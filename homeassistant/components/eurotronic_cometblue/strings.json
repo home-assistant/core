@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No Comet Blue Bluetooth TRVs discovered.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_devices_found": "No Comet Blue Bluetooth TRVs discovered."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

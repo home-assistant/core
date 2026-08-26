@@ -7,7 +7,6 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "model_not_supported": "The device model is currently unsupported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

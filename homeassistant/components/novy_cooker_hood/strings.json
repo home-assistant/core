@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_compatible_transmitters": "[%key:common::config_flow::abort::no_compatible_radio_frequency_transmitters%]",
-      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]"
     },
     "step": {
       "reconfigure": {

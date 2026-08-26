@@ -5,8 +5,7 @@
       "another_device": "The IP address/hostname of another Nettigo Air Monitor was used.",
       "device_unsupported": "The device is unsupported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

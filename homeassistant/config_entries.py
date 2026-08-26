@@ -3537,11 +3537,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             data_updates=data_updates,
             options=options,
         )
+        translation_domain: str | None = None
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
-        return self.async_abort(reason=reason)
+                translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
     def async_update_reload_and_abort(
@@ -3591,11 +3593,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
                     integration_domain=self.handler,
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        translation_domain: str | None = None
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
-        return self.async_abort(reason=reason)
+                translation_domain = HOMEASSISTANT_DOMAIN
+        return self.async_abort(reason=reason, translation_domain=translation_domain)
 
     @callback
     @override
