@@ -30,6 +30,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_all_appliances[electrolux_ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '912076029_00:20220017-443E071A0CC4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'FRIGIDAIRE',
+    'model': 'FHWW103WB1',
+    'model_id': None,
+    'name': 'Air Conditioner',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '20220017',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[electrolux_air_purifier]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -57,6 +88,37 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '24200001',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_dam_ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '1:950011600_00:44709990-C8F742FDB3E7',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'COMFORT600',
+    'model_id': None,
+    'name': 'Portable Air Conditioner',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '44709990',
     'sw_version': None,
     'via_device_id': None,
   })
