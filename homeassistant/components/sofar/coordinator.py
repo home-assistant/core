@@ -59,13 +59,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             serial_number=serial,
         )
 
-    @property
-    def served_components(self) -> frozenset[str]:
-        """Component names this poll serves; empty before first refresh."""
-        if self.data is not None:
-            return frozenset(self.data.updated | set(self.data.failed))
-        return frozenset()
-
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
@@ -137,12 +130,15 @@ class SofarRuntimeData:
 
     @property
     def served_components(self) -> frozenset[str]:
-        """Component names either poll serves; empty before first refresh."""
-        return self.readings.served_components | self.settings.served_components
+        """Component names this inverter polls, answered or not."""
+        device = self.readings.device
+        return frozenset(device.readings_components) | frozenset(
+            device.settings_components
+        )
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
-        if component in self.readings.served_components:
+        if component in self.readings.device.readings_components:
             return self.readings
         return self.settings
 

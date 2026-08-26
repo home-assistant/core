@@ -41,12 +41,12 @@ async def test_runtime_data_routes_components_to_their_own_coordinator(
 ) -> None:
     """Test served_components/coordinator_for span both coordinators."""
     runtime_data = init_integration.runtime_data
+    device = runtime_data.readings.device
 
-    assert "grid" in runtime_data.readings.served_components
-    assert "active_power_control" in runtime_data.settings.served_components
+    assert "grid" in device.readings_components
+    assert "active_power_control" in device.settings_components
     assert runtime_data.served_components == (
-        runtime_data.readings.served_components
-        | runtime_data.settings.served_components
+        frozenset(device.readings_components) | frozenset(device.settings_components)
     )
 
     assert runtime_data.coordinator_for("grid") is runtime_data.readings
