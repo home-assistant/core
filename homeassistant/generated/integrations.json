@@ -2170,8 +2170,8 @@
       "name": "Flexit",
       "integrations": {
         "flexit": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Flexit"
         },
@@ -6788,6 +6788,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sofar": {
+      "name": "Sofar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "solaredge": {
       "name": "SolarEdge",

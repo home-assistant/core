@@ -423,7 +423,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.31.0
+aioshelly==13.32.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -577,6 +577,7 @@ asusrouter==1.21.3
 # homeassistant.components.samsungtv
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.wiim
 # homeassistant.components.yeelight
 async-upnp-client==0.48.1
 
@@ -1029,6 +1030,9 @@ fixerio==1.0.0a0
 # homeassistant.components.fjaraskupan
 fjaraskupan==2.3.4
 
+# homeassistant.components.flexit
+flexit-modbus==0.1.0
+
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.2.3
 
@@ -1069,6 +1073,9 @@ fressnapftracker==0.2.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.1
+
+# homeassistant.components.fronius
+fronius-modbus==0.2.0
 
 # homeassistant.components.fumis
 fumis==0.4.0
@@ -1253,7 +1260,7 @@ hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.11.0
+hassil==3.12.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.1
@@ -2937,7 +2944,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.11
+reolink-aio==0.21.13
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3084,6 +3091,9 @@ snapcast==2.3.8
 
 # homeassistant.components.sonos
 soco==0.31.2
+
+# homeassistant.components.sofar
+sofar-modbus==0.3.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
