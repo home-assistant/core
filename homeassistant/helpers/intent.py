@@ -1129,6 +1129,13 @@ class DynamicServiceIntentHandler(IntentHandler):
         failed_results: list[IntentResponseTarget] = []
         service_results = await asyncio.gather(*service_coros, return_exceptions=True)
         for state, service_result in zip(states, service_results, strict=True):
+            if isinstance(service_result, BaseException) and not isinstance(
+                service_result, Exception
+            ):
+                # Cancellation and other non-Exception base exceptions
+                # propagate, matching the previous behavior.
+                raise service_result
+
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
