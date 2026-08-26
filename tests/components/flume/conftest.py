@@ -1,8 +1,8 @@
 """Flume test fixtures."""
 
 from collections.abc import Generator
-import datetime
 from http import HTTPStatus
+import time
 from unittest.mock import patch
 
 import jwt
@@ -102,10 +102,9 @@ TOKEN_SIGNING_KEY = "flume-test-token-signing-key-0123"
 
 def encode_access_token() -> str:
     """Encode the payload of the access token."""
-    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)  # pylint: disable=home-assistant-enforce-naive-now
     payload = {
         "user_id": USER_ID,
-        "exp": int(expiration_time.timestamp()),
+        "exp": int(time.time() + 12 * 3600),
     }
     return jwt.encode(payload, key=TOKEN_SIGNING_KEY)
 
