@@ -77,7 +77,7 @@ class PassiveBluetoothProcessorData:
 class RestoredPassiveBluetoothDataUpdate(TypedDict):
     """Restored PassiveBluetoothDataUpdate."""
 
-    devices: dict[str, DeviceInfo]
+    devices: dict[str, dict[str, Any]]
     entity_descriptions: dict[str, dict[str, Any]]
     entity_names: dict[str, str | None]
     entity_data: dict[str, Any]
@@ -173,7 +173,9 @@ class PassiveBluetoothDataUpdate[_T]:
         """Serialize restore data to storage."""
         return {
             "devices": {
-                key or "": device_info for key, device_info in self.devices.items()
+                # A device info is stored as the mapping of the fields it sets
+                key or "": dict(device_info)
+                for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
                 key.to_string(): serialize_entity_description(description)
@@ -196,7 +198,7 @@ class PassiveBluetoothDataUpdate[_T]:
         """Set the restored data from storage."""
         self.devices.update(
             {
-                key or None: device_info
+                key or None: DeviceInfo(device_info)
                 for key, device_info in restore_data["devices"].items()
             }
         )

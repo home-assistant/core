@@ -1782,9 +1782,9 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info["via_device_id"] = via_device_id
-        update_device_info = cast(dict[str, Any], device_info)
-        update_device_info["config_entry_id"] = config_entry_id
-        device = device_registry.async_get_or_create(**update_device_info)
+        device = device_registry.async_get_or_create(
+            config_entry_id=config_entry_id, **device_info
+        )
 
     return device.id if device else None
 

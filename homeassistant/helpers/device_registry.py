@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, Field, InitVar, dataclass, fields as dataclass_fields
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -15,9 +15,10 @@ import time
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Literal,
     NamedTuple,
-    Required,
+    Self,
     TypedDict,
     Unpack,
     overload,
@@ -125,27 +126,202 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
-class DeviceInfo(TypedDict, total=False):
+type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
+
+
+class _DeviceInfoMapping:
+    """Dict-style access for the device info dataclasses.
+
+    Device info used to be a TypedDict, and integrations still build and read it as
+    a mapping, for example by passing it to the device registry with
+    `**device_info`. A field left at UNDEFINED is not part of the mapping, which
+    preserves the TypedDict semantics of an unset key.
+
+    Every method here exists for a usage found in an integration; the set is
+    deliberately closed, as this compatibility layer is meant to be deprecated
+    once integrations read and write the fields directly.
+    """
+
+    __slots__ = ()
+
+    # The mapping keys, in field declaration order
+    _field_names: ClassVar[tuple[str, ...]]
+
+    if TYPE_CHECKING:
+        # Set by the @dataclass decorator, declared for _device_info_fields
+        __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
+
+    def __post_init__(self, initial: _DeviceInfoLike | None) -> None:
+        """Apply the fields of a mapping passed to the constructor."""
+        # Integrations build a device info from a mapping: `DeviceInfo({...})`
+        if initial is not None:
+            self.update(initial)
+
+    def __getitem__(self, key: str) -> Any:
+        """Return the value of a set field."""
+        # Also backs `.get()`, `dict()` and `**device_info` unpacking
+        if key in self._field_names:
+            value = getattr(self, key)
+            if value is not UNDEFINED:
+                return value
+        raise KeyError(key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Set the value of a field."""
+        # Integrations fill a device info in after building it
+        if key not in self._field_names:
+            raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
+        setattr(self, key, value)
+
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the set fields."""
+        # Also backs `in`, there being no __contains__ to fall back on
+        return (key for key in self._field_names if getattr(self, key) is not UNDEFINED)
+
+    def __len__(self) -> int:
+        """Return the number of set fields."""
+        # A device info without any field must be falsy, as an empty dict was
+        return sum(getattr(self, key) is not UNDEFINED for key in self._field_names)
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        """Return if the set fields match those of another device info or mapping."""
+        # Integrations compare a device info to a plain mapping, so this can't be
+        # left to the dataclass
+        if isinstance(other, _DeviceInfoMapping):
+            return type(other) is type(self) and all(
+                getattr(self, key) == getattr(other, key) for key in self._field_names
+            )
+        if isinstance(other, Mapping):
+            return dict(self) == other
+        return NotImplemented
+
+    @override
+    def __repr__(self) -> str:
+        """Return the representation, listing the set fields only."""
+        # The generated repr would spell out UNDEFINED for every unset field
+        set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
+        return f"{type(self).__name__}({set_fields})"
+
+    def keys(self) -> tuple[str, ...]:
+        """Return the names of the set fields."""
+        # Required, together with __getitem__, for `**device_info` unpacking
+        return tuple(self)
+
+    def items(self) -> tuple[tuple[str, Any], ...]:
+        """Return the set fields as key-value pairs."""
+        return tuple((key, getattr(self, key)) for key in self)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the set fields.
+
+        Reads the fields, so a caller does not need the mapping interface the
+        integrations use. The JSON encoders serialize an object with an as_dict; a
+        dataclass would otherwise be serialized field by field, unset ones included.
+        """
+        return {
+            name: value
+            for name in self._field_names
+            if (value := getattr(self, name)) is not UNDEFINED
+        }
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Return the value of a field, or default if the field is not set."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def update(self, other: _DeviceInfoLike) -> None:
+        """Set the fields another device info or mapping has set."""
+        # Integrations merge fields in with `device_info.update(...)`
+        for key, value in other.items():
+            self[key] = value
+
+    def pop(self, key: str, default: Any = UNDEFINED) -> Any:
+        """Unset a field and return its value, or default if it is not set."""
+        # Integrations drop fields before passing a device info on
+        try:
+            value = self[key]
+        except KeyError:
+            if default is UNDEFINED:
+                raise
+            return default
+        setattr(self, key, UNDEFINED)
+        return value
+
+    def __or__(self, other: _DeviceInfoLike) -> Self:
+        """Return a copy updated with the fields of another mapping."""
+        # Integrations layer a device info on top of a shared one:
+        # `base_device_info | DeviceInfo(...)`
+        new = copy.copy(self)
+        new.update(other)
+        return new
+
+    def __ror__(self, other: _DeviceInfoLike) -> Self:
+        """Return a copy holding the fields of another mapping it does not set."""
+        # An integration can hold a device info as a plain dict, and layer on top
+        # of it: `base_device_info | DeviceInfo(...)`
+        new = copy.copy(self)
+        for key, value in other.items():
+            if key not in self:
+                new[key] = value
+        return new
+
+    def __ior__(self, other: _DeviceInfoLike) -> Self:
+        """Update with the fields of another mapping."""
+        # Integrations merge extra fields in: `self._attr_device_info |= {...}`
+        self.update(other)
+        return self
+
+
+def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
+    cls: type[_DeviceInfoT],
+) -> type[_DeviceInfoT]:
+    """Cache the field names a device info dataclass exposes as mapping keys."""
+    cls._field_names = tuple(field.name for field in dataclass_fields(cls))
+    return cls
+
+
+@_device_info_fields
+@dataclass(eq=False, repr=False, slots=True)
+class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
-    configuration_url: str | URL | None
-    connections: set[tuple[str, str]]
-    entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    model_id: str | None
-    name: str | None
-    serial_number: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    hw_version: str | None
-    translation_key: str | None
-    translation_placeholders: Mapping[str, str] | None
-    via_device_id: str
+    initial: InitVar[_DeviceInfoLike | None] = None
+    _: KW_ONLY
+    configuration_url: str | URL | UndefinedType | None = UNDEFINED
+    connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
+    entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED
+    identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED
+    manufacturer: str | UndefinedType | None = UNDEFINED
+    model: str | UndefinedType | None = UNDEFINED
+    model_id: str | UndefinedType | None = UNDEFINED
+    name: str | UndefinedType | None = UNDEFINED
+    serial_number: str | UndefinedType | None = UNDEFINED
+    suggested_area: str | UndefinedType | None = UNDEFINED
+    sw_version: str | UndefinedType | None = UNDEFINED
+    hw_version: str | UndefinedType | None = UNDEFINED
+    translation_key: str | UndefinedType | None = UNDEFINED
+    translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
+    via_device_id: str | UndefinedType = UNDEFINED
+
+    if not TYPE_CHECKING:
+        # Deprecated fields, accepted until the versions listed in
+        # _DEPRECATED_DEVICE_INFO_PARAMETERS. They are hidden from type checkers, as
+        # they were dropped from the typed device info when they were deprecated,
+        # but integrations still set them and async_get_or_create still reports them.
+        created_at: str | UndefinedType = UNDEFINED
+        default_manufacturer: str | UndefinedType = UNDEFINED
+        default_model: str | UndefinedType = UNDEFINED
+        default_name: str | UndefinedType = UNDEFINED
+        modified_at: str | UndefinedType = UNDEFINED
+        via_device: tuple[str, str] | UndefinedType = UNDEFINED
 
 
-class ChildDeviceInfo(TypedDict, total=False):
+@_device_info_fields
+@dataclass(eq=False, repr=False, slots=True)
+class ChildDeviceInfo(_DeviceInfoMapping):
     """Entity device information for a child device in the device registry.
 
     A child device is a lightweight logical part of a parent device. The parent
@@ -153,12 +329,14 @@ class ChildDeviceInfo(TypedDict, total=False):
     entry, and must belong to the same config subentry.
     """
 
-    identifiers: Required[set[tuple[str, str]]]
-    name: str | None
-    parent_device_id: Required[str]
-    suggested_area: str | None
-    translation_key: str | None
-    translation_placeholders: Mapping[str, str] | None
+    initial: InitVar[_DeviceInfoLike | None] = None
+    _: KW_ONLY
+    identifiers: set[tuple[str, str]]
+    name: str | UndefinedType | None = UNDEFINED
+    parent_device_id: str
+    suggested_area: str | UndefinedType | None = UNDEFINED
+    translation_key: str | UndefinedType | None = UNDEFINED
+    translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
 
 
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
@@ -200,7 +378,9 @@ class DeviceEntryType(StrEnum):
 class DeviceInfoError(HomeAssistantError):
     """Raised when device info is invalid."""
 
-    def __init__(self, domain: str, device_info: DeviceInfo, message: str) -> None:
+    def __init__(
+        self, domain: str, device_info: Mapping[str, Any], message: str
+    ) -> None:
         """Initialize error."""
         super().__init__(
             f"Invalid device info {device_info} for '{domain}' config entry: {message}",
@@ -240,7 +420,7 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
 
 def _validate_device_info(
     config_entry: ConfigEntry,
-    device_info: DeviceInfo,
+    device_info: Mapping[str, Any],
 ) -> None:
     """Validate that a device info has enough information to match up a device."""
     if not device_info.get("connections") and not device_info.get("identifiers"):
@@ -2321,10 +2501,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry, translation_key, translation_placeholders
             )
 
-        # Reconstruct a DeviceInfo dict from the arguments.
-        # When we upgrade to Python 3.12, we can change this method to instead
-        # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        device_info: DeviceInfo = {  # type: ignore[assignment]
+        # Reconstruct a device info dict from the arguments, used for error
+        # reporting. It can hold deprecated keys, so it's not a DeviceInfo.
+        device_info: dict[str, Any] = {
             key: val
             for key, val in (
                 ("connections", connections),
@@ -2636,9 +2815,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry, translation_key, translation_placeholders
             )
 
-        # Reconstruct a ChildDeviceInfo dict from the arguments, used for error reporting
-        # and conversion of an existing device to a child device.
-        device_info: DeviceInfo = {  # type: ignore[assignment]
+        # Reconstruct a child device info dict from the arguments, used for error
+        # reporting and conversion of an existing device to a child device.
+        device_info: dict[str, Any] = {
             key: val
             for key, val in (
                 ("identifiers", identifiers),
@@ -2823,7 +3002,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device: DeviceEntry,
         parent: DeviceEntry,
         config_entry: ConfigEntry,
-        device_info: DeviceInfo,
+        device_info: Mapping[str, Any],
     ) -> None:
         """Validate converting a device to a child device.
 
@@ -3840,7 +4019,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
-        device_info: DeviceInfo,
+        device_info: Mapping[str, Any],
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
     ) -> None:
