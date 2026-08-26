@@ -2,14 +2,7 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import (
-    Collection,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Set as AbstractSet,
-)
+from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
 from dataclasses import KW_ONLY, Field, InitVar, dataclass, fields as dataclass_fields
 from datetime import datetime
@@ -133,13 +126,20 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
-class _DeviceInfoMapping(MutableMapping[str, Any]):
-    """Mapping interface for the device info dataclasses.
+type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
-    Device info used to be a TypedDict and is widely consumed as a mapping, for
-    example by passing it to the device registry with `**device_info`. A field
-    left at UNDEFINED is not part of the mapping, which preserves the TypedDict
-    semantics of an unset key.
+
+class _DeviceInfoMapping:
+    """Dict-style access for the device info dataclasses.
+
+    Device info used to be a TypedDict, and integrations still build and read it as
+    a mapping, for example by passing it to the device registry with
+    `**device_info`. A field left at UNDEFINED is not part of the mapping, which
+    preserves the TypedDict semantics of an unset key.
+
+    Every method here exists for a usage found in an integration; the set is
+    deliberately closed, as this compatibility layer is meant to be deprecated
+    once integrations read and write the fields directly.
     """
 
     __slots__ = ()
@@ -151,47 +151,36 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
         # Set by the @dataclass decorator, declared for _device_info_fields
         __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
 
-    def __post_init__(self, initial: Mapping[str, Any] | None) -> None:
+    def __post_init__(self, initial: _DeviceInfoLike | None) -> None:
         """Apply the fields of a mapping passed to the constructor."""
         # Integrations build a device info from a mapping: `DeviceInfo({...})`
         if initial is not None:
             self.update(initial)
 
-    @override
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
-        # Also backs `.get()`, `in` and `**device_info` unpacking
+        # Also backs `.get()`, `dict()` and `**device_info` unpacking
         if key in self._field_names:
             value = getattr(self, key)
             if value is not UNDEFINED:
                 return value
         raise KeyError(key)
 
-    @override
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
-        # Integrations fill a device info in after building it, and `.update()`
-        # merges another mapping in field by field
+        # Integrations fill a device info in after building it
         if key not in self._field_names:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
         setattr(self, key, value)
 
-    @override
-    def __delitem__(self, key: str) -> None:
-        """Unset a field."""
-        # Integrations drop fields before passing a device info on, with `.pop()`
-        if key not in self._field_names or getattr(self, key) is UNDEFINED:
-            raise KeyError(key)
-        setattr(self, key, UNDEFINED)
-
-    @override
     def __iter__(self) -> Iterator[str]:
         """Iterate over the set fields."""
+        # Also backs `in`, there being no __contains__ to fall back on
         return (key for key in self._field_names if getattr(self, key) is not UNDEFINED)
 
-    @override
     def __len__(self) -> int:
         """Return the number of set fields."""
+        # A device info without any field must be falsy, as an empty dict was
         return sum(getattr(self, key) is not UNDEFINED for key in self._field_names)
 
     @override
@@ -201,7 +190,41 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
         set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
         return f"{type(self).__name__}({set_fields})"
 
-    def __or__(self, other: Mapping[str, Any]) -> Self:
+    def keys(self) -> tuple[str, ...]:
+        """Return the names of the set fields."""
+        # Required, together with __getitem__, for `**device_info` unpacking
+        return tuple(self)
+
+    def items(self) -> tuple[tuple[str, Any], ...]:
+        """Return the set fields as key-value pairs."""
+        return tuple((key, getattr(self, key)) for key in self)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Return the value of a field, or default if the field is not set."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def update(self, other: _DeviceInfoLike) -> None:
+        """Set the fields another device info or mapping has set."""
+        # Integrations merge fields in with `device_info.update(...)`
+        for key, value in other.items():
+            self[key] = value
+
+    def pop(self, key: str, default: Any = UNDEFINED) -> Any:
+        """Unset a field and return its value, or default if it is not set."""
+        # Integrations drop fields before passing a device info on
+        try:
+            value = self[key]
+        except KeyError:
+            if default is UNDEFINED:
+                raise
+            return default
+        setattr(self, key, UNDEFINED)
+        return value
+
+    def __or__(self, other: _DeviceInfoLike) -> Self:
         """Return a copy updated with the fields of another mapping."""
         # Integrations layer a device info on top of a shared one:
         # `base_device_info | DeviceInfo(...)`
@@ -209,7 +232,7 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
         new.update(other)
         return new
 
-    def __ior__(self, other: Mapping[str, Any]) -> Self:
+    def __ior__(self, other: _DeviceInfoLike) -> Self:
         """Update with the fields of another mapping."""
         # Integrations merge extra fields in: `self._attr_device_info |= {...}`
         self.update(other)
@@ -225,11 +248,11 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
 
 
 @_device_info_fields
-@dataclass(eq=False, repr=False, slots=True)
+@dataclass(repr=False, slots=True)
 class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
-    initial: InitVar[Mapping[str, Any] | None] = None
+    initial: InitVar[_DeviceInfoLike | None] = None
     _: KW_ONLY
     configuration_url: str | URL | UndefinedType | None = UNDEFINED
     connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
@@ -249,7 +272,7 @@ class DeviceInfo(_DeviceInfoMapping):
 
 
 @_device_info_fields
-@dataclass(eq=False, repr=False, slots=True)
+@dataclass(repr=False, slots=True)
 class ChildDeviceInfo(_DeviceInfoMapping):
     """Entity device information for a child device in the device registry.
 
@@ -258,7 +281,7 @@ class ChildDeviceInfo(_DeviceInfoMapping):
     entry, and must belong to the same config subentry.
     """
 
-    initial: InitVar[Mapping[str, Any] | None] = None
+    initial: InitVar[_DeviceInfoLike | None] = None
     _: KW_ONLY
     identifiers: set[tuple[str, str]]
     name: str | UndefinedType | None = UNDEFINED
