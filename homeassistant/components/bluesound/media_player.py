@@ -9,6 +9,7 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -616,7 +617,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 entity_registry, config_entry.entry_id
             )
             for entity_entry in entity_entries:
-                if entity_entry.domain == "media_player":
+                if entity_entry.domain == MEDIA_PLAYER_DOMAIN:
                     result[entity_entry.entity_id] = (
                         config_entry.runtime_data.coordinator.data.sync_status
                     )

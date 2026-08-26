@@ -1,0 +1,4 @@
+shuffle:
+  target:
+    entity:
+      integration: collection_image
