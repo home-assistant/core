@@ -1,6 +1,5 @@
 """Number platform for the Duco integration."""
 
-from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 import logging
 from typing import override
@@ -27,21 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
-class DucoNumberEntityDescription(NumberEntityDescription):
-    """Description of a Duco number entity."""
-
-    suggested_display_precision: int | None = None
-    translation_key: str
-
-
-NUMBER_DESCRIPTIONS: tuple[DucoNumberEntityDescription, ...] = (
-    DucoNumberEntityDescription(
+NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
+    NumberEntityDescription(
         key="bypass_supply_target_temperature_zone",
         translation_key="bypass_supply_target_temperature_zone",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        suggested_display_precision=1,
     ),
 )
 
@@ -103,7 +93,7 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         self,
         coordinator: DucoCoordinator,
         node: Node,
-        description: DucoNumberEntityDescription,
+        description: NumberEntityDescription,
         zone_id: int,
         minimum: float,
         maximum: float,
@@ -113,10 +103,6 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         super().__init__(coordinator, node)
         self.entity_description = description
         self._zone_id = zone_id
-        self._attr_device_class = description.device_class
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_suggested_display_precision = description.suggested_display_precision
-        self._attr_translation_key = description.translation_key
         self._attr_translation_placeholders = {"zone": str(zone_id)}
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{node.node_id}_"
