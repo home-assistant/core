@@ -176,6 +176,7 @@ async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
             side_effect=delayed_get_data,
         ),
     ):
+        # Trigger the scheduled refresh while the data fetch is held in flight.
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
         await update_started.wait()
