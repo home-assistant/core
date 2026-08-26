@@ -106,7 +106,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         if (
             binary_sensors := self.device.get("binary_sensors", {})
         ) and binary_sensors.get(self.entity_description.state_key, False):
-            if "outdoor_air_temperature" in self.device:
+            if "outdoor_air_temperature" in self.device["sensors"]:
                 return STATE_ELECTRIC
 
             return STATE_GAS
