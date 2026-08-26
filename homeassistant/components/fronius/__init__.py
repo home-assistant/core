@@ -4,13 +4,22 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Final
+from urllib.parse import urlsplit
 
+from fronius_modbus import (
+    GEN24_UNIT_ID,
+    FroniusModbusInverter,
+    SunSpecError,
+    datamanager_unit_id,
+)
+from modbus_connection import ModbusError, ModbusTcpParams
 from pyfronius import Fronius, FroniusError
 
+from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -18,17 +27,21 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_MODBUS_PORT,
+    DEFAULT_MODBUS_PORT,
     DOMAIN,
     SOLAR_NET_DISCOVERY_NEW,
     SOLAR_NET_ID_SYSTEM,
     SOLAR_NET_RESCAN_TIMER,
     FroniusDeviceInfo,
+    SolarNetId,
 )
 from .coordinator import (
     FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusModbusInverterUpdateCoordinator,
     FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
@@ -60,13 +73,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> b
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.minor_version < 2:
+        # add the Modbus port setting
+        data = {CONF_MODBUS_PORT: DEFAULT_MODBUS_PORT, **entry.data}
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=2)
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: FroniusConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: FroniusConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True
@@ -96,6 +120,12 @@ class FroniusSolarNet:
         self.ohmpilot_coordinator: FroniusOhmpilotUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
+
+        self.modbus_inverter_coordinators: list[
+            FroniusModbusInverterUpdateCoordinator
+        ] = []
+        # one hold on the shared connection per inverter, kept across re-scans
+        self.modbus_inverters: dict[SolarNetId, FroniusModbusInverter] = {}
 
     async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""
@@ -228,6 +258,11 @@ class FroniusSolarNet:
                 _inverter_info.unique_id,
             )
 
+        # an inverter that was asleep answers nothing, so retry the ones
+        # still without Modbus data on every re-scan
+        for inverter_coordinator in self.inverter_coordinators:
+            await self._init_modbus_inverter(inverter_coordinator.inverter_info)
+
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         inverter_infos: list[FroniusDeviceInfo] = []
@@ -279,6 +314,94 @@ class FroniusSolarNet:
                 unique_id,
             )
         return inverter_infos
+
+    def _modbus_params(self) -> ModbusTcpParams | None:
+        """Return the Modbus link settings, or None for an unusable host."""
+        # the configured host may be a bare host name or a full URL
+        url = self.host if "://" in self.host else f"//{self.host}"
+        if (modbus_host := urlsplit(url).hostname) is None:
+            return None
+        return ModbusTcpParams(
+            host=modbus_host, port=self.config_entry.data[CONF_MODBUS_PORT]
+        )
+
+    async def _init_modbus_inverter(self, inverter_info: FroniusDeviceInfo) -> None:
+        """Set up a Modbus coordinator for an inverter exposing SunSpec MPPT data."""
+        if inverter_info.solar_net_id in [
+            coordinator.inverter_info.solar_net_id
+            for coordinator in self.modbus_inverter_coordinators
+        ]:
+            return
+        if (unit_id := self._modbus_unit_id(inverter_info.solar_net_id)) is None:
+            return
+        if (
+            modbus_inverter := self.modbus_inverters.get(inverter_info.solar_net_id)
+        ) is None:
+            if (params := self._modbus_params()) is None:
+                return
+            try:
+                unit = async_get_unit(self.hass, self.config_entry, params, unit_id)
+            except HomeAssistantError as err:
+                # another integration holds the device on different link settings
+                _LOGGER.debug("No Modbus unit for inverter %s: %s", unit_id, err)
+                return
+            modbus_inverter = FroniusModbusInverter(unit)
+            self.modbus_inverters[inverter_info.solar_net_id] = modbus_inverter
+
+        try:
+            await modbus_inverter.discover()
+        except (ModbusError, SunSpecError) as err:
+            _LOGGER.debug(
+                "No SunSpec data for inverter %s at Modbus unit %s: %s",
+                inverter_info.solar_net_id,
+                unit_id,
+                err,
+            )
+            return
+        if modbus_inverter.mppt is None:
+            _LOGGER.debug(
+                "No MPPT model exposed by inverter %s at Modbus unit %s",
+                inverter_info.solar_net_id,
+                unit_id,
+            )
+            return
+
+        coordinator = FroniusModbusInverterUpdateCoordinator(
+            hass=self.hass,
+            solar_net=self,
+            logger=_LOGGER,
+            name=f"{DOMAIN}_modbus_inverter_{inverter_info.solar_net_id}_{self.host}",
+            inverter_info=inverter_info,
+            modbus_inverter=modbus_inverter,
+            config_entry=self.config_entry,
+        )
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            await coordinator.async_refresh()
+        else:
+            try:
+                await coordinator.async_config_entry_first_refresh()
+            except ConfigEntryNotReady:
+                # never fail the whole entry for optional Modbus data
+                return
+        self.modbus_inverter_coordinators.append(coordinator)
+
+        # Only for re-scans. Initial setup adds entities
+        # through sensor.async_setup_entry
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
+
+        _LOGGER.debug(
+            "Modbus enabled for inverter %s (UID: %s, unit ID: %s)",
+            inverter_info.solar_net_id,
+            inverter_info.unique_id,
+            unit_id,
+        )
+
+    def _modbus_unit_id(self, solar_net_id: str) -> int | None:
+        """Return the Modbus unit ID for an inverter."""
+        if not self.config_entry.data["is_logger"]:
+            return GEN24_UNIT_ID
+        return datamanager_unit_id(solar_net_id)
 
     @staticmethod
     async def _init_optional_coordinator[_FroniusCoordinatorT: FroniusCoordinatorBase](

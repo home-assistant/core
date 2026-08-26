@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING, Any, override
 from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
@@ -21,7 +24,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_set_assistant_option,
     async_should_expose,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.core import (
     CoreState,
     Event,
@@ -115,12 +118,12 @@ def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
         return False
 
     if (
-        domain == "binary_sensor"
+        domain == BINARY_SENSOR_DOMAIN
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
     ):
         return True
 
-    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
         return True
 
     return False
@@ -500,12 +503,25 @@ class CloudGoogleConfig(AbstractConfig):
         if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
             return
 
+        device_id = event.data["device_id"]
+        ent_reg = er.async_get(self.hass)
+
+        # Children without an area of their own inherit the parent's area, so a
+        # parent area change also changes the effective area of their entities.
+        device_ids = [device_id]
+        device_ids.extend(
+            child.id
+            for child in dr.async_entries_for_parent_device(
+                dr.async_get(self.hass), device_id
+            )
+            if child.area_id is None
+        )
+
         # Check if any exposed entity uses the device area
         if not any(
             entity_entry.area_id is None and self.should_expose(entity_entry.entity_id)
-            for entity_entry in er.async_entries_for_device(
-                er.async_get(self.hass), event.data["device_id"]
-            )
+            for check_device_id in device_ids
+            for entity_entry in er.async_entries_for_device(ent_reg, check_device_id)
         ):
             return
 

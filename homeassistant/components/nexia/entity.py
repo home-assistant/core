@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME, ATTR_SUGGESTED_AREA
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +28,7 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     """Base class for nexia entities."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
@@ -102,13 +103,11 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, unique_id)
         self._zone = zone
-        zone_name = self._zone.get_name()
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info |= {
             ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
-            ATTR_NAME: zone_name,
-            ATTR_SUGGESTED_AREA: zone_name,
+            ATTR_NAME: zone.get_name(),
             "via_device_id": dr.async_get_device_id_by_identifier(
                 self.coordinator.hass,
                 (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773

@@ -7,10 +7,11 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import AbodeConfigEntry, AbodeSystem
@@ -41,9 +42,12 @@ def _change_setting(call: ServiceCall) -> None:
 
     try:
         _get_abode_system(call.hass).abode.set_setting(setting, value)
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     except AbodeException as ex:
-        LOGGER.warning(ex)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="change_setting_failed",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
 
 
 def _capture_image(call: ServiceCall) -> None:
