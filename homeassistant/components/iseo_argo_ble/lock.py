@@ -130,8 +130,8 @@ class IseoLockEntity(LockEntity):
         )
         dev_reg = dr.async_get(self.hass)
         if not (
-            device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, cast(str, self._entry.unique_id))}
+            device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, cast(str, self._entry.unique_id)), self._entry.entry_id
             )
         ):
             _LOGGER.debug("No device entry found, cannot store firmware version")
