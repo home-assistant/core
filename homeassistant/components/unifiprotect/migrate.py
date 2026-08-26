@@ -4,9 +4,6 @@ from itertools import chain
 import logging
 from typing import TypedDict
 
-from uiprotect import ProtectApiClient
-from uiprotect.data import Bootstrap
-
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -101,13 +98,12 @@ def create_repair_if_used(
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-async def async_migrate_data(
-    hass: HomeAssistant,
-    entry: UFPConfigEntry,
-    protect: ProtectApiClient,
-    bootstrap: Bootstrap,
-) -> None:
-    """Run all valid UniFi Protect data migrations."""
+async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Run all valid UniFi Protect data migrations.
+
+    Every migration operates purely on the entity/device registries, so this
+    runs in both connection modes (no bootstrap required).
+    """
 
     _LOGGER.debug("Start Migrate: async_deprecate_hdr")
     async_deprecate_hdr(hass, entry)

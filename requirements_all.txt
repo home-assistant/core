@@ -1099,6 +1099,9 @@ gassist-text==0.0.14
 # homeassistant.components.gatus
 gatus-api==1.2.0
 
+# homeassistant.components.conversation
+gazetteer-matcher==1.0.0
+
 # homeassistant.components.google
 gcal-sync==9.1.0
 
@@ -1415,6 +1418,9 @@ irm-kmi-api==1.1.1
 
 # homeassistant.components.isal
 isal==1.8.0
+
+# homeassistant.components.iseo_argo_ble
+iseo-argo-ble==0.5.3
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
@@ -2787,7 +2793,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.31.1
+python-roborock==7.1.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
