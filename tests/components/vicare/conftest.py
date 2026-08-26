@@ -97,7 +97,8 @@ class MockViCareService:
     ) -> None:
         """Initialize the mock from a json dump."""
         self._test_data = load_json_object_fixture(fixture.data_file)
-        self.fetch_all_features = Mock(return_value=self._test_data)
+        # Mirror the real signature: fetch_all_features() requires an accessor.
+        self.fetch_all_features = Mock(side_effect=lambda accessor: self._test_data)
         self.setProperty = Mock()
         self.clear_cache = Mock()
         self.roles = fixture.roles

@@ -60,7 +60,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         """Force a fresh fetch from the Viessmann API."""
         try:
             self._device.service.clear_cache()
-            self._device.service.fetch_all_features()
+            self._device.service.fetch_all_features(self._device.accessor)
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
         except (
