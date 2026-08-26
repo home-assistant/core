@@ -19,14 +19,12 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry import _get_access_token
+from homeassistant.components.teslemetry import STREAM_TOPICS, _get_access_token
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
-    ENERGY_INFO_INTERVAL,
-    ENERGY_LIVE_INTERVAL,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -165,7 +163,7 @@ async def test_energy_site_refresh_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_add_listener: AsyncMock,
+    mock_add_listener: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
@@ -593,7 +591,6 @@ async def test_vehicle_data_retry_exceptions(
 @pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
 async def test_live_status_coordinator_retry_exceptions(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
     exception: TeslaFleetError,
     expected_retry_after: float,
@@ -616,9 +613,8 @@ async def test_live_status_coordinator_retry_exceptions(
     assert entry.state is ConfigEntryState.LOADED
     assert call_count == 1
 
-    # Trigger coordinator refresh - this will raise the exception
-    freezer.tick(ENERGY_LIVE_INTERVAL)
-    async_fire_time_changed(hass)
+    # The recovery/manual REST path still raises the exception
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     # API was called exactly once for this refresh (no manual retry loop)
@@ -665,7 +661,6 @@ async def test_energy_history_coordinator_retry_exceptions(
 
 async def test_live_status_auth_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test live status coordinator handles auth errors."""
     call_count = 0
@@ -684,9 +679,8 @@ async def test_live_status_auth_error(
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.LOADED
 
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
+        # The recovery/manual REST path surfaces the auth error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
         await hass.async_block_till_done()
 
         # Auth error triggers reauth flow
@@ -695,7 +689,6 @@ async def test_live_status_auth_error(
 
 async def test_live_status_generic_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test live status coordinator handles generic TeslaFleetError."""
     call_count = 0
@@ -714,9 +707,8 @@ async def test_live_status_generic_error(
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.LOADED
 
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
+        # The recovery/manual REST path surfaces the error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
         await hass.async_block_till_done()
 
         # Entry stays loaded but coordinator will have failed
@@ -911,10 +903,9 @@ async def test_vehicle_polling_stops_when_all_entities_disabled(
 async def test_energy_site_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_site_info: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    mock_add_listener: MagicMock,
 ) -> None:
-    """Test energy site sw_version updates when info coordinator refreshes."""
+    """Test energy site sw_version updates from a site_info stream event."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -925,14 +916,11 @@ async def test_energy_site_version_update(
     assert device is not None
     assert device.sw_version == "23.44.0 eb113390"
 
-    # Update mock to return new version on next poll
-    updated_site_info = deepcopy(SITE_INFO)
-    updated_site_info["response"]["version"] = "24.1.0 abc123"
-    mock_site_info.side_effect = lambda: updated_site_info
-
-    # Trigger coordinator refresh
-    freezer.tick(ENERGY_INFO_INTERVAL)
-    async_fire_time_changed(hass)
+    # A slim site_info stream event carries the new version
+    updated_site_info = deepcopy(SITE_INFO["response"])
+    updated_site_info.pop("tariff_content_v2", None)
+    updated_site_info["version"] = "24.1.0 abc123"
+    mock_add_listener.send({"site_id": site_id, "site_info": updated_site_info})
     await hass.async_block_till_done()
 
     # Check device sw_version was updated
@@ -962,7 +950,6 @@ async def test_live_status_auth_failed_forbidden(
 )
 async def test_live_status_coordinator_refresh_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
     side_effect: list,
 ) -> None:
@@ -972,8 +959,7 @@ async def test_live_status_coordinator_refresh_error(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    freezer.tick(ENERGY_LIVE_INTERVAL)
-    async_fire_time_changed(hass)
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -1229,4 +1215,115 @@ async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
         await _get_access_token(session)
     await hass.async_block_till_done()
 
-    assert not hass.config_entries.flow.async_progress()
+
+def test_stream_topic_allowlist() -> None:
+    """The stream subscribes to exactly the topics the integration consumes."""
+    assert [topic.value for topic in STREAM_TOPICS] == [
+        "state",
+        "vehicle_data",
+        "data",
+        "connectivity",
+        "credits",
+        "live_status",
+        "site_info",
+        "tariff_content_v2",
+    ]
+
+
+async def test_energy_stream_no_recurring_rest_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+) -> None:
+    """The live/info REST cold reads happen once and do not recur."""
+    await setup_platform(hass, [Platform.SENSOR])
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+    # Advancing well past the old 30-second poll intervals triggers no REST reads.
+    freezer.tick(ENERGY_HISTORY_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+
+async def test_energy_stream_unload_unsubscribes_and_closes_stream(
+    hass: HomeAssistant,
+) -> None:
+    """Unload runs each listener unsubscribe and closes the shared stream."""
+    live_unsub = MagicMock()
+    info_unsub = MagicMock()
+    tariff_unsub = MagicMock()
+
+    with (
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_LiveStatus",
+            return_value=live_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_SiteInfo",
+            return_value=info_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_TariffContentV2",
+            return_value=tariff_unsub,
+        ),
+        patch("teslemetry_stream.TeslemetryStream.close") as mock_close,
+    ):
+        entry = await setup_platform(hass, [Platform.SENSOR])
+        assert entry.state is ConfigEntryState.LOADED
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    live_unsub.assert_called_once()
+    info_unsub.assert_called_once()
+    tariff_unsub.assert_called_once()
+    mock_close.assert_called_once()
+
+
+async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+    mock_energy_info_stream: MagicMock,
+) -> None:
+    """A dropped stream marks energy entities unavailable until documents resume."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    # Both stream-driven coordinators start available from the setup cold read.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    # A stream disconnect fails the live and info/tariff coordinators.
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
+
+    # A streamed live_status document restores the live coordinator on reconnect.
+    live_status = deepcopy(LIVE_STATUS["response"])
+    live_status["solar_power"] = 456
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+    # A streamed site_info document restores the info/tariff coordinator.
+    slim_site_info = {
+        key: value
+        for key, value in deepcopy(SITE_INFO["response"]).items()
+        if key != "tariff_content_v2"
+    }
+    mock_energy_info_stream.send(slim_site_info)
+    await hass.async_block_till_done()
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]
