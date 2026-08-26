@@ -71,6 +71,7 @@
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
       "power_factor_phase": { "name": "Power factor {phase}" },
+      "ssid": { "name": "SSID" },
       "voltage_phase": { "name": "Voltage {phase}" }
     }
   },

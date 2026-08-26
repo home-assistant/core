@@ -7,8 +7,20 @@
     }
   },
   "exceptions": {
+    "auto_login_failed_cloud_error": {
+      "message": "Could not reach Home Assistant Cloud to finish signing you in. Please try signing in again."
+    },
+    "auto_login_failed_timeout": {
+      "message": "Your email was not confirmed in time, so we stopped waiting. Your account was created, so please confirm your email and sign in."
+    },
+    "auto_login_failed_unexpected_error": {
+      "message": "An unexpected error stopped us from signing you in. Please try signing in again."
+    },
     "backup_size_too_large": {
       "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    },
+    "no_pending_auto_login": {
+      "message": "There is no registration waiting for an email confirmation."
     }
   },
   "issues": {

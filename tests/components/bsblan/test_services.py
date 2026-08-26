@@ -186,7 +186,7 @@ async def test_invalid_device_id(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "invalid_device_id"
+    assert exc_info.value.translation_key == "service_device_not_found"
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -227,7 +227,7 @@ async def test_no_config_entry_for_device(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "no_config_entry_for_device"
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
 
 
 async def test_config_entry_not_loaded(
@@ -251,7 +251,7 @@ async def test_config_entry_not_loaded(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "config_entry_not_loaded"
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.usefixtures("setup_integration")

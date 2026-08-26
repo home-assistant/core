@@ -3,9 +3,12 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from uiprotect.data import Sensor
 from uiprotect.data.devices import Camera, Chime
+from uiprotect.data.public_devices import SensorFeatureCapability
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.button import SENSOR_BUTTONS
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -15,8 +18,10 @@ from .utils import (
     adopt_devices,
     assert_entity_counts,
     enable_entity,
+    ids_from_device_description,
     init_entry,
     remove_entities,
+    setup_public_sensor,
 )
 
 
@@ -143,3 +148,57 @@ async def test_adopt_button_removed(
     assert_entity_counts(hass, Platform.BUTTON, 4, 2)
     entity = entity_registry.async_get(entity_id)
     assert entity is None
+
+
+CLEAR_TAMPER = next(d for d in SENSOR_BUTTONS if d.key == "clear_tamper")
+
+
+async def test_button_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The clear-tamper button is only created for a sensor advertising tampering."""
+    setup_public_sensor(ufp, capabilities={SensorFeatureCapability.TEMPERATURE})
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BUTTON, sensor_all, CLEAR_TAMPER
+    )
+    assert entity_registry.async_get(entity_id) is None
+
+
+async def test_button_sense_capability_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A console upgrade removes the clear-tamper button when unsupported."""
+    stale = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        f"{sensor_all.mac}_{CLEAR_TAMPER.key}",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(ufp, capabilities={SensorFeatureCapability.TEMPERATURE})
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_button_sense_no_capability_map_creates_clear_tamper(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Without a capability map (Protect below 7.2) the button is still created."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BUTTON, sensor_all, CLEAR_TAMPER
+    )
+    assert entity_registry.async_get(entity_id) is not None
