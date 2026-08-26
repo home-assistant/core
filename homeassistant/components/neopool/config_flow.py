@@ -139,7 +139,9 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema, user_input or current
+            ),
             errors=errors,
         )
 
