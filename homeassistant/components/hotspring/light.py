@@ -40,7 +40,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         HotSpringLightEntity(coordinator, zone_id)
-        for zone_id, zone in coordinator.data.light_zones.items()
+        for zone_id, zone in coordinator.light_zones.items()
         if zone.is_enabled
     )
 
@@ -65,7 +65,7 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     @property
     def _zone(self) -> LightZone:
         """Return the light zone data."""
-        return self.coordinator.data.light_zones[self._zone_id]
+        return self.coordinator.light_zones[self._zone_id]
 
     @property
     @override
@@ -104,7 +104,7 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
             await self.coordinator.hotspring.set_light_brightness(self._zone_id, 5)
 
         self.coordinator.async_set_updated_data(
-            self.coordinator.create_data(cast(Spa, self.coordinator.hotspring.spa))
+            cast(Spa, self.coordinator.hotspring.spa)
         )
 
     @hotspring_exception_handler
@@ -113,5 +113,5 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
         """Turn the light off."""
         await self.coordinator.hotspring.turn_off_light(self._zone_id)
         self.coordinator.async_set_updated_data(
-            self.coordinator.create_data(cast(Spa, self.coordinator.hotspring.spa))
+            cast(Spa, self.coordinator.hotspring.spa)
         )

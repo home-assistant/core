@@ -33,8 +33,8 @@ async def test_diagnostics_custom_topic(
     This preserves diagnosing capabilities in case a spa model acts differently than expected.
     """
     coordinator = init_integration.runtime_data
-    coordinator.data.spa.info.root_topic = "customTopic"
-    coordinator.data.spa.info.hostname = "customHost"
+    coordinator.data.info.root_topic = "customTopic"
+    coordinator.data.info.hostname = "customHost"
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)

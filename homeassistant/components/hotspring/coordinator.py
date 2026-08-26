@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for Hot Spring."""
 
-from dataclasses import dataclass
 from typing import override
 
 from hotspring import (
@@ -13,7 +12,7 @@ from hotspring import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -22,15 +21,7 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 type HotSpringConfigEntry = ConfigEntry[HotSpringDataUpdateCoordinator]
 
 
-@dataclass
-class HotSpringData:
-    """Class for Hot Spring coordinator data."""
-
-    spa: Spa
-    light_zones: dict[int, LightZone]
-
-
-class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[HotSpringData]):
+class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
     """Class to manage fetching Hot Spring data from a single endpoint."""
 
     config_entry: HotSpringConfigEntry
@@ -41,6 +32,7 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[HotSpringData]):
             config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
         )
+        self.light_zones: dict[int, LightZone] = {}
         super().__init__(
             hass,
             LOGGER,
@@ -49,15 +41,15 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[HotSpringData]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def create_data(self, spa: Spa) -> HotSpringData:
-        """Create HotSpringData from a Spa instance."""
-        return HotSpringData(
-            spa=spa,
-            light_zones={zone.zone_id: zone for zone in spa.light_zones},
-        )
+    @callback
+    @override
+    def async_set_updated_data(self, data: Spa) -> None:
+        """Manually update data, notify listeners and reset refresh interval."""
+        self.light_zones = {zone.zone_id: zone for zone in data.light_zones}
+        super().async_set_updated_data(data)
 
     @override
-    async def _async_update_data(self) -> HotSpringData:
+    async def _async_update_data(self) -> Spa:
         """Fetch data from Hot Spring."""
         try:
             spa = await self.hotspring.update()
@@ -81,4 +73,5 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[HotSpringData]):
                 translation_key="invalid_response",
             )
 
-        return self.create_data(spa)
+        self.light_zones = {zone.zone_id: zone for zone in spa.light_zones}
+        return spa
