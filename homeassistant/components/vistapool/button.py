@@ -73,6 +73,13 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
+        # Serialized with the light entity, which writes the same path: an
+        # interleaved write would break the pending-order/wire-order match.
+        async with self.coordinator.write_lock(_LIGHT_STATUS_PATH):
+            await self._async_pulse()
+
+    async def _async_pulse(self) -> None:
+        """Run the pulse sequence; caller holds the light.status write lock."""
         if self.coordinator.get_value(_LIGHT_STATUS_PATH) not in (True, "1"):
             await self._async_write_status(1)
             self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)

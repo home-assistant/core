@@ -48,6 +48,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
         self._pending_optimistic: dict[str, list[tuple[Any, float]]] = {}
+        self._write_locks: dict[str, asyncio.Lock] = {}
         self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
         self._self_heal_handle: asyncio.TimerHandle | None = None
         self._self_heal_task: asyncio.Task[None] | None = None
@@ -105,6 +106,16 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_value(self, path: str, default: Any = None) -> Any:
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
+
+    def write_lock(self, value_path: str) -> asyncio.Lock:
+        """Return the lock serializing writers of a path.
+
+        Writers sharing a path across platforms (the light entity and the
+        LED pulse) must keep the pending-write order identical to the wire
+        order, or confirmations would overlay values the controller no
+        longer has.
+        """
+        return self._write_locks.setdefault(value_path, asyncio.Lock())
 
     def record_optimistic(self, value_path: str, value: Any) -> None:
         """Track a just-written value without announcing new entity state.

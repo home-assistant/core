@@ -1,5 +1,6 @@
 """Tests for the Vistapool button platform."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from typing import Any
@@ -10,9 +11,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_STATE_CHANGED,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     Platform,
@@ -364,6 +367,81 @@ async def test_button_press_failed_pulse_reconciles_consumed_off(
             )
         await hass.async_block_till_done()
 
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
+async def test_light_write_serialized_with_pulse(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a light write during the pulse waits for it.
+
+    An interleaved write would make the pending order differ from the wire
+    order, so confirmations would overlay a value the controller no longer
+    has.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS",
+        [Platform.BUTTON, Platform.LIGHT],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+        release = asyncio.Event()
+        wire: list[int] = []
+
+        async def _hold_first_off(_pool_id: str, _path: str, value: int) -> None:
+            """Hold the pulse's first send so a light write can try to interleave."""
+            wire.append(value)
+            if wire == [0]:
+                await release.wait()
+
+        mock_vistapool_client.set_value.side_effect = _hold_first_off
+
+        press_task = hass.async_create_task(
+            hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {ATTR_ENTITY_ID: _BUTTON},
+                blocking=True,
+            )
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+        assert wire == [0]
+
+        off_task = hass.async_create_task(
+            hass.services.async_call(
+                LIGHT_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+                blocking=True,
+            )
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+        # The light write must wait for the pulse, not hit the wire mid-pulse.
+        assert wire == [0]
+
+        release.set()
+        await press_task
+        await off_task
+        assert wire == [0, 1, 0]
+
+        # Confirmations in wire order settle on the user's final off.
+        on_data({"light": {"status": 0}})
+        on_data({"light": {"status": 1}})
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
         assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
