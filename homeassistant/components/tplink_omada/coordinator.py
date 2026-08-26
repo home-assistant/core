@@ -34,9 +34,10 @@ POLL_CLIENTS = 300
 POLL_DEVICES = 300
 POLL_UPGRADE = 60
 
-# Number of consecutive empty device-list sweeps required before removing
+# Number of consecutive empty device-list updates required before removing
 # device entries, to tolerate transient empty responses from the controller.
-EMPTY_DEVICE_LIMIT = 3
+# Device polls run every five minutes, so this is about one hour of emptiness.
+EMPTY_DEVICE_LIMIT = 12
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -135,11 +136,17 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
+        self.consecutive_empty_updates = 0
 
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
-        return {d.mac: d for d in await self.omada_client.get_devices()}
+        devices = {d.mac: d for d in await self.omada_client.get_devices()}
+        if devices:
+            self.consecutive_empty_updates = 0
+        else:
+            self.consecutive_empty_updates += 1
+        return devices
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
@@ -305,14 +312,14 @@ async def async_cleanup_devices(
 
     devices = controller.devices_coordinator.data
     if not devices:
-        # A successful but empty response is likely a transient controller glitch.
-        # Only clean after several consecutive empty sweeps, since removal
-        # permanently loses user customizations on the device entries.
-        if controller.consecutive_empty_device_lists < EMPTY_DEVICE_LIMIT - 1:
-            controller.consecutive_empty_device_lists += 1
+        # A successful but empty response is likely a transient controller glitch,
+        # and removal also deletes the device's entities from the registry, so only
+        # clean once the empty list is confirmed over consecutive updates.
+        if (
+            controller.devices_coordinator.consecutive_empty_updates
+            < EMPTY_DEVICE_LIMIT
+        ):
             return
-    else:
-        controller.consecutive_empty_device_lists = 0
 
     device_registry = dr.async_get(hass)
     entry_id = controller.devices_coordinator.config_entry.entry_id

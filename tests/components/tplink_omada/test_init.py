@@ -18,6 +18,7 @@ from tplink_omada_client.exceptions import (
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.controller import OmadaSiteController
 from homeassistant.components.tplink_omada.coordinator import (
+    EMPTY_DEVICE_LIMIT,
     async_cleanup_client_trackers,
     async_cleanup_devices,
 )
@@ -465,15 +466,19 @@ async def test_cleanup_recreates_device_when_reappears(
 
 
 @pytest.mark.parametrize(
-    ("empty_sweeps", "orphan_removed"),
-    [(1, False), (2, False), (3, True)],
+    ("empty_updates", "orphan_removed"),
+    [
+        (1, False),
+        (EMPTY_DEVICE_LIMIT - 1, False),
+        (EMPTY_DEVICE_LIMIT, True),
+    ],
 )
 async def test_cleanup_devices_requires_confirmed_empty_list(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    empty_sweeps: int,
+    empty_updates: int,
     orphan_removed: bool,
 ) -> None:
     """Test device cleanup removes entries only after repeated empty responses."""
@@ -495,9 +500,9 @@ async def test_cleanup_devices_requires_confirmed_empty_list(
 
     site_client = mock_omada_client.get_site_client.return_value
     site_client.get_devices = AsyncMock(return_value=[])
-    await controller.devices_coordinator.async_refresh()
 
-    for _ in range(empty_sweeps):
+    for _ in range(empty_updates):
+        await controller.devices_coordinator.async_refresh()
         await async_cleanup_devices(hass, controller)
 
     assert (device_registry.async_get(orphan.id) is None) is orphan_removed
