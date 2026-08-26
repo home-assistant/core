@@ -1,7 +1,7 @@
 """Tests for the Fronius Modbus TCP (SunSpec) support."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
@@ -251,7 +251,11 @@ async def test_no_mppt_model(
     mock_fronius_modbus: MockModbusConnection,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a SunSpec device without MPPT model creates no Modbus entities."""
+    """Test a SunSpec device without MPPT model still gets its controls.
+
+    The power limit and battery setpoints live in their own models, so they
+    do not depend on the MPPT data being there.
+    """
     mock_fronius_modbus.for_unit(1).holding.update(
         build_sunspec_map([], include_mppt_model=False)
     )
@@ -262,13 +266,16 @@ async def test_no_mppt_model(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert config_entry.runtime_data.modbus_inverter_coordinators == []
-    assert not [
+    modbus_entities = [
         entry
         for entry in er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
         if "-modbus-" in entry.unique_id
     ]
+    # no MPPT sensors, but the controls and their derived values are there
+    assert not [entry for entry in modbus_entities if "mppt" in entry.unique_id]
+    assert "number" in {entry.domain for entry in modbus_entities}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -411,3 +418,36 @@ async def test_modbus_retried_after_setup(
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
     # the hold on the shared connection is taken once, not once per re-scan
     assert mock_modbus_unavailable.call_count == 1
+
+
+async def test_control_refused_creates_no_control_entities(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device that rejects writes gets readings but no controls.
+
+    "Inverter control via Modbus" has to be enabled on the device web
+    interface; without it every write is refused, so offering the controls
+    would only produce entities that error when used.
+    """
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=5000)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    with patch(
+        "fronius_modbus.Controls.probe_write_access", AsyncMock(return_value=False)
+    ):
+        config_entry = await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678"
+        )
+
+    assert config_entry.runtime_data.modbus_settings_coordinators == []
+    assert not [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == "number"
+    ]

@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from fronius_modbus import (
     FroniusModbusInverter,
@@ -16,6 +16,7 @@ from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,6 +29,7 @@ from .const import (
     SolarNetId,
 )
 from .entity import FroniusEntity, FroniusEntityDescription
+from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
@@ -185,12 +187,10 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
         return {self.inverter_info.solar_net_id: data}
 
 
-class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
-    """Query SunSpec data from an inverters Modbus interface."""
+class FroniusModbusCoordinatorBase(FroniusCoordinatorBase):
+    """Shared behaviour of the coordinators reading an inverter over Modbus."""
 
-    default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = {Platform.SENSOR: MODBUS_INVERTER_ENTITY_DESCRIPTIONS}
     update_exceptions = (ModbusError, SunSpecError)
 
     def __init__(
@@ -200,7 +200,7 @@ class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
         modbus_inverter: FroniusModbusInverter,
         **kwargs: Any,
     ) -> None:
-        """Set up a Fronius Modbus inverter device scope coordinator."""
+        """Set up a Fronius Modbus device scope coordinator."""
         super().__init__(*args, **kwargs)
         self.inverter_info = inverter_info
         self.modbus_inverter = modbus_inverter
@@ -215,11 +215,51 @@ class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
         """
         return await self._do_update()
 
+    @abstractmethod
+    async def _refresh_components(self) -> None:
+        """Refresh the components this coordinator reads."""
+
+    async def _refresh(self) -> None:
+        """Refresh the components, re-discovering once on a register map shift."""
+        try:
+            await self._refresh_components()
+        except SunSpecMapShiftError:
+            # The register map shifts when the data type setting is changed on
+            # the device. Re-discover once at the new addresses and retry.
+            await self.modbus_inverter.discover()
+            await self._refresh_components()
+
+    def _as_device_data(
+        self, values: Mapping[str, float | bool | None]
+    ) -> dict[SolarNetId, Any]:
+        """Wrap values in the SolarAPI's {"value": ...} shape entities read."""
+        return {
+            self.inverter_info.solar_net_id: {
+                key: {"value": value} for key, value in values.items()
+            }
+        }
+
+
+class FroniusModbusInverterUpdateCoordinator(FroniusModbusCoordinatorBase):
+    """Query SunSpec MPPT data from an inverters Modbus interface."""
+
+    default_interval = timedelta(minutes=1)
+    valid_descriptions = {Platform.SENSOR: MODBUS_INVERTER_ENTITY_DESCRIPTIONS}
+
+    @override
+    async def _refresh_components(self) -> None:
+        """Refresh the Multiple MPPT model."""
+        if (mppt := self.modbus_inverter.mppt) is None:
+            raise SunSpecError("Multiple MPPT model not available")
+        await mppt.async_update()
+
     @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from the Modbus interface."""
-        mppt = await self._update_mppt()
-        values: dict[str, float | None] = {
+        await self._refresh()
+        # re-discovery on a map shift replaces the component
+        mppt = cast("Mppt", self.modbus_inverter.mppt)
+        values: dict[str, float | bool | None] = {
             "energy_total_pv": mppt.pv_energy_total,
             "storage_energy_charged_total": mppt.storage_charge_energy_total,
             "storage_energy_discharged_total": mppt.storage_discharge_energy_total,
@@ -229,27 +269,84 @@ class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
             values[f"mppt_{number}_voltage_dc"] = module.voltage
             values[f"mppt_{number}_power_dc"] = module.power
             values[f"mppt_{number}_energy_dc"] = module.energy
-        # entities read the SolarAPI's {"value": ...} shape, so match it here
-        return {
-            self.inverter_info.solar_net_id: {
-                key: {"value": value} for key, value in values.items()
-            }
-        }
+        return self._as_device_data(values)
 
-    async def _update_mppt(self) -> Mppt:
-        """Refresh the MPPT model, re-discovering once on a register map shift."""
-        if (mppt := self.modbus_inverter.mppt) is None:
-            raise SunSpecError("Multiple MPPT model not available")
+
+class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
+    """Query the writable settings of an inverters Modbus interface.
+
+    Settings only change when something writes them, so they are polled on
+    their own interval rather than with the live MPPT readings.
+    """
+
+    default_interval = timedelta(minutes=5)
+    valid_descriptions = {Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS}
+
+    @override
+    async def _refresh_components(self) -> None:
+        """Refresh the models carrying the writable settings."""
+        for component in (
+            self.modbus_inverter.controls,
+            self.modbus_inverter.storage,
+        ):
+            if component is not None:
+                await component.async_update()
+
+    async def async_write(
+        self,
+        component_name: str,
+        field: str,
+        value: float | bool,
+        *,
+        enable_field: str | None = None,
+    ) -> None:
+        """Write a setpoint to the device and refresh what it reports back.
+
+        The model is refreshed first so its header check catches a shifted
+        register map before anything is written - the register addresses
+        move when the data type setting is changed on the device.
+
+        A setpoint on its own has no effect: the device applies it only while
+        the mode it belongs to is enabled, and per the Fronius documentation a
+        change to an already active mode is picked up by enabling it again.
+        ``enable_field`` is written after the setpoint for both reasons.
+        """
+        component = getattr(self.modbus_inverter, component_name)
+        if component is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_model_unavailable",
+            )
         try:
-            await mppt.async_update()
-        except SunSpecMapShiftError:
-            # The register map shifts when the data type setting is changed on
-            # the device. Re-discover once at the new addresses and retry.
-            await self.modbus_inverter.discover()
-            if (mppt := self.modbus_inverter.mppt) is None:
-                raise
-            await mppt.async_update()
-        return mppt
+            await component.async_update()
+            await component.write(field, value)
+            if enable_field is not None:
+                await component.write(enable_field, True)
+        except (ModbusError, SunSpecError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_write_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        # not debounced: the entity should settle on what the device reports
+        # back, and writes are rare and user initiated
+        await self.async_refresh()
+
+    @override
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return the settings per solar net id from the Modbus interface."""
+        await self._refresh()
+        inverter = self.modbus_inverter
+        values: dict[str, float | bool | None] = {}
+
+        if (controls := inverter.controls) is not None:
+            values["power_limit"] = controls.power_limit
+        if (storage := inverter.storage) is not None:
+            values["battery_charge_limit"] = storage.charge_limit
+            values["battery_discharge_limit"] = storage.discharge_limit
+            values["battery_minimum_reserve"] = storage.minimum_reserve
+
+        return self._as_device_data(values)
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
