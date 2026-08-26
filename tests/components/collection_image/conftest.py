@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
+from homeassistant.core import HomeAssistant
 
 from .const import TEST_IMAGE
 
@@ -30,7 +31,7 @@ def config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def browse_media_result() -> BrowseMediaSource:
-    """Return a default collection containing one image."""
+    """Return the default collection containing one image."""
     return BrowseMediaSource(
         domain=None,
         identifier=None,
@@ -61,12 +62,55 @@ def browse_media_result() -> BrowseMediaSource:
 
 
 @pytest.fixture
-def mock_media_source(browse_media_result: BrowseMediaSource):
+def browse_media_result_2() -> BrowseMediaSource:
+    """Return a collection containing three images."""
+    return BrowseMediaSource(
+        domain=None,
+        identifier=None,
+        media_class="",
+        media_content_type="",
+        title="Three images",
+        can_play=False,
+        can_expand=True,
+        children=[
+            BrowseMedia(
+                media_class=MediaClass.IMAGE,
+                media_content_id=f"media-source://mymedia_2/photo_{number}",
+                media_content_type="image/png",
+                title=f"picture {number}",
+                can_play=True,
+                can_expand=False,
+            )
+            for number in range(1, 4)
+        ],
+    )
+
+
+@pytest.fixture
+def mock_media_source(
+    browse_media_result: BrowseMediaSource,
+    browse_media_result_2: BrowseMediaSource,
+):
     """Mock browsing and resolving the configured media source."""
+
+    async def browse_side_effect(
+        _hass: HomeAssistant,
+        media_content_id,
+        *,
+        content_filter=None,
+    ):
+        if media_content_id == "media-source://mymedia":
+            return browse_media_result
+
+        if media_content_id == "media-source://mymedia_2":
+            return browse_media_result_2
+
+        raise ValueError(f"Unexpected media content ID: {media_content_id}")
+
     with (
         patch(
             "homeassistant.components.collection_image.image.async_browse_media",
-            new=AsyncMock(return_value=browse_media_result),
+            new=AsyncMock(side_effect=browse_side_effect),
         ) as mock_browse,
         patch(
             "homeassistant.components.collection_image.image.async_resolve_media",

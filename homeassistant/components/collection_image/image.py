@@ -8,6 +8,7 @@ from typing import override
 from homeassistant.components.image import ImageEntity
 from homeassistant.components.media_player import (
     BrowseError,
+    BrowseMedia,
     MediaClass,
     async_process_play_media_url,
 )
@@ -36,11 +37,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Collection Image image entities."""
     media = entry.data[CONF_MEDIA]
+    if isinstance(media, dict):
+        content_ids = [media["media_content_id"]]
+    else:
+        content_ids = [item["media_content_id"] for item in media]
     async_add_entities(
         [
             CollectionImageImageEntity(
                 name=entry.title,
-                media_content_id=media["media_content_id"],
+                media_content_ids=content_ids,
                 unique_id=entry.entry_id,
                 hass=hass,
             )
@@ -58,7 +63,7 @@ class CollectionImageImageEntity(ImageEntity):
     def __init__(
         self,
         name: str,
-        media_content_id: str,
+        media_content_ids: list[str],
         unique_id: str,
         hass: HomeAssistant,
     ) -> None:
@@ -67,11 +72,10 @@ class CollectionImageImageEntity(ImageEntity):
         self.path = None
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self.media_content_id = media_content_id
+        self.media_content_ids = media_content_ids
 
     async def get_next_image(self) -> None:
-        """Update the image entity with the next image from the source media."""
-
+        """Update the image entity with a random image from configured media sources."""
         self._cached_image = None
 
         def set_unavailable() -> None:
@@ -81,59 +85,76 @@ class CollectionImageImageEntity(ImageEntity):
             self._attr_image_url = UNDEFINED
             self.async_write_ha_state()
 
-        try:
-            media = await async_browse_media(self.hass, self.media_content_id)
-        except BrowseError as err:
+        images: list[BrowseMedia] = []
+
+        for media_content_id in self.media_content_ids:
+            try:
+                media = await async_browse_media(self.hass, media_content_id)
+            except BrowseError as err:
+                if not self._unavailable_logged:
+                    _LOGGER.info(
+                        "%s: Unable to browse %s: %s",
+                        self.entity_id,
+                        media_content_id,
+                        err,
+                    )
+                continue
+
+            if media.children:
+                images.extend(
+                    item
+                    for item in media.children
+                    if item.media_class == MediaClass.IMAGE
+                )
+
+        if not images:
             if not self._unavailable_logged:
-                _LOGGER.info("%s: %s", self.entity_id, str(err))
+                _LOGGER.info(
+                    "%s: No valid images in %s",
+                    self.entity_id,
+                    self.media_content_ids,
+                )
             set_unavailable()
             return
 
-        if media.children and (
-            filtered := [
-                item for item in media.children if item.media_class == MediaClass.IMAGE
-            ]
-        ):
-            child = random.choice(filtered)
-            try:
-                resolved = await async_resolve_media(
-                    self.hass, child.media_content_id, self.entity_id
-                )
-            except Unresolvable as err:
-                if not self._unavailable_logged:
-                    _LOGGER.info("%s: %s", self.entity_id, str(err))
-                set_unavailable()
-                return
+        child = random.choice(images)
 
-            if resolved.url:
-                self.path = None
-                self._attr_image_url = async_process_play_media_url(
-                    self.hass, resolved.url
-                )
-            else:
-                self.path = resolved.path
-                self._attr_image_url = UNDEFINED
-
-            self._attr_content_type = resolved.mime_type
-            self._attr_available = True
-            self._attr_image_last_updated = dt_util.utcnow()
-            if self._unavailable_logged:
+        try:
+            resolved = await async_resolve_media(
+                self.hass,
+                child.media_content_id,
+                self.entity_id,
+            )
+        except Unresolvable as err:
+            if not self._unavailable_logged:
                 _LOGGER.info(
-                    "%s: Has become available again",
+                    "%s: Unable to resolve %s: %s",
                     self.entity_id,
+                    child.media_content_id,
+                    err,
                 )
-            self._unavailable_logged = False
-            self.async_write_ha_state()
+            set_unavailable()
             return
 
-        if not self._unavailable_logged:
-            _LOGGER.info(
-                "%s: No valid images in %s",
-                self.entity_id,
-                self.media_content_id,
+        if resolved.url:
+            self.path = None
+            self._attr_image_url = async_process_play_media_url(
+                self.hass,
+                resolved.url,
             )
-        set_unavailable()
-        return
+        else:
+            self.path = resolved.path
+            self._attr_image_url = UNDEFINED
+
+        self._attr_content_type = resolved.mime_type
+        self._attr_available = True
+        self._attr_image_last_updated = dt_util.utcnow()
+
+        if self._unavailable_logged:
+            _LOGGER.info("%s: Has become available again", self.entity_id)
+
+        self._unavailable_logged = False
+        self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:

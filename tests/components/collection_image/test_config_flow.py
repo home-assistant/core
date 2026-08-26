@@ -44,20 +44,24 @@ async def _assert_successful_configure(
         result = await hass.config_entries.flow.async_configure(
             previous_step["flow_id"],
             {
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
+                "media": [
+                    {
+                        "media_content_id": "media-source://mymedia",
+                        "media_content_type": "",
+                    }
+                ],
             },
         )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "My pictures collection"
     assert result.get("data") == {
-        "media": {
-            "media_content_id": "media-source://mymedia",
-            "media_content_type": "",
-        },
+        "media": [
+            {
+                "media_content_id": "media-source://mymedia",
+                "media_content_type": "",
+            }
+        ],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -105,10 +109,12 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "media": {
-                    "media_content_id": "media-source://mymedia_empty",
-                    "media_content_type": "",
-                },
+                "media": [
+                    {
+                        "media_content_id": "media-source://mymedia_empty",
+                        "media_content_type": "",
+                    }
+                ],
             },
         )
         await hass.async_block_till_done()
@@ -141,10 +147,12 @@ async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "media": {
-                    "media_content_id": "media-source://mymedia",
-                    "media_content_type": "",
-                },
+                "media": [
+                    {
+                        "media_content_id": "media-source://mymedia",
+                        "media_content_type": "",
+                    }
+                ],
             },
         )
         await hass.async_block_till_done()

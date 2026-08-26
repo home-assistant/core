@@ -7,7 +7,9 @@ from unittest.mock import AsyncMock, patch
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.image import Image, async_get_image
+from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
@@ -34,6 +36,74 @@ async def test_image(
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+
+    assert state and state.state == TEST_TIME
+
+    client = await hass_client()
+
+    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    expected_data = await hass.async_add_executor_job(TEST_IMAGE.read_bytes)
+    body = await resp.read()
+    assert body == expected_data
+
+
+async def test_image_multi(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_media_source,
+    browse_media_result: BrowseMediaSource,
+    browse_media_result_2: BrowseMediaSource,
+) -> None:
+    """Test multiple media sources."""
+
+    expected_images = [
+        child
+        for result in (browse_media_result, browse_media_result_2)
+        for child in result.children
+        if child.media_class == MediaClass.IMAGE
+    ]
+
+    with (
+        freeze_time(TEST_TIME),
+        patch(
+            "homeassistant.components.collection_image.image.random.choice",
+            return_value=expected_images[-1],
+        ) as mock_choice,
+    ):
+        config_entry = MockConfigEntry(
+            data={
+                "media": [
+                    {
+                        "media_content_id": "media-source://mymedia",
+                        "media_content_type": "",
+                    },
+                    {
+                        "media_content_id": "media-source://mymedia_2",
+                        "media_content_type": "",
+                    },
+                ]
+            },
+            domain=DOMAIN,
+            title="Random Image",
+        )
+
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_choice.assert_called_once_with(expected_images)
+
+    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+        "media-source://mymedia/photo",
+        "media-source://mymedia_2/photo_1",
+        "media-source://mymedia_2/photo_2",
+        "media-source://mymedia_2/photo_3",
+    ]
 
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
@@ -163,7 +233,8 @@ async def test_no_images(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        "image.random_image: No valid images in media-source://mymedia" in caplog.text
+        "image.random_image: No valid images in ['media-source://mymedia']"
+        in caplog.text
     )
 
     client = await hass_client()
@@ -189,7 +260,10 @@ async def test_media_error(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "image.random_image: Media Source not loaded" in caplog.text
+    assert (
+        "image.random_image: Unable to browse media-source://mymedia: Media Source not loaded"
+        in caplog.text
+    )
 
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
@@ -220,7 +294,10 @@ async def test_unresolvable(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "image.random_image: Media Source not loaded" in caplog.text
+    assert (
+        "image.random_image: Unable to resolve media-source://mymedia/photo: Media Source not loaded"
+        in caplog.text
+    )
 
 
 async def test_image_file_read_error(
