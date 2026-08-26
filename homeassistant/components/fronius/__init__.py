@@ -409,18 +409,13 @@ class FroniusSolarNet:
         Modbus data is optional, so a device that doesn't answer never fails
         the whole entry.
         """
-        if self.config_entry.state is ConfigEntryState.LOADED:
-            await coordinator.async_refresh()
-            if not coordinator.last_update_success:
-                return False
-            # Only for re-scans. Initial setup adds entities through the
-            # platforms' async_setup_entry.
-            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
-            return True
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady:
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
             return False
+        # Only for re-scans. Initial setup adds entities through the
+        # platforms' async_setup_entry.
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
         return True
 
     async def _modbus_control_allowed(
