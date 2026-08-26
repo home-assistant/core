@@ -52,6 +52,48 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+STATUS_OPTIONS: list[str] = [
+    "charging",
+    "connected",
+    "diode_check_failed",
+    "disabled",
+    "gfci_fault",
+    "gfci_self_test_failure",
+    "no_ground",
+    "not_connected",
+    "over_temperature",
+    "sleeping",
+    "stuck_relay",
+    "unknown",
+    "vent_required",
+]
+
+STATUS_MAP: dict[str, str] = {
+    "unknown": "unknown",
+    "not connected": "not_connected",
+    "not_connected": "not_connected",
+    "connected": "connected",
+    "charging": "charging",
+    "vent required": "vent_required",
+    "vent_required": "vent_required",
+    "diode check failed": "diode_check_failed",
+    "diode_check_failed": "diode_check_failed",
+    "gfci fault": "gfci_fault",
+    "gfci_fault": "gfci_fault",
+    "no ground": "no_ground",
+    "no_ground": "no_ground",
+    "stuck relay": "stuck_relay",
+    "stuck_relay": "stuck_relay",
+    "gfci self-test failure": "gfci_self_test_failure",
+    "gfci self test failure": "gfci_self_test_failure",
+    "gfci_self_test_failure": "gfci_self_test_failure",
+    "over temperature": "over_temperature",
+    "over_temperature": "over_temperature",
+    "sleeping": "sleeping",
+    "disabled": "disabled",
+}
+
+
 @dataclass(frozen=True, kw_only=True)
 class OpenEVSESensorDescription(SensorEntityDescription):
     """Describes an OpenEVSE sensor entity."""
@@ -64,7 +106,13 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda ev: ev.status,
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_OPTIONS,
+        value_fn=lambda ev: (
+            STATUS_MAP.get(str(ev.status).lower().strip(), "unknown")
+            if ev.status is not None
+            else None
+        ),
     ),
     OpenEVSESensorDescription(
         key="service_level",

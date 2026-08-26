@@ -156,7 +156,7 @@
           "diode_check_failed": "Diode check failed",
           "disabled": "Disabled",
           "gfci_fault": "GFCI fault",
-          "gfci_self_test_failure": "GFCI self test failure",
+          "gfci_self_test_failure": "GFCI self-test failure",
           "no_ground": "No ground",
           "not_connected": "Not connected",
           "over_temperature": "Over temperature",
