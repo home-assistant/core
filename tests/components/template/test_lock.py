@@ -31,6 +31,8 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1161,6 +1163,50 @@ async def test_restore_state(
     # The first trigger should replace the restored code_format attribute
     assert_state_and_attributes(
         hass, TEST_LOCK, LockState.UNLOCKED, {"code_format": "\\\\d+"}
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("lock", UNLOCK_ACTION),
+        ("unlock", LOCK_ACTION),
+        ("open", {**LOCK_ACTION, **UNLOCK_ACTION}),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_LOCK, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("lock", UNLOCK_ACTION),
+        ("unlock", LOCK_ACTION),
+        ("open", {**LOCK_ACTION, **UNLOCK_ACTION}),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_LOCK, config, action, caplog
     )
 
 

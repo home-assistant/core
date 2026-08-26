@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -861,6 +862,10 @@ class NodeEvents:
             issue_id = f"device_config_file_changed.{device.id}"
             if await node.async_has_device_config_changed():
                 device_name = device.name_by_user or device.name or "Unnamed device"
+                if device.area_id and (
+                    area := ar.async_get(self.hass).async_get_area(device.area_id)
+                ):
+                    device_name = f"{device_name} ({area.name})"
                 async_create_issue(
                     self.hass,
                     DOMAIN,

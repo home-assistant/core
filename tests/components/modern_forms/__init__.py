@@ -60,6 +60,36 @@ async def modern_forms_timers_set_mock(
     )
 
 
+async def modern_forms_breeze_call_mock(
+    hass: HomeAssistant, method: str, url: str, data: dict[str, Any]
+) -> AiohttpClientMockResponse:
+    """Set up the basic returns for a breeze-capable Modern Forms fan."""
+    if COMMAND_QUERY_STATIC_DATA in data:
+        fixture = "device_info.json"
+    else:
+        fixture = "device_status_breeze.json"
+    return AiohttpClientMockResponse(
+        method=method,
+        url=url,
+        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+    )
+
+
+async def modern_forms_breeze_active_call_mock(
+    hass: HomeAssistant, method: str, url: str, data: dict[str, Any]
+) -> AiohttpClientMockResponse:
+    """Set up the basic returns for a breeze-capable fan with breeze active."""
+    if COMMAND_QUERY_STATIC_DATA in data:
+        fixture = "device_info.json"
+    else:
+        fixture = "device_status_breeze_active.json"
+    return AiohttpClientMockResponse(
+        method=method,
+        url=url,
+        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+    )
+
+
 async def init_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

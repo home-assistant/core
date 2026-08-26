@@ -11,7 +11,10 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
 )
-from homeassistant.components.template.alarm_control_panel import DEFAULT_NAME
+from homeassistant.components.template.alarm_control_panel import (
+    DEFAULT_NAME,
+    SCRIPT_FIELDS,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -25,6 +28,8 @@ from .conftest import (
     assert_action,
     assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -796,6 +801,34 @@ async def test_invalid_availability_template_keeps_component_available(
     assert hass.states.get(TEST_PANEL.entity_id).state != STATE_UNAVAILABLE
     error = "UndefinedError: 'x' is undefined"
     assert error in caplog_setup_text or error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_PANEL, style, {}, action, caplog
+    )
+
+
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_PANEL, {}, action, caplog
+    )
 
 
 @pytest.mark.parametrize(

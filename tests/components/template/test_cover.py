@@ -39,6 +39,8 @@ from .conftest import (
     assert_action,
     assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1290,6 +1292,54 @@ async def test_restore_state(
     assert state.state == final_state
     assert state.attributes["current_position"] == 75
     assert state.attributes["current_tilt_position"] == 75
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_COVER, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_COVER, config, action, caplog
+    )
 
 
 @pytest.mark.parametrize(
