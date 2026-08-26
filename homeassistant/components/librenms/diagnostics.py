@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import LibrenmsConfigEntry
 
-TO_REDACT_ENTRY = {CONF_API_KEY, CONF_HOST}
+TO_REDACT_ENTRY = {CONF_API_KEY, CONF_HOST, "title"}
 TO_REDACT_DATA = {
     "authname",
     "authpass",
