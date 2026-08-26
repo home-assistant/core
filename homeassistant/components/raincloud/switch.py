@@ -1,7 +1,7 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -66,6 +66,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
         super().__init__(*args)
         self._default_watering_timer = default_watering_timer
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._sensor_type == "manual_watering":
@@ -74,6 +75,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self.data.auto_watering = True
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._sensor_type == "manual_watering":
@@ -91,6 +93,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self._attr_is_on = self.data.auto_watering
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

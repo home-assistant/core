@@ -11,6 +11,7 @@ from homeassistant import runner
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.config import get_default_config_dir
+from homeassistant.config_entries import ConfigEntries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -48,13 +49,17 @@ def run(args: Sequence[str] | None) -> None:
     parser_change_pw.add_argument("new_password", type=str)
     parser_change_pw.set_defaults(func=change_password)
 
-    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))  # type: ignore[deprecated]
-    asyncio.run(run_command(parser.parse_args(args)))
+    asyncio.run(
+        run_command(parser.parse_args(args)), loop_factory=runner.create_event_loop
+    )
 
 
 async def run_command(args: argparse.Namespace) -> None:
     """Run the command."""
     hass = HomeAssistant(os.path.join(os.getcwd(), args.config))
+    hass.config_entries = ConfigEntries(hass, {})
+    # The device registry migration waits for the config entries to load
+    await hass.config_entries.async_initialize()
     dr.async_setup(hass)
     await asyncio.gather(dr.async_load(hass), er.async_load(hass))
     hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])

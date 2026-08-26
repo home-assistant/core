@@ -1,6 +1,7 @@
 """Support for Open-Meteo weather."""
 
 from datetime import datetime, time
+from typing import override
 
 from open_meteo import Forecast as OpenMeteoForecast
 
@@ -82,6 +83,7 @@ class OpenMeteoWeatherEntity(
         )
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         if not self.coordinator.data.current_weather:
@@ -91,6 +93,7 @@ class OpenMeteoWeatherEntity(
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         if not self.coordinator.data.current_weather:
@@ -98,6 +101,7 @@ class OpenMeteoWeatherEntity(
         return self.coordinator.data.current_weather.temperature
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         if not self.coordinator.data.current_weather:
@@ -105,6 +109,7 @@ class OpenMeteoWeatherEntity(
         return self.coordinator.data.current_weather.wind_speed
 
     @property
+    @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         if not self.coordinator.data.current_weather:
@@ -112,6 +117,7 @@ class OpenMeteoWeatherEntity(
         return self.coordinator.data.current_weather.wind_direction
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         if self.coordinator.data.daily is None:
@@ -169,6 +175,7 @@ class OpenMeteoWeatherEntity(
         return forecasts
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         if self.coordinator.data.hourly is None:

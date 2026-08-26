@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.prusalink import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -37,7 +38,7 @@ def setup_sensor_platform_only():
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
     """Test sensors while no job active."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -146,7 +147,7 @@ async def test_sensors_idle_job_mk3(
     mock_job_api_idle_mk3,
 ) -> None:
     """Test sensors while job state is idle (MK3)."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -260,7 +261,7 @@ async def test_sensors_active_job(
         "homeassistant.components.prusalink.sensor.utcnow",
         return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
     ):
-        assert await async_setup_component(hass, "prusalink", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -301,7 +302,7 @@ async def test_axis_x_y_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
     """Test X and Y axis position sensors."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title_x_position")
     assert state is not None
@@ -328,7 +329,7 @@ async def test_axis_x_y_not_created_when_absent(
     """X and Y sensors are not created when axis fields are absent from the response."""
     del mock_get_status_idle["printer"]["axis_x"]
     del mock_get_status_idle["printer"]["axis_y"]
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert hass.states.get("sensor.workshop_mock_title_x_position") is None
     assert hass.states.get("sensor.workshop_mock_title_y_position") is None
@@ -339,7 +340,7 @@ async def test_min_extrusion_temp_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
     """Test minimum extrusion temperature sensor from info endpoint."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title_minimum_extrusion_temperature")
     assert state is not None
@@ -358,7 +359,7 @@ async def test_min_extrusion_temp_not_created_when_absent(
 ) -> None:
     """Min extrusion temp sensor is not created when the info field is absent."""
     del mock_info_api["min_extrusion_temp"]
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert (
         hass.states.get("sensor.workshop_mock_title_minimum_extrusion_temperature")

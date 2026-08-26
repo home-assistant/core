@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import HeltyConfigEntry, HeltyDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.FAN, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeltyConfigEntry) -> bool:

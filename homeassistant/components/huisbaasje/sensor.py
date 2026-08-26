@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
@@ -242,10 +243,11 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         self._source_type = description.key
         self._sensor_type = description.sensor_type
         self._attr_unique_id = (
-            f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"
+            f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if (
@@ -257,6 +259,7 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return bool(

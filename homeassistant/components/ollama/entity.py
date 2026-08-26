@@ -6,8 +6,8 @@ import logging
 from typing import Any
 
 import ollama
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
+    KEEP_ALIVE_FOREVER,
 )
 from .models import MessageHistory, MessageRole
 
@@ -42,7 +43,7 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": convert(tool.parameters, custom_serializer=custom_serializer),
+        "parameters": to_openapi(tool.parameters, custom_serializer=custom_serializer),
     }
     if tool.description:
         tool_spec["description"] = tool.description
@@ -224,7 +225,7 @@ class OllamaBaseLLMEntity(Entity):
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = convert(
+            output_format = to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer
@@ -243,8 +244,21 @@ class OllamaBaseLLMEntity(Entity):
                     messages=list(message_history.messages),
                     tools=tools,
                     stream=True,
-                    # keep_alive requires specifying unit. In this case, seconds
-                    keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    # keep_alive: -1 is a special sentinel meaning "keep loaded
+                    # forever" and must be passed as the integer -1, not as a
+                    # duration string ("-1s" would be treated as an invalid
+                    # negative duration by the Ollama server).  All other values
+                    # are expressed as a duration string with a seconds suffix.
+                    keep_alive=(
+                        keep_alive_seconds
+                        if (
+                            keep_alive_seconds := int(
+                                settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                            )
+                        )
+                        == KEEP_ALIVE_FOREVER
+                        else f"{keep_alive_seconds}s"
+                    ),
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                     think=settings.get(CONF_THINK),
                     format=output_format,

@@ -50,7 +50,7 @@ async def test_full_flow(
     """Check full flow."""
 
     result = await hass.config_entries.flow.async_init(
-        "xbox", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -134,7 +134,7 @@ async def test_discovery(
     """Check DHCP/SSDP discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        "xbox", context={"source": source}, data=service_info
+        DOMAIN, context={"source": source}, data=service_info
     )
 
     assert result["type"] is FlowResultType.FORM

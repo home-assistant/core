@@ -7,7 +7,7 @@ import mimetypes
 import pathlib
 import random
 import string
-from typing import Any
+from typing import Any, override
 
 import requests
 import slixmpp
@@ -100,6 +100,7 @@ class XmppNotificationService(BaseNotificationService):
         self._verify = verify
         self._room = room
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)

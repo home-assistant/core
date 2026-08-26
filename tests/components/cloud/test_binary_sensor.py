@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from hass_nabucasa.const import DISPATCH_REMOTE_CONNECT, DISPATCH_REMOTE_DISCONNECT
 import pytest
 
+from homeassistant.components.cloud import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
@@ -27,7 +28,7 @@ async def test_remote_connection_sensor(
     entity_id = "binary_sensor.remote_ui"
     cloud.remote.certificate = None
 
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is None

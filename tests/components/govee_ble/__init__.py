@@ -24,6 +24,31 @@ GVH5075_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+GVH5184_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH5184_XXXX",
+    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    rssi=-56,
+    manufacturer_data={
+        6966: b" \x01\x00\x01\x01\xe4\x01\x86\x0c\x1c\xff\xff\x86\n\xf0\xff\xff",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\x0c",
+    },
+    service_uuids=["00008451-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
+GVH5198_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    rssi=-56,
+    manufacturer_data={
+        12322: b"\x6c\x01\x00\x01\x01\xa4\xc2\x0f\x0e\x10\xff\xff\xff\xff\x08\xfc\xff\xff\xff\xff"
+    },
+    service_uuids=["00009851-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
 GVH5177_SERVICE_INFO = BluetoothServiceInfo(
     name="GVH5177 2EC8",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",

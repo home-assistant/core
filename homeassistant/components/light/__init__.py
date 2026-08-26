@@ -37,7 +37,9 @@ from .const import (  # noqa: F401
     SCAN_INTERVAL,
     VALID_COLOR_MODES,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -114,7 +116,9 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     This is the equivalent of entity helper get_supported_features.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        return state.attributes.get(
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+        )
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -122,7 +126,7 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     if not entry.capabilities:
         return None
 
-    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
+    return entry.capabilities.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
 
 
 # Float that represents transition time in seconds to make change.
@@ -741,19 +745,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_SUPPORTED_COLOR_MODES,
-            ATTR_EFFECT_LIST,
-            ATTR_MIN_COLOR_TEMP_KELVIN,
-            ATTR_MAX_COLOR_TEMP_KELVIN,
-            ATTR_BRIGHTNESS,
-            ATTR_COLOR_MODE,
-            ATTR_COLOR_TEMP_KELVIN,
-            ATTR_EFFECT,
-            ATTR_HS_COLOR,
-            ATTR_RGB_COLOR,
-            ATTR_RGBW_COLOR,
-            ATTR_RGBWW_COLOR,
-            ATTR_XY_COLOR,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES,
+            LightEntityCapabilityAttribute.EFFECT_LIST,
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+            LightEntityStateAttribute.BRIGHTNESS,
+            LightEntityStateAttribute.COLOR_MODE,
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+            LightEntityStateAttribute.EFFECT,
+            LightEntityStateAttribute.HS_COLOR,
+            LightEntityStateAttribute.RGB_COLOR,
+            LightEntityStateAttribute.RGBW_COLOR,
+            LightEntityStateAttribute.RGBWW_COLOR,
+            LightEntityStateAttribute.XY_COLOR,
         }
     )
 
@@ -869,6 +873,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_effect
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
@@ -878,12 +883,18 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ColorMode.COLOR_TEMP in supported_color_modes:
             min_color_temp_kelvin = self.min_color_temp_kelvin
             max_color_temp_kelvin = self.max_color_temp_kelvin
-            data[ATTR_MIN_COLOR_TEMP_KELVIN] = min_color_temp_kelvin
-            data[ATTR_MAX_COLOR_TEMP_KELVIN] = max_color_temp_kelvin
+            data[LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN] = (
+                min_color_temp_kelvin
+            )
+            data[LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN] = (
+                max_color_temp_kelvin
+            )
         if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT_LIST] = self.effect_list
+            data[LightEntityCapabilityAttribute.EFFECT_LIST] = self.effect_list
 
-        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(supported_color_modes)
+        data[LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES] = sorted(
+            supported_color_modes
+        )
 
         return data
 
@@ -892,40 +903,83 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> dict[str, tuple[float, ...]]:
         data: dict[str, tuple[float, ...]] = {}
         if color_mode == ColorMode.HS and (hs_color := self.hs_color):
-            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+            data[LightEntityStateAttribute.HS_COLOR] = (
+                round(hs_color[0], 3),
+                round(hs_color[1], 3),
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_hs_to_RGB(
+                *hs_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_hs_to_xy(
+                *hs_color
+            )
         elif color_mode == ColorMode.XY and (xy_color := self.xy_color):
-            data[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            data[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
-            data[ATTR_XY_COLOR] = (round(xy_color[0], 6), round(xy_color[1], 6))
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_xy_to_hs(
+                *xy_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_xy_to_RGB(
+                *xy_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = (
+                round(xy_color[0], 6),
+                round(xy_color[1], 6),
+            )
         elif color_mode == ColorMode.RGB and (rgb_color := self.rgb_color):
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.RGBW and (
             rgbw_color := self._light_internal_rgbw_color
         ):
             rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_RGBW_COLOR] = tuple(int(x) for x in rgbw_color[0:4])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.RGBW_COLOR] = tuple(
+                int(x) for x in rgbw_color[0:4]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.RGBWW and (rgbww_color := self.rgbww_color):
             rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.RGBWW_COLOR] = tuple(
+                int(x) for x in rgbww_color[0:5]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.COLOR_TEMP and (
             color_temp_kelvin := self.color_temp_kelvin
         ):
             hs_color = color_util.color_temperature_to_hs(color_temp_kelvin)
-            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+            data[LightEntityStateAttribute.HS_COLOR] = (
+                round(hs_color[0], 3),
+                round(hs_color[1], 3),
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_hs_to_RGB(
+                *hs_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_hs_to_xy(
+                *hs_color
+            )
         return data
 
     def __validate_color_mode(
@@ -981,6 +1035,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         data: dict[str, Any] = {}
@@ -998,34 +1053,36 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if LightEntityFeature.EFFECT in supported_features:
             if _is_on:
                 effect = self.effect
-            data[ATTR_EFFECT] = effect
+            data[LightEntityStateAttribute.EFFECT] = effect
 
         self.__validate_color_mode(color_mode, supported_color_modes, effect)
 
-        data[ATTR_COLOR_MODE] = color_mode
+        data[LightEntityStateAttribute.COLOR_MODE] = color_mode
 
         if brightness_supported(supported_color_modes):
             if color_mode in COLOR_MODES_BRIGHTNESS:
-                data[ATTR_BRIGHTNESS] = self.brightness
+                data[LightEntityStateAttribute.BRIGHTNESS] = self.brightness
             else:
-                data[ATTR_BRIGHTNESS] = None
+                data[LightEntityStateAttribute.BRIGHTNESS] = None
 
         if color_temp_supported(supported_color_modes):
             if color_mode == ColorMode.COLOR_TEMP:
-                data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
+                data[LightEntityStateAttribute.COLOR_TEMP_KELVIN] = (
+                    self.color_temp_kelvin
+                )
             else:
-                data[ATTR_COLOR_TEMP_KELVIN] = None
+                data[LightEntityStateAttribute.COLOR_TEMP_KELVIN] = None
 
         if color_supported(supported_color_modes) or color_temp_supported(
             supported_color_modes
         ):
-            data[ATTR_HS_COLOR] = None
-            data[ATTR_RGB_COLOR] = None
-            data[ATTR_XY_COLOR] = None
+            data[LightEntityStateAttribute.HS_COLOR] = None
+            data[LightEntityStateAttribute.RGB_COLOR] = None
+            data[LightEntityStateAttribute.XY_COLOR] = None
             if ColorMode.RGBW in supported_color_modes:
-                data[ATTR_RGBW_COLOR] = None
+                data[LightEntityStateAttribute.RGBW_COLOR] = None
             if ColorMode.RGBWW in supported_color_modes:
-                data[ATTR_RGBWW_COLOR] = None
+                data[LightEntityStateAttribute.RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
 
@@ -1047,6 +1104,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_supported_color_modes
 
     @cached_property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

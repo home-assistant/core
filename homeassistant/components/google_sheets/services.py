@@ -69,7 +69,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
     add_created_column = call.data[ADD_CREATED_COLUMN]
-    now = str(datetime.now())
+    now = str(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
     rows = []
     for d in call.data[DATA]:
         row_data = ({"created": now} | d) if add_created_column else d

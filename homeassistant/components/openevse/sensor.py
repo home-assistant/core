@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
@@ -75,7 +76,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
             "1": "level_1",
             "2": "level_2",
             "a": "automatic",
-        }.get(ev.service_level.lower()),
+        }.get(str(ev.service_level).lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -460,6 +461,7 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.charger)

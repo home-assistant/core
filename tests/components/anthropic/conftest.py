@@ -24,6 +24,7 @@ import pytest
 from homeassistant.components.anthropic.const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -41,7 +42,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="Claude",
-        domain="anthropic",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
@@ -88,7 +89,7 @@ async def mock_init_component(
         new_callable=AsyncMock,
         return_value=AsyncPage(data=model_list),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 

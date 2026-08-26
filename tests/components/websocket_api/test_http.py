@@ -10,6 +10,7 @@ from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import (
+    DOMAIN,
     async_register_command,
     const,
     http,
@@ -412,7 +413,7 @@ async def test_auth_timeout_logs_at_debug(
 ) -> None:
     """Test auth timeout is logged at debug level not warning."""
     # Setup websocket API
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
 

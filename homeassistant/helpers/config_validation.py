@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
+from probatio import UNSUPPORTED, to_field_list
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -857,7 +857,7 @@ def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     parsed = urlparse(url_in)
 
@@ -872,7 +872,7 @@ def url(
 
 
 def configuration_url(value: Any) -> str:
-    """Validate an URL that allows the homeassistant schema."""
+    """Validate a URL that allows the homeassistant schema."""
     return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
@@ -1188,7 +1188,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
             raise ValueError("Nesting expandable sections is not supported")
         return {
             "type": "expandable",
-            "schema": voluptuous_serialize.convert(
+            "schema": to_field_list(
                 schema.schema,
                 custom_serializer=functools.partial(
                     _custom_serializer, allow_section=False
@@ -1203,7 +1203,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     if isinstance(schema, selector.Selector):
         return schema.serialize()
 
-    return voluptuous_serialize.UNSUPPORTED
+    return UNSUPPORTED
 
 
 # Schemas
@@ -1414,7 +1414,10 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         _HAS_ENTITY_SERVICE_FIELD,
     )
     setattr(validator, "_entity_service_schema", True)  # noqa: B010
-    return validator
+    # Wrap in a vol.Schema so the vol.All compiles its sub-validators once,
+    # instead of re-wrapping them in a new vol.Schema on every validation as a
+    # top-level vol.All does.
+    return vol.Schema(validator)
 
 
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
@@ -1953,6 +1956,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
+                    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
                     vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }

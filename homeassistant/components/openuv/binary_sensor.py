@@ -1,5 +1,7 @@
 """Support for OpenUV binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -45,11 +47,13 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update the entity from the latest data."""
         self._update_attrs()
         super()._handle_coordinator_update()
 
+    @override
     def _update_attrs(self) -> None:
         data = self.coordinator.data
 

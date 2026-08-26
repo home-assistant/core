@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import lawn_mower, mqtt
+from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
@@ -15,6 +15,7 @@ from homeassistant.components.lawn_mower import (
     SERVICE_START_MOWING,
     LawnMowerEntityFeature,
 )
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -63,7 +64,7 @@ DEFAULT_FEATURES = (
 )
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         lawn_mower.DOMAIN: {
             "name": "test",
             "dock_command_topic": "dock-test-topic",
@@ -78,7 +79,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "activity_state_topic": "test/lawn_mower_stat",
                     "dock_command_topic": "dock-test-topic",
@@ -135,7 +136,7 @@ async def test_run_lawn_mower_setup_and_state_updates(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     lawn_mower.DOMAIN: {
                         "pause_command_topic": "pause-test-topic",
                         "name": "test",
@@ -146,7 +147,7 @@ async def test_run_lawn_mower_setup_and_state_updates(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     lawn_mower.DOMAIN: {
                         "dock_command_topic": "dock-test-topic",
                         "start_mowing_command_topic": "start_mowing-test-topic",
@@ -175,7 +176,7 @@ async def test_supported_features(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "activity_state_topic": "test/lawn_mower_stat",
                     "name": "Test Lawn Mower",
@@ -289,7 +290,7 @@ async def test_run_lawn_mower_service_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "pause_command_topic": "test/lawn_mower_pause_cmd",
                     "name": "Test Lawn Mower",
@@ -315,7 +316,7 @@ async def test_restore_lawn_mower_from_invalid_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "name": "Test Lawn Mower",
                     "dock_command_topic": "test/lawn_mower_dock_cmd",
@@ -501,7 +502,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -529,7 +530,7 @@ async def test_discovery_removal_lawn_mower(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered lawn_mower."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][lawn_mower.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, lawn_mower.DOMAIN, data)
 
 
@@ -628,7 +629,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             lawn_mower.DOMAIN: {
                 "name": "test",
                 "activity_state_topic": "test-topic",
@@ -687,7 +688,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             lawn_mower.DOMAIN: {
                 "activity_state_topic": "test/lawn_mower_stat",
                 "dock_command_topic": "dock-test-topic",
@@ -714,7 +715,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "dock_command_topic": "dock-test-topic",
                     "pause_command_topic": "pause-test-topic",
@@ -826,9 +827,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(
-        DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN]
-    )
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][lawn_mower.DOMAIN])
     config["actions"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
@@ -935,7 +934,7 @@ async def test_skipped_async_ha_write_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "name": "test",
                     "activity_state_topic": "test-topic",

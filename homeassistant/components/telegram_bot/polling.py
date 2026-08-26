@@ -1,6 +1,7 @@
 """Support for Telegram bot using polling."""
 
 import logging
+from typing import override
 
 from telegram import Bot, Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
@@ -71,6 +72,7 @@ class PollBot(BaseTelegramBot):
             lambda update, context: process_error(self.bot, update, context)
         )
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_polling()

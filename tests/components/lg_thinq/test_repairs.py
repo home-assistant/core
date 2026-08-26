@@ -11,11 +11,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -63,7 +59,6 @@ async def test_deprecated_fan_speed_number_repair_flow(
     assert issue.is_fixable is True
 
     # Start the repair flow
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     result = await start_repair_fix_flow(
         client, DOMAIN, f"deprecated_fan_speed_number_{entity_id}"
