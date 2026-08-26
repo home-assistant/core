@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import BYPASS_SUPPLY_TARGET_ZONE_IDS, DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     board_info: BoardInfo
     _supports_time_filter_remain: bool
     _supports_ventilation_temperatures: bool
-    _bypass_supply_temperature_targets_supported: dict[int, bool]
+    _supports_bypass_supply_temperature_targets: bool
     _configured_node_names: dict[int, str]
 
     def __init__(
@@ -75,9 +75,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         self._configured_node_names = {}
         self._supports_time_filter_remain = True
         self._supports_ventilation_temperatures = True
-        self._bypass_supply_temperature_targets_supported = dict.fromkeys(
-            BYPASS_SUPPLY_TARGET_ZONE_IDS, True
-        )
+        self._supports_bypass_supply_temperature_targets = True
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -208,22 +206,17 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     "Could not fetch Duco ventilation temperatures", exc_info=err
                 )
 
-        # Query optional temperature targets sequentially to avoid bursts against
-        # the local Duco box.
         bypass_supply_temperature_targets = (
             self.data.bypass_supply_temperature_targets.copy() if self.data else {}
         )
-        for zone_id in BYPASS_SUPPLY_TARGET_ZONE_IDS:
-            if not self._bypass_supply_temperature_targets_supported[zone_id]:
-                continue
-
+        if self._supports_bypass_supply_temperature_targets:
             try:
-                target = await self.client.async_get_bypass_supply_temperature_target(
-                    zone_id
+                bypass_supply_temperature_targets = (
+                    await self.client.async_get_bypass_supply_temperature_targets()
                 )
             except DucoUnsupportedCapabilityError:
-                self._bypass_supply_temperature_targets_supported[zone_id] = False
-                bypass_supply_temperature_targets.pop(zone_id, None)
+                bypass_supply_temperature_targets = {}
+                self._supports_bypass_supply_temperature_targets = False
             except DucoConnectionError as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -231,12 +224,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 ) from err
             except DucoError as err:
                 _LOGGER.debug(
-                    "Could not fetch Duco bypass supply target for zone %s",
-                    zone_id,
+                    "Could not fetch Duco bypass supply temperature targets",
                     exc_info=err,
                 )
-            else:
-                bypass_supply_temperature_targets[zone_id] = target
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},

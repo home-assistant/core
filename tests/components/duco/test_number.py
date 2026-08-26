@@ -14,7 +14,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -75,6 +75,8 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
         _ZONE_4_ENTITY_ID,
     ):
         assert hass.states.get(entity_id) is not None
+
+    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -251,48 +253,30 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
     )
 
 
-async def test_bypass_supply_temperature_target_keeps_value_when_missing(
+@pytest.mark.usefixtures("mock_duco_client")
+async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
 ) -> None:
-    """Test an existing bypass target keeps its value when it disappears."""
-    zone_1_missing = False
-
-    async def async_get_bypass_supply_temperature_target(
-        zone_id: int,
-    ) -> BypassSupplyTemperatureTarget:
-        if zone_id == 1 and zone_1_missing:
-            raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
-        if target := mock_bypass_supply_temperature_targets.get(zone_id):
-            return target
-        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
-
-    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
-        async_get_bypass_supply_temperature_target
-    )
-
+    """Test a bypass target becomes unavailable when a bulk read omits it."""
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == "20.0"
 
-    zone_1_missing = True
+    updated_target = replace(mock_bypass_supply_temperature_targets.pop(1), value=20.5)
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
-    assert state.state == "20.0"
+    assert state.state == STATE_UNAVAILABLE
 
-    mock_bypass_supply_temperature_targets[1] = replace(
-        mock_bypass_supply_temperature_targets[1], value=20.5
-    )
-    zone_1_missing = False
+    mock_bypass_supply_temperature_targets[1] = updated_target
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -305,33 +289,19 @@ async def test_bypass_supply_temperature_target_keeps_value_when_missing(
 async def test_bypass_supply_temperature_target_keeps_previous_value_on_transient_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test an existing bypass target keeps its value on transient refresh errors."""
-    zone_1_fails = False
-
-    async def async_get_bypass_supply_temperature_target(
-        zone_id: int,
-    ) -> BypassSupplyTemperatureTarget:
-        if zone_id == 1 and zone_1_fails:
-            raise DucoError("Temporary bypass target failure")
-        if target := mock_bypass_supply_temperature_targets.get(zone_id):
-            return target
-        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
-
-    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
-        async_get_bypass_supply_temperature_target
-    )
-
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == "20.0"
 
-    zone_1_fails = True
+    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = (
+        DucoError("Temporary bypass target failure")
+    )
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
