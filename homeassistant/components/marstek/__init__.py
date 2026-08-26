@@ -39,7 +39,7 @@ async def async_create_udp_client(hass: HomeAssistant) -> MarstekUDPClient:
     try:
         await client.async_setup()
         addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    except TimeoutError, OSError, TypeError:
+    except (TimeoutError, OSError, TypeError):
         await client.async_cleanup()
         raise
 
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
     coordinator = MarstekDataUpdateCoordinator(hass, entry, data.udp_client)
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady:
+    except (ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady):
         await _async_release_udp_client(hass, data)
         raise
 

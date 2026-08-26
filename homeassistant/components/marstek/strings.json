@@ -42,7 +42,7 @@
   "entity": {
     "sensor": {
       "battery_power": {
-        "name": "Grid power"
+        "name": "Battery power"
       },
       "battery_soc": {
         "name": "Battery level"

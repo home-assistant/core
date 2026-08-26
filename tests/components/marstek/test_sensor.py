@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -10,9 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from .conftest import MOCK_DEVICE_STATUS
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -64,17 +68,7 @@ async def test_polling_failure_recovers(
 
     mock_udp_client.get_device_status.side_effect = [
         OSError("network down"),
-        {
-            "battery_soc": 85,
-            "battery_power": 1300,
-            "device_mode": "Manual",
-            "battery_status": "Charging",
-            "device_ip": "192.168.1.100",
-            "pv1_power": 500,
-            "pv1_voltage": 48,
-            "pv1_current": 10,
-            "pv1_state": 1,
-        },
+        MOCK_DEVICE_STATUS.copy(),
     ]
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))

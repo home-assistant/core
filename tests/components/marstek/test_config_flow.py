@@ -1,6 +1,6 @@
 """Tests for the Marstek config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -76,30 +76,26 @@ EXPECTED_DEVICE_OPTION_2 = (
 
 
 async def test_discovery_flow_creates_entry(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test adding a device discovered on the local network."""
     mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
     mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
-    with patch(
-        "homeassistant.components.marstek.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "discover"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "discover"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE: "0"}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == EXPECTED_TITLE
@@ -170,29 +166,25 @@ async def test_discovery_flow_aborts_without_stable_unique_id(
 
 
 async def test_manual_flow_creates_entry(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test adding a device by IP address."""
     mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
-    with patch(
-        "homeassistant.components.marstek.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "manual"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "manual"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == EXPECTED_TITLE
@@ -234,6 +226,7 @@ async def test_manual_flow_aborts_if_host_configured(hass: HomeAssistant) -> Non
         pytest.param(TypeError("bad data"), "device_not_found", id="typeerror"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_manual_flow_errors_are_recoverable(
     hass: HomeAssistant,
     mock_udp_client: MagicMock,
@@ -246,29 +239,25 @@ async def test_manual_flow_errors_are_recoverable(
         MOCK_DISCOVERY_RESPONSE["result"],
     ]
 
-    with patch(
-        "homeassistant.components.marstek.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "manual"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "manual"
-        assert result["errors"] == {"base": expected_reason}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": expected_reason}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_MAC
