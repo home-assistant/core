@@ -153,7 +153,7 @@ SENSOR_SETTINGS = vol.Schema(
                     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
                     vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
                     vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
-                        DeviceClassSelectorConfig(domain=Platform.NUMBER)
+                        DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     vol.Optional(CONF_STATE_CLASS): SelectSelector(
                         SelectSelectorConfig(
