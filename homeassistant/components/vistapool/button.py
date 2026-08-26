@@ -73,15 +73,21 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
-        if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
-            await self._async_write_status(0)
-            # Track the intermediate off so its echo is confirmed in order,
-            # but don't announce it: the light entity must not flicker off
-            # for the duration of the pulse delay.
-            self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 0)
-            await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
+        if self.coordinator.get_value(_LIGHT_STATUS_PATH) not in (True, "1"):
+            await self._async_write_status(1)
+            self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
+            return
+        # Queue the whole off/on sequence before the first send: the echoes
+        # are then confirmed in order, and a push landing inside the pulse
+        # delay is overlaid with the final on instead of the transient off,
+        # so the light entity never flickers. A failed send leaves queued
+        # values the cloud never got; the TTL self-heal reconciles those.
+        self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 0)
+        self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 1)
+        await self._async_write_status(0)
+        await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
         await self._async_write_status(1)
-        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def _async_write_status(self, value: int) -> None:
         """Write light.status via the cloud API."""

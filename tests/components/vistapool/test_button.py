@@ -187,7 +187,7 @@ async def test_button_press_does_not_flicker_light_state(
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test the pulse's intermediate off is never announced as light state."""
+    """Test the pulse never announces off, even for pushes inside the delay."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"hasLED": 1, "version": 1},
         "light": {"status": 1},
@@ -200,6 +200,16 @@ async def test_button_press_does_not_flicker_light_state(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+        async def _push_during_pulse(_pool_id: str, _path: str, value: int) -> None:
+            """Land a stale echo and the off echo inside the pulse delay."""
+            if value == 0:
+                on_data({"light": {"status": 1}})
+                on_data({"light": {"status": 0}})
+
+        mock_vistapool_client.set_value.side_effect = _push_during_pulse
 
         events = async_capture_events(hass, EVENT_STATE_CHANGED)
         await hass.services.async_call(
