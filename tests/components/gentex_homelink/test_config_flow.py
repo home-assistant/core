@@ -155,7 +155,7 @@ async def test_auth_error(
     assert result["reason"] == "oauth_unauthorized"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_successful(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -163,7 +163,7 @@ async def test_reauth_successful(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -183,7 +183,7 @@ async def test_reauth_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
