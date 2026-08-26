@@ -47,10 +47,8 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add number entities for discovered bypass temperature targets."""
         new_entities = []
-        for (
-            zone_id,
-            target,
-        ) in coordinator.data.bypass_supply_temperature_targets.items():
+        targets = coordinator.data.bypass_supply_temperature_targets
+        for zone_id, target in targets.items():
             if zone_id in known_zone_ids:
                 continue
 
