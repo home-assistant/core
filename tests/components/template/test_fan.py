@@ -31,6 +31,8 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1616,6 +1618,56 @@ async def test_restore_state(
     assert state.attributes["preset_mode"] == "low"
     assert state.attributes["oscillating"] is True
     assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_FAN, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_FAN, config, action, caplog
+    )
 
 
 @pytest.mark.parametrize(

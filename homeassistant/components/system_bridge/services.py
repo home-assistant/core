@@ -20,11 +20,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    service,
-)
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
@@ -148,19 +144,8 @@ def _get_coordinator(
     hass: HomeAssistant, device_id: str
 ) -> SystemBridgeDataUpdateCoordinator:
     """Return the coordinator for a device id."""
-
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=DOMAIN
-    )
-    if device is None or config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device": device_id},
-        )
-    entry: SystemBridgeConfigEntry = service.async_get_config_entry(
-        hass, DOMAIN, config_entry.entry_id
-    )
+    entry: SystemBridgeConfigEntry
+    _, entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return entry.runtime_data
 
 

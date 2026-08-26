@@ -133,6 +133,11 @@
         "name": "Tank full"
       }
     },
+    "button": {
+      "start": {
+        "name": "Start"
+      }
+    },
     "climate": {
       "climate_zone1": {
         "name": "Zone 1 thermostat"
@@ -359,6 +364,9 @@
   "exceptions": {
     "device_communication_error": {
       "message": "Error communicating with the device: {error}"
+    },
+    "e1_device_off": {
+      "message": "Turn on the dishwasher before starting a wash cycle."
     },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
