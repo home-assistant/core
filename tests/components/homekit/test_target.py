@@ -6,6 +6,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.homekit.target import (
+    async_is_bridge_target_entity,
+    async_target_entity_ids_by_type,
     async_track_target_entity_change,
     should_include_entity,
 )
@@ -129,6 +131,24 @@ def test_base_entity_filter_inclusion_wins_tie() -> None:
         {},
         has_include_rules=True,
     )
+
+
+def test_accessory_mode_target_expansion_is_filterable(
+    hass: HomeAssistant,
+) -> None:
+    """Test accessory-mode entities can be filtered from target expansion."""
+    hass.states.async_set("camera.test", "on")
+    targets = {ATTR_ENTITY_ID: ["camera.test"]}
+
+    assert (
+        async_target_entity_ids_by_type(
+            hass, targets, entity_filter=async_is_bridge_target_entity
+        )[ATTR_ENTITY_ID]
+        == set()
+    )
+    assert async_target_entity_ids_by_type(hass, targets)[ATTR_ENTITY_ID] == {
+        "camera.test"
+    }
 
 
 def test_target_filter_with_only_exclusions() -> None:

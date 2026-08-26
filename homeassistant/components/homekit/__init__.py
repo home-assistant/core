@@ -151,6 +151,7 @@ from .const import (
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
 from .target import (
+    async_is_bridge_target_entity,
     async_target_entity_ids_by_type,
     async_track_target_entity_change,
     should_include_entity,
@@ -455,6 +456,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
                         hass,
                         {target_type: target_ids},
                         _async_reload_on_target_change,
+                        entity_filter=(
+                            async_is_bridge_target_entity
+                            if exclude_accessory_mode
+                            else None
+                        ),
                     )
                 )
 
@@ -954,11 +960,18 @@ class HomeKit:
         ent_reg = er.async_get(self.hass)
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
+        target_entity_filter = (
+            async_is_bridge_target_entity if self._exclude_accessory_mode else None
+        )
         targeted_included_entity_ids = async_target_entity_ids_by_type(
-            self.hass, self._include_targets
+            self.hass,
+            self._include_targets,
+            entity_filter=target_entity_filter,
         )
         targeted_excluded_entity_ids = async_target_entity_ids_by_type(
-            self.hass, self._exclude_targets
+            self.hass,
+            self._exclude_targets,
+            entity_filter=target_entity_filter,
         )
         has_include_rules = bool(
             any(

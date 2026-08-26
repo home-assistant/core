@@ -65,7 +65,12 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .models import HomeKitEntryData
-from .target import async_target_entity_ids_by_type, should_include_entity
+from .target import (
+    TargetEntityFilter,
+    async_is_bridge_target_entity,
+    async_target_entity_ids_by_type,
+    should_include_entity,
+)
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
@@ -196,12 +201,18 @@ def _async_entity_ids_matching_filter(
     entity_filter: EntityFilterDict,
     domains: Iterable[str],
     entity_config: Mapping[str, dict[str, Any]] | None = None,
+    *,
+    target_entity_filter: TargetEntityFilter | None = async_is_bridge_target_entity,
 ) -> list[str]:
     """Return supported entities selected by the shared precedence rules."""
     include_targets = entity_filter.get("include_targets", {})
     exclude_targets = entity_filter.get("exclude_targets", {})
-    included_entity_ids = async_target_entity_ids_by_type(hass, include_targets)
-    excluded_entity_ids = async_target_entity_ids_by_type(hass, exclude_targets)
+    included_entity_ids = async_target_entity_ids_by_type(
+        hass, include_targets, entity_filter=target_entity_filter
+    )
+    excluded_entity_ids = async_target_entity_ids_by_type(
+        hass, exclude_targets, entity_filter=target_entity_filter
+    )
     explicitly_included = {
         *entity_filter.get(CONF_INCLUDE_ENTITIES, []),
         *include_targets.get(CONF_ENTITY_ID, []),

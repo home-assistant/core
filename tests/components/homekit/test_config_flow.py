@@ -61,6 +61,7 @@ def _mock_config_entry_with_options_populated():
 
 async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     """Test we can setup a new instance in bridge mode."""
+    hass.states.async_set("camera.target_only", "on")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -77,7 +78,10 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "include"
     assert result2["last_step"] is False
 
-    include_targets = {ATTR_LABEL_ID: ["homekit"]}
+    include_targets = {
+        ATTR_ENTITY_ID: ["camera.target_only"],
+        ATTR_LABEL_ID: ["homekit"],
+    }
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {CONF_INCLUDE_TARGETS: include_targets},
@@ -85,6 +89,7 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "review"
     assert result3["last_step"] is False
+    assert result3["description_placeholders"] == {"count": "0"}
 
     result3 = await hass.config_entries.flow.async_configure(result3["flow_id"], {})
     assert result3["type"] is FlowResultType.FORM
