@@ -154,10 +154,8 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
     ),
 }
 
-# pyhik uses videoloss as a connection watchdog rather than a real sensor event
-# (see homeassistant/components/hikvision/__init__.py and pyhik.hikvision).
-# When it leaks into `current_event_states` (e.g. via ISAPI on some NVR setups),
-# skip it silently instead of warning about an unknown sensor type.
+# pyhik uses videoloss as a connection watchdog, not a user-facing event, so a
+# leaked entry gets no entity and no unknown-sensor warning.
 IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
 
 _LOGGER = logging.getLogger(__name__)
