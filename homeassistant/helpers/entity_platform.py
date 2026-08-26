@@ -868,8 +868,9 @@ class EntityPlatform:
             restored = await self._async_add_entity_impl(
                 entity, update_before_add, entity_registry, config_subentry_id
             )
-        except Exception:
-            # The entity is not registered yet, aborting is enough to clean up.
+        except BaseException:
+            # Also abort on cancellation, e.g. by the surrounding add timeout;
+            # the entity is not registered yet, so aborting is enough to clean up.
             entity.add_to_platform_abort()
             raise
 
@@ -900,8 +901,9 @@ class EntityPlatform:
 
         try:
             await entity.add_to_platform_finish()
-        except Exception:
-            # The entity is partially registered: the state id was reserved and
+        except BaseException:
+            # Also handle cancellation, e.g. by the surrounding add timeout. The
+            # entity is partially registered: the state id was reserved and
             # `async_internal_added_to_hass` may have populated entity_sources.
             # Roll that back before aborting so neither leaks.
             await entity.async_internal_will_remove_from_hass()

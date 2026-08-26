@@ -3001,6 +3001,51 @@ async def test_platform_state_fail_to_add(
     assert hass.states.get("test.test") is None
 
 
+async def test_platform_state_cancelled_during_add(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the entity is cleaned up if adding it is cancelled.
+
+    Cancellation, e.g. by the surrounding add timeout, raises CancelledError
+    which derives from BaseException; the entity must still be aborted and its
+    partial registration rolled back.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    adding = asyncio.Event()
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self) -> None:
+            adding.set()
+            await asyncio.Event().wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    task = asyncio.create_task(
+        platform._async_add_entity(ent, False, entity_registry, None)
+    )
+    # Wait until the entity is committed and blocked inside async_added_to_hass
+    await adding.wait()
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
+
+
 async def test_platform_state_write_from_init(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
