@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -12,6 +11,7 @@ import pytest
 
 from homeassistant.components.coolbot.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +40,7 @@ def make_device(
         "wifi_dbm": -55.0,
         "coolbot_hardware": "6",
         "jumper_firmware": "1.2.3",
-        "last_data_at": datetime.now(UTC),
+        "last_data_at": dt_util.utcnow(),
     }
     fields.update(overrides)
     return CoolbotDevice(**fields)

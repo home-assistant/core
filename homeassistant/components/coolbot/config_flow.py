@@ -53,7 +53,11 @@ class CoolbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return "no_devices"
             return None
         finally:
-            await client.async_close()
+            # A failed close must not replace the flow's real outcome.
+            try:
+                await client.async_close()
+            except Exception:
+                _LOGGER.debug("Error while closing the socket", exc_info=True)
 
     @override
     async def async_step_user(

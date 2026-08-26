@@ -8,7 +8,16 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import CoolbotConfigEntry, device_is_fresh
 
-TO_REDACT = {"password", "email", "mac_address", "unique_id"}
+TO_REDACT = {
+    "password",
+    "email",
+    "mac_address",
+    "unique_id",
+    "name",
+    "dash_id",
+    "device_id",
+    "target",
+}
 
 
 async def async_get_config_entry_diagnostics(

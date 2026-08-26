@@ -34,11 +34,27 @@ async def test_setup_and_unload(
 async def test_setup_retries_when_service_is_unreachable(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """A connection failure at setup schedules a retry, not a hard error."""
+    """A connection failure at setup schedules a retry, not a hard error.
+
+    The failed client is closed rather than leaked: a rejected connect still
+    leaves its socket and reader task running until someone closes it.
+    """
     mock_client.async_connect.side_effect = CoolbotError("down")
 
     assert not await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.async_close.assert_awaited()
+
+
+async def test_an_aborted_first_refresh_closes_the_socket(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """When setup fails after connecting, nothing else can close the socket."""
+    mock_client.async_get_devices.return_value = []
+
+    assert not await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.async_close.assert_awaited()
 
 
 async def test_setup_starts_reauth_on_bad_credentials(
@@ -54,13 +70,15 @@ async def test_setup_starts_reauth_on_bad_credentials(
 
 
 async def test_removing_a_device_the_account_still_reports_is_refused(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """A device the account still reports would just be recreated."""
     assert await setup_integration(hass, mock_config_entry)
 
-    registry = dr.async_get(hass)
-    device = registry.async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
     )
     assert device is not None
@@ -68,13 +86,15 @@ async def test_removing_a_device_the_account_still_reports_is_refused(
 
 
 async def test_removing_a_vanished_device_is_allowed(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """A device the account no longer reports may be deleted."""
     assert await setup_integration(hass, mock_config_entry)
 
-    registry = dr.async_get(hass)
-    orphan = registry.async_get_or_create(
+    orphan = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "coolbot_gone")},
     )

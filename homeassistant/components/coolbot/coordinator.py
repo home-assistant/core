@@ -42,6 +42,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             config_entry=entry,
         )
         self._client: CoolbotClient | None = None
+        self._stale_ids: set[str] = set()
 
     @override
     async def _async_setup(self) -> None:
@@ -58,6 +59,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         try:
             await client.async_connect()
         except CoolbotAuthError as err:
+            # A rejected login still leaves the socket and reader task running;
+            # only closing the client stops them.
+            await _async_close_client(client)
             # Prompts the user to re-enter credentials rather than retrying forever.
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -65,6 +69,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except CoolbotError as err:
+            await _async_close_client(client)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
@@ -87,6 +92,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             devices = await self._client.async_get_devices(wait_for_live=False)
             await self._client.async_ping()
         except CoolbotAuthError as err:
+            # Refreshes stop until reauth completes; the socket must not be
+            # left open for that whole time.
+            await self._async_shutdown_client()
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -104,7 +112,37 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         if not devices:
             raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_devices")
 
-        return {device.unique_id: device for device in devices}
+        data: dict[str, CoolbotDevice] = {}
+        for device in devices:
+            if device.is_provisioned and not device.mac_address:
+                # The MAC arrives as a replayed pin and this device's has not
+                # landed yet. Its unique_id would be a dash/slot fallback that
+                # changes once the MAC arrives, duplicating the device, so hold
+                # it back; a later refresh adds it under its stable identity.
+                _LOGGER.debug(
+                    "Holding back %s until its MAC address arrives", device.name
+                )
+                continue
+            data[device.unique_id] = device
+
+        self._log_staleness_transitions(data)
+        return data
+
+    def _log_staleness_transitions(self, data: dict[str, CoolbotDevice]) -> None:
+        """Log once when a device stops reporting, and once when it recovers."""
+        for device in data.values():
+            if not device.is_provisioned:
+                continue
+            if device_is_fresh(device):
+                if device.unique_id in self._stale_ids:
+                    self._stale_ids.discard(device.unique_id)
+                    _LOGGER.info("%s is reporting again", device.name)
+            elif device.unique_id not in self._stale_ids:
+                self._stale_ids.add(device.unique_id)
+                _LOGGER.info(
+                    "%s has stopped reporting; its readings are marked unavailable",
+                    device.name,
+                )
 
     @override
     async def async_shutdown(self) -> None:
@@ -114,11 +152,16 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     async def _async_shutdown_client(self) -> None:
         if self._client is not None:
-            try:
-                await self._client.async_close()
-            except Exception:
-                _LOGGER.debug("Error while closing the socket", exc_info=True)
-            self._client = None
+            client, self._client = self._client, None
+            await _async_close_client(client)
+
+
+async def _async_close_client(client: CoolbotClient) -> None:
+    """Close a client without letting a failed close mask the real problem."""
+    try:
+        await client.async_close()
+    except Exception:
+        _LOGGER.debug("Error while closing the socket", exc_info=True)
 
 
 def device_is_fresh(device: CoolbotDevice) -> bool:
@@ -132,6 +175,7 @@ def device_is_fresh(device: CoolbotDevice) -> bool:
         return False
     age = device.data_age_seconds
     if age is None:
-        # No live push seen yet this session; fall back to the account's own view.
-        return device.available
+        # The server replays a cached snapshot on connect that can be minutes
+        # old, so nothing is trustworthy until a live push arrives this session.
+        return False
     return age <= STALE_AFTER_SECONDS

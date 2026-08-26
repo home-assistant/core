@@ -6,12 +6,14 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from pycoolbot import CoolbotAuthError, CoolbotError
+import pytest
 
 from homeassistant.components.coolbot.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
+from .conftest import make_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -69,14 +71,64 @@ async def test_failed_refresh_marks_data_stale_then_recovers(
 async def test_auth_failure_during_refresh_starts_reauth(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Credentials failing mid-flight prompt the user rather than looping."""
+    """Credentials failing mid-flight prompt the user rather than looping.
+
+    Refreshes stop until reauth completes, so the socket is closed rather than
+    left open for however long that takes.
+    """
     assert await setup_integration(hass, mock_config_entry)
+    mock_client.async_close.reset_mock()
 
     mock_client.async_get_devices.side_effect = CoolbotAuthError("expired")
     await _tick(hass)
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert any(flow["context"]["source"] == "reauth" for flow in flows)
+    mock_client.async_close.assert_awaited()
+
+
+async def test_a_device_waits_for_its_mac_identity(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A provisioned device whose MAC pin has not replayed yet is held back.
+
+    Its unique_id would be a dash/slot fallback that changes once the MAC
+    arrives, which would duplicate the device. It appears on a later refresh
+    under its stable identity instead.
+    """
+    mock_client.async_get_devices.return_value = [
+        make_device(unique_id="coolbot_10_0", mac_address=None)
+    ]
+    assert await setup_integration(hass, mock_config_entry)
+    assert not mock_config_entry.runtime_data.data
+
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
+    assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
+
+
+async def test_staleness_is_logged_once_in_each_direction(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A device going stale is logged once, and once again on recovery."""
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [
+        make_device(last_data_at=dt_util.utcnow() - timedelta(minutes=10))
+    ]
+    await _tick(hass)
+    assert "has stopped reporting" in caplog.text
+
+    caplog.clear()
+    await _tick(hass)
+    assert "has stopped reporting" not in caplog.text
+
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
+    assert "is reporting again" in caplog.text
 
 
 async def test_an_empty_device_list_is_a_failure_not_a_wipe(

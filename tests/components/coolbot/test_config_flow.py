@@ -46,6 +46,20 @@ async def test_user_flow_creates_entry(
     mock_client.async_close.assert_awaited()
 
 
+async def test_user_flow_survives_a_failing_close(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Cleanup trouble must not replace the flow's real outcome."""
+    mock_client.async_close.side_effect = CoolbotError("already closed")
+
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_strips_and_lowercases_identity(
     hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:

@@ -5,6 +5,7 @@ Read-only. Nothing in this integration writes to a device.
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -16,7 +17,13 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> bool:
     """Set up CoolBot Pro from a config entry."""
     coordinator = CoolbotCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryAuthFailed, ConfigEntryNotReady:
+        # The socket may already be open (for example when the account reports
+        # no devices) and nothing else will close it once setup is abandoned.
+        await coordinator.async_shutdown()
+        raise
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -32,7 +39,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: CoolbotConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: CoolbotConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow deleting a device that the account no longer reports.
 

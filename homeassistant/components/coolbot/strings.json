@@ -1,37 +1,10 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Sign in with your CoolBot Pro account, the same credentials you use in the CoolBot app.",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "The email address of your CoolBot Pro account.",
-          "password": "The password of your CoolBot Pro account."
-        }
-      },
-      "reconfigure": {
-        "description": "Update the stored credentials for this CoolBot Pro account.",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "Must be the same account this entry was created with.",
-          "password": "The current password of your CoolBot Pro account."
-        }
-      },
-      "reauth_confirm": {
-        "description": "The stored password for {email} no longer works. Enter the current one.",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "The current password of your CoolBot Pro account."
-        }
-      }
+    "abort": {
+      "account_mismatch": "This entry belongs to a different CoolBot account. Add a new entry for the other account instead.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -39,20 +12,47 @@
       "no_devices": "Signed in successfully, but this account has no CoolBot that has ever connected.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "account_mismatch": "This entry belongs to a different CoolBot account. Add a new entry for the other account instead.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The current password of your CoolBot Pro account."
+        },
+        "description": "The stored password for {email} no longer works. Enter the current one."
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Must be the same account this entry was created with.",
+          "password": "The current password of your CoolBot Pro account."
+        },
+        "description": "Update the stored credentials for this CoolBot Pro account."
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your CoolBot Pro account.",
+          "password": "The password of your CoolBot Pro account."
+        },
+        "description": "Sign in with your CoolBot Pro account, the same credentials you use in the CoolBot app."
+      }
     }
   },
   "entity": {
     "sensor": {
-      "room_temperature": { "name": "Room temperature" },
       "fin_temperature": { "name": "Fin temperature" },
+      "hardware_status": { "name": "Hardware status" },
+      "room_temperature": { "name": "Room temperature" },
       "set_point": { "name": "Set point" },
-      "wifi_signal": { "name": "Wi-Fi signal" },
-      "hardware_status": { "name": "Hardware status" }
+      "wifi_signal": { "name": "Wi-Fi signal" }
     }
   },
   "exceptions": {

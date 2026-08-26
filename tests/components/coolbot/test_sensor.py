@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from homeassistant.components.coolbot.const import UPDATE_INTERVAL
@@ -43,14 +43,16 @@ async def test_sensor_values(
 
 
 async def test_wifi_signal_is_disabled_by_default(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """The diagnostic signal sensor registers but stays disabled."""
     await _setup(hass, mock_config_entry)
 
     assert hass.states.get("sensor.walk_in_cooler_wi_fi_signal") is None
-    registry = er.async_get(hass)
-    entry = registry.async_get_entity_id(
+    entry = entity_registry.async_get_entity_id(
         "sensor", "coolbot", "coolbot_aabbccddeeff_wifi_signal"
     )
     assert entry is not None  # registered, just not enabled
@@ -75,6 +77,23 @@ async def test_unprovisioned_slots_create_no_entities(
     assert hass.states.get("sensor.empty_slot_room_temperature") is None
 
 
+async def test_replayed_snapshot_is_not_trusted_at_startup(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Before any live push, measurements are unavailable; settings still show.
+
+    The server replays a cached snapshot on connect that can be minutes old,
+    so publishing it as current would defeat the whole freshness check.
+    """
+    mock_client.async_get_devices.return_value = [make_device(last_data_at=None)]
+    await _setup(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
+    )
+    assert hass.states.get("sensor.walk_in_cooler_set_point").state == "40.0"
+
+
 async def test_stale_measurements_go_unavailable_but_settings_stay(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -84,7 +103,7 @@ async def test_stale_measurements_go_unavailable_but_settings_stay(
 
     mock_client.async_get_devices.return_value = [
         make_device(
-            last_data_at=datetime.now(UTC) - timedelta(minutes=10), status="OFFLINE"
+            last_data_at=dt_util.utcnow() - timedelta(minutes=10), status="OFFLINE"
         )
     ]
     await _tick(hass)

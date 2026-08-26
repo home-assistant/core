@@ -56,7 +56,9 @@ rules:
   log-when-unavailable:
     status: done
     comment: |
-      Handled by the coordinator.
+      Service unavailability is logged by DataUpdateCoordinator; per-device
+      staleness transitions are logged once in each direction by the
+      coordinator itself.
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
