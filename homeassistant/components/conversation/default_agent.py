@@ -716,6 +716,14 @@ class DefaultAgent(ConversationEntity):
         chat_log: ChatLog,
     ) -> intent.IntentResponse | None:
         """Try to recognize a sentence hassil could not, or return None to give up."""
+        if hassil_result is not None and (hassil_result.intent_metadata or {}).get(
+            METADATA_CUSTOM_SENTENCE
+        ):
+            # A sentence somebody wrote themselves, matched to the intent they wrote
+            # it for, with only the target left unresolved. Its error says so; the
+            # gazetteer would answer a different intent it happens to recognize.
+            return None
+
         language = user_input.language or self.hass.config.language
         if not self._gazetteer.supports(language):
             return None

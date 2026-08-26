@@ -833,3 +833,37 @@ async def test_the_home_is_built_once_for_concurrent_sentences(
         )
 
     assert builds == 1
+
+
+@pytest.mark.usefixtures("home")
+async def test_a_custom_sentence_keeps_its_own_error(hass: HomeAssistant) -> None:
+    """Test a sentence somebody wrote themselves is not answered by the gazetteer.
+
+    hassil matched it to the intent it was written for and only the target failed,
+    so its error is the answer. The gazetteer would recognize the same words as a
+    built-in command and run that instead.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        conversation.DOMAIN,
+        {"conversation": {"intents": {"MoodLight": ["please activate {name} now"]}}},
+    )
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {"intent_script": {"MoodLight": {"speech": {"text": "Mood set"}}}},
+    )
+    calls = async_mock_service(hass, "light", "turn_on")
+
+    result = await conversation.async_converse(
+        hass, "please activate kichen lights now", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any device called kichen lights"
+    )
+    assert not calls
