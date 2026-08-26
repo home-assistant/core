@@ -19,8 +19,9 @@ from homeassistant.helpers.trigger_template_entity import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import TriggerUpdateCoordinator, check_conditions
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .validators import check_conditions
 
 _LOGGER = logging.getLogger(__name__)
 
