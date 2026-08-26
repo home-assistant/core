@@ -121,41 +121,32 @@ async def __get_prices(
         PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
     )
 
-    data: EnergyPrices
-
     if price_type is ServicePriceType.GAS:
-        try:
-            data = await coordinator.energyzero.get_gas_prices(
-                start_date=start,
-                end_date=end,
-                price_type=selected_price_type,
-                local_tz=local_tz,
-            )
-        except EnergyZeroNoDataError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_data",
-                translation_placeholders={
-                    "date": start.isoformat(),
-                },
-            ) from err
+        prices = coordinator.energyzero.get_gas_prices(
+            start_date=start,
+            end_date=end,
+            price_type=selected_price_type,
+            local_tz=local_tz,
+        )
     else:
-        try:
-            data = await coordinator.energyzero.get_electricity_prices(
-                start_date=start,
-                end_date=end,
-                interval=Interval.HOUR,
-                price_type=selected_price_type,
-                local_tz=local_tz,
-            )
-        except EnergyZeroNoDataError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_data",
-                translation_placeholders={
-                    "date": start.isoformat(),
-                },
-            ) from err
+        prices = coordinator.energyzero.get_electricity_prices(
+            start_date=start,
+            end_date=end,
+            interval=Interval.HOUR,
+            price_type=selected_price_type,
+            local_tz=local_tz,
+        )
+
+    try:
+        data: EnergyPrices = await prices
+    except EnergyZeroNoDataError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_data",
+            translation_placeholders={
+                "date": start.isoformat(),
+            },
+        ) from err
 
     return __serialize_prices(data)
 
