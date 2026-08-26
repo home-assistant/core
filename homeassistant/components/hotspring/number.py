@@ -1,6 +1,8 @@
 """Support for Hot Spring number entities."""
 
-from typing import override
+from typing import cast, override
+
+from hotspring import Spa
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -57,11 +59,13 @@ class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the current target temperature."""
-        return self.coordinator.data.heater.set_temperature
+        return self.coordinator.data.spa.heater.set_temperature
 
     @hotspring_exception_handler
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
         await self.coordinator.hotspring.set_temperature(round(value))
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        self.coordinator.async_set_updated_data(
+            self.coordinator.create_data(cast(Spa, self.coordinator.hotspring.spa))
+        )

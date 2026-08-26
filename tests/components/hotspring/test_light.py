@@ -366,3 +366,41 @@ async def test_disabled_zone_not_added(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     assert not entity_registry.async_is_registered(ENTITY_ID)
+
+
+async def test_multiple_light_zones(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+) -> None:
+    """Test setting up multiple light zones."""
+    device_fixture.light_zones = [
+        LightZone(
+            zone_id=1,
+            is_enabled=True,
+            is_on=True,
+            color=LightColor.BLUE,
+            light_wheel=LightWheelMode.OFF,
+            intensity=5,
+            loop_speed=0,
+        ),
+        LightZone(
+            zone_id=2,
+            is_enabled=True,
+            is_on=False,
+            color=LightColor.RED,
+            light_wheel=LightWheelMode.OFF,
+            intensity=0,
+            loop_speed=0,
+        ),
+    ]
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
+
+    state_1 = hass.states.get(ENTITY_ID)
+    assert state_1 is not None
+    assert state_1.state == "on"
+
+    state_2 = hass.states.get("light.connectedspa_ddeeff_light_zone_2")
+    assert state_2 is not None
+    assert state_2.state == "off"

@@ -1,8 +1,15 @@
 """DataUpdateCoordinator for Hot Spring."""
 
+from dataclasses import dataclass
 from typing import override
 
-from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
+from hotspring import (
+    HotSpring,
+    HotSpringConnectionError,
+    HotSpringError,
+    LightZone,
+    Spa,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -15,7 +22,15 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 type HotSpringConfigEntry = ConfigEntry[HotSpringDataUpdateCoordinator]
 
 
-class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
+@dataclass
+class HotSpringData:
+    """Class for Hot Spring coordinator data."""
+
+    spa: Spa
+    light_zones: dict[int, LightZone]
+
+
+class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[HotSpringData]):
     """Class to manage fetching Hot Spring data from a single endpoint."""
 
     config_entry: HotSpringConfigEntry
@@ -34,8 +49,15 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
             update_interval=SCAN_INTERVAL,
         )
 
+    def create_data(self, spa: Spa) -> HotSpringData:
+        """Create HotSpringData from a Spa instance."""
+        return HotSpringData(
+            spa=spa,
+            light_zones={zone.zone_id: zone for zone in spa.light_zones},
+        )
+
     @override
-    async def _async_update_data(self) -> Spa:
+    async def _async_update_data(self) -> HotSpringData:
         """Fetch data from Hot Spring."""
         try:
             spa = await self.hotspring.update()
@@ -59,4 +81,4 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
                 translation_key="invalid_response",
             )
 
-        return spa
+        return self.create_data(spa)

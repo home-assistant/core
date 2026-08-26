@@ -89,4 +89,4 @@ class HotSpringBinarySensorEntity(HotSpringEntity, BinarySensorEntity):
     @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return self.entity_description.is_on_fn(self.coordinator.data)
+        return self.entity_description.is_on_fn(self.coordinator.data.spa)

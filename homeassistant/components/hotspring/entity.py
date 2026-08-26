@@ -15,8 +15,8 @@ class HotSpringEntity(CoordinatorEntity[HotSpringDataUpdateCoordinator]):
     def __init__(self, coordinator: HotSpringDataUpdateCoordinator, key: str) -> None:
         """Initialize a base Hot Spring entity."""
         super().__init__(coordinator)
-        info = self.coordinator.data.info
-        versions = self.coordinator.data.versions
+        info = self.coordinator.data.spa.info
+        versions = self.coordinator.data.spa.versions
         self._attr_unique_id = f"{info.mac_address}_{key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, info.mac_address)},

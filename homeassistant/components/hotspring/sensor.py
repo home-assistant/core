@@ -100,7 +100,7 @@ async def async_setup_entry(
     async_add_entities(
         HotSpringSensorEntity(coordinator, description)
         for description in SENSORS
-        if description.exists_fn(coordinator.data)
+        if description.exists_fn(coordinator.data.spa)
     )
 
 
@@ -122,4 +122,4 @@ class HotSpringSensorEntity(HotSpringEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.spa)

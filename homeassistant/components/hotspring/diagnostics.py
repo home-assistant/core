@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-    spa = coordinator.data
+    spa = coordinator.data.spa
 
     info = asdict(spa.info)
     if mac_address := spa.info.mac_address:
