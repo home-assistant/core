@@ -1,5 +1,6 @@
 """The tests for the  Template light platform."""
 
+from enum import StrEnum
 from itertools import chain
 from typing import Any
 
@@ -2309,7 +2310,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute,
+    attribute: StrEnum,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""

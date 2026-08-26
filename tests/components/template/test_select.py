@@ -763,7 +763,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute,
+    attribute: SelectEntityCapabilityAttribute,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""
