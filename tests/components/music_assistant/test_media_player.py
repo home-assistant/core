@@ -38,7 +38,6 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_source import DOMAIN as MEDIA_SOURCE_DOMAIN
 from homeassistant.components.music_assistant.const import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
@@ -86,7 +85,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .common import (
     setup_integration_from_fixtures,
@@ -108,10 +106,29 @@ MOCK_TRACK = Track(
     provider_mappings={},
 )
 MOCK_TTS_ENTITY_ID = "tts.test"
+MOCK_SECOND_TTS_ENTITY_ID = "tts.second"
 
 
 class MockTTSConfigFlow(ConfigFlow):
     """Config flow for the mock text-to-speech integration."""
+
+
+class MockSecondTTSEntity(MockTTSEntity):
+    """Second mock text-to-speech entity."""
+
+    _attr_name = "Second"
+
+
+@pytest.fixture(name="tts_entities")
+async def tts_entities_fixture(hass: HomeAssistant) -> None:
+    """Set up two text-to-speech entities, of which the first is the default engine."""
+    for test_domain, tts_entity in (
+        ("test", MockTTSEntity(DEFAULT_LANG)),
+        ("test2", MockSecondTTSEntity(DEFAULT_LANG)),
+    ):
+        mock_platform(hass, f"{test_domain}.config_flow")
+        with mock_config_flow(test_domain, MockTTSConfigFlow):
+            await mock_config_entry_setup(hass, tts_entity, test_domain=test_domain)
 
 
 async def test_media_player(
@@ -998,19 +1015,21 @@ async def test_media_player_play_announcement_action(
     )
 
 
-@pytest.mark.usefixtures("mock_tts_cache_dir")
+@pytest.mark.parametrize(
+    "tts_entity_id",
+    [MOCK_TTS_ENTITY_ID, MOCK_SECOND_TTS_ENTITY_ID],
+    ids=["default tts entity", "non-default tts entity"],
+)
+@pytest.mark.usefixtures("mock_tts_cache_dir", "tts_entities")
 async def test_media_player_play_announcement_action_with_message(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    tts_entity_id: str,
 ) -> None:
-    """Test media_player play_announcement action with a spoken message."""
+    """Test media_player play_announcement action speaks a message with the given entity."""
     await async_process_ha_core_config(
         hass, {"internal_url": "http://example.local:8123"}
     )
-    assert await async_setup_component(hass, MEDIA_SOURCE_DOMAIN, {})
-    mock_platform(hass, "test.config_flow")
-    with mock_config_flow("test", MockTTSConfigFlow):
-        await mock_config_entry_setup(hass, MockTTSEntity(DEFAULT_LANG))
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_player_1"
     mass_player_id = "00:00:00:00:00:01"
@@ -1020,7 +1039,7 @@ async def test_media_player_play_announcement_action_with_message(
         {
             ATTR_ENTITY_ID: entity_id,
             ATTR_MESSAGE: "Dinner is ready!",
-            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
+            ATTR_TTS_ENTITY_ID: tts_entity_id,
             ATTR_USE_PRE_ANNOUNCE: True,
             ATTR_ANNOUNCE_VOLUME: 50,
         },
@@ -1032,7 +1051,7 @@ async def test_media_player_play_announcement_action_with_message(
     stream = hass.data[DATA_TTS_MANAGER].token_to_stream[
         announcement_url.rsplit("/", 1)[-1]
     ]
-    assert stream.engine == MOCK_TTS_ENTITY_ID
+    assert stream.engine == tts_entity_id
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/play_announcement",
         require_schema=None,
@@ -1060,12 +1079,17 @@ async def test_media_player_play_announcement_action_with_message(
             ATTR_URL: "http://blah.com/announcement.mp3",
             ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
         },
+        {
+            ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: "media_player.test_player_2",
+        },
     ],
     ids=[
         "neither url nor message",
         "both url and message",
         "message without tts entity",
         "tts entity without message",
+        "entity outside the tts domain",
     ],
 )
 async def test_media_player_play_announcement_action_invalid_input(
