@@ -1,7 +1,6 @@
 """Tests for the telegram_bot component."""
 
 import base64
-from datetime import datetime
 from http import HTTPStatus
 import io
 import os
@@ -102,7 +101,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.util import json as json_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
 from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
@@ -287,7 +286,7 @@ async def test_send_message_with_inline_keyboard(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),

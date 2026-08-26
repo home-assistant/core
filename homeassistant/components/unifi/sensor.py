@@ -191,9 +191,7 @@ def async_uptime_value_changed_fn(
 @callback
 def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
-    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
-    # supports metering
-    return hub.api.outlets[obj_id].caps == 3
+    return hub.api.outlets[obj_id].has_metering is True
 
 
 @callback
