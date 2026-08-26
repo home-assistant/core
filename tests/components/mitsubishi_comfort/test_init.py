@@ -98,8 +98,8 @@ async def test_setup_entry_no_address_loads_and_registers(
 
     assert entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC)), entry.entry_id
     )
 
 

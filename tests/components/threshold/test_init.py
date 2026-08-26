@@ -196,7 +196,9 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
 
     assert config_entry.entry_id not in _get_device_config_entries(run1_entry)
     assert config_entry.entry_id not in _get_device_config_entries(run2_entry)
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.initial_my_threshold"
+    )
     assert threshold_entity_entry.device_id == run1_entry.device_id
 
     hass.config_entries.async_update_entry(
@@ -208,7 +210,9 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     # Check that the device association has updated
     assert config_entry.entry_id not in _get_device_config_entries(run1_entry)
     assert config_entry.entry_id not in _get_device_config_entries(run2_entry)
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.initial_my_threshold"
+    )
     assert threshold_entity_entry.device_id == run2_entry.device_id
 
 
@@ -225,7 +229,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert await hass.config_entries.async_setup(threshold_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -233,21 +239,20 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source device, this removes the source sensor
     with patch(
         "homeassistant.components.threshold.async_unload_entry",
         wraps=threshold.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        device_registry.async_remove_device(sensor_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
     # Check that the entity is no longer linked to the source device
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id is None
 
     # Check that the device is removed
@@ -272,7 +277,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert await hass.config_entries.async_setup(threshold_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -291,7 +298,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     mock_unload_entry.assert_not_called()
 
     # Check that the entity is no longer linked to the source device
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id is None
 
     # Check that the source device is not removed
@@ -320,7 +329,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert await hass.config_entries.async_setup(threshold_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -340,7 +351,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     mock_unload_entry.assert_called_once()
 
     # Check that the entity is no longer linked to the source device
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id is None
 
     # Check that the threshold config entry is not in the device
@@ -372,7 +385,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert await hass.config_entries.async_setup(threshold_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -394,7 +409,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     mock_unload_entry.assert_called_once()
 
     # Check that the entity is linked to the other device
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_device_2.id
 
     # Check that the derivative config entry is not in any of the devices
@@ -422,7 +439,9 @@ async def test_async_handle_source_entity_new_entity_id(
     assert await hass.config_entries.async_setup(threshold_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -489,7 +508,9 @@ async def test_migration_1_1(
     # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert threshold_config_entry.entry_id not in sensor_device.config_entries
-    threshold_entity_entry = entity_registry.async_get("binary_sensor.my_threshold")
+    threshold_entity_entry = entity_registry.async_get(
+        "binary_sensor.mock_title_my_threshold"
+    )
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert threshold_config_entry.version == 1

@@ -11,10 +11,27 @@ from neopool_modbus.exceptions import (
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 
-from .const import CURRENT_VERSION, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
+from .const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
+    CONF_USE_LIGHT,
+    CURRENT_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_UNIT_ID,
+    DOMAIN,
+)
+from .coordinator import NeoPoolConfigEntry
 
 
 async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -37,6 +54,15 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NeoPool."""
 
     VERSION = CURRENT_VERSION
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: NeoPoolConfigEntry,
+    ) -> NeoPoolOptionsFlowHandler:
+        """Return the options flow handler."""
+        return NeoPoolOptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -73,3 +99,45 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+
+class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle options flow for NeoPool integration."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step of the options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = self.config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_USE_LIGHT,
+                    default=options.get(CONF_USE_LIGHT, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_COVER_SENSOR,
+                    default=options.get(CONF_USE_COVER_SENSOR, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX1,
+                    default=options.get(CONF_USE_AUX1, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX2,
+                    default=options.get(CONF_USE_AUX2, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX3,
+                    default=options.get(CONF_USE_AUX3, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX4,
+                    default=options.get(CONF_USE_AUX4, False),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

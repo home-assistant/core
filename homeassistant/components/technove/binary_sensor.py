@@ -18,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TechnoVEBinarySensorDescription(BinarySensorEntityDescription):
@@ -30,6 +32,7 @@ BINARY_SENSORS = [
     TechnoVEBinarySensorDescription(
         key="conflict_in_sharing_config",
         translation_key="conflict_in_sharing_config",
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.conflict_in_sharing_config,
     ),

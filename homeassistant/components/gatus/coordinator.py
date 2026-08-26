@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -27,6 +28,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         self.url = url.rstrip("/")
         self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
         self._entry_id = entry.entry_id
+        self.last_update_time = dt_util.utcnow().replace(second=0, microsecond=0)
         device_registry = dr.async_get(hass)
         self._known_endpoint_keys = {
             identifier[1].removeprefix(f"{entry.entry_id}_")
@@ -49,6 +51,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
     @override
     async def _async_update_data(self) -> dict[str, EndpointStatus]:
         """Fetch endpoint statuses from the Gatus API."""
+        self.last_update_time = dt_util.utcnow().replace(second=0, microsecond=0)
         try:
             raw_endpoints = await self.client.get_endpoints_statuses()
         except GatusClientError as err:
@@ -70,10 +73,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
                     and identifier[1].removeprefix(f"{self._entry_id}_") in stale_keys
                     for identifier in device.identifiers
                 ):
-                    device_registry.async_update_device(
-                        device.id,
-                        remove_config_entry_id=self._entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
         self._known_endpoint_keys = current_keys
 
         return {ep.key: ep for ep in raw_endpoints}

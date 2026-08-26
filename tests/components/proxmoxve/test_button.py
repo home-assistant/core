@@ -112,7 +112,7 @@ async def test_node_all_actions_buttons(
         ("button.vm_web_start", 100, "start"),
         ("button.vm_web_stop", 100, "stop"),
         ("button.vm_web_restart", 100, "reboot"),
-        ("button.vm_web_hibernate", 100, "hibernate"),
+        ("button.vm_web_suspend", 100, "suspend"),
         ("button.vm_web_reset", 100, "reset"),
         ("button.vm_web_shut_down", 100, "shutdown"),
     ],
@@ -268,9 +268,9 @@ async def test_node_buttons_exceptions(
             SSLError("ssl error"),
         ),
         (
-            "button.vm_web_hibernate",
+            "button.vm_web_suspend",
             100,
-            "hibernate",
+            "suspend",
             ConnectTimeout("timeout"),
         ),
         (
