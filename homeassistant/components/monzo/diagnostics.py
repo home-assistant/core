@@ -80,7 +80,6 @@ async def async_get_config_entry_diagnostics(
             "pots": [_pot_diagnostics(pot, account_ids) for pot in data.pots.values()],
         },
         "webhook": {
-            "uses_cloudhook": CONF_CLOUDHOOK_URL in entry.data,
             "has_persisted_webhook_url": CONF_WEBHOOK_URL in entry.data,
             **runtime_data.webhook_manager.diagnostics_data,
         },

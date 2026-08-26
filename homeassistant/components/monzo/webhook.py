@@ -83,6 +83,8 @@ class MonzoWebhookManager:
             "known_account_count": len(self._known_account_ids),
             "retry_scheduled": self._retry_cancel is not None,
             "retrying": self._retrying,
+            "uses_cloudhook": self._webhook_url is not None
+            and self._webhook_url == self.entry.data.get(CONF_CLOUDHOOK_URL),
         }
 
     async def async_setup(self) -> None:
