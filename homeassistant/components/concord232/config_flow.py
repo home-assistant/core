@@ -1,6 +1,5 @@
 """Config flow for the Concord232 integration."""
 
-import asyncio
 import logging
 from typing import Any, override
 
@@ -29,7 +28,6 @@ from . import build_url
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
-    DATA_IMPORT_LOCK,
     DEFAULT_MODE,
     DEFAULT_PORT,
     DOMAIN,
@@ -107,13 +105,12 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from YAML platform configuration."""
-        # The alarm and binary sensor platforms set up concurrently and import
-        # the same server; the lock lets the first import create the entry and
-        # the second merge into it.
-        lock = self.hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
-        async with lock:
-            result = await self._async_handle_import(import_data)
+        """Import a config entry from YAML platform configuration.
+
+        Concurrent imports are serialized by async_import_yaml, whose lock
+        spans the whole flow including entry registration.
+        """
+        result = await self._async_handle_import(import_data)
 
         # Scoped per server: several YAML endpoints can import independently
         issue_id = (

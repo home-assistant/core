@@ -1,10 +1,15 @@
 """The Concord232 integration."""
 
+import asyncio
+
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+
+from .const import DATA_IMPORT_LOCK, DOMAIN
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
@@ -13,6 +18,21 @@ def build_url(host: str, port: int) -> str:
     """Return the server url for the stored connection settings."""
     # URL.build brackets IPv6 hosts correctly
     return str(URL.build(scheme="http", host=host, port=port))
+
+
+async def async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import one platform's YAML configuration through the config flow.
+
+    The alarm and binary sensor platforms set up concurrently and import
+    the same server. The lock spans the entire flow, including entry
+    registration, so the first import creates the entry and the second
+    sees it and merges into it instead of creating a duplicate.
+    """
+    lock = hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
+    async with lock:
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

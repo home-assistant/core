@@ -1,5 +1,6 @@
 """Tests for the Concord232 config flow."""
 
+import asyncio
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ import requests
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.concord232 import async_import_yaml
 from homeassistant.components.concord232.const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
@@ -516,3 +518,28 @@ async def test_cleared_code_survives_reimport(
     )
     assert result["reason"] == "already_configured"
     assert entry.options[CONF_CODE] == ""
+
+
+async def test_concurrent_platform_imports_create_one_entry(
+    hass: HomeAssistant, mock_concord232_client: MagicMock
+) -> None:
+    """Test simultaneous platform imports merge into a single entry."""
+    await asyncio.gather(
+        async_import_yaml(
+            hass,
+            {
+                CONF_HOST: "localhost",
+                CONF_PORT: 5007,
+                CONF_NAME: "Test Alarm",
+                CONF_CODE: "1234",
+                CONF_MODE: "silent",
+            },
+        ),
+        async_import_yaml(hass, {CONF_HOST: "localhost", CONF_PORT: 5007}),
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].title == "Test Alarm"
+    assert entries[0].options == {CONF_CODE: "1234", CONF_MODE: "silent"}

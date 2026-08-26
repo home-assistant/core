@@ -15,7 +15,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import build_url
-from .const import DEFAULT_MODE, DEFAULT_PORT, DOMAIN
+from . import async_import_yaml, build_url
+from .const import DEFAULT_MODE, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +53,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML platform configuration and create a config entry."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-    )
+    await async_import_yaml(hass, config)
 
 
 async def async_setup_entry(
