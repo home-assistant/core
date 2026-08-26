@@ -215,3 +215,19 @@ async def test_no_partitions_reports_unknown(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_setup_connection_error_creates_no_entity(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a connection error during setup leaves no panel entity."""
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("boom")
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert "Unable to connect to Concord232" in caplog.text

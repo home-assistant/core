@@ -199,7 +199,8 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if CONF_NAME in import_data and title == entry.data[CONF_HOST]:
                     title = import_data[CONF_NAME]
                 # The companion platform's import extends the platform set;
-                # updating data reloads the entry so the platform loads now
+                # updating data reloads the entry so the platform loads now.
+                # Never narrow an unrestricted entry, only extend a restriction.
                 entry_data = dict(entry.data)
                 imported = entry_data.get(CONF_IMPORTED_PLATFORMS, [])
                 if platform and imported and platform not in imported:

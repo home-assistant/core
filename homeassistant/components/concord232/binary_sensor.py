@@ -31,7 +31,6 @@ from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_PORT
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Alarm"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
@@ -69,7 +68,7 @@ async def async_setup_entry(
     # Options imported from YAML; JSON storage turns zone numbers into strings
     exclude = {int(number) for number in entry.options.get(CONF_EXCLUDE_ZONES, [])}
     zone_types = {
-        int(number): zone_type
+        int(number): BinarySensorDeviceClass(zone_type)
         for number, zone_type in entry.options.get(CONF_ZONE_TYPES, {}).items()
     }
     sensors = await hass.async_add_executor_job(

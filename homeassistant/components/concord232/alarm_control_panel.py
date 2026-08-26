@@ -70,11 +70,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Concord232 alarm control panel from a config entry."""
     url = build_url(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    # An empty options field means no code is configured
+    # "" is the options flow's explicit cleared-code marker
     code: str | None = entry.options.get(CONF_CODE) or None
     mode: str = entry.options.get(CONF_MODE, DEFAULT_MODE)
     try:
-        # The constructor connects to the server
+        # The constructor does blocking I/O against the server
         alarm = await hass.async_add_executor_job(
             Concord232Alarm, url, entry.title, code, mode
         )
