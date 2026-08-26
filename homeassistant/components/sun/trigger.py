@@ -426,6 +426,14 @@ class BlueHourEndedTrigger(_GoldenBlueHourTrigger):
     _setting_elevation = ELEVATION_BLUE_HOUR_LOW
 
 
+# The sun's daily extreme only crosses the horizon - producing a midnight sun or
+# polar night - inside the polar circles. A midnight sun needs the solar-midnight
+# elevation to reach the horizon, which at maximum declination happens no lower
+# than ~65.4° of latitude; below this the scan below can never find a crossing, so
+# it is skipped entirely. The threshold sits a safe margin under that minimum.
+_MIN_POLAR_LATITUDE = 65.0
+
+
 def _next_horizon_crossing(
     observer: astral.Observer,
     event: str,
@@ -442,6 +450,11 @@ def _next_horizon_crossing(
     crossing occurs within the scanned window (just over a year), which is the
     case at any latitude that never has a midnight sun or polar night.
     """
+    # Outside the polar circles neither event can occur; skip the ~year-long scan
+    # (which would otherwise run in the event loop on every scheduling attempt).
+    if abs(observer.latitude) < _MIN_POLAR_LATITUDE:
+        return None
+
     event_func = getattr(astral.sun, event)
     # A positive ("after") offset delays the fire time past the crossing itself,
     # so a crossing up to `offset` in the past can still be pending; look back

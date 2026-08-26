@@ -4,12 +4,14 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 from typing import Any
 
+import astral
 from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import automation, sun
+from homeassistant.components.sun.trigger import _next_horizon_crossing
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -873,6 +875,30 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("latitude", "has_crossing"),
+    [
+        (32.87, False),  # San Diego, well below the polar circle
+        (60.0, False),  # below the polar circle
+        (65.0, False),  # at the short-circuit threshold, still no polar period
+        (78.22, True),  # Svalbard, deep polar
+    ],
+)
+def test_next_horizon_crossing_short_circuits_non_polar(
+    latitude: float, has_crossing: bool
+) -> None:
+    """Test the crossing scan is skipped where no polar period can occur.
+
+    Below the polar circles the scan can never find a crossing, so it must
+    short-circuit rather than run its ~year-long loop in the event loop.
+    """
+    observer = astral.Observer(latitude, 15.0, 0)
+    result = _next_horizon_crossing(
+        observer, "midnight", _TEST_DATETIME, target_above=True, offset=timedelta(0)
+    )
+    assert (result is not None) is has_crossing
 
 
 # --- Sun elevation triggers --------------------------------------------------
