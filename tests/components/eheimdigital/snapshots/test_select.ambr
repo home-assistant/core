@@ -57,7 +57,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'manual',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_constant_flow_speed-entry]
@@ -110,8 +110,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'const_flow_speed',
-    'unique_id': '00:00:00:00:00:04_const_flow_speed',
+    'translation_key': 'const_flow',
+    'unique_id': '00:00:00:00:00:04_const_flow',
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
@@ -143,7 +143,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '860',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_day_speed-entry]
@@ -229,7 +229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '740',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_filter_mode-entry]
@@ -292,7 +292,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'manual',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_high_pulse_speed-entry]
@@ -378,7 +378,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '740',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_low_pulse_speed-entry]
@@ -464,7 +464,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '440',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_filter_manual_speed-entry]
@@ -636,7 +636,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '550',
   })
 # ---
 # name: test_setup[select.mock_aquarium_mock_reeflex_operation_mode-entry]
@@ -695,6 +695,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'daycycle',
   })
 # ---

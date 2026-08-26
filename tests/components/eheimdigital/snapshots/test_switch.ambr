@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00:00:00:00:00:05_active',
+    'unique_id': '00:00:00:00:00:05_is_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -146,7 +146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_setup[switch.mock_aquarium_mock_reeflex_booster-entry]
@@ -196,7 +196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_setup[switch.mock_aquarium_mock_reeflex_expert_mode-entry]
@@ -246,7 +246,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_setup[switch.mock_aquarium_mock_reeflex_pause-entry]
@@ -296,6 +296,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---

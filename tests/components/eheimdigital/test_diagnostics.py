@@ -25,12 +25,17 @@ async def test_entry_diagnostics(
 
     await init_integration(hass, mock_config_entry)
 
-    for device in eheimdigital_hub_mock.return_value.devices.values():
+    for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
         await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-            device.mac_address, device.device_type
+            device, device_obj.device_type
         )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
 
-    mock_config_entry.runtime_data.data = eheimdigital_hub_mock.return_value.devices
+        await hass.async_block_till_done()
 
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry

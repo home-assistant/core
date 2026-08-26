@@ -16,11 +16,18 @@ from eheimdigital.types import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory, UnitOfFrequency, UnitOfVolumeFlowRate
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfFrequency,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
@@ -73,8 +80,8 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSelectDescription[EheimDigitalFilter], ..
         set_value_fn=lambda device, value: device.set_manual_speed(float(value)),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
-        key="const_flow_speed",
-        translation_key="const_flow_speed",
+        key="const_flow",
+        translation_key="const_flow",
         entity_category=EntityCategory.CONFIG,
         use_api_unit=True,
         unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
@@ -166,6 +173,18 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
 )
 
 
+def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
+    registry = er.async_get(hass)
+    if (
+        old_id := registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{device_address}_const_flow_speed"
+        )
+    ) is not None:
+        registry.async_update_entity(
+            old_id, new_unique_id=f"{device_address}_const_flow"
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -175,35 +194,40 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
+        device_coordinator: EheimDigitalDeviceUpdateCoordinator[Any],
     ) -> None:
         """Set up the number entities for one or multiple devices."""
         entities: list[EheimDigitalSelect[Any]] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalClassicVario):
-                entities.extend(
-                    EheimDigitalSelect[EheimDigitalClassicVario](
-                        coordinator, device, description
-                    )
-                    for description in CLASSICVARIO_DESCRIPTIONS
+        _async_migrate_entities(hass, device_coordinator.data.mac_address)
+        if isinstance(device_coordinator.data, EheimDigitalClassicVario):
+            entities.extend(
+                EheimDigitalSelect[EheimDigitalClassicVario](
+                    device_coordinator, description
                 )
-            if isinstance(device, EheimDigitalFilter):
-                entities.extend(
-                    EheimDigitalFilterSelect(coordinator, device, description)
-                    for description in FILTER_DESCRIPTIONS
+                for description in CLASSICVARIO_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalFilter):
+            entities.extend(
+                EheimDigitalFilterSelect(device_coordinator, description)
+                for description in FILTER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalReeflexUV):
+            entities.extend(
+                EheimDigitalSelect[EheimDigitalReeflexUV](
+                    device_coordinator, description
                 )
-            if isinstance(device, EheimDigitalReeflexUV):
-                entities.extend(
-                    EheimDigitalSelect[EheimDigitalReeflexUV](
-                        coordinator, device, description
-                    )
-                    for description in REEFLEX_DESCRIPTIONS
-                )
+                for description in REEFLEX_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
 
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalSelect[_DeviceT: EheimDigitalDevice](
@@ -217,15 +241,14 @@ class EheimDigitalSelect[_DeviceT: EheimDigitalDevice](
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
         description: EheimDigitalSelectDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital select entity."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
         if description.options_fn is not None:
-            self._attr_options = description.options_fn(device)
+            self._attr_options = description.options_fn(self._device)
         elif description.options is not None:
             self._attr_options = description.options
         self._attr_unique_id = f"{self._device_address}_{description.key}"

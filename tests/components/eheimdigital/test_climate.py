@@ -8,6 +8,7 @@ from eheimdigital.types import (
     EheimDigitalClientError,
     HeaterMode,
     HeaterUnit,
+    MsgTitle,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -37,15 +38,14 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("heater_mock")
-async def test_setup_heater(
+async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test climate platform setup for heater."""
+    """Test climate platform setup."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -57,10 +57,17 @@ async def test_setup_heater(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
-    )
-    await hass.async_block_till_done()
+    for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, device_obj.device_type
+        )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
+
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -273,7 +280,10 @@ async def test_state_update(
     heater_mock.heater_data["active"] = int(False)
     heater_mock.heater_data["mode"] = int(HeaterMode.SMART)
 
-    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
+    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+        "00:00:00:00:00:02", MsgTitle.HEATER_DATA
+    )
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get("climate.mock_aquarium_mock_heater"))
     assert state.state == HVACMode.OFF

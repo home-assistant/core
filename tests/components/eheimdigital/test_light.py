@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
-from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError, MsgTitle
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -64,10 +64,17 @@ async def test_setup_classic_led_ctrl(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
-    )
-    await hass.async_block_till_done()
+    for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, device_obj.device_type
+        )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
+
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -107,10 +114,17 @@ async def test_dynamic_new_devices(
         "00:00:00:00:00:01": classic_led_ctrl_mock
     }
 
-    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
-    )
-    await hass.async_block_till_done()
+    for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, device_obj.device_type
+        )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
+
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -272,7 +286,9 @@ async def test_state_update(
 
     classic_led_ctrl_mock.ccv["currentValues"] = [30, 20]
 
-    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
+    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+        classic_led_ctrl_mock.mac_address, MsgTitle.CCV
+    )
 
     assert (
         state := hass.states.get(

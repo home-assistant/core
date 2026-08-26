@@ -8,13 +8,16 @@ from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.reeflex import EheimDigitalReeflexUV
+from eheimdigital.types import MsgTitle
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity, exception_handler
 
 # Coordinator is used to centralize the data updates
@@ -35,7 +38,7 @@ REEFLEX_DESCRIPTIONS: tuple[
     EheimDigitalSwitchDescription[EheimDigitalReeflexUV], ...
 ] = (
     EheimDigitalSwitchDescription[EheimDigitalReeflexUV](
-        key="active",
+        key="is_active",
         name=None,
         entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda device: device.is_active,
@@ -65,6 +68,18 @@ REEFLEX_DESCRIPTIONS: tuple[
 )
 
 
+def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
+    registry = er.async_get(hass)
+    if (
+        old_id := registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{device_address}_active"
+        )
+    ) is not None:
+        registry.async_update_entity(
+            old_id, new_unique_id=f"{device_address}_is_active"
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -74,25 +89,32 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
+        device_coordinator: EheimDigitalDeviceUpdateCoordinator[Any],
     ) -> None:
         """Set up the switch entities for one or multiple devices."""
         entities: list[SwitchEntity] = []
-        for device in device_address.values():
-            if isinstance(device, (EheimDigitalClassicVario, EheimDigitalFilter)):
-                entities.append(EheimDigitalFilterSwitch(coordinator, device))
-            if isinstance(device, EheimDigitalReeflexUV):
-                entities.extend(
-                    EheimDigitalSwitch[EheimDigitalReeflexUV](
-                        coordinator, device, description
-                    )
-                    for description in REEFLEX_DESCRIPTIONS
+        _async_migrate_entities(hass, device_coordinator.data.mac_address)
+        if (
+            isinstance(device_coordinator.data, EheimDigitalFilter)
+            and device_coordinator.msg_title == MsgTitle.FILTER_DATA
+        ) or (
+            isinstance(device_coordinator.data, EheimDigitalClassicVario)
+            and device_coordinator.msg_title == MsgTitle.CLASSIC_VARIO_DATA
+        ):
+            entities.append(EheimDigitalFilterSwitch(device_coordinator))
+        if isinstance(device_coordinator.data, EheimDigitalReeflexUV):
+            entities.extend(
+                EheimDigitalSwitch[EheimDigitalReeflexUV](
+                    device_coordinator, description
                 )
+                for description in REEFLEX_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
 
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalSwitch[_DeviceT: EheimDigitalDevice](
@@ -104,12 +126,11 @@ class EheimDigitalSwitch[_DeviceT: EheimDigitalDevice](
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
         description: EheimDigitalSwitchDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital switch entity."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
@@ -140,12 +161,13 @@ class EheimDigitalFilterSwitch(
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: EheimDigitalClassicVario | EheimDigitalFilter,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[
+            EheimDigitalClassicVario | EheimDigitalFilter
+        ],
     ) -> None:
         """Initialize an EHEIM Digital classicVARIO or filter switch entity."""
-        super().__init__(coordinator, device)
-        self._attr_unique_id = device.mac_address
+        super().__init__(coordinator)
+        self._attr_unique_id = self._device_address
         self._async_update_attrs()
 
     @override

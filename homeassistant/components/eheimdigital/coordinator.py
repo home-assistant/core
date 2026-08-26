@@ -7,7 +7,7 @@ from typing import override
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
-from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError, MsgTitle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -19,17 +19,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-type AsyncSetupDeviceEntitiesCallback = Callable[[dict[str, EheimDigitalDevice]], None]
+type AsyncSetupDeviceEntitiesCallback = Callable[
+    [EheimDigitalDeviceUpdateCoordinator[EheimDigitalDevice]], None
+]
 
 type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
 
 
-class EheimDigitalUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, EheimDigitalDevice]]
-):
-    """The EHEIM Digital data update coordinator."""
+class EheimDigitalUpdateCoordinator(DataUpdateCoordinator[None]):
+    """The EHEIM Digital main data update coordinator."""
 
     config_entry: EheimDigitalConfigEntry
+    device_coordinators: dict[
+        str, dict[MsgTitle, EheimDigitalDeviceUpdateCoordinator[EheimDigitalDevice]]
+    ]
+    main_device_added_event: asyncio.Event
+    hub: EheimDigitalHub
 
     def __init__(
         self, hass: HomeAssistant, config_entry: EheimDigitalConfigEntry
@@ -54,6 +59,7 @@ class EheimDigitalUpdateCoordinator(
         self.known_devices: set[str] = set()
         self.incomplete_devices: set[str] = set()
         self.platform_callbacks: set[AsyncSetupDeviceEntitiesCallback] = set()
+        self.device_coordinators = {}
 
     def add_platform_callback(
         self,
@@ -61,6 +67,9 @@ class EheimDigitalUpdateCoordinator(
     ) -> None:
         """Add the setup callbacks from a specific platform."""
         self.platform_callbacks.add(async_setup_device_entities)
+        for device in self.device_coordinators.values():
+            for coordinator in device.values():
+                async_setup_device_entities(coordinator)
 
     async def _async_device_found(
         self, device_address: str, device_type: EheimDeviceType
@@ -75,22 +84,42 @@ class EheimDigitalUpdateCoordinator(
             return
 
         if (
-            device_address not in self.known_devices
+            device_address not in self.device_coordinators
             or device_address in self.incomplete_devices
         ):
-            for platform_callback in self.platform_callbacks:
-                platform_callback({device_address: self.hub.devices[device_address]})
+            if device_address not in self.device_coordinators:
+                self.device_coordinators[device_address] = {}
+                for title in self.hub.devices[device_address].packet_mapping:
+                    self.device_coordinators[device_address][title] = (
+                        EheimDigitalDeviceUpdateCoordinator(
+                            self.hass,
+                            self.config_entry,
+                            self,
+                            self.hub.devices[device_address],
+                            title,
+                        )
+                    )
+                    for platform_callback in self.platform_callbacks:
+                        platform_callback(
+                            self.device_coordinators[device_address][title]
+                        )
             if device_address in self.incomplete_devices:
                 self.incomplete_devices.remove(device_address)
 
-    async def _async_receive_callback(self) -> None:
+    async def _async_receive_callback(self, device: str, msg_title: MsgTitle) -> None:
         if any(self.incomplete_devices):
             for device_address in self.incomplete_devices.copy():
                 if not self.hub.devices[device_address].is_missing_data:
                     await self._async_device_found(
                         device_address, EheimDeviceType.VERSION_UNDEFINED
                     )
-        self.async_set_updated_data(self.hub.devices)
+        if (
+            device in self.device_coordinators
+            and msg_title in self.device_coordinators[device]
+        ):
+            self.device_coordinators[device][msg_title].async_set_updated_data(
+                self.hub.devices[device]
+            )
 
     @override
     async def _async_setup(self) -> None:
@@ -103,13 +132,45 @@ class EheimDigitalUpdateCoordinator(
                 # before the response from the device is parsed.
                 await self.main_device_added_event.wait()
             await self.hub.update()
+            self.async_add_listener(lambda: None, None)
         except (TimeoutError, EheimDigitalClientError) as err:
             raise ConfigEntryNotReady from err
 
     @override
-    async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
+    async def _async_update_data(self) -> None:
         try:
             await self.hub.update()
         except ClientError as ex:
+            for a in self.device_coordinators.values():
+                for coordinator in a.values():
+                    coordinator.async_set_update_error(ex)
             raise UpdateFailed from ex
-        return self.data
+
+
+class EheimDigitalDeviceUpdateCoordinator[_DeviceT: EheimDigitalDevice](
+    DataUpdateCoordinator[_DeviceT]
+):
+    """An EHEIM Digital device update coordinator."""
+
+    main_coordinator: EheimDigitalUpdateCoordinator
+    msg_title: MsgTitle
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: EheimDigitalConfigEntry,
+        main_coordinator: EheimDigitalUpdateCoordinator,
+        device: _DeviceT,
+        msg_title: MsgTitle,
+    ) -> None:
+        """Initialize an EHEIM Digital device update coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{device.mac_address}_{msg_title}",
+            update_interval=None,
+        )
+        self.main_coordinator = main_coordinator
+        self.data = device
+        self.msg_title = msg_title
