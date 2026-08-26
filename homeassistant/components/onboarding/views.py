@@ -128,8 +128,15 @@ class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
         # On Supervisor based installations the hassio integration loads after
         # the HTTP server already serves onboarding. Wait for it so the
         # installation type is not misdetected while still starting up. When
-        # hassio is not pending setup this returns immediately.
-        await async_wait_component(hass, "hassio")
+        # hassio is not pending setup this returns immediately. The wait is
+        # shielded because cancellation on connection drop would cancel the
+        # shared setup future and make hassio setup fail. The task is created
+        # through hass to hold a strong reference to it.
+        await asyncio.shield(
+            hass.async_create_task(
+                async_wait_component(hass, "hassio"), "onboarding wait hassio"
+            )
+        )
 
         # Onboarding may have completed while waiting
         if self._data["done"]:

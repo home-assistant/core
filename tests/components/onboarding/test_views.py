@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant import bootstrap
 from homeassistant.components import hassio, onboarding
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant, callback
@@ -415,6 +416,45 @@ async def test_onboarding_integration_requires_auth(
     )
 
     assert resp.status == 401
+
+
+async def test_onboarding_installation_type_client_disconnect(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a client disconnect does not break the pending hassio setup.
+
+    The HTTP runner is created with handler_cancellation=True, so a disconnect
+    cancels the request handler. An unshielded wait would cancel the setup
+    future shared with every other waiter and with hassio setup itself.
+    """
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    async_set_domains_to_be_loaded(hass, {"hassio"})
+
+    wait_entered, instrumented_wait = _instrumented_wait_component()
+
+    view = views.InstallationTypeOnboardingView(hass.data[DOMAIN].steps)
+    request = Mock()
+    request.app = {KEY_HASS: hass}
+
+    with patch(
+        "homeassistant.components.onboarding.views.async_wait_component",
+        instrumented_wait,
+    ):
+        task = hass.async_create_task(view.get(request))
+        await wait_entered.wait()
+
+        # The client goes away while the request waits for hassio
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        # Setting up hassio must still resolve the shared setup future
+        assert not await async_setup_component(hass, "hassio", {})
 
 
 async def test_onboarding_core_sets_up_met(
