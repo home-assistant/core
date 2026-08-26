@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
@@ -60,24 +60,53 @@ async def async_setup_entry(
     """Set up the Sofar Inverter Modbus sensor platform."""
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
-
     device = runtime_data.readings.device
-    entities: list[SensorEntity] = [
+
+    async_add_entities(
         _sensor_class(description)(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and _part_is_present(device, description)
-    ]
-    async_add_entities(entities)
+        if description.component in served and not _is_battery_pack(description)
+    )
+
+    wired: set[int] = set()
+
+    @callback
+    def _async_add_wired_packs() -> None:
+        """Add a pack's sensors the first time it reports a voltage."""
+        new = {
+            number
+            for number in _BATTERY_COMPONENTS
+            if number not in wired and _pack_is_wired(device, served, number)
+        }
+        if not new:
+            return
+        wired.update(new)
+        async_add_entities(
+            _sensor_class(description)(runtime_data, description)
+            for description in SENSOR_DESCRIPTIONS
+            if (part := description.part) is not None
+            and part[0] == "battery"
+            and part[1] in new
+        )
+
+    _async_add_wired_packs()
+    entry.async_on_unload(
+        runtime_data.readings.async_add_listener(_async_add_wired_packs)
+    )
 
 
-def _part_is_present(
-    device: SofarInverter, description: SofarSensorDescription
-) -> bool:
-    """Whether the part exists: packs are read, strings come from the model."""
-    if (part := description.part) is None or part[0] != "battery":
-        return True
-    component = getattr(device, description.component)
-    return bool(getattr(component, f"battery_voltage_{part[1]}", None))
+def _is_battery_pack(description: SofarSensorDescription) -> bool:
+    """Whether a description belongs to one numbered battery pack."""
+    return description.part is not None and description.part[0] == "battery"
+
+
+def _pack_is_wired(device: SofarInverter, served: frozenset[str], number: int) -> bool:
+    """Whether a pack has answered, so it physically exists."""
+    component_name = _BATTERY_COMPONENTS[number]
+    if component_name not in served:
+        return False
+    component = getattr(device, component_name)
+    return bool(getattr(component, f"battery_voltage_{number}", None))
 
 
 def _sensor_class(

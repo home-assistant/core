@@ -33,6 +33,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 PV_POWER_REGISTER = 0x0586
+BATTERY_3_VOLTAGE_REGISTER = 0x0612
 SOLAR_GENERATION_REGISTER = 0x0684
 
 
@@ -440,3 +441,43 @@ async def test_only_wired_battery_packs_become_devices(
     )
     assert total_id is not None
     assert entity_registry.async_get(total_id).device_id == inverter.id
+
+
+async def test_battery_pack_appears_once_its_block_answers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pack whose block failed at setup is added when it recovers."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    # Inside the battery_3_8 block, so pack 3 cannot be seen at setup.
+    unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, ModbusError("block busy"))
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    unique_id = f"{MOCK_HYBRID_SERIAL}_battery_voltage_3"
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+
+    unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # No reload: the coordinator's own listener notices the pack answering.
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "51.5"
