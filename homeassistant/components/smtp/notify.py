@@ -250,7 +250,7 @@ class MailNotifyEntity(NotifyEntity):
                         "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
                     },
                 )
-            if (html_part := msg.get_body("html")) and (
+            if (html_part := msg.get_body(("related", "html"))) and (
                 cid := file.get(ATTR_CONTENT_ID)
             ):
                 html_part.add_related(
