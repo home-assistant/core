@@ -9593,56 +9593,6 @@
     'state': 'grid_connected',
   })
 # ---
-# name: test_all_entities[sensor.hydxxktl_3p_system_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hydxxktl_3p_system_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'System time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'System time',
-    'platform': 'sofar',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rtc',
-    'unique_id': 'SP1XXES100XX_rtc',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.hydxxktl_3p_system_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P System time',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.hydxxktl_3p_system_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[sensor.hydxxktl_3p_update_system_time_operation_result-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

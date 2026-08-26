@@ -208,6 +208,26 @@
         "name": "UV"
       }
     },
+    "switch": {
+      "electrolysis_boost": {
+        "name": "Electrolysis boost"
+      },
+      "electrolysis_cover": {
+        "name": "Electrolysis cover"
+      },
+      "filtration": {
+        "name": "Filtration"
+      },
+      "heating_climate": {
+        "name": "Heating climate"
+      },
+      "relay": {
+        "name": "Relay {number}"
+      },
+      "smart_mode_freeze": {
+        "name": "Smart mode freeze"
+      }
+    },
     "time": {
       "filtration_interval_end": {
         "name": "Filtration interval {number} end"
