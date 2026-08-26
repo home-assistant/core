@@ -417,7 +417,7 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
     )
     assert entity_id is not None
-    # The exact moment, so a wrong sign or unit cannot pass as "not unknown".
+    # The exact moment: a wrong sign or unit must not slip through.
     deadline = (dt_util.utcnow() + timedelta(seconds=300)).isoformat(timespec="seconds")
     assert hass.states.get(entity_id).state == deadline
 
