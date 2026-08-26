@@ -428,14 +428,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     trend_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Trend",
-            "entity_id": "sensor.test_source",
+            "entity_id": source_entity.entity_id,
             "invert": False,
         },
         title="Trend",
@@ -445,7 +445,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity = entity_registry.async_get("binary_sensor.trend")
+    trend_entity = entity_registry.async_get("binary_sensor.mock_title_trend")
     assert trend_entity is not None
     assert trend_entity.device_id == source_entity.device_id
 

@@ -7,6 +7,7 @@ from typing import override
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, Chime, Host
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -210,7 +211,11 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 connections=connections,
-                via_device=(DOMAIN, self._host.unique_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, self._host.unique_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
                 name=self._host.api.camera_name(channel),
                 model=self._host.api.camera_model(channel),
                 model_id=self._host.api.item_number(channel),
@@ -231,7 +236,11 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             self._dev_id = f"{self._host.unique_id}_lens{channel}"
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
-                via_device=(DOMAIN, parent_dev_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, parent_dev_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
                 name=f"{self._host.api.camera_name(0)} lens {channel}",
                 model=self._host.api.camera_model(0),
                 manufacturer=self._host.api.manufacturer,
@@ -298,7 +307,11 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
-            via_device=(DOMAIN, via_dev_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, via_dev_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,
@@ -336,7 +349,11 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
-            via_device=(DOMAIN, via_dev_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, via_dev_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,

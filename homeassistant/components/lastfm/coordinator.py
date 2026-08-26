@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
-from pylast import LastFMNetwork, PyLastError, Track
+from pylast import LastFMNetwork, PyLastError, Track, WSError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERS, DOMAIN, LOGGER
+from .const import CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED, LOGGER
 
 type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
@@ -50,6 +50,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             update_interval=timedelta(seconds=30),
         )
         self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
+        self._warned_hidden_users: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
@@ -67,13 +68,33 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         try:
             play_count = user.get_playcount()
             image = user.get_image()
-            now_playing = format_track(user.get_now_playing())
             top_tracks = user.get_top_tracks(limit=1)
-            last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
             if self.last_update_success:
                 LOGGER.error("LastFM update for %s failed: %r", username, exc)
             return None
+        now_playing = None
+        last_tracks = []
+        try:
+            now_playing = format_track(user.get_now_playing())
+            last_tracks = user.get_recent_tracks(limit=1)
+        except PyLastError as exc:
+            if not (
+                isinstance(exc, WSError) and exc.status == ERROR_CODE_LOGIN_REQUIRED
+            ):
+                if self.last_update_success:
+                    LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                return None
+            if username not in self._warned_hidden_users:
+                self._warned_hidden_users.add(username)
+                LOGGER.warning(
+                    "LastFM user %s has hidden their recent listening information "
+                    "(https://www.last.fm/settings/privacy); now playing and last "
+                    "played track are unavailable",
+                    username,
+                )
+        else:
+            self._warned_hidden_users.discard(username)
         top_track = None
         if len(top_tracks) > 0:
             top_track = format_track(top_tracks[0].item)

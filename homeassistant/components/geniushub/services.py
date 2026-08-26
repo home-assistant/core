@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -58,7 +59,7 @@ def setup_service_functions(hass: HomeAssistant) -> None:
                 translation_placeholders={"entity_id": entity_id},
             )
 
-        if registry_entry.domain != "climate":
+        if registry_entry.domain != CLIMATE_DOMAIN:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_zone",

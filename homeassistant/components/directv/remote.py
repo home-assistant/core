@@ -29,7 +29,9 @@ async def async_setup_entry(
     async_add_entities(
         (
             DIRECTVRemote(
+                hass=hass,
                 dtv=dtv,
+                entry=entry,
                 name=str.title(location.name),
                 address=location.address,
             )
@@ -42,10 +44,20 @@ async def async_setup_entry(
 class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
     """Device that sends commands to a DirecTV receiver."""
 
-    def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
+    def __init__(
+        self,
+        *,
+        hass: HomeAssistant,
+        dtv: DIRECTV,
+        entry: DirecTVConfigEntry,
+        name: str,
+        address: str = "0",
+    ) -> None:
         """Initialize DirecTV remote."""
         super().__init__(
+            hass=hass,
             dtv=dtv,
+            entry=entry,
             name=name,
             address=address,
         )

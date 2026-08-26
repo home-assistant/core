@@ -78,7 +78,7 @@ def mock_randrange() -> Generator[None]:
 
     with patch(
         "random.randrange",
-        return_value=1234567890123456789,
+        side_effect=[1, 2, 3, 4, 5, 6, 7, 8, 9],
     ):
         yield
 

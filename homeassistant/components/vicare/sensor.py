@@ -38,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     VICARE_BAR,
@@ -49,7 +50,8 @@ from .const import (
     VICARE_W,
     VICARE_WH,
 )
-from .entity import ViCareEntity
+from .coordinator import ViCareCoordinator
+from .entity import ViCareCoordinatorEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
     filter_state,
@@ -57,7 +59,6 @@ from .utils import (
     get_circuits,
     get_compressors,
     get_condensers,
-    get_device_serial,
     get_evaporators,
     get_inverters,
     is_supported,
@@ -1541,11 +1542,13 @@ def _build_entities(
 
     entities: list[ViCareSensor] = []
     for device in device_list:
+        assert device.coordinator is not None
         # add device entities
         entities.extend(
             ViCareSensor(
+                device.coordinator,
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -1556,8 +1559,9 @@ def _build_entities(
         if isinstance(device.api, FloorHeating):
             entities.extend(
                 ViCareSensor(
+                    device.coordinator,
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                 )
@@ -1575,8 +1579,9 @@ def _build_entities(
         ):
             entities.extend(
                 ViCareSensor(
+                    device.coordinator,
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,
@@ -1598,19 +1603,18 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             config_entry.runtime_data.devices,
-        ),
-        # run update to have device_class set depending on unit_of_measurement
-        True,
+        )
     )
 
 
-class ViCareSensor(ViCareEntity, SensorEntity):
+class ViCareSensor(ViCareCoordinatorEntity, SensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareSensorEntityDescription
 
     def __init__(
         self,
+        coordinator: ViCareCoordinator,
         description: ViCareSensorEntityDescription,
         device_serial: str | None,
         device_config: PyViCareDeviceConfig,
@@ -1619,30 +1623,29 @@ class ViCareSensor(ViCareEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            description.key, device_serial, device_config, device, component
+            coordinator,
+            description.key,
+            device_serial,
+            device_config,
+            device,
+            component,
         )
         self.entity_description = description
+        if description.unit_getter is not None:
+            with suppress(PyViCareNotSupportedFeatureError):
+                if (vicare_unit := description.unit_getter(self._api)) is not None:
+                    self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
+                        vicare_unit
+                    )
+                    if vicare_unit in VICARE_UNIT_TO_DEVICE_CLASS:
+                        self._attr_device_class = VICARE_UNIT_TO_DEVICE_CLASS[
+                            vicare_unit
+                        ]
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_native_value is not None
-
-    def update(self) -> None:
-        """Update state of sensor."""
-        vicare_unit = None
-        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
-            self._attr_native_value = self.entity_description.value_getter(self._api)
-
-            if self.entity_description.unit_getter:
-                vicare_unit = self.entity_description.unit_getter(self._api)
-
-        if vicare_unit is not None:
-            if (
-                device_class := VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
-            ) is not None:
-                self._attr_device_class = device_class
-            self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
-                vicare_unit
-            )
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        with suppress(PyViCareNotSupportedFeatureError):
+            return self.entity_description.value_getter(self._api)
+        return None
