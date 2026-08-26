@@ -85,7 +85,11 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
 ) -> None:
     """Handle update."""
-    if entry.data[CONF_NPSSO] == entry.runtime_data.user_data.psn.npsso:
+    psn = entry.runtime_data.user_data.psn
+    if (
+        entry.data[CONF_NPSSO] == psn.npsso
+        and entry.data.get(CONF_TOKEN_RESPONSE) == psn.token_response
+    ):
         return
     await hass.config_entries.async_reload(entry.entry_id)
 

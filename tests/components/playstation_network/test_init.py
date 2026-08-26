@@ -84,6 +84,37 @@ async def test_restores_and_persists_token_response(
     async_reload.assert_not_awaited()
 
 
+async def test_reloads_after_reauth_with_unchanged_npsso(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test reauthentication reloads when only the token response changes."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reauthenticated_token_response = TOKEN_RESPONSE | {
+        "access_token": "reauthenticated-access-token",
+        "refresh_token": "reauthenticated-refresh-token",
+    }
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as async_reload:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                CONF_NPSSO: NPSSO_TOKEN,
+                CONF_TOKEN_RESPONSE: reauthenticated_token_response,
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     "exception", [PSNAWPNotFoundError, PSNAWPServerError, PSNAWPClientError]
 )
