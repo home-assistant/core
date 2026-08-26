@@ -11,8 +11,14 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,19 +28,34 @@ from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+# GoodWe documents Modbus register 45353 (BattChargeCurrMax) as an unsigned
+# 16-bit value with gain 10 and range [0, 1000], i.e. 0-100.0 A in 0.1 A steps.
+# This is the range of the register itself, not a per-model hardware limit:
+# the inverter and the battery BMS still enforce their own limits.
+BATTERY_CHARGE_CURRENT_MAX = 100
+
 
 @dataclass(frozen=True, kw_only=True)
 class GoodweNumberEntityDescription(NumberEntityDescription):
     """Class describing Goodwe number entities."""
 
-    getter: Callable[[Inverter], Awaitable[int]]
-    setter: Callable[[Inverter, int], Awaitable[None]]
+    getter: Callable[[Inverter], Awaitable[float]]
+    setter: Callable[[Inverter, float], Awaitable[None]]
     filter: Callable[[Inverter], bool]
+    # Converts the requested value to the value written to the inverter.
+    # Most settings are whole numbers, settings with a finer resolution
+    # (e.g. currents with 0.1 A steps) provide their own conversion.
+    converter: Callable[[float], float] = int
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
     """Return the unit of an inverter setting."""
     return next((s.unit for s in inverter.settings() if s.id_ == setting), "")
+
+
+def _has_setting(inverter: Inverter, setting: str) -> bool:
+    """Return whether the inverter advertises an inverter setting."""
+    return any(s.id_ == setting for s in inverter.settings())
 
 
 NUMBERS = (
@@ -80,6 +101,24 @@ NUMBERS = (
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
         filter=lambda inv: True,
     ),
+    # Battery charge current limit in A (inverter side, BMS limits still apply).
+    # Only added when the inverter advertises the setting.
+    GoodweNumberEntityDescription(
+        key="battery_charge_current",
+        translation_key="battery_charge_current",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        mode=NumberMode.BOX,
+        native_step=0.1,
+        native_min_value=0,
+        native_max_value=BATTERY_CHARGE_CURRENT_MAX,
+        getter=lambda inv: inv.read_setting("battery_charge_current"),
+        setter=lambda inv, val: inv.write_setting("battery_charge_current", val),
+        filter=lambda inv: _has_setting(inv, "battery_charge_current"),
+        # The register has a resolution of 0.1 A
+        converter=lambda val: round(val, 1),
+    ),
 )
 
 
@@ -101,6 +140,10 @@ async def async_setup_entry(
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
+        if current_value is None:
+            # Inverter rejected reading this setting
+            _LOGGER.debug("No value for inverter setting %s", description.key)
+            continue
 
         entities.append(
             InverterNumberEntity(device_info, description, inverter, current_value)
@@ -121,7 +164,7 @@ class InverterNumberEntity(NumberEntity):
         device_info: DeviceInfo,
         description: GoodweNumberEntityDescription,
         inverter: Inverter,
-        current_value: int,
+        current_value: float,
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
@@ -138,6 +181,7 @@ class InverterNumberEntity(NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.setter(self._inverter, int(value))
-        self._attr_native_value = value
+        native_value = self.entity_description.converter(value)
+        await self.entity_description.setter(self._inverter, native_value)
+        self._attr_native_value = float(native_value)
         self.async_write_ha_state()
