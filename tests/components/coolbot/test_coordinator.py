@@ -107,6 +107,27 @@ async def test_a_device_waits_for_its_mac_identity(
     assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
 
 
+async def test_startup_replay_is_not_logged_as_an_outage(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A device that has not reported yet is not an outage.
+
+    Readings are untrusted until the first live push, which normally lands
+    within 15s of setup; logging that as a failure and recovery would be noise
+    on every single startup.
+    """
+    mock_client.async_get_devices.return_value = [make_device(last_data_at=None)]
+    assert await setup_integration(hass, mock_config_entry)
+    assert "has stopped reporting" not in caplog.text
+
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
+    assert "is reporting again" not in caplog.text
+
+
 async def test_staleness_is_logged_once_in_each_direction(
     hass: HomeAssistant,
     mock_client: AsyncMock,

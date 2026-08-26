@@ -42,7 +42,8 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             config_entry=entry,
         )
         self._client: CoolbotClient | None = None
-        self._stale_ids: set[str] = set()
+        #: Last known reporting state per device; absent until one first reports.
+        self._reporting: dict[str, bool] = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -129,16 +130,27 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         return data
 
     def _log_staleness_transitions(self, data: dict[str, CoolbotDevice]) -> None:
-        """Log once when a device stops reporting, and once when it recovers."""
+        """Log once when a device stops reporting, and once when it recovers.
+
+        A device that has not reported yet is not an outage: the cloud replays a
+        cached snapshot on connect, so every device looks stale for the first few
+        seconds of a normal setup. Only a device that was reporting can stop.
+        """
         for device in data.values():
             if not device.is_provisioned:
                 continue
-            if device_is_fresh(device):
-                if device.unique_id in self._stale_ids:
-                    self._stale_ids.discard(device.unique_id)
-                    _LOGGER.info("%s is reporting again", device.name)
-            elif device.unique_id not in self._stale_ids:
-                self._stale_ids.add(device.unique_id)
+            fresh = device_is_fresh(device)
+            was_fresh = self._reporting.get(device.unique_id)
+            if was_fresh is None:
+                if fresh:
+                    self._reporting[device.unique_id] = True
+                continue
+            if fresh is was_fresh:
+                continue
+            self._reporting[device.unique_id] = fresh
+            if fresh:
+                _LOGGER.info("%s is reporting again", device.name)
+            else:
                 _LOGGER.info(
                     "%s has stopped reporting; its readings are marked unavailable",
                     device.name,
