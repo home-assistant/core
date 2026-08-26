@@ -152,17 +152,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
 
 
 class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
-    """Representation of a Lutron OpenCloseStop zone.
-
-    These zones are driven by relay or contact-closure outputs on RA3 and
-    HomeWorks QSX processors. They support only Raise, Lower and Stop and do
-    not report a level, so no position is available and the open/closed state
-    is unknown.
-
-    The control type describes only the command interface, not the physical
-    load, which may be a shade, blind, curtain or another motorized cover, so
-    no device class is set.
-    """
+    """Representation of a Lutron cover with open, close and stop only."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
@@ -173,11 +163,15 @@ class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._smartbridge.raise_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._smartbridge.lower_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
