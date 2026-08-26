@@ -42,13 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PIN, default=""): vol.All(
-            cv.string, vol.Match(r"^[0-9]+\Z", msg="invalid_pin")
-        )
-    }
-)
+INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=""): cv.string})
 
 DEFAULT_START_OFF = False
 
@@ -520,17 +514,23 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.pairing
         assert self.protocol
         if user_input is not None:
-            try:
-                self.pairing.pin(user_input[CONF_PIN])
-                await self.pairing.finish()
-                self.credentials[self.protocol.value] = self.pairing.service.credentials
-                return await self.async_pair_next_protocol()
-            except exceptions.PairingError:
-                _LOGGER.exception("Authentication problem")
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            pin = user_input[CONF_PIN]
+            if not pin.isascii() or not pin.isdigit():
+                errors["pin"] = "invalid_pin"
+            else:
+                try:
+                    self.pairing.pin(pin)
+                    await self.pairing.finish()
+                    self.credentials[self.protocol.value] = (
+                        self.pairing.service.credentials
+                    )
+                    return await self.async_pair_next_protocol()
+                except exceptions.PairingError:
+                    _LOGGER.exception("Authentication problem")
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="pair_with_pin",

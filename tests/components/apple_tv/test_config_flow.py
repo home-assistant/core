@@ -17,16 +17,10 @@ from homeassistant.components.apple_tv.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .common import (
-    MockPairingHandler,
-    airplay_service,
-    create_conf,
-    mrp_service,
-    raop_service,
-)
+from .common import airplay_service, create_conf, mrp_service, raop_service
 
 from tests.common import MockConfigEntry
 
@@ -161,20 +155,11 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.usefixtures("mrp_device", "pairing")
+@pytest.mark.usefixtures("mrp_device")
 async def test_user_pair_leading_zero_pin(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, pairing: AsyncMock
 ) -> None:
     """Test that a pairing PIN with a leading zero is passed through as a string."""
-    pins: list[object] = []
-    original_pin = MockPairingHandler.pin
-
-    def _pin(self: MockPairingHandler, pin: object) -> None:
-        pins.append(pin)
-        original_pin(self, pin)
-
-    monkeypatch.setattr(MockPairingHandler, "pin", _pin)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -189,13 +174,15 @@ async def test_user_pair_leading_zero_pin(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "0123"}
     )
-    assert pins == ["0123"]
+    assert pairing.handler.pin_code == "0123"
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mrp_device", "pairing")
+@pytest.mark.usefixtures("mrp_device")
 @pytest.mark.parametrize("invalid_pin", ["abcd", "12ab", "١٢٣٤", "123\n"])
-async def test_user_pair_non_numeric_pin(hass: HomeAssistant, invalid_pin: str) -> None:
+async def test_user_pair_non_numeric_pin(
+    hass: HomeAssistant, pairing: AsyncMock, invalid_pin: str
+) -> None:
     """Test that a non-numeric PIN is rejected at the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -208,11 +195,17 @@ async def test_user_pair_non_numeric_pin(hass: HomeAssistant, invalid_pin: str) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_with_pin"
 
-    with pytest.raises(InvalidData) as err:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"pin": invalid_pin}
-        )
-    assert err.value.schema_errors == {"pin": "invalid_pin"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": invalid_pin}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"pin": "invalid_pin"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "0123"}
+    )
+    assert pairing.handler.pin_code == "0123"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("dmap_device", "dmap_pin", "pairing")
