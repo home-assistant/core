@@ -1,5 +1,6 @@
 """Tests for PlayStation Network."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -21,6 +22,7 @@ from homeassistant.components.playstation_network.const import (
 from homeassistant.components.playstation_network.coordinator import (
     PlaystationNetworkRuntimeData,
 )
+from homeassistant.components.playstation_network.helpers import PlaystationNetworkData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -155,20 +157,36 @@ async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
         "refresh_token": "reauthenticated-refresh-token",
     }
     mock_psnawpapi.authenticator.token_response = stale_token_response
+    coordinator = config_entry.runtime_data.user_data
+    update_started = asyncio.Event()
+    continue_update = asyncio.Event()
 
-    with patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
+    async def delayed_update_data() -> PlaystationNetworkData:
+        update_started.set()
+        await continue_update.wait()
+        return coordinator.data
+
+    with (
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+        patch.object(coordinator, "update_data", side_effect=delayed_update_data),
+    ):
+        refresh_task = hass.async_create_task(
+            coordinator.async_request_refresh(), "test in-flight PSN refresh"
+        )
+        await update_started.wait()
         hass.config_entries.async_update_entry(
             config_entry,
             data={
-                CONF_NPSSO: "reauthenticated-npsso",
+                CONF_NPSSO: NPSSO_TOKEN,
                 CONF_TOKEN_RESPONSE: reauthenticated_token_response,
             },
         )
-        await config_entry.runtime_data.user_data.async_request_refresh()
+        continue_update.set()
+        await refresh_task
         await hass.async_block_till_done()
 
     assert config_entry.data == {
-        CONF_NPSSO: "reauthenticated-npsso",
+        CONF_NPSSO: NPSSO_TOKEN,
         CONF_TOKEN_RESPONSE: reauthenticated_token_response,
     }
 

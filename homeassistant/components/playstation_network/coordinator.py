@@ -78,6 +78,9 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @override
     async def _async_update_data(self) -> _DataT:
         """Get the latest data from the PSN."""
+        persisted_npsso = self.config_entry.data[CONF_NPSSO]
+        persisted_token_response = self.config_entry.data.get(CONF_TOKEN_RESPONSE)
+
         try:
             data = await self.update_data()
         except PSNAWPAuthenticationError as error:
@@ -92,9 +95,11 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ) from error
 
         if (
-            self.config_entry.data[CONF_NPSSO] == self.psn.npsso
+            self.config_entry.data[CONF_NPSSO] == persisted_npsso == self.psn.npsso
+            and self.config_entry.data.get(CONF_TOKEN_RESPONSE)
+            == persisted_token_response
             and (token_response := self.psn.token_response) is not None
-            and token_response != self.config_entry.data.get(CONF_TOKEN_RESPONSE)
+            and token_response != persisted_token_response
         ):
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
