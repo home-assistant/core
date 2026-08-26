@@ -4537,7 +4537,9 @@ async def test_not_triggered_trace_isolated_from_chained_run(
 
 
 COMPOSITE_ID = "composite00000000000000000000ab"
-COMPOSITE_ISSUE_ID = f"event_trigger_composite_device_id_composite_auto_{COMPOSITE_ID}"
+COMPOSITE_ISSUE_ID = (
+    f"automation_event_trigger_composite_device_id_composite_auto_{COMPOSITE_ID}"
+)
 
 
 @pytest.fixture
@@ -4744,6 +4746,118 @@ async def test_event_trigger_composite_device_id_kept_on_unchanged_reload(
     _assert_composite_issue(issues[0])
 
 
+@pytest.mark.parametrize(
+    (
+        "setup_composite_id",
+        "issues_after_setup",
+        "reload_composite_id",
+        "issues_after_reload",
+    ),
+    [
+        pytest.param(COMPOSITE_ID, 1, None, 0, id="stops_being_composite_clears_issue"),
+        pytest.param(None, 0, COMPOSITE_ID, 1, id="becomes_composite_creates_issue"),
+    ],
+)
+async def test_event_trigger_composite_device_id_refreshed_on_unchanged_reload(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    setup_composite_id: str | None,
+    issues_after_setup: int,
+    reload_composite_id: str | None,
+    issues_after_reload: int,
+) -> None:
+    """Test the repair is refreshed when a device's composite status changes.
+
+    The automation config text is identical across the reload, so the entity is
+    reused, but the trigger's finding depends on the device registry which changed.
+    """
+    e1 = MockConfigEntry(domain="itg1")
+    e1.add_to_hass(hass)
+    e2 = MockConfigEntry(domain="itg2")
+    e2.add_to_hass(hass)
+    d1 = device_registry.async_get_or_create(
+        config_entry_id=e1.entry_id, identifiers={("itg1", "1")}, name="Split device 1"
+    )
+    d2 = device_registry.async_get_or_create(
+        config_entry_id=e2.entry_id, identifiers={("itg2", "1")}, name="Split device 2"
+    )
+
+    def _set_composite_id(composite_id: str | None) -> None:
+        device_registry._devices[d1.id] = attr.evolve(
+            device_registry._devices[d1.id], composite_device_id=composite_id
+        )
+        device_registry._devices[d2.id] = attr.evolve(
+            device_registry._devices[d2.id], composite_device_id=composite_id
+        )
+
+    _set_composite_id(setup_composite_id)
+
+    config = {
+        automation.DOMAIN: {
+            "id": "composite_auto",
+            "alias": "Composite automation",
+            "triggers": {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": COMPOSITE_ID},
+            },
+            "actions": {"action": "test.automation"},
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == issues_after_setup
+
+    _set_composite_id(reload_composite_id)
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == issues_after_reload
+
+
+@pytest.mark.usefixtures("split_devices")
+async def test_event_trigger_composite_device_id_idless_no_edit(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an id-less automation gets the no-edit repair (no /edit/None link)."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "Composite automation",
+                "triggers": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {"device_id": COMPOSITE_ID},
+                },
+                "actions": {"action": "test.automation"},
+            }
+        },
+    )
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = issues[0]
+    assert issue["issue_domain"] == "automation"
+    assert issue["translation_key"] == "event_trigger_composite_device_id_no_edit"
+    # Id-less automations have no editor deep link, so no edit placeholder is set.
+    assert "edit" not in issue["translation_placeholders"]
+    # The owner key falls back to the entity_id when there is no unique id.
+    assert issue["issue_id"] == (
+        "automation_event_trigger_composite_device_id_"
+        f"automation.composite_automation_{COMPOSITE_ID}"
+    )
+
+
 _MOCK_CONDITION_FINDING = ValidationFinding(
     finding_type="mock_condition_finding",
     issue_key="mock_key",
@@ -4833,7 +4947,9 @@ async def test_condition_validation_finding_raises_issue(
     # Translations live in the homeassistant integration; attributed to automation.
     assert issue["domain"] == "homeassistant"
     assert issue["issue_domain"] == "automation"
-    assert issue["issue_id"] == "mock_condition_finding_mock_cond_auto_mock_key"
+    assert (
+        issue["issue_id"] == "automation_mock_condition_finding_mock_cond_auto_mock_key"
+    )
     assert issue["translation_key"] == "mock_condition_finding"
     assert issue["is_fixable"] is False
     assert issue["severity"] == "error"

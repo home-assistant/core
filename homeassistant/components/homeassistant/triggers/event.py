@@ -29,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
-# Base translation key (in the homeassistant integration) of the repair raised when an event
-# trigger filters on a pre-migration composite device id.
 COMPOSITE_DEVICE_ID_ISSUE = "event_trigger_composite_device_id"
 
 
