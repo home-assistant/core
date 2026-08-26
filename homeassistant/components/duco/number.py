@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BOX_NODE_ID, BYPASS_SUPPLY_TARGET_ZONE_IDS, DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -26,13 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
-    NumberEntityDescription(
-        key="bypass_supply_target_temperature_zone",
-        translation_key="bypass_supply_target_temperature_zone",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
+BYPASS_SUPPLY_TARGET_DESCRIPTION = NumberEntityDescription(
+    key="bypass_supply_target_temperature_zone",
+    translation_key="bypass_supply_target_temperature_zone",
+    device_class=NumberDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
 )
 
 
@@ -49,35 +47,33 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add number entities for discovered bypass temperature targets."""
         new_entities = []
-        for description in NUMBER_DESCRIPTIONS:
-            for zone_id in BYPASS_SUPPLY_TARGET_ZONE_IDS:
-                if zone_id in known_zone_ids:
-                    continue
+        for (
+            zone_id,
+            target,
+        ) in coordinator.data.bypass_supply_temperature_targets.items():
+            if zone_id in known_zone_ids:
+                continue
 
-                target = coordinator.data.bypass_supply_temperature_targets.get(zone_id)
-                if target is None:
-                    continue
+            # Skip incomplete metadata because guessing valid limits would expose an invalid control.
+            if (
+                target.minimum is None
+                or target.maximum is None
+                or target.increment is None
+            ):
+                continue
 
-                # Skip incomplete metadata because guessing valid limits would expose an invalid control.
-                if (
-                    target.minimum is None
-                    or target.maximum is None
-                    or target.increment is None
-                ):
-                    continue
-
-                known_zone_ids.add(zone_id)
-                new_entities.append(
-                    DucoBypassSupplyTemperatureTargetNumber(
-                        coordinator,
-                        coordinator.data.nodes[BOX_NODE_ID],
-                        description,
-                        zone_id,
-                        target.minimum,
-                        target.maximum,
-                        target.increment,
-                    )
+            known_zone_ids.add(zone_id)
+            new_entities.append(
+                DucoBypassSupplyTemperatureTargetNumber(
+                    coordinator,
+                    coordinator.data.nodes[BOX_NODE_ID],
+                    BYPASS_SUPPLY_TARGET_DESCRIPTION,
+                    zone_id,
+                    target.minimum,
+                    target.maximum,
+                    target.increment,
                 )
+            )
 
         if new_entities:
             async_add_entities(new_entities)
