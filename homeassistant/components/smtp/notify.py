@@ -219,10 +219,10 @@ class MailNotifyEntity(NotifyEntity):
         """Send an email message via smtp.send_message action."""
         msg = EmailMessage()
         msg.set_content(message)
-        msg["Subject"] = title or ATTR_TITLE_DEFAULT
+        msg.add_header("Subject", title or ATTR_TITLE_DEFAULT)
 
         if ATTR_HTML in kwargs:
-            msg.add_related(kwargs[ATTR_HTML], subtype="html")
+            msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
 
         attachments = kwargs.get(ATTR_ATTACHMENTS, [])
 
@@ -250,15 +250,23 @@ class MailNotifyEntity(NotifyEntity):
                         "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
                     },
                 )
-
-            msg.add_attachment(
-                content,
-                maintype=main_type,
-                subtype=subtype,
-                filename=target_filename,
-                cid=f"<{cid}>" if (cid := file.get(ATTR_CONTENT_ID)) else None,
-                disposition="inline" if ATTR_CONTENT_ID in file else "attachment",
-            )
+            if (html_part := msg.get_body("html")) and (
+                cid := file.get(ATTR_CONTENT_ID)
+            ):
+                html_part.add_related(
+                    content,
+                    maintype=main_type,
+                    subtype=subtype,
+                    filename=target_filename,
+                    cid=f"<{cid}>",
+                )
+            else:
+                msg.add_attachment(
+                    content,
+                    maintype=main_type,
+                    subtype=subtype,
+                    filename=target_filename,
+                )
 
         await self.hass.async_add_executor_job(self._send_email, msg)
         self._async_record_notification()
@@ -268,15 +276,19 @@ class MailNotifyEntity(NotifyEntity):
         if TYPE_CHECKING:
             assert self._subentry.unique_id
 
-        msg["From"] = email.utils.formataddr(
-            (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+        msg.add_header(
+            "From",
+            email.utils.formataddr(
+                (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+            ),
         )
-        msg["To"] = email.utils.formataddr(
-            (self._subentry.title, self._subentry.unique_id)
+        msg.add_header(
+            "To",
+            email.utils.formataddr((self._subentry.title, self._subentry.unique_id)),
         )
-        msg["X-Mailer"] = "Home Assistant"
-        msg["Date"] = email.utils.format_datetime(dt_util.now())
-        msg["Message-Id"] = email.utils.make_msgid()
+        msg.add_header("X-Mailer", "Home Assistant")
+        msg.add_header("Date", email.utils.format_datetime(dt_util.now()))
+        msg.add_header("Message-Id", email.utils.make_msgid())
 
         client: SMTP_SSL | SMTP | None = None
         for attempt in range(self._client.tries):
