@@ -61,11 +61,7 @@ async def test_turn_on_default(
         blocking=True,
     )
 
-    mock_hotspring.set_light_color.assert_called_once_with(
-        1,
-        color="WHITE",
-        intensity=5,
-    )
+    mock_hotspring.set_light_brightness.assert_called_once_with(1, 5)
 
 
 async def test_turn_on_with_brightness(
@@ -84,11 +80,7 @@ async def test_turn_on_with_brightness(
         blocking=True,
     )
 
-    mock_hotspring.set_light_color.assert_called_once_with(
-        1,
-        color="WHITE",
-        intensity=3,
-    )
+    mock_hotspring.set_light_brightness.assert_called_once_with(1, 3)
 
 
 async def test_turn_on_with_rgb_color_when_off(
@@ -108,11 +100,7 @@ async def test_turn_on_with_rgb_color_when_off(
     )
 
     mock_hotspring.set_light_rgb.assert_called_once_with(1, 120, 200, 50)
-    mock_hotspring.set_light_color.assert_called_once_with(
-        1,
-        color="WHITE",
-        intensity=5,
-    )
+    mock_hotspring.set_light_brightness.assert_called_once_with(1, 5)
 
 
 async def test_turn_on_with_rgb_color_when_on(
@@ -146,7 +134,7 @@ async def test_turn_on_with_rgb_color_when_on(
     )
 
     mock_hotspring.set_light_rgb.assert_called_once_with(1, 120, 200, 50)
-    mock_hotspring.set_light_color.assert_not_called()
+    mock_hotspring.set_light_brightness.assert_not_called()
 
 
 async def test_turn_on_with_rgb_color_and_brightness(
@@ -167,45 +155,36 @@ async def test_turn_on_with_rgb_color_and_brightness(
     )
 
     mock_hotspring.set_light_rgb.assert_called_once_with(1, 120, 200, 50)
-    mock_hotspring.set_light_color.assert_called_once_with(
-        1,
-        color="WHITE",
-        intensity=2,
-    )
+    mock_hotspring.set_light_brightness.assert_called_once_with(1, 2)
 
 
-async def test_turn_on_preserves_existing_color_and_intensity(
+async def test_rgb_color_active_custom(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hotspring: MagicMock,
     device_fixture: Spa,
 ) -> None:
-    """Test turning on light preserves existing color and intensity."""
+    """Test rgb_color property returns custom RGB values when active."""
     device_fixture.light_zones = [
         LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=True,
-            color=LightColor.BLUE,
+            color=LightColor.CUSTOM,
             light_wheel=LightWheelMode.OFF,
             intensity=3,
             loop_speed=0,
+            c_red=120,
+            c_green=200,
+            c_blue=50,
+            rgb_state="active",
         ),
     ]
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-
-    mock_hotspring.set_light_color.assert_called_once_with(
-        1,
-        color="BLUE",
-        intensity=3,
-    )
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("rgb_color") == (120, 200, 50)
 
 
 async def test_turn_off(
@@ -242,7 +221,7 @@ async def test_turn_on_error(
     match: str,
 ) -> None:
     """Test exception handling when turning on light."""
-    mock_hotspring.set_light_color.side_effect = exception
+    mock_hotspring.set_light_brightness.side_effect = exception
 
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
@@ -295,7 +274,7 @@ async def test_disabled_zone_not_added(
             zone_id=1,
             is_enabled=False,
             is_on=False,
-            color=LightColor.OFF,
+            color=LightColor.UNKNOWN,
             light_wheel=LightWheelMode.OFF,
             intensity=0,
             loop_speed=0,

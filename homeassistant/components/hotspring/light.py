@@ -1,8 +1,8 @@
 """Support for Hot Spring light entities."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
-from hotspring import LightColor, LightZone
+from hotspring import LightColor, LightZone, Spa
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -74,13 +74,13 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
-        return self._zone.intensity > 0
+        return self._zone.is_on
 
     @property
     @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        if self._zone.intensity <= 0:
+        if not self._zone.is_on:
             return None
         return value_to_brightness((1, 5), self._zone.intensity)
 
@@ -88,53 +88,39 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value."""
-        return LIGHT_COLOR_TO_RGB.get(self._zone.color)
+        zone = self._zone
+        if zone.rgb_state == "active" and (zone.c_red, zone.c_green, zone.c_blue) != (
+            0,
+            0,
+            0,
+        ):
+            return (zone.c_red, zone.c_green, zone.c_blue)
+        return LIGHT_COLOR_TO_RGB.get(zone.color)
 
     @hotspring_exception_handler
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        zone = self._zone
+        if (rgb_color := kwargs.get(ATTR_RGB_COLOR)) is not None:
+            await self.coordinator.hotspring.set_light_rgb(self._zone_id, *rgb_color)
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             intensity = round(brightness_to_value((1, 5), brightness))
-        elif zone.intensity > 0:
-            intensity = zone.intensity
-        else:
-            intensity = 5
+            await self.coordinator.hotspring.set_light_brightness(
+                self._zone_id, intensity
+            )
+        elif not self.is_on:
+            await self.coordinator.hotspring.set_light_brightness(self._zone_id, 5)
 
-        if (rgb_color := kwargs.get(ATTR_RGB_COLOR)) is not None:
-            r, g, b = rgb_color
-            await self.coordinator.hotspring.set_light_rgb(self._zone_id, r, g, b)
-            if zone.intensity <= 0 or ATTR_BRIGHTNESS in kwargs:
-                color = (
-                    zone.color.value
-                    if zone.color in LIGHT_COLOR_TO_RGB
-                    else LightColor.WHITE.value
-                )
-                await self.coordinator.hotspring.set_light_color(
-                    self._zone_id,
-                    color=color,
-                    intensity=intensity,
-                )
-            await self.coordinator.async_request_refresh()
-            return
-
-        if zone.color in LIGHT_COLOR_TO_RGB:
-            color = zone.color.value
-        else:
-            color = LightColor.WHITE.value
-
-        await self.coordinator.hotspring.set_light_color(
-            self._zone_id,
-            color=color,
-            intensity=intensity,
+        self.coordinator.async_set_updated_data(
+            cast(Spa, self.coordinator.hotspring.spa)
         )
-        await self.coordinator.async_request_refresh()
 
     @hotspring_exception_handler
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.coordinator.hotspring.turn_off_light(self._zone_id)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(
+            cast(Spa, self.coordinator.hotspring.spa)
+        )
