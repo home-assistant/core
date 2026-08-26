@@ -406,8 +406,9 @@ class FroniusSolarNet:
     ) -> bool:
         """Do the first refresh of a Modbus coordinator, reporting success.
 
-        Modbus data is optional, so a device that doesn't answer never fails
-        the whole entry.
+        Not `async_config_entry_first_refresh`: Modbus data is optional, so a
+        device that doesn't answer must leave the rest of the entry alone
+        instead of raising `ConfigEntryNotReady`.
         """
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
