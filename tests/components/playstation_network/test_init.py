@@ -51,6 +51,7 @@ async def test_persists_token_response_for_existing_entry(
 async def test_restores_and_persists_token_response(
     hass: HomeAssistant,
     mock_psnawpapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test stored tokens are restored and refreshed tokens are persisted."""
     stored_token_response = TOKEN_RESPONSE | {"access_token": "stored-access-token"}
@@ -79,7 +80,8 @@ async def test_restores_and_persists_token_response(
     with patch.object(
         hass.config_entries, "async_reload", new=AsyncMock()
     ) as async_reload:
-        await config_entry.runtime_data.user_data.async_request_refresh()
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert config_entry.data[CONF_TOKEN_RESPONSE] == refreshed_token_response
@@ -141,6 +143,7 @@ async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_psnawpapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an old runtime client cannot overwrite reauthenticated tokens."""
     config_entry.add_to_hass(hass)
@@ -157,22 +160,24 @@ async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
         "refresh_token": "reauthenticated-refresh-token",
     }
     mock_psnawpapi.authenticator.token_response = stale_token_response
-    coordinator = config_entry.runtime_data.user_data
     update_started = asyncio.Event()
     continue_update = asyncio.Event()
 
-    async def delayed_update_data() -> PlaystationNetworkData:
+    async def delayed_get_data() -> PlaystationNetworkData:
         update_started.set()
         await continue_update.wait()
-        return coordinator.data
+        return PlaystationNetworkData()
 
     with (
         patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
-        patch.object(coordinator, "update_data", side_effect=delayed_update_data),
+        patch(
+            "homeassistant.components.playstation_network.helpers."
+            "PlaystationNetwork.get_data",
+            side_effect=delayed_get_data,
+        ),
     ):
-        refresh_task = hass.async_create_task(
-            coordinator.async_request_refresh(), "test in-flight PSN refresh"
-        )
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
         await update_started.wait()
         hass.config_entries.async_update_entry(
             config_entry,
@@ -182,7 +187,6 @@ async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
             },
         )
         continue_update.set()
-        await refresh_task
         await hass.async_block_till_done()
 
     assert config_entry.data == {
@@ -195,6 +199,7 @@ async def test_does_not_persist_tokens_when_reauth_precedes_refresh(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_psnawpapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an old client cannot overwrite a completed same-NPSSO reauth."""
     config_entry.add_to_hass(hass)
@@ -220,7 +225,8 @@ async def test_does_not_persist_tokens_when_reauth_precedes_refresh(
                 CONF_TOKEN_RESPONSE: reauthenticated_token_response,
             },
         )
-        await config_entry.runtime_data.user_data.async_request_refresh()
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert config_entry.data == {
