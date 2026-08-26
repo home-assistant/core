@@ -102,8 +102,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
 
-    def apply_optimistic(self, value_path: str, value: Any) -> None:
-        """Reflect a just-written value and protect it from stale Firestore pushes."""
+    def record_optimistic(self, value_path: str, value: Any) -> None:
+        """Track a just-written value without announcing new entity state.
+
+        For transient values in a write sequence (the LED pulse's
+        intermediate off): the echo must be confirmed in order, but
+        entities and automations must not see the value flash by.
+        """
         self._pending_optimistic.setdefault(value_path, []).append((value, monotonic()))
         _set_path(self.data, value_path, value)
         if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
@@ -114,6 +119,10 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._optimistic_handles[value_path] = self.hass.loop.call_later(
             OPTIMISTIC_TTL_SECONDS, self._expire_optimistic, value_path
         )
+
+    def apply_optimistic(self, value_path: str, value: Any) -> None:
+        """Reflect a just-written value and protect it from stale Firestore pushes."""
+        self.record_optimistic(value_path, value)
         self.async_set_updated_data(self.data)
 
     def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:

@@ -10,12 +10,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 _BUTTON = "button.my_pool_led_next_color"
 _LIGHT_ENTITY = "light.my_pool_light"
@@ -174,6 +180,43 @@ async def test_button_press_rapid_repeat_after_off(
         "light.status",
         1,
     )
+
+
+async def test_button_press_does_not_flicker_light_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the pulse's intermediate off is never announced as light state."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS",
+        [Platform.BUTTON, Platform.LIGHT],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        events = async_capture_events(hass, EVENT_STATE_CHANGED)
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: _BUTTON},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    light_states = [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == _LIGHT_ENTITY
+    ]
+    assert STATE_OFF not in light_states
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
 async def test_button_press_pulse_survives_stale_push(

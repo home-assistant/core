@@ -75,16 +75,16 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
         """Send a color-advance pulse to the pool LED fixture."""
         if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
             await self._async_write_status(0)
+            # Track the intermediate off so its echo is confirmed in order,
+            # but don't announce it: the light entity must not flicker off
+            # for the duration of the pulse delay.
+            self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 0)
             await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
         await self._async_write_status(1)
+        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
 
     async def _async_write_status(self, value: int) -> None:
-        """Write light.status and record it for stale-push protection.
-
-        Recording the intermediate off write matters: a stale pre-pulse
-        push would otherwise confirm the final on value early and let the
-        off echo flicker the light entity.
-        """
+        """Write light.status via the cloud API."""
         try:
             await self.coordinator.api.set_value(
                 self.coordinator.pool_id, _LIGHT_STATUS_PATH, value
@@ -95,4 +95,3 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, value)
