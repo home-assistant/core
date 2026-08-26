@@ -57,7 +57,7 @@ def iter_schemas() -> Generator[MatterDiscoverySchema]:
         yield from platform_schemas
 
 
-def _resolve_cluster_revision(
+def _matches_cluster_revision(
     endpoint: MatterEndpoint,
     primary_attribute: type[ClusterAttributeDescriptor],
     schema: MatterDiscoverySchema,
@@ -68,8 +68,9 @@ def _resolve_cluster_revision(
     raw_cluster_revision = endpoint.get_attribute_value(
         primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
     )
-    if raw_cluster_revision in (None, NullValue):
-        # ClusterRevision could not be read; do not filter out the schema
+    if raw_cluster_revision in (None, NullValue, 0):
+        # ClusterRevision starts at 1 (Matter spec 7.13.1); 0 means the
+        # attribute could not be read, so do not filter out the schema
         return True
     cluster_revision_value = int(raw_cluster_revision)
     if (
@@ -172,7 +173,7 @@ def async_discover_entities(
             continue
 
         # check for required cluster revision range
-        if not _resolve_cluster_revision(endpoint, primary_attribute, schema):
+        if not _matches_cluster_revision(endpoint, primary_attribute, schema):
             continue
 
         # BEGIN checks on actual attribute values

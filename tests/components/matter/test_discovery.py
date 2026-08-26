@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.matter import discovery
 from homeassistant.components.matter.discovery import (
-    _resolve_cluster_revision,
+    _matches_cluster_revision,
     async_discover_entities,
 )
 from homeassistant.components.matter.models import MatterDiscoverySchema
@@ -52,6 +52,7 @@ def _make_schema(
         (2, 6, 4, True, 1),
         (7, None, None, True, 1),
         (7, None, NullValue, True, 1),
+        (7, None, 0, True, 1),
     ],
     ids=[
         "no bounds",
@@ -64,29 +65,30 @@ def _make_schema(
         "within range",
         "unreadable revision (None)",
         "unreadable revision (NullValue)",
+        "unreadable revision (0, unpopulated uint16 default)",
     ],
 )
-def test_resolve_cluster_revision(
+def test_matches_cluster_revision(
     cluster_revision_min: int | None,
     cluster_revision_max: int | None,
     raw_cluster_revision: int | None,
     expected: bool,
     expected_call_count: int,
 ) -> None:
-    """Test _resolve_cluster_revision matches schema bounds against ClusterRevision."""
+    """Test _matches_cluster_revision matches schema bounds against ClusterRevision."""
     endpoint = MagicMock()
     endpoint.get_attribute_value.return_value = raw_cluster_revision
     schema = _make_schema(cluster_revision_min, cluster_revision_max)
     primary_attribute: type[ClusterAttributeDescriptor] = schema.required_attributes[0]
 
-    assert _resolve_cluster_revision(endpoint, primary_attribute, schema) is expected
+    assert _matches_cluster_revision(endpoint, primary_attribute, schema) is expected
     assert endpoint.get_attribute_value.call_count == expected_call_count
 
 
 @pytest.mark.parametrize(
     ("cluster_revision", "expected_discovered"),
-    [(6, True), (7, False)],
-    ids=["within range", "above range"],
+    [(6, True), (7, False), (0, True)],
+    ids=["within range", "above range", "unreadable revision (0)"],
 )
 def test_async_discover_entities_filters_by_cluster_revision(
     monkeypatch: pytest.MonkeyPatch,
