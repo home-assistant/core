@@ -27,7 +27,6 @@ from .const import (
     BATT_MODE_LOAD_FIRST,
     DEFAULT_URL,
     DOMAIN,
-    LOGIN_FAILED,
     LOGIN_INVALID_AUTH_CODE,
     V1_DEVICE_TYPES,
 )
@@ -162,12 +161,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
                         translation_key="invalid_credentials",
-                    )
-                if msg == LOGIN_FAILED:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="login_failed",
-                        translation_placeholders={"message": msg},
                     )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
