@@ -7538,8 +7538,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'offgrid_load_peak_ratio_l1',
-    'unique_id': 'SP1XXES100XX_offgrid_load_peak_ratio_l1',
+    'translation_key': 'offgrid_loadpeakratio_l1',
+    'unique_id': 'SP1XXES100XX_offgrid_loadpeakratio_l1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7594,8 +7594,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'offgrid_load_peak_ratio_l2',
-    'unique_id': 'SP1XXES100XX_offgrid_load_peak_ratio_l2',
+    'translation_key': 'offgrid_loadpeakratio_l2',
+    'unique_id': 'SP1XXES100XX_offgrid_loadpeakratio_l2',
     'unit_of_measurement': None,
   })
 # ---
@@ -7650,8 +7650,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'offgrid_load_peak_ratio_l3',
-    'unique_id': 'SP1XXES100XX_offgrid_load_peak_ratio_l3',
+    'translation_key': 'offgrid_loadpeakratio_l3',
+    'unique_id': 'SP1XXES100XX_offgrid_loadpeakratio_l3',
     'unit_of_measurement': None,
   })
 # ---

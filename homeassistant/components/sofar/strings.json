@@ -457,16 +457,16 @@
       "offgrid_frequency": {
         "name": "Off-grid frequency"
       },
-      "offgrid_load_peak_ratio": {
+      "offgrid_loadpeakratio": {
         "name": "Off-grid load peak ratio"
       },
-      "offgrid_load_peak_ratio_l1": {
+      "offgrid_loadpeakratio_l1": {
         "name": "Off-grid load peak ratio L1"
       },
-      "offgrid_load_peak_ratio_l2": {
+      "offgrid_loadpeakratio_l2": {
         "name": "Off-grid load peak ratio L2"
       },
-      "offgrid_load_peak_ratio_l3": {
+      "offgrid_loadpeakratio_l3": {
         "name": "Off-grid load peak ratio L3"
       },
       "offgrid_reactive_power_output": {
