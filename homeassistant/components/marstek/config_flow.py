@@ -24,9 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_MANUAL_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
 ABORT_MISSING_UNIQUE_ID = "missing_unique_id"
-MARSTEK_CONNECTION_ERRORS = (TimeoutError, OSError)
-MARSTEK_DISCOVERY_ERRORS = (TimeoutError, OSError, TypeError)
-MARSTEK_DEVICE_INFO_ERRORS = (TypeError,)
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,13 +49,13 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = self.discovered_device_options[str(user_input[CONF_DEVICE])].ip
             try:
                 device = await self._async_get_device_from_host(host)
-            except MARSTEK_CONNECTION_ERRORS:
+            except TimeoutError, OSError:
                 return self.async_show_form(
                     step_id="discover",
                     data_schema=vol.Schema({}),
                     errors={"base": "cannot_connect"},
                 )
-            except MARSTEK_DEVICE_INFO_ERRORS:
+            except TypeError:
                 return self.async_show_form(
                     step_id="discover",
                     data_schema=vol.Schema({}),
@@ -75,7 +72,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             finally:
                 if udp_client is not None:
                     await udp_client.async_cleanup()
-        except MARSTEK_DISCOVERY_ERRORS:
+        except TimeoutError, OSError, TypeError:
             return self.async_show_form(
                 step_id="discover",
                 data_schema=vol.Schema({}),
@@ -129,9 +126,9 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 device = await self._async_get_device_from_host(host)
-            except MARSTEK_CONNECTION_ERRORS:
+            except TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
-            except MARSTEK_DEVICE_INFO_ERRORS:
+            except TypeError:
                 errors["base"] = "device_not_found"
             else:
                 return await self._async_create_entry_from_device(device)

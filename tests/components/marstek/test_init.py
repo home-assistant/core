@@ -1,12 +1,12 @@
 """Tests for the Marstek integration."""
 
 from ipaddress import IPv4Address
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.marstek import async_create_udp_client
-from homeassistant.components.marstek.const import DOMAIN
 from homeassistant.components.marstek.coordinator import MarstekDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -30,8 +30,10 @@ async def test_async_setup_entry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, MarstekDataUpdateCoordinator)
-    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
+    assert isinstance(
+        mock_config_entry.runtime_data.coordinator, MarstekDataUpdateCoordinator
+    )
+    assert mock_config_entry.runtime_data.coordinator.udp_client is mock_udp_client
     mock_udp_client.get_device_info.assert_awaited_once()
     mock_forward_entry_setups.assert_awaited_once()
 
@@ -82,8 +84,8 @@ async def test_async_unload_multiple_entries(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert second_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
-    assert second_entry.runtime_data.udp_client is mock_udp_client
+    assert mock_config_entry.runtime_data.coordinator.udp_client is mock_udp_client
+    assert second_entry.runtime_data.coordinator.udp_client is mock_udp_client
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -109,7 +111,7 @@ async def test_async_setup_entry_client_creation_fails(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert DOMAIN not in hass.data
+    assert not hasattr(mock_config_entry, "runtime_data")
 
 
 async def test_async_create_udp_client(
@@ -131,7 +133,9 @@ async def test_async_create_udp_client(
 
     assert client is mock_client
     mock_client.async_setup.assert_awaited_once()
-    mock_client.set_broadcast_addresses.assert_called_once_with(["192.168.1.255"])
+    cast(MagicMock, mock_client.set_broadcast_addresses).assert_called_once_with(
+        ["192.168.1.255"]
+    )
     mock_client.async_cleanup.assert_not_awaited()
 
 

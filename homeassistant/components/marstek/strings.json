@@ -102,5 +102,22 @@
         "name": "PV4 voltage"
       }
     }
+  },
+  "exceptions": {
+    "device_connection_failed": {
+      "message": "Unable to connect to the Marstek device at {host}."
+    },
+    "device_update_failed": {
+      "message": "Unable to update the Marstek device at {host}."
+    },
+    "invalid_device_data": {
+      "message": "The Marstek device at {host} returned invalid data."
+    },
+    "missing_stable_id": {
+      "message": "The Marstek device at {host} did not provide a stable ID."
+    },
+    "udp_client_setup_failed": {
+      "message": "Unable to set up the Marstek UDP client."
+    }
   }
 }

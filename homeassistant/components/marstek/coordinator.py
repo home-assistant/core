@@ -1,5 +1,6 @@
 """Data update coordinator for Marstek devices."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -12,13 +13,31 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
 from .models import MarstekDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-type MarstekConfigEntry = ConfigEntry[MarstekDataUpdateCoordinator]
+
+@dataclass(slots=True)
+class MarstekSharedData:
+    """Shared runtime data for all Marstek config entries."""
+
+    udp_client: MarstekUDPClient
+    entry_count: int = 0
+
+
+@dataclass(slots=True)
+class MarstekRuntimeData:
+    """Runtime data for a Marstek config entry."""
+
+    coordinator: MarstekDataUpdateCoordinator
+    shared_data: MarstekSharedData
+
+
+type MarstekConfigEntry = ConfigEntry[MarstekRuntimeData]
 
 
 class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
@@ -56,12 +75,16 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
             device_info = await self.udp_client.get_device_info(self.device_ip)
         except (TimeoutError, OSError, TypeError) as err:
             raise ConfigEntryNotReady(
-                f"Unable to connect to Marstek device at {self.device_ip}"
+                translation_domain=DOMAIN,
+                translation_key="device_connection_failed",
+                translation_placeholders={"host": self.device_ip},
             ) from err
 
         if not isinstance(device_info, dict):
             raise ConfigEntryNotReady(
-                f"Marstek device at {self.device_ip} returned invalid data"
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_data",
+                translation_placeholders={"host": self.device_ip},
             )
 
         normalized_device_info = MarstekDeviceInfo.from_response(
@@ -69,7 +92,9 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
         )
         if not normalized_device_info.stable_id:
             raise ConfigEntryNotReady(
-                f"Marstek device at {self.device_ip} did not provide a stable ID"
+                translation_domain=DOMAIN,
+                translation_key="missing_stable_id",
+                translation_placeholders={"host": self.device_ip},
             )
 
         self.device_info = normalized_device_info
@@ -93,5 +118,7 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
             )
         except (TimeoutError, OSError, TypeError) as err:
             raise UpdateFailed(
-                f"Unable to update Marstek device at {self.device_ip}"
+                translation_domain=DOMAIN,
+                translation_key="device_update_failed",
+                translation_placeholders={"host": self.device_ip},
             ) from err

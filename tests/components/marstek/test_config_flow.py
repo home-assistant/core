@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.marstek.const import (
@@ -29,6 +30,14 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+
+def _data_schema(result: config_entries.ConfigFlowResult) -> vol.Schema:
+    """Return the data schema from a flow result."""
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    return data_schema
+
 
 DISCOVERED_DEVICE = {
     "id": 0,
@@ -117,7 +126,7 @@ async def test_discovery_flow_duplicate_device_names(
     )
     await hass.async_block_till_done()
 
-    selector = next(iter(result["data_schema"].schema.values()))
+    selector = next(iter(_data_schema(result).schema.values()))
 
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
@@ -351,7 +360,7 @@ async def test_discovery_empty_error_form_rediscovers(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
-    selector = next(iter(result["data_schema"].schema.values()))
+    selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]
@@ -390,7 +399,7 @@ async def test_discovery_flow_errors_are_recoverable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
-    selector = next(iter(result["data_schema"].schema.values()))
+    selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]
@@ -424,7 +433,7 @@ async def test_discover_failed_when_client_setup_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
-    selector = next(iter(result["data_schema"].schema.values()))
+    selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]

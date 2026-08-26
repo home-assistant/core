@@ -7,13 +7,20 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import MOCK_DEVICE_STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+def _get_state(hass: HomeAssistant, entity_id: str) -> State:
+    """Return the state for an entity."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    return state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -75,14 +82,14 @@ async def test_polling_failure_recovers(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("sensor.marstek_es5_v1_battery_level").state
+        _get_state(hass, "sensor.marstek_es5_v1_battery_level").state
         == STATE_UNAVAILABLE
     )
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=22))
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.marstek_es5_v1_battery_level").state == "85"
+    assert _get_state(hass, "sensor.marstek_es5_v1_battery_level").state == "85"
 
 
 async def test_missing_sensor_fields_do_not_fallback(
@@ -101,12 +108,14 @@ async def test_missing_sensor_fields_do_not_fallback(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.marstek_es5_v1_battery_level").state == STATE_UNKNOWN
-    assert hass.states.get("sensor.marstek_es5_v1_device_mode").state == STATE_UNKNOWN
     assert (
-        hass.states.get("sensor.marstek_es5_v1_battery_status").state == STATE_UNKNOWN
+        _get_state(hass, "sensor.marstek_es5_v1_battery_level").state == STATE_UNKNOWN
     )
-    assert hass.states.get("sensor.marstek_es5_v1_pv1_power").state == "500"
+    assert _get_state(hass, "sensor.marstek_es5_v1_device_mode").state == STATE_UNKNOWN
+    assert (
+        _get_state(hass, "sensor.marstek_es5_v1_battery_status").state == STATE_UNKNOWN
+    )
+    assert _get_state(hass, "sensor.marstek_es5_v1_pv1_power").state == "500"
     assert hass.states.get("sensor.marstek_es5_v1_pv1_voltage") is None
     assert hass.states.get("sensor.marstek_es5_v1_pv2_power") is None
 
@@ -127,4 +136,6 @@ async def test_invalid_integer_sensor_value(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.marstek_es5_v1_battery_power").state == STATE_UNKNOWN
+    assert (
+        _get_state(hass, "sensor.marstek_es5_v1_battery_power").state == STATE_UNKNOWN
+    )
