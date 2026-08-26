@@ -5,7 +5,11 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 
-PLATFORMS = [Platform.NUMBER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HotSpringConfigEntry) -> bool:

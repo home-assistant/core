@@ -53,7 +53,10 @@ def _resolve_device_id(hass: HomeAssistant, device_id: str, domain: str) -> str:
     knows the current device id, not the removed composite id.
     """
     device_registry = dr.async_get(hass)
-    if device_id in device_registry.devices:
+    if (
+        device_registry.async_get(device_id, include_composite_devices=False)
+        is not None
+    ):
         return device_id
     if not (
         split_devices := device_registry.async_get_devices_for_composite_device_id(
