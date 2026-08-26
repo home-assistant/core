@@ -9,7 +9,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_IMPORT_LOCK, DOMAIN
+from .const import (
+    CONF_IMPORT_PLATFORM,
+    CONF_IMPORTED_PLATFORMS,
+    DATA_IMPORT_LOCK,
+    DOMAIN,
+)
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
@@ -20,7 +25,20 @@ def build_url(host: str, port: int) -> str:
     return str(URL.build(scheme="http", host=host, port=port))
 
 
-async def async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+def entry_platforms(entry: ConfigEntry) -> list[Platform]:
+    """Return the platforms this entry exposes.
+
+    Imported entries are restricted to the platforms their YAML actually
+    configured; entries created through the UI expose everything.
+    """
+    return [
+        Platform(platform) for platform in entry.data.get(CONF_IMPORTED_PLATFORMS, [])
+    ] or PLATFORMS
+
+
+async def async_import_yaml(
+    hass: HomeAssistant, config: ConfigType, platform: Platform
+) -> None:
     """Import one platform's YAML configuration through the config flow.
 
     The alarm and binary sensor platforms set up concurrently and import
@@ -31,14 +49,16 @@ async def async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
     lock = hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
     async with lock:
         await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={**config, CONF_IMPORT_PLATFORM: platform.value},
         )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Concord232 from a config entry."""
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, entry_platforms(entry))
     return True
 
 
@@ -49,4 +69,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry_platforms(entry)
+    )

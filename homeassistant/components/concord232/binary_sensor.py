@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -56,7 +56,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML platform configuration and create a config entry."""
-    await async_import_yaml(hass, config)
+    await async_import_yaml(hass, config, Platform.BINARY_SENSOR)
 
 
 async def async_setup_entry(

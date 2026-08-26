@@ -27,6 +27,8 @@ from homeassistant.helpers.selector import (
 from . import build_url
 from .const import (
     CONF_EXCLUDE_ZONES,
+    CONF_IMPORT_PLATFORM,
+    CONF_IMPORTED_PLATFORMS,
     CONF_ZONE_TYPES,
     DEFAULT_MODE,
     DEFAULT_PORT,
@@ -159,10 +161,13 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Create or enrich the config entry for imported YAML configuration."""
-        data = {
+        data: dict[str, Any] = {
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
         }
+        # Restrict the entry to the platform(s) the YAML actually configured
+        if platform := import_data.get(CONF_IMPORT_PLATFORM):
+            data[CONF_IMPORTED_PLATFORMS] = [platform]
         options: dict[str, Any] = {}
         if CONF_CODE in import_data:
             options[CONF_CODE] = import_data[CONF_CODE]
@@ -193,8 +198,14 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = entry.title
                 if CONF_NAME in import_data and title == entry.data[CONF_HOST]:
                     title = import_data[CONF_NAME]
+                # The companion platform's import extends the platform set;
+                # updating data reloads the entry so the platform loads now
+                entry_data = dict(entry.data)
+                imported = entry_data.get(CONF_IMPORTED_PLATFORMS, [])
+                if platform and imported and platform not in imported:
+                    entry_data[CONF_IMPORTED_PLATFORMS] = [*imported, platform]
                 self.hass.config_entries.async_update_entry(
-                    entry, options=merged_options, title=title
+                    entry, data=entry_data, options=merged_options, title=title
                 )
             return self.async_abort(reason="already_configured")
 
