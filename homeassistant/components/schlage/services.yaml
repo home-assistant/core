@@ -1,14 +1,13 @@
 get_codes:
   target:
     entity:
-      domain: lock
       integration: schlage
-
+      domain: lock
 add_code:
   target:
     entity:
-      domain: lock
       integration: schlage
+      domain: lock
   fields:
     name:
       required: true
@@ -28,16 +27,73 @@ add_code:
       default: true
       selector:
         boolean:
-
+    start_datetime:
+      required: false
+      example: "2026-09-01 15:00"
+      selector:
+        datetime:
+    end_datetime:
+      required: false
+      example: "2026-09-01 16:00"
+      selector:
+        datetime:
 delete_code:
   target:
     entity:
-      domain: lock
       integration: schlage
+      domain: lock
   fields:
     name:
-      required: true
+      required: false
       example: "Example Person"
       selector:
         text:
           multiline: false
+    access_code_id:
+      required: false
+      example: "abc123"
+      selector:
+        text:
+          multiline: false
+update_code:
+  target:
+    entity:
+      integration: schlage
+      domain: lock
+  fields:
+    access_code_id:
+      required: true
+      example: "abc123"
+      selector:
+        text:
+          multiline: false
+    name:
+      required: false
+      example: "Example Person"
+      selector:
+        text:
+          multiline: false
+    code:
+      required: false
+      example: "1111"
+      selector:
+        text:
+          multiline: false
+    notify_on_use:
+      required: false
+      selector:
+        boolean:
+    disabled:
+      required: false
+      selector:
+        boolean:
+    start_datetime:
+      required: false
+      example: "2026-09-01 15:00"
+      selector:
+        datetime:
+    end_datetime:
+      required: false
+      example: "2026-09-01 16:00"
+      selector:
+        datetime:

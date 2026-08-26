@@ -8,6 +8,9 @@
     },
     "get_codes": {
       "service": "mdi:table-key"
+    },
+    "update_code": {
+      "service": "mdi:key-chain"
     }
   }
 }

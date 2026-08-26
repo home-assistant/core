@@ -75,14 +75,32 @@
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock."
     },
+    "schlage_code_not_found": {
+      "message": "A PIN code with this ID was not found on the lock."
+    },
+    "schlage_delete_code_ambiguous": {
+      "message": "Provide either name or access_code_id, not both."
+    },
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."
+    },
+    "schlage_delete_code_missing_identifier": {
+      "message": "Either a name or access_code_id is required to delete a PIN code."
     },
     "schlage_name_exists": {
       "message": "A PIN code with the name \"{name}\" already exists on the lock."
     },
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data."
+    },
+    "schlage_start_after_end": {
+      "message": "Start time must be before end time."
+    },
+    "schlage_temporary_dates_required": {
+      "message": "Start and end times are required together. Provide both to create a temporary PIN, or neither for a permanent one."
+    },
+    "schlage_update_code_failed": {
+      "message": "Failed to update PIN code on the lock."
     }
   },
   "services": {
@@ -93,6 +111,10 @@
           "description": "The PIN code to add. Must be unique to the lock and be between 4 and 8 digits long.",
           "name": "PIN code"
         },
+        "end_datetime": {
+          "description": "When this PIN stops working. Required together with the start time; leaving both empty creates a permanent PIN.",
+          "name": "End time"
+        },
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
@@ -100,6 +122,10 @@
         "notify_on_use": {
           "description": "Whether the native Schlage notification should be sent when this PIN is used.",
           "name": "Notify when PIN is used"
+        },
+        "start_datetime": {
+          "description": "When this PIN becomes active. Providing a start time makes the PIN temporary; both a start and an end time are required.",
+          "name": "Start time"
         }
       },
       "name": "Add PIN code"
@@ -107,8 +133,12 @@
     "delete_code": {
       "description": "Deletes a PIN code from a lock.",
       "fields": {
+        "access_code_id": {
+          "description": "Access code ID to delete (more stable than name). Either name or access_code_id is required.",
+          "name": "Access code ID"
+        },
         "name": {
-          "description": "Name of PIN code to delete.",
+          "description": "Name of PIN code to delete. Either name or access_code_id is required.",
           "name": "[%key:component::schlage::services::add_code::fields::name::name%]"
         }
       },
@@ -117,6 +147,40 @@
     "get_codes": {
       "description": "Retrieves all PIN codes from a lock.",
       "name": "Get PIN codes"
+    },
+    "update_code": {
+      "description": "Updates an existing PIN code on a lock.",
+      "fields": {
+        "access_code_id": {
+          "description": "The unique ID of the access code to update.",
+          "name": "Access code ID"
+        },
+        "code": {
+          "description": "New PIN code value (4-8 digits).",
+          "name": "PIN code"
+        },
+        "disabled": {
+          "description": "Whether the PIN code should be disabled.",
+          "name": "Disabled"
+        },
+        "end_datetime": {
+          "description": "When this PIN stops working. Required together with the start time. Omitting both preserves the code's existing schedule.",
+          "name": "End time"
+        },
+        "name": {
+          "description": "New name for the PIN code.",
+          "name": "PIN name"
+        },
+        "notify_on_use": {
+          "description": "Whether the native Schlage notification should be sent when this PIN is used.",
+          "name": "Notify when PIN is used"
+        },
+        "start_datetime": {
+          "description": "When this PIN becomes active. Providing a start time makes the PIN temporary; both a start and an end time are required. Omitting both preserves the code's existing schedule.",
+          "name": "Start time"
+        }
+      },
+      "name": "Update PIN code"
     }
   }
 }

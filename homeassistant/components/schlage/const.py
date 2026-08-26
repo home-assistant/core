@@ -11,3 +11,4 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 SERVICE_ADD_CODE = "add_code"
 SERVICE_DELETE_CODE = "delete_code"
 SERVICE_GET_CODES = "get_codes"
+SERVICE_UPDATE_CODE = "update_code"

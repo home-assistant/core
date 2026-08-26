@@ -11,7 +11,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_ADD_CODE, SERVICE_DELETE_CODE, SERVICE_GET_CODES
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_CODE,
+    SERVICE_DELETE_CODE,
+    SERVICE_GET_CODES,
+    SERVICE_UPDATE_CODE,
+)
 from .coordinator import SchlageConfigEntry, SchlageDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -36,8 +42,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required("name"): cv.string,
             vol.Required("code"): vol.All(cv.string, cv.matches_regex(r"^\d{4,8}$")),
             vol.Optional("notify_on_use", default=True): cv.boolean,
+            vol.Optional("start_datetime"): cv.datetime,
+            vol.Optional("end_datetime"): cv.datetime,
         },
         func=SERVICE_ADD_CODE,
+        admin_only=True,
     )
 
     service.async_register_platform_entity_service(
@@ -46,9 +55,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_DELETE_CODE,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required("name"): cv.string,
+            vol.Optional("name"): cv.string,
+            vol.Optional("access_code_id"): cv.string,
         },
         func=SERVICE_DELETE_CODE,
+        admin_only=True,
     )
 
     service.async_register_platform_entity_service(
@@ -59,6 +70,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=None,
         func=SERVICE_GET_CODES,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_UPDATE_CODE,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required("access_code_id"): cv.string,
+            vol.Optional("name"): cv.string,
+            vol.Optional("code"): vol.All(cv.string, cv.matches_regex(r"^\d{4,8}$")),
+            vol.Optional("notify_on_use"): cv.boolean,
+            vol.Optional("disabled"): cv.boolean,
+            vol.Optional("start_datetime"): cv.datetime,
+            vol.Optional("end_datetime"): cv.datetime,
+        },
+        func=SERVICE_UPDATE_CODE,
+        admin_only=True,
     )
 
     return True
