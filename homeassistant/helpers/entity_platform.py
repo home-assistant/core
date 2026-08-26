@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -953,32 +953,31 @@ class EntityPlatform:
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
+                # A device info without any field means no device
                 if device_info := entity.device_info:
                     dev_reg = dr.async_get(self.hass)
+                    if isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
+                        device_info_fields = device_info.as_dict()
+                    else:
+                        # An integration can still describe its device with a plain
+                        # mapping, which its type does not allow. To be deprecated.
+                        device_info_fields = dict(device_info)  # type: ignore[unreachable]
+                    # An explicit parent_device_id of None, as a dynamically built
+                    # device info may carry, means a main device
+                    parent_device_id = device_info_fields.pop("parent_device_id", None)
                     try:
-                        # A device info carrying a parent_device_id registers a child
-                        # device. An explicit None (as a dynamically built device info
-                        # may carry) means a main device, so check `is not None`.
-                        if device_info.get("parent_device_id") is not None:
+                        if parent_device_id is not None:
                             device = dev_reg.async_get_or_create_child(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast("dr.ChildDeviceInfo", device_info),
+                                parent_device_id=parent_device_id,
+                                **device_info_fields,
                             )
                         else:
-                            # An explicit parent_device_id=None means a main device;
-                            # drop the key as async_get_or_create is main-only.
                             device = dev_reg.async_get_or_create(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast(
-                                    "dr.DeviceInfo",
-                                    {
-                                        key: value
-                                        for key, value in device_info.items()
-                                        if key != "parent_device_id"
-                                    },
-                                ),
+                                **device_info_fields,
                             )
                     except dr.DeviceInfoError as exc:
                         self.logger.error(

@@ -106,7 +106,7 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},
             ATTR_NAME: zone.get_name(),
             "via_device_id": dr.async_get_device_id_by_identifier(
                 self.coordinator.hass,
