@@ -1,7 +1,9 @@
 """Tests for unifiprotect.media_source."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -213,6 +215,7 @@ async def test_browse_media_root_multiple_consoles(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -280,6 +283,7 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -1108,3 +1112,18 @@ async def test_build_days_whole_month_date_calculation(
     # Verify the identifier format is correct
     assert result.identifier.endswith(f"range:{year}:{month}:all")
     assert "Whole Month" in result.title
+
+
+async def test_public_only_entry_skipped(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry must not break the media source map.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    source = await async_get_media_source(hass)
+    assert source.data_sources == {}

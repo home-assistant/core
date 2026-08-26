@@ -9,7 +9,7 @@ from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -202,3 +202,4 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN

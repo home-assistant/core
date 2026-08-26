@@ -26,6 +26,19 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "spa_connected": {
+        "name": "Spa connected"
+      }
+    },
+    "light": {
+      "light_zone": {
+        "name": "Light zone {zone}"
+      }
+    },
     "number": {
       "target_temperature": {
         "name": "Target temperature"
