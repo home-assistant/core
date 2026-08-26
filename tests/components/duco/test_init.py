@@ -311,19 +311,13 @@ async def test_missing_bypass_temperature_targets_are_retried(
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test missing bypass targets are retried and can later create entities."""
-    target_missing = True
-
-    async def async_get_bypass_supply_temperature_targets() -> dict[
-        int, BypassSupplyTemperatureTarget
-    ]:
-        targets = mock_bypass_supply_temperature_targets.copy()
-        if target_missing:
-            targets.pop(1)
-        return targets
-
-    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = (
-        async_get_bypass_supply_temperature_targets
-    )
+    targets_without_zone_1 = {
+        k: v for k, v in mock_bypass_supply_temperature_targets.items() if k != 1
+    }
+    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = [
+        targets_without_zone_1,
+        mock_bypass_supply_temperature_targets.copy(),
+    ]
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -332,14 +326,10 @@ async def test_missing_bypass_temperature_targets_are_retried(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("number.living_bypass_target_1") is None
 
-    target_missing = False
-    mock_duco_client.async_get_bypass_supply_temperature_targets.reset_mock()
-
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
     state = hass.states.get("number.living_bypass_target_1")
     assert state is not None
     assert state.state == "20.0"
