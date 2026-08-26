@@ -673,28 +673,28 @@ async def test_a_change_during_a_rebuild_is_not_lost(
 
     rebuilding = threading.Event()
     release = threading.Event()
-    real_set_home = GazetteerMatcher.set_home
+    real_build = gazetteer._build_matcher
 
-    def set_home(self, home):
+    def build(previous, home):
         rebuilding.set()
-        release.wait(timeout=10)
-        real_set_home(self, home)
+        release.wait(timeout=5)
+        return real_build(previous, home)
 
     area_registry.async_update("kitchen_id", name="Scullery")
     assert agent._gazetteer._stale
 
-    with patch.object(GazetteerMatcher, "set_home", set_home):
+    with patch.object(gazetteer, "_build_matcher", build):
         pending = hass.async_create_task(
             conversation.async_converse(
                 hass, "turn on the scullary lights", None, Context(), None
             )
         )
-        await hass.async_add_executor_job(rebuilding.wait, 10)
+        assert await hass.async_add_executor_job(rebuilding.wait, 5)
 
         # This arrives after the home was read, so the rebuild in flight misses it.
         area_registry.async_update("bedroom_id", name="Nursery")
         release.set()
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(5):
             await pending
 
     assert agent._gazetteer._stale, "the change made during the rebuild was erased"
