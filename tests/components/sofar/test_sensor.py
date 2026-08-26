@@ -86,7 +86,7 @@ async def test_sensor_entities_created_and_state(
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a measurement/enum sensor and an opt-in total's default state."""
+    """Test a measurement and an enum sensor report live state."""
     grid_freq_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_grid_frequency"
     )
@@ -101,12 +101,33 @@ async def test_sensor_entities_created_and_state(
     assert (state := hass.states.get(system_state_id)) is not None
     assert state.state == "grid_connected"
 
-    gen_today_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_solar_generation_today"
+
+async def test_enabled_by_default_partition(
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the opt-in tiering holds, and matches the descriptions."""
+    entries = er.async_entries_for_config_entry(
+        entity_registry, init_integration.entry_id
     )
-    assert gen_today_id is not None
-    assert (entry := entity_registry.async_get(gen_today_id)) is not None
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    enabled = [entry for entry in entries if entry.disabled_by is None]
+    # Literal counts: an accidental flip has to be acknowledged here.
+    assert len(entries) == 76
+    assert len(enabled) == 24
+
+    served = init_integration.runtime_data.served_components
+    expected_disabled = {
+        description.key
+        for description in SENSOR_DESCRIPTIONS
+        if description.component in served
+        and not description.entity_registry_enabled_default
+    }
+    disabled = {
+        entry.unique_id.removeprefix(f"{MOCK_SERIAL}_")
+        for entry in entries
+        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    }
+    assert disabled == expected_disabled
 
 
 async def test_settings_backed_sensor_created_and_state(
