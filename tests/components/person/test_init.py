@@ -741,6 +741,18 @@ async def test_scanner_associated_with_other_zone(
             {ATTR_SOURCE: DEVICE_TRACKER},
             id="office",
         ),
+        # A device tracker reporting "home" without in_zones or coordinates gets placed in zone.home
+        pytest.param(
+            ("home", {ATTR_SOURCE_TYPE: SourceType.GPS}),
+            "home",
+            {
+                ATTR_IN_ZONES: ["zone.home"],
+                ATTR_LATITUDE: 32.87336,
+                ATTR_LONGITUDE: -117.22743,
+                ATTR_SOURCE: DEVICE_TRACKER,
+            },
+            id="home_without_in_zones",
+        ),
         # Legacy GPS trackers contribute their own coordinates but no zones.
         pytest.param(
             _LEGACY_GPS_NOT_HOME,
@@ -805,35 +817,6 @@ async def test_legacy_device_tracker(
         }
         | expected_extra
     )
-
-
-async def test_tracker_without_in_zones_home_state(
-    hass: HomeAssistant,
-    hass_admin_user: MockUser,
-) -> None:
-    """Test a device tracker without in_zones and coordinates reporting home sets in_zones on person."""
-    hass.set_state(CoreState.not_running)
-    user_id = hass_admin_user.id
-    config = {
-        DOMAIN: {
-            "id": "1234",
-            "name": "tracked person",
-            "user_id": user_id,
-            "device_trackers": DEVICE_TRACKER,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    # Device tracker has state home, but no in_zones attribute and no GPS coordinates
-    hass.states.async_set(DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SourceType.GPS})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("person.tracked_person")
-    assert state is not None
-    assert state.state == "home"
-    assert state.attributes[ATTR_IN_ZONES] == ["zone.home"]
 
 
 @pytest.mark.parametrize(
