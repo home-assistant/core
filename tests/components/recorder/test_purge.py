@@ -1767,6 +1767,12 @@ async def test_purge_entities_group_entity_id(
         # group's own history is purged.
         assert _count_states_before(session, member_entity_id, cutoff) == 10
         assert _count_states_before(session, group_entity_id, cutoff) == 0
+        # A zero states count can leave an orphaned StatesMeta row, so assert the
+        # group's metadata row is removed too.
+        states_meta_group = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == group_entity_id
+        )
+        assert states_meta_group.count() == 0
         # An unrelated entity is untouched, i.e. a group id which cannot be
         # expanded did not result in the whole database being purged.
         assert _count_states_before(session, "sensor.keep", cutoff) == 10
