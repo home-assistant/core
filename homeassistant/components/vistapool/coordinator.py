@@ -178,10 +178,14 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if value_path not in self._pending_optimistic:
             return
         del self._pending_optimistic[value_path]
-        self._start_self_heal()
+        self.start_self_heal()
 
-    def _start_self_heal(self) -> None:
-        """Launch the self-heal refresh unless one is already running."""
+    def start_self_heal(self) -> None:
+        """Launch an authoritative fetch unless one is already running.
+
+        Used by the TTL expiry, and by write sequences that failed halfway:
+        the local prediction is then unreliable, so fetch the truth.
+        """
         if self._self_heal_handle is not None:
             self._self_heal_handle.cancel()
             self._self_heal_handle = None
@@ -208,7 +212,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except AquariteError as err:
             self.async_set_update_error(err)
             self._self_heal_handle = self.hass.loop.call_later(
-                OPTIMISTIC_TTL_SECONDS, self._start_self_heal
+                OPTIMISTIC_TTL_SECONDS, self.start_self_heal
             )
             return
         self.async_set_updated_data(self._merge_optimistic(data))

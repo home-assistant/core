@@ -319,6 +319,54 @@ async def test_button_press_failed_pulse_discards_unsent_write(
         assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
+async def test_button_press_failed_pulse_reconciles_consumed_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a failed final on reconciles when the off echo was already consumed.
+
+    The echo confirms the off inside the pulse delay, so the queued on is
+    overlaid and published; discarding it on failure alone would leave the
+    light on forever with no further push coming. The self-heal fetch must
+    restore the controller's real off state.
+    """
+    mock_vistapool_client.fetch_pool_data.side_effect = [
+        {"main": {"hasLED": 1, "version": 1}, "light": {"status": 1}},
+        {"main": {"hasLED": 1, "version": 1}, "light": {"status": 0}},
+    ]
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS",
+        [Platform.BUTTON, Platform.LIGHT],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+        async def _echo_then_fail(_pool_id: str, _path: str, value: int) -> None:
+            """Deliver the off echo during the delay, then fail the final on."""
+            if value == 0:
+                on_data({"light": {"status": 0}})
+            if value:
+                raise AquariteError("boom")
+
+        mock_vistapool_client.set_value.side_effect = _echo_then_fail
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {ATTR_ENTITY_ID: _BUTTON},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
 async def test_button_press_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

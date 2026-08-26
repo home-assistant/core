@@ -89,12 +89,16 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
         except HomeAssistantError:
             self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
             self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            # A push consumed mid-send may have been overlaid with a queued
+            # value that just got discarded; fetch the truth.
+            self.coordinator.start_self_heal()
             raise
         await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
         try:
             await self._async_write_status(1)
         except HomeAssistantError:
             self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            self.coordinator.start_self_heal()
             raise
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
