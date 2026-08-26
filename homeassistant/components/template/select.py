@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -55,11 +55,15 @@ SELECT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=SelectEntityCapabilityAttribute
+)
+
 SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        SELECT_DOMAIN, DEFAULT_NAME, SelectEntityCapabilityAttribute
+        SELECT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -145,6 +149,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
     _state_option = CONF_STATE
     _restore_state_extra_data = SelectExtraStoredData
     _restore_state_properties = ("_attr_current_option",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -157,12 +162,12 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
 
         self.setup_state_template(
             "_attr_current_option",
-            template_validators.string(self, CONF_STATE),
+            tcv.string(self, CONF_STATE),
         )
         self.setup_template(
             CONF_OPTIONS,
             "_attr_options",
-            template_validators.list_of_strings(self, CONF_OPTIONS),
+            tcv.list_of_strings(self, CONF_OPTIONS),
         )
 
         self._attr_current_option = None

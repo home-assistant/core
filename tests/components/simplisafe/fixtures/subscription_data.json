@@ -133,6 +133,7 @@
           "upgradeWhitelisted": false,
           "model": "SS001",
           "uuid": "1234567890",
+          "serial": "1234567890",
           "uid": 12345,
           "sid": 12345,
           "cameraSettings": {
