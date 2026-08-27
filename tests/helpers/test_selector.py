@@ -1950,6 +1950,23 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                 ],
             ),
         ),
+        (
+            {"multiple": True, "accept": ["image/*"], "remove_metadata": False},
+            (
+                [
+                    {
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                        "metadata": {"foo": 42},
+                    },
+                    {
+                        "media_content_id": "ghi",
+                        "media_content_type": "jkl",
+                    },
+                ],
+            ),
+            (),
+        ),
     ],
 )
 def test_media_selector_schema_multiple(
@@ -1969,7 +1986,7 @@ def test_media_selector_schema_multiple(
         schema,
         valid_selections,
         invalid_selections,
-        drop_metadata,
+        drop_metadata if schema.get("remove_metadata", True) else None,
     )
 
 
