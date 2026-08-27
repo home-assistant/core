@@ -15,7 +15,6 @@ from homeassistant.components.select import (
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -66,54 +65,45 @@ async def test_hybrid_entities(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_charger_use_mode_select_option(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+@pytest.mark.parametrize(
+    ("key", "initial", "option"),
+    [
+        pytest.param(
+            "charger_use_mode", "self_use", "feed_in_priority_mode", id="charger"
+        ),
+        pytest.param("eps_control", "turn_off", "turn_on_enable_cold_start", id="eps"),
+    ],
+)
+async def test_select_option(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    initial: str,
+    option: str,
 ) -> None:
-    """Test the charger use mode select, served only on a hybrid."""
+    """Test selecting an option writes it and refreshes the read-back."""
     await _setup_hybrid(hass)
-    charger_id = entity_registry.async_get_entity_id(
-        SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_charger_use_mode"
+    entity_id = entity_registry.async_get_entity_id(
+        SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_{key}"
     )
-    assert charger_id is not None
-    assert (state := hass.states.get(charger_id)) is not None
-    assert state.state == "self_use"
+    assert entity_id is not None
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == initial
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: charger_id, ATTR_OPTION: "feed_in_priority_mode"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
         blocking=True,
     )
-    assert (state := hass.states.get(charger_id)) is not None
-    assert state.state == "feed_in_priority_mode"
-
-
-async def test_eps_control_select_option(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test the EPS mode select, served only on a hybrid."""
-    await _setup_hybrid(hass)
-    eps_id = entity_registry.async_get_entity_id(
-        SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_eps_control"
-    )
-    assert eps_id is not None
-    assert (state := hass.states.get(eps_id)) is not None
-    assert state.state == "turn_off"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: eps_id, ATTR_OPTION: "turn_on_enable_cold_start"},
-        blocking=True,
-    )
-    assert (state := hass.states.get(eps_id)) is not None
-    assert state.state == "turn_on_enable_cold_start"
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == option
 
 
 async def test_select_option_modbus_error(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a write failure surfaces as a HomeAssistantError."""
+    """Test a write failure propagates as-is."""
     _, connection = await _setup_hybrid(hass)
     charger_id = entity_registry.async_get_entity_id(
         SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_charger_use_mode"
@@ -121,13 +111,10 @@ async def test_select_option_modbus_error(
     assert charger_id is not None
     connection.for_unit(1).fail_write(0x1110, ModbusError("busy"))
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: charger_id, ATTR_OPTION: "feed_in_priority_mode"},
             blocking=True,
         )
-
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "modbus_error"

@@ -5,16 +5,13 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from modbus_connection import ModbusError
 from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import ChargerUseMode, EpsControlMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -88,12 +85,5 @@ class SofarSelect(SofarEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Write the selected option to the device."""
         value = self.entity_description.options_enum[option.upper()]
-        try:
-            await self.entity_description.write_fn(self.coordinator.device, value.value)
-        except ModbusError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.entity_description.write_fn(self.coordinator.device, value.value)
         await self.coordinator.async_request_refresh()
