@@ -120,7 +120,15 @@ def _get_missing_cpu_features() -> list[str] | None:
         return None
     # /proc/cpuinfo flag names for the x86-64-v2 baseline recent NumPy
     # builds require on x86_64. https://github.com/numpy/numpy/issues/31939
-    required_features = {"pni", "ssse3", "sse4_1", "sse4_2", "popcnt"}
+    required_features = {
+        "pni",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "lahf_lm",
+        "cx16",
+    }
     return sorted(required_features - set(flags))
 
 

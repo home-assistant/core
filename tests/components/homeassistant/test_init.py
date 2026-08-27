@@ -817,11 +817,37 @@ async def test_deprecated_installation_issue_container_32bit(
         (
             "x86_64",
             {"flags": ["pni", "popcnt", "sse", "sse2"]},
-            ["sse4_1", "sse4_2", "ssse3"],
+            ["cx16", "lahf_lm", "sse4_1", "sse4_2", "ssse3"],
         ),
         (
             "x86_64",
-            {"flags": ["pni", "ssse3", "sse4_1", "sse4_2", "popcnt"]},
+            {
+                "flags": [
+                    "pni",
+                    "ssse3",
+                    "sse4_1",
+                    "sse4_2",
+                    "popcnt",
+                    "cx16",
+                    "sse",
+                    "sse2",
+                ]
+            },
+            ["lahf_lm"],
+        ),
+        (
+            "x86_64",
+            {
+                "flags": [
+                    "pni",
+                    "ssse3",
+                    "sse4_1",
+                    "sse4_2",
+                    "popcnt",
+                    "lahf_lm",
+                    "cx16",
+                ]
+            },
             [],
         ),
     ],
