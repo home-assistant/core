@@ -8,10 +8,11 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
+from multidict import CIMultiDict
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -152,6 +153,8 @@ async def test_abort_if_no_implementation(
     result = await flow.async_step_user()
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
+    # Not a shared reason, so it stays with the integration owning the flow
+    assert "translation_domain" not in result
 
 
 async def test_abort_if_oauth_implementation_unavailable(
@@ -174,6 +177,55 @@ async def test_abort_if_oauth_implementation_unavailable(
     result = await flow.async_step_user()
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_implementation_unavailable"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "authorize_url_timeout",
+        "missing_credentials",
+        "no_url_available",
+        "oauth_error",
+        "oauth_failed",
+        "oauth_implementation_unavailable",
+        "oauth_timeout",
+        "oauth_unauthorized",
+        "user_rejected_authorize",
+    ],
+)
+async def test_shared_abort_reasons_use_homeassistant_domain(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    reason: str,
+) -> None:
+    """Test shared abort reasons are translated by the homeassistant domain."""
+    flow = flow_handler()
+    flow.hass = hass
+    flow.flow_id = "test-flow-id"
+    flow.handler = TEST_DOMAIN
+
+    result = flow.async_abort(reason=reason)
+
+    assert result["reason"] == reason
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+
+
+async def test_abort_reason_translation_domain_not_overridden(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+) -> None:
+    """Test an explicit domain wins and unknown reasons stay untranslated."""
+    flow = flow_handler()
+    flow.hass = hass
+    flow.flow_id = "test-flow-id"
+    flow.handler = TEST_DOMAIN
+
+    explicit = flow.async_abort(reason="oauth_error", translation_domain="other_domain")
+    assert explicit["translation_domain"] == "other_domain"
+
+    not_shared = flow.async_abort(reason="some_integration_reason")
+    assert "translation_domain" not in not_shared
 
 
 async def test_missing_credentials_for_domain(
@@ -1431,3 +1483,33 @@ async def test_async_get_config_entry_implementation_missing_provider(
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_oauth2_request_replaces_caller_authorization_header(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Test the token replaces a caller supplied Authorization header."""
+    aioclient_mock.post("https://example.com", status=201)
+
+    await config_entry_oauth2_flow.async_oauth2_request(
+        hass,
+        {"access_token": ACCESS_TOKEN_1},
+        "post",
+        "https://example.com",
+        headers={header_name: "Bearer caller supplied"},
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    headers = CIMultiDict(aioclient_mock.mock_calls[0][3])
+
+    # The token must not be sent as a second Authorization header
+    assert headers.getall("Authorization") == [f"Bearer {ACCESS_TOKEN_1}"]

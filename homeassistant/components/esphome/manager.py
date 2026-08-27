@@ -772,14 +772,7 @@ class ESPHomeManager:
             expected_disconnect,
         )
         entry_data.async_on_disconnect()
-        entry_data.expected_disconnect = expected_disconnect
-        # Mark state as stale so that we will always dispatch
-        # the next state update of that type when the device reconnects
-        entry_data.stale_state = {
-            (type(entity_state), entity_state.device_id, key)
-            for state_dict in entry_data.state.values()
-            for key, entity_state in state_dict.items()
-        }
+        entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
@@ -1147,7 +1140,9 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        infos, services = await entry_data.async_load_from_store()
+        infos, services = await entry_data.async_load_from_store(
+            restore_states=bool(entry.unique_id)
+        )
         if entry.unique_id:
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
@@ -1196,6 +1191,15 @@ class ESPHomeManager:
 
 
 @callback
+def async_get_manufacturer_model(device_info: EsphomeDeviceInfo) -> tuple[str, str]:
+    """Return the manufacturer and model to use for a device."""
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        return project_name[0], project_name[1]
+    return device_info.manufacturer or "espressif", device_info.model
+
+
+@callback
 def _async_setup_device_registry(
     hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
@@ -1241,14 +1245,8 @@ def _async_setup_device_registry(
     ):
         configuration_url = f"homeassistant://app/{dashboard.addon_slug}"
 
-    manufacturer = "espressif"
-    if device_info.manufacturer:
-        manufacturer = device_info.manufacturer
-    model = device_info.model
+    manufacturer, model = async_get_manufacturer_model(device_info)
     if device_info.project_name:
-        project_name = device_info.project_name.split(".")
-        manufacturer = project_name[0]
-        model = project_name[1]
         sw_version = (
             f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
         )
@@ -1572,11 +1570,18 @@ def _setup_services(
 async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
+    was_connected = data.available
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    await data.async_cleanup()
-    await data.client.disconnect()
+    try:
+        await data.client.disconnect()
+    finally:
+        if was_connected:
+            # on_disconnect runs in a background task that may not have
+            # persisted yet; the connection was closed by us, so it is expected
+            data.async_record_disconnect(expected_disconnect=True)
+        await data.async_cleanup()
     return data
 
 
