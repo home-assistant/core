@@ -1,6 +1,5 @@
 """Tests for the Marstek sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,11 +8,18 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .conftest import MOCK_DEVICE_STATUS
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
+
+BATTERY_LEVEL_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_level"
+BATTERY_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_power"
+BATTERY_STATUS_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_status"
+DEVICE_MODE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_device_mode"
+PV1_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_power"
+PV1_VOLTAGE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_voltage"
+PV2_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv2_power"
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> State:
@@ -56,7 +62,7 @@ async def test_polling_paused(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await mock_config_entry.runtime_data.coordinator.async_refresh()
     await hass.async_block_till_done()
 
     mock_udp_client.get_device_status.assert_not_awaited()
@@ -78,18 +84,15 @@ async def test_polling_failure_recovers(
         MOCK_DEVICE_STATUS.copy(),
     ]
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await mock_config_entry.runtime_data.coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert (
-        _get_state(hass, "sensor.marstek_es5_v1_battery_level").state
-        == STATE_UNAVAILABLE
-    )
+    assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=22))
+    await mock_config_entry.runtime_data.coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert _get_state(hass, "sensor.marstek_es5_v1_battery_level").state == "85"
+    assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == "85"
 
 
 async def test_missing_sensor_fields_do_not_fallback(
@@ -108,16 +111,12 @@ async def test_missing_sensor_fields_do_not_fallback(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        _get_state(hass, "sensor.marstek_es5_v1_battery_level").state == STATE_UNKNOWN
-    )
-    assert _get_state(hass, "sensor.marstek_es5_v1_device_mode").state == STATE_UNKNOWN
-    assert (
-        _get_state(hass, "sensor.marstek_es5_v1_battery_status").state == STATE_UNKNOWN
-    )
-    assert _get_state(hass, "sensor.marstek_es5_v1_pv1_power").state == "500"
-    assert hass.states.get("sensor.marstek_es5_v1_pv1_voltage") is None
-    assert hass.states.get("sensor.marstek_es5_v1_pv2_power") is None
+    assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert _get_state(hass, DEVICE_MODE_ENTITY_ID).state == STATE_UNKNOWN
+    assert _get_state(hass, BATTERY_STATUS_ENTITY_ID).state == STATE_UNKNOWN
+    assert _get_state(hass, PV1_POWER_ENTITY_ID).state == "500"
+    assert hass.states.get(PV1_VOLTAGE_ENTITY_ID) is None
+    assert hass.states.get(PV2_POWER_ENTITY_ID) is None
 
 
 async def test_invalid_integer_sensor_value(
@@ -136,6 +135,4 @@ async def test_invalid_integer_sensor_value(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        _get_state(hass, "sensor.marstek_es5_v1_battery_power").state == STATE_UNKNOWN
-    )
+    assert _get_state(hass, BATTERY_POWER_ENTITY_ID).state == STATE_UNKNOWN

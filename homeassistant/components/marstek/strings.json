@@ -2,13 +2,15 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured",
-      "missing_unique_id": "Device did not provide a stable unique identifier"
+      "missing_unique_id": "Device did not provide a stable unique identifier",
+      "unsupported_device": "This Marstek device type is not currently supported"
     },
     "error": {
       "cannot_connect": "Unable to connect to the device",
       "device_not_found": "Device not found at the specified IP address",
       "discovery_failed": "Failed to discover devices. Please check your network connection and try again.",
-      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network."
+      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network.",
+      "unsupported_device": "This Marstek device type is not currently supported"
     },
     "step": {
       "discover": {
@@ -118,6 +120,9 @@
     },
     "udp_client_setup_failed": {
       "message": "Unable to set up the Marstek UDP client."
+    },
+    "unsupported_device": {
+      "message": "The Marstek device type {device_type} is not currently supported."
     }
   }
 }

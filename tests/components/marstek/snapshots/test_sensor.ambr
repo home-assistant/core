@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_level-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_battery_level',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,23 +38,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_level-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 Battery level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_battery_level',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '85',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_power-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_battery_power',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,23 +96,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_power-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 Battery power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Battery power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_battery_power',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1300',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_status-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -126,7 +126,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_battery_status',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -149,21 +149,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_battery_status-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_battery_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 Battery status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Battery status',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_battery_status',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_battery_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Charging',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_device_mode-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_device_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -177,7 +177,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_device_mode',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_device_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -200,21 +200,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_device_mode-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 Device mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 Device mode',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_device_mode',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_device_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Manual',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_current-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -230,7 +230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_current',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -256,24 +256,24 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_current-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 PV1 current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 PV1 current',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:current-ac',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_current',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_power-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -289,7 +289,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_power',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -315,24 +315,24 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_power-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 PV1 power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 PV1 power',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:solar-power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_power',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_state-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -346,7 +346,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_state',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -369,21 +369,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_state-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 PV1 state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 PV1 state',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:state-machine',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_state',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_voltage-entry]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -399,7 +399,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_voltage',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -425,17 +425,17 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_setup_snapshot[sensor.marstek_es5_v1_pv1_voltage-state]
+# name: test_sensor_setup_snapshot[sensor.marstek_venuse_3_0_v1_pv1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek ES5 v1 PV1 voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marstek VenusE 3.0 v1 PV1 voltage',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:flash',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.marstek_es5_v1_pv1_voltage',
+    'entity_id': 'sensor.marstek_venuse_3_0_v1_pv1_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

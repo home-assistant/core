@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "AA:BB:CC:DD:EE:FF"
-TEST_DEVICE_TYPE = "ES5"
+TEST_DEVICE_TYPE = "VenusE 3.0"
 TEST_VERSION = 1
 TEST_WIFI_NAME = "TestWiFi"
 TEST_WIFI_MAC = "AA:BB:CC:DD:EE:FF"

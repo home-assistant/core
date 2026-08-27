@@ -13,6 +13,7 @@ from .const import (
     CONF_WIFI_MAC,
     CONF_WIFI_NAME,
     DOMAIN,
+    SUPPORTED_DEVICE_TYPES,
 )
 
 _RAW_DEVICE_TYPE = "device"
@@ -66,6 +67,11 @@ class MarstekDeviceInfo:
     def stable_id(self) -> str:
         """Return the stable hardware identifier for the device."""
         return self.mac or self.wifi_mac or self.ble_mac
+
+    @property
+    def is_supported(self) -> bool:
+        """Return if the device type is supported by this integration."""
+        return self.device_type in SUPPORTED_DEVICE_TYPES
 
     @property
     def display_name(self) -> str:

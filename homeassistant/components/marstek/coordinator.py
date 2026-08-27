@@ -10,6 +10,7 @@ from aiomarstek import MarstekUDPClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -94,6 +95,15 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
                 translation_domain=DOMAIN,
                 translation_key="missing_stable_id",
                 translation_placeholders={"host": self.device_ip},
+            )
+
+        if not normalized_device_info.is_supported:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_device",
+                translation_placeholders={
+                    "device_type": normalized_device_info.device_type
+                },
             )
 
         self.device_info = normalized_device_info

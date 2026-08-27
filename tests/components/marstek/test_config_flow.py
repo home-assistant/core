@@ -63,6 +63,21 @@ DISCOVERED_DEVICE_WITHOUT_STABLE_ID = {
     "ble_mac": "",
 }
 
+UNSUPPORTED_DEVICE_INFO = {
+    "id": 0,
+    "device": "VenusE 2.0",
+    "ver": TEST_VERSION,
+    "wifi_name": TEST_WIFI_NAME,
+    "ip": TEST_HOST,
+    "wifi_mac": TEST_WIFI_MAC,
+    "ble_mac": TEST_BLE_MAC,
+}
+
+UNSUPPORTED_DISCOVERED_DEVICE = {
+    **DISCOVERED_DEVICE,
+    "device_type": "VenusE 2.0",
+}
+
 EXPECTED_ENTRY_DATA = {
     CONF_HOST: TEST_HOST,
     CONF_MAC: TEST_MAC,
@@ -132,6 +147,49 @@ async def test_discovery_flow_duplicate_device_names(
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
         {"value": "1", "label": f"{EXPECTED_DEVICE_OPTION} #2"},
     ]
+
+
+async def test_discovery_flow_filters_unsupported_devices(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Test discovery only shows supported device types."""
+    mock_udp_client.discover_devices.return_value = [
+        UNSUPPORTED_DISCOVERED_DEVICE,
+        DISCOVERED_DEVICE,
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+    await hass.async_block_till_done()
+
+    selector = next(iter(_data_schema(result).schema.values()))
+
+    assert selector.config["options"] == [
+        {"value": "0", "label": EXPECTED_DEVICE_OPTION},
+    ]
+
+
+async def test_discovery_flow_errors_if_only_unsupported_devices_found(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Test discovery shows an error when only unsupported devices are found."""
+    mock_udp_client.discover_devices.return_value = [UNSUPPORTED_DISCOVERED_DEVICE]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
+    assert result["errors"] == {"base": "unsupported_device"}
 
 
 async def test_discovery_flow_aborts_without_stable_unique_id(
@@ -274,6 +332,28 @@ async def test_manual_flow_errors_if_device_info_is_invalid(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "device_not_found"}
+
+
+async def test_manual_flow_errors_if_device_type_is_unsupported(
+    hass: HomeAssistant,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test manual setup errors when the device type is unsupported."""
+    mock_udp_client.get_device_info.return_value = UNSUPPORTED_DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "unsupported_device"}
 
 
 @pytest.mark.parametrize(

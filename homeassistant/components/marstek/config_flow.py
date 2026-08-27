@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_MANUAL_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
 ABORT_MISSING_UNIQUE_ID = "missing_unique_id"
+ERROR_UNSUPPORTED_DEVICE = "unsupported_device"
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,11 +90,25 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         normalized_devices = [
             MarstekDeviceInfo.from_response(device) for device in discovered_devices
         ]
-        _LOGGER.debug("Discovered %d devices", len(normalized_devices))
+        supported_devices = [
+            device for device in normalized_devices if device.is_supported
+        ]
+        if not supported_devices:
+            return self.async_show_form(
+                step_id="discover",
+                data_schema=vol.Schema({}),
+                errors={"base": ERROR_UNSUPPORTED_DEVICE},
+            )
+
+        _LOGGER.debug(
+            "Discovered %d supported devices out of %d total",
+            len(supported_devices),
+            len(normalized_devices),
+        )
         self.discovered_device_options = {}
 
         device_options: list[SelectOptionDict] = []
-        for index, device in enumerate(normalized_devices):
+        for index, device in enumerate(supported_devices):
             device_label = device.display_name
             if any(option["label"] == device_label for option in device_options):
                 device_label = f"{device_label} #{index + 1}"
@@ -131,6 +146,13 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except TypeError:
                 errors["base"] = "device_not_found"
             else:
+                if not device.is_supported:
+                    errors["base"] = ERROR_UNSUPPORTED_DEVICE
+                    return self.async_show_form(
+                        step_id="manual",
+                        data_schema=STEP_MANUAL_DATA_SCHEMA,
+                        errors=errors,
+                    )
                 return await self._async_create_entry_from_device(device)
 
         return self.async_show_form(
@@ -156,6 +178,9 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, device: MarstekDeviceInfo
     ) -> ConfigFlowResult:
         """Create a config entry from normalized Marstek device data."""
+        if not device.is_supported:
+            return self.async_abort(reason=ERROR_UNSUPPORTED_DEVICE)
+
         unique_id = device.stable_id
         if not unique_id:
             return self.async_abort(reason=ABORT_MISSING_UNIQUE_ID)

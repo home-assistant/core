@@ -15,6 +15,16 @@ from homeassistant.exceptions import ConfigEntryError
 
 from tests.common import MockConfigEntry
 
+UNSUPPORTED_DEVICE_INFO = {
+    "id": 0,
+    "device": "VenusE 2.0",
+    "ver": 1,
+    "wifi_name": "TestWiFi",
+    "ip": "192.168.1.100",
+    "wifi_mac": "AA:BB:CC:DD:EE:FF",
+    "ble_mac": "11:22:33:44:55:66",
+}
+
 
 async def test_async_setup_entry(
     hass: HomeAssistant,
@@ -64,12 +74,12 @@ async def test_async_unload_multiple_entries(
     """Test the shared UDP client is cleaned up only when the last entry unloads."""
     second_entry = MockConfigEntry(
         domain=mock_config_entry.domain,
-        title="Marstek ES6 v2 (192.168.1.101)",
+        title="Marstek VNSD-0 v2 (192.168.1.101)",
         unique_id="AA:BB:CC:DD:EE:00",
         data={
             "host": "192.168.1.101",
             "mac": "AA:BB:CC:DD:EE:00",
-            "device_type": "ES6",
+            "device_type": "VNSD-0",
             "version": 2,
             "wifi_name": "OtherWiFi",
             "wifi_mac": "AA:BB:CC:DD:EE:00",
@@ -201,6 +211,22 @@ async def test_async_setup_entry_invalid_device_info(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_udp_client.async_cleanup.assert_awaited_once()
+
+
+async def test_async_setup_entry_unsupported_device_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test setup fails when the device type is unsupported."""
+    mock_config_entry.add_to_hass(hass)
+    mock_udp_client.get_device_info.return_value = UNSUPPORTED_DEVICE_INFO
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_udp_client.async_cleanup.assert_awaited_once()
 
 
