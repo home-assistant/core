@@ -25,13 +25,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
-from .const import (
-    CONF_ADDON_SLUG,
-    CONF_AUTHORIZATION_URL,
-    CONF_SCOPE,
-    CONF_TOKEN_URL,
-    DOMAIN,
-)
+from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -217,7 +211,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured(updates={CONF_URL: url})
         self.data[CONF_URL] = url
-        self.data[CONF_ADDON_SLUG] = discovery_info.slug
+        self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name
         return await self.async_step_hassio_confirm()
 

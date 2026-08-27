@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
-from .const import CONF_ADDON_SLUG, CONF_AUTHORIZATION_URL, CONF_TOKEN_URL, DOMAIN
+from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
 
     # A discovered server is identified by the app slug, so that the API id
     # survives the app being reinstalled.
-    api_id = f"{DOMAIN}-{entry.data.get(CONF_ADDON_SLUG, entry.entry_id)}"
+    api_id = f"{DOMAIN}-{entry.data.get(CONF_SLUG, entry.entry_id)}"
     unsub = llm.async_register_api(
         hass,
         ModelContextProtocolAPI(

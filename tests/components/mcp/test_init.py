@@ -10,7 +10,7 @@ from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, T
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.mcp.const import CONF_ADDON_SLUG, DOMAIN
+from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
@@ -743,7 +743,7 @@ async def test_llm_api_id_from_app_slug(
     """Test a discovered server uses the app slug for the LLM API id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "http://1.1.1.1/mcp", CONF_ADDON_SLUG: "a0d7b954_mcp"},
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)

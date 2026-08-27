@@ -11,9 +11,9 @@ import respx
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
 from homeassistant.components.mcp.const import (
-    CONF_ADDON_SLUG,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
+    CONF_SLUG,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -1059,7 +1059,7 @@ async def test_hassio_discovery_flow(
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {
         CONF_URL: MCP_SERVER_URL,
-        CONF_ADDON_SLUG: ADDON_DISCOVERY_INFO.slug,
+        CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
     }
     # The discovery uuid lets Supervisor remove the entry with the app
     assert result["result"]
