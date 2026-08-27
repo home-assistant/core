@@ -1057,6 +1057,9 @@ async def test_hassio_discovery_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {CONF_URL: MCP_SERVER_URL}
+    # The discovery uuid lets Supervisor remove the entry with the app
+    assert result["result"]
+    assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1085,6 +1088,28 @@ async def test_hassio_discovery_invalid_url(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_updates_url(hass: HomeAssistant) -> None:
+    """Test the app moving to another URL updates the existing entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDON_DISCOVERY_INFO.uuid,
+        data={CONF_URL: "http://1.1.1.1:9999/mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1184,3 +1209,56 @@ async def test_hassio_discovery_requires_authentication(
     # The user is taken to the application credentials UI to enter credentials.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_hassio_discovery_authentication_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test an OAuth flow for a discovered MCP server keeps the discovery uuid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        scopes=SCOPES,
+    )
+
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"]
+    assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
+    assert len(mock_setup_entry.mock_calls) == 1

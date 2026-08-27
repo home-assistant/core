@@ -208,6 +208,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="invalid_discovery_info")
 
         self._async_abort_entries_match({CONF_URL: url})
+        await self.async_set_unique_id(discovery_info.uuid)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
         self.data[CONF_URL] = url
         self.addon_name = discovery_info.name
         return await self.async_step_hassio_confirm()
@@ -377,12 +379,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # Unique id based on the application credentials OAuth Client ID
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        await self.async_set_unique_id(config_entry_data["auth_implementation"])
+        if self.unique_id is None:
+            # Unique id based on the application credentials OAuth Client ID. A
+            # discovered server keeps the Supervisor uuid instead, so that the
+            # entry is removed together with the app.
+            await self.async_set_unique_id(config_entry_data["auth_implementation"])
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
