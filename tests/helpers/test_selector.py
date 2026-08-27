@@ -1846,6 +1846,34 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
         ),
         (
             {
+                "image_upload": True,
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when image_upload is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+        ),
+        (
+            {
                 "accept": ["image/*"],
                 "image_upload": True,
                 "clearable": True,

@@ -1390,8 +1390,9 @@ class MediaSelector(Selector[MediaSelectorConfig]):
             if key != "entity_id"
         }
 
-        if "accept" not in self.config:
-            # If accept is not set, the entity_id field is required
+        if "accept" not in self.config and not self.config["image_upload"]:
+            # Both accept and image_upload mean the field is not tied to a media
+            # player, so the entity_id field is only required without them
             item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
         item_schema = vol.Schema(item_schema_dict)
