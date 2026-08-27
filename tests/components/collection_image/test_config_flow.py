@@ -9,9 +9,26 @@ from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_MEDIA_URI_1, MOCK_MEDIA_URI_BROWSE_ERROR, MOCK_MEDIA_URI_EMPTY
+from .const import (
+    MOCK_MEDIA_URI_1,
+    MOCK_MEDIA_URI_2,
+    MOCK_MEDIA_URI_BROWSE_ERROR,
+    MOCK_MEDIA_URI_EMPTY,
+)
 
 from tests.common import AsyncMock
+
+
+def _data_from_uris(uris: list[str]) -> dict:
+    return {
+        "media": [
+            {
+                "media_content_id": uri,
+                "media_content_type": "",
+            }
+            for uri in uris
+        ]
+    }
 
 
 @pytest.fixture
@@ -25,39 +42,30 @@ def mock_setup_entry():
         yield mock_setup
 
 
-async def _assert_successful_configure(
-    hass: HomeAssistant,
-    previous_step: config_entries.ConfigFlowResult,
-    mock_setup_entry,
-) -> None:
-
-    result = await hass.config_entries.flow.async_configure(
-        previous_step["flow_id"],
-        {
-            "media": [
-                {
-                    "media_content_id": MOCK_MEDIA_URI_1,
-                    "media_content_type": "",
-                }
+@pytest.mark.parametrize(
+    ("uris", "expected_title"),
+    [
+        ([MOCK_MEDIA_URI_1], "My pictures collection"),
+        (
+            [MOCK_MEDIA_URI_2, MOCK_MEDIA_URI_1],
+            "Three images collection",
+        ),
+        (
+            [
+                MOCK_MEDIA_URI_EMPTY,
+                MOCK_MEDIA_URI_1,
+                MOCK_MEDIA_URI_2,
             ],
-        },
-    )
-
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "My pictures collection"
-    assert result.get("data") == {
-        "media": [
-            {
-                "media_content_id": MOCK_MEDIA_URI_1,
-                "media_content_type": "",
-            }
-        ],
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
+            "My pictures collection",
+        ),
+    ],
+)
 async def test_config_flow(
-    hass: HomeAssistant, mock_media_source, mock_setup_entry
+    hass: HomeAssistant,
+    mock_media_source,
+    mock_setup_entry,
+    uris: list[str],
+    expected_title: str,
 ) -> None:
     """Test the config flow."""
 
@@ -67,11 +75,48 @@ async def test_config_flow(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
-    await _assert_successful_configure(hass, result, mock_setup_entry)
+    data = _data_from_uris(uris)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == expected_title
+    assert result.get("data") == data
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_with_empty_dir(
-    hass: HomeAssistant, mock_media_source, mock_setup_entry
+@pytest.mark.parametrize(
+    ("uris", "error", "placeholders"),
+    [
+        (
+            [MOCK_MEDIA_URI_EMPTY],
+            "selected_media_no_images",
+            {},
+        ),
+        (
+            [MOCK_MEDIA_URI_EMPTY, MOCK_MEDIA_URI_EMPTY],
+            "selected_media_no_images",
+            {},
+        ),
+        (
+            [MOCK_MEDIA_URI_BROWSE_ERROR],
+            "failed_browse",
+            {"error": "Mock directory failed to browse"},
+        ),
+        (
+            [MOCK_MEDIA_URI_EMPTY, MOCK_MEDIA_URI_BROWSE_ERROR],
+            "failed_browse",
+            {"error": "Mock directory failed to browse"},
+        ),
+    ],
+)
+async def test_config_flow_error(
+    hass: HomeAssistant,
+    mock_media_source,
+    mock_setup_entry,
+    uris: list[str],
+    error: str,
+    placeholders: dict,
 ) -> None:
     """Test the config flow with an empty directory."""
 
@@ -80,61 +125,23 @@ async def test_config_flow_with_empty_dir(
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "media": [
-                {
-                    "media_content_id": MOCK_MEDIA_URI_EMPTY,
-                    "media_content_type": "",
-                }
-            ],
-        },
-    )
+    data = _data_from_uris(uris)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("title") is None
     assert result.get("data") is None
-    assert result.get("errors") == {"media": "selected_media_no_images"}
+    assert result.get("errors") == {"media": error}
+    assert result.get("description_placeholders") == placeholders
     assert len(mock_setup_entry.mock_calls) == 0
 
     # Try again successfully to ensure we can recover from errors
-    await _assert_successful_configure(hass, result, mock_setup_entry)
+    data = _data_from_uris([MOCK_MEDIA_URI_1])
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-async def test_config_flow_with_exception(
-    hass: HomeAssistant, mock_media_source, mock_setup_entry
-) -> None:
-    """Test the config flow with a browse failure."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "media": [
-                {
-                    "media_content_id": MOCK_MEDIA_URI_BROWSE_ERROR,
-                    "media_content_type": "",
-                }
-            ],
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("title") is None
-    assert result.get("data") is None
-    assert result.get("errors") == {"media": "failed_browse"}
-    assert result.get("description_placeholders") == {
-        "error": "Mock directory failed to browse"
-    }
-    assert len(mock_setup_entry.mock_calls) == 0
-
-    await _assert_successful_configure(hass, result, mock_setup_entry)
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "My pictures collection"
+    assert result.get("data") == data
+    assert len(mock_setup_entry.mock_calls) == 1
