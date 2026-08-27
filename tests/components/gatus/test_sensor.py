@@ -204,7 +204,7 @@ async def test_sensor_missing_dns_rcode(
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a result missing DNS rcode evaluates to STATE_UNKNOWN."""
+    """Test that a result missing DNS rcode creates no entity."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
         EndpointStatus(
             key="backend_service",
@@ -224,5 +224,4 @@ async def test_sensor_missing_dns_rcode(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.backend_service_dns_response_code")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state is None
