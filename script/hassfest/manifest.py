@@ -102,6 +102,7 @@ NO_IOT_CLASS = [
     "logbook",
     "logger",
     "lovelace",
+    "map_tiles",
     "media_source",
     "moisture",
     "motion",
