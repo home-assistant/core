@@ -154,6 +154,7 @@ async def test_image_without_contour(
     state = hass.states.get("image.mock_title_contour_4")
     assert state
     assert state.state == "unknown"
+    assert "entity_picture" not in state.attributes
 
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.mock_title_contour_4")
@@ -175,6 +176,7 @@ async def test_contour_cleared_after_being_present(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != "unknown"
+    assert "entity_picture" in state.attributes
 
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
@@ -187,6 +189,7 @@ async def test_contour_cleared_after_being_present(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "unknown"
+    assert "entity_picture" not in state.attributes
 
     resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
