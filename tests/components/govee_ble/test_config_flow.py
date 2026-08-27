@@ -1,11 +1,18 @@
 """Test the Govee config flow."""
 
+from typing import cast
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth.match import (
+    BluetoothMatcher,
+    IntegrationMatcher,
+)
 from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.generated.bluetooth import BLUETOOTH
 
 from . import (
     GVH5055_SERVICE_INFO,
@@ -15,10 +22,40 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with an H5055."""
+    bleak_service_info = BluetoothServiceInfoBleak(
+        name=GVH5055_SERVICE_INFO.name,
+        address=GVH5055_SERVICE_INFO.address,
+        rssi=GVH5055_SERVICE_INFO.rssi,
+        manufacturer_data=GVH5055_SERVICE_INFO.manufacturer_data,
+        service_uuids=GVH5055_SERVICE_INFO.service_uuids,
+        service_data=GVH5055_SERVICE_INFO.service_data,
+        source=GVH5055_SERVICE_INFO.source,
+        device=generate_ble_device(
+            address=GVH5055_SERVICE_INFO.address,
+            name=GVH5055_SERVICE_INFO.name,
+        ),
+        advertisement=generate_advertisement_data(
+            local_name=GVH5055_SERVICE_INFO.name,
+            manufacturer_data=GVH5055_SERVICE_INFO.manufacturer_data,
+            service_data=GVH5055_SERVICE_INFO.service_data,
+            service_uuids=GVH5055_SERVICE_INFO.service_uuids,
+            rssi=GVH5055_SERVICE_INFO.rssi,
+        ),
+        time=0,
+        connectable=False,
+        tx_power=None,
+    )
+
+    matcher = IntegrationMatcher(cast(list[BluetoothMatcher], BLUETOOTH))
+    matcher.async_setup()
+
+    assert DOMAIN in matcher.match_domains(bleak_service_info)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
