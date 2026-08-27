@@ -56,9 +56,10 @@ rules:
   log-when-unavailable:
     status: done
     comment: |
-      Service unavailability is logged by DataUpdateCoordinator; per-device
-      staleness transitions are logged once in each direction by the
-      coordinator itself.
+      Service unavailability is logged by DataUpdateCoordinator. The
+      coordinator additionally logs once in each direction per device, for
+      both causes of a device becoming unavailable: readings going stale, and
+      the device dropping out of the account profile.
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
