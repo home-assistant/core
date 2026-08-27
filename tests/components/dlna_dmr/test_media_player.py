@@ -2055,9 +2055,10 @@ async def test_generic_error(
 
     # With a working connection, device should remain available on the next,
     # update, and any thereafter.
-    for _ in range(2):
+    for do_ping in (True, False):
+        dmr_device_mock.async_update.reset_mock()
         await async_update_entity(hass, mock_entity_id)
-        dmr_device_mock.async_update.assert_any_call(do_ping=True)
+        dmr_device_mock.async_update.assert_called_with(do_ping=do_ping)
         mock_state = hass.states.get(mock_entity_id)
         assert mock_state is not None
         assert mock_state.state == MediaPlayerState.IDLE
