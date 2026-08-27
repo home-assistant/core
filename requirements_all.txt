@@ -1256,7 +1256,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.6.0
+hass-nabucasa==2.7.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4

@@ -19,6 +19,6 @@
       "learn_more_url": "https://support.nabucasa.com/hc/en-us/articles/29718084245149-Speech-to-text-STT"
     }
   },
-  "requirements": ["hass-nabucasa==2.6.0", "openai==2.45.0"],
+  "requirements": ["hass-nabucasa==2.7.0", "openai==2.45.0"],
   "single_config_entry": true
 }
