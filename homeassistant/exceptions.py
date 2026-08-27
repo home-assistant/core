@@ -331,7 +331,7 @@ class ImplementationUnavailableError(ConfigEntryNotReady):
         )
 
 
-class UnknownImplementationError(ValueError, ConfigEntryAuthFailed):
+class UnknownImplementationError(ConfigEntryAuthFailed, ValueError):
     """Raised when a config entry references an implementation that is not registered.
 
     Also a ValueError so callers catching that keep working. Inherits

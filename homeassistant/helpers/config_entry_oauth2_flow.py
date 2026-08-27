@@ -47,11 +47,10 @@ from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-# Re-exported for integrations importing them from here since before they moved
+# Re-exported for integrations importing it from here since before it moved
 # to homeassistant.exceptions.
 __all__ = [
     "ImplementationUnavailableError",
-    "UnknownImplementationError",
 ]
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"

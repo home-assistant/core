@@ -1025,3 +1025,45 @@ async def test_reauth_flow_upgrade_to_oauth_no_auth_header(
     # Flow should proceed directly to credentials choice menu (without validate_input)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "credentials_choice"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_missing_implementation(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth recovers when the stored implementation was removed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "removed",
+            CONF_URL: MCP_SERVER_URL,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        },
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Instead of erroring out, the user can pick or create credentials again
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
