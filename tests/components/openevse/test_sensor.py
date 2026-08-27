@@ -212,13 +212,14 @@ async def test_yaml_import_already_configured(
         pytest.param("disabled", "disabled", id="disabled"),
         pytest.param("unknown", "unknown", id="unknown"),
         pytest.param("unrecognized_raw_status", "unknown", id="fallback_unknown"),
+        pytest.param(None, STATE_UNKNOWN, id="none_status"),
     ],
 )
 async def test_status_sensor_mapping(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
-    raw_status: str,
+    raw_status: str | None,
     expected_state: str,
 ) -> None:
     """Test status sensor mapping to enum options."""
