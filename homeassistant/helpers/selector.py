@@ -1343,6 +1343,8 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
 
     accept: list[str]
     multiple: bool
+    image_upload: bool
+    clearable: bool
 
 
 @SELECTORS.register("media")
@@ -1360,6 +1362,8 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         {
             vol.Optional("accept"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("image_upload", default=False): cv.boolean,
+            vol.Optional("clearable", default=False): cv.boolean,
         }
     )
     DATA_SCHEMA = vol.Schema(
