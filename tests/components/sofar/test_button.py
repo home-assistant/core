@@ -138,8 +138,6 @@ async def test_rtc_sync_reported_to_hass(
         blocking=True,
     )
 
-    # The write's trailing "execute" word and the result register are the
-    # same address (0x100A), so the press itself moves it to in-progress.
     assert (state := hass.states.get(result_id)) is not None
     assert state.state == "operation_in_progress"
 
