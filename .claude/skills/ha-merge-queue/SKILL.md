@@ -110,16 +110,6 @@ recurring ones:
 Call out mismatches worth a maintainer's attention: a PR whose body declares a breaking
 change but carries no `breaking-change` label will silently miss the release notes.
 
-If the report is published anywhere other than plain console text — an HTML artifact, a
-rendered markdown file, anything with hyperlinks — every single PR reference in every
-section (ready queue, near-misses, excluded/flagged, footnotes, everywhere) must be an
-actual `<a href="https://github.com/home-assistant/core/pull/NNNNN">` link or markdown
-`[#NNNNN](...)` link, not bare text like `#NNNNN`. It is easy to link the PRs in the main
-table and then drop back to plain-text mentions in prose sections (near-misses, excluded
-list, footer) — that is a real bug that has shipped before. Before publishing, grep your
-own output for every `#\d{5,6}` occurrence and confirm each one sits inside a real link to
-its PR.
-
 ## IMPORTANT
 
 - Only report in the CONSOLE. DO NOT ACT ON GITHUB — no comments, no reviews, no merges,
