@@ -20,7 +20,10 @@ from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
     Platform,
     UnitOfLength,
+    UnitOfMass,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -36,7 +39,9 @@ def setup_sensor_platform_only():
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
+async def test_sensors_no_job(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
+) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -142,9 +147,9 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_idle_job_mk3(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_api,
-    mock_job_api_idle_mk3,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_job_api_idle_mk3: dict[str, Any],
 ) -> None:
     """Test sensors while job state is idle (MK3)."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -251,10 +256,10 @@ async def test_sensors_idle_job_mk3(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_active_job(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_api,
-    mock_get_status_printing,
-    mock_job_api_printing,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
 ) -> None:
     """Test sensors while active job."""
     with patch(
@@ -295,6 +300,170 @@ async def test_sensors_active_job(
     assert state is not None
     assert state.state == "2500"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filename_sensor_falls_back_to_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
+) -> None:
+    """Test the filename sensor uses `name` when `display_name` is absent."""
+    del mock_job_api_printing["file"]["display_name"]
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title_filename")
+    assert state is not None
+    assert state.state == "TabletStand3~4.BGC"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_file_metadata_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
+    mock_file_metadata_api: dict[str, Any],
+) -> None:
+    """Test print file metadata sensors."""
+    mock_file_metadata_api.update(
+        {
+            "filament_used_g": 24.41,
+            "filament_used_mm": 8184.17,
+            "filament_used_cm3": 19.69,
+            "filament_cost": 0.68,
+            "filament_type": "PLA",
+            "estimated_printing_time_normal": 3811,
+            "estimated_printing_time_silent": 4256,
+        }
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_weight")
+    assert state is not None
+    assert state.state == "24.41"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfMass.GRAMS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.WEIGHT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_length")
+    assert state is not None
+    assert state.state == "8.18417"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.METERS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_volume")
+    assert state is not None
+    assert state.state == "19.69"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.MILLILITERS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLUME
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_cost")
+    assert state is not None
+    assert state.state == "0.68"
+
+    state = hass.states.get("sensor.workshop_mock_title_file_filament_type")
+    assert state is not None
+    assert state.state == "PLA"
+
+    state = hass.states.get("sensor.workshop_mock_title_estimated_printing_time")
+    assert state is not None
+    assert state.state == "3811"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.SECONDS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DURATION
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.workshop_mock_title_estimated_silent_printing_time")
+    assert state is not None
+    assert state.state == "4256"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.SECONDS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DURATION
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_file_metadata_not_fetched_when_sensors_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
+) -> None:
+    """Test disabled-by-default metadata sensors do not download the print file."""
+    with patch("pyprusalink.PrusaLink.get_file_metadata") as get_file_metadata:
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert hass.states.get("sensor.workshop_mock_title_filament_used_weight") is None
+    get_file_metadata.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_file_metadata_sensors_from_job_meta(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
+) -> None:
+    """Test print file metadata sensors from job metadata."""
+    mock_job_api_printing["file"]["meta"] = {
+        "filament used [g]": "24.41",
+        "filament_type": "PETG",
+        "estimated printing time (normal mode)": "1h 3m 31s",
+    }
+
+    with patch("pyprusalink.PrusaLink.get_file_metadata") as get_file_metadata:
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_weight")
+    assert state is not None
+    assert state.state == "24.41"
+
+    state = hass.states.get("sensor.workshop_mock_title_file_filament_type")
+    assert state is not None
+    assert state.state == "PETG"
+
+    state = hass.states.get("sensor.workshop_mock_title_estimated_printing_time")
+    assert state is not None
+    assert state.state == "3811"
+
+    get_file_metadata.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_file_metadata_sensors_unavailable_when_download_times_out(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: None,
+    mock_get_status_printing: dict[str, Any],
+    mock_job_api_printing: dict[str, Any],
+    mock_file_metadata_api: dict[str, Any],
+) -> None:
+    """Test a download timeout doesn't block setup, and a later refresh retries."""
+    with patch(
+        "pyprusalink.PrusaLink.get_file_metadata", side_effect=TimeoutError
+    ) as get_file_metadata:
+        assert await async_setup_component(hass, DOMAIN, {})
+        get_file_metadata.assert_called_once()
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_weight")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    mock_file_metadata_api["filament_used_g"] = 24.41
+    coordinator = mock_config_entry.runtime_data["file_metadata"]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.workshop_mock_title_filament_used_weight")
+    assert state is not None
+    assert state.state == "24.41"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

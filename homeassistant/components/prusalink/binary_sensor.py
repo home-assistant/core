@@ -35,6 +35,7 @@ BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = 
     "status": (
         PrusaLinkBinarySensorEntityDescription[PrinterStatus](
             key="printer.status_connect",
+            translation_key="connectivity",
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
             value_fn=lambda data: cast(
                 bool, cast(StatusInfo, data["printer"]["status_connect"])["ok"]

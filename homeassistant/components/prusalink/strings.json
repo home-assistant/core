@@ -18,6 +18,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "connectivity": {
+        "name": "Connectivity"
+      },
       "farm_mode": {
         "name": "Farm mode"
       },
@@ -48,11 +51,32 @@
       }
     },
     "sensor": {
+      "estimated_printing_time_normal": {
+        "name": "Estimated printing time"
+      },
+      "estimated_printing_time_silent": {
+        "name": "Estimated silent printing time"
+      },
       "fan_hotend": {
         "name": "Hotend fan"
       },
       "fan_print": {
         "name": "Print fan"
+      },
+      "filament_cost": {
+        "name": "Filament cost"
+      },
+      "filament_used_length": {
+        "name": "Filament used length"
+      },
+      "filament_used_volume": {
+        "name": "Filament used volume"
+      },
+      "filament_used_weight": {
+        "name": "Filament used weight"
+      },
+      "file_filament_type": {
+        "name": "File filament type"
       },
       "filename": {
         "name": "Filename"
