@@ -108,6 +108,7 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
                 "media": {
                     "media_content_id": "media-source://mymedia_empty",
                     "media_content_type": "",
+                    "metadata": {"foo": "bar"},
                 },
             },
         )
@@ -116,6 +117,19 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("title") is None
     assert result.get("data") is None
+
+    # Check that metadata is retained
+    media_key = next(
+        key
+        for key in result["data_schema"].schema
+        if getattr(key, "schema", key) == "media"
+    )
+    assert (
+        media_key.description["suggested_value"]["media_content_id"]
+        == "media-source://mymedia_empty"
+    )
+    assert media_key.description["suggested_value"]["metadata"]["foo"] == "bar"
+
     assert result.get("errors") == {"media": "selected_media_no_images"}
     assert len(mock_setup_entry.mock_calls) == 0
 
