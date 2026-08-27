@@ -121,6 +121,12 @@
           "on": "mdi:package-variant-closed-check"
         }
       },
+      "tamper": {
+        "default": "mdi:shield-check",
+        "state": {
+          "on": "mdi:shield-alert"
+        }
+      },
       "vehicle": {
         "default": "mdi:car-off",
         "state": {
@@ -494,6 +500,12 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "work_mode_battery": {
+        "default": "mdi:battery"
+      },
+      "work_mode_powered": {
+        "default": "mdi:power-plug"
       }
     },
     "sensor": {
@@ -634,6 +646,12 @@
       },
       "siren_on_event": {
         "default": "mdi:alarm-light"
+      },
+      "tamper_enabled": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield"
+        }
       }
     },
     "time": {

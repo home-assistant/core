@@ -366,6 +366,20 @@
           "toggle": "[%key:common::action::toggle%]"
         }
       },
+      "switch_connection_mode": {
+        "name": "Connection mode",
+        "state": {
+          "directly_connected": "Directly connected",
+          "matter_only": "Matter only"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "button": "Button",
+          "switch": "Switch"
+        }
+      },
       "temperature_display_mode": {
         "name": "Temperature display mode"
       },
@@ -670,6 +684,9 @@
     "switch": {
       "child_lock": {
         "name": "Child lock"
+      },
+      "display": {
+        "name": "Display"
       },
       "evse_charging_switch": {
         "name": "Enable charging"

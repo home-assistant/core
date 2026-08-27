@@ -2,13 +2,15 @@
 
 import asyncio
 import base64
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
+from dataclasses import asdict, dataclass, fields
 import logging
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Self, cast, override
 
 from awesomeversion import AwesomeVersion
+from propcache.api import cached_property
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedCommand
@@ -16,14 +18,10 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.version import VersionInfo
 
 from homeassistant.components import usb
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonInfo,
-    AddonManager,
-    AddonState,
-)
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
+    SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
     ConfigEntry,
@@ -35,7 +33,7 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
@@ -49,33 +47,16 @@ from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
-    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
-    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_S2_AUTHENTICATED_KEY,
-    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_LR_S2_ACCESS_CONTROL_KEY,
-    CONF_LR_S2_AUTHENTICATED_KEY,
-    CONF_S0_LEGACY_KEY,
-    CONF_S2_ACCESS_CONTROL_KEY,
-    CONF_S2_AUTHENTICATED_KEY,
-    CONF_S2_UNAUTHENTICATED_KEY,
     CONF_SOCKET_PATH,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
 )
-from .helpers import (
-    CannotConnect,
-    async_get_version_info,
-    format_home_id_for_display,
-    get_device_id,
-    get_device_id_ext,
-)
+from .helpers import CannotConnect, async_get_version_info, format_home_id_for_display
 from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,16 +68,80 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 SERVER_CONNECT_TIMEOUT = 60
 
-ADDON_USER_INPUT_MAP = {
-    CONF_ADDON_DEVICE: CONF_USB_PATH,
-    CONF_ADDON_SOCKET: CONF_SOCKET_PATH,
-    CONF_ADDON_S0_LEGACY_KEY: CONF_S0_LEGACY_KEY,
-    CONF_ADDON_S2_ACCESS_CONTROL_KEY: CONF_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_S2_AUTHENTICATED_KEY: CONF_S2_AUTHENTICATED_KEY,
-    CONF_ADDON_S2_UNAUTHENTICATED_KEY: CONF_S2_UNAUTHENTICATED_KEY,
-    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: CONF_LR_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
-}
+
+@dataclass
+class SecurityKeys:
+    """Security keys of a Z-Wave network.
+
+    The field names match the add-on config and config entry keys,
+    which use the same names.
+    """
+
+    s0_legacy_key: str | None = None
+    s2_access_control_key: str | None = None
+    s2_authenticated_key: str | None = None
+    s2_unauthenticated_key: str | None = None
+    lr_s2_access_control_key: str | None = None
+    lr_s2_authenticated_key: str | None = None
+
+    @staticmethod
+    def migrate_network_key(config: Mapping[str, Any]) -> dict[str, Any]:
+        """Migrate the legacy network key to the S0 legacy key.
+
+        The network key was renamed to the S0 legacy key when S2 was added.
+        Old add-on configs may still only carry the legacy network key.
+        """
+        migrated = dict(config)
+        if (
+            network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)
+        ) and not migrated.get(CONF_ADDON_S0_LEGACY_KEY):
+            migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
+        return migrated
+
+    @classmethod
+    def from_config(
+        cls, config: Mapping[str, Any], defaults: SecurityKeys | None = None
+    ) -> Self:
+        """Return keys from an add-on config or entry data, with defaults."""
+        config = cls.migrate_network_key(config)
+        return cls(
+            **{
+                field.name: config.get(
+                    field.name,
+                    ((getattr(defaults, field.name) if defaults else None) or ""),
+                )
+                for field in fields(cls)
+            }
+        )
+
+    def updated_from_user_input(self, user_input: Mapping[str, Any]) -> SecurityKeys:
+        """Return keys updated from user input, with these keys as defaults."""
+        return SecurityKeys(
+            **{
+                field.name: user_input.get(field.name, getattr(self, field.name) or "")
+                for field in fields(self)
+            }
+        )
+
+    def to_dict(self) -> dict[str, str | None]:
+        """Return the keys as add-on config options or config entry data."""
+        return asdict(self)
+
+    def get_schema(self, *, suggested: bool = False) -> dict[vol.Optional, type[str]]:
+        """Return a data schema dict for the keys, prefilled from these keys."""
+        if suggested:
+            return {
+                vol.Optional(
+                    field.name,
+                    description={"suggested_value": getattr(self, field.name)},
+                ): str
+                for field in fields(self)
+            }
+        return {
+            vol.Optional(field.name, default=getattr(self, field.name)): str
+            for field in fields(self)
+        }
+
 
 CONF_ADDON_RF_REGION = "rf_region"
 
@@ -104,12 +149,23 @@ EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
-# Steps at which another flow is only showing a discovery prompt and can be
-# aborted safely when a config entry is created by a different flow.
-DISCOVERY_PROMPT_STEPS = {
+# Flags the flow that owns the shared add-on config. Kept in the flow
+# context, which is published immediately, unlike the flow's step.
+_ADDON_OWNER_CONTEXT = "zwave_js_addon_owner"
+
+# Steps at which another flow has not yet changed any shared state,
+# e.g. the add-on config, and can be aborted safely when a config entry
+# is created or a migration starts in a different flow. Steps that can
+# be part of a migration, e.g. choose_serial_port, must not be in this
+# set.
+ABORT_SAFE_STEPS = {
+    "configure_addon_user",
+    "configure_security_keys",
     "confirm_usb_migration",
     "hassio_confirm",
     "installation_type",
+    "network_type",
+    "on_supervisor",
     "zeroconf_confirm",
 }
 
@@ -199,30 +255,147 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return non_na_ports or port_descriptions
 
 
+class AddonFlowManager:
+    """Manage the Z-Wave JS add-on for the config flow.
+
+    Wraps the add-on manager with flow-friendly error handling
+    and tracks the original add-on config for reverts.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Set up the add-on flow manager."""
+        self.hass = hass
+        self.addon_manager = get_addon_manager(hass)
+        # Set to True if the add-on was running when its config was changed,
+        # meaning a restart instead of a start is needed.
+        self.restart_addon = False
+        # Set to True once this flow has started a stopped add-on.
+        self.addon_started = False
+        # The add-on config before this flow changed it, for reverts.
+        self.original_config: dict[str, Any] | None = None
+
+    async def async_get_addon_info(self) -> AddonInfo:
+        """Return Z-Wave JS add-on info."""
+        try:
+            addon_info: AddonInfo = await self.addon_manager.async_get_addon_info()
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_info_failed") from err
+
+        return addon_info
+
+    async def async_set_addon_config(self, config_updates: dict) -> None:
+        """Set Z-Wave JS add-on config."""
+        addon_info = await self.async_get_addon_info()
+        addon_config = addon_info.options
+
+        new_addon_config = addon_config | config_updates
+
+        if new_addon_config.get(CONF_ADDON_DEVICE) is None:
+            new_addon_config.pop(CONF_ADDON_DEVICE, None)
+        if new_addon_config.get(CONF_ADDON_SOCKET) is None:
+            new_addon_config.pop(CONF_ADDON_SOCKET, None)
+
+        if new_addon_config == addon_config:
+            return
+
+        if addon_info.state is AddonState.RUNNING:
+            self.restart_addon = True
+        if self.original_config is None:
+            # Only capture the config before the first change, so a revert
+            # restores the config from before the flow, also if the flow
+            # changes the config multiple times, e.g. when the RF region
+            # step sets the region.
+            self.original_config = dict(addon_config)
+        new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
+        try:
+            await self.addon_manager.async_set_addon_options(new_addon_config)
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_set_config_failed") from err
+
+    async def async_install_addon(self) -> None:
+        """Install the Z-Wave JS add-on."""
+        await self.addon_manager.async_schedule_install_addon()
+
+    async def async_stop_addon(self) -> None:
+        """Stop the Z-Wave JS add-on."""
+        await self.addon_manager.async_stop_addon()
+
+    async def async_start_addon_and_wait(
+        self, ws_address: str | None
+    ) -> tuple[str, VersionInfo]:
+        """(Re)start the add-on and wait until the server is reachable.
+
+        Return the server websocket address and version info.
+        """
+        if self.restart_addon:
+            await self.addon_manager.async_schedule_restart_addon()
+        else:
+            self.addon_started = True
+            await self.addon_manager.async_schedule_start_addon()
+        version_info: VersionInfo | None = None
+        # Sleep some seconds to let the add-on start properly before connecting.
+        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
+            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
+            try:
+                if not ws_address:
+                    discovery_info = (
+                        await self.addon_manager.async_get_addon_discovery_info()
+                    )
+                    ws_address = (
+                        f"ws://{discovery_info['host']}:{discovery_info['port']}"
+                    )
+                version_info = await async_get_version_info(self.hass, ws_address)
+            except (AddonError, CannotConnect) as err:
+                _LOGGER.debug(
+                    "Add-on not ready yet, waiting %s seconds: %s",
+                    ADDON_SETUP_TIMEOUT,
+                    err,
+                )
+            else:
+                break
+        else:
+            raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
+
+        assert version_info is not None
+        return ws_address, version_info
+
+    async def async_get_addon_discovery_info(self) -> dict:
+        """Return add-on discovery info."""
+        try:
+            discovery_info_config = (
+                await self.addon_manager.async_get_addon_discovery_info()
+            )
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_get_discovery_info_failed") from err
+
+        return discovery_info_config
+
+
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
+    @cached_property
+    def _addon_setup(self) -> AddonFlowManager:
+        """Return the add-on flow manager."""
+        return AddonFlowManager(self.hass)
+
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Set up flow instance."""
-        self.s0_legacy_key: str | None = None
-        self.s2_access_control_key: str | None = None
-        self.s2_authenticated_key: str | None = None
-        self.s2_unauthenticated_key: str | None = None
-        self.lr_s2_access_control_key: str | None = None
-        self.lr_s2_authenticated_key: str | None = None
+        self.security_keys = SecurityKeys()
         self.usb_path: str | None = None
         self.socket_path: str | None = None  # ESPHome socket
         self.ws_address: str | None = None
-        self.restart_addon: bool = False
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.version_info: VersionInfo | None = None
-        self.original_addon_config: dict[str, Any] | None = None
-        self.revert_reason: str | None = None
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
@@ -235,13 +408,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._recommended_install = False
         self._rf_region: str | None = None
         self._entry_unloaded_by_flow = False
+        # Set if the flow unique id is a placeholder that must be replaced
+        # with the home ID before a config entry is created.
+        self._unique_id_is_placeholder = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Install Z-Wave JS add-on."""
         if not self.install_task:
-            self.install_task = self.hass.async_create_task(self._async_install_addon())
+            self.install_task = self.hass.async_create_task(
+                self._addon_setup.async_install_addon()
+            )
 
         if not self.install_task.done():
             return self.async_show_progress(
@@ -276,17 +454,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             not self._rf_region or self._rf_region == "Automatic"
         ):
             # If the country is not set, we need to check the RF region add-on config.
-            addon_info = await self._async_get_addon_info()
+            addon_info = await self._addon_setup.async_get_addon_info()
             rf_region: str | None = addon_info.options.get(CONF_ADDON_RF_REGION)
             self._rf_region = rf_region
             if rf_region is None or rf_region == "Automatic":
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
+            if not self._async_acquire_addon_ownership():
+                return self.async_abort(reason="already_in_progress")
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
-            await self._async_set_addon_config(config_updates)
+            await self._addon_setup.async_set_addon_config(config_updates)
 
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
@@ -320,34 +500,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
         self.version_info = None
-        if self.restart_addon:
-            await addon_manager.async_schedule_restart_addon()
-        else:
-            await addon_manager.async_schedule_start_addon()
-        # Sleep some seconds to let the add-on start properly before connecting.
-        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
-            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
-            try:
-                if not self.ws_address:
-                    discovery_info = await self._async_get_addon_discovery_info()
-                    self.ws_address = (
-                        f"ws://{discovery_info['host']}:{discovery_info['port']}"
-                    )
-                self.version_info = await async_get_version_info(
-                    self.hass, self.ws_address
-                )
-            except (AbortFlow, CannotConnect) as err:
-                _LOGGER.debug(
-                    "Add-on not ready yet, waiting %s seconds: %s",
-                    ADDON_SETUP_TIMEOUT,
-                    err,
-                )
-            else:
-                break
-        else:
-            raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
+        (
+            self.ws_address,
+            self.version_info,
+        ) = await self._addon_setup.async_start_addon_and_wait(self.ws_address)
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
@@ -370,61 +527,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._reconfigure_config_entry:
             return await self.async_step_finish_addon_setup_reconfigure(user_input)
         return await self.async_step_finish_addon_setup_user(user_input)
-
-    async def _async_get_addon_info(self) -> AddonInfo:
-        """Return and cache Z-Wave JS add-on info."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_info_failed") from err
-
-        return addon_info
-
-    async def _async_set_addon_config(self, config_updates: dict) -> None:
-        """Set Z-Wave JS add-on config."""
-        addon_info = await self._async_get_addon_info()
-        addon_config = addon_info.options
-
-        new_addon_config = addon_config | config_updates
-
-        if new_addon_config.get(CONF_ADDON_DEVICE) is None:
-            new_addon_config.pop(CONF_ADDON_DEVICE, None)
-        if new_addon_config.get(CONF_ADDON_SOCKET) is None:
-            new_addon_config.pop(CONF_ADDON_SOCKET, None)
-
-        if new_addon_config == addon_config:
-            return
-
-        if addon_info.state is AddonState.RUNNING:
-            self.restart_addon = True
-        # Copy the add-on config to keep the objects separate.
-        self.original_addon_config = dict(addon_config)
-        # Remove legacy network_key
-        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            await addon_manager.async_set_addon_options(new_addon_config)
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_set_config_failed") from err
-
-    async def _async_install_addon(self) -> None:
-        """Install the Z-Wave JS add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        await addon_manager.async_schedule_install_addon()
-
-    async def _async_get_addon_discovery_info(self) -> dict:
-        """Return add-on discovery info."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            discovery_info_config = await addon_manager.async_get_addon_discovery_info()
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_get_discovery_info_failed") from err
-
-        return discovery_info_config
 
     @override
     async def async_step_user(
@@ -557,7 +659,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             usb.get_serial_by_id, discovery_info.device
         )
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         if (
             addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
             and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
@@ -571,10 +673,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
-        # We don't need to check if the unique_id is already configured
-        # since we will update the unique_id before finishing the flow.
-        # The unique_id set above is just a temporary value to avoid
-        # duplicate discovery flows.
+        # The unique id set above is a placeholder that is replaced with the
+        # home ID before an entry is created, so only check ignored entries.
+        if any(
+            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
         dev_path = discovery_info.device
         self.usb_path = dev_path
         if manufacturer == "Nabu Casa" and description == "ZWA-2 - Nabu Casa ZWA-2":
@@ -766,7 +871,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        addon_info = await self._async_get_addon_info()
+        if self._addon_owned_by_other_entry():
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the existing entry.
+            # A discovery of the existing entry's own adapter passes, so the
+            # entry can be updated, e.g. from a USB path to a socket.
+            return self.async_abort(reason="addon_already_configured")
+
+        addon_info = await self._addon_setup.async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
             addon_config = addon_info.options
@@ -775,22 +887,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.usb_path = addon_config.get(CONF_ADDON_DEVICE)
                 self.socket_path = addon_config.get(CONF_ADDON_SOCKET)
 
-            self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
-            self.s2_access_control_key = addon_config.get(
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.s2_authenticated_key = addon_config.get(
-                CONF_ADDON_S2_AUTHENTICATED_KEY, ""
-            )
-            self.s2_unauthenticated_key = addon_config.get(
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
-            )
-            self.lr_s2_access_control_key = addon_config.get(
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.lr_s2_authenticated_key = addon_config.get(
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
-            )
+            self.security_keys = SecurityKeys.from_config(addon_config)
+
+            if self._adapter_discovered:
+                # Apply the discovered adapter to the add-on config and
+                # restart the add-on before connecting, so the server
+                # version info reflects the discovered adapter.
+                self._addon_config_updates.update(
+                    {
+                        CONF_ADDON_DEVICE: self.usb_path,
+                        CONF_ADDON_SOCKET: self.socket_path,
+                    }
+                )
+                return await self.async_step_start_addon()
+
             return await self.async_step_finish_addon_setup_user()
 
         if addon_info.state is AddonState.NOT_RUNNING:
@@ -839,6 +949,49 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
+    def _async_abort_other_prompt_flows(self) -> None:
+        """Abort other flows that are only showing a prompt.
+
+        A created entry or a started migration may make them redundant.
+        Flows that have progressed further, e.g. a migration that has
+        backed up the network, must not be interrupted.
+        """
+        for progress in self._async_in_progress():
+            if progress.get("step_id") not in ABORT_SAFE_STEPS:
+                continue
+            if cast(dict[str, Any], progress["context"]).get(_ADDON_OWNER_CONTEXT):
+                # An owner may be mid-write while still showing a prompt.
+                continue
+            self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
+    @callback
+    def _async_acquire_addon_ownership(self) -> bool:
+        """Try to make this flow the owner of the shared add-on config.
+
+        Return False if another flow in progress owns it.
+        Ownership ends when the flow is removed from progress.
+        """
+        context = cast(dict[str, Any], self.context)
+        if context.get(_ADDON_OWNER_CONTEXT):
+            return True
+        if any(
+            cast(dict[str, Any], flow["context"]).get(_ADDON_OWNER_CONTEXT)
+            # A discovery flow may write the config in its first step.
+            for flow in self._async_in_progress(include_uninitialized=True)
+        ):
+            return False
+        context[_ADDON_OWNER_CONTEXT] = True
+        return True
+
+    @callback
+    def _addon_owned_by_other_entry(self) -> bool:
+        """Return if another config entry uses the add-on."""
+        return any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
+        )
+
+    @callback
     def _validate_usb_or_socket_path(self) -> str | None:
         """Validate that exactly one of USB path and socket path is set."""
         if self.usb_path and self.socket_path:
@@ -857,40 +1010,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if user_input["network_type"] == NETWORK_TYPE_NEW:
-                addon_info = await self._async_get_addon_info()
-                addon_config = addon_info.options
+                addon_info = await self._addon_setup.async_get_addon_info()
                 # Keep existing keys from the add-on config so the keys of a
                 # previously configured network are not destroyed.
                 # Keys left empty are generated by the add-on on start.
-                self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
-                self.s2_access_control_key = addon_config.get(
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
-                )
-                self.s2_authenticated_key = addon_config.get(
-                    CONF_ADDON_S2_AUTHENTICATED_KEY, ""
-                )
-                self.s2_unauthenticated_key = addon_config.get(
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
-                )
-                self.lr_s2_access_control_key = addon_config.get(
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
-                )
-                self.lr_s2_authenticated_key = addon_config.get(
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
-                )
+                self.security_keys = SecurityKeys.from_config(addon_info.options)
 
-                addon_config_updates = {
+                self._addon_config_updates = {
                     CONF_ADDON_DEVICE: self.usb_path,
                     CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                    **self.security_keys.to_dict(),
                 }
-
-                self._addon_config_updates = addon_config_updates
                 return await self.async_step_start_addon()
 
             # Network already exists, go to security keys step
@@ -911,80 +1041,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for security keys for existing Z-Wave network."""
-        addon_info = await self._async_get_addon_info()
-        addon_config = addon_info.options
-
-        s0_legacy_key = addon_config.get(
-            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
-        )
-        s2_access_control_key = addon_config.get(
-            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
-        )
-        s2_authenticated_key = addon_config.get(
-            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
-        )
-        s2_unauthenticated_key = addon_config.get(
-            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
-        )
-        lr_s2_access_control_key = addon_config.get(
-            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
-        )
-        lr_s2_authenticated_key = addon_config.get(
-            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
-        )
+        addon_info = await self._addon_setup.async_get_addon_info()
+        default_keys = SecurityKeys.from_config(addon_info.options, self.security_keys)
 
         if user_input is not None:
-            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, s0_legacy_key)
-            self.s2_access_control_key = user_input.get(
-                CONF_S2_ACCESS_CONTROL_KEY, s2_access_control_key
-            )
-            self.s2_authenticated_key = user_input.get(
-                CONF_S2_AUTHENTICATED_KEY, s2_authenticated_key
-            )
-            self.s2_unauthenticated_key = user_input.get(
-                CONF_S2_UNAUTHENTICATED_KEY, s2_unauthenticated_key
-            )
-            self.lr_s2_access_control_key = user_input.get(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, lr_s2_access_control_key
-            )
-            self.lr_s2_authenticated_key = user_input.get(
-                CONF_LR_S2_AUTHENTICATED_KEY, lr_s2_authenticated_key
-            )
+            self.security_keys = default_keys.updated_from_user_input(user_input)
 
-            addon_config_updates = {
+            self._addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
                 CONF_ADDON_SOCKET: self.socket_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_dict(),
             }
-
-            self._addon_config_updates = addon_config_updates
             return await self.async_step_start_addon()
 
-        data_schema = vol.Schema(
-            {
-                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
-                ): str,
-            }
-        )
+        data_schema = vol.Schema(default_keys.get_schema())
 
         return self.async_show_form(
             step_id="configure_security_keys", data_schema=data_schema
@@ -999,10 +1069,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         Set unique id and abort if already configured.
         """
         if not self.ws_address:
-            discovery_info = await self._async_get_addon_discovery_info()
+            discovery_info = await self._addon_setup.async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source == SOURCE_USB:
+        if (
+            not self.unique_id
+            or self.source == SOURCE_USB
+            or self._unique_id_is_placeholder
+        ):
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -1014,6 +1088,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
             )
+            self._unique_id_is_placeholder = False
 
         if (
             existing_entry := next(
@@ -1030,35 +1105,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # with add-on data.
             return self.async_abort(reason="already_configured")
 
-        # When we came from discovery, make sure we update the add-on
-        if self._adapter_discovered and self.use_addon:
-            await self._async_set_addon_config(
-                {
-                    CONF_ADDON_DEVICE: self.usb_path,
-                    CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-                }
-            )
-            if self.restart_addon:
-                manager = get_addon_manager(self.hass)
-                await manager.async_stop_addon()
-
         self._abort_if_unique_id_configured(
             updates={
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_dict(),
             },
             error=(
                 "migration_successful"
@@ -1071,13 +1123,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
-        # Abort other flows that are still at a discovery prompt, since the
-        # new entry may make them redundant. Flows that have progressed
-        # further, e.g. a migration that has backed up the network,
-        # must not be interrupted.
-        for progress in self._async_in_progress():
-            if progress.get("step_id") in DISCOVERY_PROMPT_STEPS:
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+        self._async_abort_other_prompt_flows()
 
         return self.async_create_entry(
             title=TITLE,
@@ -1085,12 +1131,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_dict(),
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
@@ -1138,8 +1179,45 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if config_entry.state is ConfigEntryState.NOT_LOADED:
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+        if config_entry.state is not ConfigEntryState.NOT_LOADED:
+            return
+        if (original_config := self._addon_setup.original_config) is not None:
+            # The flow changed the add-on config without completing.
+            # Restore the config before reloading the entry, so the entry
+            # doesn't adopt the unconfirmed adapter and keys on setup.
+            self.hass.async_create_task(
+                self._async_restore_addon_config_and_reload(original_config)
+            )
+            return
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    async def _async_restore_addon_config_and_reload(
+        self, original_config: dict[str, Any]
+    ) -> None:
+        """Restore the add-on config and reload the config entry."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        addon_manager = self._addon_setup.addon_manager
+        # Migrate the legacy network key, like async_set_addon_config does,
+        # so restoring doesn't drop the S0 key on older add-on configurations.
+        restored_config = SecurityKeys.migrate_network_key(original_config)
+        try:
+            await addon_manager.async_set_addon_options(restored_config)
+        except AddonError as err:
+            # Don't reload the entry if the options were not restored, so the
+            # reload doesn't adopt the unconfirmed options still on the add-on.
+            _LOGGER.error("Failed to restore add-on options: %s", err)
+            return
+        if self._addon_setup.restart_addon or self._addon_setup.addon_started:
+            # The add-on is running with the unconfirmed options this flow
+            # set. Restart it before the reload, so the entry doesn't
+            # reconnect to the unconfirmed adapter.
+            try:
+                await addon_manager.async_restart_addon()
+            except AddonError as err:
+                _LOGGER.error("Failed to restart add-on: %s", err)
+                return
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -1184,6 +1262,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
                 },
             )
+
+        if not self._async_acquire_addon_ownership():
+            return self.async_abort(reason="already_in_progress")
+
+        # Remaining prompts, e.g. for other discovered adapters,
+        # are superseded by this migration.
+        self._async_abort_other_prompt_flows()
 
         self._migrating = True
         return await self.async_step_backup_nvm()
@@ -1334,17 +1419,24 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if config_entry.data.get(CONF_USE_ADDON):
                 # Unload the config entry before stopping the add-on.
                 await self._async_unload_entry_for_flow()
-                addon_manager = get_addon_manager(self.hass)
                 _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
-                    await addon_manager.async_stop_addon()
+                    await self._addon_setup.async_stop_addon()
                 except AddonError as err:
                     _LOGGER.error(err)
                     self._async_schedule_entry_reload()
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
 
-        addon_info = await self._async_get_addon_info()
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.entry_id != config_entry.entry_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the other entry.
+            return self.async_abort(reason="addon_already_configured")
+
+        addon_info = await self._addon_setup.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
@@ -1355,27 +1447,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         addon_config = addon_info.options
 
         errors: dict[str, str] = {}
 
+        default_keys = SecurityKeys.from_config(addon_config, self.security_keys)
+
         if user_input is not None:
-            # The revert helper only passes keys present in the original
-            # add-on config, which may lack some of the security keys,
-            # so don't index the keys directly.
-            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, "")
-            self.s2_access_control_key = user_input.get(CONF_S2_ACCESS_CONTROL_KEY, "")
-            self.s2_authenticated_key = user_input.get(CONF_S2_AUTHENTICATED_KEY, "")
-            self.s2_unauthenticated_key = user_input.get(
-                CONF_S2_UNAUTHENTICATED_KEY, ""
-            )
-            self.lr_s2_access_control_key = user_input.get(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.lr_s2_authenticated_key = user_input.get(
-                CONF_LR_S2_AUTHENTICATED_KEY, ""
-            )
+            # Missing keys default to the current add-on config, so
+            # existing keys are preserved.
+            self.security_keys = default_keys.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1385,20 +1467,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 addon_config_updates = {
                     CONF_ADDON_DEVICE: self.usb_path,
                     CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                    **self.security_keys.to_dict(),
                 }
+
+                if not self._async_acquire_addon_ownership():
+                    return self.async_abort(reason="already_in_progress")
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
 
-                await self._async_set_addon_config(addon_config_updates)
+                await self._addon_setup.async_set_addon_config(addon_config_updates)
 
-                if addon_info.state is AddonState.RUNNING and not self.restart_addon:
+                if (
+                    addon_info.state is AddonState.RUNNING
+                    and not self._addon_setup.restart_addon
+                ):
                     return await self.async_step_finish_addon_setup_reconfigure()
 
                 if (
@@ -1411,25 +1494,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
-        s0_legacy_key = addon_config.get(
-            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
-        )
-        s2_access_control_key = addon_config.get(
-            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
-        )
-        s2_authenticated_key = addon_config.get(
-            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
-        )
-        s2_unauthenticated_key = addon_config.get(
-            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
-        )
-        lr_s2_access_control_key = addon_config.get(
-            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
-        )
-        lr_s2_authenticated_key = addon_config.get(
-            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
-        )
-
         try:
             ports = await async_get_usb_ports(self.hass)
         except OSError as err:
@@ -1450,29 +1514,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_SOCKET_PATH, description={"suggested_value": socket_path}
                 ): str,
-                vol.Optional(
-                    CONF_S0_LEGACY_KEY, description={"suggested_value": s0_legacy_key}
-                ): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY,
-                    description={"suggested_value": s2_access_control_key},
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY,
-                    description={"suggested_value": s2_authenticated_key},
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY,
-                    description={"suggested_value": s2_unauthenticated_key},
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_ACCESS_CONTROL_KEY,
-                    description={"suggested_value": lr_s2_access_control_key},
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_AUTHENTICATED_KEY,
-                    description={"suggested_value": lr_s2_authenticated_key},
-                ): str,
+                **default_keys.get_schema(suggested=True),
             }
         )
 
@@ -1504,7 +1546,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         addon_config = addon_info.options
         old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
         # Remove the old controller from the ports list.
@@ -1577,16 +1619,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_dict(),
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
+        # The migration is committed to the new adapter now, so drop the
+        # revert snapshot: if the flow is abandoned during the restore, the
+        # entry must be reloaded on the new adapter, not reverted to the old
+        # add-on config.
+        self._addon_setup.original_config = None
 
         return await self.async_step_restore_nvm()
 
@@ -1600,14 +1642,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if self.revert_reason:
-            self.original_addon_config = None
-            reason = self.revert_reason
-            self.revert_reason = None
-            return await self.async_revert_addon_config(reason=reason)
 
         if not self.ws_address:
-            discovery_info = await self._async_get_addon_discovery_info()
+            discovery_info = await self._addon_setup.async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
         if not self.version_info:
@@ -1626,12 +1663,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_dict(),
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }
@@ -1646,6 +1678,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
+        # The adapter may first be discovered without a home ID and get the
+        # placeholder unique id below, then report a home ID on a later
+        # discovery. Track the placeholder id so such a discovery can be
+        # deduplicated against a pending prompt or an ignored entry.
+        placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
             existing_entry: ConfigEntry | None = None
             if (
@@ -1675,12 +1712,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     if existing_socket_path == discovery_info.socket_path:
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
-                    manager = get_addon_manager(self.hass)
-                    await self._async_set_addon_config(
+                    if not self._async_acquire_addon_ownership():
+                        return self.async_abort(reason="already_in_progress")
+                    await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )
-                    if self.restart_addon:
-                        await manager.async_stop_addon()
+                    if self._addon_setup.restart_addon:
+                        await self._addon_setup.async_stop_addon()
                     self.hass.config_entries.async_update_entry(
                         existing_entry,
                         data={
@@ -1693,6 +1731,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
+            if any(
+                flow["context"].get("unique_id") == placeholder_unique_id
+                for flow in self._async_in_progress()
+            ):
+                return self.async_abort(reason="already_in_progress")
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry
@@ -1701,6 +1744,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(discovery_info.zwave_home_id), raise_on_progress=False
             )
+        else:
+            # Set a placeholder unique id so the discovery can be ignored
+            # also when the adapter doesn't report a home ID yet.
+            # It is replaced with the home ID before an entry is created.
+            self._unique_id_is_placeholder = True
+            await self.async_set_unique_id(placeholder_unique_id)
+
+        if any(
+            entry.source == SOURCE_IGNORE
+            and entry.unique_id in (self.unique_id, placeholder_unique_id)
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
 
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
@@ -1709,34 +1765,49 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._adapter_discovered = True
 
+        # A discovered adapter that doesn't belong to an existing add-on based
+        # entry is a different adapter, so offer to migrate the existing
+        # network to it instead of repointing the shared add-on config.
+        discovered_home_id = (
+            str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
+        )
+        addon_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_USE_ADDON)
+        ]
+        if discovered_home_id is None and any(
+            entry.data.get(CONF_SOCKET_PATH) == discovery_info.socket_path
+            for entry in addon_entries
+        ):
+            # A reconnect of the configured adapter without a home ID is the
+            # same adapter, not a new one to migrate to.
+            return self.async_abort(reason="already_configured")
+
+        if addon_entry := next(
+            (entry for entry in addon_entries if entry.unique_id != discovered_home_id),
+            None,
+        ):
+            self._reconfigure_config_entry = addon_entry
+            return await self.async_step_confirm_usb_migration()
+
         return await self.async_step_installation_type()
 
     async def async_revert_addon_config(self, reason: str) -> ConfigFlowResult:
-        """Abort the options flow.
+        """Abort the flow.
 
         If the add-on options have been changed, revert those and restart add-on.
         """
-        # If reverting the add-on options failed, abort immediately.
-        if self.revert_reason:
-            _LOGGER.error(
-                "Failed to revert add-on options before aborting flow, reason: %s",
-                reason,
-            )
-
-        if self.revert_reason or not self.original_addon_config:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
+        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        if (original_config := self._addon_setup.original_config) is None:
             self._async_schedule_entry_reload()
-            return self.async_abort(reason=reason)
-
-        self.revert_reason = reason
-        addon_config_input = {
-            ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in self.original_addon_config.items()
-            if addon_key in ADDON_USER_INPUT_MAP
-        }
-        _LOGGER.debug("Reverting app options, reason: %s", reason)
-        return await self.async_step_configure_addon_reconfigure(addon_config_input)
+        else:
+            # Clear the abandoned-flow recovery state, so async_remove
+            # doesn't restore the add-on config a second time.
+            self._addon_setup.original_config = None
+            self._entry_unloaded_by_flow = False
+            await self._async_restore_addon_config_and_reload(original_config)
+        return self.async_abort(reason=reason)
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
@@ -1828,21 +1899,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             with suppress(TimeoutError):
                 async with asyncio.timeout(helpers.DRIVER_READY_EVENT_TIMEOUT):
                     await controller_reset.wait()
-
-            if own_node := controller.own_node:
-                device_registry = dr.async_get(self.hass)
-                if (
-                    (device_id_ext := get_device_id_ext(driver, own_node))
-                    and (
-                        old_device := device_registry.async_get_device_by_identifier(
-                            get_device_id(driver, own_node), config_entry.entry_id
-                        )
-                    )
-                    and device_id_ext not in old_device.identifiers
-                ):
-                    # The old controller device is stale, and unlike the
-                    # integration, the flow knows the controller was replaced.
-                    device_registry.async_remove_device(old_device.id)
         finally:
             for unsub in unsubs:
                 unsub()
