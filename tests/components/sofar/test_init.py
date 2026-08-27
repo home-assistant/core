@@ -214,12 +214,12 @@ async def test_device_info_carries_the_firmware_versions(
     assert device.serial_number == MOCK_SERIAL
 
 
-async def test_device_versions_recover_without_a_reload(
+async def test_device_versions_need_a_reload_to_recover(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test firmware versions reach the device once identity answers."""
+    """Test a failed identity read is not retried until the entry reloads."""
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
     unit = connection.for_unit(1)
@@ -240,17 +240,26 @@ async def test_device_versions_recover_without_a_reload(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
-    )
-    assert device is not None
-    assert device.hw_version is None
-    assert device.sw_version is None
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+        )
+        assert device is not None
+        assert device.hw_version is None
+        assert device.sw_version is None
 
-    unit.fail_read(0x044D, None)
-    freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+        unit.fail_read(0x044D, None)
+        freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+        )
+        assert device is not None
+        assert device.hw_version is None
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
@@ -258,6 +267,33 @@ async def test_device_versions_recover_without_a_reload(
     assert device is not None
     assert device.hw_version == MOCK_HW_VERSION
     assert device.sw_version == MOCK_SW_VERSION
+
+
+async def test_identity_retries_after_one_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a transient identity failure is retried within the same setup."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    _heal_after_one_failure(unit, 0x044D)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.hw_version == MOCK_HW_VERSION
 
 
 async def test_every_component_failing_recovers_on_a_later_poll(
