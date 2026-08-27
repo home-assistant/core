@@ -66,7 +66,6 @@ class ImageMediaSource(MediaSource):
                 can_expand=False,
             )
             for image in self.hass.data[DATA_COMPONENT].entities
-            if self.hass.states.get(image.entity_id)
         ]
 
         return BrowseMediaSource(
