@@ -22,6 +22,7 @@
       "yd\u00b2"
     ],
     "atmospheric_pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -199,6 +200,7 @@
       "mm/h"
     ],
     "pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -356,6 +358,7 @@
       "yd\u00b2"
     ],
     "atmospheric_pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -570,6 +573,7 @@
       "mm/h"
     ],
     "pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
