@@ -669,23 +669,30 @@ def async_register_implementation(
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
 
-async def async_get_implementations(
+async def _async_get_implementations(
     hass: HomeAssistant, domain: str
-) -> dict[str, AbstractOAuth2Implementation]:
-    """Return OAuth2 implementations for specified domain."""
-    registered = hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {})
+) -> tuple[
+    dict[str, AbstractOAuth2Implementation], list[ImplementationUnavailableError]
+]:
+    """Return OAuth2 implementations for specified domain and any provider failures."""
+    registered = dict(hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}))
+    exceptions: list[ImplementationUnavailableError] = []
 
-    if DATA_PROVIDERS not in hass.data:
-        return registered
-
-    registered = dict(registered)
-    exceptions = []
-    for get_impl in list(hass.data[DATA_PROVIDERS].values()):
+    for get_impl in list(hass.data.get(DATA_PROVIDERS, {}).values()):
         try:
             for impl in await get_impl(hass, domain):
                 registered[impl.domain] = impl
         except ImplementationUnavailableError as err:
             exceptions.append(err)
+
+    return registered, exceptions
+
+
+async def async_get_implementations(
+    hass: HomeAssistant, domain: str
+) -> dict[str, AbstractOAuth2Implementation]:
+    """Return OAuth2 implementations for specified domain."""
+    registered, exceptions = await _async_get_implementations(hass, domain)
 
     if not registered and exceptions:
         raise ImplementationUnavailableError(*exceptions)
@@ -697,13 +704,20 @@ async def async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> AbstractOAuth2Implementation:
     """Return the implementation for this config entry."""
-    implementations = await async_get_implementations(hass, config_entry.domain)
+    implementations, exceptions = await _async_get_implementations(
+        hass, config_entry.domain
+    )
     implementation = implementations.get(config_entry.data["auth_implementation"])
 
-    if implementation is None:
-        raise UnknownImplementationError
+    if implementation is not None:
+        return implementation
 
-    return implementation
+    if exceptions:
+        # A provider is down, so the configured implementation may still come back.
+        # Retry instead of asking the user to link the account again.
+        raise ImplementationUnavailableError(*exceptions)
+
+    raise UnknownImplementationError
 
 
 @callback

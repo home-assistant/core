@@ -1682,3 +1682,40 @@ async def test_implementation_unavailable_retries_setup(hass: HomeAssistant) -> 
     assert (
         config_entry.error_reason_translation_key == "oauth2_implementation_unavailable"
     )
+
+
+async def test_config_entry_implementation_unavailable_provider(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+) -> None:
+    """Test a temporarily unavailable provider is not mistaken for a removed one.
+
+    The entry is linked through the cloud, which is down, while the integration
+    still offers a local implementation the user has not configured.
+    """
+
+    async def failing_cloud_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Fail like the cloud provider does when it cannot reach the server."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError("cloud is down")
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_cloud_provider
+    )
+    # The integration still offers a local implementation, so the cloud failure
+    # would otherwise be swallowed
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, local_impl
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={"auth_implementation": "cloud"},
+    )
+
+    # Retry rather than asking the user to re-link an account that is fine
+    with pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError):
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
