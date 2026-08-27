@@ -30,7 +30,7 @@ TEST_PROMPT = "Please transcribe the audio."
 
 
 def _interaction_with_text(text: str) -> interactions.Interaction:
-    """Build an Interaction whose output_text derives to the given text."""
+    """Build an Interaction whose output_text resolves to the given text."""
     return interactions.Interaction(
         status="completed",
         steps=[
@@ -82,9 +82,8 @@ async def setup_integration(
 ) -> None:
     """Set up the test environment.
 
-    The configured chat model defaults to TEST_CHAT_MODEL, but can be
-    overridden with indirect parametrization, e.g.
-    @pytest.mark.parametrize("setup_integration", [OTHER_MODEL], indirect=True)
+    The chat model defaults to TEST_CHAT_MODEL; override it by indirectly
+    parametrizing this fixture.
     """
     model = getattr(request, "param", TEST_CHAT_MODEL)
     config_entry = MockConfigEntry(
