@@ -99,7 +99,9 @@ def _validator(annotation: Any) -> Any:
                 *(_validator(arg) for arg in sorted(non_none, key=_union_member_order))
             )
         )
-        return vol.Maybe(inner) if allows_none else inner
+        # Not ``vol.Maybe``: ``voluptuous_openapi`` does not recognize probatio's
+        # ``Maybe`` class and would type the parameter as a string.
+        return vol.Any(None, inner) if allows_none else inner
     if annotation is str:
         return str
     if annotation is bool:
@@ -125,6 +127,14 @@ _FIELD_BOUNDS = {
     "offset": vol.Range(min=0),
     "delta_before_ms": vol.Range(min=0),
     "delta_after_ms": vol.Range(min=0),
+}
+_PAGINATION_MARKERS: dict[Any, Any] = {
+    vol.Optional(
+        "limit", description="Maximum number of results to return.", default=100
+    ): vol.All(_INT, _FIELD_BOUNDS["limit"]),
+    vol.Optional(
+        "offset", description="Number of results to skip.", default=0
+    ): vol.All(_INT, _FIELD_BOUNDS["offset"]),
 }
 
 
@@ -296,6 +306,33 @@ def _dpt_func(
     return _call
 
 
+def _last_values_func() -> _ToolFunc:
+    """Page through the last values, which knx-telegram-store returns in full.
+
+    ``get_last_values`` yields one entry per group address ever seen on the
+    bus - thousands on a real installation - and takes no limit, so the window
+    is applied here. Drop this once the library paginates it itself.
+    """
+
+    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
+        limit = args.pop("limit")
+        offset = args.pop("offset")
+        telegrams = await kts_mcp.get_last_values(
+            _require_store(knx), kts_mcp.LastValuesInput(**args)
+        )
+        window = telegrams[offset : offset + limit]
+        limit_reached = offset + limit < len(telegrams)
+        return {
+            "telegrams": window,
+            "total_count": len(telegrams),
+            "offset": offset,
+            "next_offset": offset + len(window) if limit_reached else None,
+            "limit_reached": limit_reached,
+        }
+
+    return _call
+
+
 def _xknx_func(lib_func: Callable, input_type: type | None = None) -> _ToolFunc:
     async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
         if input_type is None:
@@ -305,7 +342,6 @@ def _xknx_func(lib_func: Callable, input_type: type | None = None) -> _ToolFunc:
     return _call
 
 
-# name, description, parameter schema, callable.
 def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     return [
         (
@@ -319,8 +355,8 @@ def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
             "get_last_values",
             "Most recent telegram for each group address, optionally filtered to given "
             "destinations.",
-            _schema_from_dataclass(kts_mcp.LastValuesInput),
-            _store_func(kts_mcp.get_last_values, kts_mcp.LastValuesInput),
+            _schema_from_dataclass(kts_mcp.LastValuesInput).extend(_PAGINATION_MARKERS),
+            _last_values_func(),
         ),
         (
             "get_store_stats",

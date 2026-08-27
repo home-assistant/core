@@ -51,6 +51,22 @@ def _tool(tools: list[llm.Tool], name: str) -> llm.Tool:
     return next(tool for tool in tools if tool.name == name)
 
 
+def _telegram_summary(destination: str) -> TelegramSummary:
+    return TelegramSummary(
+        timestamp="2026-08-27T12:00:00+00:00",
+        source="1.1.1",
+        destination=destination,
+        telegramtype="GroupValueWrite",
+        direction="Incoming",
+        dpt=None,
+        value=1,
+        value_numeric=None,
+        raw_data="01",
+        source_name=None,
+        destination_name=None,
+    )
+
+
 async def test_llm_api_registered_after_setup(
     hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
 ) -> None:
@@ -401,3 +417,36 @@ async def test_library_errors_become_translated_tool_errors(
             _llm_context(),
         )
     assert err.value.translation_key == "llm_tool_failed"
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected_count", "expected_next_offset"),
+    [
+        pytest.param({}, 100, 100, id="first_page"),
+        pytest.param({"limit": 50, "offset": 2480}, 20, None, id="last_page"),
+    ],
+)
+async def test_get_last_values_is_paginated(
+    hass: HomeAssistant,
+    tool_args: dict[str, Any],
+    expected_count: int,
+    expected_next_offset: int | None,
+) -> None:
+    """The library returns one entry per group address without a limit."""
+    telegrams = [_telegram_summary(f"1/1/{index}") for index in range(2500)]
+    knx = _mock_knx(store=Mock())
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(
+            llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
+        )
+        tool = _tool(llm_api._build_tools(knx), "get_last_values")
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput(tool_name="get_last_values", tool_args=tool_args),
+            _llm_context(),
+        )
+
+    assert len(result["telegrams"]) == expected_count
+    assert result["total_count"] == 2500
+    assert result["next_offset"] == expected_next_offset

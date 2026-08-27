@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -195,6 +196,30 @@ async def test_knx_project_file_remove(
     assert res["success"], res
     assert not hass.data[KNX_MODULE_KEY].project.loaded
     assert not hass_storage.get(KNX_PROJECT_STORAGE_KEY)
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_knx_project_cache_not_resurrected_by_concurrent_load(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """A load in flight must not restore a project that was removed meanwhile."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    loading = asyncio.Event()
+    original_load = project._store.async_load
+
+    async def slow_load() -> Any:
+        loading.set()
+        await asyncio.sleep(0)
+        return await original_load()
+
+    with patch.object(project._store, "async_load", slow_load):
+        load = hass.async_create_task(project.get_knxproject())
+        await loading.wait()
+        await project.remove_project_file()
+    await load
+
+    assert project._project is None
 
 
 @pytest.mark.usefixtures("load_knxproj")
