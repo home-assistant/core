@@ -1898,7 +1898,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
 @pytest.mark.parametrize(
     "schema",
     [
-        # image_upload can only be used when accept is set
+        # image_upload can only be used when accept is not empty
         {"image_upload": True},
         {"image_upload": True, "accept": []},
     ],

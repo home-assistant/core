@@ -131,7 +131,7 @@ def _validate_selector_reorder_config(config: Any) -> Any:
 def _validate_media_selector_config(config: Any) -> Any:
     """Validate media selectors with image_upload option."""
     if config.get("image_upload") and not config.get("accept"):
-        raise vol.Invalid("image_upload can only be used when accept is set")
+        raise vol.Invalid("image_upload can only be used when accept is not empty")
     return config
 
 
