@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      Polled every minute. The backend caches each account's payload and
+      answers an unchanged poll with a 304 carrying no body, so a poll that
+      finds nothing new costs very little. A configured webhook delivers
+      changes immediately and makes the poll a fallback.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
+  entity-event-setup:
+    status: done
+    comment: |
+      Push updates arrive on a single integration-level webhook and are fed
+      into the coordinator, so entities subscribe only to the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: Handled by async_config_entry_first_refresh.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Entities go unavailable when the sensor is offline or its last reading
+      has aged past the staleness window.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Cloud account based; devices cannot be discovered on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud account based; there is no network discovery to update from.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: done
+    comment: Sensors added in the app appear on the next poll.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices:
+    status: done
+    comment: |
+      Sensors deleted in the app are removed from the device registry on the
+      next poll.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

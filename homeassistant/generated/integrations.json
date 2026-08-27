@@ -6766,6 +6766,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "smartyplants": {
+      "name": "SmartyPlants",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "smhi": {
       "name": "SMHI",
       "integration_type": "service",
