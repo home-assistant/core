@@ -201,6 +201,32 @@ def mock_config_entry_switch() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_binary_sensor() -> MockConfigEntry:
+    """Return a config entry with the options the binary_sensor platform gates on."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (
