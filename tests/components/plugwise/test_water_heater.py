@@ -141,15 +141,13 @@ async def test_anna_water_heater_states(
         assert state.state == STATE_GAS
 
 
-@pytest.mark.parametrize("cooling_present", [False], indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_anna_water_heater_states(
+async def test_adam_water_heater_active_state(
     hass: HomeAssistant,
     mock_smile_adam_jip: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test Anna water_heater states."""
+    """Test Adam water_heater active state."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
