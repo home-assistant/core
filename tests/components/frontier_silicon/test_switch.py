@@ -23,7 +23,6 @@ async def test_dst_switch(
     # Set up integration
     await setup_integration(hass, config_entry)
 
-    # Set switch on
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -32,10 +31,8 @@ async def test_dst_switch(
     )
     await hass.async_block_till_done()
 
-    # Check that set_dst was called to turn the switch on
-    mock_afsapi.set_dst.assert_called_with(True)
+    mock_afsapi.set_dst.assert_awaited_with(True)
 
-    # Set switch off
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -44,5 +41,4 @@ async def test_dst_switch(
     )
     await hass.async_block_till_done()
 
-    # Check that set_dst was called to turn the switch off
-    mock_afsapi.set_dst.assert_called_with(False)
+    mock_afsapi.set_dst.assert_awaited_with(False)
