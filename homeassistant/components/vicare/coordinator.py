@@ -9,6 +9,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidCredentialsError,
+    PyViCareInvalidDataError,
     PyViCareRateLimitError,
 )
 import requests
@@ -65,8 +66,9 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed from err
         except (
             PyViCareDeviceCommunicationError,
-            PyViCareRateLimitError,
             PyViCareInternalServerError,
+            PyViCareInvalidDataError,
+            PyViCareRateLimitError,
             requests.RequestException,
         ) as err:
             raise UpdateFailed(str(err)) from err

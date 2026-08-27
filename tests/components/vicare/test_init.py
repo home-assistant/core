@@ -10,6 +10,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareInvalidDataError,
 )
 
 from homeassistant.components.vicare.const import DOMAIN
@@ -501,6 +502,44 @@ async def test_coordinator_recovers_after_transient_failure(
 
         state = hass.states.get(sensor_id)
         assert state.state != STATE_UNAVAILABLE
+
+
+async def test_coordinator_handles_invalid_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A malformed payload fails the refresh without an unexpected error."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_id = "sensor.model0_outside_temperature"
+        service.fetch_all_features.side_effect = PyViCareInvalidDataError(
+            {"error": "no data"}
+        )
+        caplog.clear()
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(sensor_id).state == STATE_UNAVAILABLE
+        assert "Unexpected error fetching" not in caplog.text
 
 
 async def test_per_device_failure_isolation(
