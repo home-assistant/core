@@ -29,10 +29,11 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
-    HomeAssistantError,
+    ImplementationUnavailableError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
+    UnknownImplementationError,
 )
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
@@ -81,10 +82,6 @@ _SHARED_ABORT_REASONS = frozenset(
         "user_rejected_authorize",
     }
 )
-
-
-class ImplementationUnavailableError(HomeAssistantError):
-    """Raised when an underlying implementation is unavailable."""
 
 
 @callback
@@ -698,7 +695,7 @@ async def async_get_config_entry_implementation(
     implementation = implementations.get(config_entry.data["auth_implementation"])
 
     if implementation is None:
-        raise ValueError("Implementation not available")
+        raise UnknownImplementationError
 
     return implementation
 

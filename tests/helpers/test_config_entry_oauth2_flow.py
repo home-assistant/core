@@ -14,6 +14,8 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -1479,7 +1481,7 @@ async def test_async_get_config_entry_implementation_missing_provider(
     )
 
     # This should fail since both providers are empty.
-    with pytest.raises(ValueError, match="Implementation not available"):
+    with pytest.raises(ValueError, match="no longer available"):
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
@@ -1513,3 +1515,170 @@ async def test_oauth2_request_replaces_caller_authorization_header(
 
     # The token must not be sent as a second Authorization header
     assert headers.getall("Authorization") == [f"Bearer {ACCESS_TOKEN_1}"]
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected_state", "expected_translation_key"),
+    [
+        pytest.param(
+            HTTPStatus.BAD_REQUEST,
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            "oauth2_helper_reauth_required",
+            id="reauth",
+        ),
+        pytest.param(
+            HTTPStatus.TOO_MANY_REQUESTS,
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            "oauth2_helper_refresh_transient",
+            id="transient",
+        ),
+        pytest.param(
+            600,
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            None,
+            id="generic",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("flow_handler")
+async def test_token_error_handled_without_integration_mapping(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    status_code: int,
+    expected_state: config_entries.ConfigEntryState,
+    expected_translation_key: str | None,
+) -> None:
+    """Test setup maps token refresh errors when the integration does not.
+
+    Only the transient and reauth subclasses carry config entry semantics, the
+    base error is left to the integration.
+    """
+    aioclient_mock.post(TOKEN_URL, status=status_code, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Refresh the token without mapping the OAuth errors."""
+        session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
+        await session.async_ensure_token_valid()
+        return True
+
+    mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert config_entry.error_reason_translation_key == expected_translation_key
+
+
+@pytest.mark.usefixtures("flow_handler")
+async def test_token_error_integration_can_handle_it_itself(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test an integration can still map a token error to its own behaviour."""
+    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.BAD_REQUEST, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Treat a reauth error as recoverable instead."""
+        session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
+        try:
+            await session.async_ensure_token_valid()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryNotReady from err
+        return True
+
+    mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+async def test_unknown_implementation_asks_for_reauth(hass: HomeAssistant) -> None:
+    """Test an entry referencing a removed implementation asks for reauth."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={"auth_implementation": "removed", "token": {}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with pytest.raises(ConfigEntryAuthFailed) as err:
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+
+    # Still a ValueError so integrations catching that keep working
+    assert isinstance(err.value, ValueError)
+
+
+@pytest.mark.usefixtures("flow_handler")
+async def test_implementation_unavailable_retries_setup(hass: HomeAssistant) -> None:
+    """Test an unavailable implementation retries setup without integration mapping."""
+
+    async def failing_provider(
+        hass: HomeAssistant, domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Fail like the cloud provider does when it cannot reach the server."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError("cloud is down")
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={"auth_implementation": TEST_DOMAIN, "token": {}},
+    )
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Resolve the implementation without mapping the error."""
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+        return True
+
+    mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry.error_reason_translation_key == "oauth2_implementation_unavailable"
+    )
