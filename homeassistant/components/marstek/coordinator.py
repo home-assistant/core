@@ -10,7 +10,6 @@ from aiomarstek import MarstekUDPClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -18,7 +17,7 @@ from .models import MarstekDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass(slots=True)
@@ -74,14 +73,14 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
         try:
             device_info = await self.udp_client.get_device_info(self.device_ip)
         except (TimeoutError, OSError, TypeError) as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_connection_failed",
                 translation_placeholders={"host": self.device_ip},
             ) from err
 
         if not isinstance(device_info, dict):
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_device_data",
                 translation_placeholders={"host": self.device_ip},
@@ -91,7 +90,7 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
             device_info, self.device_ip
         )
         if not normalized_device_info.stable_id:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="missing_stable_id",
                 translation_placeholders={"host": self.device_ip},

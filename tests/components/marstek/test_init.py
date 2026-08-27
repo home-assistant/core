@@ -1,6 +1,7 @@
 """Tests for the Marstek integration."""
 
 from ipaddress import IPv4Address
+import logging
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -164,16 +165,19 @@ async def test_async_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup retries when the device cannot be reached."""
     mock_config_entry.add_to_hass(hass)
     mock_udp_client.get_device_info.side_effect = TimeoutError("timeout")
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.ERROR):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_udp_client.async_cleanup.assert_awaited_once()
+    assert "Unexpected error fetching Marstek" not in caplog.text
 
 
 @pytest.mark.parametrize(
