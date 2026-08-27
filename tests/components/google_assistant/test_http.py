@@ -12,8 +12,9 @@ from uuid import uuid4
 import py
 import pytest
 
-from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
+from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA, helpers
 from homeassistant.components.google_assistant.const import (
+    DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
@@ -27,8 +28,10 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -381,6 +384,101 @@ async def test_missing_service_account(hass: HomeAssistant) -> None:
     assert config._access_token_renew is renew
 
 
+async def test_should_expose_uses_exposed_entities_store(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test should_expose delegates to the shared exposed entities store."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+
+    assert config.should_expose(entry.entity_id) is False
+
+    async_expose_entity(hass, DOMAIN, entry.entity_id, True)
+
+    assert config.should_expose(entry.entity_id) is True
+
+
+async def test_migrate_expose_settings(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test YAML-configured exposure is migrated to the shared store once."""
+    light_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    switch_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(light_entry.entity_id, "on")
+    hass.states.async_set(switch_entry.entity_id, "on")
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {switch_entry.entity_id: {"expose": True}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(light_entry.entity_id) is True
+    assert google_config.should_expose(switch_entry.entity_id) is True
+
+    # Let the delayed save of the migration version flush before creating a
+    # new store instance below, so it actually observes it as migrated.
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+
+    # A user-made change after migration must not be reverted by a later
+    # initialization of the same (already migrated) config.
+    async_expose_entity(hass, DOMAIN, light_entry.entity_id, False)
+
+    other_config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {switch_entry.entity_id: {"expose": True}},
+        }
+    )
+    google_config = GoogleConfig(hass, other_config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(light_entry.entity_id) is False
+
+
+async def test_expose_update_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that updating exposed entities schedules a Google sync."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # The entity was already exposed by the initial YAML-based migration.
+    assert config.should_expose(entry.entity_id) is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        async_expose_entity(hass, DOMAIN, entry.entity_id, False)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -551,7 +649,7 @@ async def test_agent_user_id_storage(
 
     assert hass_storage["google_assistant"] == {
         "version": 1,
-        "minor_version": 2,
+        "minor_version": 3,
         "key": "google_assistant",
         "data": {
             "agent_user_ids": {
@@ -559,6 +657,7 @@ async def test_agent_user_id_storage(
                     "local_webhook_id": "test_webhook",
                 }
             },
+            "expose_settings_version": 0,
         },
     }
 

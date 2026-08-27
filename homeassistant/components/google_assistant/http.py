@@ -11,6 +11,11 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_listen_entity_updates,
+    async_should_expose,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -37,12 +42,15 @@ from .const import (
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
     STORE_AGENT_USER_IDS,
+    STORE_EXPOSE_SETTINGS_VERSION,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .helpers import AbstractConfig
 from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
+
+EXPOSE_SETTINGS_VERSION = 1
 
 
 def _get_homegraph_jwt(time, iss, key):
@@ -97,7 +105,24 @@ class GoogleConfig(AbstractConfig):
 
         await super().async_initialize()
 
+        if self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION:
+            self._migrate_expose_settings()
+            self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
+
+        self._on_deinitialize.append(
+            async_listen_entity_updates(
+                self.hass, DOMAIN, self._async_exposed_entities_updated
+            )
+        )
+
         self.async_enable_local_sdk()
+
+    def _migrate_expose_settings(self) -> None:
+        """Migrate should_expose settings computed from YAML to the shared store."""
+        for entity_id in self.hass.states.async_entity_ids():
+            async_expose_entity(
+                self.hass, DOMAIN, entity_id, self._should_expose_legacy(entity_id)
+            )
 
     @property
     @override
@@ -169,6 +194,13 @@ class GoogleConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
+        return async_should_expose(self.hass, DOMAIN, entity_id)
+
+    def _should_expose_legacy(self, entity_id: str) -> bool:
+        """Return if entity should be exposed, based on YAML configuration.
+
+        Only used to seed the shared expose settings store on first migration.
+        """
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
 
@@ -197,7 +229,12 @@ class GoogleConfig(AbstractConfig):
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
-        return is_default_exposed or explicit_expose
+        return bool(is_default_exposed or explicit_expose)
+
+    @callback
+    def _async_exposed_entities_updated(self) -> None:
+        """Handle updated expose settings."""
+        self.async_schedule_google_sync_all()
 
     @override
     def should_2fa(self, state):
@@ -311,7 +348,7 @@ class GoogleConfigStore:
     """A configuration store for google assistant."""
 
     _STORAGE_VERSION = 1
-    _STORAGE_VERSION_MINOR = 2
+    _STORAGE_VERSION_MINOR = 3
     _STORAGE_KEY = DOMAIN
     _data: dict[str, Any]
 
@@ -346,6 +383,10 @@ class GoogleConfigStore:
                 }
                 should_save_data = True
 
+        if STORE_EXPOSE_SETTINGS_VERSION not in data:
+            data[STORE_EXPOSE_SETTINGS_VERSION] = 0
+            should_save_data = True
+
         if should_save_data:
             await self._store.async_save(data)
 
@@ -355,6 +396,17 @@ class GoogleConfigStore:
     def agent_user_ids(self) -> dict[str, Any]:
         """Return a list of connected agent user_ids."""
         return self._data[STORE_AGENT_USER_IDS]
+
+    @property
+    def expose_settings_version(self) -> int:
+        """Return the expose settings migration version."""
+        return self._data[STORE_EXPOSE_SETTINGS_VERSION]
+
+    @callback
+    def async_set_expose_settings_version(self, version: int) -> None:
+        """Set the expose settings migration version."""
+        self._data[STORE_EXPOSE_SETTINGS_VERSION] = version
+        self._store.async_delay_save(lambda: self._data, 1.0)
 
     @callback
     def add_agent_user_id(self, agent_user_id: str) -> None:
