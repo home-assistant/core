@@ -12,7 +12,7 @@ from switchbot_api import (
 )
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
@@ -79,23 +79,34 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         ]:
             self._attr_supported_features = LockEntityFeature.OPEN
 
+    @callback
+    def _write_optimistic_state(self, *, is_locked: bool) -> None:
+        """Write the state the command asked for, until the cloud reports back.
+
+        The transient states have to go with it: they outrank `is_locked` in
+        `LockEntity.state`, so a lock commanded out of a jam would keep
+        reading jammed until the next poll.
+        """
+        self._attr_is_locked = is_locked
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_jammed = False
+        self.async_write_ha_state()
+
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.send_api_command(LockCommands.LOCK)
-        self._attr_is_locked = True
-        self.async_write_ha_state()
+        self._write_optimistic_state(is_locked=True)
 
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.send_api_command(LockCommands.UNLOCK)
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        self._write_optimistic_state(is_locked=False)
 
     @override
     async def async_open(self, **kwargs: Any) -> None:
         """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        self._write_optimistic_state(is_locked=False)

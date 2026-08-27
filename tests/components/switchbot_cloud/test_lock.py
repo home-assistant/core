@@ -148,3 +148,45 @@ async def test_lock_states(
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("lock.lock_1").state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_state"),
+    [
+        (SERVICE_LOCK, LockState.LOCKED),
+        (SERVICE_UNLOCK, LockState.UNLOCKED),
+        (SERVICE_OPEN, LockState.UNLOCKED),
+    ],
+)
+async def test_command_replaces_a_jam(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    service: str,
+    expected_state: str,
+) -> None:
+    """Test a command clears the jam instead of leaving it standing."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="lock-id-1",
+            deviceName="lock-1",
+            deviceType="Smart Lock Ultra",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {"lockState": "jammed"}
+
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    lock_id = "lock.lock_1"
+    assert hass.states.get(lock_id).state == LockState.JAMMED
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            LOCK_DOMAIN, service, {ATTR_ENTITY_ID: lock_id}, blocking=True
+        )
+    assert hass.states.get(lock_id).state == expected_state
