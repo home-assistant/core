@@ -18,7 +18,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
@@ -30,24 +29,6 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
-
-    @override
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle discovery via DHCP. MAC/IP are not stored."""
-        await self._async_handle_discovery_without_unique_id()
-        return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask the user to confirm cloud setup after a DHCP match."""
-        if user_input is not None:
-            return await self.async_step_user()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="discovery_confirm")
 
     @override
     async def async_step_user(

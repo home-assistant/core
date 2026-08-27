@@ -164,18 +164,11 @@ async def test_dhcp_discovery_success(
     mock_setup_entry: AsyncMock,
     mock_imou_openapi_client: AsyncMock,
 ) -> None:
-    """DHCP discovery confirms, then completes the existing user login form."""
+    """DHCP discovery opens the existing user login form and creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
         data=DHCP_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -235,7 +228,7 @@ async def test_dhcp_discovery_invalid_auth(
     mock_setup_entry: AsyncMock,
     mock_imou_openapi_client: AsyncMock,
 ) -> None:
-    """After confirm, bad credentials stay on the user step."""
+    """Bad credentials stay on the user step, then recover to CREATE_ENTRY."""
     mock_imou_openapi_client.async_get_token.side_effect = (
         InvalidAppIdOrSecretException("fail")
     )
@@ -245,9 +238,9 @@ async def test_dhcp_discovery_invalid_auth(
         context={"source": SOURCE_DHCP},
         data=DHCP_DISCOVERY,
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=USER_INPUT,
@@ -256,3 +249,16 @@ async def test_dhcp_discovery_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
+
+    mock_imou_openapi_client.async_get_token.reset_mock(side_effect=True)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Imou"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
+    assert len(mock_setup_entry.mock_calls) == 1
