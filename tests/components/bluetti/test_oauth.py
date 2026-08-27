@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybluetti import UserProduct
 
+from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.oauth import (
     ISSUE_ID_OAUTH_EXPIRED,
@@ -297,7 +298,7 @@ async def test_async_get_access_token_ensures_validity_first():
 
 async def test_select_devices_shows_form_with_available_devices(hass):
     """Select devices shows form with available devices."""
-    flow = OAuth2FlowHandler()
+    flow = BluettiConfigFlow()
     flow.hass = hass
     flow.context = {}
     flow._oauth_data = {
@@ -306,8 +307,8 @@ async def test_select_devices_shows_form_with_available_devices(hass):
     }
     product = UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls:
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls:
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=MagicMock(data=[product])
         )

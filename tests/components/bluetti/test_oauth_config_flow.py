@@ -1,25 +1,28 @@
-"""Tests for the OAuth2 device-selection config flow step (oauth.py)."""
+"""Tests for the OAuth2 device-selection config flow step (config_flow.py)."""
 
 import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from pybluetti import UserProduct
+import pytest
 
+from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
 from homeassistant.components.bluetti.const import (
     ACCOUNT_UNIQUE_ID,
     DOMAIN,
     INTEGRATION_NAME,
 )
-from homeassistant.components.bluetti.oauth import OAuth2FlowHandler
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.json import JSONEncoder
 
 from tests.common import MockConfigEntry
 
 
-def _make_flow(hass) -> OAuth2FlowHandler:
-    flow = OAuth2FlowHandler()
+def _make_flow(hass) -> BluettiConfigFlow:
+    flow = BluettiConfigFlow()
     flow.hass = hass
+    flow.handler = DOMAIN
     flow.context = {}
     flow._oauth_data = {
         "auth_implementation": "bluetti",
@@ -69,12 +72,17 @@ async def test_merge_into_existing_entry_by_unique_id(hass):
     flow._products = [UserProduct(sn="SN1", name="New Device", stateList=[], online="1")]
     flow._product_client = AsyncMock()
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
-        result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+    # _abort_if_unique_id_configured() raises AbortFlow directly (the real
+    # flow manager catches this and turns it into the {"type": "abort", ...}
+    # result seen by a user going through a real flow). It only schedules a
+    # reload for an entry already LOADED/SETUP_RETRY, which this bare
+    # MockConfigEntry - added but never actually set up - isn't, so there's
+    # nothing to assert about reload scheduling here; the merge is the
+    # behavior under test.
+    with pytest.raises(AbortFlow) as exc_info:
+        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "success"
-    mock_reload.assert_awaited_once_with(existing_entry.entry_id)
+    assert exc_info.value.reason == "success"
 
     updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
     assert set(updated.options["devices"]) == {"SN0", "SN1"}
@@ -99,11 +107,13 @@ async def test_legacy_entry_without_unique_id_is_adopted(hass):
     flow._products = [UserProduct(sn="SN1", name="New Device", stateList=[], online="1")]
     flow._product_client = AsyncMock()
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()):
-        result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+    with (
+        patch.object(hass.config_entries, "async_schedule_reload"),
+        pytest.raises(AbortFlow) as exc_info,
+    ):
+        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "success"
+    assert exc_info.value.reason == "success"
 
     updated = hass.config_entries.async_get_entry(legacy_entry.entry_id)
     assert updated.unique_id == ACCOUNT_UNIQUE_ID
@@ -126,8 +136,8 @@ async def test_get_user_products_failure_aborts_cannot_connect(hass):
     """Get user products failure aborts cannot connect."""
     flow = _make_flow(hass)
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls:
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls:
         mock_client_cls.return_value.get_user_products = AsyncMock(side_effect=RuntimeError("boom"))
         result = await flow.async_step_select_devices(user_input=None)
 
@@ -139,8 +149,8 @@ async def test_no_devices_available_aborts(hass):
     """No devices available aborts."""
     flow = _make_flow(hass)
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls:
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls:
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=[])
         )
@@ -164,8 +174,8 @@ async def test_all_devices_exists_aborts(hass):
     flow = _make_flow(hass)
     product = UserProduct(sn="SN1", name="Already Added", stateList=[], online="1")
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls:
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls:
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=[product])
         )
@@ -190,8 +200,8 @@ async def test_reconfigure_token_updates_existing_entry(hass):
     flow.context = {"entry_id": existing_entry.entry_id}
     product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls, \
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls, \
          patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=[product])
@@ -212,8 +222,8 @@ async def test_reconfigure_token_missing_entry_aborts(hass):
     flow.context = {"entry_id": "does-not-exist"}
     product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
 
-    with patch("homeassistant.components.bluetti.oauth.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.oauth.ProductClient") as mock_client_cls:
+    with patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"), \
+         patch("homeassistant.components.bluetti.config_flow.ProductClient") as mock_client_cls:
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=[product])
         )

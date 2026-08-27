@@ -190,8 +190,13 @@ async def test_set_state_value_applies_optimistic_update_and_notifies_coordinato
     device.coordinator.async_set_updated_data.assert_called_once_with(device)
 
 
-async def test_set_state_value_does_not_apply_on_server_error_code():
-    """Set state value does not apply on server error code."""
+async def test_set_state_value_raises_and_does_not_apply_on_server_error_code():
+    """Set state value raises and does not apply on server error code.
+
+    Regression test: a rejected command (nonzero msgCode) used to be
+    silently ignored - the caller (and any automation) saw the service call
+    as successful even though the device's state never actually changed.
+    """
     device = BluettiDevice(
         device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
         state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
@@ -200,16 +205,19 @@ async def test_set_state_value_does_not_apply_on_server_error_code():
     device._api_client.control_device.return_value = UnifyResponse(msgId="1", msgCode=1)
     device.coordinator = MagicMock()
 
-    await device.set_state_value("SetCtrlAc", "1")
+    with pytest.raises(HomeAssistantError):
+        await device.set_state_value("SetCtrlAc", "1")
 
     assert device.get_state("SetCtrlAc").fn_value == "0"
+    device.coordinator.async_set_updated_data.assert_not_called()
 
 
-async def test_set_state_value_does_not_apply_on_non_json_response():
+async def test_set_state_value_raises_and_does_not_apply_on_non_json_response():
     """control_device() returns a plain str for a non-JSON server response.
 
     Regression test: accessing .msgCode on that str used to crash with an
-    unhandled AttributeError instead of just not applying the update.
+    unhandled AttributeError; fixing that must not also silently swallow a
+    rejected command - it should raise the same way a bad msgCode does.
     """
     device = BluettiDevice(
         device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
@@ -219,7 +227,8 @@ async def test_set_state_value_does_not_apply_on_non_json_response():
     device._api_client.control_device.return_value = "not json"
     device.coordinator = MagicMock()
 
-    await device.set_state_value("SetCtrlAc", "1")  # must not raise
+    with pytest.raises(HomeAssistantError):
+        await device.set_state_value("SetCtrlAc", "1")
 
     assert device.get_state("SetCtrlAc").fn_value == "0"
 

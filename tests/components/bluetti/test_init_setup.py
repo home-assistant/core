@@ -7,7 +7,6 @@ from modbus_connection.exceptions import ModbusConnectionError
 
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -85,45 +84,6 @@ async def test_async_setup_entry_with_a_device(hass):
     assert devices[0].device_id == "SN1"
     assert "SN1" in entry.runtime_data.coordinators
     mock_stomp_cls.return_value.connect.assert_awaited_once()
-
-
-async def test_async_setup_entry_registers_binary_sensor_under_its_own_domain(hass):
-    """Async setup entry registers binary sensor under its own domain."""
-    # Regression test: BluettiBinarySensor entities used to be appended to
-    # the `entities` list handed to the sensor platform's async_add_entities,
-    # so they were registered under sensor.* instead of binary_sensor.* -
-    # entity_id domain is decided by which EntityPlatform.async_add_entities
-    # call registers the entity, not by the entity class's own base class.
-    state_list = [{"fnCode": "onLine", "fnName": "Online", "fnValue": "1", "fnType": "SENSOR"}]
-    entry = _entry(
-        hass,
-        products=[{"sn": "SN1", "name": "Device", "stateList": state_list, "online": "1"}],
-        devices=["SN1"],
-    )
-    status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=state_list)
-
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
-        mock_stomp_cls.return_value.connect = AsyncMock()
-        mock_product_cls.return_value.get_device_status = AsyncMock(
-            return_value=MagicMock(data=[status_data])
-        )
-
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id("binary_sensor", DOMAIN, "SN1_onLine")
-    assert entity_id is not None
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "SN1_onLine") is None
 
 
 async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(hass):
@@ -328,3 +288,65 @@ async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from
     assert "SN1" in entry.runtime_data.coordinators
     assert entry.runtime_data.coordinators["SN1"].last_update_success
     assert not entry.runtime_data.modbus_coordinators["SN1"].last_update_success
+
+
+async def test_unloading_the_entry_disconnects_the_websocket(hass):
+    """Unloading the entry disconnects the websocket."""
+    entry = _entry(hass)
+
+    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
+         patch(
+             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+             AsyncMock(return_value=MagicMock()),
+         ), \
+         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
+         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls:
+        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_stomp_cls.return_value.disconnect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_stomp_cls.return_value.disconnect.assert_awaited_once()
+
+
+async def test_a_failed_first_refresh_still_disconnects_the_websocket(hass):
+    """A failed first refresh still disconnects the websocket, not just a full unload.
+
+    Regression test: the websocket's disconnect must be registered via
+    entry.async_on_unload() as soon as it connects, not only handled
+    explicitly in async_unload_entry() - otherwise a first refresh failure
+    (which puts the entry into a setup retry, not a full unload) would leave
+    that websocket connection open, and each retry would connect a new one
+    without ever disconnecting the last.
+    """
+    entry = _entry(
+        hass,
+        products=[{"sn": "SN1", "name": "Device", "stateList": [], "online": "1"}],
+        devices=["SN1"],
+    )
+
+    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
+         patch(
+             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+             AsyncMock(return_value=MagicMock()),
+         ), \
+         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
+         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
+         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls:
+        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_stomp_cls.return_value.disconnect = AsyncMock()
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            side_effect=RuntimeError("cloud is down")
+        )
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_stomp_cls.return_value.disconnect.assert_awaited_once()

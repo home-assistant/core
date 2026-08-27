@@ -66,6 +66,9 @@
     "command_failed": {
       "message": "Error sending command to {device_id}: {error}"
     },
+    "command_rejected": {
+      "message": "Command to {device_id} was rejected by the BLUETTI cloud: {error}"
+    },
     "select_option_read_only": {
       "message": "{fn_code} is read-only and cannot be changed"
     },

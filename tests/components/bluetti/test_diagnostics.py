@@ -69,6 +69,35 @@ async def test_diagnostics_redacts_sensitive_data_and_lists_devices(hass):
     assert "SN1" not in diagnostics["coordinators"]
 
 
+async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(hass):
+    """Diagnostics redacts serial number used as a modbus options key.
+
+    Regression test: entry_options["modbus"] is keyed by the same real
+    serial number as entry_options["devices"] - redacting one but not the
+    other would still leak it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"auth_implementation": DOMAIN, "token": {}, "products": [{"sn": "SN1", "name": "Device"}]},
+        options={"devices": ["SN1"], "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}}},
+    )
+    entry.add_to_hass(hass)
+
+    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260")
+    coordinator = MagicMock(last_update_success=True, update_interval="0:00:30")
+    entry.runtime_data = BluettiRuntimeData(
+        auth=MagicMock(),
+        bluetti_devices=MagicMock(devices=[device]),
+        stomp_client=MagicMock(),
+        coordinators={"SN1": coordinator},
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert diagnostics["entry_options"]["modbus"] == {"device_1": {"host": "10.2.1.60", "port": 502}}
+    assert "SN1" not in str(diagnostics)
+
+
 async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devices(hass):
     """Diagnostics aliases are stable and correlate across multiple devices."""
     entry = MockConfigEntry(

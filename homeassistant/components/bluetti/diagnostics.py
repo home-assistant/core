@@ -64,6 +64,13 @@ async def async_get_config_entry_diagnostics(
         entry_options["devices"] = [
             aliases.get(sn, sn) for sn in entry_options["devices"]
         ]
+    if "modbus" in entry_options:
+        # Keyed by the same real serial numbers - alias the keys too, or a
+        # device with local Modbus configured would leak its serial here
+        # even though "devices" above was redacted.
+        entry_options["modbus"] = {
+            aliases.get(sn, sn): config for sn, config in entry_options["modbus"].items()
+        }
 
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),

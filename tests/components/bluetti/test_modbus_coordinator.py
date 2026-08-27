@@ -1,7 +1,8 @@
 """Tests for BluettiModbusCoordinator."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.exceptions import AcknowledgeError, ModbusConnectionError
 import pytest
@@ -80,16 +81,22 @@ async def test_survives_a_slow_update_within_the_overall_budget(hass):
     Regression test for the same "Request cancelled outside library" bug
     fixed in bluetti-modbus PR #26: the per-update timeout budgets the whole
     sequential multi-block read, not one request, so it must comfortably
-    survive one block being slow.
+    survive one block being slow. Shrinks UPDATE_TIMEOUT rather than
+    sleeping through a real 30s budget - the ratio (a slow update taking
+    ~60% of the budget) is what's under test, not the literal duration.
     """
     device = _device(values={"b_soc": 42})
 
     async def slow_update() -> None:
-        await asyncio.sleep(15)
+        await asyncio.sleep(0.06)
 
     device.async_update = AsyncMock(side_effect=slow_update)
     coordinator = BluettiModbusCoordinator(hass, MagicMock(), "SN1", device)
 
-    result = await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.bluetti.modbus_coordinator.UPDATE_TIMEOUT",
+        timedelta(seconds=0.1),
+    ):
+        result = await coordinator._async_update_data()
 
     assert result["b_soc"].value == 42

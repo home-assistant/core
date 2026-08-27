@@ -7,24 +7,14 @@ from typing import Any, cast
 
 from aiohttp import ClientSession
 from pybluetti import ProductClient, UserProduct
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    ACCOUNT_UNIQUE_ID,
-    DOMAIN,
-    EVENT_TOKEN_EXPIRED,
-    INTEGRATION_NAME,
-    NOTIFY_ID_TOKEN_EXPIRED,
-)
-from .profile.application_profile import APPLICATION_PROFILE
+from .const import DOMAIN, EVENT_TOKEN_EXPIRED, NOTIFY_ID_TOKEN_EXPIRED
 
 __LOGGER__ = logging.getLogger(__name__)
 
@@ -51,141 +41,6 @@ class OAuth2FlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, doma
         """Handle OAuth2 callback and create config entry."""
         self._oauth_data = data
         return await self.async_step_select_devices()
-
-    async def async_step_select_devices(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Let user select devices after OAuth2 login."""
-        if user_input is not None:
-            try:
-                await self._product_client.bind_devices({"bindSnList": user_input["devices"]})
-            except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
-                __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
-                return self.async_abort(reason="cannot_connect")
-
-            # Prevent configuring the same BLUETTI account twice: look up any
-            # existing entry by its unique_id instead of matching on title.
-            await self.async_set_unique_id(ACCOUNT_UNIQUE_ID)
-            existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, ACCOUNT_UNIQUE_ID
-            )
-            if existing_entry is None:
-                # Entries created before this integration used a stable
-                # unique_id have none set; fall back to the old title match
-                # once and backfill the unique_id so future lookups work.
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    if entry.unique_id is None and entry.title == f"{INTEGRATION_NAME} Power Integration":
-                        self.hass.config_entries.async_update_entry(entry, unique_id=ACCOUNT_UNIQUE_ID)
-                        existing_entry = entry
-                        break
-
-            if existing_entry:
-                # Merge into the existing integration entry
-                existing_devices = existing_entry.options.get("devices", [])
-                existing_products = existing_entry.data.get("products", [])
-
-                # Merge the device list (deduplicated)
-                merged_devices = list(set(existing_devices + user_input["devices"]))
-
-                # Merge the product data (deduplicated)
-                existing_product_sns = {p.get("sn") if isinstance(p, dict) else p.sn for p in existing_products}
-                new_products = [p for p in self._products if p.sn not in existing_product_sns]
-                merged_products = existing_products + [p.model_dump() if hasattr(p, "model_dump") else p for p in new_products]
-
-                # Update the existing entry
-                self.hass.config_entries.async_update_entry(
-                    existing_entry,
-                    data={
-                        "auth_implementation": self._oauth_data["auth_implementation"],
-                        "token": self._oauth_data["token"],
-                        "products": merged_products
-                    },
-                    options={"devices": merged_devices}
-                )
-
-                # Reload the integration to pick up the new devices
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-
-                return self.async_abort(reason="success")
-            # Create a new integration entry
-            return self.async_create_entry(
-                title=f"{INTEGRATION_NAME} Power Integration",
-                data={
-                    "auth_implementation": self._oauth_data["auth_implementation"],
-                    "token": self._oauth_data["token"],
-                    "products": [p.model_dump() for p in self._products]
-                },
-                options=user_input,
-            )
-
-        http_session = async_get_clientsession(self.hass)
-        access_token = self._oauth_data["token"]["access_token"]
-        product_client = ProductClient(
-            http_session,
-            APPLICATION_PROFILE.config["server"]["gateway"],
-            access_token,
-            on_auth_expired=lambda: self.hass.bus.fire(EVENT_TOKEN_EXPIRED),
-        )
-        try:
-            products = await product_client.get_user_products()
-        except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
-            __LOGGER__.error("Failed to fetch BLUETTI products: %s", err)
-            return self.async_abort(reason="cannot_connect")
-
-        # Checked before iterating products.data below: it's `T | None` on
-        # the wire, and a cloud response that omits "data" entirely would
-        # otherwise crash the dict comprehension with an unhandled
-        # TypeError instead of aborting gracefully.
-        if not products.data:
-            return self.async_abort(reason="no_devices_available")
-
-        self._product_client = product_client
-        self._products = products.data
-
-        # Collect the devices already added to any existing entry
-        integrated_devices = set()
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            integrated_devices.update(entry.options.get("devices", []))
-
-        # Filter out devices that have already been added
-        available_devices = {
-            prod.sn: f"{prod.name} - {prod.sn}"
-            for prod in products.data
-            if prod.sn not in integrated_devices
-        }
-
-
-        # reconfigure token
-        if "entry_id" in self.context:
-            cur_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-            if cur_entry is None:
-                return self.async_abort(reason="reconfigure_failed")
-            __LOGGER__.info("reconfigure token")
-            new_data = {**cur_entry.data,"token":self._oauth_data["token"]}
-            self.hass.config_entries.async_update_entry(
-                    cur_entry,
-                    data=new_data
-                )
-            await self.hass.config_entries.async_reload(cur_entry.entry_id)
-            return self.async_abort(reason="success")
-
-        # All the account's devices are already added
-        if not available_devices:
-            return self.async_abort(reason="all_devices_exists")
-
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    "devices",
-                    default=list(available_devices.keys())
-                ): cv.multi_select(available_devices)
-            }
-        )
-
-        return self.async_show_form(
-            step_id="select_devices",
-            data_schema=schema,
-        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

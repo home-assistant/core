@@ -1,26 +1,20 @@
-"""Tests for the BLUETTI entity platforms (sensor/binary_sensor, switch, select)."""
+"""Tests for the BLUETTI sensor platform."""
 
 from datetime import timedelta
 
-import pytest
-
-from homeassistant.components.bluetti.binary_sensor import BluettiBinarySensor
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.coordinator import BluettiDeviceCoordinator
 from homeassistant.components.bluetti.models import BluettiDevice, BluettiState
-from homeassistant.components.bluetti.select import BluettiSelect
 from homeassistant.components.bluetti.sensor import (
     BluettiEnergySensor,
     BluettiEstimatedBatteryPowerSensor,
     BluettiSensor,
 )
-from homeassistant.components.bluetti.switch import BluettiSwitch
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -316,88 +310,3 @@ async def test_estimated_battery_power_sensor_handles_non_numeric_input(hass):
     charge_sensor, _ = _make_estimated_battery_sensors(coordinator.device, pv_state, grid_state, ac_load_state)
 
     assert charge_sensor.native_value is None
-
-
-async def test_binary_sensor_reflects_state_value(hass):
-    """Binary sensor reflects state value."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.states[0]
-    state.fn_value = "1"
-
-    entity = BluettiBinarySensor(coordinator.device, state, {"name": "Online"})
-
-    assert entity.is_on is True
-    assert entity.has_entity_name is True
-
-
-async def test_switch_is_on_and_off(hass):
-    """Switch is on and off."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.get_state("SetCtrlAc")
-
-    entity = BluettiSwitch(coordinator.device, state)
-
-    assert entity.is_on is False
-    assert entity.name == "AC Output"
-    assert entity.unique_id == "SN1_SetCtrlAc"
-
-
-async def test_switch_power_toggle_available_even_when_offline(hass):
-    """Switch power toggle available even when offline."""
-    coordinator = _make_coordinator(hass)
-    coordinator.device.on_line = "0"
-    # SetCtrlPowerOn is not in the fixture state list; add it directly.
-    power_state = BluettiState(
-        fn_code="SetCtrlPowerOn", fn_name="Power", fn_value="1", fn_type="SWITCH"
-    )
-    coordinator.device.states.append(power_state)
-
-    entity = BluettiSwitch(coordinator.device, power_state)
-
-    assert entity.available is True
-
-
-async def test_select_current_option_and_editability(hass):
-    """Select current option and editability."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.get_state("SetCtrlWorkMode")
-
-    entity = BluettiSelect(coordinator.device, state)
-
-    assert entity.options == ["Standard", "Silent"]
-    assert entity.current_option == "Standard"
-    assert entity._readonly is False
-
-
-async def test_select_readonly_state_keeps_options_populated(hass):
-    """Select readonly state keeps options populated."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.get_state("InvWorkState")
-
-    entity = BluettiSelect(coordinator.device, state)
-
-    assert entity._readonly is True
-    # Options must stay populated so current_option is never reported as
-    # outside of the advertised options list.
-    assert entity.options == ["Idle"]
-    assert entity.current_option == "Idle"
-
-
-async def test_select_readonly_option_cannot_be_changed(hass):
-    """Select readonly option cannot be changed."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.get_state("InvWorkState")
-    entity = BluettiSelect(coordinator.device, state)
-
-    with pytest.raises(ServiceValidationError):
-        await entity.async_select_option("Idle")
-
-
-async def test_select_invalid_option_raises(hass):
-    """Select invalid option raises."""
-    coordinator = _make_coordinator(hass)
-    state = coordinator.device.get_state("SetCtrlWorkMode")
-    entity = BluettiSelect(coordinator.device, state)
-
-    with pytest.raises(ServiceValidationError):
-        await entity.async_select_option("does-not-exist")

@@ -20,6 +20,11 @@ from homeassistant.components.bluetti.modbus_support import modbus_dev_type_for_
         ("EP2000-Garage", "ep2000"),
         ("SMeter", None),
         ("AC200L", None),
+        # Regression test: only the part before the first hyphen (the real
+        # model) is checked, not the whole string by containment - an
+        # unsupported model must not be misclassified just because its
+        # user-set custom name happens to contain a supported model's name.
+        ("AC200L-EP2000", None),
         ("Unknown", None),
         ("", None),
         (None, None),

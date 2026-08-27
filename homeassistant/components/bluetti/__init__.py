@@ -35,9 +35,6 @@ __LOGGER__ = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
-    Platform.SWITCH,
-    Platform.SELECT,
 ]
 
 
@@ -128,11 +125,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
     )
     await stomp_client.connect()
+    # Registered as soon as the connection exists, not after setup fully
+    # succeeds: if a later step below (e.g. a device's first refresh) raises
+    # ConfigEntryNotReady, Home Assistant still runs already-registered
+    # async_on_unload callbacks before retrying setup - without this, each
+    # retry would connect a new client without ever disconnecting the
+    # previous attempt's.
+    entry.async_on_unload(stomp_client.disconnect)
 
     coordinators: dict[str, BluettiDeviceCoordinator] = {}
     for device in bluetti_devices.devices:
         device.bind_runtime(product_client, hass, entry)
-        device.name = device.sn
         coordinators[device.device_id] = BluettiDeviceCoordinator(hass, entry, device)
 
     # Each device's first refresh is an independent network round-trip, so
@@ -208,20 +211,16 @@ async def _async_update_listener(hass: HomeAssistant, entry: BluettiConfigEntry)
 
 async def async_unload_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> bool:
     """Unload a config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    runtime_data = getattr(entry, "runtime_data", None)
-    if unloaded and runtime_data:
-        try:
-            await runtime_data.stomp_client.disconnect()
-        except Exception as e:  # noqa: BLE001 - best-effort disconnect; must not block unload/removal
-            __LOGGER__.warning("Error while disconnecting websocket: %s", e)
-        # No explicit modbus_coordinators shutdown here: DataUpdateCoordinator
-        # (constructed with config_entry=entry) already registers its own
-        # async_shutdown via config_entry.async_on_unload, and the shared
-        # Modbus connection itself is released the same way - async_get_unit
-        # (see modbus_coordinator.py) registers its own release callback via
-        # entry.async_on_unload when the unit is first acquired.
-    return unloaded
+    # No explicit cleanup calls here: the websocket is disconnected by the
+    # async_on_unload callback registered right after it connects in
+    # async_setup_entry (so a failed setup retry cleans it up too, not just
+    # a full unload). DataUpdateCoordinator (constructed with
+    # config_entry=entry) already registers its own async_shutdown via
+    # config_entry.async_on_unload, and the shared Modbus connection is
+    # released the same way - async_get_unit (see modbus_coordinator.py)
+    # registers its own release callback via entry.async_on_unload when the
+    # unit is first acquired.
+    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: BluettiConfigEntry, device_entry: dr.DeviceEntry

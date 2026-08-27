@@ -25,34 +25,6 @@ def _runtime_data(stomp_client) -> BluettiRuntimeData:
     )
 
 
-async def test_unload_entry_disconnects_websocket(hass):
-    """Unload entry disconnects websocket."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    stomp_client = AsyncMock()
-    entry.runtime_data = _runtime_data(stomp_client)
-
-    result = await async_unload_entry(hass, entry)
-
-    assert result is True
-    stomp_client.disconnect.assert_awaited_once()
-
-
-async def test_unload_entry_survives_disconnect_error(hass):
-    """Unload entry survives disconnect error."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    stomp_client = AsyncMock()
-    stomp_client.disconnect.side_effect = RuntimeError("socket already closed")
-    entry.runtime_data = _runtime_data(stomp_client)
-
-    # Must not raise even though disconnect() failed.
-    result = await async_unload_entry(hass, entry)
-    assert result is True
-
-
 async def test_unload_entry_does_not_explicitly_shut_down_modbus_coordinators(hass):
     """Unload entry does not explicitly shut down modbus coordinators."""
     # DataUpdateCoordinator (constructed with config_entry=entry) already

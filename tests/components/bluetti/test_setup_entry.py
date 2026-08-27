@@ -1,32 +1,19 @@
-"""Tests for the async_setup_entry() function of each entity platform."""
+"""Tests for the sensor platform's async_setup_entry()."""
 
 from enum import Enum
 from unittest.mock import MagicMock
 
 from bluetti_modbus_lib.modbus.client import ClientReturnValue
-from pybluetti import UnifyResponse
 
 from homeassistant.components.bluetti import BluettiRuntimeData
-from homeassistant.components.bluetti.binary_sensor import (
-    BluettiBinarySensor,
-    async_setup_entry as binary_sensor_setup_entry,
-)
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
-from homeassistant.components.bluetti.select import (
-    BluettiSelect,
-    async_setup_entry as select_setup_entry,
-)
 from homeassistant.components.bluetti.sensor import (
     BluettiEnergySensor,
     BluettiEstimatedBatteryPowerSensor,
     BluettiModbusSensor,
     BluettiSensor,
     async_setup_entry as sensor_setup_entry,
-)
-from homeassistant.components.bluetti.switch import (
-    BluettiSwitch,
-    async_setup_entry as switch_setup_entry,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
@@ -77,57 +64,14 @@ async def test_sensor_setup_entry_creates_expected_entities(hass):
 
     await sensor_setup_entry(hass, entry, added.extend)
 
-    # SOC + InvWorkState sensors; onLine is a binary_sensor entity, set up by
-    # the binary_sensor platform instead (see test_binary_sensor_setup_entry_*).
+    # SOC + InvWorkState sensors; onLine is a binary_sensor entity, out of
+    # scope for the sensor-only platform this PR adds.
     assert len(added) == 2
     sensors = [e for e in added if isinstance(e, BluettiSensor)]
     assert len(sensors) == 2
-    assert not any(isinstance(e, BluettiBinarySensor) for e in added)
 
     enum_sensor = next(s for s in sensors if s._state_obj.fn_code == "InvWorkState")
     assert enum_sensor.native_value == "Grid"  # exercises the support_mode_values branch
-
-
-async def test_binary_sensor_setup_entry_creates_expected_entities(hass):
-    """Binary sensor setup entry creates expected entities."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[
-            {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "50", "fnType": "SENSOR",
-                "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
-            },
-            {"fnCode": "onLine", "fnName": "Online", "fnValue": "1", "fnType": "SENSOR"},
-        ],
-    )
-    entry = _entry_with_devices(hass, [device])
-    added = []
-
-    await binary_sensor_setup_entry(hass, entry, added.extend)
-
-    assert len(added) == 1
-    binary_sensor = added[0]
-    assert isinstance(binary_sensor, BluettiBinarySensor)
-    assert binary_sensor.is_on is True
-    # entity_id is derived from the platform async_add_entities was invoked
-    # through, not the entity class - domain correctness is exercised by the
-    # real config-entry setup test in test_init.py, this only proves the
-    # entity itself is produced.
-
-
-async def test_binary_sensor_setup_entry_with_no_matching_states_adds_nothing(hass):
-    """Binary sensor setup entry with no matching states adds nothing."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
-    )
-    entry = _entry_with_devices(hass, [device])
-    async_add_entities = MagicMock()
-
-    result = await binary_sensor_setup_entry(hass, entry, async_add_entities)
-
-    assert result is True
-    async_add_entities.assert_not_called()
 
 
 async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(hass):
@@ -264,61 +208,6 @@ async def test_sensor_setup_entry_with_no_matching_states_adds_nothing(hass):
     async_add_entities.assert_not_called()
 
 
-async def test_switch_setup_entry_creates_switch_and_controls_it(hass):
-    """Switch setup entry creates switch and controls it."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
-    )
-    device._api_client = MagicMock()
-    entry = _entry_with_devices(hass, [device])
-    added = []
-
-    await switch_setup_entry(hass, entry, added.extend)
-
-    assert len(added) == 1
-    switch = added[0]
-    assert isinstance(switch, BluettiSwitch)
-    assert switch.is_on is False
-
-    async def fake_control_device(payload):
-        return UnifyResponse(msgId="1", msgCode=0)
-
-    device._api_client.control_device = fake_control_device
-    await switch.async_turn_on()
-    assert switch.is_on is True
-
-    await switch.async_turn_off()
-    assert switch.is_on is False
-
-
-async def test_select_setup_entry_creates_select_and_controls_it(hass):
-    """Select setup entry creates select and controls it."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{
-            "fnCode": "SetCtrlWorkMode", "fnName": "Mode", "fnValue": "0", "fnType": "SELECT",
-            "supportModeValues": [{"code": "0", "name": "Standard"}, {"code": "1", "name": "Silent"}],
-        }],
-    )
-    device._api_client = MagicMock()
-    entry = _entry_with_devices(hass, [device])
-    added = []
-
-    await select_setup_entry(hass, entry, added.extend)
-
-    assert len(added) == 1
-    select = added[0]
-    assert isinstance(select, BluettiSelect)
-
-    async def fake_control_device(payload):
-        return UnifyResponse(msgId="1", msgCode=0)
-
-    device._api_client.control_device = fake_control_device
-    await select.async_select_option("Silent")
-    assert select.current_option == "Silent"
-
-
 async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_device(hass):
     """Sensor setup entry creates modbus sensors grouped with cloud device."""
 
@@ -351,6 +240,10 @@ async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_devi
         "g_i_f": ClientReturnValue(name="g_i_f", unit="Hz", value=50.0),
     }
     modbus_coordinator = MagicMock(data=fields)
+    # Entities are created from the device's declared fields (see sensor.py),
+    # not from modbus_coordinator.data directly - independent of whether the
+    # coordinator has completed a poll yet.
+    modbus_coordinator.device.field_names.return_value = list(fields.keys())
 
     entry = _entry_with_devices(hass, [device], modbus_coordinators={"SN1": modbus_coordinator})
     added = []
@@ -374,6 +267,36 @@ async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_devi
     assert modbus_sensors["b_cycle_count"].native_value is None
 
 
+async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_completed(hass):
+    """Modbus sensors are created even when the first poll hasn't completed.
+
+    Regression test: local Modbus is optional/supplementary, so a failed or
+    still-pending first refresh must not prevent entities from ever being
+    created - entities must come from the device's declared fields, not
+    from whatever the coordinator happened to have read by the time setup
+    runs once.
+    """
+    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260")
+    modbus_coordinator = MagicMock(data=None)
+    modbus_coordinator.device.field_names.return_value = ["b_soc_high"]
+
+    entry = _entry_with_devices(hass, [device], modbus_coordinators={"SN1": modbus_coordinator})
+    added = []
+
+    await sensor_setup_entry(hass, entry, added.extend)
+
+    modbus_sensors = [s for s in added if isinstance(s, BluettiModbusSensor)]
+    assert len(modbus_sensors) == 1
+    assert modbus_sensors[0].native_value is None
+    assert modbus_sensors[0].native_unit_of_measurement is None
+
+    # Once the coordinator's next poll actually succeeds, the same
+    # already-created entity picks up the real value and unit.
+    modbus_coordinator.data = {"b_soc_high": ClientReturnValue(name="b_soc_high", unit="%", value=100)}
+    assert modbus_sensors[0].native_value == 100
+    assert modbus_sensors[0].native_unit_of_measurement == "%"
+
+
 async def test_sensor_setup_entry_skips_modbus_coordinator_for_unknown_device(hass):
     """Sensor setup entry skips modbus coordinator for unknown device."""
     entry = _entry_with_devices(hass, [], modbus_coordinators={"UNKNOWN_SN": MagicMock(data={})})
@@ -385,15 +308,3 @@ async def test_sensor_setup_entry_skips_modbus_coordinator_for_unknown_device(ha
     assert added == []
 
 
-async def test_select_setup_entry_ignores_states_without_modes(hass):
-    """Select setup entry ignores states without modes."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
-    )
-    entry = _entry_with_devices(hass, [device])
-    async_add_entities = MagicMock()
-
-    await select_setup_entry(hass, entry, async_add_entities)
-
-    async_add_entities.assert_not_called()

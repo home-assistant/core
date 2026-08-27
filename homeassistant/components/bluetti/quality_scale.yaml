@@ -17,6 +17,12 @@ rules:
   docs-actions:
     status: exempt
     comment: No custom service actions are provided by this integration.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -63,23 +69,32 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: >-
+      A newly bound BLUETTI account device does not show up automatically -
+      the user must open the options flow and select it. The rule requires
+      fully automatic detection and entity creation with no user
+      interaction; a previous "done" claim here didn't hold up against the
+      rule's own documentation.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
+  entity-disabled-by-default: done
+  # ^ Modbus-sourced diagnostic-category sensors set
+  #   _attr_entity_registry_enabled_default = False (see sensor.py's
+  #   BluettiModbusSensor.__init__) - the rule has no exceptions, so a
+  #   previous "exempt" claim here (on the theory that no entity qualified)
+  #   didn't hold up once actually checked against the rule's own text.
+  entity-translations:
+    status: todo
     comment: >-
-      The entity set is small and deliberate; every entity is a primary
-      measurement or control, not diagnostic noise, so none warrant being
-      disabled by default.
-  entity-translations: done
-  # ^ Cloud-sourced entities remain untranslated by necessity: their names
-  #   are provided dynamically by the BLUETTI cloud API per device/firmware
-  #   (fnName), not static strings known at development time (see entity.py).
-  #   Modbus-sourced entities (modbus_entity.py) use field names from
-  #   bluetti_modbus_lib, which ARE known at development time, and do carry
-  #   real translation_key/strings.json entries - satisfying this rule for
-  #   the portion of the integration where it's actually possible.
+      Cloud-sourced entities remain untranslated: their names are provided
+      dynamically by the BLUETTI cloud API per device/firmware (fnName), not
+      static strings known at development time (see entity.py). The rule
+      has no exceptions for this - a previous "done" claim treated the
+      Modbus-sourced entities' real translations (which do satisfy the rule
+      for their own portion) as sufficient for the whole integration, which
+      the rule's own text doesn't support.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

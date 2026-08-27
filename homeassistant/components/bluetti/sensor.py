@@ -158,7 +158,13 @@ async def async_setup_entry(
         modbus_device = bluetti_devices.get_device_by_sn(device_id)
         if modbus_device is None:
             continue
-        for field_name in modbus_coordinator.data or {}:
+        # Entities are created from the device's declared fields, not from
+        # modbus_coordinator.data - the optional startup refresh is allowed
+        # to fail (see the async_refresh()-not-first_refresh() comment in
+        # __init__.py), and setup only runs once, so entities keyed off
+        # data that isn't there yet would never get created once the
+        # coordinator's next poll actually succeeds.
+        for field_name in modbus_coordinator.device.field_names():
             if field_name in MODBUS_FIELDS_DUPLICATING_CLOUD:
                 continue
             entities.append(BluettiModbusSensor(modbus_device, modbus_coordinator, field_name))
@@ -335,9 +341,6 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
         """Initialize the sensor from its owning device and Modbus field name."""
         super().__init__(device, coordinator, field_name)
 
-        field: ClientReturnValue | None = (coordinator.data or {}).get(field_name)
-        self._attr_native_unit_of_measurement = field.unit if field else None
-
         metadata = modbus_metadata_for(field_name)
         if metadata.device_class:
             self._attr_device_class = metadata.device_class
@@ -353,6 +356,16 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
                 if metadata.category == EntityCategory.CONFIG
                 else metadata.category
             )
+            # Diagnostic entities are exactly the "less popular, noisy"
+            # candidates this rule targets - most users never need to see
+            # them, but can still opt in from the entity's settings.
+            self._attr_entity_registry_enabled_default = False
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the field's unit, once the coordinator has actually read it."""
+        field: ClientReturnValue | None = (self.coordinator.data or {}).get(self._field_name)
+        return field.unit if field else None
 
     @property
     def native_value(self) -> str | float | None:

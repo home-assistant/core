@@ -32,10 +32,9 @@ class BluettiData:
             BluettiDevice(
                 device_id=dev.sn,
                 on_line=dev.online or "0",
-                # Overwritten with dev.sn again right after construction
-                # (see __init__.py's coordinator setup loop) - matching
-                # that fallback here too keeps this constructor honest
-                # about the type the cloud actually promises (str | None).
+                # Falls back to the serial only when the cloud doesn't
+                # report a name at all - dev.name is `str | None` on the
+                # wire, and the serial is the only thing guaranteed present.
                 name=dev.name or dev.sn,
                 sn=dev.sn,
                 model=dev.model or "Unknown",
@@ -208,8 +207,20 @@ class BluettiDevice:
         # control_device() returns a plain str for a non-JSON server
         # response - not expected in practice, but unlike UnifyResponse it
         # has no .msgCode, so it must be ruled out before checking success.
-        if isinstance(result, UnifyResponse) and result.msgCode == 0:
-            state.set_value(value)
+        # A rejected command (nonzero msgCode, or a non-JSON response) must
+        # not look like success to the caller - the request reached the
+        # cloud fine, but the device's actual state never changed, and an
+        # automation or the UI would otherwise report the action as done.
+        if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_rejected",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                    "error": str(result),
+                },
+            )
+        state.set_value(value)
 
         if self.coordinator:
             self.coordinator.async_set_updated_data(self)
