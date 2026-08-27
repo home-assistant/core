@@ -2,6 +2,7 @@
 
 from asyncio import Event
 from datetime import datetime
+from itertools import chain
 from unittest.mock import ANY, patch
 
 import pytest
@@ -9,6 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.sensor import (
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
+)
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -1953,7 +1958,13 @@ async def test_attributes_template(
     )
 
 
-@pytest.mark.parametrize("attribute", ["device_class"])
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        *list(chain(SensorEntityCapabilityAttribute, SensorEntityStateAttribute)),
+        "device_class",
+    ],
+)
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )

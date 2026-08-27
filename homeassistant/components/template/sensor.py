@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -70,7 +72,10 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(SensorEntityCapabilityAttribute, SensorEntityStateAttribute),
+    device_class=True,
+)
 
 SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
