@@ -29,6 +29,7 @@ from .conftest import TEST_API_NAME
 
 from tests.common import MockConfigEntry
 
+TEST_ENTRY_ID = "01JZABCDEFGHIJKLMNOPQRSTUV"
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
     description="Search memory for relevant context based on a query.",
@@ -737,13 +738,28 @@ async def test_sse_client_does_not_build_ssl_context(
     await client.aclose()
 
 
-async def test_llm_api_id_from_app_slug(
-    hass: HomeAssistant, mock_mcp_client: Mock
+@pytest.mark.parametrize(
+    ("entry_data", "expected_api_id"),
+    [
+        pytest.param({}, f"mcp-{TEST_ENTRY_ID}", id="manual"),
+        pytest.param({CONF_SLUG: "a0d7b954_mcp"}, "mcp-a0d7b954_mcp", id="discovered"),
+    ],
+)
+async def test_llm_api_id(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    entry_data: dict[str, str],
+    expected_api_id: str,
 ) -> None:
-    """Test a discovered server uses the app slug for the LLM API id."""
+    """Test the LLM API id of a discovered server is stable across a reinstall.
+
+    A reinstall of the app creates a new config entry, so the id of a
+    discovered server is based on the app slug instead of the entry id.
+    """
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        entry_id=TEST_ENTRY_ID,
+        data={CONF_URL: "http://1.1.1.1/mcp", **entry_data},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)
@@ -756,4 +772,4 @@ async def test_llm_api_id_from_app_slug(
 
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
-    assert api.id == "mcp-a0d7b954_mcp"
+    assert api.id == expected_api_id

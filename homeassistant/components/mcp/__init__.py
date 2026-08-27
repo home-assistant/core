@@ -72,8 +72,6 @@ async def async_setup_entry(
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
     await coordinator.async_config_entry_first_refresh()
 
-    # A discovered server is identified by the app slug, so that the API id
-    # survives the app being reinstalled.
     api_id = f"{DOMAIN}-{entry.data.get(CONF_SLUG, entry.entry_id)}"
     unsub = llm.async_register_api(
         hass,
