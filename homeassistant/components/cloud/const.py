@@ -18,6 +18,7 @@ DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
 DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")
+# In memory only, so a restart drops the registration and the user signs in by hand.
 DATA_PENDING_AUTO_LOGIN: HassKey[AutoLoginController | None] = HassKey(
     "cloud_pending_auto_login"
 )

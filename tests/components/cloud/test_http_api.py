@@ -1347,6 +1347,34 @@ async def test_resend_auto_login_confirm_error(
 
 
 @pytest.mark.usefixtures("setup_cloud")
+async def test_auto_login_failed_pushed_without_pending(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the give-up push does not depend on core still tracking a registration."""
+    cloud.id_token = None
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/subscribe_events"})
+    assert (await client.receive_json())["success"]
+
+    await cloud.events.publish(
+        LoginFailedEvent(auto=True, reason=LoginFailedReason.TIMEOUT)
+    )
+
+    event = await client.receive_json()
+    assert event["id"] == 5
+    assert event["event"] == {
+        "type": "auto_login_failed",
+        "translation_key": "auto_login_failed_timeout",
+    }
+
+    status = await get_cloud_status(client, 6)
+    assert status["auto_login"] is None
+
+
+@pytest.mark.usefixtures("setup_cloud")
 async def test_resend_auto_login_confirm_timeout(
     hass: HomeAssistant,
     cloud: MagicMock,
