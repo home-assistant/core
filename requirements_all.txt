@@ -1256,7 +1256,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.6.0
+hass-nabucasa==2.7.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -3081,7 +3081,7 @@ simplehound==0.3
 simplepush==2.2.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2024.01.0
+simplisafe-python==2026.06.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.4

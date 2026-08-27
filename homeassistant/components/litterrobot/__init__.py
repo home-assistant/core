@@ -6,8 +6,13 @@ import logging
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -82,6 +87,16 @@ async def async_migrate_entry(
 async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
+
+    # Entries are not unloaded at shutdown, and the first refresh already starts
+    # the account's WebSocket monitor.
+    async def _async_disconnect_account(event: Event) -> None:
+        await coordinator.account.disconnect()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_account)
+    )
+
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
