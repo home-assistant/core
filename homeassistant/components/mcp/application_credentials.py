@@ -3,9 +3,14 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 import contextvars
+from typing import override
 
-from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.components.application_credentials import (
+    AuthorizationServer,
+    ClientCredential,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 
 CONF_ACTIVE_AUTHORIZATION_SERVER = "active_authorization_server"
 
@@ -27,7 +32,46 @@ def authorization_server_context(
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
-    """Return authorization server, for the default auth implementation."""
-    if _mcp_context.get() is None:
+    """Return the active authorization server."""
+    authorization_server = _mcp_context.get(None)
+    if authorization_server is None:
         raise RuntimeError("No MCP authorization server set in context")
-    return _mcp_context.get()
+    return authorization_server
+
+
+class MCPAuthImplementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce):
+    """OAuth2 implementation for MCP servers, with PKCE required by the MCP OAuth profile."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
+        authorization_server: AuthorizationServer,
+    ) -> None:
+        """Initialize MCPAuthImplementation."""
+        super().__init__(
+            hass,
+            auth_domain,
+            credential.client_id,
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+            client_secret=credential.client_secret,
+        )
+        self._name = credential.name
+
+    @property
+    @override
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self._name or self.client_id
+
+
+async def async_get_auth_implementation(
+    hass: HomeAssistant,
+    auth_domain: str,
+    credential: ClientCredential,
+) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+    """Return the OAuth2 implementation for the active MCP authorization server."""
+    authorization_server = await async_get_authorization_server(hass)
+    return MCPAuthImplementation(hass, auth_domain, credential, authorization_server)
