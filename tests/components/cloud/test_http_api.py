@@ -14,6 +14,7 @@ from freezegun.api import FrozenDateTimeFactory
 from hass_nabucasa import (
     AlreadyConnectedError,
     AuthTimeoutError,
+    AutoLoginController,
     LoginFailedEvent,
     LoginFailedReason,
 )
@@ -38,7 +39,11 @@ from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
-from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
+from homeassistant.components.cloud.const import (
+    DATA_PENDING_AUTO_LOGIN,
+    DEFAULT_EXPOSED_DOMAINS,
+    DOMAIN,
+)
 from homeassistant.components.cloud.http_api import validate_language_voice
 from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
@@ -824,9 +829,18 @@ async def register_auto_login(
     assert req.status == HTTPStatus.OK
 
 
-async def fail_auto_login(cloud: MagicMock, reason: LoginFailedReason) -> None:
+def pending_controller(hass: HomeAssistant) -> AutoLoginController:
+    """Return the controller core is holding for the pending registration."""
+    controller = hass.data[DATA_PENDING_AUTO_LOGIN]
+    assert controller is not None
+    return controller
+
+
+async def fail_auto_login(
+    hass: HomeAssistant, cloud: MagicMock, reason: LoginFailedReason
+) -> None:
     """Give up on the pending auto-login the way hass_nabucasa does."""
-    controller = cloud.register_and_auto_login.return_value
+    controller = pending_controller(hass)
     controller.failed_reason = reason
     controller.active = False
     await cloud.events.publish(LoginFailedEvent(auto=True, reason=reason))
@@ -888,12 +902,19 @@ async def test_register_auto_login_already_given_up(
     the LOGIN_FAILED event fired before there was anything to store.
     """
     cloud.id_token = None
-    controller = cloud.register_and_auto_login.return_value
-    cloud.register_and_auto_login.side_effect = None
-    controller.email = "hello@bla.com"
-    controller.active = False
-    controller.failed_reason = LoginFailedReason.TIMEOUT
 
+    def give_up_immediately(*args: Any, **kwargs: Any) -> AutoLoginController:
+        """Return a controller whose retry loop has already given up."""
+        return AutoLoginController(
+            email="hello@bla.com",
+            cancel=MagicMock(),
+            attempt_now=MagicMock(),
+            resend=AsyncMock(),
+            active=False,
+            failed_reason=LoginFailedReason.TIMEOUT,
+        )
+
+    cloud.register_and_auto_login.side_effect = give_up_immediately
     await register_auto_login(hass_client)
 
     client = await hass_ws_client(hass)
@@ -919,11 +940,16 @@ async def test_register_auto_login_replaces_pending(
     """Test a second registration takes over from the first."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    await register_auto_login(hass_client, email="second@bla.com")
+    first = pending_controller(hass)
 
-    assert cloud.register_and_auto_login.call_count == 2
+    await register_auto_login(hass_client, email="second@bla.com")
+    second = pending_controller(hass)
+
+    assert second is not first
+    assert first.email == "hello@bla.com"
+    assert second.email == "second@bla.com"
     # hass_nabucasa cancels the superseded retry loop itself.
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
+    assert first.cancel.call_count == 0
 
     client = await hass_ws_client(hass)
     status = await get_cloud_status(client, 5)
@@ -998,13 +1024,14 @@ async def test_cancel_auto_login(
     """Test cancelling a pending auto-login."""
     cloud.id_token = None
     await register_auto_login(hass_client)
+    controller = pending_controller(hass)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/cancel_auto_login"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 1
+    assert controller.cancel.call_count == 1
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None
@@ -1067,8 +1094,8 @@ async def test_auto_login_command_without_pending(
     # The frontend renders the message from the translation key, not the text.
     assert response["error"]["translation_domain"] == DOMAIN
     assert response["error"]["translation_key"] == "no_pending_auto_login"
-    controller = cloud.register_and_auto_login.return_value
-    assert getattr(controller, controller_method).call_count == 0
+    assert hass.data[DATA_PENDING_AUTO_LOGIN] is None
+    cloud.register_and_auto_login.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -1107,7 +1134,7 @@ async def test_auto_login_failure_pushed(
     response = await client.receive_json()
     assert response["success"]
 
-    await fail_auto_login(cloud, reason)
+    await fail_auto_login(hass, cloud, reason)
 
     event = await client.receive_json()
     assert event["id"] == 5
@@ -1142,7 +1169,7 @@ async def test_auto_login_command_after_failure(
     """Test the retry commands are refused once the retry loop gave up."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    await fail_auto_login(cloud, LoginFailedReason.TIMEOUT)
+    await fail_auto_login(hass, cloud, LoginFailedReason.TIMEOUT)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": command})
@@ -1163,7 +1190,7 @@ async def test_cancel_auto_login_after_failure(
     """Test the failed registration can be dismissed."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    await fail_auto_login(cloud, LoginFailedReason.TIMEOUT)
+    await fail_auto_login(hass, cloud, LoginFailedReason.TIMEOUT)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/cancel_auto_login"})
@@ -1277,13 +1304,14 @@ async def test_logout_clears_auto_login(
     """Test logging out clears a pending auto-login."""
     cloud.id_token = None
     await register_auto_login(hass_client)
+    controller = pending_controller(hass)
 
     cloud_client = await hass_client()
     req = await cloud_client.post("/api/cloud/logout")
 
     assert req.status == HTTPStatus.OK
     # The library cancels the auto-login task on logout itself.
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
+    assert controller.cancel.call_count == 0
 
     client = await hass_ws_client(hass)
     status = await get_cloud_status(client, 5)
@@ -1309,7 +1337,7 @@ async def test_auto_login_command_keeps_pending(
     """Test forcing an attempt or resending the mail leaves the retry loop alone."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    controller = cloud.register_and_auto_login.return_value
+    controller = pending_controller(hass)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": command})
@@ -1332,9 +1360,8 @@ async def test_resend_auto_login_confirm_error(
 ) -> None:
     """Test a failing resend of the confirmation email."""
     cloud.id_token = None
-    controller = cloud.register_and_auto_login.return_value
-    controller.resend.side_effect = UnknownError
     await register_auto_login(hass_client)
+    pending_controller(hass).resend.side_effect = UnknownError
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
@@ -1383,9 +1410,8 @@ async def test_resend_auto_login_confirm_timeout(
 ) -> None:
     """Test a resend that never comes back is reported as a gateway timeout."""
     cloud.id_token = None
-    controller = cloud.register_and_auto_login.return_value
-    controller.resend.side_effect = TimeoutError
     await register_auto_login(hass_client)
+    pending_controller(hass).resend.side_effect = TimeoutError
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
@@ -1408,13 +1434,14 @@ async def test_remove_data_cancels_auto_login(
     """Test removing the cloud data cancels a pending auto-login."""
     cloud.id_token = None
     await register_auto_login(hass_client)
+    controller = pending_controller(hass)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/remove_data"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 1
+    assert controller.cancel.call_count == 1
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None
@@ -1431,6 +1458,7 @@ async def test_remove_data_logged_in_keeps_auto_login(
     id_token = cloud.id_token
     cloud.id_token = None
     await register_auto_login(hass_client)
+    controller = pending_controller(hass)
     cloud.id_token = id_token
 
     client = await hass_ws_client(hass)
@@ -1440,7 +1468,7 @@ async def test_remove_data_logged_in_keeps_auto_login(
     assert not response["success"]
     assert response["error"]["code"] == "logged_in"
     cloud.remove_data.assert_not_called()
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
+    assert controller.cancel.call_count == 0
 
 
 @pytest.mark.usefixtures("setup_cloud")
@@ -1454,6 +1482,7 @@ async def test_remove_data_failure_still_cancels_auto_login(
     cloud.id_token = None
     cloud.remove_data.side_effect = ValueError("Cloud not stopped")
     await register_auto_login(hass_client)
+    controller = pending_controller(hass)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/remove_data"})
@@ -1461,7 +1490,7 @@ async def test_remove_data_failure_still_cancels_auto_login(
 
     assert not response["success"]
     # Cancelled before the wipe starts, so no login can land on erased data.
-    assert cloud.register_and_auto_login.return_value.cancel.call_count == 1
+    assert controller.cancel.call_count == 1
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None

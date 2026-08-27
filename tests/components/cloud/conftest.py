@@ -102,12 +102,6 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             ),
         )
         mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
-        auto_login_controller = AutoLoginController(
-            email="",
-            cancel=MagicMock(),
-            attempt_now=MagicMock(),
-            resend=AsyncMock(),
-        )
 
         def mock_register_and_auto_login(
             email: str,
@@ -115,17 +109,22 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             *,
             client_metadata: dict[str, str] | None = None,
         ) -> AutoLoginController:
-            """Mock registering, handing back a freshly started controller."""
+            """Mock registering, handing back a freshly started controller.
+
+            A distinct controller per call, like the real Cloud, so a test can tell a
+            replaced registration from one that was left in place.
+            """
             if mock_cloud.is_logged_in:
                 raise AlreadyLoggedIn(
                     "Cannot register and auto-login while already logged in."
                 )
-            auto_login_controller.email = email.lower()
-            auto_login_controller.active = True
-            auto_login_controller.failed_reason = None
-            return auto_login_controller
+            return AutoLoginController(
+                email=email.lower(),
+                cancel=MagicMock(),
+                attempt_now=MagicMock(),
+                resend=AsyncMock(),
+            )
 
-        mock_cloud.register_and_auto_login.return_value = auto_login_controller
         mock_cloud.register_and_auto_login.side_effect = mock_register_and_auto_login
 
         def set_up_mock_cloud(
