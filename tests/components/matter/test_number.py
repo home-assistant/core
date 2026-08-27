@@ -32,6 +32,50 @@ async def test_numbers(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
+async def test_on_time(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the OnTime number, which drives the device-side auto-off."""
+    entity_id = "number.mock_onoffpluginunit_on_time"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0"
+
+    # The device reports tenths of a second and decrements them ten times a
+    # second, so the entity deliberately renders whole seconds.
+    set_node_attribute(matter_node, 1, 6, 0x4001, 1234)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "123"
+
+    # Writing goes the other way: seconds in, tenths on the wire.
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 300,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OnOff.Attributes.OnTime,
+        ),
+        value=3000,
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_level_control_config_entities(
     hass: HomeAssistant,

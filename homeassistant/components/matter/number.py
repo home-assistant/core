@@ -271,6 +271,34 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
+            key="on_time",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="on_time",
+            device_class=NumberDeviceClass.DURATION,
+            # OnTime is a uint16 in tenths of a second, so 6553 whole seconds
+            # is the largest value that still fits when converted back.
+            native_max_value=6553,
+            native_min_value=0,
+            # Deliberately whole seconds: while a countdown runs the device
+            # decrements this attribute ten times a second and reports every
+            # step, so a tenth-of-a-second resolution would rewrite entity
+            # state at 10 Hz. Seconds keep sub-minute timeouts usable at one
+            # state change per second.
+            device_to_ha=lambda x: None if x is None else x // 10,
+            ha_to_device=lambda x: int(x) * 10,
+            native_step=1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        # OnTime is mandatory when (and only when) the cluster has the Lighting
+        # feature, which is what makes the device time itself out.
+        required_attributes=(clusters.OnOff.Attributes.OnTime,),
+        featuremap_contains=clusters.OnOff.Bitmaps.Feature.kLighting,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
             key="EveWeatherAltitude",
             device_class=NumberDeviceClass.DISTANCE,
             entity_category=EntityCategory.CONFIG,
