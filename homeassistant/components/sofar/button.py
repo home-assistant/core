@@ -4,17 +4,14 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from modbus_connection import ModbusError
 from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.variants import HYBRID, PV, InverterType, matches
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -74,13 +71,6 @@ class SofarButton(SofarEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        try:
-            await self.entity_description.press_fn(self.coordinator.device)
-        except ModbusError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.entity_description.press_fn(self.coordinator.device)
         if self.entity_description.refresh_after:
             await self.coordinator.async_request_refresh()
