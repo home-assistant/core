@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Final, override
 
 from homeassistant.components.water_heater import (
-    STATE_ELECTRIC,
     STATE_GAS,
+    STATE_HEAT_PUMP,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
