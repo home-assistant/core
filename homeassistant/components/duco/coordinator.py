@@ -206,9 +206,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     "Could not fetch Duco ventilation temperatures", exc_info=err
                 )
 
-        bypass_supply_temperature_targets = (
-            self.data.bypass_supply_temperature_targets.copy() if self.data else {}
-        )
+        bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget] = {}
         if self._supports_bypass_supply_temperature_targets:
             try:
                 bypass_supply_temperature_targets = (

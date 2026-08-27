@@ -7,12 +7,13 @@ from duco_connectivity import (
     BypassSupplyTemperatureTarget,
     DucoError,
     DucoRateLimitError,
+    Node,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, SCAN_INTERVAL
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -92,6 +93,32 @@ async def test_bypass_supply_temperature_targets_missing_skips_number_creation(
     assert hass.states.get(_ZONE_2_ENTITY_ID) is None
 
 
+async def test_bypass_supply_temperature_targets_wait_for_box_node(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+) -> None:
+    """Test bypass target discovery retries when the box node is initially missing."""
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_nodes if node.node_id != BOX_NODE_ID
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    assert hass.states.get(_ZONE_1_ENTITY_ID) is None
+    assert hass.states.get(_ZONE_2_ENTITY_ID) is None
+
+    mock_duco_client.async_get_nodes.return_value = mock_nodes
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(_ZONE_1_ENTITY_ID) is not None
+    assert hass.states.get(_ZONE_2_ENTITY_ID) is not None
+
+
 @pytest.mark.parametrize(
     "field",
     [
@@ -131,7 +158,7 @@ async def test_set_bypass_supply_temperature_target(
         blocking=True,
     )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
         1, 20.5
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
@@ -162,7 +189,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
         blocking=True,
     )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
         1, 20.5
     )
 
@@ -202,7 +229,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         blocking=True,
     )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
         1, 20.5
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
@@ -234,7 +261,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
         blocking=True,
     )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
         1, 24.5
     )
 
@@ -326,9 +353,7 @@ async def test_set_bypass_supply_temperature_target_error(
     match: str,
 ) -> None:
     """Test write failures raise translated Home Assistant errors."""
-    mock_duco_client.async_set_bypass_supply_temperature_target = AsyncMock(
-        side_effect=exception
-    )
+    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = exception
 
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
