@@ -1127,3 +1127,49 @@ async def test_public_only_entry_skipped(
 
     source = await async_get_media_source(hass)
     assert source.data_sources == {}
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_before_recording_started(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month that is entirely before recording started."""
+    start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:2"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title.endswith("February 2022")
+    assert browse.identifier == base_id
+    # Every child must belong to the month that was asked for, not to the
+    # month recording happens to have started in.
+    for child in browse.children:
+        assert child.identifier.startswith(f"{base_id}:")
+
+
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
+async def test_browse_media_month_without_recording_start(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test browsing a month when the console reports no recording start."""
+    # Falls back to the earliest camera recording, so clear that as well.
+    doorbell.stats.video.recording_start = None
+    ufp.api.bootstrap._recording_start = None
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all:range:2022:9"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.identifier == base_id
