@@ -37,7 +37,7 @@ async def test_not_supported(hass: HomeAssistant) -> None:
     with patch(MODULE, return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_onboarding(hass: HomeAssistant) -> None:
@@ -58,4 +58,4 @@ async def test_onboarding_not_supported(hass: HomeAssistant) -> None:
             context={"source": "onboarding"},
         )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == "no_devices_found"
