@@ -4,7 +4,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from pybluetti import UserProduct
+from pybluetti import UnifyResponse, UserProduct
 import pytest
 
 from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
@@ -37,6 +37,7 @@ async def test_new_entry_products_are_json_serializable(hass: HomeAssistant) -> 
     flow = _make_flow(hass)
     flow._products = [UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")]
     flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
 
     result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 
@@ -52,6 +53,7 @@ async def test_new_entry_gets_account_unique_id(hass: HomeAssistant) -> None:
     flow = _make_flow(hass)
     flow._products = [UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")]
     flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
 
     await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 
@@ -78,6 +80,7 @@ async def test_merge_into_existing_entry_by_unique_id(hass: HomeAssistant) -> No
         UserProduct(sn="SN1", name="New Device", stateList=[], online="1")
     ]
     flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
 
     # _abort_if_unique_id_configured() raises AbortFlow directly (the real
     # flow manager catches this and turns it into the {"type": "abort", ...}
@@ -115,6 +118,7 @@ async def test_legacy_entry_without_unique_id_is_adopted(hass: HomeAssistant) ->
         UserProduct(sn="SN1", name="New Device", stateList=[], online="1")
     ]
     flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
 
     with (
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -134,6 +138,26 @@ async def test_bind_devices_failure_aborts_cannot_connect(hass: HomeAssistant) -
     flow = _make_flow(hass)
     flow._product_client = AsyncMock()
     flow._product_client.bind_devices.side_effect = RuntimeError("boom")
+
+    result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_bind_devices_rejected_response_aborts_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """A rejected bind (nonzero msgCode) must not be treated as success.
+
+    Regression test: bind_devices() returns UnifyResponse | str and does not
+    raise on a rejected bind - previously this fell through and created the
+    entry as though the devices were actually bound.
+    """
+    flow = _make_flow(hass)
+    flow._products = [UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=1)
 
     result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 

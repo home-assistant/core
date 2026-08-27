@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.exceptions import ModbusConnectionError
-from pybluetti import UserProduct
+from pybluetti import UnifyResponse, UserProduct
 
 from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
 from homeassistant.components.bluetti.const import DOMAIN
@@ -169,6 +169,7 @@ async def test_submit_binds_and_merges_devices_and_products(
     )
     flow = _flow(hass, entry)
     flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
     flow._products = [
         UserProduct(sn="SN2", name="New Device", stateList=[], online="1")
     ]
@@ -191,6 +192,26 @@ async def test_submit_bind_failure_aborts_cannot_connect(hass: HomeAssistant) ->
     flow = _flow(hass, entry)
     flow._product_client = AsyncMock()
     flow._product_client.bind_devices.side_effect = RuntimeError("boom")
+
+    result = await flow.async_step_init(user_input={"devices": ["SN1"]})
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_submit_bind_rejected_response_aborts_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """A rejected bind (nonzero msgCode) must not be treated as success.
+
+    Regression test: bind_devices() returns UnifyResponse | str and does not
+    raise on a rejected bind - previously this fell through and persisted
+    the devices as though binding succeeded.
+    """
+    entry = _entry(hass)
+    flow = _flow(hass, entry)
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=1)
 
     result = await flow.async_step_init(user_input={"devices": ["SN1"]})
 
@@ -542,7 +563,9 @@ async def test_add_devices_through_real_flow_manager_preserves_modbus(
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=products)
         )
-        mock_client_cls.return_value.bind_devices = AsyncMock()
+        mock_client_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
+        )
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] == "menu"

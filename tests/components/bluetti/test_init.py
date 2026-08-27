@@ -66,7 +66,16 @@ async def test_remove_entry_cleans_up_device_and_entity_registries(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Remove entry cleans up device and entity registries."""
+    """Removing the entry cleans up its devices and entities.
+
+    Driven through hass.config_entries.async_remove() rather than calling
+    async_remove_entry() directly: this integration's own hook no longer
+    does this cleanup itself (that would risk deleting a device merged with
+    another integration's - see async_remove_entry's docstring) and relies
+    entirely on Core's own post-removal device_registry/entity_registry
+    async_clear_config_entry(), which only runs as part of the real removal
+    pipeline, not from calling the hook in isolation.
+    """
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = _runtime_data(MagicMock())
@@ -79,7 +88,7 @@ async def test_remove_entry_cleans_up_device_and_entity_registries(
         model="AC200L",
     )
     # Deliberately not linked to device_entry: device removal cascades to
-    # its own entities, so this checks the explicit entity cleanup loop.
+    # its own entities, so this checks entity cleanup independently too.
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -87,7 +96,7 @@ async def test_remove_entry_cleans_up_device_and_entity_registries(
         config_entry=entry,
     )
 
-    await async_remove_entry(hass, entry)
+    await hass.config_entries.async_remove(entry.entry_id)
 
     assert (
         device_registry.async_get_device_by_identifier((DOMAIN, "SN1"), entry.entry_id)

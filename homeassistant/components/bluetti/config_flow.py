@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from pybluetti import ProductClient
+from pybluetti import ProductClient, UnifyResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
@@ -62,11 +62,19 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
         """Let user select devices after OAuth2 login."""
         if user_input is not None:
             try:
-                await self._product_client.bind_devices(
+                result = await self._product_client.bind_devices(
                     {"bindSnList": user_input["devices"]}
                 )
             except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
+                return self.async_abort(reason="cannot_connect")
+
+            # bind_devices() returns a plain str for a non-JSON server
+            # response, and a nonzero msgCode without raising - either way
+            # the devices were not actually bound, so this must not fall
+            # through and create/update the entry as though it succeeded.
+            if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
+                __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
                 return self.async_abort(reason="cannot_connect")
 
             # Prevent configuring the same BLUETTI account twice: look up any

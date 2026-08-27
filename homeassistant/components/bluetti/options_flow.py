@@ -12,7 +12,7 @@ from typing import Any
 from bluetti_modbus_lib import get_device
 from modbus_connection import ModbusTcpParams
 from modbus_connection.exceptions import ModbusError
-from pybluetti import ProductClient, UserProduct
+from pybluetti import ProductClient, UnifyResponse, UserProduct
 import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -76,9 +76,19 @@ class BluettiOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             selected = user_input["devices"]
             try:
-                await self._product_client.bind_devices({"bindSnList": selected})
+                result = await self._product_client.bind_devices(
+                    {"bindSnList": selected}
+                )
             except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
+                return self.async_abort(reason="cannot_connect")
+
+            # bind_devices() returns a plain str for a non-JSON server
+            # response, and a nonzero msgCode without raising - either way
+            # the devices were not actually bound, so this must not fall
+            # through and persist them as though it succeeded.
+            if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
+                __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
                 return self.async_abort(reason="cannot_connect")
 
             current_devices = entry.options.get("devices", [])
