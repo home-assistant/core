@@ -315,7 +315,7 @@ async def setup_test_component(
 
 
 async def assert_devices_and_entities_created(
-    hass: HomeAssistant, expected: DeviceTestInfo
+    hass: HomeAssistant, config_entry_id: str, expected: DeviceTestInfo
 ):
     """Check all expected devices and entities are loaded correctly."""
     entity_registry = er.async_get(hass)
@@ -337,8 +337,8 @@ async def assert_devices_and_entities_created(
         #   This is only set when we have detected broken serial numbers
         #   (and serial number is not used as an identifier).
 
-        device = device_registry.async_get_device(
-            identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (IDENTIFIER_ACCESSORY_ID, expected.unique_id), config_entry_id
         )
 
         logger.debug("Comparing device %r to %r", device, expected)

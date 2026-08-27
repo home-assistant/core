@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, override
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
+from uiprotect.data.public_devices import SensorFeatureCapability
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -28,6 +29,7 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_ufp_instance_command
 
@@ -72,6 +74,7 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         key="clear_tamper",
         translation_key="clear_tamper",
         ufp_press="clear_tamper",
+        ufp_capability=SensorFeatureCapability.TAMPER,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -114,6 +117,7 @@ async def async_setup_entry(
 ) -> None:
     """Discover devices on a UniFi Protect NVR."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.BUTTON, data, SENSOR_BUTTONS)
 
     adopt_entities = partial(
         async_all_device_entities,

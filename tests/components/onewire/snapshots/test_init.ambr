@@ -2,8 +2,8 @@
 # name: test_registry[01.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': 'DS2401',
     'name': '01.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -33,8 +32,8 @@
 # name: test_registry[05.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -55,7 +54,6 @@
     'model_id': 'DS2405',
     'name': '05.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -64,8 +62,8 @@
 # name: test_registry[10.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -86,7 +84,6 @@
     'model_id': 'DS18S20',
     'name': '10.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -95,8 +92,8 @@
 # name: test_registry[12.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -117,7 +114,6 @@
     'model_id': 'DS2406',
     'name': '12.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -126,8 +122,8 @@
 # name: test_registry[1D.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -148,7 +144,6 @@
     'model_id': 'DS2423',
     'name': '1D.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': <ANY>,
@@ -157,8 +152,8 @@
 # name: test_registry[1F.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -179,7 +174,6 @@
     'model_id': 'DS2409',
     'name': '1F.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -188,8 +182,8 @@
 # name: test_registry[20.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -210,7 +204,6 @@
     'model_id': 'DS2450',
     'name': '20.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -219,8 +212,8 @@
 # name: test_registry[22.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -241,7 +234,6 @@
     'model_id': 'DS1822',
     'name': '22.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -250,8 +242,8 @@
 # name: test_registry[26.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -272,7 +264,6 @@
     'model_id': 'DS2438',
     'name': '26.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -281,8 +272,8 @@
 # name: test_registry[28.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -303,7 +294,6 @@
     'model_id': 'DS18B20',
     'name': '28.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -312,8 +302,8 @@
 # name: test_registry[28.222222222222-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -334,7 +324,6 @@
     'model_id': 'DS18B20',
     'name': '28.222222222222',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -343,8 +332,8 @@
 # name: test_registry[28.222222222223-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -365,7 +354,6 @@
     'model_id': 'DS18B20',
     'name': '28.222222222223',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '222222222223',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -374,8 +362,8 @@
 # name: test_registry[29.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -396,7 +384,6 @@
     'model_id': 'DS2408',
     'name': '29.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -405,8 +392,8 @@
 # name: test_registry[30.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -427,7 +414,6 @@
     'model_id': 'DS2760',
     'name': '30.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -436,8 +422,8 @@
 # name: test_registry[3A.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -458,7 +444,6 @@
     'model_id': 'DS2413',
     'name': '3A.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -467,8 +452,8 @@
 # name: test_registry[3B.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -489,7 +474,6 @@
     'model_id': 'DS1825',
     'name': '3B.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -498,8 +482,8 @@
 # name: test_registry[42.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -520,7 +504,6 @@
     'model_id': 'DS28EA00',
     'name': '42.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -529,8 +512,8 @@
 # name: test_registry[7E.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -551,7 +534,6 @@
     'model_id': 'EDS0068',
     'name': '7E.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -560,8 +542,8 @@
 # name: test_registry[7E.222222222222-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -582,7 +564,6 @@
     'model_id': 'EDS0066',
     'name': '7E.222222222222',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -591,8 +572,8 @@
 # name: test_registry[7E.333333333333-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -613,7 +594,6 @@
     'model_id': 'EDS0065',
     'name': '7E.333333333333',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '333333333333',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -622,8 +602,8 @@
 # name: test_registry[A6.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -644,7 +624,6 @@
     'model_id': 'DS2438',
     'name': 'A6.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -653,8 +632,8 @@
 # name: test_registry[EF.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -675,7 +654,6 @@
     'model_id': 'HobbyBoards_EF',
     'name': 'EF.111111111111',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -684,8 +662,8 @@
 # name: test_registry[EF.111111111112-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -706,7 +684,6 @@
     'model_id': 'HB_MOISTURE_METER',
     'name': 'EF.111111111112',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111112',
     'sw_version': '3.2',
     'via_device_id': None,
@@ -715,8 +692,8 @@
 # name: test_registry[EF.111111111113-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -737,7 +714,6 @@
     'model_id': 'HB_HUB',
     'name': 'EF.111111111113',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '111111111113',
     'sw_version': '3.2',
     'via_device_id': None,

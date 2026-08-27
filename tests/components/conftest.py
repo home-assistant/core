@@ -796,6 +796,7 @@ def os_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     supervisor_client.os.info.return_value = OSInfo(
         version="1.0.0",
         version_latest="1.0.0",
+        version_pending=None,
         update_available=False,
         board=None,
         boot=None,
@@ -893,10 +894,6 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.coordinator.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -1188,6 +1185,8 @@ async def _check_config_flow_result_translations(
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
+        if (abort_domain := result.get("translation_domain")) is not None:
+            integration = abort_domain
         await _validate_translation(
             flow.hass,
             translation_errors,

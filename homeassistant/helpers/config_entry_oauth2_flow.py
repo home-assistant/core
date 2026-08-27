@@ -10,7 +10,7 @@ from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
 import base64
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 import hashlib
 from http import HTTPStatus
 import json
@@ -19,14 +19,15 @@ import secrets
 import time
 from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, web
+from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestError,
@@ -64,6 +65,22 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
+
+# Abort reasons shared by all OAuth2 config flows. They are translated by the
+# homeassistant integration so each flow does not repeat them in its strings.json.
+_SHARED_ABORT_REASONS = frozenset(
+    {
+        "authorize_url_timeout",
+        "missing_credentials",
+        "no_url_available",
+        "oauth_error",
+        "oauth_failed",
+        "oauth_implementation_unavailable",
+        "oauth_timeout",
+        "oauth_unauthorized",
+        "user_rejected_authorize",
+    }
+)
 
 
 class ImplementationUnavailableError(HomeAssistantError):
@@ -419,6 +436,26 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self.external_data: Any = None
         self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
 
+    @callback
+    @override
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
+        next_flow: tuple[config_entries.FlowType, str] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Abort the flow, translating shared OAuth2 reasons centrally."""
+        if translation_domain is None and reason in _SHARED_ABORT_REASONS:
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
+            next_flow=next_flow,
+        )
+
     @property
     @abstractmethod
     def logger(self) -> logging.Logger:
@@ -761,7 +798,13 @@ class OAuth2Session:
             if self.valid_token:
                 return
 
-            new_token = await self.implementation.async_refresh_token(self.token)
+            try:
+                new_token = await self.implementation.async_refresh_token(self.token)
+            except OAuth2TokenRequestReauthError:
+                # Start reauth here so it also happens for callers that map the
+                # error onto a recoverable one, which would retry indefinitely.
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
@@ -785,16 +828,9 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-    headers = kwargs.pop("headers", {})
-    return await session.request(
-        method,
-        url,
-        **kwargs,
-        headers={
-            **headers,
-            "authorization": f"Bearer {token['access_token']}",
-        },
-    )
+    headers = CIMultiDict(kwargs.pop("headers", {}))
+    headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
+    return await session.request(method, url, **kwargs, headers=headers)
 
 
 @callback
