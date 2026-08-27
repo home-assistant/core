@@ -214,19 +214,22 @@ async def _complete_reauth(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth_loaded_does_not_schedule_reload(
+async def test_reauth_loaded_schedules_reload(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A loaded entry is reloaded by its update listener, not by the flow."""
+    """A data-only reauth schedules the reload itself to apply the token.
+
+    The subentry set is unchanged, so the update listener never reloads.
+    """
     mock_entry = await setup_platform(hass, [])
     assert mock_entry.state is ConfigEntryState.LOADED
 
     mock_schedule_reload = await _complete_reauth(
         hass, hass_client_no_auth, aioclient_mock, mock_entry
     )
-    mock_schedule_reload.assert_not_called()
+    mock_schedule_reload.assert_called_once_with(mock_entry.entry_id)
 
 
 @pytest.mark.usefixtures("current_request_with_host")

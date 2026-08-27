@@ -121,29 +121,36 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_error")
 
         await self.async_set_unique_id(self.uid)
-        # When the entry is loaded its subentry-change update listener applies the
-        # new token via a reload, so use the non-reloading variant to avoid a double
-        # reload and the paired-reload deprecation warning. When it is not loaded
-        # (e.g. reauth after a setup failure) no listener exists, so the reloading
-        # variant is needed to apply the data and emits no deprecation.
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
-            entry = self._get_reauth_entry()
-            if entry.state is ConfigEntryState.LOADED:
-                return self.async_update_and_abort(entry, data=data)
-            return self.async_update_reload_and_abort(entry, data=data)
+            return self._async_apply_token(self._get_reauth_entry(), data)
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
-            entry = self._get_reconfigure_entry()
-            if entry.state is ConfigEntryState.LOADED:
-                return self.async_update_and_abort(entry, data=data)
-            return self.async_update_reload_and_abort(entry, data=data)
+            return self._async_apply_token(self._get_reconfigure_entry(), data)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title="Teslemetry",
             data=data,
         )
+
+    def _async_apply_token(
+        self, entry: ConfigEntry, data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Store the refreshed token and reload the entry exactly once."""
+        if entry.state is not ConfigEntryState.LOADED:
+            # An unloaded entry (e.g. reauth after a setup failure) has no update
+            # listener, so the reloading variant applies the data and does not
+            # emit the paired-reload deprecation warning.
+            return self.async_update_reload_and_abort(entry, data=data)
+        # A loaded entry carries the _setup_subentry_change_reload update listener,
+        # but that listener only reloads when the subentry set changes; a data-only
+        # token refresh leaves it unchanged, so nothing would restart the runtime.
+        # async_update_reload_and_abort would warn because the listener exists, so
+        # update without reloading and then schedule the single reload here.
+        result = self.async_update_and_abort(entry, data=data)
+        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        return result
 
     async def async_test_connection(self, token_data: dict[str, Any]) -> dict[str, str]:
         """Test the connection with OAuth token."""
@@ -238,7 +245,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # Only unpaired sites are offered here, so their api is always the
             # cloud EnergySite that exposes the pairing endpoints (a paired site
             # would carry an EnergySiteRouter instead).
-            await self._prepare_energy_site(cast(TeslemetryEnergySite, energy_data.api))
+            if abort := await self._prepare_energy_site(
+                cast(TeslemetryEnergySite, energy_data.api)
+            ):
+                return abort
             return await self._async_begin_pairing()
 
         return self.async_show_form(
@@ -255,8 +265,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def _prepare_energy_site(self, energy_site: TeslemetryEnergySite) -> None:
-        """Discover the gateway address and load the integration's RSA key."""
+    async def _prepare_energy_site(
+        self, energy_site: TeslemetryEnergySite
+    ) -> SubentryFlowResult | None:
+        """Discover the gateway address and load the integration's RSA key.
+
+        Returns an abort result if the RSA key cannot be loaded, else None.
+        """
         self._energy_site = energy_site
 
         try:
@@ -269,10 +284,17 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         keyholder = Teslemetry(
             session=async_get_clientsession(self.hass), access_token=""
         )
-        await keyholder.get_rsa_private_key(path)
-        self._key_pem = await self.hass.async_add_executor_job(Path(path).read_bytes)
+        try:
+            await keyholder.get_rsa_private_key(path)
+            self._key_pem = await self.hass.async_add_executor_job(
+                Path(path).read_bytes
+            )
+        except (OSError, ValueError) as err:
+            LOGGER.debug("RSA key load failed: %s", err)
+            return self.async_abort(reason="cannot_connect")
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
+        return None
 
     async def _async_begin_pairing(self) -> SubentryFlowResult:
         """Resume or begin key pairing based on the key's state on the gateway."""
