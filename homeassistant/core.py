@@ -16,7 +16,6 @@ from collections.abc import (
     ValuesView,
 )
 import concurrent.futures
-from contextvars import ContextVar
 from dataclasses import dataclass
 import datetime
 import enum
@@ -76,7 +75,6 @@ from .const import (
     __version__,
 )
 from .exceptions import (
-    ConfigEntryAuthFailed,
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -107,7 +105,7 @@ from .util.ulid import ulid_at_time, ulid_now
 if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import HomeAssistantHTTP
-    from .config_entries import ConfigEntries, ConfigEntry
+    from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
@@ -219,29 +217,6 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return getattr(func, "_hass_callback", False) is True
-
-
-@dataclass(slots=True)
-class ServiceCallState:
-    """Mutable state of the currently executing service call."""
-
-    config_entry: ConfigEntry | None = None
-
-
-_current_service_call_state: ContextVar[ServiceCallState | None] = ContextVar(
-    "current_service_call_state", default=None
-)
-
-
-@callback
-def async_set_service_config_entry(config_entry: ConfigEntry) -> None:
-    """Set the config entry the currently executing service call is acting on.
-
-    Read when the handler raises ConfigEntryAuthFailed, so a reauth flow can be
-    started without the integration having to look the entry up itself.
-    """
-    if (state := _current_service_call_state.get()) is not None:
-        state.config_entry = config_entry
 
 
 def is_callback_check_partial(target: Callable[..., Any]) -> bool:
@@ -3021,25 +2996,16 @@ class ServiceRegistry:
         """Execute a service."""
         job = handler.job
         target = job.target
-        state = ServiceCallState()
-        token = _current_service_call_state.set(state)
-        try:
-            if job.job_type is HassJobType.Coroutinefunction:
-                if TYPE_CHECKING:
-                    target = cast(
-                        Callable[..., Coroutine[Any, Any, ServiceResponse]], target
-                    )
-                return await target(service_call)
-            if job.job_type is HassJobType.Callback:
-                if TYPE_CHECKING:
-                    target = cast(Callable[..., ServiceResponse], target)
-                return target(service_call)
+        if job.job_type is HassJobType.Coroutinefunction:
+            if TYPE_CHECKING:
+                target = cast(
+                    Callable[..., Coroutine[Any, Any, ServiceResponse]], target
+                )
+            return await target(service_call)
+        if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 target = cast(Callable[..., ServiceResponse], target)
-            return await self._hass.async_add_executor_job(target, service_call)
-        except ConfigEntryAuthFailed:
-            if (entry := state.config_entry) is not None:
-                entry.async_start_reauth_if_available(self._hass)
-            raise
-        finally:
-            _current_service_call_state.reset(token)
+            return target(service_call)
+        if TYPE_CHECKING:
+            target = cast(Callable[..., ServiceResponse], target)
+        return await self._hass.async_add_executor_job(target, service_call)

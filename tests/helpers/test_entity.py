@@ -1,13 +1,13 @@
 """Test the entity helper."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 import logging
 import threading
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from propcache.api import cached_property
@@ -16,7 +16,6 @@ from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -33,11 +32,7 @@ from homeassistant.core import (
     ReleaseChannel,
     callback,
 )
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -55,9 +50,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     RegistryEntryWithDefaults,
-    mock_config_flow,
     mock_integration,
-    mock_platform,
     mock_registry,
 )
 
@@ -3116,53 +3109,3 @@ async def test_platform_state_write_from_init_unique_id(
     # The early attempt to write is interpreted as a unique ID collision
     assert "Platform test_platform does not generate unique IDs." in caplog.text
     assert "Entity id already exists - ignoring: test.test" not in caplog.text
-
-
-async def test_update_auth_failed_starts_reauth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a failing entity update starts a reauth flow for its config entry."""
-
-    class MockFlow(config_entries.ConfigFlow):
-        """Config flow implementing reauth."""
-
-        async def async_step_reauth(
-            self, entry_data: Mapping[str, Any]
-        ) -> config_entries.ConfigFlowResult:
-            """Handle reauth."""
-            return await self.async_step_reauth_confirm()
-
-        async def async_step_reauth_confirm(
-            self, user_input: dict[str, Any] | None = None
-        ) -> config_entries.ConfigFlowResult:
-            """Confirm reauth."""
-            return self.async_show_form(step_id="reauth_confirm")
-
-    config_entry = MockConfigEntry(domain="test_reauth", title="Entry 1")
-    config_entry.add_to_hass(hass)
-    mock_integration(hass, MockModule("test_reauth"))
-    mock_platform(hass, "test_reauth.config_flow", None)
-
-    platform = MockEntityPlatform(hass)
-    platform.config_entry = config_entry
-    ent = MockEntity(entity_id="sensor.test")
-    ent.hass = hass
-    ent.platform = platform
-    ent.async_update = AsyncMock(
-        side_effect=ConfigEntryAuthFailed("Poof, token is cripple")
-    )
-
-    with mock_config_flow("test_reauth", MockFlow):
-        await ent.async_update_ha_state(True)
-        await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
-    assert len(flows) == 1
-    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
-    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
-
-    assert (
-        "Authentication failed while updating sensor.test: Poof, token is cripple"
-        in caplog.text
-    )
-    assert hass.states.get("sensor.test") is None  # No update should be written

@@ -22,14 +22,9 @@ from homeassistant.components.portainer.services import (
     SERVICE_RECREATE_CONTAINER,
     _async_get_device_and_entry,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
@@ -355,55 +350,3 @@ async def test_service_portainer_exceptions(
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("service", "device_identifier", "device_key", "client_method"),
-    [
-        (
-            SERVICE_PRUNE_IMAGES,
-            TEST_DEVICE_IDENTIFIER,
-            ATTR_DEVICE_ID,
-            "images_prune",
-        ),
-        (
-            SERVICE_RECREATE_CONTAINER,
-            TEST_CONTAINER_DEVICE_IDENTIFIER,
-            ATTR_CONTAINER_DEVICE_ID,
-            "container_recreate",
-        ),
-    ],
-)
-async def test_service_auth_error_starts_reauth(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    mock_portainer_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    service: str,
-    device_identifier: str,
-    device_key: str,
-    client_method: str,
-) -> None:
-    """Test a service failing to authenticate starts a reauth flow."""
-    await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, device_identifier), mock_config_entry.entry_id
-    )
-    assert device is not None
-
-    getattr(
-        mock_portainer_client, client_method
-    ).side_effect = PortainerAuthenticationError("auth")
-    with pytest.raises(ConfigEntryAuthFailed):
-        await hass.services.async_call(
-            DOMAIN,
-            service,
-            {device_key: device.id},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

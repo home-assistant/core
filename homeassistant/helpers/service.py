@@ -35,7 +35,6 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    async_set_service_config_entry,
     callback,
 )
 from homeassistant.exceptions import (
@@ -1397,7 +1396,6 @@ def async_get_config_entry(
                 "entry_title": config_entry.title,
             },
         )
-    async_set_service_config_entry(config_entry)
     return config_entry
 
 
@@ -1436,7 +1434,6 @@ def _async_get_single_loaded_config_entry(
                 "entry_title": config_entry.title,
             },
         )
-    async_set_service_config_entry(config_entry)
     return config_entry
 
 
@@ -1476,5 +1473,4 @@ def async_get_device_and_config_entry(
                 "entry_title": config_entry.title,
             },
         )
-    async_set_service_config_entry(config_entry)
     return device, config_entry

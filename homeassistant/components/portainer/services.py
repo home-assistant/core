@@ -11,11 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -122,7 +118,7 @@ async def prune_images(call: ServiceCall) -> None:
             dangling=call.data.get(ATTR_DANGLING, False),
         )
     except PortainerAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from err
@@ -157,7 +153,7 @@ async def recreate_container(call: ServiceCall) -> None:
             pull_image=call.data.get(ATTR_PULL_IMAGE, False),
         )
     except PortainerAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from err

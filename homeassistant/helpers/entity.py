@@ -51,11 +51,7 @@ from homeassistant.core import (
     get_release_channel,
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
@@ -995,15 +991,6 @@ class Entity(
         if force_refresh:
             try:
                 await self.async_device_update()
-            except ConfigEntryAuthFailed as err:
-                if (platform := self.platform) is not None and (
-                    entry := platform.config_entry
-                ) is not None:
-                    entry.async_start_reauth_if_available(self.hass)
-                _LOGGER.error(
-                    "Authentication failed while updating %s: %s", self.entity_id, err
-                )
-                return
             except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
