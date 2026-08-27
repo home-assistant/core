@@ -15,12 +15,31 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_ENTITY_ID, TEST_IMAGE
+from .const import (
+    DEFAULT_ENTITY_ID,
+    MOCK_MEDIA_URI_1,
+    MOCK_MEDIA_URI_2,
+    MOCK_MEDIA_URI_EMPTY,
+    TEST_IMAGE,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 TEST_TIME = "2025-11-08T12:00:00+00:00"
+
+
+def _create_config_entry(uris: str | list[str]) -> MockConfigEntry:
+    if isinstance(uris, str):
+        media = {"media_content_id": uris, "media_content_type": ""}
+    else:
+        media = [{"media_content_id": uri, "media_content_type": ""} for uri in uris]
+
+    return MockConfigEntry(
+        data={"media": media},
+        domain=DOMAIN,
+        title="Random Image",
+    )
 
 
 async def test_image(
@@ -75,23 +94,7 @@ async def test_image_multi(
             return_value=expected_images[-1],
         ) as mock_choice,
     ):
-        config_entry = MockConfigEntry(
-            data={
-                "media": [
-                    {
-                        "media_content_id": "media-source://mymedia",
-                        "media_content_type": "",
-                    },
-                    {
-                        "media_content_id": "media-source://mymedia_2",
-                        "media_content_type": "",
-                    },
-                ]
-            },
-            domain=DOMAIN,
-            title="Random Image",
-        )
-
+        config_entry = _create_config_entry([MOCK_MEDIA_URI_1, MOCK_MEDIA_URI_2])
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -205,26 +208,15 @@ async def test_image_url(
 async def test_no_images(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    mock_media_source,
 ) -> None:
     """Test when there are no images in the media folder."""
-    with patch(
-        "homeassistant.components.collection_image.image.async_browse_media",
-        return_value=BrowseMediaSource(
-            domain=None,
-            identifier=None,
-            media_class="",
-            media_content_type="",
-            title="",
-            can_play=False,
-            can_expand=True,
-            children=[],
-        ),
-    ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    config_entry = _create_config_entry([MOCK_MEDIA_URI_EMPTY])
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
@@ -233,7 +225,7 @@ async def test_no_images(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        "image.random_image: No valid images in ['media-source://mymedia']"
+        "image.random_image: No valid images in ['media-source://mymedia_empty']"
         in caplog.text
     )
 
