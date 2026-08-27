@@ -192,6 +192,28 @@ async def test_discovery_flow_errors_if_only_unsupported_devices_found(
     assert result["errors"] == {"base": "unsupported_device"}
 
 
+async def test_discovery_flow_aborts_if_selected_device_is_unsupported(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Test discovery aborts if the selected device is no longer supported."""
+    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
+    mock_udp_client.get_device_info.return_value = UNSUPPORTED_DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+
+
 async def test_discovery_flow_aborts_without_stable_unique_id(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
