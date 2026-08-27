@@ -34,6 +34,12 @@
     }
   },
   "exceptions": {
+    "append_failed": {
+      "message": "Failed to write data to the Google Sheets document"
+    },
+    "get_failed": {
+      "message": "Failed to retrieve data from the Google Sheets document"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
