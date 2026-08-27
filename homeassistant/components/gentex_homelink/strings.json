@@ -17,7 +17,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The HomeLink integration needs to re-authenticate your account",
+        "description": "HomeLink needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
