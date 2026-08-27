@@ -135,20 +135,26 @@ async def test_pool_cover_none_yields_unknown(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_pool_cover_unknown_when_filtration_off(
+@pytest.mark.parametrize("pump_state", [False, None])
+async def test_pool_cover_unknown_when_filtration_not_running(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    pump_state: bool | None,
 ) -> None:
-    """Cover reads unknown while filtration is off, not a false "open"."""
+    """Cover reads unknown unless the pump is confirmed running.
+
+    The device only reports the cover bit while filtration runs, so an idle
+    (False) or unknown (None) pump state must not surface a stale open/closed.
+    """
     await setup_integration(hass, mock_config_entry_binary_sensor)
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
         "Pool Cover": False,
-        "Filtration Pump": False,
+        "Filtration Pump": pump_state,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)

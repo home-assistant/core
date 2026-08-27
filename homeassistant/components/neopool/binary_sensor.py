@@ -65,9 +65,9 @@ def _device_time_drift(data: dict[str, Any], hass: HomeAssistant) -> bool | None
 def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
     """Invert the raw cover state for the OPENING device class.
 
-    The cover bit is only valid while filtration runs; off, report unknown.
+    The cover bit is only valid while filtration runs; otherwise report unknown.
     """
-    if data.get("Filtration Pump") is False:
+    if data.get("Filtration Pump") is not True:
         return None
     value = data.get("Pool Cover")
     if value is None:
