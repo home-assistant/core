@@ -1,9 +1,11 @@
 """Websocket API for Z-Wave JS."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
+import logging
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
@@ -104,12 +106,15 @@ if TYPE_CHECKING:
     from .models import ZwaveJSConfigEntry
 
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
+ERR_RF_TOGGLE_FAILED = "rf_toggle_failed"
 NODE_ID = "node_id"
 DEVICE_ID = "device_id"
 COMMAND_CLASS_ID = "command_class_id"
@@ -412,6 +417,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_network_neighbors)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -616,6 +622,83 @@ async def websocket_node_status(
 ) -> None:
     """Get the status of a Z-Wave JS node."""
     connection.send_result(msg[ID], node_status(node))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/network_neighbors",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_network_neighbors(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ZwaveJSConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Get the node IDs of the neighbors of all nodes in the network.
+
+    Reading the routing table can wedge older controllers when the radio is
+    on or reads overlap, so refreshes are serialized and done with RF off:
+    https://zwave-js.github.io/zwave-js/#/api/controller?id=getnodeneighbors
+    """
+    controller = driver.controller
+
+    async def restore_rf() -> bool:
+        """Turn the radio back on, returning False instead of raising."""
+        try:
+            return await controller.async_toggle_rf(True)
+        except BaseZwaveJSServerError:
+            return False
+
+    async def read_network_neighbors() -> tuple[bool, bool, dict[int, list[int]]]:
+        """Read the neighbors of all nodes while the radio is off."""
+        neighbors: dict[int, list[int]] = {}
+        rf_disabled = False
+        async with entry.runtime_data.network_neighbors_lock:
+            try:
+                rf_disabled = await controller.async_toggle_rf(False)
+                if rf_disabled:
+                    # Snapshot the nodes, inclusion/exclusion can mutate the
+                    # collection while it is being iterated
+                    for node in list(controller.nodes.values()):
+                        # Long range nodes are not part of the mesh
+                        if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                            continue
+                        try:
+                            neighbors[
+                                node.node_id
+                            ] = await controller.async_get_node_neighbors(node)
+                        except FailedCommand:
+                            continue
+            finally:
+                rf_restored = await restore_rf()
+                if not rf_restored:
+                    _LOGGER.error(
+                        "Failed to re-enable RF after reading the neighbors of"
+                        " the nodes of config entry %s",
+                        entry.entry_id,
+                    )
+        return rf_disabled, rf_restored, neighbors
+
+    # The refresh runs as its own task and is only abandoned on cancellation,
+    # so a closing connection can't interrupt it while the radio is off
+    rf_disabled, rf_restored, neighbors = await asyncio.shield(
+        hass.async_create_task(read_network_neighbors())
+    )
+    if not rf_disabled:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
+        return
+    if not rf_restored:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to re-enable RF")
+        return
+    connection.send_result(msg[ID], neighbors)
 
 
 @websocket_api.websocket_command(
