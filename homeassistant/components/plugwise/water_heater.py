@@ -14,6 +14,7 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     DHW_TEMP,
@@ -134,13 +135,27 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         """Set new target temperature."""
         temperature = float(kwargs[ATTR_TEMPERATURE])
         if temperature < self._attr_min_temp or temperature > self._attr_max_temp:
+            temperature_unit = self.hass.config.units.temperature_unit
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=FAIL_SET_TEMP,
                 translation_placeholders={
                     "temperature": str(temperature),
-                    "max_temp": str(self._attr_max_temp),
-                    "min_temp": str(self._attr_min_temp),
+                    "max_temp": str(
+                        TemperatureConverter.convert(
+                            self._attr_max_temp,
+                            UnitOfTemperature.CELSIUS,
+                            temperature_unit,
+                        )
+                    ),
+                    "min_temp": str(
+                        TemperatureConverter.convert(
+                            self._attr_min_temp,
+                            UnitOfTemperature.CELSIUS,
+                            temperature_unit,
+                        )
+                    ),
+                    "temperature_unit": temperature_unit,
                 },
             )
 

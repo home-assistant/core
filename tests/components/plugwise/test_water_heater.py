@@ -18,6 +18,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -161,3 +162,30 @@ async def test_adam_water_heater_active_state(
 
         assert (state := hass.states.get("water_heater.opentherm_domestic_hot_water"))
         assert state.state == STATE_GAS
+
+
+async def test_adam_water_heater_setpoint_error_uses_configured_unit(
+    hass: HomeAssistant,
+    mock_smile_adam_jip: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test out-of-range setpoint errors use the configured temperature unit."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+                ATTR_TEMPERATURE: 145,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_placeholders == {
+        "temperature": "62.77777777777778",
+        "max_temp": "140.0",
+        "min_temp": "104.0",
+        "temperature_unit": "°F",
+    }
