@@ -87,6 +87,11 @@
       "eco2": {
         "name": "Estimated carbon dioxide"
       }
+    },
+    "switch": {
+      "scan_control": {
+        "name": "Scan"
+      }
     }
   },
   "exceptions": {
