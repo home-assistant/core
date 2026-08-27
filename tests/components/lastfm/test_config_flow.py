@@ -1,5 +1,6 @@
 """Test Lastfm config flow."""
 
+import asyncio
 from unittest.mock import MagicMock, call, patch
 
 from pylast import WSError
@@ -197,10 +198,17 @@ async def test_flow_abort_cancels_session_key_polling(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
+        polling_task = next(
+            task
+            for task in asyncio.all_tasks()
+            if task.get_coro().__qualname__
+            == "LastFmConfigFlowHandler._async_poll_for_session_key"
+        )
 
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
 
+    assert polling_task.cancelled()
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
