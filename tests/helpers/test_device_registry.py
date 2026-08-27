@@ -10658,6 +10658,42 @@ async def test_update_main_device_rejects_disabled_by_device(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by=DEVICE matching a deleted device restores nothing.
+
+    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
+    would restore a main device disabled by DEVICE. The rejection must run before the
+    restore.
+    """
+    match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
+    identifiers = {("test", "restore")}
+    device_id = "restore-device-id"
+    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
+    # a DEVICE value.
+    device_registry._deleted_devices[device_id] = attr.evolve(
+        _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
+        disabled_by=UNDEFINED,
+    )
+
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers=identifiers,
+            disabled_by=dr.DeviceEntryDisabler.DEVICE,
+        )
+
+    # Nothing was restored: no main device exists and the deleted entry is untouched
+    assert len(device_registry.devices) == 0
+    assert device_id in device_registry._deleted_devices
+    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
+
+
+@pytest.mark.usefixtures("hass")
 async def test_child_device_update_identifiers(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -10807,6 +10843,50 @@ async def test_remove_child_device_and_restore(
     assert restored.labels == {"outdoor"}
     assert restored.name_by_user == "Lamp"
     assert restored.parent_device_id == parent.id
+
+
+@pytest.mark.usefixtures("hass")
+async def test_restore_child_deleted_via_parent_cascade(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test restoring a child that was cascade-deleted with its parent.
+
+    Removing the parent cascade-deletes the child; re-registering the parent and then
+    the child restores the child with its id and user-provided data intact.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    device_registry.async_update_child_device(
+        child_device.id, area_id="garden", labels={"outdoor"}, name_by_user="Lamp"
+    )
+
+    device_registry.async_remove_device(parent.id)
+    assert device_registry.async_get(child_device.id) is None
+    assert child_device.id in device_registry._deleted_devices
+    assert parent.id in device_registry._deleted_devices
+
+    restored_parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    assert restored_parent.id == parent.id
+
+    restored_child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=restored_parent.id,
+        name="Outlet 1",
+    )
+    assert restored_child.id == child_device.id
+    assert restored_child.area_id == "garden"
+    assert restored_child.labels == {"outdoor"}
+    assert restored_child.name_by_user == "Lamp"
+    assert restored_child.parent_device_id == restored_parent.id
+    assert device_registry.async_get(child_device.id) is restored_child
+    assert child_device.id not in device_registry._deleted_devices
 
 
 @pytest.mark.usefixtures("hass")
@@ -11476,6 +11556,49 @@ async def test_child_device_load_and_save(
     registry2.async_schedule_save()
     await flush_store(registry2._store)
     assert hass_storage[dr.STORAGE_KEY]["data"] == first_save
+
+
+async def test_child_device_stored_fragment(
+    hass_storage: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the exact serialized payload of a non-empty stored child device.
+
+    Pins the full key set so an extra serialized key can't slip in unnoticed.
+    """
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    entry_id = mock_config_entry_with_subentries.entry_id
+    parent, child_device = _create_parent_and_child(
+        device_registry, entry_id, config_subentry_id="mock-subentry-id-1-1"
+    )
+    device_registry.async_update_child_device(
+        child_device.id,
+        area_id="garden",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+        labels={"outdoor"},
+        name_by_user="Lamp",
+    )
+
+    await flush_store(device_registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == [
+        {
+            "area_id": "garden",
+            "config_entry_id": entry_id,
+            "config_subentry_id": "mock-subentry-id-1-1",
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "disabled_by": "user",
+            "id": child_device.id,
+            "identifiers": [["test", "strip_outlet_1"]],
+            "labels": ["outdoor"],
+            "modified_at": "2024-01-01T00:00:00+00:00",
+            "name_by_user": "Lamp",
+            "name": "Outlet 1",
+            "parent_device_id": parent.id,
+        }
+    ]
 
 
 @pytest.mark.parametrize("load_registries", [False])

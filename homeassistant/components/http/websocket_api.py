@@ -13,11 +13,31 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
-from .const import ATTR_CONFIG, CONF_SERVER_PORT
+from .const import (
+    ATTR_CONFIG,
+    CONF_SERVER_PORT,
+    CONF_TRUSTED_PROXIES,
+    CONF_USE_X_FORWARDED_FOR,
+)
 from .server import async_verify_can_bind
 
 ERR_BIND_FAILED: Final = "bind_failed"
 ERR_NOT_RUNNING: Final = "not_running"
+
+
+def _validate_trusted_proxies(config: ConfData) -> ConfData:
+    """Reject trusting X-Forwarded-For without a proxy to trust it from.
+
+    Forwarded requests are refused when no proxy is trusted, so the combination
+    breaks the very setup it is meant to enable.
+    """
+    if config.get(CONF_USE_X_FORWARDED_FOR) and not config.get(CONF_TRUSTED_PROXIES):
+        raise vol.Invalid(
+            "at least one trusted proxy is required to use X-Forwarded-For",
+            path=[CONF_TRUSTED_PROXIES],
+        )
+
+    return config
 
 
 @callback
@@ -64,7 +84,9 @@ async def websocket_get_config(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "http/config/configure",
-        vol.Required(ATTR_CONFIG): vol.Any(None, HTTP_STORAGE_SCHEMA),
+        vol.Required(ATTR_CONFIG): vol.Any(
+            None, vol.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
+        ),
     }
 )
 @websocket_api.async_response

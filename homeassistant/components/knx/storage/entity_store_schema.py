@@ -10,7 +10,6 @@ from xknx.exceptions import ConversionError
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.number import (
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberDeviceClass,
     NumberMode,
 )
 from homeassistant.components.sensor import (
@@ -575,13 +574,8 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
                     custom_value=True,
                 ),
             ),
-            probatio.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in NumberDeviceClass],
-                    # should align with sensor
-                    translation_key="component.knx.selector.sensor_device_class",
-                    sort=True,
-                )
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
             ),
             probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         },
