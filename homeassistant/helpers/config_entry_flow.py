@@ -1,12 +1,12 @@
 """Helpers for data entry flows for config entries."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 
 from .typing import DiscoveryInfoType
 
@@ -24,8 +24,42 @@ type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
+# Abort reasons raised below which the `homeassistant` integration translates, so
+# integrations do not have to repeat the string.
+_SHARED_ABORT_REASONS = frozenset({"cloud_not_connected"})
 
-class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow):
+
+class _SharedAbortReasonsFlow(config_entries.ConfigFlow):
+    """Config flow whose shared abort reasons are translated centrally."""
+
+    # Replaces a shared abort reason with an integration specific one, for handlers
+    # the shared wording does not describe accurately.
+    abort_reason_overrides: Mapping[str, str] = {}
+
+    @override
+    @callback
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
+        next_flow: tuple[config_entries.FlowType, str] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Abort the config flow."""
+        if (custom_reason := self.abort_reason_overrides.get(reason)) is not None:
+            reason = custom_reason
+        elif translation_domain is None and reason in _SHARED_ABORT_REASONS:
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
+            next_flow=next_flow,
+        )
+
+
+class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](_SharedAbortReasonsFlow):
     """Handle a discovery config flow."""
 
     VERSION = 1
@@ -199,7 +233,7 @@ def register_discovery_flow(
     config_entries.HANDLERS.register(domain)(DiscoveryFlow)
 
 
-class WebhookFlowHandler(config_entries.ConfigFlow):
+class WebhookFlowHandler(_SharedAbortReasonsFlow):
     """Handle a webhook config flow."""
 
     VERSION = 1
@@ -259,10 +293,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             self.hass
         ):
             if not async_is_connected(self.hass):
-                return self.async_abort(
-                    reason="cloud_not_connected",
-                    translation_domain=HOMEASSISTANT_DOMAIN,
-                )
+                return self.async_abort(reason="cloud_not_connected")
 
             webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True

@@ -77,6 +77,31 @@ async def test_single_entry_allowed(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    # Not a shared reason, so the integration's own translation is used
+    assert "translation_domain" not in result
+
+
+async def test_abort_reason_overrides(hass: HomeAssistant) -> None:
+    """Test a handler can replace an abort reason with an integration specific one."""
+
+    class TestFlow(config_entry_flow.DiscoveryFlowHandler[bool]):
+        """Discovery flow handler the shared wording does not fit."""
+
+        abort_reason_overrides = {"no_devices_found": "not_supported"}
+
+        def __init__(self) -> None:
+            super().__init__("test", "Test", lambda hass: False)
+
+    with patch.dict(config_entries.HANDLERS):
+        config_entries.HANDLERS.register("test")(TestFlow)
+        flow = TestFlow()
+        flow.hass = hass
+        flow.context = {"source": config_entries.SOURCE_USER}
+        result = await flow.async_step_confirm(user_input={})
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+    assert "translation_domain" not in result
 
 
 async def test_user_no_devices_found(
