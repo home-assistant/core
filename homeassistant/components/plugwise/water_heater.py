@@ -30,7 +30,7 @@ from .util import plugwise_command
 PARALLEL_UPDATES = 0
 
 FAIL_SET_TEMP: Final = "temperature_out_of_range"
-OPERATION_LIST: Final[list[str]] = [STATE_ELECTRIC, STATE_GAS, STATE_OFF]
+OPERATION_LIST: Final[list[str]] = [STATE_GAS, STATE_HEAT_PUMP, STATE_OFF]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,7 +107,10 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
             binary_sensors := self.device.get("binary_sensors", {})
         ) and binary_sensors.get(self.entity_description.state_key, False):
             if "outdoor_air_temperature" in self.device["sensors"]:
-                return STATE_ELECTRIC
+                if binary_sensors.get("secondary_boiler_state", False):
+                    return STATE_GAS
+
+                return STATE_HEAT_PUMP
 
             return STATE_GAS
 
