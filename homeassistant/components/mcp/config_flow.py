@@ -20,6 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
     async_get_implementations,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
@@ -153,6 +154,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.oauth_config: OAuthConfig | None = None
         self.auth_header: AuthenticateHeader | None = None
+        self.addon_name: str = ""
 
     @override
     async def async_step_user(
@@ -188,6 +190,55 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
             description_placeholders={"example_url": EXAMPLE_URL},
         )
+
+    @override
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery of an MCP server provided by an app."""
+        url = discovery_info.config.get(CONF_URL)
+        try:
+            cv.url(url)
+        except vol.Invalid:
+            _LOGGER.debug(
+                "Ignoring discovery from app %s with invalid URL: %s",
+                discovery_info.slug,
+                url,
+            )
+            return self.async_abort(reason="invalid_discovery_info")
+
+        self._async_abort_entries_match({CONF_URL: url})
+        self.data[CONF_URL] = url
+        self.addon_name = discovery_info.name
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the MCP server provided by an app."""
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                description_placeholders={"addon": self.addon_name},
+            )
+
+        try:
+            info = await validate_input(self.hass, self.data)
+        except TimeoutConnectError:
+            return self.async_abort(reason="timeout_connect")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth as err:
+            self.auth_header = err.metadata
+            return await self.async_step_auth_discovery()
+        except MissingCapabilities:
+            return self.async_abort(reason="missing_capabilities")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        return self.async_create_entry(title=info["title"], data=self.data)
 
     async def async_step_auth_discovery(
         self, user_input: dict[str, Any] | None = None
