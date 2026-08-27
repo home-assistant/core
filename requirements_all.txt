@@ -1755,7 +1755,7 @@ numato-gpio==0.13.0
 # homeassistant.components.iqvia
 # homeassistant.components.stream
 # homeassistant.components.trend
-numpy==2.5.2
+numpy==2.3.2
 
 # homeassistant.components.nyt_games
 nyt_games==0.5.0
