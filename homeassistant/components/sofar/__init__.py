@@ -1,8 +1,9 @@
 """Integrate Sofar devices into Home Assistant."""
 
 from datetime import timedelta
+import logging
 
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.components.modbus import async_get_unit
@@ -13,6 +14,8 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -59,6 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     )
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
+
+    # Not tied to a coordinator: the serial and firmware versions don't
+    # change, so sofar-modbus reads identity once and never re-polls it.
+    try:
+        await device.identity.async_update()
+    except ModbusError as err:
+        _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create(
