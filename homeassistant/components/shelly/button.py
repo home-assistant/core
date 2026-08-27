@@ -44,6 +44,7 @@ from .utils import (
     format_ble_addr,
     get_device_entry_gen,
     get_ir_device_info,
+    get_rpc_custom_name,
     get_rpc_key_id,
     get_virtual_component_ids,
 )
@@ -325,9 +326,11 @@ class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
         """Initialize IRCode button."""
         super().__init__(coordinator, key, attribute, description)
 
-        self._attr_name = (
-            coordinator.device.config[key].get("name") or f"IR Code {self._id}"
-        )
+        if (custom_name := get_rpc_custom_name(coordinator.device, key)) is not None:
+            self._attr_name = custom_name
+        else:
+            self._attr_translation_key = "ir_code"
+            self._attr_translation_placeholders = {"id": str(self._id)}
         self._attr_device_info = get_ir_device_info(
             coordinator.hass,
             coordinator.config_entry.entry_id,
