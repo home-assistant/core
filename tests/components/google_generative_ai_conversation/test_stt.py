@@ -191,17 +191,45 @@ async def test_stt_process_audio_stream_api_error(
     assert result.text is None
 
 
+@pytest.mark.parametrize(
+    ("response", "expected_log"),
+    [
+        pytest.param(
+            types.GenerateContentResponse(candidates=[]),
+            "STT response contained no text (finish_reason=None)",
+            id="empty_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[{"finish_reason": "STOP", "content": {"role": "model"}}]
+            ),
+            "STT response contained no text (finish_reason=FinishReason.STOP)",
+            id="blank_text_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[],
+                prompt_feedback={
+                    "block_reason": "SAFETY",
+                    "block_reason_message": "Blocked for safety reasons",
+                },
+            ),
+            "STT response contained no text (block_reason=Blocked for safety reasons)",
+            id="blocked_prompt",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
-async def test_stt_process_audio_stream_empty_response(
+async def test_stt_process_audio_stream_no_text_response(
     hass: HomeAssistant,
     mock_genai_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
+    response: types.GenerateContentResponse,
+    expected_log: str,
 ) -> None:
-    """Test STT processing with an empty response from the API."""
+    """Test STT logs when the API response contains no text."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
-    mock_genai_client.aio.models.generate_content.return_value = (
-        types.GenerateContentResponse(candidates=[])
-    )
+    mock_genai_client.aio.models.generate_content.return_value = response
 
     metadata = stt.SpeechMetadata(
         language="en-US",
@@ -217,79 +245,7 @@ async def test_stt_process_audio_stream_empty_response(
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
-    assert "STT response contained no text (finish_reason=None)" in caplog.text
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_stt_process_audio_stream_blank_text_response(
-    hass: HomeAssistant,
-    mock_genai_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test STT logs an error when the API returns no text despite a candidate."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
-    mock_genai_client.aio.models.generate_content.return_value = (
-        types.GenerateContentResponse(
-            candidates=[{"finish_reason": "STOP", "content": {"role": "model"}}]
-        )
-    )
-
-    metadata = stt.SpeechMetadata(
-        language="en-US",
-        format=stt.AudioFormats.OGG,
-        codec=stt.AudioCodecs.OPUS,
-        bit_rate=stt.AudioBitRates.BITRATE_16,
-        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-        channel=stt.AudioChannels.CHANNEL_MONO,
-    )
-    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
-
-    result = await entity.async_process_audio_stream(metadata, audio_stream)
-
-    assert result.result == stt.SpeechResultState.ERROR
-    assert result.text is None
-    assert (
-        "STT response contained no text (finish_reason=FinishReason.STOP)"
-        in caplog.text
-    )
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_stt_process_audio_stream_blocked_prompt(
-    hass: HomeAssistant,
-    mock_genai_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test STT logs the block reason when the prompt is blocked."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
-    mock_genai_client.aio.models.generate_content.return_value = (
-        types.GenerateContentResponse(
-            candidates=[],
-            prompt_feedback={
-                "block_reason": "SAFETY",
-                "block_reason_message": "Blocked for safety reasons",
-            },
-        )
-    )
-
-    metadata = stt.SpeechMetadata(
-        language="en-US",
-        format=stt.AudioFormats.OGG,
-        codec=stt.AudioCodecs.OPUS,
-        bit_rate=stt.AudioBitRates.BITRATE_16,
-        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-        channel=stt.AudioChannels.CHANNEL_MONO,
-    )
-    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
-
-    result = await entity.async_process_audio_stream(metadata, audio_stream)
-
-    assert result.result == stt.SpeechResultState.ERROR
-    assert result.text is None
-    assert (
-        "STT response contained no text (block_reason=Blocked for safety reasons)"
-        in caplog.text
-    )
+    assert expected_log in caplog.text
 
 
 @pytest.mark.usefixtures("mock_genai_client")
