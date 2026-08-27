@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN, INTEGRATION_TITLE
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
@@ -69,30 +70,13 @@ STATUS_OPTIONS: list[str] = [
     "vent_required",
 ]
 
-STATUS_MAP: dict[str, str] = {
-    "unknown": "unknown",
-    "not connected": "not_connected",
-    "not_connected": "not_connected",
-    "connected": "connected",
-    "charging": "charging",
-    "vent required": "vent_required",
-    "vent_required": "vent_required",
-    "diode check failed": "diode_check_failed",
-    "diode_check_failed": "diode_check_failed",
-    "gfci fault": "gfci_fault",
-    "gfci_fault": "gfci_fault",
-    "no ground": "no_ground",
-    "no_ground": "no_ground",
-    "stuck relay": "stuck_relay",
-    "stuck_relay": "stuck_relay",
-    "gfci self-test failure": "gfci_self_test_failure",
-    "gfci self test failure": "gfci_self_test_failure",
-    "gfci_self_test_failure": "gfci_self_test_failure",
-    "over temperature": "over_temperature",
-    "over_temperature": "over_temperature",
-    "sleeping": "sleeping",
-    "disabled": "disabled",
-}
+
+def _map_status(status: str | None) -> str | None:
+    """Map raw status string to enum option."""
+    if status is None:
+        return None
+    slug = slugify(status)
+    return slug if slug in STATUS_OPTIONS else "unknown"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -109,11 +93,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=STATUS_OPTIONS,
-        value_fn=lambda ev: (
-            STATUS_MAP.get(str(ev.status).lower().strip(), "unknown")
-            if ev.status is not None
-            else None
-        ),
+        value_fn=lambda ev: _map_status(ev.status),
     ),
     OpenEVSESensorDescription(
         key="service_level",
