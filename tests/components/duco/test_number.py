@@ -121,7 +121,6 @@ async def test_bypass_supply_temperature_target_incomplete_metadata_skips_number
 @pytest.mark.usefixtures("init_integration")
 async def test_set_bypass_supply_temperature_target(
     hass: HomeAssistant,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test setting a bypass target refreshes the number from the box."""
