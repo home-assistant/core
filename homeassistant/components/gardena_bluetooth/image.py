@@ -97,7 +97,7 @@ class GardenaBluetoothImage(GardenaBluetoothEntity, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         if (image := self._render()) != self._image:
             self._image = image
-            self._attr_image_last_updated = dt_util.utcnow()
+            self._attr_image_last_updated = dt_util.utcnow() if image else None
         super()._handle_coordinator_update()
 
     @override
