@@ -7,9 +7,26 @@ from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import GVH5075_SERVICE_INFO, GVH5177_SERVICE_INFO, NOT_GOVEE_SERVICE_INFO
+from . import (
+    GVH5055_SERVICE_INFO,
+    GVH5075_SERVICE_INFO,
+    GVH5177_SERVICE_INFO,
+    NOT_GOVEE_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
+
+
+async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with an H5055."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=GVH5055_SERVICE_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
