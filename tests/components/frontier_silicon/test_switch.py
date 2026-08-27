@@ -32,6 +32,7 @@ async def test_dst_switch(
     await hass.async_block_till_done()
 
     mock_afsapi.set_dst.assert_awaited_with(True)
+    mock_afsapi.set_dst.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -42,3 +43,4 @@ async def test_dst_switch(
     await hass.async_block_till_done()
 
     mock_afsapi.set_dst.assert_awaited_with(False)
+    mock_afsapi.set_dst.reset_mock()
