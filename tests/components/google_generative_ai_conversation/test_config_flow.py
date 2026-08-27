@@ -1,15 +1,12 @@
 """Test the Google Generative AI Conversation config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
-from homeassistant.components.google_generative_ai_conversation.config_flow import (
-    google_generative_ai_config_option_schema,
-)
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -86,6 +83,26 @@ def get_models_pager():
         yield model_15_flash
         yield model_15_pro
         yield model_31_flash_tts
+
+    return models_pager()
+
+
+def get_prefix_collision_models_pager():
+    """Return a pager of model ids that start with letters from "models/"."""
+    models = []
+    for name in (
+        "models/gemini-2.5-pro",
+        "models/embedding-001",
+        "models/learnlm-2.0-flash-experimental",
+        "models/lyria-realtime-exp",
+    ):
+        model = Mock(supported_actions=["generateContent"])
+        model.name = name
+        models.append(model)
+
+    async def models_pager():
+        for model in models:
+            yield model
 
     return models_pager()
 
@@ -780,44 +797,38 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     ] == expected_options
 
 
-async def test_model_labels_only_drop_the_models_prefix(hass: HomeAssistant) -> None:
-    """The label must keep the model id intact.
+async def test_subentry_chat_model_labels_keep_the_full_model_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test the chat model selector labels only drop the "models/" prefix."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
 
-    `str.lstrip("models/")` strips the character *set* {m,o,d,e,l,s,/}, so ids
-    beginning with one of those letters lost it: models/embedding-001 rendered
-    as "bedding-001". Every model in `get_models_pager` starts with "g", which
-    is why this was invisible.
-    """
-    names = [
-        "models/gemini-2.5-pro",
-        "models/embedding-001",
-        "models/learnlm-2.0-flash-experimental",
-        "models/lyria-realtime-exp",
-    ]
-    models = []
-    for name in names:
-        model = Mock(supported_actions=["generateContent"])
-        model.name = name
-        models.append(model)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "set_options"
 
-    async def models_pager():
-        for model in models:
-            yield model
+    # Uncheck recommended so the model selector is built
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            result["data_schema"]({CONF_RECOMMENDED: False}),
+        )
 
-    genai_client = Mock()
-    genai_client.aio.models.list = AsyncMock(return_value=models_pager())
-
-    schema = await google_generative_ai_config_option_schema(
-        hass,
-        is_new=True,
-        subentry_type="conversation",
-        options={CONF_RECOMMENDED: False},
-        genai_client=genai_client,
-    )
-
-    key = next(k for k in schema if k == CONF_CHAT_MODEL)
-    labels = [opt["label"] for opt in schema[key].config["options"]]
-    assert labels == [
+    assert result["type"] is FlowResultType.FORM
+    schema_dict = result["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert [opt["label"] for opt in schema_dict[chat_model_key].config["options"]] == [
         "embedding-001",
         "gemini-2.5-pro",
         "learnlm-2.0-flash-experimental",
