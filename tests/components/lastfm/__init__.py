@@ -133,10 +133,12 @@ class MockSessionKeyGenerator:
         self,
         web_auth_url_error: Exception | None = None,
         session_key_error: Exception | None = None,
+        session_username: str = USERNAME_1,
     ) -> None:
         """Initialize the mock."""
         self.web_auth_url_error = web_auth_url_error
         self.session_key_error = session_key_error
+        self.session_username = session_username
 
     def get_web_auth_url(self) -> str:
         """Get mock web auth URL."""
@@ -150,7 +152,7 @@ class MockSessionKeyGenerator:
         """Get mock session key and username."""
         if self.session_key_error:
             raise self.session_key_error
-        return SESSION_KEY, USERNAME_1
+        return SESSION_KEY, self.session_username
 
     def get_web_auth_session_key(self, url: str, token: str = "") -> str:
         """Get mock session key."""

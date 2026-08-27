@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "wrong_account": "The authorized Last.fm account ({authorized_user}) does not match the configured account ({configured_user}). Start setup again and authorize the configured account."
+    },
     "error": {
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
@@ -8,7 +11,7 @@
     },
     "step": {
       "auth_url": {
-        "description": "Select the link below to open Last.fm and authorize Home Assistant with your account, then return here. Setup continues automatically once the authorization is detected.",
+        "description": "Select the link below to open Last.fm and authorize Home Assistant with your account, then return here and select Submit. Setup may continue automatically once the authorization is detected.",
         "title": "Authorize Home Assistant with Last.fm"
       },
       "friends": {

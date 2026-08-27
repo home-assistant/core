@@ -19,6 +19,9 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -41,7 +44,9 @@ PLACEHOLDERS = {
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_API_SECRET): str,
+        vol.Optional(CONF_API_SECRET): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
         vol.Required(CONF_MAIN_USER): str,
     }
 )
@@ -50,10 +55,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_lastfm_user(
-    api_key: str, username: str, check_recent_tracks: bool = True
+    api_key: str,
+    username: str,
+    check_recent_tracks: bool = True,
+    api_secret: str = "",
+    session_key: str = "",
 ) -> tuple[User, dict[str, str]]:
     """Get and validate lastFM User."""
-    user = LastFMNetwork(api_key=api_key).get_user(username)
+    user = LastFMNetwork(
+        api_key=api_key, api_secret=api_secret, session_key=session_key
+    ).get_user(username)
     errors = {}
     try:
         user.get_playcount()
@@ -80,13 +91,21 @@ def get_lastfm_user(
 
 
 def validate_lastfm_users(
-    api_key: str, usernames: list[str]
+    api_key: str,
+    usernames: list[str],
+    api_secret: str = "",
+    session_key: str = "",
 ) -> tuple[list[str], dict[str, str]]:
     """Validate list of users. Return tuple of valid users and errors."""
     valid_users = []
     errors = {}
     for username in usernames:
-        _, lastfm_errors = get_lastfm_user(api_key, username)
+        _, lastfm_errors = get_lastfm_user(
+            api_key,
+            username,
+            api_secret=api_secret,
+            session_key=session_key,
+        )
         if lastfm_errors:
             errors = lastfm_errors
         else:
@@ -110,10 +129,10 @@ def get_web_auth_url(api_key: str, api_secret: str) -> tuple[SessionKeyGenerator
 
 def get_session_key(
     session_key_generator: SessionKeyGenerator, auth_url: str
-) -> str | None:
-    """Exchange the web auth token for a session key once it is authorized."""
+) -> tuple[str, str] | None:
+    """Exchange the web auth token for a session key and username."""
     try:
-        return session_key_generator.get_web_auth_session_key(auth_url)
+        return session_key_generator.get_web_auth_session_key_username(auth_url)
     except PyLastError:
         return None
     except Exception:
@@ -126,6 +145,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     data: dict[str, Any] = {}
     _auth_url: str
+    _authorized_username: str | None = None
     _session_key_generator: SessionKeyGenerator
     _polling_task: asyncio.Task[None] | None = None
 
@@ -144,6 +164,15 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Cancel the session key polling task when the flow is removed."""
         if self._polling_task:
             self._polling_task.cancel()
+            self._polling_task = None
+
+    @callback
+    def _set_session(self, session: tuple[str, str]) -> None:
+        """Store a session when it belongs to the configured user."""
+        session_key, username = session
+        self._authorized_username = username
+        if username.casefold() == self.data[CONF_MAIN_USER].casefold():
+            self.data[CONF_SESSION_KEY] = session_key
 
     @override
     async def async_step_user(
@@ -201,11 +230,16 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             else:
                 # The user continued manually before authorization was detected
-                session_key = await self.hass.async_add_executor_job(
+                session = await self.hass.async_add_executor_job(
                     get_session_key, self._session_key_generator, self._auth_url
                 )
-                if session_key is not None:
-                    self.data[CONF_SESSION_KEY] = session_key
+                if session is not None:
+                    self._set_session(session)
+        if self._authorized_username is not None and CONF_SESSION_KEY not in self.data:
+            if self._polling_task:
+                self._polling_task.cancel()
+                self._polling_task = None
+            return self.async_external_step_done(next_step_id="wrong_account")
         if CONF_SESSION_KEY in self.data:
             if self._polling_task:
                 self._polling_task.cancel()
@@ -213,19 +247,35 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_external_step_done(next_step_id="friends")
         return self.async_external_step(step_id="auth_url", url=self._auth_url)
 
+    async def async_step_wrong_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when authorization used a different Last.fm account."""
+        assert self._authorized_username is not None
+        return self.async_abort(
+            reason="wrong_account",
+            description_placeholders={
+                "authorized_user": self._authorized_username,
+                "configured_user": self.data[CONF_MAIN_USER],
+            },
+        )
+
     async def _async_poll_for_session_key(self) -> None:
         """Poll Last.fm until the user has authorized the application."""
-        for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
-            await asyncio.sleep(POLLING_INTERVAL)
-            session_key = await self.hass.async_add_executor_job(
-                get_session_key, self._session_key_generator, self._auth_url
-            )
-            if session_key is not None:
-                self.data[CONF_SESSION_KEY] = session_key
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(self.flow_id)
+        try:
+            for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
+                await asyncio.sleep(POLLING_INTERVAL)
+                session = await self.hass.async_add_executor_job(
+                    get_session_key, self._session_key_generator, self._auth_url
                 )
-                return
+                if session is not None:
+                    self._set_session(session)
+                    self.hass.async_create_task(
+                        self.hass.config_entries.flow.async_configure(self.flow_id)
+                    )
+                    return
+        finally:
+            self._polling_task = None
 
     async def async_step_friends(
         self, user_input: dict[str, Any] | None = None
@@ -298,9 +348,13 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
         options = self.config_entry.options
         if user_input is not None:
             users, errors = await self.hass.async_add_executor_job(
-                validate_lastfm_users,
-                options[CONF_API_KEY],
-                user_input[CONF_USERS],
+                partial(
+                    validate_lastfm_users,
+                    options[CONF_API_KEY],
+                    user_input[CONF_USERS],
+                    api_secret=options.get(CONF_API_SECRET, ""),
+                    session_key=options.get(CONF_SESSION_KEY, ""),
+                )
             )
             user_input[CONF_USERS] = users
             if not errors:

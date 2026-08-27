@@ -1,6 +1,6 @@
 """Test Lastfm config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, call, patch
 
 from pylast import WSError
 import pytest
@@ -19,13 +19,16 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     API_KEY,
+    API_SECRET,
     AUTH_URL,
     CONF_DATA,
     CONF_DATA_WITH_SESSION_KEY,
     CONF_FRIENDS_DATA,
     CONF_USER_DATA,
     CONF_USER_DATA_WITH_SECRET,
+    SESSION_KEY,
     USERNAME_1,
+    USERNAME_2,
     MockSessionKeyGenerator,
     MockUser,
     patch_setup_entry,
@@ -37,6 +40,7 @@ from tests.common import MockConfigEntry
 FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
 POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
+MAX_POLLING_ATTEMPTS_PATH = f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS"
 
 
 @pytest.mark.parametrize(
@@ -78,11 +82,8 @@ async def test_full_user_flow_with_session_key(
     """Test the full user configuration flow with web authentication."""
     with (
         patch("pylast.User", return_value=default_user),
-        patch(
-            SESSION_KEY_GENERATOR_PATH,
-            return_value=MockSessionKeyGenerator(),
-        ),
-        patch(POLLING_INTERVAL_PATH, 60),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
+        patch(POLLING_INTERVAL_PATH, 0),
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -98,9 +99,7 @@ async def test_full_user_flow_with_session_key(
         assert result["step_id"] == "auth_url"
         assert result["url"] == AUTH_URL
 
-        # The user authorizes in the browser and the flow is resumed
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
@@ -112,6 +111,66 @@ async def test_full_user_flow_with_session_key(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["options"] == CONF_DATA_WITH_SESSION_KEY
+
+
+async def test_flow_rejects_session_for_different_user(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test a session for a different Last.fm user is rejected."""
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(session_username=USERNAME_2),
+        ),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert result["description_placeholders"] == {
+        "authorized_user": USERNAME_2,
+        "configured_user": USERNAME_1,
+    }
+
+
+async def test_flow_restarts_polling_after_timeout(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test polling restarts when the user continues after a timeout."""
+    session_key_generator = MockSessionKeyGenerator(
+        session_key_error=WSError("network", "17", "Unauthorized Token")
+    )
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch(POLLING_INTERVAL_PATH, 0),
+        patch(MAX_POLLING_ATTEMPTS_PATH, 1),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await hass.async_block_till_done()
+
+        session_key_generator.session_key_error = None
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "friends"
 
 
 @pytest.mark.parametrize(
@@ -421,6 +480,50 @@ async def test_options_flow(
         CONF_MAIN_USER: USERNAME_1,
         CONF_USERS: [USERNAME_1],
     }
+
+
+async def test_options_flow_with_session_key(
+    hass: HomeAssistant,
+    default_user: MockUser,
+    hidden_user: MockUser,
+) -> None:
+    """Test options validation accepts a hidden user with a saved session."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options=CONF_DATA_WITH_SESSION_KEY,
+    )
+    config_entry.add_to_hass(hass)
+    anonymous_network = MagicMock()
+    anonymous_network.get_user.return_value = hidden_user
+    authenticated_network = MagicMock()
+    authenticated_network.get_user.return_value = default_user
+    with (
+        patch(
+            f"{FLOW_MODULE}.LastFMNetwork",
+            side_effect=[anonymous_network, authenticated_network],
+        ) as network_cls,
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_USERS: [USERNAME_1]}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        **CONF_DATA_WITH_SESSION_KEY,
+        CONF_USERS: [USERNAME_1],
+    }
+    network_cls.assert_has_calls(
+        [
+            call(api_key=API_KEY, api_secret="", session_key=""),
+            call(
+                api_key=API_KEY,
+                api_secret=API_SECRET,
+                session_key=SESSION_KEY,
+            ),
+        ]
+    )
 
 
 async def test_options_flow_incorrect_username(
