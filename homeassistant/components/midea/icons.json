@@ -5,6 +5,18 @@
         "default": "mdi:air-filter"
       }
     },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "full": "mdi:fan-chevron-up",
+              "silent": "mdi:fan-chevron-down"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {

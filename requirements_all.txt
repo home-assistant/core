@@ -102,7 +102,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.61.0
+PyViCare==2.62.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1256,7 +1256,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.6.0
+hass-nabucasa==2.7.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1303,7 +1303,7 @@ hole==0.9.2
 holidays==0.103
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260826.0
+home-assistant-frontend==20260826.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.8.25
@@ -2519,7 +2519,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.44
+pyportainer==1.0.45
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -3081,7 +3081,7 @@ simplehound==0.3
 simplepush==2.2.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2024.01.0
+simplisafe-python==2026.06.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.4
@@ -3105,7 +3105,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.5.0
+sofar-modbus==0.6.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3

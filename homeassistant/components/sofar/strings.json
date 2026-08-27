@@ -32,6 +32,14 @@
     }
   },
   "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
     "sensor": {
       "active_power_load_sys": {
         "name": "Active power load system"
