@@ -61,6 +61,38 @@
         "name": "Pool light"
       }
     },
+    "number": {
+      "cl1": {
+        "name": "Chlorine setpoint"
+      },
+      "heating_temp": {
+        "name": "Temperature setpoint"
+      },
+      "hidro": {
+        "name": "Hydrolisis target production level"
+      },
+      "hidro_cover_reduction": {
+        "name": "Cover reduction (when covered)"
+      },
+      "hidro_shutdown_temperature": {
+        "name": "Hydrolysis shutdown temp. threshold"
+      },
+      "ph1": {
+        "name": "pH max limit"
+      },
+      "ph2": {
+        "name": "pH min limit"
+      },
+      "rx1": {
+        "name": "Redox setpoint"
+      },
+      "smart_temp_high": {
+        "name": "Smart upper temperature"
+      },
+      "smart_temp_low": {
+        "name": "Smart lower temperature"
+      }
+    },
     "sensor": {
       "cell_runtime_part": {
         "name": "Cell runtime since reset"

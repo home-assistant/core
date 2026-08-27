@@ -8,6 +8,7 @@ NAME = "NeoPool"
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
