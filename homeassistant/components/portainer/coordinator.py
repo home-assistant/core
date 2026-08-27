@@ -230,7 +230,6 @@ class PortainerCoordinator(
         try:
             endpoints = await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
-            _LOGGER.error("Authentication error: %s", repr(err))
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
@@ -251,19 +250,27 @@ class PortainerCoordinator(
                 )
                 continue
 
-            (
-                containers,
-                docker_version,
-                docker_info,
-                docker_system_df,
-                volumes,
-            ) = await asyncio.gather(
-                self.portainer.get_containers(endpoint.id),
-                self.portainer.docker_version(endpoint.id),
-                self.portainer.docker_info(endpoint.id),
-                self.portainer.docker_system_df(endpoint.id, verbose=True),
-                self.portainer.get_volumes(endpoint.id),
-            )
+            try:
+                (
+                    containers,
+                    docker_version,
+                    docker_info,
+                    docker_system_df,
+                    volumes,
+                ) = await asyncio.gather(
+                    self.portainer.get_containers(endpoint.id),
+                    self.portainer.docker_version(endpoint.id),
+                    self.portainer.docker_info(endpoint.id),
+                    self.portainer.docker_system_df(endpoint.id, verbose=True),
+                    self.portainer.get_volumes(endpoint.id),
+                )
+            except PortainerTimeoutError:
+                _LOGGER.warning(
+                    "Timed out fetching data for endpoint: %s (ID: %d). Skipping data fetch",
+                    endpoint.name,
+                    endpoint.id,
+                )
+                continue
 
             stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
             swarm_id = (
