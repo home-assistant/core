@@ -72,6 +72,29 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_disabling_remote_without_backend(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test disabling remote before the remote backend is initialized.
+
+    Preferences are reset when a new user logs in, which disables remote while
+    hass_nabucasa has no backend to disconnect from.
+    """
+    prefs = hass.data[DATA_CLOUD].client.prefs
+
+    with patch("hass_nabucasa.remote.RemoteUI.connect"):
+        await prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+
+    await prefs.async_update(remote_enabled=False)
+    await hass.async_block_till_done()
+
+    assert not prefs.remote_enabled
+    assert "RemoteNotConnected" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
 async def test_remote_services(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:

@@ -115,7 +115,7 @@ async def async_search_media(
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,
-    target_media_player: str | None | UndefinedType = UNDEFINED,
+    target_media_player: str | UndefinedType | None = UNDEFINED,
 ) -> PlayMedia:
     """Get info to play media."""
     if DOMAIN not in hass.config.top_level_components:

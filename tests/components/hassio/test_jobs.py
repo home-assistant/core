@@ -1,7 +1,6 @@
 """Test supervisor jobs manager."""
 
 from collections.abc import Generator
-from datetime import datetime
 import os
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -52,7 +51,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 extra=None,
                 child_jobs=[
                     Job(
@@ -63,7 +62,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                         stage=None,
                         done=False,
                         errors=[],
-                        created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                        created=dt_util.utcnow(),
                         extra=None,
                         child_jobs=[],
                     )
@@ -142,7 +141,7 @@ async def test_job_manager_ws_updates(
                     "stage": None,
                     "done": False,
                     "errors": [],
-                    "created": (created := datetime.now().isoformat()),  # pylint: disable=home-assistant-enforce-naive-now
+                    "created": (created := dt_util.utcnow().isoformat()),
                     "extra": None,
                 },
             },
@@ -306,7 +305,7 @@ async def test_job_manager_reload_on_supervisor_restart(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 extra=None,
                 child_jobs=[],
             )
@@ -384,7 +383,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 extra=None,
                 child_jobs=[],
             )
@@ -428,7 +427,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
                     "stage": None,
                     "done": False,
                     "errors": [],
-                    "created": datetime.now().isoformat(),  # pylint: disable=home-assistant-enforce-naive-now
+                    "created": dt_util.utcnow().isoformat(),
                     "extra": None,
                 },
             },
@@ -457,7 +456,7 @@ async def test_job_manager_periodic_refresh(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 extra=None,
                 child_jobs=[],
             )

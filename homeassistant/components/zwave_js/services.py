@@ -83,6 +83,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "set_user",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Optional(const.ATTR_USER_ID): uint16_id,
@@ -106,6 +107,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_user",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_delete_user",
@@ -115,6 +117,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_all_users",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_delete_all_users",
@@ -144,6 +147,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "set_credential",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(const.ATTR_USER_ID): uint16_id,
@@ -161,6 +165,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_credential",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(const.ATTR_USER_ID): uint16_id,
@@ -176,6 +181,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_all_credentials",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_delete_all_credentials",

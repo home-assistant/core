@@ -193,8 +193,14 @@
     "play_tone_failed": {
       "message": "Failed to play tone on {device_name}: {error}."
     },
+    "reboot_timeout": {
+      "message": "Timeout waiting for {hostname} to reboot after update"
+    },
     "send_ir_code_failed": {
       "message": "Failed to send IR code: {error}."
+    },
+    "unknown_effect": {
+      "message": "Unknown effect: {effect}."
     }
   },
   "issues": {
