@@ -74,7 +74,7 @@ def _node_configs_with_primary_name(
             "async_get_board_info",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (
@@ -95,7 +95,7 @@ def _node_configs_with_primary_name(
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (

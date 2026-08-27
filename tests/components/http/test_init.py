@@ -3009,11 +3009,19 @@ async def test_pending_config_promote_cancels_revert(
 @pytest.mark.parametrize(
     "config",
     [
-        {"server_port": "not-a-port"},
-        {
-            "use_x_forwarded_for": True,
-            "trusted_proxies": ["not-an-ip-network"],
-        },
+        pytest.param({"server_port": "not-a-port"}, id="invalid_port"),
+        pytest.param(
+            {
+                "use_x_forwarded_for": True,
+                "trusted_proxies": ["not-an-ip-network"],
+            },
+            id="invalid_proxy_network",
+        ),
+        pytest.param({"use_x_forwarded_for": True}, id="proxies_omitted"),
+        pytest.param(
+            {"use_x_forwarded_for": True, "trusted_proxies": []},
+            id="proxies_empty",
+        ),
     ],
 )
 async def test_websocket_http_config_invalid(
@@ -3035,3 +3043,34 @@ async def test_websocket_http_config_invalid(
     response = await ws_client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({"use_x_forwarded_for": False}, id="omitted"),
+        pytest.param(
+            {"use_x_forwarded_for": False, "trusted_proxies": []}, id="empty_list"
+        ),
+        pytest.param({"trusted_proxies": ["127.0.0.0/8"]}, id="proxies_only"),
+    ],
+)
+async def test_websocket_configure_without_trusted_proxies(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config: dict[str, Any],
+) -> None:
+    """Test that reverse proxy support can be turned off without trusted proxies."""
+    assert await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    async_mock_service(hass, "homeassistant", "restart")
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": config}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
