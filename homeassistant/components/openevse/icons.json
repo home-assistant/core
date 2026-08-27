@@ -35,7 +35,6 @@
           "over_temperature": "mdi:thermometer-alert",
           "sleeping": "mdi:sleep",
           "stuck_relay": "mdi:alert",
-          "unknown": "mdi:help-circle",
           "vent_required": "mdi:fan-alert"
         }
       },

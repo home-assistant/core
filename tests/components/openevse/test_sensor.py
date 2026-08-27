@@ -210,8 +210,8 @@ async def test_yaml_import_already_configured(
         pytest.param("over temperature", "over_temperature", id="over_temperature"),
         pytest.param("sleeping", "sleeping", id="sleeping"),
         pytest.param("disabled", "disabled", id="disabled"),
-        pytest.param("unknown", "unknown", id="unknown"),
-        pytest.param("unrecognized_raw_status", "unknown", id="fallback_unknown"),
+        pytest.param("unknown", STATE_UNKNOWN, id="unknown"),
+        pytest.param("unrecognized_raw_status", STATE_UNKNOWN, id="fallback_unknown"),
         pytest.param(None, STATE_UNKNOWN, id="none_status"),
     ],
 )

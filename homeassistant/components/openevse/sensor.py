@@ -66,17 +66,15 @@ STATUS_OPTIONS: list[str] = [
     "over_temperature",
     "sleeping",
     "stuck_relay",
-    "unknown",
     "vent_required",
 ]
 
 
 def _map_status(status: str | None) -> str | None:
     """Map raw status string to enum option."""
-    if status is None:
-        return None
-    slug = slugify(status)
-    return slug if slug in STATUS_OPTIONS else "unknown"
+    if status is not None and (slug := slugify(status)) in STATUS_OPTIONS:
+        return slug
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)

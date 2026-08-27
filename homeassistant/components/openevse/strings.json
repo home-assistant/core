@@ -185,7 +185,6 @@
           "over_temperature": "Over temperature",
           "sleeping": "Sleeping",
           "stuck_relay": "Stuck relay",
-          "unknown": "Unknown",
           "vent_required": "Vent required"
         }
       },
