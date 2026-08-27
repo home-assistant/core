@@ -1844,6 +1844,24 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
             ),
         ),
+        (
+            {
+                "accept": ["image/*"],
+                "remove_metadata": False,
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (),
+        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -1861,7 +1879,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
         schema,
         valid_selections,
         invalid_selections,
-        drop_metadata,
+        drop_metadata if schema.get("remove_metadata", True) else None,
     )
 
 

@@ -1343,6 +1343,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
 
     accept: list[str]
     multiple: bool
+    remove_metadata: bool
 
 
 @SELECTORS.register("media")
@@ -1360,17 +1361,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         {
             vol.Optional("accept"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("remove_metadata", default=True): cv.boolean,
         }
     )
     DATA_SCHEMA = vol.Schema(
         {
-            # If accept is set, the entity_id field will not be present
             vol.Optional("entity_id"): cv.entity_id_or_uuid,
-            # Although marked as optional in frontend, this field is required
             vol.Required("media_content_id"): str,
-            # Although marked as optional in frontend, this field is required
             vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
+            vol.Optional("metadata"): dict,
         }
     )
 
@@ -1380,11 +1379,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
         """Validate the passed selection."""
-        item_schema_dict = {
-            key: value
-            for key, value in self.DATA_SCHEMA.schema.items()
-            if key != "entity_id"
-        }
+
+        item_schema_dict = {}
+
+        for key, value in self.DATA_SCHEMA.schema.items():
+            key_name = getattr(key, "schema", key)
+
+            if key_name == "entity_id":
+                continue
+
+            if key_name == "metadata" and self.config.get("remove_metadata", True):
+                key = vol.Remove("metadata")
+
+            item_schema_dict[key] = value
 
         if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
