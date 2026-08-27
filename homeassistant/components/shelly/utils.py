@@ -901,6 +901,27 @@ def get_blu_trv_device_info(
     )
 
 
+def get_ir_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    device: RpcDevice,
+    mac: str,
+    key: str,
+) -> DeviceInfo:
+    """Return device info for IR code sub-device."""
+    device_id = device.config[key]["device_id"]
+    ir_device_key = f"irdevice:{device_id}"
+    name = device.config[ir_device_key].get("name") or f"IR Device {device_id}"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{ir_device_key}")},
+        name=name,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
+    )
+
+
 def is_block_single_device(device: BlockDevice, block: Block | None = None) -> bool:
     """Return true if block is single device."""
     return (
