@@ -18,7 +18,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
@@ -63,54 +62,44 @@ async def test_pv_entities(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_remote_switch_turn_on(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+@pytest.mark.parametrize(
+    ("remote_on", "service", "initial", "final"),
+    [
+        pytest.param(False, SERVICE_TURN_ON, STATE_OFF, STATE_ON, id="turn_on"),
+        pytest.param(True, SERVICE_TURN_OFF, STATE_ON, STATE_OFF, id="turn_off"),
+    ],
+)
+async def test_remote_switch_toggle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    remote_on: bool,
+    service: str,
+    initial: str,
+    final: str,
 ) -> None:
-    """Test turning the remote switch on writes the register."""
-    await _setup_pv(hass)
+    """Test toggling the remote switch writes the register."""
+    await _setup_pv(hass, remote_on=remote_on)
     entity_id = entity_registry.async_get_entity_id(
         SWITCH_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_remote_switch_on_off"
     )
     assert entity_id is not None
     assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == STATE_OFF
+    assert state.state == initial
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == STATE_ON
-
-
-async def test_remote_switch_turn_off(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test turning the remote switch off writes the register."""
-    await _setup_pv(hass, remote_on=True)
-    entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_remote_switch_on_off"
-    )
-    assert entity_id is not None
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == STATE_OFF
+    assert state.state == final
 
 
 async def test_turn_on_modbus_error(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a write failure surfaces as a HomeAssistantError."""
+    """Test a write failure propagates as-is."""
     _, connection = await _setup_pv(hass)
     entity_id = entity_registry.async_get_entity_id(
         SWITCH_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_remote_switch_on_off"
@@ -118,13 +107,10 @@ async def test_turn_on_modbus_error(
     assert entity_id is not None
     connection.for_unit(1).fail_write(0x1104, ModbusError("busy"))
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "modbus_error"

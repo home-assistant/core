@@ -3,15 +3,12 @@
 from dataclasses import dataclass
 from typing import Any, override
 
-from modbus_connection import ModbusError
 from sofar_modbus.modern.enums import RemoteSwitchOnOff
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -63,14 +60,7 @@ class SofarSwitch(SofarEntity, SwitchEntity):
     async def _async_write(self, value: RemoteSwitchOnOff) -> None:
         """Write the switch state to the device."""
         component = getattr(self.coordinator.device, self.entity_description.component)
-        try:
-            await component.write(self.entity_description.key, value)
-        except ModbusError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await component.write(self.entity_description.key, value)
         await self.coordinator.async_request_refresh()
 
     @override
