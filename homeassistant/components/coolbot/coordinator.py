@@ -110,9 +110,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        if not devices:
-            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_devices")
-
+        # An empty list is a valid answer, not a failure: the profile is
+        # authoritative, and treating it as an error would retain the previous
+        # devices forever, leaving the last removed cooler undeletable and a
+        # reload stuck retrying.
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:

@@ -61,9 +61,6 @@
     },
     "connection_error": {
       "message": "Could not communicate with the CoolBot service: {error}"
-    },
-    "no_devices": {
-      "message": "The CoolBot account reported no devices."
     }
   }
 }

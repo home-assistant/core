@@ -152,18 +152,22 @@ async def test_staleness_is_logged_once_in_each_direction(
     assert "is reporting again" in caplog.text
 
 
-async def test_an_empty_device_list_is_a_failure_not_a_wipe(
+async def test_an_emptied_account_is_a_valid_update(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Zero devices means the profile fetch broke.
+    """Removing the last cooler produces a successful, empty update.
 
-    Keeping the previous data (and flagging the failure) beats deleting every
-    entity's state.
+    Treating an empty profile as a failure would retain the previous devices
+    for good, which leaves the removed cooler permanently undeletable and a
+    reload stuck in setup retry.
     """
     assert await setup_integration(hass, mock_config_entry)
 
     mock_client.async_get_devices.return_value = []
     await _tick(hass)
 
-    assert not mock_config_entry.runtime_data.last_update_success
-    assert mock_config_entry.runtime_data.data  # previous devices retained
+    assert mock_config_entry.runtime_data.last_update_success
+    assert mock_config_entry.runtime_data.data == {}
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
+    )
