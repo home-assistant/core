@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -9,6 +11,7 @@ from pycoolbot import CoolbotAuthError, CoolbotError
 import pytest
 
 from homeassistant.components.coolbot.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -85,6 +88,59 @@ async def test_auth_failure_during_refresh_starts_reauth(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert any(flow["context"]["source"] == "reauth" for flow in flows)
     mock_client.async_close.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    "failure", [RuntimeError("surprise"), asyncio.CancelledError()]
+)
+async def test_a_connect_that_never_succeeds_closes_the_client(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    failure: BaseException,
+) -> None:
+    """Every way of leaving a connect attempt has to close the client.
+
+    The socket and its reader task exist partway through connecting, before
+    anything else holds the client, so an unexpected error or a cancellation
+    from a reload would otherwise leak both.
+    """
+    mock_client.async_connect.side_effect = failure
+    mock_config_entry.add_to_hass(hass)
+
+    with suppress(Exception, asyncio.CancelledError):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    mock_client.async_close.assert_awaited()
+
+
+async def test_a_reconnect_before_the_mac_replays_does_not_flap(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A known cooler survives a refresh that arrives before its MAC does.
+
+    Reconnecting only waits for the first replayed pin, which need not be this
+    cooler's MAC. Dropping it for that one cycle would report an outage that is
+    not happening and flap its entities.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [
+        make_device(unique_id="coolbot_10_0", mac_address=None)
+    ]
+    await _tick(hass)
+
+    assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
+    assert "has stopped reporting" not in caplog.text
+    # Whatever unit it is displayed in, the reading must still be there.
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state != "unavailable"
+    )
 
 
 async def test_a_device_waits_for_its_mac_identity(

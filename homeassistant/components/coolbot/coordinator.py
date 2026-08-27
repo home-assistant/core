@@ -63,12 +63,11 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             self.config_entry.data[CONF_PASSWORD],
             session=session,
         )
+        connected = False
         try:
             await client.async_connect()
+            connected = True
         except CoolbotAuthError as err:
-            # A rejected login still leaves the socket and reader task running;
-            # only closing the client stops them.
-            await _async_close_client(client)
             # Prompts the user to re-enter credentials rather than retrying forever.
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -76,12 +75,19 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except CoolbotError as err:
-            await _async_close_client(client)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+        finally:
+            if not connected:
+                # The socket and its reader task exist from partway through
+                # connecting, and nothing else holds this client yet, so every
+                # way of leaving without it — a rejected login, an unexpected
+                # error, cancellation from a reload or shutdown — has to close
+                # it here or it is leaked for the lifetime of the entry.
+                await _async_close_client(client)
 
         self._client = client
 
@@ -120,13 +126,24 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         # authoritative, and treating it as an error would retain the previous
         # devices forever, leaving the last removed cooler undeletable and a
         # reload stuck retrying.
+        # Devices already seen, by dashboard slot: the slot is stable across a
+        # reconnect, while the unique id is not until the MAC has replayed.
+        seen_by_slot = {device.target: device for device in (self.data or {}).values()}
+
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:
                 # This device's MAC has not landed yet; it arrives as a replayed
                 # pin. Its unique_id would be a dash/slot fallback that changes
-                # once the MAC arrives, duplicating the device, so hold it back;
-                # a later refresh adds it under its stable identity.
+                # once the MAC arrives, duplicating the device, so it cannot be
+                # published under that id.
+                if (already_seen := seen_by_slot.get(device.target)) is not None:
+                    # Reconnecting only waits for the first replayed pin, which
+                    # need not be this device's MAC. Carrying the last snapshot
+                    # over the gap avoids reporting an outage that is not
+                    # happening and flapping its entities for a cycle.
+                    data[already_seen.unique_id] = already_seen
+                    continue
                 _LOGGER.debug(
                     "Holding back %s until its MAC address arrives", device.name
                 )
