@@ -116,6 +116,41 @@ async def test_setup_starts_reauth_on_bad_credentials(
     assert any(flow["context"]["source"] == "reauth" for flow in flows)
 
 
+async def test_hardware_details_that_replay_late_reach_the_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Model and firmware pins can replay after the cooler is created.
+
+    Connecting returns once the first pin has replayed, and device info is only
+    read when an entity is added, so these details would otherwise stay missing
+    until the entry is reloaded.
+    """
+    mock_client.async_get_devices.return_value = [
+        make_device(coolbot_hardware=None, jumper_firmware=None)
+    ]
+    assert await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "CoolBot Pro"
+    assert device.sw_version is None
+
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "CoolBot Pro 6"
+    assert device.sw_version == "1.2.3"
+
+
 async def test_a_deleted_cooler_returning_gets_its_entities_back(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

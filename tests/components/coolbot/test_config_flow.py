@@ -201,12 +201,28 @@ async def test_reconfigure_flow_updates_credentials(
     assert mock_config_entry.data[CONF_PASSWORD] == "rotated"
 
 
-@pytest.mark.parametrize("flow", ["reauth", "reconfigure"])
+@pytest.mark.parametrize(
+    ("start_flow", "user_input", "reason"),
+    [
+        (
+            "start_reauth_flow",
+            {CONF_PASSWORD: "new-password"},
+            "reauth_successful",
+        ),
+        (
+            "start_reconfigure_flow",
+            {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: "new-password"},
+            "reconfigure_successful",
+        ),
+    ],
+)
 async def test_existing_entry_flows_allow_an_emptied_account(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    flow: str,
+    start_flow: str,
+    user_input: dict[str, str],
+    reason: str,
 ) -> None:
     """Credentials stay fixable after the last cooler is removed.
 
@@ -217,19 +233,13 @@ async def test_existing_entry_flows_allow_an_emptied_account(
     mock_config_entry.add_to_hass(hass)
     mock_client.async_get_devices.return_value = []
 
-    if flow == "reauth":
-        result = await mock_config_entry.start_reauth_flow(hass)
-        user_input = {CONF_PASSWORD: "new-password"}
-    else:
-        result = await mock_config_entry.start_reconfigure_flow(hass)
-        user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: "new-password"}
-
+    result = await getattr(mock_config_entry, start_flow)(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == f"{flow}_successful"
+    assert result["reason"] == reason
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
 
 

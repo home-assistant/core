@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -50,6 +51,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: that are new. Held here rather than in the platform so a removal can
         #: clear it.
         self.known_devices: set[str] = set()
+        #: Hardware details last written to the device registry, per unique id,
+        #: so an unchanged refresh does not touch the registry at all.
+        self._device_details: dict[str, tuple[str, str | None, str | None]] = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -151,7 +155,44 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             data[device.unique_id] = device
 
         self._log_staleness_transitions(data)
+        self._apply_late_device_details(data)
         return data
+
+    def _apply_late_device_details(self, data: dict[str, CoolbotDevice]) -> None:
+        """Record hardware details that replay after a cooler is created.
+
+        Connecting returns once the first pin has replayed, so a cooler can be
+        registered before its model and firmware pins arrive. Device info is
+        only read when an entity is added, so without this those details would
+        stay missing until the entry is reloaded.
+        """
+        registry: dr.DeviceRegistry | None = None
+        for unique_id, device in data.items():
+            details = (
+                device_model(device),
+                device.jumper_firmware,
+                device.jumper_hardware,
+            )
+            if self._device_details.get(unique_id) == details:
+                continue
+            if registry is None:
+                registry = dr.async_get(self.hass)
+            entry = registry.async_get_device_by_identifier(
+                (DOMAIN, unique_id), self.config_entry.entry_id
+            )
+            if entry is None:
+                # Its entities have not been created yet, so it will be
+                # registered with whatever has replayed by then.
+                continue
+            self._device_details[unique_id] = details
+            if (entry.model, entry.sw_version, entry.hw_version) == details:
+                continue
+            registry.async_update_device(
+                entry.id,
+                model=details[0],
+                sw_version=details[1],
+                hw_version=details[2],
+            )
 
     def _log_staleness_transitions(self, data: dict[str, CoolbotDevice]) -> None:
         """Log once when a device stops reporting, and once when it recovers.
@@ -201,6 +242,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         """
         self.known_devices.discard(unique_id)
         self._reporting.pop(unique_id, None)
+        self._device_details.pop(unique_id, None)
 
     @override
     async def async_shutdown(self) -> None:
@@ -220,6 +262,13 @@ async def _async_close_client(client: CoolbotClient) -> None:
         await client.async_close()
     except Exception:
         _LOGGER.debug("Error while closing the socket", exc_info=True)
+
+
+def device_model(device: CoolbotDevice) -> str:
+    """Return the model name, including the hardware revision once known."""
+    if device.coolbot_hardware:
+        return f"CoolBot Pro {device.coolbot_hardware}"
+    return "CoolBot Pro"
 
 
 def device_is_fresh(device: CoolbotDevice) -> bool:

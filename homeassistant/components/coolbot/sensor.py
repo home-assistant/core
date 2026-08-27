@@ -27,7 +27,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import CoolbotConfigEntry, CoolbotCoordinator, device_is_fresh
+from .coordinator import (
+    CoolbotConfigEntry,
+    CoolbotCoordinator,
+    device_is_fresh,
+    device_model,
+)
 
 # Everything is served from the coordinator's already-received state, so there is
 # no I/O to throttle.
@@ -154,9 +159,7 @@ class CoolbotSensor(CoordinatorEntity[CoolbotCoordinator], SensorEntity):
             identifiers={(DOMAIN, device.unique_id)},
             manufacturer=MANUFACTURER,
             name=device.name,
-            model=f"CoolBot Pro {device.coolbot_hardware}"
-            if device.coolbot_hardware
-            else "CoolBot Pro",
+            model=device_model(device),
             sw_version=device.jumper_firmware,
             hw_version=device.jumper_hardware,
         )
