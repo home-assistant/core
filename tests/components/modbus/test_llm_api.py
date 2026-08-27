@@ -7,7 +7,7 @@ from modbus_connection import ModbusTcpParams
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.modbus import async_get_unit
+from homeassistant.components.modbus import async_get_temporary_unit, async_get_unit
 from homeassistant.components.modbus.llm_api import API_ID
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import Context, HomeAssistant
@@ -142,7 +142,7 @@ async def test_reading_an_unknown_device_is_refused(
     assert await async_setup_component(hass, "modbus", {})
     await _hold_a_unit(hass, consumer)
 
-    with pytest.raises(HomeAssistantError, match="No Modbus connection"):
+    with pytest.raises(HomeAssistantError, match="holds no unit"):
         await (await _instance(hass)).async_call_tool(
             llm.ToolInput(
                 tool_name="read_modbus_block",
@@ -289,3 +289,50 @@ async def test_a_bit_table_may_read_more_than_a_register_table(
                 tool_name="read_modbus_block", tool_args=args | {"table": "holding"}
             )
         )
+
+
+async def test_reading_a_unit_nobody_holds_is_refused(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """The endpoint alone is not the boundary: a gateway carries other devices."""
+    assert await async_setup_component(hass, "modbus", {})
+    await _hold_a_unit(hass, consumer, 1)
+
+    with pytest.raises(HomeAssistantError, match="holds no unit 7"):
+        await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(
+                tool_name="read_modbus_block",
+                tool_args={
+                    "endpoint": ["tcp", "device.local", 502],
+                    "unit_id": 7,  # on the same bus, but nobody asked for it
+                    "address": 0,
+                    "count": 1,
+                },
+            )
+        )
+
+
+async def test_a_device_only_being_probed_is_invisible(hass: HomeAssistant) -> None:
+    """A config flow's hold is a device nobody has accepted yet."""
+    assert await async_setup_component(hass, "modbus", {})
+    params = ModbusTcpParams(host="probing.local", port=502)
+
+    async with async_get_temporary_unit(hass, params, 1):
+        listed = await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(tool_name="list_modbus_devices", tool_args={})
+        )
+
+        assert listed["devices"] == []
+
+        with pytest.raises(HomeAssistantError, match="holds no unit"):
+            await (await _instance(hass)).async_call_tool(
+                llm.ToolInput(
+                    tool_name="read_modbus_block",
+                    tool_args={
+                        "endpoint": ["tcp", "probing.local", 502],
+                        "unit_id": 1,
+                        "address": 0,
+                        "count": 1,
+                    },
+                )
+            )

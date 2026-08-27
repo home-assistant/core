@@ -19,7 +19,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.util.json import JsonObjectType
 
-from .connection import DATA_MODBUS_CONNECTIONS, async_get_connection_info
+from .connection import (
+    DATA_MODBUS_CONNECTIONS,
+    async_get_connection_info,
+    async_get_temporary_unit,
+)
 
 API_ID: Final = "modbus"
 
@@ -163,30 +167,40 @@ class ReadModbusBlockTool(llm.Tool):
         args: dict[str, Any] = self.parameters(tool_input.tool_args)
         endpoint = tuple(args["endpoint"])
 
+        unit_id: int = args["unit_id"]
         shared = hass.data.get(DATA_MODBUS_CONNECTIONS, {}).get(endpoint)
-        if shared is None:
+
+        # Only a unit some config entry holds may be read. The endpoint alone
+        # would let a caller reach any address on a gateway, including devices
+        # behind it that no integration asked for, and a connection a config
+        # flow is only probing belongs to nothing yet.
+        if shared is None or not any(
+            unit_id in units for units in shared.units.values()
+        ):
             raise HomeAssistantError(
-                f"No Modbus connection to {list(endpoint)}. "
-                "Call list_modbus_devices for the ones there are."
+                f"Home Assistant holds no unit {unit_id} on {list(endpoint)}. "
+                "Call list_modbus_devices for the units there are."
             )
 
-        unit = shared.connection.for_unit(args["unit_id"])
         address: int = args["address"]
         count: int = args["count"]
 
-        # Spelled out rather than dispatched through a mapping: the register
-        # tables answer with ints and the bit tables with bools, which no one
-        # callable type covers.
-        values: list[int] | list[bool]
-        match args["table"]:
-            case "input":
-                values = await unit.read_input_registers(address, count)
-            case "coil":
-                values = await unit.read_coils(address, count)
-            case "discrete_input":
-                values = await unit.read_discrete_inputs(address, count)
-            case _:
-                values = await unit.read_holding_registers(address, count)
+        # Held for the read, so unloading the last consumer mid-request cannot
+        # close the connection underneath it.
+        async with async_get_temporary_unit(hass, shared.params, unit_id) as unit:
+            # Spelled out rather than dispatched through a mapping: the
+            # register tables answer with ints and the bit tables with bools,
+            # which no one callable type covers.
+            values: list[int] | list[bool]
+            match args["table"]:
+                case "input":
+                    values = await unit.read_input_registers(address, count)
+                case "coil":
+                    values = await unit.read_coils(address, count)
+                case "discrete_input":
+                    values = await unit.read_discrete_inputs(address, count)
+                case _:
+                    values = await unit.read_holding_registers(address, count)
 
         return {
             "address": address,

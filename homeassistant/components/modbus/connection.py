@@ -159,7 +159,8 @@ def async_get_connection_info(hass: HomeAssistant) -> list[ModbusConnectionInfo]
     """Return the connections the integration is keeping open.
 
     One entry per physical device, naming the config entries holding units on
-    it. A device several integrations share appears once, with all of them.
+    it. A device several integrations share appears once, with all of them. A
+    connection a config flow is only probing is not one of them.
     """
     return [
         ModbusConnectionInfo(
@@ -168,4 +169,7 @@ def async_get_connection_info(hass: HomeAssistant) -> list[ModbusConnectionInfo]
             units={entry_id: sorted(held) for entry_id, held in shared.units.items()},
         )
         for endpoint, shared in hass.data.get(DATA_MODBUS_CONNECTIONS, {}).items()
+        # A connection held only by a config flow's probe is a device nobody
+        # has accepted yet, so it is not one of the integration's connections.
+        if shared.units
     ]
