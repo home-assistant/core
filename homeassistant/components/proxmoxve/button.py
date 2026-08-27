@@ -29,6 +29,17 @@ from .helpers import is_granted
 PARALLEL_UPDATES = 1
 
 
+def _snapshot_name() -> str:
+    """Return the name to give a newly created snapshot.
+
+    Proxmox caps snapshot names at 40 characters and only accepts
+    [A-Za-z0-9_], starting with a letter. The guest name is left out because
+    it is of variable length and routinely holds characters Proxmox rejects,
+    and the snapshot already lives under the guest it belongs to.
+    """
+    return f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+
+
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox node button description."""
@@ -176,13 +187,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node)
             .qemu(vmid)
-            .snapshot.post(
-                name=(
-                    "homeassistant_snapshot_"
-                    f"{coordinator.data[node].vms[vmid]['name']}_"
-                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
-                )
-            )
+            .snapshot.post(name=_snapshot_name())
         ),
         permission=ProxmoxPermission.SNAPSHOT,
         entity_category=EntityCategory.CONFIG,
@@ -220,13 +225,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node)
             .lxc(vmid)
-            .snapshot.post(
-                name=(
-                    "homeassistant_snapshot_"
-                    f"{coordinator.data[node].containers[vmid]['name']}_"
-                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
-                )
-            )
+            .snapshot.post(name=_snapshot_name())
         ),
         permission=ProxmoxPermission.SNAPSHOT,
         entity_category=EntityCategory.CONFIG,
