@@ -61,6 +61,7 @@ from .const import (
     CONNECT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import TPLinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -872,7 +873,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TPLinkConfigEntry,
     ) -> TPLinkOptionsFlowHandler:
         """Create the options flow."""
         return TPLinkOptionsFlowHandler()
