@@ -119,7 +119,8 @@ class GoogleConfig(AbstractConfig):
 
     def _migrate_expose_settings(self) -> None:
         """Migrate should_expose settings computed from YAML to the shared store."""
-        for entity_id in self.hass.states.async_entity_ids():
+        entity_registry = er.async_get(self.hass)
+        for entity_id in {*entity_registry.entities, *self.entity_config}:
             async_expose_entity(
                 self.hass, DOMAIN, entity_id, self._should_expose_legacy(entity_id)
             )

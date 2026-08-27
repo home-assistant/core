@@ -413,8 +413,8 @@ async def test_migrate_expose_settings(
     switch_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", suggested_object_id="ac"
     )
-    hass.states.async_set(light_entry.entity_id, "on")
-    hass.states.async_set(switch_entry.entity_id, "on")
+    # No states are set, since migration must not depend on the entities'
+    # integrations being loaded.
 
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
