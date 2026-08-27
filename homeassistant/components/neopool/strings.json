@@ -29,7 +29,7 @@
   "entity": {
     "binary_sensor": {
       "aux": {
-        "name": "Relay Aux {number}"
+        "name": "Auxiliary relay {number}"
       },
       "chlorine_control_module": {
         "name": "Chlorine regulation active"

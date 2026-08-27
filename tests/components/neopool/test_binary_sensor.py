@@ -4,12 +4,15 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from neopool_modbus.decoders import encode_device_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform as ep, entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -42,7 +45,7 @@ async def test_direct_key_reflects_coordinator_value(
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A simple boolean key from coordinator.data flows straight through is_on."""
     await setup_integration(hass, mock_config_entry_binary_sensor)
@@ -75,7 +78,7 @@ async def test_pool_cover_inverts_hardware_value(
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Pool Cover: hardware 1 (covered) → HA OFF; hardware 0 → HA ON.
 
@@ -114,7 +117,7 @@ async def test_pool_cover_none_yields_unknown(
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Missing Pool Cover key surfaces as STATE_UNKNOWN, not on/off."""
     await setup_integration(hass, mock_config_entry_binary_sensor)
@@ -137,7 +140,7 @@ async def test_pool_cover_unknown_when_filtration_off(
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Cover reads unknown while filtration is off, not a false "open"."""
     await setup_integration(hass, mock_config_entry_binary_sensor)
@@ -161,7 +164,7 @@ async def test_measurement_module_off_when_filtration_off(
     entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Measurement-module sensors report OFF when the filtration pump is idle."""
     await setup_integration(hass, mock_config_entry_binary_sensor)
@@ -232,3 +235,52 @@ async def test_setup_when_modules_absent(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_binary_sensor.entry_id
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("time_zone", ["UTC", "America/New_York"])
+async def test_device_time_drift(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry_binary_sensor: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
+) -> None:
+    """The drift sensor decodes MBF_PAR_TIME in the HA timezone and thresholds it.
+
+    MBF_PAR_TIME is the device wall-clock encoded as naive epoch seconds. In
+    sync means the decoded clock matches HA now within a minute; a two-minute
+    offset trips the PROBLEM sensor. Both the UTC and a non-UTC timezone are
+    exercised so the tz normalisation is covered.
+    """
+    await hass.config.async_set_time_zone(time_zone)
+    freezer.move_to("2024-01-02 08:04:05+00:00")
+    tz = dt_util.get_time_zone(time_zone)
+    await setup_integration(hass, mock_config_entry_binary_sensor)
+
+    # Device clock matches HA wall-clock after the poll tick: OFF.
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_TIME": encode_device_time(dt_util.now(tz) + timedelta(seconds=60)),
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = _binary_state(hass, entity_registry, "Device Time Out Of Sync")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Device clock two minutes ahead of HA: over the 60 s threshold, so ON.
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_TIME": encode_device_time(
+            dt_util.now(tz) + timedelta(seconds=60) + timedelta(minutes=2)
+        ),
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = _binary_state(hass, entity_registry, "Device Time Out Of Sync")
+    assert state is not None
+    assert state.state == STATE_ON
