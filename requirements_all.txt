@@ -102,7 +102,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.61.0
+PyViCare==2.62.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -206,7 +206,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.8.0
+aioaquarite==0.9.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -459,7 +459,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==93
+aiounifi==94
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -1081,7 +1081,7 @@ fritzconnection[qr]==1.15.1
 fronius-modbus==0.2.0
 
 # homeassistant.components.fumis
-fumis==0.4.0
+fumis==0.4.1
 
 # homeassistant.components.fyta
 fyta_cli==0.7.3
@@ -1460,7 +1460,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.8.2.133643
+knx-frontend==2026.8.26.184052
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.11.2
@@ -2519,7 +2519,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.44
+pyportainer==1.0.45
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2696,7 +2696,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.11.0
+python-duco-connectivity==0.12.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -3105,7 +3105,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.5.0
+sofar-modbus==0.6.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3

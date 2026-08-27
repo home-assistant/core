@@ -41,15 +41,15 @@ class MockPyViCare:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
-            service = MockViCareService(
+            accessor = ViCareDeviceAccessor(
                 f"installation{idx}",
                 fixture.gateway_id or f"gateway{idx}",
                 f"deviceId{idx}",
-                fixture,
             )
+            service = MockViCareService(fixture)
             self.devices.append(
                 PyViCareDeviceConfig(
-                    service.accessor,
+                    accessor,
                     service,
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
@@ -61,16 +61,18 @@ class MockPyViCare:
         # Simulate a device with an unsupported deviceType that PyViCare's
         # `devices` filter would drop but should still appear in `all_devices`
         # (used by diagnostics).
-        unsupported_service = MockViCareService(
+        unsupported_accessor = ViCareDeviceAccessor(
             "installation_unsupported",
             "gateway_unsupported",
             "deviceId_unsupported",
-            Fixture(set(), "vicare/dummy-device-no-serial.json"),
+        )
+        unsupported_service = MockViCareService(
+            Fixture(set(), "vicare/dummy-device-no-serial.json")
         )
         self.all_devices = [
             *self.devices,
             PyViCareDeviceConfig(
-                unsupported_service.accessor,
+                unsupported_accessor,
                 unsupported_service,
                 "unsupported_model",
                 "Online",
@@ -92,16 +94,15 @@ class MockPyViCare:
 class MockViCareService:
     """PyVicareService mock using a json dump."""
 
-    def __init__(
-        self, installation_id: str, gateway_id: str, device_id: str, fixture: Fixture
-    ) -> None:
+    def __init__(self, fixture: Fixture) -> None:
         """Initialize the mock from a json dump."""
         self._test_data = load_json_object_fixture(fixture.data_file)
-        self.fetch_all_features = Mock(return_value=self._test_data)
+        # Mirror the real signature: fetch_all_features() requires an accessor,
+        # and no real service carries one.
+        self.fetch_all_features = Mock(side_effect=lambda accessor: self._test_data)
         self.setProperty = Mock()
         self.clear_cache = Mock()
         self.roles = fixture.roles
-        self.accessor = ViCareDeviceAccessor(installation_id, gateway_id, device_id)
 
     def hasRoles(self, requested_roles: list[str]) -> bool:
         """Return true if requested roles are assigned."""
