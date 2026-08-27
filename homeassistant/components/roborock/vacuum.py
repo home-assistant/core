@@ -75,6 +75,9 @@ Q7_STATE_CODE_TO_STATE = {
     WorkStatusMapping.SLEEPING: VacuumActivity.IDLE,
     WorkStatusMapping.WAITING_FOR_ORDERS: VacuumActivity.IDLE,
     WorkStatusMapping.PAUSED: VacuumActivity.PAUSED,
+    # An untouched pause falls asleep after ~10 minutes; the job is kept and
+    # resumes on the next start, so this is a pause rather than an idle state.
+    WorkStatusMapping.WORKING_SLEEP: VacuumActivity.PAUSED,
     WorkStatusMapping.DOCKING: VacuumActivity.RETURNING,
     WorkStatusMapping.CHARGING: VacuumActivity.DOCKED,
     WorkStatusMapping.SWEEP_MOPING: VacuumActivity.CLEANING,
