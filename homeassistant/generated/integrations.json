@@ -3486,6 +3486,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iseo_argo_ble": {
+      "name": "ISEO Argo BLE Lock",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "iskra": {
       "name": "iskra",
       "integration_type": "hub",
@@ -6052,7 +6058,7 @@
       "name": "Remember The Milk",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "remote_calendar": {
       "integration_type": "service",
@@ -6581,6 +6587,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "silla_prism": {
+      "name": "Silla Prism",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "simplefin": {
       "name": "SimpleFin",
@@ -8479,7 +8491,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {

@@ -938,6 +938,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
 /tests/components/isal/ @bdraco
+/homeassistant/components/iseo_argo_ble/ @FezVrasta
+/tests/components/iseo_argo_ble/ @FezVrasta
 /homeassistant/components/iskra/ @iskramis
 /tests/components/iskra/ @iskramis
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
@@ -1490,8 +1492,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
 /homeassistant/components/qbus/ @Qbus-iot @thomasddn
 /tests/components/qbus/ @Qbus-iot @thomasddn
-/homeassistant/components/qingping/ @bdraco
-/tests/components/qingping/ @bdraco
+/homeassistant/components/qingping/ @bdraco @tengfeili-qingping
+/tests/components/qingping/ @bdraco @tengfeili-qingping
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
@@ -1680,6 +1682,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard
 /tests/components/signal_messenger/ @bbernhard
+/homeassistant/components/silla_prism/ @ebaschiera
+/tests/components/silla_prism/ @ebaschiera
 /homeassistant/components/simplefin/ @scottg489 @jeeftor
 /tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87
@@ -2161,6 +2165,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zhong_hong/ @crhan
+/tests/components/zhong_hong/ @crhan
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
 /homeassistant/components/zinvolt/ @joostlek
