@@ -14,8 +14,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("dst_switch_available"),
-    [(True), (False)],
+    ("dst_switch_side_effect", "expected_num_entities"),
+    [(None, 2), (FSNotImplementedError, 1)],
 )
 async def test_init_with_dst_availability(
     hass: HomeAssistant,
@@ -23,11 +23,11 @@ async def test_init_with_dst_availability(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_afsapi: AsyncMock,
-    dst_switch_available: bool,
+    dst_switch_side_effect: FSNotImplementedError | None,
+    expected_num_entities: int,
 ) -> None:
     """Test integration setup notices the difference between devices which do or don't implement a DST switch."""
-    if not dst_switch_available:
-        mock_afsapi.get_dst.side_effect = FSNotImplementedError
+    mock_afsapi.get_dst.side_effect = dst_switch_side_effect
 
     await setup_integration(hass, config_entry)
 
@@ -36,8 +36,7 @@ async def test_init_with_dst_availability(
     device_entry = devices[0]
 
     entities = er.async_entries_for_device(entity_registry, device_entry.id)
-    expected_entities = 2 if dst_switch_available else 1
-    assert len(entities) == expected_entities
+    assert len(entities) == expected_num_entities
 
 
 async def test_init_device_not_ready(
