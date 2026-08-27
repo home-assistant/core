@@ -62,9 +62,7 @@ rules:
   entity-device-class:
     status: exempt
     comment: Camera entities do not use device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: All entities represent monitored services and should be enabled by default.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:

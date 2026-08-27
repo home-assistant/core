@@ -1,6 +1,6 @@
 """Support for INDI Allsky camera."""
 
-from typing import Any, override
+from typing import override
 
 from aioindiallsky import IndiAllSkyError
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
     """Representation of an INDI Allsky camera."""
 
-    _attr_translation_key = "camera"
+    _attr_name = None
 
     def __init__(
         self,
@@ -50,19 +50,3 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
             return None
         else:
             return image
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return camera extra state attributes."""
-        exposure = self.coordinator.data.exposure
-        if exposure is None:
-            return None
-
-        return {
-            "binmode": exposure.binmode,
-            "exposure": exposure.exposure,
-            "filename": exposure.filename,
-            "gain": exposure.gain,
-            "temperature": exposure.temp,
-        }
