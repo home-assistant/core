@@ -80,6 +80,11 @@ def mock_homee() -> Generator[AsyncMock]:
             "wlan_ssid": "TestSSID",
             "latitude": 52.5200,
             "longitude": 13.4050,
+            "address": "Test address",
+            "zip": "10115",
+            "city": "Berlin",
+            "available_ssids": ["TestSSID", "OtherSSID"],
+            "webhooks_key": "test_webhooks_key",
         }
 
         yield homee

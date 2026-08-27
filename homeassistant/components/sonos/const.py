@@ -11,6 +11,7 @@ DOMAIN = "sonos"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -159,6 +160,7 @@ PLAYABLE_MEDIA_TYPES = [
 
 SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
+SONOS_CREATE_BUTTON = "sonos_create_button"
 SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"

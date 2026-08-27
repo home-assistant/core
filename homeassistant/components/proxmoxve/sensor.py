@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, override
 
 from homeassistant.components.sensor import (
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -25,6 +26,7 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
+from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -34,20 +36,22 @@ class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox node sensor description."""
 
     value_fn: Callable[[ProxmoxNodeData], StateType | datetime]
+    permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxVMSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox VM sensor description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox container sensor description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -134,12 +138,15 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
         translation_key="node_uptime",
-        value_fn=lambda data: data.node["uptime"],
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
+                if data.node["uptime"] is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_status",
@@ -147,6 +154,8 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         value_fn=lambda data: data.node["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["online", "offline"],
+        permission=ProxmoxPermission.VMAUDIT,
+        permission_target="vms",
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_last_backup",
@@ -230,12 +239,15 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
         translation_key="vm_uptime",
-        value_fn=lambda data: data.get("uptime"),
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
+                if data.get("uptime") is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_disk",
@@ -347,12 +359,15 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
         translation_key="container_uptime",
-        value_fn=lambda data: data.get("uptime"),
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
+                if data.get("uptime") is not None
+                else None
+            )
+        ),
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_disk",
@@ -474,6 +489,12 @@ async def async_setup_entry(
             ProxmoxNodeSensor(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
+            if is_granted(
+                coordinator.permissions,
+                p_type=entity_description.permission_target,
+                p_id=node.node["node"],
+                permission=entity_description.permission,
+            )
         )
 
     def _async_add_new_vms(
@@ -565,7 +586,7 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.vm_data)
 
@@ -577,7 +598,7 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.container_data)
 
