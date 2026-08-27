@@ -20,7 +20,7 @@ from homeassistant.components.sofar.sensor import (
     SofarSensorDescription,
     SofarTotalSensor,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -54,9 +54,14 @@ async def test_all_entities(
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    with (
+        patch("homeassistant.components.sofar.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: connection.for_unit(
+                unit_id
+            ),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -132,7 +137,11 @@ async def test_enabled_by_default_partition(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entries = [
+        e
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if e.domain == SENSOR_DOMAIN
+    ]
     # Literal counts: an accidental flip has to be acknowledged here.
     assert len(entries) == created
     assert len([e for e in entries if e.disabled_by is None]) == enabled
