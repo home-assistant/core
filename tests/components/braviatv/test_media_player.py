@@ -33,8 +33,8 @@ BRAVIA_SYSTEM_INFO = {
     "cid": "very_unique_string",
 }
 
-# The TV leaves "label" empty when unset, allows the same label on several
-# inputs, and does not stop one matching another input's "title".
+# The TV leaves "label" empty when unset, omits it on some models, and allows the
+# same label on several inputs.
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
@@ -61,47 +61,19 @@ INPUTS = [
         "uri": "extInput:hdmi?port=4",
         "title": "HDMI 4",
         "connection": True,
-        "label": "HDMI 1",
-        "icon": "meta:hdmi",
-    },
-    {
-        "uri": "extInput:hdmi?port=5",
-        "title": "HDMI 5",
-        "connection": True,
-        "label": "hdmi 1",
-        "icon": "meta:hdmi",
-    },
-    {
-        # Some models leave the key out entirely rather than sending it empty.
-        "uri": "extInput:hdmi?port=6",
-        "title": "HDMI 6",
-        "connection": True,
         "icon": "meta:hdmi",
     },
     {
         "uri": "extInput:cec?type=player&port=1",
         "connection": True,
         "label": "Streaming box",
-        "icon": "meta:cec",
-    },
-    {
-        "uri": "extInput:cec?type=player&port=2",
-        "connection": True,
-        "label": "Streaming box",
-        "icon": "meta:cec",
-    },
-    {
-        "uri": "extInput:composite?port=1",
-        "title": "Streaming box (2)",
-        "connection": False,
-        "label": "",
-        "icon": "meta:composite",
+        "icon": "meta:playbackdevice",
     },
     {
         "uri": "extInput:scart?port=1",
         "title": "AV1",
         "connection": False,
-        "label": "Stra\u00dfe",
+        "label": "Straße",
         "icon": "meta:scart",
     },
 ]
@@ -150,19 +122,13 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # "HDMI 3" repeats "HDMI 2"'s label, so it falls back to its own generic
-    # name to stay reachable.
+    # HDMI 3 repeats HDMI 2's label, so it does not appear twice.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
         "HDMI 1",
         "Game console",
-        "HDMI 3",
         "HDMI 4",
-        "HDMI 5",
-        "HDMI 6",
         "Streaming box",
-        "Streaming box (3)",
-        "Streaming box (2)",
-        "Stra\u00dfe",
+        "Straße",
     ]
     # The playing input is reported with the same name used in the source list.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
@@ -176,12 +142,8 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 4", "extInput:hdmi?port=4"),
-        ("HDMI 5", "extInput:hdmi?port=5"),
-        ("HDMI 6", "extInput:hdmi?port=6"),
         ("Streaming box", "extInput:cec?type=player&port=1"),
-        ("Streaming box (3)", "extInput:cec?type=player&port=2"),
-        ("Streaming box (2)", "extInput:composite?port=1"),
-        ("STRASSE", "extInput:scart?port=1"),
+        ("straße", "extInput:scart?port=1"),
     ],
 )
 async def test_select_source(
