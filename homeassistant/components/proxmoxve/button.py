@@ -32,10 +32,10 @@ PARALLEL_UPDATES = 1
 def _snapshot_name() -> str:
     """Return the name to give a newly created snapshot.
 
-    Proxmox caps snapshot names at 40 characters and only accepts
-    [A-Za-z0-9_], starting with a letter. The guest name is left out because
-    it is of variable length and routinely holds characters Proxmox rejects,
-    and the snapshot already lives under the guest it belongs to.
+    Proxmox validates this as a `pve-configid` of at most 40 characters, and
+    the prefix and timestamp already take up 37 of those. So the guest name is
+    left out: any name longer than two characters pushed the total over the
+    limit, and the snapshot already lives under the guest it belongs to.
     """
     return f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
 
