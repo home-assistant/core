@@ -4,9 +4,11 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+import platform
 import struct
 from typing import Any
 
+from cpuinfo import cpuinfo
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core_config
@@ -103,6 +105,23 @@ DEPRECATION_URL = (
 def _is_32_bit() -> bool:
     size = struct.calcsize("P")
     return size * 8 == 32
+
+
+def _get_missing_cpu_features() -> list[str] | None:
+    """Return NumPy-required x86-64-v2 CPU features missing on this machine.
+
+    Returns None if the check does not apply (non-x86_64 hardware) or
+    compatibility could not be determined.
+    """
+    if platform.machine() not in ("x86_64", "AMD64"):
+        return None
+    flags = cpuinfo.get_cpu_info().get("flags")
+    if not flags:
+        return None
+    # /proc/cpuinfo flag names for the x86-64-v2 baseline recent NumPy
+    # builds require on x86_64. https://github.com/numpy/numpy/issues/31939
+    required_features = {"pni", "ssse3", "sse4_1", "sse4_2", "popcnt"}
+    return sorted(required_features - set(flags))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -469,6 +488,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     # Delay deprecation check to make sure installation method is determined correctly
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
+
+    async def _async_check_cpu_features(event: Event) -> None:
+        """Check for a CPU missing instructions required by recent NumPy."""
+        missing_features = await hass.async_add_executor_job(_get_missing_cpu_features)
+        if missing_features:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "unsupported_cpu",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="unsupported_cpu",
+                translation_placeholders={
+                    "missing_features": ", ".join(missing_features)
+                },
+            )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_cpu_features)
 
     return True
 

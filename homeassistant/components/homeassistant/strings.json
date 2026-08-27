@@ -224,6 +224,10 @@
       },
       "title": "Storage corruption detected for {storage_key}"
     },
+    "unsupported_cpu": {
+      "description": "This system's CPU is missing instructions ({missing_features}) that a future version of Home Assistant will require. Updating Home Assistant will fail to start on this hardware.\n\nThis is common on virtual machines whose CPU type emulates an old processor. For example, on Proxmox VE, change the VM's CPU type from `kvm64`/`qemu64` to `host` or `x86-64-v2` (or newer) and restart the VM.",
+      "title": "CPU is missing instructions required by a future Home Assistant update"
+    },
     "unsupported_local_deps": {
       "description": "This system is running Home Assistant outside a virtual environment or a Docker container. This is not supported and will not work after the release of Home Assistant 2026.11.",
       "title": "Deprecation notice: Installation method"

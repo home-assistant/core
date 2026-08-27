@@ -18,6 +18,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+    _get_missing_cpu_features,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -805,3 +806,69 @@ async def test_deprecated_installation_issue_container_32bit(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"arch": arch}
+
+
+@pytest.mark.parametrize(
+    ("machine", "cpu_info", "expected"),
+    [
+        ("aarch64", {"flags": []}, None),
+        ("x86_64", {}, None),
+        ("x86_64", {"flags": []}, None),
+        (
+            "x86_64",
+            {"flags": ["pni", "popcnt", "sse", "sse2"]},
+            ["sse4_1", "sse4_2", "ssse3"],
+        ),
+        (
+            "x86_64",
+            {"flags": ["pni", "ssse3", "sse4_1", "sse4_2", "popcnt"]},
+            [],
+        ),
+    ],
+)
+def test_get_missing_cpu_features(
+    machine: str,
+    cpu_info: dict[str, list[str]],
+    expected: list[str] | None,
+) -> None:
+    """Test detection of CPU features required by NumPy."""
+    with (
+        patch("platform.machine", return_value=machine),
+        patch(
+            "homeassistant.components.homeassistant.cpuinfo.get_cpu_info",
+            return_value=cpu_info,
+        ),
+    ):
+        assert _get_missing_cpu_features() == expected
+
+
+@pytest.mark.parametrize(
+    ("missing_features", "expected_placeholders"),
+    [
+        (None, None),
+        ([], None),
+        (["sse4_1", "sse4_2"], {"missing_features": "sse4_1, sse4_2"}),
+    ],
+)
+async def test_unsupported_cpu_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    missing_features: list[str] | None,
+    expected_placeholders: dict[str, str] | None,
+) -> None:
+    """Test the unsupported CPU repair issue is created when features are missing."""
+    with patch(
+        "homeassistant.components.homeassistant._get_missing_cpu_features",
+        return_value=missing_features,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_cpu")
+    if expected_placeholders is None:
+        assert issue is None
+    else:
+        assert issue.domain == DOMAIN
+        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.translation_placeholders == expected_placeholders
