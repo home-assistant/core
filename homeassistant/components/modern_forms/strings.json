@@ -43,6 +43,11 @@
         "name": "[%key:component::light::title%]"
       }
     },
+    "number": {
+      "breeze_intensity": {
+        "name": "Breeze intensity"
+      }
+    },
     "sensor": {
       "fan_timer_remaining_time": {
         "name": "Fan sleep time"

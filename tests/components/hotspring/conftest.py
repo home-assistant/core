@@ -117,7 +117,7 @@ def device_fixture() -> Spa:
             zone_id=1,
             is_enabled=True,
             is_on=False,
-            color=LightColor.OFF,
+            color=LightColor.BLUE,
             light_wheel=LightWheelMode.OFF,
             intensity=0,
             loop_speed=0,
@@ -178,6 +178,7 @@ def mock_hotspring(device_fixture: Spa) -> Generator[MagicMock]:
     ):
         client = hotspring_mock.return_value
         client.update.return_value = device_fixture
+        client.spa = device_fixture
         yield client
 
 

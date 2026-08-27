@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
@@ -63,6 +68,8 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "MBF_PAR_INTELLIGENT_INTERVALS": 4,
     "MBF_PAR_INTELLIGENT_TT_NEXT_INTERVAL": 7200,
     "MBF_PAR_FILTVALVE_REMAINING": 0,
+    "MBF_PAR_FILTVALVE_INTERVAL": 150,
+    "MBF_PAR_FILTVALVE_MODE": 0,
     "HIDRO_POLARITY": 0,
     "ION_POLARITY": 0,
     "PH_PUMP_STATUS": "off",
@@ -77,6 +84,7 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH acid pump active": False,
     "Filtration Pump": False,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
+    "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
     "CELL_RUNTIME_TOTAL": 0x00010000,
     "CELL_RUNTIME_PART": 0x00000E10,
@@ -84,6 +92,41 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "CELL_RUNTIME_POLB": 0x00000708,
     "CELL_RUNTIME_POL_CHANGES": 0x00000007,
 }
+
+
+# Aux timer blocks default to manual mode (enable=4) so switch writes pass the
+# guard; auto-mode tests override the returned mode per case.
+def _timer_block(enable: int = 4) -> dict[str, Any]:
+    """Return a timer block dict for the mock read_all_timers."""
+    return {
+        "enable": enable,
+        "on": 0,
+        "interval": 0,
+        "period": 0,
+        "countdown": 0,
+        "stop": None,
+    }
+
+
+MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
+    "relay_aux1": _timer_block(),
+    "relay_aux2": _timer_block(),
+    "relay_aux3": _timer_block(),
+    "relay_aux4": _timer_block(),
+}
+
+
+def _read_all_timers(
+    enabled_timers: list[str] | None = None, **_kwargs: Any
+) -> dict[str, dict[str, Any]]:
+    """Return the requested timer blocks, mirroring the library contract."""
+    if enabled_timers is None:
+        return {name: dict(block) for name, block in MOCK_TIMER_BLOCKS.items()}
+    return {
+        name: dict(MOCK_TIMER_BLOCKS[name])
+        for name in enabled_timers
+        if name in MOCK_TIMER_BLOCKS
+    }
 
 
 @pytest.fixture
@@ -133,6 +176,31 @@ def mock_config_entry_light() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_switch() -> MockConfigEntry:
+    """Return a config entry with the option-gated switches enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (
@@ -147,8 +215,22 @@ def mock_neopool_client() -> Generator[MagicMock]:
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
-        mock_client.read_all_timers = AsyncMock(return_value={})
+        mock_client.read_all_timers = AsyncMock(side_effect=_read_all_timers)
+        mock_client.connection_stats = {
+            "host": MOCK_HOST,
+            "port": MOCK_PORT,
+            "unit_id": DEFAULT_UNIT_ID,
+            "connected": True,
+            "total_operations": 10,
+            "successful_operations": 10,
+            "success_rate_percent": 100.0,
+        }
         mock_client.async_set_relay_state = AsyncMock(return_value={})
+        mock_client.async_set_manual_filtration = AsyncMock(return_value={})
+        mock_client.async_set_binary_flag = AsyncMock(return_value={})
+        mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
+        mock_client.async_start_backwash = AsyncMock(return_value=None)
+        mock_client.async_stop_backwash = AsyncMock(return_value=None)
         mock_client.close = AsyncMock()
         yield mock_client
 
