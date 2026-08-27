@@ -19,6 +19,20 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+_IDENTITY_ATTEMPTS = 3
+
+
+async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
+    """Read identity once, retrying a few times against a transient blip."""
+    for attempt in range(_IDENTITY_ATTEMPTS):
+        try:
+            await device.identity.async_update()
+        except ModbusError as err:
+            if attempt == _IDENTITY_ATTEMPTS - 1:
+                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
+        else:
+            return
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
     """Set up Sofar Inverter Modbus from a config entry."""
@@ -63,12 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
 
-    # Not tied to a coordinator: the serial and firmware versions don't
-    # change, so sofar-modbus reads identity once and never re-polls it.
-    try:
-        await device.identity.async_update()
-    except ModbusError as err:
-        _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
+    # Not tied to a coordinator: identity never changes once read.
+    await _async_read_identity(entry, device)
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create(
