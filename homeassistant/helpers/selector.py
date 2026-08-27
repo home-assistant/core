@@ -1366,9 +1366,13 @@ class MediaSelector(Selector[MediaSelectorConfig]):
     )
     DATA_SCHEMA = vol.Schema(
         {
+            # If accept is set, the entity_id field will not be present
             vol.Optional("entity_id"): cv.entity_id_or_uuid,
+            # Although marked as optional in frontend, this field is required
             vol.Required("media_content_id"): str,
+            # Although marked as optional in frontend, this field is required
             vol.Required("media_content_type"): str,
+            # Data used by frontend for decoration. Removed unless remove_metadata is False
             vol.Optional("metadata"): dict,
         }
     )
