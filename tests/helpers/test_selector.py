@@ -1846,34 +1846,6 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
         ),
         (
             {
-                "image_upload": True,
-            },
-            (
-                {
-                    "media_content_id": "abc",
-                    "media_content_type": "def",
-                },
-                {
-                    "media_content_id": "abc",
-                    "media_content_type": "def",
-                    "metadata": {},
-                },
-            ),
-            (
-                None,
-                "abc",
-                {},
-                {
-                    # We do not allow entity_id when image_upload is set
-                    "entity_id": "sensor.abc",
-                    "media_content_id": "abc",
-                    "media_content_type": "def",
-                    "metadata": {},
-                },
-            ),
-        ),
-        (
-            {
                 "accept": ["image/*"],
                 "image_upload": True,
                 "clearable": True,
@@ -1921,6 +1893,20 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
         invalid_selections,
         drop_metadata,
     )
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # image_upload can only be used when accept is set
+        {"image_upload": True},
+        {"image_upload": True, "accept": []},
+    ],
+)
+def test_media_selector_schema_error(schema) -> None:
+    """Test media selector with invalid config."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"media": schema})
 
 
 @pytest.mark.parametrize(

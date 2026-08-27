@@ -128,6 +128,13 @@ def _validate_selector_reorder_config(config: Any) -> Any:
     return config
 
 
+def _validate_media_selector_config(config: Any) -> Any:
+    """Validate media selectors with image_upload option."""
+    if config.get("image_upload") and not config.get("accept"):
+        raise vol.Invalid("image_upload can only be used when accept is set")
+    return config
+
+
 def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
     """Make selector config schema."""
     if schema_dict is None:
@@ -1358,13 +1365,16 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         "filter_entity": {EntitySelector.selector_type}
     }
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("accept"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("image_upload", default=False): cv.boolean,
-            vol.Optional("clearable", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("accept"): [str],
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("image_upload", default=False): cv.boolean,
+                vol.Optional("clearable", default=False): cv.boolean,
+            }
+        ),
+        _validate_media_selector_config,
     )
     DATA_SCHEMA = vol.Schema(
         {
@@ -1390,9 +1400,8 @@ class MediaSelector(Selector[MediaSelectorConfig]):
             if key != "entity_id"
         }
 
-        if "accept" not in self.config and not self.config["image_upload"]:
-            # Both accept and image_upload mean the field is not tied to a media
-            # player, so the entity_id field is only required without them
+        if "accept" not in self.config:
+            # If accept is not set, the entity_id field is required
             item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
         item_schema = vol.Schema(item_schema_dict)
