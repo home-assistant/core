@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, patch
 from pylast import WSError
 import pytest
 
+from homeassistant.components.lastfm.config_flow import get_session_key
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
     CONF_MAIN_USER,
@@ -41,6 +42,16 @@ FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
 POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
 MAX_POLLING_ATTEMPTS_PATH = f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS"
+
+
+def test_get_session_key_unexpected_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unexpected session key error is logged."""
+    session_key_generator = MockSessionKeyGenerator(session_key_error=Exception())
+
+    assert get_session_key(session_key_generator, AUTH_URL) is None
+    assert "Unexpected exception" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -171,6 +182,26 @@ async def test_flow_restarts_polling_after_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "friends"
+
+
+async def test_flow_abort_cancels_session_key_polling(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test aborting the flow cancels session key polling."""
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 @pytest.mark.parametrize(
