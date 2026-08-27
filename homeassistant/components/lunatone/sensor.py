@@ -188,7 +188,6 @@ class LunatoneDALILineStatusSensor(
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_icon = "mdi:current-ac"
     _attr_options = list(DALI_LINE_STATUS_SENSOR_MAPPING.values())
     _attr_state_class = None
     _attr_translation_key = "dali_line_status"
