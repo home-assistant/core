@@ -83,6 +83,38 @@
     }
   },
   "entity": {
+    "image": {
+      "app_icon": {
+        "name": "App icon"
+      },
+      "avatar": {
+        "name": "Avatar"
+      },
+      "header_capsule": {
+        "name": "Header capsule"
+      },
+      "library_capsule": {
+        "name": "Library capsule"
+      },
+      "library_hero": {
+        "name": "Library hero capsule"
+      },
+      "library_logo": {
+        "name": "Library logo"
+      },
+      "main_capsule": {
+        "name": "Main capsule"
+      },
+      "page_background": {
+        "name": "Page background"
+      },
+      "small_capsule": {
+        "name": "Small capsule"
+      },
+      "vertical_capsule": {
+        "name": "Vertical capsule"
+      }
+    },
     "sensor": {
       "account": {
         "state": {
@@ -95,13 +127,27 @@
           "snooze": "Snooze"
         },
         "state_attributes": {
+          "created": { "name": "Account created" },
           "game": { "name": "Game" },
           "game_icon": { "name": "Game icon" },
           "game_id": { "name": "Game ID" },
           "game_image_header": { "name": "Game header image" },
           "game_image_main": { "name": "Game image" },
           "last_online": { "name": "Last online" },
-          "level": { "name": "Level" }
+          "level": { "name": "Level" },
+          "real_name": { "name": "Real name" }
+        }
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "app_id": { "name": "Steam App ID" }
         }
       }
     }

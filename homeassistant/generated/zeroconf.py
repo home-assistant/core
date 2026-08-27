@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -1011,6 +1016,11 @@ ZEROCONF = {
             "domain": "systemnexa2",
         },
     ],
+    "_tbk_vmc._tcp.local.": [
+        {
+            "domain": "flow_it",
+        },
+    ],
     "_technove-stations._tcp.local.": [
         {
             "domain": "technove",
@@ -1060,6 +1070,12 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "watkins_spa*",
         },
     ],
     "_wyoming._tcp.local.": [

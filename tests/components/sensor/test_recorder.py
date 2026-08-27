@@ -144,6 +144,20 @@ def disable_mariadb_issue() -> None:
         yield
 
 
+@pytest.fixture(autouse=True)
+def disable_deprecated_database_version_issue() -> None:
+    """Disable creating issues about deprecated database versions."""
+    with (
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
+        ),
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_not_supported_lts"
+        ),
+    ):
+        yield
+
+
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
@@ -6744,7 +6758,7 @@ async def test_clean_up_repairs(
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     client = await hass_ws_client()
 
     # Create some issues

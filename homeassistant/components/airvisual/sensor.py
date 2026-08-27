@@ -9,14 +9,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_STATE,
     CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    EntityStateAttribute,
     UnitOfDensity,
     UnitOfRatio,
 )
@@ -191,12 +190,14 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         )
 
         if self.coordinator.config_entry.options[CONF_SHOW_ON_MAP]:
-            self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
-            self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
+            self._attr_extra_state_attributes[EntityStateAttribute.LATITUDE] = latitude
+            self._attr_extra_state_attributes[EntityStateAttribute.LONGITUDE] = (
+                longitude
+            )
             self._attr_extra_state_attributes.pop("lati", None)
             self._attr_extra_state_attributes.pop("long", None)
         else:
             self._attr_extra_state_attributes["lati"] = latitude
             self._attr_extra_state_attributes["long"] = longitude
-            self._attr_extra_state_attributes.pop(ATTR_LATITUDE, None)
-            self._attr_extra_state_attributes.pop(ATTR_LONGITUDE, None)
+            self._attr_extra_state_attributes.pop(EntityStateAttribute.LATITUDE, None)
+            self._attr_extra_state_attributes.pop(EntityStateAttribute.LONGITUDE, None)

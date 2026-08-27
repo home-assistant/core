@@ -56,7 +56,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        return self.get_many((event_type,), session)[event_type]
+        return self.get_many((event_type,), session, from_recorder)[event_type]
 
     def get_many(
         self,
