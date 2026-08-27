@@ -1,11 +1,15 @@
 """Trigger entity."""
 
 from collections.abc import Callable
+import logging
 from typing import Any, override
 
-from homeassistant.const import CONF_VARIABLES
+import voluptuous as vol
+
+from homeassistant.const import CONF_CONDITIONS, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import condition
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import (
     _SENTINEL,
@@ -17,8 +21,12 @@ from homeassistant.helpers.trigger_template_entity import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TriggerUpdateCoordinator
+from .const import CONF_ATTRIBUTES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+from .validators import check_conditions, log_validation_error, validate_attributes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
@@ -44,6 +52,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
+        self._cond_func: condition.ConditionsChecker | None = None
 
         self._skip_rendered_result: list[str] = []
         if self.skip_rendered_result is not None:
@@ -52,7 +61,19 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
+
+        # Setup condition before calling async_added_to_hass to ensure
+        # the condition is available before a trigger can occur
+        if condition_config := self._config.get(CONF_CONDITIONS):
+            self._cond_func = await condition.async_conditions_from_config(
+                self.hass,
+                condition_config,
+                _LOGGER,
+                f"template {self.domain} entity",
+            )
+
         await super().async_added_to_hass()
+
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over
             # restored state, so skip restore entirely to avoid clobbering the
@@ -60,6 +81,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._process_data()
         else:
             await self.async_restore_last_state()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up conditions when removing from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._cond_func:
+            self._cond_func.async_unload()
 
     @override
     def _set_unique_id(self, unique_id: str | None) -> None:
@@ -227,6 +255,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             rendered, variables, [state_option] if state_option else []
         )
 
+        # Handle attributes as a dictionary.
         if self._attribute_templates:
             attributes = {}
             for attribute, template in self._attribute_templates.items():
@@ -239,6 +268,29 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                         self.entity_id, err, attribute=attribute
                     )
             self._attr_extra_state_attributes = attributes
+
+        # Handle attributes as a template.
+        elif attributes_template := self._attributes_template:
+            validated = {}
+            try:
+                result = template_render_complex(attributes_template, variables)
+                validated = vol.All(
+                    dict,
+                    validate_attributes(
+                        self.entity_id,
+                        self._blocked_attributes,
+                    ),
+                )(result)
+
+            except TemplateError as err:
+                log_triggered_template_error(
+                    self.entity_id, err, attribute=CONF_ATTRIBUTES
+                )
+            except vol.Invalid as err:
+                log_validation_error(
+                    result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
+                )
+            self._attr_extra_state_attributes = validated
 
         self._rendered = rendered
 
@@ -292,6 +344,9 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         else:
             self._rendered_entity_variables = coordinator_variables
         variables = self._template_variables(self._rendered_entity_variables)
+
+        if not check_conditions(self._cond_func, variables):
+            return
 
         self.async_set_context(self.coordinator.data["context"])
         if self._render_availability_template(variables):

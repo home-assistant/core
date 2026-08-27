@@ -1509,8 +1509,8 @@
       "on": true
     },
     "owner": {
-      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
-      "rtype": "zone"
+      "rid": "a3fbc86a-bf4c-4c69-899d-d6eafc37e288",
+      "rtype": "bridge_home"
     },
     "type": "grouped_light"
   },

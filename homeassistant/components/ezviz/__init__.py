@@ -11,6 +11,7 @@ from pyezvizapi.exceptions import (
     PyEzvizError,
 )
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TIMEOUT, CONF_TYPE, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -118,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
         for entity_entry in entries:
             unique_id = entity_entry.unique_id
             if (
-                entity_entry.domain == "sensor"
+                entity_entry.domain == SENSOR_DOMAIN
                 and unique_id is not None
                 and unique_id.endswith(".last_alarm_pic")
             ):
