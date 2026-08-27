@@ -35,7 +35,10 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
+    ProxmoxAgentState,
+    ProxmoxPermission,
 )
+from .helpers import is_granted
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 
@@ -52,6 +55,7 @@ class NodeResources:
     containers: list[dict[str, Any]]
     storages: list[dict[str, Any]]
     backups: list[dict[str, Any]]
+    agents: dict[int, str] = field(default_factory=dict)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -205,7 +209,15 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         for node, resources in node_pairs:
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
-                vms={int(vm["vmid"]): vm for vm in resources.vms},
+                vms={
+                    int(vm["vmid"]): {
+                        **vm,
+                        "guest_agent": resources.agents.get(
+                            int(vm["vmid"]), ProxmoxAgentState.UNKNOWN
+                        ),
+                    }
+                    for vm in resources.vms
+                },
                 containers={
                     int(container["vmid"]): container
                     for container in resources.containers
@@ -272,9 +284,31 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return NodeResources(vms=[], containers=[], storages=[], backups=[])
+            return NodeResources(
+                vms=[], containers=[], storages=[], backups=[], agents={}
+            )
 
+        agents: dict[int, str] = {}
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        # Determine VM status if guest agent present
+        for vm in vms:
+            vmid = vm["vmid"]
+            has_permission = any(
+                is_granted(self.permissions, p_type="vms", p_id=vmid, permission=perm)
+                for perm in (
+                    ProxmoxPermission.VMGUESTAUDIT,
+                    ProxmoxPermission.VMGUESTUNRESTRICTED,
+                )
+            )
+            if vm["status"] != "running" or not has_permission:
+                agents[vmid] = ProxmoxAgentState.UNKNOWN
+                continue
+            # will respond with {"result":{}} or raise exception from http status 500 if not running
+            try:
+                self.proxmox.nodes(node[CONF_NODE]).qemu(vmid).agent.ping.post()
+                agents[vmid] = ProxmoxAgentState.ACTIVE
+            except ResourceException:
+                agents[vmid] = ProxmoxAgentState.INACTIVE
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (
@@ -283,7 +317,11 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         )
 
         return NodeResources(
-            vms=vms, containers=containers, storages=storages, backups=backups
+            vms=vms,
+            containers=containers,
+            storages=storages,
+            backups=backups,
+            agents=agents,
         )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:

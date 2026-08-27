@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import ProxmoxPermission
+from .const import ProxmoxAgentState, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -302,6 +302,14 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxVMSensorEntityDescription(
+        key="guest_agent_status",
+        translation_key="guest_agent_status",
+        value_fn=lambda data: data["guest_agent"],
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in ProxmoxAgentState],
         entity_registry_enabled_default=False,
     ),
 )

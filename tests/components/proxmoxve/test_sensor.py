@@ -2,9 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
+from proxmoxer.core import ResourceException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.proxmoxve.const import DOMAIN, ProxmoxAgentState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -92,3 +94,42 @@ async def test_sensors_according_to_permissions(
 
     assert "sensor.pve1_status" in {e.entity_id for e in entries}
     assert "sensor.pve1_cpu" not in {e.entity_id for e in entries}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expected_state", "agent_side_effect"),
+    [
+        ("sensor.vm_web_guest_agent_status", ProxmoxAgentState.ACTIVE, None),
+        (
+            "sensor.vm_web_guest_agent_status",
+            ProxmoxAgentState.INACTIVE,
+            ResourceException("500", "error", "content"),
+        ),
+        ("sensor.vm_db_guest_agent_status", ProxmoxAgentState.UNKNOWN, None),
+    ],
+)
+async def test_agent_state(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    expected_state: str,
+    agent_side_effect: Exception | None,
+) -> None:
+    """Normal conditions for guest agent state."""
+    vm_data = await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+
+    node_mock = mock_proxmox_client.nodes.return_value
+    node_mock.qemu.get.return_value = vm_data
+
+    vm_mock = MagicMock()
+    vm_mock.agent.ping.post.side_effect = agent_side_effect
+    vm_mock.agent.ping.post.return_value = {"result": {}}
+
+    node_mock.qemu.side_effect = lambda *args: vm_mock if args else node_mock.qemu
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state

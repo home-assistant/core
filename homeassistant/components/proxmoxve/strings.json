@@ -209,6 +209,14 @@
       "container_uptime": {
         "name": "Uptime"
       },
+      "guest_agent_status": {
+        "name": "Guest agent status",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "unknown": "Unknown"
+        }
+      },
       "node_backup_duration": {
         "name": "Backup duration"
       },
