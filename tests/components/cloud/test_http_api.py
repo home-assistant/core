@@ -824,6 +824,14 @@ async def register_auto_login(
     assert req.status == HTTPStatus.OK
 
 
+async def fail_auto_login(cloud: MagicMock, reason: LoginFailedReason) -> None:
+    """Give up on the pending auto-login the way hass_nabucasa does."""
+    controller = cloud.register_and_auto_login.return_value
+    controller.failed_reason = reason
+    controller.active = False
+    await cloud.events.publish(LoginFailedEvent(auto=True, reason=reason))
+
+
 async def get_cloud_status(
     client: MockHAClientWebSocket, msg_id: int
 ) -> dict[str, Any]:
@@ -868,19 +876,98 @@ async def test_register_auto_login_reports_normalized_email(
 
 
 @pytest.mark.usefixtures("setup_cloud")
+async def test_register_auto_login_already_given_up(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a retry loop that gave up before the view stored its controller.
+
+    The controller is the single source of truth, so the reason survives even though
+    the LOGIN_FAILED event fired before there was anything to store.
+    """
+    cloud.id_token = None
+    controller = cloud.register_and_auto_login.return_value
+    cloud.register_and_auto_login.side_effect = None
+    controller.email = "hello@bla.com"
+    controller.active = False
+    controller.failed_reason = LoginFailedReason.TIMEOUT
+
+    await register_auto_login(hass_client)
+
+    client = await hass_ws_client(hass)
+    status = await get_cloud_status(client, 5)
+    assert status["auto_login"] == {
+        "email": "hello@bla.com",
+        "failed": "auto_login_failed_timeout",
+    }
+
+    await client.send_json({"id": 6, "type": "cloud/attempt_auto_login_now"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["translation_key"] == "no_pending_auto_login"
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_register_auto_login_replaces_pending(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a second registration takes over from the first."""
+    cloud.id_token = None
+    await register_auto_login(hass_client)
+    await register_auto_login(hass_client, email="second@bla.com")
+
+    assert cloud.register_and_auto_login.call_count == 2
+    # hass_nabucasa cancels the superseded retry loop itself.
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
+
+    client = await hass_ws_client(hass)
+    status = await get_cloud_status(client, 5)
+    assert status["auto_login"] == {"email": "second@bla.com", "failed": None}
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_auto_login_hidden_while_logged_in(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a leftover pending registration is not reported once signed in."""
+    id_token = cloud.id_token
+    cloud.id_token = None
+    await register_auto_login(hass_client)
+    cloud.id_token = id_token
+
+    client = await hass_ws_client(hass)
+    status = await get_cloud_status(client, 5)
+
+    assert status["logged_in"] is True
+    assert status["auto_login"] is None
+
+
+@pytest.mark.usefixtures("setup_cloud")
 async def test_register_auto_login_while_logged_in(
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test registering with auto-login is refused while already logged in."""
     cloud_client = await hass_client()
-    req = await cloud_client.post(
-        "/api/cloud/register_auto_login",
-        json={"email": "hello@bla.com", "password": "falcon42"},
-    )
+    with patch(
+        "homeassistant.components.cloud.http_api.async_detect_location_info",
+        return_value=None,
+    ):
+        req = await cloud_client.post(
+            "/api/cloud/register_auto_login",
+            json={"email": "hello@bla.com", "password": "falcon42"},
+        )
 
     assert req.status == HTTPStatus.BAD_REQUEST
-    cloud.register_and_auto_login.assert_not_called()
+    cloud.auth.async_register.assert_not_called()
 
 
 @pytest.mark.usefixtures("setup_cloud")
@@ -1020,7 +1107,7 @@ async def test_auto_login_failure_pushed(
     response = await client.receive_json()
     assert response["success"]
 
-    await cloud.events.publish(LoginFailedEvent(auto=True, reason=reason))
+    await fail_auto_login(cloud, reason)
 
     event = await client.receive_json()
     assert event["id"] == 5
@@ -1055,9 +1142,7 @@ async def test_auto_login_command_after_failure(
     """Test the retry commands are refused once the retry loop gave up."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    await cloud.events.publish(
-        LoginFailedEvent(auto=True, reason=LoginFailedReason.TIMEOUT)
-    )
+    await fail_auto_login(cloud, LoginFailedReason.TIMEOUT)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": command})
@@ -1078,9 +1163,7 @@ async def test_cancel_auto_login_after_failure(
     """Test the failed registration can be dismissed."""
     cloud.id_token = None
     await register_auto_login(hass_client)
-    await cloud.events.publish(
-        LoginFailedEvent(auto=True, reason=LoginFailedReason.TIMEOUT)
-    )
+    await fail_auto_login(cloud, LoginFailedReason.TIMEOUT)
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/cancel_auto_login"})
@@ -1264,6 +1347,30 @@ async def test_resend_auto_login_confirm_error(
 
 
 @pytest.mark.usefixtures("setup_cloud")
+async def test_resend_auto_login_confirm_timeout(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a resend that never comes back is reported as a gateway timeout."""
+    cloud.id_token = None
+    controller = cloud.register_and_auto_login.return_value
+    controller.resend.side_effect = TimeoutError
+    await register_auto_login(hass_client)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == str(HTTPStatus.BAD_GATEWAY)
+
+    status = await get_cloud_status(client, 6)
+    assert status["auto_login"]["email"] == "hello@bla.com"
+
+
+@pytest.mark.usefixtures("setup_cloud")
 async def test_remove_data_cancels_auto_login(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1283,6 +1390,29 @@ async def test_remove_data_cancels_auto_login(
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_remove_data_logged_in_keeps_auto_login(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the logged-in refusal returns before anything is cancelled."""
+    id_token = cloud.id_token
+    cloud.id_token = None
+    await register_auto_login(hass_client)
+    cloud.id_token = id_token
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/remove_data"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "logged_in"
+    cloud.remove_data.assert_not_called()
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
 
 
 @pytest.mark.usefixtures("setup_cloud")
