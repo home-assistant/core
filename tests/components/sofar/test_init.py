@@ -269,6 +269,33 @@ async def test_device_versions_need_a_reload_to_recover(
     assert device.sw_version == MOCK_SW_VERSION
 
 
+async def test_identity_retries_after_one_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a transient identity failure is retried within the same setup."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    _heal_after_one_failure(unit, 0x044D)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.hw_version == MOCK_HW_VERSION
+
+
 async def test_every_component_failing_recovers_on_a_later_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
