@@ -345,8 +345,9 @@ class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
         """Emit IR code."""
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
-        assert self._id is not None
-        await self.call_rpc("IRCode.Emit", {"id": self._id})
+            assert self._id is not None
+
+        await self.coordinator.device.ircode_emit(self._id)
 
 
 class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
