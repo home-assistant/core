@@ -37,7 +37,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -257,7 +256,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
+    except ValueError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth_implementation_not_available",

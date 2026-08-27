@@ -134,10 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
                 hass, entry
             )
         )
-    except (
-        config_entry_oauth2_flow.ImplementationUnavailableError,
-        ValueError,
-    ) as err:
+    except ValueError as err:
         # Application Credentials missing or removed — user must re-authenticate
         _LOGGER.debug("OAuth2 implementation unavailable: %s", err)
         raise ConfigEntryAuthFailed(
