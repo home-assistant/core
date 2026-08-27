@@ -1,7 +1,7 @@
 """Test service helpers."""
 
 import asyncio
-from collections.abc import Callable, Generator, Iterable, Mapping
+from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 import io
 import threading
@@ -65,10 +65,8 @@ from tests.common import (
     RegistryEntryWithDefaults,
     async_mock_service,
     mock_area_registry,
-    mock_config_flow,
     mock_device_registry,
     mock_integration,
-    mock_platform,
     mock_registry,
 )
 
@@ -3465,35 +3463,13 @@ async def test_get_service_device_and_config_entry(
 
 
 @pytest.fixture
-def reauth_entries(
-    hass: HomeAssistant,
-) -> Generator[tuple[MockConfigEntry, MockConfigEntry]]:
-    """Set up two entries of an integration which implements a reauth flow."""
-
-    class MockFlow(config_entries.ConfigFlow):
-        """Config flow implementing reauth."""
-
-        async def async_step_reauth(
-            self, entry_data: Mapping[str, Any]
-        ) -> config_entries.ConfigFlowResult:
-            """Handle reauth."""
-            return await self.async_step_reauth_confirm()
-
-        async def async_step_reauth_confirm(
-            self, user_input: dict[str, Any] | None = None
-        ) -> config_entries.ConfigFlowResult:
-            """Confirm reauth."""
-            return self.async_show_form(step_id="reauth_confirm")
-
+def reauth_entries(hass: HomeAssistant) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up two config entries to test reauth is started for the right one."""
     entry_1 = MockConfigEntry(domain="test_reauth", title="Entry 1")
     entry_1.add_to_hass(hass)
     entry_2 = MockConfigEntry(domain="test_reauth", title="Entry 2")
     entry_2.add_to_hass(hass)
-
-    mock_integration(hass, MockModule("test_reauth"))
-    mock_platform(hass, "test_reauth.config_flow", None)
-    with mock_config_flow("test_reauth", MockFlow):
-        yield entry_1, entry_2
+    return entry_1, entry_2
 
 
 def _mock_entity_on_entry(
@@ -3515,29 +3491,24 @@ async def test_entity_service_call_starts_reauth(
     entry, _ = reauth_entries
     entity = _mock_entity_on_entry(hass, "light.kitchen", entry)
 
-    with pytest.raises(exceptions.ConfigEntryAuthFailed):
+    with (
+        patch.object(entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(exceptions.ConfigEntryAuthFailed),
+    ):
         await service.entity_service_call(
             hass,
             {entity.entity_id: entity},
             HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
             ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
         )
-    await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
-    assert len(flows) == 1
-    assert flows[0]["context"]["entry_id"] == entry.entry_id
-    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    start_reauth.assert_called_once_with(hass)
 
 
 async def test_entity_service_call_starts_reauth_for_every_entry(
     hass: HomeAssistant, reauth_entries: tuple[MockConfigEntry, MockConfigEntry]
 ) -> None:
-    """Test each failing entity starts a reauth flow for its own config entry.
-
-    Only the first exception of a multi entity call is re-raised to the caller,
-    so the reauth flow must be started before the exception is discarded.
-    """
+    """Test each failing entity starts a reauth flow for its own config entry."""
     entry_1, entry_2 = reauth_entries
     entities = {
         entity.entity_id: entity
@@ -3547,21 +3518,20 @@ async def test_entity_service_call_starts_reauth_for_every_entry(
         )
     }
 
-    with pytest.raises(exceptions.ConfigEntryAuthFailed):
+    with (
+        patch.object(entry_1, "async_start_reauth_if_available") as start_reauth_1,
+        patch.object(entry_2, "async_start_reauth_if_available") as start_reauth_2,
+        pytest.raises(exceptions.ConfigEntryAuthFailed),
+    ):
         await service.entity_service_call(
             hass,
             entities,
             HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
             ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
         )
-    await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
-    assert len(flows) == 2
-    assert {flow["context"]["entry_id"] for flow in flows} == {
-        entry_1.entry_id,
-        entry_2.entry_id,
-    }
+    start_reauth_1.assert_called_once_with(hass)
+    start_reauth_2.assert_called_once_with(hass)
 
 
 async def test_batched_entity_service_call_starts_reauth(
@@ -3577,26 +3547,23 @@ async def test_batched_entity_service_call_starts_reauth(
         )
     }
 
-    with pytest.raises(exceptions.ConfigEntryAuthFailed):
+    with (
+        patch.object(entry_1, "async_start_reauth_if_available") as start_reauth_1,
+        patch.object(entry_2, "async_start_reauth_if_available") as start_reauth_2,
+        pytest.raises(exceptions.ConfigEntryAuthFailed),
+    ):
         await service.batched_entity_service_call(
             hass,
             entities,
             AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed),
             ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
         )
-    await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
-    assert len(flows) == 2
-    assert {flow["context"]["entry_id"] for flow in flows} == {
-        entry_1.entry_id,
-        entry_2.entry_id,
-    }
+    start_reauth_1.assert_called_once_with(hass)
+    start_reauth_2.assert_called_once_with(hass)
 
 
-async def test_entity_service_call_no_config_entry(
-    hass: HomeAssistant, reauth_entries: tuple[MockConfigEntry, MockConfigEntry]
-) -> None:
+async def test_entity_service_call_no_config_entry(hass: HomeAssistant) -> None:
     """Test an entity without a config entry does not start a reauth flow."""
     entity = _mock_entity_on_entry(hass, "light.kitchen", None)
 
@@ -3607,33 +3574,3 @@ async def test_entity_service_call_no_config_entry(
             HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
             ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
         )
-    await hass.async_block_till_done()
-
-    assert not hass.config_entries.flow.async_progress_by_handler("test_reauth")
-
-
-async def test_entity_service_call_without_reauth_step(hass: HomeAssistant) -> None:
-    """Test no reauth flow is started if the integration does not implement one."""
-
-    class MockFlow(config_entries.ConfigFlow):
-        """Config flow without reauth support."""
-
-    entry = MockConfigEntry(domain="test_reauth", title="Entry 1")
-    entry.add_to_hass(hass)
-    mock_integration(hass, MockModule("test_reauth"))
-    mock_platform(hass, "test_reauth.config_flow", None)
-    entity = _mock_entity_on_entry(hass, "light.kitchen", entry)
-
-    with (
-        mock_config_flow("test_reauth", MockFlow),
-        pytest.raises(exceptions.ConfigEntryAuthFailed),
-    ):
-        await service.entity_service_call(
-            hass,
-            {entity.entity_id: entity},
-            HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
-            ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
-        )
-    await hass.async_block_till_done()
-
-    assert not hass.config_entries.flow.async_progress_by_handler("test_reauth")
