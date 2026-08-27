@@ -86,6 +86,7 @@ class AFSAPISwitch(FrontierSiliconEntity, SwitchEntity):
         """Initialize the Frontier Silicon API device."""
         super().__init__(afsapi, config_entry)
         self.entity_description = description
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
 
     @fs_command_exception_wrap
     @override
