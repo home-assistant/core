@@ -49,12 +49,6 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add number entities for discovered bypass temperature targets."""
-        box_node = coordinator.data.nodes.get(BOX_NODE_ID)
-        # The box node can transiently disappear, so retry discovery on the
-        # next refresh.
-        if box_node is None:
-            return
-
         new_entities = []
         targets = coordinator.data.bypass_supply_temperature_targets
         for description in NUMBER_DESCRIPTIONS:
@@ -74,7 +68,7 @@ async def async_setup_entry(
                 new_entities.append(
                     DucoBypassSupplyTemperatureTargetNumber(
                         coordinator,
-                        box_node,
+                        coordinator.data.nodes[BOX_NODE_ID],
                         description,
                         zone_id,
                         target.minimum,
