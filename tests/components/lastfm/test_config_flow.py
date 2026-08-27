@@ -257,12 +257,10 @@ async def test_flow_waits_for_authorization(
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
 
-        # Not yet authorized: the flow stays on the external step
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
 
-        # The user authorizes the application
         mock_session_key_generator.session_key_error = None
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
