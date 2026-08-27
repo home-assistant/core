@@ -25,16 +25,31 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _PLUGINS_ROOT = _PROJECT_ROOT  # mypy_plugins/ lives under the worktree root
 
 
-def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[str]:
+@pytest.fixture(scope="module")
+def mypy_cache(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return a mypy cache directory shared by every case in this module.
+
+    Each case type-checks a few lines, but mypy has to analyse all of typeshed
+    before it gets there. Sharing an incremental cache pays that once instead
+    of once per case. The directory is new for every run, so nothing can carry
+    over from an earlier one.
+    """
+    return tmp_path_factory.mktemp("mypy_cache")
+
+
+def _run_mypy(
+    code: str, tmp_path: Path, cache: Path, mypy_path: str | None = None
+) -> list[str]:
     """Run mypy with the plugin and return home-assistant-enum-identity-compare errors.
 
     Each error is normalized to ``LINE: MESSAGE`` form. ``mypy_path``, if
     given, is written into ``mypy.ini`` so tests can supply stub modules
     that resolve to specific fullnames (used for the framework-guaranteed set).
     """
-    src = tmp_path / "case.py"
+    # mypy keys a cache entry on the module name, so each case gets its own
+    # name rather than overwriting the entry the case before it wrote.
+    src = tmp_path / f"case_{tmp_path.name}.py"
     src.write_text(textwrap.dedent(code))
-    cache = tmp_path / "mypy_cache"
     config = tmp_path / "mypy.ini"
     config_body = (
         "[mypy]\n"
@@ -58,7 +73,6 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
             sys.executable,
             "-m",
             "mypy",
-            "--no-incremental",
             f"--cache-dir={cache}",
             "--config-file",
             str(config),
@@ -233,12 +247,13 @@ def fn(s: DerivedStates) -> bool:
 )
 def test_bad_plain_enum(
     tmp_path: Path,
+    mypy_cache: Path,
     snippet: str,
     enum_name: str,
     op_substrings: tuple[str, str],
 ) -> None:
     """Comparisons on plain ``Enum`` operands must flag a single error."""
-    errors = _run_mypy(_PRELUDE + snippet, tmp_path)
+    errors = _run_mypy(_PRELUDE + snippet, tmp_path, mypy_cache)
     assert len(errors) == 1
     assert enum_name in errors[0]
     assert all(op in errors[0] for op in op_substrings)
@@ -381,9 +396,9 @@ def fn(s: HTTPStatus) -> bool:
         ),
     ],
 )
-def test_good_no_flag(tmp_path: Path, snippet: str) -> None:
+def test_good_no_flag(tmp_path: Path, mypy_cache: Path, snippet: str) -> None:
     """Legitimate comparisons must not emit any error."""
-    errors = _run_mypy(_PRELUDE + snippet, tmp_path)
+    errors = _run_mypy(_PRELUDE + snippet, tmp_path, mypy_cache)
     assert errors == []
 
 
@@ -443,7 +458,7 @@ def test_bad_framework_guaranteed(
 ) -> None:
     """The framework-guaranteed ``FlowResultType`` StrEnum must flag a single error."""
     _write_flow_result_type_stub(tmp_path)
-    errors = _run_mypy(snippet, tmp_path, mypy_path=str(tmp_path))
+    errors = _run_mypy(snippet, tmp_path, mypy_cache, mypy_path=str(tmp_path))
     assert len(errors) == 1
     assert "FlowResultType" in errors[0]
     assert all(op in errors[0] for op in op_substrings)
