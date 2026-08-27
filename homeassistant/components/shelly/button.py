@@ -310,7 +310,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.button_trigger(self._id, "single_push")
 
 
-class ShellyIRCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
+class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly IRCode button."""
 
     entity_description: RpcButtonDescription
@@ -404,6 +404,6 @@ RPC_BUTTONS = {
     ),
     "ircode": RpcButtonDescription(
         key="ircode",
-        entity_class=ShellyIRCodeButton,
+        entity_class=RpcIrCodeButton,
     ),
 }
