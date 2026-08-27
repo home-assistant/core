@@ -211,10 +211,13 @@ async def test_stt_process_audio_stream_api_error(
                 candidates=[],
                 prompt_feedback={
                     "block_reason": "SAFETY",
+                    # Not populated by the Gemini API in practice (only
+                    # Vertex AI); included to prove it is not what gets
+                    # logged.
                     "block_reason_message": "Blocked for safety reasons",
                 },
             ),
-            "STT response contained no text (block_reason=Blocked for safety reasons)",
+            "STT response contained no text (block_reason=BlockedReason.SAFETY)",
             id="blocked_prompt",
         ),
     ],

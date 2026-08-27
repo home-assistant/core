@@ -267,9 +267,12 @@ class GoogleGenerativeAISttEntity(
                     stt.SpeechResultState.SUCCESS,
                 )
             if response.prompt_feedback:
+                # block_reason_message is not supported by the Gemini API
+                # (only Vertex AI), so it is always None for this
+                # API-key-based client; block_reason is always populated.
                 LOGGER.error(
                     "STT response contained no text (block_reason=%s)",
-                    response.prompt_feedback.block_reason_message,
+                    response.prompt_feedback.block_reason,
                 )
             else:
                 finish_reason = (
