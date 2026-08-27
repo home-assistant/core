@@ -30,6 +30,11 @@ SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
+ENV_SUPERVISOR: Final = "SUPERVISOR"
+
+# Default HTTP port when running under Supervisor, which fronts Core on the
+# standard HTTP port.
+SUPERVISOR_DEFAULT_PORT: Final = 80
 
 # Cast to be able to load custom cards.
 # My to be able to check url and version info.

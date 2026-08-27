@@ -30,6 +30,14 @@ async def test_buttons(
         ("button.test_homelink", "tessie_trigger_homelink"),
         ("button.test_keyless_driving", "remote_start"),
         ("button.test_play_fart", "remote_boombox"),
+        (
+            "button.test_enable_keep_accessory_power",
+            "enable_keep_accessory_power_mode",
+        ),
+        (
+            "button.test_disable_keep_accessory_power",
+            "disable_keep_accessory_power_mode",
+        ),
     ):
         with patch(
             f"tesla_fleet_api.tessie.Vehicle.{func}",

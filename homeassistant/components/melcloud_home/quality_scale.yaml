@@ -68,9 +68,7 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: No reconfiguration needed in the current setup.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No issues identified that require repair.

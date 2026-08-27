@@ -10,21 +10,27 @@ DOMAIN = "ecovacs"
 CONF_CONTINENT = "continent"
 CONF_OVERRIDE_REST_URL = "override_rest_url"
 CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
+CONF_VERIFICATION_CODE = "verification_code"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
 
 SUPPORTED_LIFESPANS = (
     LifeSpan.AIR_FRESHENER,
     LifeSpan.BLADE,
     LifeSpan.BRUSH,
+    LifeSpan.CLEANING_SOLUTION,
     LifeSpan.DUST_BAG,
     LifeSpan.FILTER,
     LifeSpan.HAND_FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.ROUND_MOP,
+    LifeSpan.SEWAGE_BOX,
     LifeSpan.SIDE_BRUSH,
     LifeSpan.STATION_FILTER,
+    LifeSpan.TRIMMER_BRUSH,
     LifeSpan.UNIT_CARE,
     LifeSpan.UV_SANITIZER,
+    LifeSpan.WATER_SINK,
+    LifeSpan.WEED_ROPE,
 )
 
 SUPPORTED_STATION_ACTIONS = (

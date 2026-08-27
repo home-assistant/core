@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeoPoolConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: NeoPoolConfigEntry) -> bool:
     """Unload a NeoPool config entry."""
+    entry.runtime_data.cancel_follow_up_refresh()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         await entry.runtime_data.client.close()

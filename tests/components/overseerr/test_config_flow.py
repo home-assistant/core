@@ -1,5 +1,6 @@
 """Tests for the Overseerr config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -27,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def patch_webhook_id() -> None:
+def patch_webhook_id() -> Generator[None]:
     """Patch webhook ID generation."""
     with patch(
         "homeassistant.components.overseerr.config_flow.async_generate_id",
