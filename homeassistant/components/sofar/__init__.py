@@ -9,6 +9,7 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
@@ -59,7 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     await readings.async_config_entry_first_refresh()
     await settings.async_refresh()
 
-    entry.runtime_data = SofarRuntimeData(readings, settings)
+    # Up front: a part's device must name an inverter that has an id.
+    inverter = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **readings.device_info
+    )
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

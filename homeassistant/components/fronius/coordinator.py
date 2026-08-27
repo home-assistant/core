@@ -346,8 +346,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         values: dict[str, float | bool | None] = {}
 
         if (controls := inverter.controls) is not None:
-            values["power_limit"] = controls.power_limit
-            values["power_limit_enabled"] = controls.enabled
+            values["ac_power_limit"] = controls.power_limit
+            values["ac_power_limit_enabled"] = controls.enabled
         if (storage := inverter.storage) is not None:
             values["battery_charge_power_limit"] = storage.charge_limit
             values["battery_charge_power_limit_enabled"] = storage.charge_limit_enabled
