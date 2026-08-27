@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: >-
+      No custom service actions are registered; only standard entity
+      services (turn_on/turn_off/select_option) are used, which Home
+      Assistant handles natively.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  # ^ pybluetti and bluetti-modbus (bluetti-community/bluetti-modbus) are
+  #   both properly published, versioned PyPI packages - no vendored code.
+  docs-actions:
+    status: exempt
+    comment: No custom service actions are provided by this integration.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: >-
+      Devices are added via the BLUETTI cloud account; the optional local
+      Modbus connection (host/port) must still be entered manually - there is
+      no discovery protocol for BLUETTI's Modbus TCP interface either.
+  discovery:
+    status: exempt
+    comment: >-
+      Devices are added via the BLUETTI cloud account (OAuth2); the optional
+      local Modbus connection (host/port) must still be entered manually,
+      since there is no discovery protocol (mDNS/SSDP/etc.) for BLUETTI's
+      Modbus TCP interface.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      The entity set is small and deliberate; every entity is a primary
+      measurement or control, not diagnostic noise, so none warrant being
+      disabled by default.
+  entity-translations: done
+  # ^ Cloud-sourced entities remain untranslated by necessity: their names
+  #   are provided dynamically by the BLUETTI cloud API per device/firmware
+  #   (fnName), not static strings known at development time (see entity.py).
+  #   Modbus-sourced entities (modbus_entity.py) use field names from
+  #   bluetti_modbus_lib, which ARE known at development time, and do carry
+  #   real translation_key/strings.json entries - satisfying this rule for
+  #   the portion of the integration where it's actually possible.
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: >-
+      mypy --strict already passes locally and in CI (scripts/typecheck).
+      What's left is out of this repo's hands: the rule also requires the
+      integration's own entry in home-assistant/core's .strict-typing file,
+      only possible once actually submitted to core.

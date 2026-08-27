@@ -705,6 +705,9 @@ bluetooth-auto-recovery==1.6.4
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.29.21
 
+# homeassistant.components.bluetti
+bluetti-modbus==0.1.1
+
 # homeassistant.components.bond
 bond-async==0.2.1
 
@@ -2100,6 +2103,9 @@ pyblackbird==0.6
 
 # homeassistant.components.bluesound
 pyblu==2.0.8
+
+# homeassistant.components.bluetti
+pybluetti==0.1.1
 
 # homeassistant.components.neato
 pybotvac==0.0.29

@@ -1,0 +1,221 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "all_devices_exists": "[%key:common::config_flow::abort::all_devices_exists%]",
+      "no_devices_available": "[%key:common::config_flow::abort::no_devices_available%]",
+      "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
+      "success": "Successfully added your BLUETTI devices.",
+      "reconfigure_failed": "[%key:common::config_flow::abort::reconfigure_no_matching_entry%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "BLUETTI options",
+        "description": "What would you like to do?",
+        "menu_options": {
+          "add_devices": "Add BLUETTI devices",
+          "configure_modbus": "Configure local Modbus"
+        }
+      },
+      "configure_modbus": {
+        "title": "Configure local Modbus",
+        "description": "Enter the local Modbus TCP connection details for this device. This is optional and supplements the cloud connection with additional sensors - it does not replace it.",
+        "data": {
+          "device_sn": "Device",
+          "host": "Host",
+          "port": "Port"
+        }
+      },
+      "add_devices": {
+        "title": "Add BLUETTI devices",
+        "description": "Select any additional devices bound to your BLUETTI account that you want to add to Home Assistant.",
+        "data": {
+          "devices": "Devices"
+        }
+      }
+    },
+    "abort": {
+      "no_devices_available": "[%key:common::config_flow::abort::no_devices_available%]",
+      "all_devices_exists": "[%key:common::config_flow::abort::all_devices_exists%]",
+      "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Error sending command to {device_id}: {error}"
+    },
+    "select_option_read_only": {
+      "message": "{fn_code} is read-only and cannot be changed"
+    },
+    "select_option_invalid": {
+      "message": "Invalid option {option} for {fn_code}"
+    },
+    "modbus_error": {
+      "message": "Error communicating with the device over Modbus: {error}"
+    }
+  },
+  "issues": {
+    "oauth_expired": {
+      "title": "BLUETTI authentication expired",
+      "description": "Your BLUETTI account authorization has expired. Go to the integration's settings and select **Reconfigure** to sign in again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_o_e_total": {
+        "name": "Total AC Output Energy"
+      },
+      "ac_o_switch": {
+        "name": "AC Output Switch"
+      },
+      "b_c": {
+        "name": "Battery Current"
+      },
+      "b_c_total": {
+        "name": "Total Battery Current"
+      },
+      "b_cell_count": {
+        "name": "Cell Count"
+      },
+      "b_cycle_count": {
+        "name": "Battery Cycle Count"
+      },
+      "b_i_e": {
+        "name": "Total Battery Charged Energy"
+      },
+      "b_ntc_count": {
+        "name": "Temperature Sensor Count"
+      },
+      "b_o_e": {
+        "name": "Total Battery Discharged Energy"
+      },
+      "b_soc_high": {
+        "name": "Max Charge Limit (SoC High)"
+      },
+      "b_soc_low": {
+        "name": "Min Discharge Limit (SoC Low)"
+      },
+      "b_soh": {
+        "name": "Battery SoH"
+      },
+      "b_soh_total": {
+        "name": "Total Battery SoH"
+      },
+      "b_t_avg": {
+        "name": "Average Battery Temperature"
+      },
+      "b_type": {
+        "name": "Battery Type"
+      },
+      "b_v": {
+        "name": "Battery Voltage"
+      },
+      "b_v_total": {
+        "name": "Total Battery Voltage"
+      },
+      "d_inverter_fault": {
+        "name": "Inverter Fault"
+      },
+      "d_inverter_status": {
+        "name": "Inverter Status"
+      },
+      "d_inverter_total": {
+        "name": "Total Inverter Power"
+      },
+      "d_inverter_type": {
+        "name": "Inverter Type"
+      },
+      "d_inverter_warning": {
+        "name": "Inverter Warning"
+      },
+      "d_num_battery_packs": {
+        "name": "Number of Battery Packs"
+      },
+      "d_num_inverters": {
+        "name": "Inverter Count"
+      },
+      "g_i_e_total": {
+        "name": "Total Grid Import Energy"
+      },
+      "g_i_f": {
+        "name": "Grid Frequency"
+      },
+      "g_i_switch": {
+        "name": "Grid Charging Switch"
+      },
+      "g_o_e_total": {
+        "name": "Total Grid Export Energy"
+      },
+      "g_o_switch": {
+        "name": "Grid Feed-in Switch"
+      },
+      "pv_1_i_c": {
+        "name": "PV 1 Input Current"
+      },
+      "pv_1_i_p": {
+        "name": "PV 1 Input Power"
+      },
+      "pv_1_i_v": {
+        "name": "PV 1 Input Voltage"
+      },
+      "pv_2_i_c": {
+        "name": "PV 2 Input Current"
+      },
+      "pv_2_i_p": {
+        "name": "PV 2 Input Power"
+      },
+      "pv_2_i_v": {
+        "name": "PV 2 Input Voltage"
+      },
+      "pv_3_i_c": {
+        "name": "PV 3 Input Current"
+      },
+      "pv_3_i_p": {
+        "name": "PV 3 Input Power"
+      },
+      "pv_3_i_v": {
+        "name": "PV 3 Input Voltage"
+      },
+      "pv_4_i_c": {
+        "name": "PV 4 Input Current"
+      },
+      "pv_4_i_p": {
+        "name": "PV 4 Input Power"
+      },
+      "pv_4_i_v": {
+        "name": "PV 4 Input Voltage"
+      },
+      "pv_ac_e": {
+        "name": "PV AC Energy"
+      },
+      "pv_ac_p": {
+        "name": "PV AC Power"
+      },
+      "pv_i_e_total": {
+        "name": "Total PV Input Energy"
+      }
+    }
+  }
+}

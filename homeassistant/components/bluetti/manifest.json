@@ -1,0 +1,19 @@
+{
+  "domain": "bluetti",
+  "name": "BLUETTI",
+  "codeowners": [
+    "@chpego"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "application_credentials",
+    "modbus"
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/bluetti",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "requirements": [
+    "pybluetti==0.1.1",
+    "bluetti-modbus==0.1.1"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "entity": {
+    "sensor": {
+      "invworkstate": {
+        "default": "mdi:solar-power"
+      },
+      "chgfulltime": {
+        "default": "mdi:clock-outline"
+      },
+      "acloadalltotalpower": {
+        "default": "mdi:power-socket-eu"
+      },
+      "dcloadalltotalpower": {
+        "default": "mdi:current-dc"
+      },
+      "pvalltotalpower": {
+        "default": "mdi:solar-power"
+      },
+      "gridalltotalpower": {
+        "default": "mdi:transmission-tower"
+      }
+    },
+    "switch": {
+      "setctrlac": {
+        "default": "mdi:power-socket-us"
+      },
+      "setctrldc": {
+        "default": "mdi:car-battery"
+      },
+      "setctrlpoweron": {
+        "default": "mdi:power"
+      },
+      "storm_mode_cloud_ctrl": {
+        "default": "mdi:weather-lightning"
+      },
+      "setctrlpoweron-2": {
+        "default": "mdi:sleep"
+      }
+    },
+    "select": {
+      "setctrlworkmode": {
+        "default": "mdi:cog"
+      },
+      "setdceco": {
+        "default": "mdi:flash"
+      },
+      "setaceco": {
+        "default": "mdi:power-plug"
+      },
+      "invworkstate": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}
