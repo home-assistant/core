@@ -610,7 +610,7 @@ class ProtectMediaSource(MediaSource):
         )
         day = start
         if (recording_start := data.api.bootstrap.recording_start) is not None:
-            day = max(recording_start.date(), day)
+            day = max(dt_util.as_local(recording_start).date(), day)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
         while day <= end:
