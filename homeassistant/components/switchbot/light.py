@@ -268,7 +268,7 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
         _LOGGER.debug("Turning on night light %s, address %s", kwargs, self._address)
         low = (
             requested := kwargs.get(ATTR_BRIGHTNESS)
-        ) is not None and requested <= 128
+        ) is not None and requested <= 127
         await self._device.turn_on_light(low=low)
 
     @exception_handler
