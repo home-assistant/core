@@ -906,10 +906,12 @@ class EntityPlatform:
             # entity is partially registered: the state id was reserved and
             # `async_internal_added_to_hass` may have populated entity_sources.
             # Roll that back before aborting so neither leaks.
-            await entity.async_internal_will_remove_from_hass()
-            if not restored:
-                self.hass.states.async_remove(entity_id)
-            entity.add_to_platform_abort()
+            try:
+                await entity.async_internal_will_remove_from_hass()
+            finally:
+                if not restored:
+                    self.hass.states.async_remove(entity_id)
+                entity.add_to_platform_abort()
             raise
 
     async def _async_add_entity_impl(  # noqa: C901
