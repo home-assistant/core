@@ -10,8 +10,9 @@ from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, T
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.mcp.const import DOMAIN
+from homeassistant.components.mcp.const import CONF_ADDON_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -734,3 +735,25 @@ async def test_sse_client_does_not_build_ssl_context(
 
     assert not mock_load_certs.called
     await client.aclose()
+
+
+async def test_llm_api_id_from_app_slug(
+    hass: HomeAssistant, mock_mcp_client: Mock
+) -> None:
+    """Test a discovered server uses the app slug for the LLM API id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_ADDON_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL],
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"
