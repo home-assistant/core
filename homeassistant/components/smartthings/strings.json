@@ -2,16 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
       "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
@@ -263,6 +256,41 @@
           "less": "Less",
           "none": "[%key:common::state::off%]",
           "standard": "Standard"
+        }
+      },
+      "dishwasher_washing_course": {
+        "name": "Cycle",
+        "state": {
+          "ai": "AI Wash",
+          "auto": "Auto",
+          "baby_bottle": "Baby bottle",
+          "babycare": "Baby care",
+          "chef": "Chef",
+          "cold_rinse": "Cold rinse",
+          "daily": "Daily",
+          "delicate": "Delicate",
+          "drinkware": "Drinkware",
+          "dry_only": "Dry only",
+          "eco": "Eco",
+          "express": "Express",
+          "extra_silence": "Extra silence",
+          "glasses": "Delicate",
+          "heavy": "Heavy",
+          "intensive": "Intensive",
+          "machine_care": "Machine care",
+          "night": "Night",
+          "night_silence": "Night silence",
+          "normal": "Normal",
+          "plastics": "Plastic",
+          "pots_and_pans": "Pots and pans",
+          "pre_blast": "Pre blast",
+          "pre_wash": "Pre wash",
+          "quick": "Quick",
+          "rinse_dry": "Rinse dry",
+          "rinse_only": "Rinse only",
+          "self_clean": "Self clean",
+          "steam_soak": "Steam soak",
+          "upper_express": "Upper express"
         }
       },
       "dust_filter_alarm": {

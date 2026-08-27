@@ -10,7 +10,9 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     BluetoothProxyFeature,
+    ConnectionClosedEvent,
     DeviceInfo,
+    DisconnectReason,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
@@ -69,6 +71,7 @@ from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
+ERROR_PROVISIONING_CLOSED = "provisioning_closed"
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
@@ -831,6 +834,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
+        provisioning_closed = False
+
+        def _on_connection_closed(event: ConnectionClosedEvent) -> None:
+            nonlocal provisioning_closed
+            if event.reason is DisconnectReason.PROVISIONING_CLOSED:
+                provisioning_closed = True
+
+        cli.add_connection_closed_callback(_on_connection_closed)
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
@@ -851,6 +862,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except ResolveAPIError:
             return "resolve_error"
         except APIConnectionError:
+            if provisioning_closed:
+                return ERROR_PROVISIONING_CLOSED
             return "connection_error"
         finally:
             await cli.disconnect(force=True)

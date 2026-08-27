@@ -1,6 +1,7 @@
 """Tests for the llama.cpp conversation platform."""
 
 from collections.abc import AsyncGenerator, Generator
+import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -191,6 +192,102 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
+
+
+@pytest.mark.parametrize(("config_entry_options"), [ASSIST_OPTIONS])
+async def test_function_call_with_datetime_tool_results(
+    hass: HomeAssistant,
+    mock_chat_log: MockChatLog,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test function call where tool result contains time/date/datetime objects."""
+    mock_chat_log.mock_tool_results(
+        {
+            "call_call_1": {
+                "speech_slots": {
+                    "time": datetime.time(12, 0),
+                    "date": datetime.date(2026, 8, 23),
+                    "datetime": datetime.datetime(2026, 8, 23, 12, 0),
+                }
+            },
+        }
+    )
+
+    def completion_result(
+        *args: Any, messages: list[dict[str, Any]] | list[Any], **kwargs: Any
+    ) -> ChatCompletion:
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content="I have successfully called the function with time",
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_call_1",
+                                function=Function(
+                                    arguments='{"param1":"call1"}',
+                                    name="test_tool",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            mock_chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.llama_cpp_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
 
 @pytest.mark.parametrize(("config_entry_options"), [ASSIST_OPTIONS])

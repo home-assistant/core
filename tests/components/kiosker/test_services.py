@@ -262,7 +262,9 @@ async def test_service_non_kiosker_device(
         identifiers={("other_domain", "other_device")},
     )
 
-    with pytest.raises(ServiceValidationError, match=f"No {DOMAIN} devices"):
+    with pytest.raises(
+        ServiceValidationError, match=f"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",
