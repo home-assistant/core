@@ -1,344 +1,336 @@
 """Test RYSE Cover entity behavior."""
 
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any
+from unittest.mock import MagicMock
 
 from bleak import BleakError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntityFeature
-from homeassistant.components.ryse.cover import RyseCoverEntity
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL,
+    CoverEntityFeature,
+    CoverState,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
+ENTITY_ID = "cover.test_device"
+LOGGER_NAME = "homeassistant.components.ryse.cover"
+
+
+async def async_poll_device(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance time so the cover platform polls the device once."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a minimal mock ConfigEntry."""
-    return MockConfigEntry(
-        domain="ryse", title="Test Device", data={}, unique_id="AA:BB:CC:DD:EE:FF"
+async def polled_cover(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_integration: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up the integration and let the cover complete its first poll."""
+    await async_poll_device(hass, freezer)
+
+    return setup_integration
+
+
+async def test_cover_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test the cover entity is registered against the RYSE device."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry
+    assert entity_entry.unique_id == f"{DEVICE_ADDRESS}_cover"
+    assert entity_entry.device_id
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
+    assert device_entry.manufacturer == "RYSE"
+    assert device_entry.model == "SmartShade BLE"
+    assert (dr.CONNECTION_BLUETOOTH, DEVICE_ADDRESS) in device_entry.connections
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
     )
 
 
-@pytest.fixture
-def mock_device() -> MagicMock:
-    """Mock RyseBLEDevice."""
-    device = MagicMock()
-    device.address = "AA:BB:CC:DD:EE:FF"
-    device.is_valid_position.return_value = True
-    device.get_real_position.side_effect = lambda x: 100 - x
-    device.is_closed.side_effect = lambda x: x == 100
-    return device
-
-
-async def test_cover_properties(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test properties of RyseCoverEntity."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-
-    info = entity.device_info
-    assert info["manufacturer"] == "RYSE"
-    assert ("bluetooth", "AA:BB:CC:DD:EE:FF") in info["connections"]
-    assert entity._attr_supported_features & CoverEntityFeature.OPEN
-
-
-async def test_update_position_valid(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test updating position calls HA state write and stores correct values."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.async_write_ha_state = MagicMock()
-
-    # Simulate device reporting raw position 100 (fully closed)
-    await entity._update_position(100)
-    mock_device.is_valid_position.assert_called_with(100)
-    # _current_position must be the mapped HA display position (100 - 100 = 0)
-    assert entity._current_position == 0
-    # is_closed must receive the raw device position (100), not the HA position
-    mock_device.is_closed.assert_called_with(100)
-    assert entity._attr_is_closed is True
-    entity.async_write_ha_state.assert_called()
-
-
-async def test_async_open_close_and_set_cover(
-    hass: HomeAssistant, mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test open, close and set cover methods."""
-    mock_device.send_open = AsyncMock()
-    mock_device.send_close = AsyncMock()
-    mock_device.send_set_position = AsyncMock()
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.hass = hass
-    entity.async_write_ha_state = MagicMock()
-
-    await entity.async_open_cover()
-    await entity.async_close_cover()
-
-    ha_position = 75
-    await entity.async_set_cover_position(**{ATTR_POSITION: ha_position})
-
-    mock_device.send_open.assert_awaited()
-    mock_device.send_close.assert_awaited()
-    # Device receives the inverted (raw) position, not the HA display value
-    mock_device.send_set_position.assert_awaited_once_with(100 - ha_position)
-    # Entity remembers the HA display position so current_cover_position reports correctly
-    assert entity._current_position == ha_position
-
-
-async def test_async_update_handles_exceptions(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test BLE communication errors handled gracefully."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    mock_device.client = None
-    mock_device.pair = AsyncMock(return_value=False)
-
-    await entity.async_update()
-    assert entity._attr_available is False
-
-
-async def test_current_cover_position_invalid(
+async def test_cover_unavailable_until_first_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: MockConfigEntry,
 ) -> None:
-    """Test invalid position returns None."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity._current_position = 200
-    mock_device.is_valid_position.return_value = False
-    caplog.set_level(logging.WARNING, logger="homeassistant.components.ryse.cover")
+    """Test the cover stays unavailable until the device has been polled."""
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-    pos = entity.current_cover_position
-    assert pos is None
-    assert "Invalid position" in caplog.text
+    await async_poll_device(hass, freezer)
 
-
-async def test_async_update_connected_triggers_available_and_get_position(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Covers: `self._attr_available = True` and `send_get_position()`."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-
-    # Mock as connected
-    mock_device.client = MagicMock()
-    mock_device.client.is_connected = True
-
-    # Mock get_position behavior
-    mock_device.send_get_position = AsyncMock()
-
-    entity._current_position = None  # triggers send_get_position()
-
-    await entity.async_update()
-
-    assert entity._attr_available is True
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
     mock_device.send_get_position.assert_awaited_once()
 
 
-async def test_async_update_timeout_error(
+async def test_cover_polls_connected_device_without_pairing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: MockConfigEntry,
 ) -> None:
-    """Covers: `except TimeoutError` block."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    """Test an already connected device is not paired again."""
+    mock_device.client = MagicMock(is_connected=True)
 
-    mock_device.client = MagicMock()
-    mock_device.client.is_connected = True
+    await async_poll_device(hass, freezer)
 
-    mock_device.send_get_position = AsyncMock(side_effect=TimeoutError())
-    caplog.set_level(logging.WARNING, logger="homeassistant.components.ryse.cover")
-
-    await entity.async_update()
-
+    mock_device.pair.assert_not_awaited()
     mock_device.send_get_position.assert_awaited_once()
-    assert "BLE communication error while reading device data" in caplog.text
-    assert entity.available is False
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
-async def test_current_cover_position_valid(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Covers final line: `return self._current_position`."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity._current_position = 42
-
-    mock_device.is_valid_position.return_value = True
-
-    assert entity.current_cover_position == 42
-
-
-async def test_entity_lifecycle(
+async def test_position_notification(
     hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    polled_cover: MockConfigEntry,
 ) -> None:
-    """Test async_added_to_hass, async_will_remove_from_hass and _clear_callback."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    """Test a position notification from the device updates the state machine."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
 
-    # Attach hass so base-class async_added_to_hass() can run without errors
-    entity.hass = hass
-
-    # Spy on async_on_remove to check registration while preserving base behavior
-    original_on_remove = entity.async_on_remove
-    entity.async_on_remove = MagicMock(side_effect=original_on_remove)
-
-    # Call added_to_hass
-    await entity.async_added_to_hass()
-    assert mock_device.update_callback == entity._update_position
-    entity.async_on_remove.assert_called_once_with(entity._clear_callback)
-
-    # Call will_remove_from_hass
-    await entity.async_will_remove_from_hass()
-    assert mock_device.update_callback is None
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
-async def test_clear_callback_other_callback(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test _clear_callback does not clear if callback is different."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    other_cb = MagicMock()
-    mock_device.update_callback = other_cb
-
-    entity._clear_callback()
-    assert mock_device.update_callback == other_cb
-
-
-async def test_async_update_pairing_success(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test async_update when pairing succeeds."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    mock_device.client = None
-    mock_device.pair = AsyncMock(return_value=True)
-    mock_device.send_get_position = AsyncMock()
-
-    await entity.async_update()
-    assert entity.available is True
-    mock_device.send_get_position.assert_awaited_once()
-
-
-async def test_async_update_pairing_failure_log_debug(
+async def test_position_notification_out_of_range(
+    hass: HomeAssistant,
     mock_device: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
+    polled_cover: MockConfigEntry,
 ) -> None:
-    """Test debug log when pairing fails and entity was available."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity._attr_available = True
-    mock_device.client = None
-    mock_device.pair = AsyncMock(return_value=False)
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.ryse.cover")
+    """Test an out of range position is not exposed to the state machine."""
+    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
 
-    await entity.async_update()
-    assert entity.available is False
+    await mock_device.update_callback(58)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_CURRENT_POSITION] == 42
+
+    mock_device.is_valid_position.return_value = False
+    await mock_device.update_callback(58)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    assert "Invalid position value detected: 42" in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "method",
+        "device_args",
+        "expected_state",
+        "expected_position",
+    ),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", (), CoverState.OPEN, 100),
+        (SERVICE_CLOSE_COVER, {}, "send_close", (), CoverState.CLOSED, 0),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 75},
+            "send_set_position",
+            (25,),
+            CoverState.OPEN,
+            75,
+        ),
+    ],
+)
+async def test_cover_services(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    device_args: tuple[int, ...],
+    expected_state: CoverState,
+    expected_position: int,
+) -> None:
+    """Test the cover actions send a command and report the new position."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+        blocking=True,
+    )
+
+    getattr(mock_device, method).assert_awaited_once_with(*device_args)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
+    ids=["timeout", "oserror", "bleak"],
+)
+@pytest.mark.parametrize(
+    ("service", "service_data", "method", "error"),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", "Failed to open cover"),
+        (SERVICE_CLOSE_COVER, {}, "send_close", "Failed to close cover"),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "send_set_position",
+            "Failed to set cover position",
+        ),
+    ],
+)
+async def test_cover_services_ble_error(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    exception: Exception,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    error: str,
+) -> None:
+    """Test BLE errors during a cover action surface as HomeAssistantError."""
+    getattr(mock_device, method).side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_pairing_failure_marks_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a failed pairing marks the cover unavailable and is logged once."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
+    mock_device.pair.return_value = False
+
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
     assert "Failed to pair with device, skipping update" in caplog.text
 
+    caplog.clear()
+    await async_poll_device(hass, freezer)
 
-async def test_async_update_pairing_failure_no_log_debug(
-    mock_device: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test no debug log when pairing fails and entity was not available."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity._attr_available = False
-    mock_device.client = None
-    mock_device.pair = AsyncMock(return_value=False)
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.ryse.cover")
-
-    await entity.async_update()
-    assert entity.available is False
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
     assert "Failed to pair with device, skipping update" not in caplog.text
 
 
-# ---------------------------------------------------------------------------
-# Exception-handling tests for BLE command methods
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
-    "exc",
+    "exception",
     [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
     ids=["timeout", "oserror", "bleak"],
 )
-async def test_async_open_cover_ble_error_raises_ha_error(
-    exc: Exception,
+async def test_ble_error_while_polling_marks_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+    exception: Exception,
 ) -> None:
-    """BLE errors during send_open are re-raised as HomeAssistantError."""
-    mock_device.send_open = AsyncMock(side_effect=exc)
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.async_write_ha_state = MagicMock()
-    original_position = entity._current_position
+    """Test a BLE error while polling marks the cover unavailable."""
+    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
+    mock_device.send_get_position.side_effect = exception
 
-    with pytest.raises(HomeAssistantError, match="Failed to open cover"):
-        await entity.async_open_cover()
+    await async_poll_device(hass, freezer)
 
-    # State must NOT be updated on failure
-    assert entity._current_position == original_position
-    entity.async_write_ha_state.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "BLE communication error while reading device data" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "exc",
-    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
-    ids=["timeout", "oserror", "bleak"],
-)
-async def test_async_close_cover_ble_error_raises_ha_error(
-    exc: Exception,
+async def test_notification_callback_lifecycle(
+    hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: MockConfigEntry,
 ) -> None:
-    """BLE errors during send_close are re-raised as HomeAssistantError."""
-    mock_device.send_close = AsyncMock(side_effect=exc)
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.async_write_ha_state = MagicMock()
-    original_position = entity._current_position
+    """Test the device notification callback is registered and removed again."""
+    assert mock_device.update_callback is not None
 
-    with pytest.raises(HomeAssistantError, match="Failed to close cover"):
-        await entity.async_close_cover()
+    await hass.config_entries.async_unload(setup_integration.entry_id)
+    await hass.async_block_till_done()
 
-    # State must NOT be updated on failure
-    assert entity._current_position == original_position
-    entity.async_write_ha_state.assert_not_called()
+    assert mock_device.update_callback is None
 
 
-@pytest.mark.parametrize(
-    "exc",
-    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
-    ids=["timeout", "oserror", "bleak"],
-)
-async def test_async_set_cover_position_ble_error_raises_ha_error(
-    exc: Exception,
+async def test_notification_callback_replaced(
+    hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: MockConfigEntry,
 ) -> None:
-    """BLE errors during send_set_position are re-raised as HomeAssistantError."""
-    mock_device.send_set_position = AsyncMock(side_effect=exc)
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.async_write_ha_state = MagicMock()
-    original_position = entity._current_position
+    """Test unloading keeps a callback that was registered by someone else."""
+    other_callback = MagicMock()
+    mock_device.update_callback = other_callback
 
-    with pytest.raises(HomeAssistantError, match="Failed to set cover position"):
-        await entity.async_set_cover_position(**{ATTR_POSITION: 50})
+    await hass.config_entries.async_unload(setup_integration.entry_id)
+    await hass.async_block_till_done()
 
-    # State must NOT be updated on failure
-    assert entity._current_position == original_position
-    entity.async_write_ha_state.assert_not_called()
-
-
-async def test_current_cover_position_is_none(
-    mock_device: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Covers: `if self._current_position is None: return None`."""
-    entity = RyseCoverEntity(mock_device, mock_config_entry)
-
-    # Ensure it is explicitly None (it is by default in __init__)
-    entity._current_position = None
-
-    assert entity.current_cover_position is None
+    assert mock_device.update_callback is other_callback

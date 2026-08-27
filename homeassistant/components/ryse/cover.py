@@ -59,11 +59,7 @@ class RyseCoverEntity(CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
-
-        # Register the callback safely
         self._device.update_callback = self._update_position
-
-        # Ensure cleanup automatically on removal
         self.async_on_remove(self._clear_callback)
 
     async def async_will_remove_from_hass(self) -> None:

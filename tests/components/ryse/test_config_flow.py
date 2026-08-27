@@ -20,10 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# ---------------------------------------------------------------------------
-# Test constants
-# ---------------------------------------------------------------------------
-
 DEVICE_NAME = "RYSE Shade"
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 RSSI_VALUE = -40
@@ -37,7 +33,6 @@ ADVERTISEMENT_DATA = AdvertisementData(
     tx_power=None,
     platform_data=(),
 )
-
 
 BLE_DEVICE = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
 
@@ -57,11 +52,6 @@ DISCOVERY_INFO = BluetoothServiceInfoBleak(
 )
 
 USER_INPUT = {CONF_ADDRESS: DEVICE_ADDRESS}
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -93,11 +83,6 @@ def discovery() -> Generator[MagicMock]:
         yield mock_discovery
 
 
-# ---------------------------------------------------------------------------
-# USER STEP TESTS
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("discovery", "mock_pairing")
 async def test_async_step_user_success(hass: HomeAssistant) -> None:
     """Test user flow succeeds and creates entry."""
@@ -118,28 +103,25 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "expected_error"),
+    ("pair_result", "expected_error"),
     [
         (Exception("boom"), "unexpected_error"),
         (TimeoutError("timeout"), "cannot_connect"),
         (OSError("os error"), "cannot_connect"),
         (BleakError("bleak error"), "cannot_connect"),
-        (None, "cannot_connect"),
+        (False, "cannot_connect"),
     ],
 )
 @pytest.mark.usefixtures("discovery")
 async def test_async_step_user_errors(
     hass: HomeAssistant,
     mock_pairing: tuple[MagicMock, MagicMock],
-    raise_error: Exception | None,
+    pair_result: Exception | bool,
     expected_error: str,
 ) -> None:
-    """Test errors during user pairing."""
-
+    """Test errors during user pairing can be recovered from."""
     mock_pair, _ = mock_pairing
-    mock_pair.side_effect = raise_error
-    if raise_error is None:
-        mock_pair.return_value = False
+    mock_pair.side_effect = [pair_result, True]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -153,20 +135,26 @@ async def test_async_step_user_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEVICE_NAME
+    assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
+
 
 @pytest.mark.usefixtures("discovery", "mock_pairing")
 async def test_async_step_user_device_added_between_steps(
     hass: HomeAssistant,
 ) -> None:
     """Test that we abort if the device gets added in another flow."""
-
-    # Start flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
-    # Add entry manually (simulating another flow creating it)
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DEVICE_ADDRESS,
@@ -174,7 +162,6 @@ async def test_async_step_user_device_added_between_steps(
     )
     entry.add_to_hass(hass)
 
-    # Continue previous flow → must abort
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -197,11 +184,6 @@ async def test_async_step_user_no_devices_found(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
-
-
-# ---------------------------------------------------------------------------
-# BLUETOOTH DISCOVERY TESTS
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_pairing")
@@ -228,27 +210,24 @@ async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "error_text"),
+    ("pair_result", "error_text"),
     [
         (Exception("boom"), "unexpected_error"),
         (TimeoutError("timeout"), "cannot_connect"),
         (OSError("os error"), "cannot_connect"),
         (BleakError("bleak error"), "cannot_connect"),
-        (None, "cannot_connect"),
+        (False, "cannot_connect"),
     ],
 )
 async def test_async_step_bluetooth_errors(
     hass: HomeAssistant,
     mock_pairing: tuple[MagicMock, MagicMock],
-    raise_error: Exception | None,
+    pair_result: Exception | bool,
     error_text: str,
 ) -> None:
-    """Test Bluetooth discovery confirm error handling."""
-
+    """Test Bluetooth discovery confirm errors can be recovered from."""
     mock_pair, _ = mock_pairing
-    mock_pair.side_effect = raise_error
-    if raise_error is None:
-        mock_pair.return_value = False
+    mock_pair.side_effect = [pair_result, True]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -265,6 +244,15 @@ async def test_async_step_bluetooth_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_text}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEVICE_NAME
+    assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
 
 
 @pytest.mark.usefixtures("mock_pairing")
@@ -295,7 +283,6 @@ async def test_async_step_user_skips_already_configured(
     hass: HomeAssistant, discovery: MagicMock
 ) -> None:
     """Test that we skip already configured devices in user flow discovery."""
-    # Add the device as already configured
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DEVICE_ADDRESS,
@@ -393,6 +380,15 @@ async def test_async_step_user_filter_matching_manufacturer_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Generic Device"
+    assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
+
 
 @pytest.mark.usefixtures("mock_pairing")
 async def test_async_step_user_filter_matching_service_uuid(
@@ -430,6 +426,15 @@ async def test_async_step_user_filter_matching_service_uuid(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Generic Device"
+    assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
 
 
 @pytest.mark.usefixtures("mock_pairing")
@@ -499,20 +504,27 @@ async def test_async_step_bluetooth_fallback_name(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {"name": "RYSE device"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RYSE device"
+    assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
+
 
 async def test_async_step_user_pairing_check_timeout(
     hass: HomeAssistant, discovery: MagicMock, mock_pairing: tuple[MagicMock, MagicMock]
 ) -> None:
     """Test handling a timeout when checking if a device is in pairing mode."""
     _, mock_is_pair = mock_pairing
-    # Simulate a timeout error inside the async context
     mock_is_pair.side_effect = TimeoutError("Connection timed out")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Because it timed out, the candidate is discarded, leaving no devices
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
@@ -528,6 +540,5 @@ async def test_async_step_user_pairing_check_unexpected_exception(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Discarded due to exception, leading to no devices found
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

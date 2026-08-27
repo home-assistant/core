@@ -59,7 +59,6 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        # Store discovery info for later use
         self._discovery_info = discovery_info
 
         return await self.async_step_bluetooth_confirm()
@@ -138,10 +137,9 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         for info in async_discovered_service_info(self.hass, connectable=True):
             if info.address in current_ids:
                 continue
-            if not info.name:  # Skip no-name devices
+            if not info.name:
                 continue
 
-            # Pre-filter candidates by name, manufacturer id, or known service UUIDs
             has_ryse_uuid = SERVICE_UUID in info.service_uuids
             has_ryse_mfg = MANUFACTURER_ID in info.manufacturer_data
             has_ryse_name = MANUFACTURER_NAME in info.name.upper()
@@ -157,13 +155,11 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             for device in results:
                 if device is not None:
-                    # Add device to selection list
                     self._discovered_devices[device.address] = device.name
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        # Show dropdown form
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
