@@ -104,7 +104,7 @@ async def test_config_flow(
             {"error": "Mock directory failed to browse"},
         ),
         (
-            [MOCK_MEDIA_URI_EMPTY, MOCK_MEDIA_URI_BROWSE_ERROR],
+            [MOCK_MEDIA_URI_1, MOCK_MEDIA_URI_BROWSE_ERROR],
             "failed_browse",
             {"error": "Mock directory failed to browse"},
         ),
