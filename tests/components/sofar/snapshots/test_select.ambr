@@ -1,0 +1,133 @@
+# serializer version: 1
+# name: test_hybrid_entities[select.hydxxktl_3p_charger_use_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'self_use',
+        'time_of_use',
+        'timing_mode',
+        'passive_mode',
+        'peak_cut_mode',
+        'off_grid_mode',
+        'generator_mode',
+        'feed_in_priority_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hydxxktl_3p_charger_use_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charger use mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger use mode',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charger_use_mode',
+    'unique_id': 'SP1XXES100XX_charger_use_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hybrid_entities[select.hydxxktl_3p_charger_use_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P Charger use mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'self_use',
+        'time_of_use',
+        'timing_mode',
+        'passive_mode',
+        'peak_cut_mode',
+        'off_grid_mode',
+        'generator_mode',
+        'feed_in_priority_mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hydxxktl_3p_charger_use_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_use',
+  })
+# ---
+# name: test_hybrid_entities[select.hydxxktl_3p_eps_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'turn_off',
+        'turn_on_prohibit_cold_start',
+        'turn_on_enable_cold_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hydxxktl_3p_eps_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EPS mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EPS mode',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eps_control',
+    'unique_id': 'SP1XXES100XX_eps_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hybrid_entities[select.hydxxktl_3p_eps_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P EPS mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'turn_off',
+        'turn_on_prohibit_cold_start',
+        'turn_on_enable_cold_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hydxxktl_3p_eps_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'turn_off',
+  })
+# ---

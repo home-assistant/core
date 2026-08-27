@@ -20,7 +20,7 @@ from homeassistant.components.sofar.sensor import (
     SofarSensorDescription,
     SofarTotalSensor,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -54,9 +54,14 @@ async def test_all_entities(
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    with (
+        patch("homeassistant.components.sofar.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: connection.for_unit(
+                unit_id
+            ),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -103,8 +108,8 @@ async def test_sensor_entities_created_and_state(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            138,
-            45,
+            140,
+            47,
             id="hybrid",
         ),
     ],
