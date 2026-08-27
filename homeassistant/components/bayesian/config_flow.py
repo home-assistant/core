@@ -4,15 +4,12 @@
 from collections.abc import Mapping
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -52,6 +49,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector, translation
@@ -167,13 +165,8 @@ OPTIONS_SCHEMA = vol.Schema(
                 msg="extreme_prior_error",
             ),
         ),
-        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[cls.value for cls in BinarySensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="binary_sensor_device_class",
-                sort=True,
-            ),
+        vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+            selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
         ),
     }
 )
@@ -439,17 +432,20 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"observation": ObservationSubentryFlowHandler}
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, str]) -> str:
         """Return config entry title."""
         name: str = options[CONF_NAME]
         return name
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow when config entry has been created."""
         subentry_result = await self.hass.config_entries.subentries.async_init(

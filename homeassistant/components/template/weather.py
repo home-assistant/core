@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, override
 
 import voluptuous as vol
 
@@ -28,6 +28,7 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -38,10 +39,8 @@ from homeassistant.const import (
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -56,7 +55,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -67,7 +66,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -220,6 +219,10 @@ WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=WeatherEntityStateAttribute
+)
+
 
 WEATHER_YAML_SCHEMA = (
     vol.Schema(
@@ -229,12 +232,16 @@ WEATHER_YAML_SCHEMA = (
     )
     .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
     .extend(
-        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+        ).schema
     )
 )
 
 WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
-    make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
 )
 
 WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
@@ -340,11 +347,11 @@ def validate_forecast(
     )
 
     def validate(result: Any) -> list[Forecast] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 option,
                 result,
@@ -355,7 +362,7 @@ def validate_forecast(
         for forecast in result:
             if not isinstance(forecast, dict):
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -368,7 +375,7 @@ def validate_forecast(
             diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
             if diff_result:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -378,7 +385,7 @@ def validate_forecast(
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -388,7 +395,7 @@ def validate_forecast(
                 )
             if "datetime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -404,12 +411,77 @@ def validate_forecast(
     return validate
 
 
-class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
+@dataclass(kw_only=True)
+class WeatherExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    last_apparent_temperature: float | None
+    last_cloud_coverage: int | None
+    last_dew_point: float | None
+    last_humidity: float | None
+    last_ozone: float | None
+    last_pressure: float | None
+    last_temperature: float | None
+    last_uv_index: float | None
+    last_visibility: float | None
+    last_wind_bearing: float | str | None
+    last_wind_gust_speed: float | None
+    last_wind_speed: float | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the event data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored event state from a dict."""
+        for key, vtypes in (
+            ("last_apparent_temperature", (float, int)),
+            ("last_cloud_coverage", (float, int)),
+            ("last_dew_point", (float, int)),
+            ("last_humidity", (float, int)),
+            ("last_ozone", (float, int)),
+            ("last_pressure", (float, int)),
+            ("last_temperature", (float, int)),
+            ("last_uv_index", (float, int)),
+            ("last_visibility", (float, int)),
+            ("last_wind_bearing", (float, int, str)),
+            ("last_wind_gust_speed", (float, int)),
+            ("last_wind_speed", (float, int)),
+        ):
+            # This is needed to safeguard against previous restore data that has strings
+            # instead of floats or ints.
+            if key not in restored or (
+                (value := restored[key]) is not None and not isinstance(value, vtypes)
+            ):
+                return None
+
+        return cls(
+            last_apparent_temperature=restored["last_apparent_temperature"],
+            last_cloud_coverage=restored["last_cloud_coverage"],
+            last_dew_point=restored["last_dew_point"],
+            last_humidity=restored["last_humidity"],
+            last_ozone=restored["last_ozone"],
+            last_pressure=restored["last_pressure"],
+            last_temperature=restored["last_temperature"],
+            last_uv_index=restored["last_uv_index"],
+            last_visibility=restored["last_visibility"],
+            last_wind_bearing=restored["last_wind_bearing"],
+            last_wind_gust_speed=restored["last_wind_gust_speed"],
+            last_wind_speed=restored["last_wind_speed"],
+        )
+
+
+class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEntity):
     """Representation of a template weathers features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_CONDITION
     _optimistic_entity = True
+    _restore_state_extra_data = WeatherExtraStoredData
+    _restore_state_properties = ("_attr_condition",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -424,17 +496,17 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         # Required options
         self.setup_state_template(
             "_attr_condition",
-            template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
+            tcv.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
         )
         self.setup_template(
             CONF_HUMIDITY,
             "_attr_humidity",
-            template_validators.number(self, CONF_HUMIDITY, 0.0, 100.0),
+            tcv.number(self, CONF_HUMIDITY, 0.0, 100.0),
         )
         self.setup_template(
             CONF_TEMPERATURE,
             "_attr_native_temperature",
-            template_validators.number(self, CONF_TEMPERATURE),
+            tcv.number(self, CONF_TEMPERATURE),
         )
 
         # Optional options
@@ -460,9 +532,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             (CONF_WIND_GUST_SPEED, "_attr_native_wind_gust_speed"),
             (CONF_WIND_SPEED, "_attr_native_wind_speed"),
         ):
-            self.setup_template(
-                option, attribute, template_validators.number(self, option)
-            )
+            self.setup_template(option, attribute, tcv.number(self, option))
 
         # Forecasts
 
@@ -510,6 +580,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
     @property
+    @override
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self._attribution is None:
@@ -538,17 +609,61 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
         return update
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_daily or []
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_hourly or []
 
+    @override
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_twice_daily or []
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> WeatherExtraStoredData:
+        """Return weather specific state data to be restored."""
+        return WeatherExtraStoredData(
+            last_apparent_temperature=self.native_apparent_temperature,
+            last_cloud_coverage=self._attr_cloud_coverage,
+            last_dew_point=self.native_dew_point,
+            last_humidity=self.humidity,
+            last_ozone=self.ozone,
+            last_pressure=self.native_pressure,
+            last_temperature=self.native_temperature,
+            last_uv_index=self.uv_index,
+            last_visibility=self.native_visibility,
+            last_wind_bearing=self.wind_bearing,
+            last_wind_gust_speed=self.native_wind_gust_speed,
+            last_wind_speed=self.native_wind_speed,
+        )
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_condition = last_state.state
+        return True
+
+    @override
+    def restore_extra_data(self, extra_data: WeatherExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_native_apparent_temperature = extra_data.last_apparent_temperature
+        self._attr_cloud_coverage = extra_data.last_cloud_coverage
+        self._attr_native_dew_point = extra_data.last_dew_point
+        self._attr_humidity = extra_data.last_humidity
+        self._attr_ozone = extra_data.last_ozone
+        self._attr_native_pressure = extra_data.last_pressure
+        self._attr_native_temperature = extra_data.last_temperature
+        self._attr_uv_index = extra_data.last_uv_index
+        self._attr_native_visibility = extra_data.last_visibility
+        self._attr_wind_bearing = extra_data.last_wind_bearing
+        self._attr_native_wind_gust_speed = extra_data.last_wind_gust_speed
+        self._attr_native_wind_speed = extra_data.last_wind_speed
 
 
 class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
@@ -567,68 +682,7 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
         AbstractTemplateWeather.__init__(self, config)
 
 
-@dataclass(kw_only=True)
-class WeatherExtraStoredData(ExtraStoredData):
-    """Object to hold extra stored data."""
-
-    last_apparent_temperature: float | None
-    last_cloud_coverage: int | None
-    last_dew_point: float | None
-    last_humidity: float | None
-    last_ozone: float | None
-    last_pressure: float | None
-    last_temperature: float | None
-    last_uv_index: float | None
-    last_visibility: float | None
-    last_wind_bearing: float | str | None
-    last_wind_gust_speed: float | None
-    last_wind_speed: float | None
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the event data."""
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
-        """Initialize a stored event state from a dict."""
-        for key, vtypes in (
-            ("last_apparent_temperature", (float, int)),
-            ("last_cloud_coverage", (float, int)),
-            ("last_dew_point", (float, int)),
-            ("last_humidity", (float, int)),
-            ("last_ozone", (float, int)),
-            ("last_pressure", (float, int)),
-            ("last_temperature", (float, int)),
-            ("last_uv_index", (float, int)),
-            ("last_visibility", (float, int)),
-            ("last_wind_bearing", (float, int, str)),
-            ("last_wind_gust_speed", (float, int)),
-            ("last_wind_speed", (float, int)),
-        ):
-            # This is needed to safeguard against previous restore data that has strings
-            # instead of floats or ints.
-            if key not in restored or (
-                (value := restored[key]) is not None and not isinstance(value, vtypes)
-            ):
-                return None
-
-        return cls(
-            last_apparent_temperature=restored["last_apparent_temperature"],
-            last_cloud_coverage=restored["last_cloud_coverage"],
-            last_dew_point=restored["last_dew_point"],
-            last_humidity=restored["last_humidity"],
-            last_ozone=restored["last_ozone"],
-            last_pressure=restored["last_pressure"],
-            last_temperature=restored["last_temperature"],
-            last_uv_index=restored["last_uv_index"],
-            last_visibility=restored["last_visibility"],
-            last_wind_bearing=restored["last_wind_bearing"],
-            last_wind_gust_speed=restored["last_wind_gust_speed"],
-            last_wind_speed=restored["last_wind_speed"],
-        )
-
-
-class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity):
+class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather):
     """Weather entity based on trigger data."""
 
     domain = WEATHER_DOMAIN
@@ -642,52 +696,3 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
         """Initialize."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateWeather.__init__(self, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (state := await self.async_get_last_state())
-            and state.state is not None
-            and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and (weather_data := await self.async_get_last_weather_data())
-        ):
-            self._attr_native_apparent_temperature = (
-                weather_data.last_apparent_temperature
-            )
-            self._attr_cloud_coverage = weather_data.last_cloud_coverage
-            self._attr_condition = state.state
-            self._attr_native_dew_point = weather_data.last_dew_point
-            self._attr_humidity = weather_data.last_humidity
-            self._attr_ozone = weather_data.last_ozone
-            self._attr_native_pressure = weather_data.last_pressure
-            self._attr_native_temperature = weather_data.last_temperature
-            self._attr_uv_index = weather_data.last_uv_index
-            self._attr_native_visibility = weather_data.last_visibility
-            self._attr_wind_bearing = weather_data.last_wind_bearing
-            self._attr_native_wind_gust_speed = weather_data.last_wind_gust_speed
-            self._attr_native_wind_speed = weather_data.last_wind_speed
-
-    @property
-    def extra_restore_state_data(self) -> WeatherExtraStoredData:
-        """Return weather specific state data to be restored."""
-        return WeatherExtraStoredData(
-            last_apparent_temperature=self.native_apparent_temperature,
-            last_cloud_coverage=self._attr_cloud_coverage,
-            last_dew_point=self.native_dew_point,
-            last_humidity=self.humidity,
-            last_ozone=self.ozone,
-            last_pressure=self.native_pressure,
-            last_temperature=self.native_temperature,
-            last_uv_index=self.uv_index,
-            last_visibility=self.native_visibility,
-            last_wind_bearing=self.wind_bearing,
-            last_wind_gust_speed=self.native_wind_gust_speed,
-            last_wind_speed=self.native_wind_speed,
-        )
-
-    async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
-        """Restore weather specific state data."""
-        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
-            return None
-        return WeatherExtraStoredData.from_dict(restored_last_extra_data.as_dict())

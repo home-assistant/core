@@ -98,10 +98,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         new_options = {**config_entry.options}
 

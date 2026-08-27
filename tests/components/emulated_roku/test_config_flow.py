@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.emulated_roku import config_flow
+from homeassistant.components.emulated_roku import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,7 +38,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
 async def test_flow_already_registered_entry(hass: HomeAssistant) -> None:
     """Test that config flow doesn't allow existing names."""
     MockConfigEntry(
-        domain="emulated_roku", data={"name": "Emulated Roku Test", "listen_port": 8062}
+        domain=DOMAIN, data={"name": "Emulated Roku Test", "listen_port": 8062}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

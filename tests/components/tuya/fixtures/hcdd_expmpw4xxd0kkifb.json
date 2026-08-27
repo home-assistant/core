@@ -1,0 +1,91 @@
+{
+  "name": "Chasing Tape Light",
+  "category": "hcdd",
+  "product_id": "expmpw4xxd0kkifb",
+  "product_name": "Chasing Tape Light",
+  "online": true,
+  "sub": false,
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}"
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}"
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000,\"scale\":0,\"step\":1}"
+    },
+    "colour_data": {
+      "type": "String",
+      "value": "{\"maxlen\":255}"
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}"
+    },
+    "music_data": {
+      "type": "String",
+      "value": "{\"maxlen\":255}"
+    },
+    "lightpixel_number_set": {
+      "type": "Integer",
+      "value": "{\"min\":1,\"max\":1000,\"scale\":1,\"step\":1}"
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}"
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}"
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":1000,\"scale\":0,\"step\":1}"
+    },
+    "colour_data": {
+      "type": "String",
+      "value": "{\"maxlen\":255}"
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}"
+    },
+    "light_length": {
+      "type": "Integer",
+      "value": "{\"unit\":\"cm\",\"min\":1,\"max\":10000,\"scale\":0,\"step\":1}"
+    },
+    "light_pixel": {
+      "type": "Integer",
+      "value": "{\"min\":1,\"max\":1024,\"scale\":0,\"step\":1}"
+    },
+    "lightpixel_number_set": {
+      "type": "Integer",
+      "value": "{\"min\":1,\"max\":1000,\"scale\":1,\"step\":1}"
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "work_mode": "white",
+    "bright_value": 1000,
+    "temp_value": 0,
+    "colour_data": "007803e803e8",
+    "countdown": 0,
+    "light_length": 1200,
+    "light_pixel": 48,
+    "lightpixel_number_set": 24
+  }
+}

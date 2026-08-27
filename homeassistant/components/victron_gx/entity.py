@@ -1,7 +1,7 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -15,9 +15,33 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 # Entities that should be marked as diagnostic
-ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat", "platform_device_reboot"]
+ENTITIES_CATEGORY_DIAGNOSTIC = [
+    "system_heartbeat",
+    "platform_device_reboot",
+    "solarcharger_device_off_reason",
+]
 # Entities that should be disabled by default
-ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat", "platform_device_reboot"]
+ENTITIES_DISABLE_BY_DEFAULT = [
+    "system_heartbeat",
+    "platform_device_reboot",
+    "solarcharger_device_off_reason",
+    # Per-tracker solar charger entities can multiply quickly on multi-tracker chargers.
+    "solarcharger_tracker_{tracker}_power",
+    "solarcharger_tracker_{tracker}_voltage",
+    "solarcharger_tracker_{tracker}_current",
+    "solarcharger_tracker_{tracker}_operation_mode",
+    "solarcharger_tracker_{tracker}_name",
+    "solarcharger_tracker_{tracker}_max_power_today",
+    "solarcharger_tracker_{tracker}_max_voltage_today",
+    "solarcharger_tracker_{tracker}_yield_today",
+    # Per-MPPT multi-device entities have the same amplification problem.
+    "multi_mppt_{mppt_id}_yield_today",
+    "multi_mppt_{mppt_id}_yield_yesterday",
+    "multi_mppt_{mpptnumber}_state",
+    "multi_mppt_{mpptnumber}_power",
+    "multi_mppt_{mpptnumber}_voltage",
+    "multi_mppt_{mpptnumber}_current",
+]
 # Units that must be provided directly instead of via localization.
 SPECIAL_NATIVE_UNITS = {"%", "Ah"}
 
@@ -61,7 +85,11 @@ class VictronBaseEntity(Entity):
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
 
-    def _native_unit_of_measurement(self) -> str | None:
+    def _resolve_native_unit_of_measurement(self) -> str | None:
+        """Resolve native unit of measurement for platforms that support it."""
+        if self._metric.metric_type is MetricType.COST:
+            return self.hass.config.currency
+
         unit_of_measurement = self._metric.unit_of_measurement
         # We need to provide a native unit in three cases:
         if (
@@ -75,7 +103,7 @@ class VictronBaseEntity(Entity):
             # 3. Dynamic units come from user-configured MQTT topics (e.g.
             # SwitchableOutput Settings/Unit) and have no translation file
             # entry, so we must set the unit programmatically.
-            or self._metric.metric_type == MetricType.DYNAMIC
+            or self._metric.metric_type is MetricType.DYNAMIC
         ):
             return unit_of_measurement
 
@@ -90,11 +118,13 @@ class VictronBaseEntity(Entity):
     def _on_update(self, _: VictronVenusMetric, value: Any) -> None:
         self._on_update_cb(value)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._metric.on_update = self._on_update
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         # Unregister update callback

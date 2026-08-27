@@ -34,15 +34,9 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
 
     connection_factory = MagicMock(wraps=connection_factory)
 
-    with (
-        patch(
-            "homeassistant.components.dsmr.sensor.create_dsmr_reader",
-            connection_factory,
-        ),
-        patch(
-            "homeassistant.components.dsmr.sensor.create_tcp_dsmr_reader",
-            connection_factory,
-        ),
+    with patch(
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)
         closed.set()
@@ -112,7 +106,7 @@ def dsmr_connection_send_validate_fixture() -> Generator[
                     EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
                 ),
             }
-        if args[1] == "5L":
+        if args[1] in ("5L", "MSn"):
             protocol.telegram = {
                 LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
                     LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
@@ -127,7 +121,7 @@ def dsmr_connection_send_validate_fixture() -> Generator[
                     LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
             }
-        if args[1] == "5S":
+        if args[1] in ("5S", "SAGEMCOM_T210_D_R"):
             protocol.telegram = {
                 P1_MESSAGE_TIMESTAMP: CosemObject(
                     P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]
@@ -156,15 +150,9 @@ def dsmr_connection_send_validate_fixture() -> Generator[
 
     protocol.wait_closed = wait_closed
 
-    with (
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
-            connection_factory,
-        ),
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_tcp_dsmr_reader",
-            connection_factory,
-        ),
+    with patch(
+        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)
 
@@ -207,14 +195,8 @@ def rfxtrx_dsmr_connection_send_validate_fixture() -> Generator[
 
     protocol.wait_closed = wait_closed
 
-    with (
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_rfxtrx_dsmr_reader",
-            connection_factory,
-        ),
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_rfxtrx_tcp_dsmr_reader",
-            connection_factory,
-        ),
+    with patch(
+        "homeassistant.components.dsmr.config_flow.create_rfxtrx_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)

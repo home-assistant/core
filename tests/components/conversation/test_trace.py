@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import trace
+from homeassistant.components.conversation import DOMAIN, trace
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
 
 

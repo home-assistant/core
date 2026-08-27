@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import dataclasses
+from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import json
@@ -14,7 +15,7 @@ from typing import Any, Concatenate, cast
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import AlreadyConnectedError, Cloud, auth
+from hass_nabucasa import AlreadyConnectedError, AutoLoginController, Cloud, auth
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
@@ -30,26 +31,33 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
+from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
-from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
+    DATA_PENDING_AUTO_LOGIN,
+    DOMAIN,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
@@ -63,10 +71,13 @@ from .const import (
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
+from .models import PendingAutoLogin, auto_login_failure_key
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
 _LOGGER = logging.getLogger(__name__)
+
+_NO_PENDING_AUTO_LOGIN = "no_pending_auto_login"
 
 
 _CLOUD_ERRORS: dict[
@@ -75,6 +86,10 @@ _CLOUD_ERRORS: dict[
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant Cloud.",
+    ),
+    auth.AuthTimeoutError: (
+        HTTPStatus.GATEWAY_TIMEOUT,
+        "Authentication timed out.",
     ),
     aiohttp.ClientError: (
         HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -99,6 +114,12 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
+    websocket_api.async_register_command(hass, websocket_subscribe_cloud_events)
+    websocket_api.async_register_command(hass, websocket_attempt_auto_login_now)
+    websocket_api.async_register_command(hass, websocket_resend_auto_login_confirm)
+    websocket_api.async_register_command(hass, websocket_cancel_auto_login)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -114,6 +135,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudRegisterView)
+    hass.http.register_view(CloudRegisterAutoLoginView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
     hass.http.register_view(DownloadSupportPackageView)
@@ -131,6 +153,7 @@ def async_setup(hass: HomeAssistant) -> None:
                 HTTPStatus.BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
+            auth.AlreadyLoggedIn: (HTTPStatus.BAD_REQUEST, "Already logged in."),
             auth.Unauthenticated: (HTTPStatus.UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
@@ -309,13 +332,7 @@ class CloudLoginView(HomeAssistantView):
             self._mfa_tokens_set_time = time.time()
             raise
 
-        if "assist_pipeline" in hass.config.components:
-            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
-        else:
-            new_cloud_pipeline_id = None
-
-        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
-        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
+        return self.json({"success": True})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -342,6 +359,32 @@ class CloudLogoutView(HomeAssistantView):
         return self.json_message("ok")
 
 
+async def _async_location_client_metadata(
+    hass: HomeAssistant,
+) -> dict[str, str] | None:
+    """Detect location info to attach as registration client metadata."""
+    client_metadata = None
+
+    if (
+        location_info := await async_detect_location_info(async_get_clientsession(hass))
+    ) and location_info.country_code is not None:
+        client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
+        if location_info.region_code is not None:
+            client_metadata["NC_REGION_CODE"] = location_info.region_code
+        if location_info.zip_code is not None:
+            client_metadata["NC_ZIP_CODE"] = location_info.zip_code
+
+    return client_metadata
+
+
+_REGISTER_SCHEMA = vol.Schema(
+    {
+        vol.Required("email"): str,
+        vol.Required("password"): vol.All(str, vol.Length(min=6)),
+    }
+)
+
+
 class CloudRegisterView(HomeAssistantView):
     """Register on the Home Assistant cloud."""
 
@@ -350,31 +393,13 @@ class CloudRegisterView(HomeAssistantView):
 
     @require_admin
     @_handle_cloud_errors
-    @RequestDataValidator(
-        vol.Schema(
-            {
-                vol.Required("email"): str,
-                vol.Required("password"): vol.All(str, vol.Length(min=6)),
-            }
-        )
-    )
+    @RequestDataValidator(_REGISTER_SCHEMA)
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        client_metadata = None
-
-        if (
-            location_info := await async_detect_location_info(
-                async_get_clientsession(hass)
-            )
-        ) and location_info.country_code is not None:
-            client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
-            if location_info.region_code is not None:
-                client_metadata["NC_REGION_CODE"] = location_info.region_code
-            if location_info.zip_code is not None:
-                client_metadata["NC_ZIP_CODE"] = location_info.zip_code
+        client_metadata = await _async_location_client_metadata(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(
@@ -383,6 +408,40 @@ class CloudRegisterView(HomeAssistantView):
                 client_metadata=client_metadata,
             )
 
+        return self.json_message("ok")
+
+
+class CloudRegisterAutoLoginView(HomeAssistantView):
+    """Register on the Home Assistant cloud and log in once confirmed."""
+
+    url = "/api/cloud/register_auto_login"
+    name = "api:cloud:register_auto_login"
+
+    @require_admin
+    @_handle_cloud_errors
+    @RequestDataValidator(_REGISTER_SCHEMA)
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Handle registration with auto-login request."""
+        hass = request.app[KEY_HASS]
+        cloud = hass.data[DATA_CLOUD]
+
+        if cloud.is_logged_in:
+            raise auth.AlreadyLoggedIn("Cannot register if already logged in.")
+
+        client_metadata = await _async_location_client_metadata(hass)
+
+        async with asyncio.timeout(REQUEST_TIMEOUT):
+            controller = await cloud.register_and_auto_login(
+                data["email"],
+                data["password"],
+                client_metadata=client_metadata,
+            )
+
+        hass.data[DATA_PENDING_AUTO_LOGIN] = PendingAutoLogin(
+            # hass_nabucasa registers and logs in with the lowercased address.
+            email=data["email"].lower(),
+            controller=controller,
+        )
         return self.json_message("ok")
 
 
@@ -666,6 +725,25 @@ class DownloadSupportPackageView(HomeAssistantView):
         )
 
 
+@callback
+def _async_auto_login_controller(hass: HomeAssistant) -> AutoLoginController | None:
+    """Return the controls of a retry loop that is still running."""
+    pending = hass.data[DATA_PENDING_AUTO_LOGIN]
+    return pending.controller if pending is not None else None
+
+
+@callback
+def _async_clear_pending_auto_login(hass: HomeAssistant) -> None:
+    """Cancel and forget a pending auto-login, telling subscribers it is gone."""
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        return
+
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+    if pending.controller is not None:
+        pending.controller.cancel()
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "auto_login_cancelled"})
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
 @websocket_api.async_response
@@ -687,6 +765,9 @@ async def websocket_cloud_remove_data(
         )
         return
 
+    # Cancel first, so an auto-login cannot land while the data is being wiped.
+    _async_clear_pending_auto_login(hass)
+
     await cloud.remove_data()
     await cloud.client.prefs.async_erase_config()
 
@@ -705,9 +786,114 @@ async def websocket_cloud_status(
     Async friendly.
     """
     cloud = hass.data[DATA_CLOUD]
-    connection.send_message(
-        websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
+    data = await _account_data(hass, cloud)
+
+    # Only admins are shown the email of a pending registration.
+    if (
+        not cloud.is_logged_in
+        and connection.user.is_admin
+        and (pending := hass.data[DATA_PENDING_AUTO_LOGIN])
+    ):
+        data["auto_login"] = {
+            "email": pending.email,
+            "failed": auto_login_failure_key(pending.failed_reason),
+        }
+
+    connection.send_message(websocket_api.result_message(msg["id"], data))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/subscribe_events"})
+@callback
+def websocket_subscribe_cloud_events(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to cloud events."""
+
+    @callback
+    def on_event(event: Mapping[str, Any]) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], event))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, EVENT_CLOUD_EVENT, on_event
     )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/attempt_auto_login_now"})
+@callback
+def websocket_attempt_auto_login_now(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Attempt a pending auto-login now instead of waiting for the backoff."""
+    if (controller := _async_auto_login_controller(hass)) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    controller.attempt_now()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): "cloud/resend_auto_login_confirm"}
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_resend_auto_login_confirm(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Resend the confirmation email for a pending auto-login."""
+    if (controller := _async_auto_login_controller(hass)) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    async with asyncio.timeout(REQUEST_TIMEOUT):
+        await controller.resend()
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/cancel_auto_login"})
+@callback
+def websocket_cancel_auto_login(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Cancel a pending auto-login after registration."""
+    if hass.data[DATA_PENDING_AUTO_LOGIN] is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    _async_clear_pending_auto_login(hass)
+    connection.send_result(msg["id"])
 
 
 def _require_cloud_login(
@@ -846,6 +1032,48 @@ async def websocket_update_prefs(
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({vol.Required("type"): "cloud/onboarding/postpone"})
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to postpone onboarding."""
+    cloud = hass.data[DATA_CLOUD]
+    postponed_until = (dt_util.utcnow() + timedelta(hours=24)).isoformat()
+    await cloud.client.prefs.async_update(onboarding_postponed_until=postponed_until)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/onboarding/complete",
+        vol.Required("items"): [vol.In(ONBOARDING_ITEMS)],
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to complete onboarding items."""
+    cloud = hass.data[DATA_CLOUD]
+    onboarded_items = list(cloud.client.prefs.onboarded_items)
+    new_items = [item for item in msg["items"] if item not in onboarded_items]
+    if new_items:
+        onboarded_items.extend(dict.fromkeys(new_items))
+        await cloud.client.prefs.async_update(onboarded_items=onboarded_items)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/create",
@@ -894,6 +1122,7 @@ async def _account_data(
     assert hass.config.api
     if not cloud.is_logged_in:
         return {
+            "auto_login": None,
             "logged_in": False,
             "cloud": STATE_DISCONNECTED,
             "http_use_ssl": hass.config.api.use_ssl,
@@ -922,6 +1151,7 @@ async def _account_data(
     return {
         "alexa_entities": client.alexa_user_config["filter"].config,
         "alexa_registered": alexa_config.authorized,
+        "auto_login": None,
         "cloud": cloud.iot.state,
         "cloud_last_disconnect_reason": cloud_last_disconnect_reason,
         "email": claims["email"],
@@ -930,6 +1160,8 @@ async def _account_data(
         "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
+        "onboarding_completed": client.prefs.onboarding_completed,
+        "onboarding_postponed": client.prefs.onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,

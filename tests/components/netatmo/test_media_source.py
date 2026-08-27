@@ -1,6 +1,7 @@
 """Test Local Media Source."""
 
 import ast
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -12,24 +13,30 @@ from homeassistant.components.media_source import (
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
+from homeassistant.components.netatmo.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_load_fixture
+from .common import selected_platforms
+
+from tests.common import MockConfigEntry, async_load_fixture
 
 
-async def test_async_browse_media(hass: HomeAssistant) -> None:
+async def test_async_browse_media(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
     """Test browse media."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    with selected_platforms([Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Prepare cached Netatmo event date
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_EVENTS] = ast.literal_eval(
+    # Prepare cached Netatmo event data
+    data_handler = config_entry.runtime_data
+    data_handler.events = ast.literal_eval(
         await async_load_fixture(hass, "events.txt", DOMAIN)
     )
-
-    hass.data[DOMAIN][DATA_CAMERAS] = {
+    data_handler.cameras = {
         "12:34:56:78:90:ab": "MyCamera",
         "12:34:56:78:90:ac": "MyOutdoorCamera",
     }
@@ -58,7 +65,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     with pytest.raises(BrowseError) as excinfo:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/")
     assert str(excinfo.value) == (
-        "Failed to browse media with content id media-source://netatmo/: "
+        "Failed to browse media with content ID media-source://netatmo/: "
         "Invalid media source URI"
     )
     # Test successful listing

@@ -66,8 +66,8 @@ async def test_switches(
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_switch_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_switch_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device")

@@ -4,12 +4,11 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
@@ -17,16 +16,11 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_STATE,
-    CONF_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -36,7 +30,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -45,18 +39,19 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+CONF_LAST_RESET = "last_reset"
 DEFAULT_NAME = "Template Sensor"
 
 
 def validate_last_reset(val):
     """Run extra validation checks."""
     if (
-        val.get(ATTR_LAST_RESET) is not None
+        val.get(CONF_LAST_RESET) is not None
         and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
     ):
         raise vol.Invalid(
@@ -75,18 +70,16 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_LAST_RESET): cv.template,
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_attributes_schema(
-            SENSOR_DOMAIN, DEFAULT_NAME
-        ).schema
-    ),
+    .extend(make_template_entity_common_schema(SENSOR_DOMAIN, DEFAULT_NAME).schema),
     validate_last_reset,
 )
 
@@ -154,13 +147,13 @@ def validate_datetime(
                 return result
 
             if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity, attribute, result, "expected a valid timestamp"
                 )
                 return None
 
             if kwargs.get("require_tzinfo", True) and parsed_timestamp.tzinfo is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     attribute,
                     result,
@@ -173,7 +166,7 @@ def validate_datetime(
         if (parsed_date := dt_util.parse_date(result)) is not None:
             return parsed_date
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             entity, attribute, result, "expected a valid date"
         )
         return None
@@ -186,6 +179,9 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
+    _restore_state_extra_data = SensorExtraStoredData
+    _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -204,10 +200,10 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             self._validate_state,
         )
         self.setup_template(
-            ATTR_LAST_RESET,
+            CONF_LAST_RESET,
             "_attr_last_reset",
             validate_datetime(
-                self, ATTR_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
+                self, CONF_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
             ),
         )
 
@@ -219,7 +215,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             if not isinstance(result, bool) and isinstance(result, (int, float)):
                 return result
 
-            return template_validators.number(self, CONF_STATE)(result)
+            return tcv.number(self, CONF_STATE)(result)
 
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
@@ -229,6 +225,13 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             return result
 
         return validate_datetime(self, CONF_STATE, self.device_class)(result)
+
+    @override
+    def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
+        """Restore the extra data."""
+        # Do not restore native_unit_of_measurement, this is always pulled from the
+        # sensor configuration.
+        self._attr_native_value = extra_data.native_value
 
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
@@ -262,17 +265,3 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         """Initialize."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSensor.__init__(self, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and (extra_data := await self.async_get_last_sensor_data()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and CONF_STATE not in self._rendered
-        ):
-            self._attr_native_value = extra_data.native_value
-            self.restore_attributes(last_state)

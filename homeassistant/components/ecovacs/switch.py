@@ -1,7 +1,7 @@
 """Ecovacs switch module."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from deebot_client.capabilities import CapabilitySetEnable
 from deebot_client.events import EnableEvent
@@ -133,6 +133,7 @@ class EcovacsSwitchEntity(
 
     _attr_is_on = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -143,10 +144,12 @@ class EcovacsSwitchEntity(
 
         self._subscribe(self._capability.event, on_event)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.execute_command(self._capability.set(True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.execute_command(self._capability.set(False))

@@ -1,5 +1,6 @@
 """The Shelly integration."""
 
+import asyncio
 from functools import partial
 from typing import Final
 
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -62,6 +64,7 @@ from .repairs import (
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_rtsp_disabled_issue,
 )
 from .services import async_setup_services
 from .utils import (
@@ -73,6 +76,7 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    is_rpc_ble_scanner_supported,
     remove_empty_sub_devices,
     remove_stale_blu_trv_devices,
 )
@@ -80,6 +84,7 @@ from .utils import (
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
@@ -114,6 +119,9 @@ COAP_SCHEMA: Final = vol.Schema(
 )
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
+# Max time to wait at startup for a BLE proxy to register its scanner.
+STARTUP_SCANNER_WAIT: Final = 3.0
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
@@ -129,8 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Migrate old config entries."""
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 3):
-        return False
+
     if entry.minor_version < 3:
         # One-time flip of explicit Active scanning to Auto so existing
         # installs get the new battery-friendly default; Passive stays
@@ -189,13 +196,9 @@ async def _async_setup_block_entry(
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -290,6 +293,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
         port=get_http_port(entry.data),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     ws_context = await get_ws_context(hass)
@@ -303,13 +307,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -365,6 +365,21 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()
+
+        if (
+            is_rpc_ble_scanner_supported(entry)
+            and entry.options.get(CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED)
+            != BLEScannerMode.DISABLED
+        ):
+            # Wait for the proxy to register its scanner before finishing setup.
+            try:
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await runtime_data.rpc.ble_scanner_setup_done.wait()
+            except TimeoutError:
+                LOGGER.debug(
+                    "%s: Timed out waiting for BLE scanner to register", entry.title
+                )
+
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
@@ -379,6 +394,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry,
         )
         async_manage_open_wifi_ap_issue(hass, entry)
+        async_manage_rtsp_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

@@ -3,9 +3,15 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, override
 
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
-from watergate_local_api.models import DeviceState, NetworkingData, TelemetryData
+from watergate_local_api.models import (
+    AutoShutOffState,
+    DeviceState,
+    NetworkingData,
+    TelemetryData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +29,7 @@ class WatergateAgregatedRequests:
     state: DeviceState
     telemetry: TelemetryData
     networking: NetworkingData
+    auto_shut_off: AutoShutOffState
 
 
 type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
@@ -49,15 +56,22 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> WatergateAgregatedRequests:
         try:
             state = await self.api.async_get_device_state()
             telemetry = await self.api.async_get_telemetry_data()
             networking = await self.api.async_get_networking()
+            auto_shut_off = await self.api.async_get_auto_shut_off()
         except WatergateApiException as exc:
             raise UpdateFailed(f"Sonic device is unavailable: {exc}") from exc
-        return WatergateAgregatedRequests(state, telemetry, networking)
+        if TYPE_CHECKING:
+            # Every supported Sonic firmware reports auto shut-off; the client
+            # raises rather than returning None when the read genuinely fails.
+            assert auto_shut_off is not None
+        return WatergateAgregatedRequests(state, telemetry, networking, auto_shut_off)
 
+    @override
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
         """Manually update data, notify listeners and DO NOT reset refresh interval."""
 

@@ -24,7 +24,9 @@
     }),
     'device': dict({
       'info': dict({
+        'brand': None,
         'client_id': 'MF_000000000000',
+        'date_code': '',
         'device_name': 'ModernFormsFan',
         'fan_motor_type': 'DC125X25',
         'fan_type': '1818-56',
@@ -41,13 +43,23 @@
       'status': dict({
         'adaptive_learning_enabled': False,
         'away_mode_enabled': False,
+        'decommission': False,
+        'factory_reset': False,
         'fan_direction': 'forward',
         'fan_on': True,
         'fan_sleep_timer': 0,
         'fan_speed': 3,
+        'fan_timer': None,
         'light_brightness': 50,
         'light_on': True,
         'light_sleep_timer': 0,
+        'light_timer': None,
+        'reset_rf_pair_list': False,
+        'rf_pair_mode_active': False,
+        'schedule': '**REDACTED**',
+        'user_data': '**REDACTED**',
+        'wind': None,
+        'wind_speed': 2,
       }),
     }),
   })

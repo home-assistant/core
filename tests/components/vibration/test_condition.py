@@ -1,0 +1,196 @@
+"""Test vibration conditions."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    create_target_condition,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_target_entities,
+    target_entities,
+)
+
+
+@pytest.fixture
+async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple binary sensor entities associated with different targets."""
+    return await target_entities(hass, "binary_sensor")
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("vibration.is_detected", {}, True, True),
+        ("vibration.is_not_detected", {}, True, True),
+    ],
+)
+async def test_vibration_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that vibration conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("binary_sensor"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_condition_states_any(
+            condition="vibration.is_detected",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "vibration"},
+        ),
+        *parametrize_condition_states_any(
+            condition="vibration.is_not_detected",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "vibration"},
+        ),
+    ],
+)
+async def test_vibration_binary_sensor_condition_behavior_any(
+    hass: HomeAssistant,
+    target_binary_sensors: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test vibration condition for binary_sensor with 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_binary_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("binary_sensor"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    [
+        *parametrize_condition_states_all(
+            condition="vibration.is_detected",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "vibration"},
+        ),
+        *parametrize_condition_states_all(
+            condition="vibration.is_not_detected",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            required_filter_attributes={ATTR_DEVICE_CLASS: "vibration"},
+        ),
+    ],
+)
+async def test_vibration_binary_sensor_condition_behavior_all(
+    hass: HomeAssistant,
+    target_binary_sensors: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test vibration condition for binary_sensor with 'all' behavior."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_binary_sensors,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "condition_key",
+        "state_matching",
+        "state_non_matching",
+    ),
+    [
+        (
+            "vibration.is_detected",
+            STATE_ON,
+            STATE_OFF,
+        ),
+        (
+            "vibration.is_not_detected",
+            STATE_OFF,
+            STATE_ON,
+        ),
+    ],
+)
+async def test_vibration_condition_excludes_non_vibration_device_class(
+    hass: HomeAssistant,
+    condition_key: str,
+    state_matching: str,
+    state_non_matching: str,
+) -> None:
+    """Test vibration condition excludes entities without device_class vibration."""
+    entity_id_vibration = "binary_sensor.test_vibration"
+    entity_id_motion = "binary_sensor.test_motion"
+
+    hass.states.async_set(
+        entity_id_vibration, state_matching, {ATTR_DEVICE_CLASS: "vibration"}
+    )
+    hass.states.async_set(
+        entity_id_motion,
+        state_matching,
+        {ATTR_DEVICE_CLASS: "motion"},
+    )
+    await hass.async_block_till_done()
+
+    condition_any = await create_target_condition(
+        hass,
+        condition=condition_key,
+        target={CONF_ENTITY_ID: [entity_id_vibration, entity_id_motion]},
+        behavior="any",
+    )
+
+    assert condition_any.async_check() is True
+
+    hass.states.async_set(
+        entity_id_vibration,
+        state_non_matching,
+        {ATTR_DEVICE_CLASS: "vibration"},
+    )
+    await hass.async_block_till_done()
+
+    assert condition_any.async_check() is False

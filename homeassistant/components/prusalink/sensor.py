@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import cast, override
 
 from pyprusalink.types import (
     JobFilePrint,
@@ -46,6 +46,13 @@ class PrusaLinkSensorEntityDescription[
     """Describes PrusaLink sensor entity."""
 
     value_fn: Callable[[T], datetime | StateType]
+
+
+# Both job timestamps are derived from the wall clock, so they only hold while
+# the job is actually progressing. Once it ends the printer keeps reporting the
+# job with a frozen printing time and nothing remaining, which would drift the
+# start forward and pin the finish to "now".
+JOB_IN_PROGRESS_STATES = {PrinterState.PRINTING.value, PrinterState.PAUSED.value}
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -195,7 +202,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             ),
             available_fn=lambda data: (
                 data.get("time_printing") is not None
-                and data.get("state") != PrinterState.IDLE.value
+                and data.get("state") in JOB_IN_PROGRESS_STATES
             ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
@@ -212,7 +219,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             ),
             available_fn=lambda data: (
                 data.get("time_remaining") is not None
-                and data.get("state") != PrinterState.IDLE.value
+                and data.get("state") in JOB_IN_PROGRESS_STATES
             ),
         ),
     ),
@@ -275,6 +282,7 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

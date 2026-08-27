@@ -35,7 +35,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
-            "cloud",
+            DOMAIN,
             {
                 "http": {},
                 "cloud": {
@@ -69,6 +69,29 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
         cl.service_discovery._action_overrides["lorem_ipsum"]
         == "https://lorem.ipsum/test-url"
     )
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_disabling_remote_without_backend(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test disabling remote before the remote backend is initialized.
+
+    Preferences are reset when a new user logs in, which disables remote while
+    hass_nabucasa has no backend to disconnect from.
+    """
+    prefs = hass.data[DATA_CLOUD].client.prefs
+
+    with patch("hass_nabucasa.remote.RemoteUI.connect"):
+        await prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+
+    await prefs.async_update(remote_enabled=False)
+    await hass.async_block_till_done()
+
+    assert not prefs.remote_enabled
+    assert "RemoteNotConnected" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
@@ -138,7 +161,7 @@ async def test_setup_existing_cloud_user(
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
-            "cloud",
+            DOMAIN,
             {
                 "http": {},
                 "cloud": {
@@ -248,7 +271,7 @@ async def test_async_get_or_create_cloudhook(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test async_get_or_create_cloudhook."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
@@ -318,7 +341,7 @@ async def test_async_listen_cloudhook_change(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test async_listen_cloudhook_change."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
@@ -430,7 +453,7 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
     assert len(changes) == 0
 
     # Now set up cloud
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 

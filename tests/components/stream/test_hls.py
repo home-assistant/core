@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     HLS_PROVIDER,
@@ -48,7 +49,7 @@ HLS_CONFIG = {
 @pytest.fixture
 async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
-    await async_setup_component(hass, "stream", HLS_CONFIG)
+    await async_setup_component(hass, DOMAIN, HLS_CONFIG)
 
 
 class HlsClient:

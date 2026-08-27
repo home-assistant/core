@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -75,11 +75,13 @@ class WorldTidesInfoSensor(SensorEntity):
         self.data = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr = {}
@@ -97,6 +99,7 @@ class WorldTidesInfoSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         if self.data:

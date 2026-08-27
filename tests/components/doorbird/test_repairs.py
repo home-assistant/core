@@ -7,13 +7,9 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import mock_not_found_exception
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -28,13 +24,12 @@ async def test_change_schedule_fails(
         favorites_side_effect=mock_not_found_exception()
     )
     assert doorbird_entry.entry.state is ConfigEntryState.SETUP_RETRY
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_reg.issues) == 1
     issue = list(issue_reg.issues.values())[0]
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
@@ -44,6 +39,8 @@ async def test_change_schedule_fails(
     assert "404" in placeholders["error"]
     assert data["step_id"] == "confirm"
 
-    data = await process_repair_fix_flow(client, flow_id)
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        data = await process_repair_fix_flow(client, flow_id)
+        await hass.async_block_till_done()
 
     assert data["type"] == "create_entry"

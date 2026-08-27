@@ -9,15 +9,20 @@ UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
+PRODUCTS_CYBERTRUCK = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]["car_type"] = "cybertruck"
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
+VEHICLE_DATA_NONE = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_NONE["response"]["vehicle_state"]["ft"] = None
+VEHICLE_DATA_NONE["response"]["vehicle_state"]["rt"] = None
+VEHICLE_DATA_NONE["response"]["charge_state"]["charge_port_door_open"] = None
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
@@ -40,6 +45,16 @@ COMMAND_NOERROR = {"answer": 42}
 COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERROR)
 
 RESPONSE_OK = {"response": {}, "error": None}
+
+# Per-vehicle config cache returned in the metadata endpoint. The select
+# platform reads rear_seat_heaters and third_row_seats to decide which rear
+# seat-heater entities exist. Defaults match the Model 3 in vehicle_data.json
+# (heated rear bench, no third row, no seat cooling).
+VEHICLE_CONFIG = {
+    "rear_seat_heaters": 1,
+    "third_row_seats": "None",
+    "has_seat_cooling": False,
+}
 
 METADATA = {
     "uid": UNIQUE_ID,
@@ -64,6 +79,7 @@ METADATA = {
             "discounted": False,
             "fleet_telemetry": "1.0.2",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {
@@ -96,6 +112,7 @@ METADATA_LEGACY = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {
@@ -118,6 +135,7 @@ METADATA_NOSCOPE = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {
@@ -127,3 +145,27 @@ METADATA_NOSCOPE = {
         }
     },
 }
+
+# Energy-only account: no accessible vehicle, one accessible energy site.
+METADATA_ENERGY = {
+    "uid": UNIQUE_ID,
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {},
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
+}
+PRODUCTS_ENERGY = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_ENERGY["response"] = [
+    product for product in PRODUCTS_ENERGY["response"] if "energy_site_id" in product
+]

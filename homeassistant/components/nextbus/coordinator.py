@@ -1,6 +1,6 @@
 """NextBus data update coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -9,6 +9,7 @@ from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .util import RouteStop
@@ -67,7 +68,7 @@ class NextBusDataUpdateCoordinator(
             # But only if we have a reset time to unthrottle
             and self.client.rate_limit_reset is not None
             # Unless we are after the reset time
-            and datetime.now() < self.client.rate_limit_reset
+            and dt_util.naive_now() < self.client.rate_limit_reset
         ):
             self.logger.debug(
                 "Rate limit threshold reached. Skipping updates for. Routes: %s",

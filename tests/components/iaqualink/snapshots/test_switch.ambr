@@ -39,7 +39,7 @@
 # name: test_setup[switch.aux_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aux 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aux 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.aux_1',

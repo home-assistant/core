@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
@@ -40,11 +40,13 @@ class OAuth2FlowHandler(
     MINOR_VERSION = 3
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         scopes = ["Xboxlive.signin", "Xboxlive.offline_access"]
@@ -52,18 +54,21 @@ class OAuth2FlowHandler(
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
 

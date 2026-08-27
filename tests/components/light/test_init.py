@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import light
+from homeassistant.components.light import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -843,7 +844,7 @@ async def test_light_context(
     """Test that light context works."""
     setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
@@ -871,7 +872,7 @@ async def test_light_turn_on_auth(
     """Test that light context works."""
     setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
@@ -906,7 +907,7 @@ async def test_light_brightness_step(hass: HomeAssistant) -> None:
     entity1.supported_color_modes = {light.ColorMode.BRIGHTNESS}
     entity1.color_mode = light.ColorMode.BRIGHTNESS
     entity1.brightness = 50
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -950,7 +951,7 @@ async def test_light_brightness_step_pct(hass: HomeAssistant) -> None:
     entity.supported_color_modes = {light.ColorMode.BRIGHTNESS}
     entity.color_mode = light.ColorMode.BRIGHTNESS
     entity.brightness = 255
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
@@ -993,7 +994,7 @@ async def test_light_brightness_pct_conversion(
     entity.supported_color_modes = {light.ColorMode.BRIGHTNESS}
     entity.color_mode = light.ColorMode.BRIGHTNESS
     entity.brightness = 100
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
@@ -1148,7 +1149,7 @@ async def test_light_service_call_rgbw(hass: HomeAssistant) -> None:
 
     setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1188,7 +1189,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
     entity3 = entities[3]
     entity3.supported_color_modes = {light.ColorMode.RGBW}
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1251,7 +1252,7 @@ async def test_light_state_rgbw(hass: HomeAssistant) -> None:
     entity0.rgbww_color = "Invalid"  # Should be ignored
     entity0.xy_color = "Invalid"  # Should be ignored
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1282,7 +1283,7 @@ async def test_light_state_rgbww(hass: HomeAssistant) -> None:
     entity0.xy_color = "Invalid"  # Should be ignored
     entity0.brightness = 255
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1344,7 +1345,7 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     entity6.supported_color_modes = {light.ColorMode.COLOR_TEMP}
     entity6.color_mode = light.ColorMode.COLOR_TEMP
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1753,7 +1754,7 @@ async def test_light_turn_on_rgb_color_is_plain_tuple(
     ]
     setup_test_component_platform(hass, light.DOMAIN, entities)
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -1803,7 +1804,7 @@ async def test_light_service_call_color_temp_emulation(hass: HomeAssistant) -> N
     entity2.supported_color_modes = {light.ColorMode.HS, light.ColorMode.WHITE}
     entity2.color_mode = light.ColorMode.HS
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1864,7 +1865,7 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     assert entity1.min_color_temp_kelvin == 2000
     assert entity1.max_color_temp_kelvin == 6535
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -1982,7 +1983,7 @@ async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
     entity0.color_mode = light.ColorMode.HS
     setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -2105,7 +2106,7 @@ async def test_light_state_color_conversion(hass: HomeAssistant) -> None:
     entity2.rgb_color = "Invalid"  # Should be ignored
     entity2.xy_color = (0.1, 0.8)
 
-    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)

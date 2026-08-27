@@ -4715,6 +4715,7 @@
           'id': 'deviceId0',
           'modelId': 'model0',
           'roles': list([
+            'type:boiler',
           ]),
           'status': 'Online',
           'type': None,
