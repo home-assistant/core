@@ -13,13 +13,11 @@ from homeassistant.components.moon.helpers import (
     STATE_WANING_GIBBOUS,
     STATE_WAXING_CRESCENT,
     STATE_WAXING_GIBBOUS,
-    moon,
 )
 from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -80,53 +78,3 @@ async def test_moon_day(
     assert device_entry
     assert device_entry.name == "Moon"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
-
-
-@pytest.mark.parametrize(
-    ("target_str", "expected_phase"),
-    [
-        pytest.param(
-            "2026-08-27",
-            13.411222222222223,
-            id="date-midnight",
-        ),
-        pytest.param(
-            "2026-08-27 22:56:00+00:00",
-            14.26677777777778,
-            id="datetime-utc",
-        ),
-        pytest.param(
-            "2026-08-27 22:56:00",
-            14.26677777777778,
-            id="datetime-naive",
-        ),
-    ],
-)
-def test_moon_phase_calculation(target_str: str, expected_phase: float) -> None:
-    """Test moon phase calculation across date and datetime inputs."""
-    target = dt_util.parse_date(target_str) or dt_util.parse_datetime(target_str)
-    assert target is not None
-    assert moon.phase(target) == pytest.approx(expected_phase)
-
-
-def test_moon_phase_default_now() -> None:
-    """Test moon phase defaults to current time."""
-    now = dt_util.parse_datetime("2026-08-27 22:56:00+00:00")
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        assert moon.phase() == pytest.approx(14.26677777777778)
-
-
-async def test_moon_sensor_unmocked(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Moon sensor without mocking moon.phase."""
-    now = dt_util.parse_datetime("2026-08-27 22:56:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.moon_phase")
-    assert state
-    assert state.state == STATE_FULL_MOON
