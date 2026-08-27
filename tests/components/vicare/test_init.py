@@ -11,6 +11,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
 )
 
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
@@ -801,3 +802,35 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     assert client.services["gwB"].fetch_all_features.call_count == 1
     assert hass.states.get("sensor.model0_temperature").state == "17.5"
     assert hass.states.get("sensor.model1_temperature").state == "16.9"
+
+
+async def test_setup_loads_with_unpaid_package_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A gateway whose bulk fetch raises PACKAGE_NOT_PAID_FOR still loads."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json")
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    mock_vicare.devices[
+        0
+    ].service.fetch_all_features.side_effect = PyViCareNotSupportedFeatureError(
+        "PACKAGE_NOT_PAID_FOR"
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
