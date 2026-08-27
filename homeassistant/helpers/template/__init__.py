@@ -13,6 +13,7 @@ import re
 import sys
 from types import CodeType
 from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
+import warnings
 import weakref
 
 import jinja2
@@ -271,7 +272,12 @@ def _cached_parse_result(render_result: str) -> Any:
     # every render. Catching here caches that outcome (return the original
     # render) so the recompile only happens once per distinct result.
     try:
-        result = literal_eval(render_result)
+        with warnings.catch_warnings():
+            # A render such as "7.0in" is not a literal, but it does make the
+            # tokenizer warn about an invalid decimal literal on its way to
+            # raising, which would otherwise reach the log.
+            warnings.simplefilter("ignore", SyntaxWarning)
+            result = literal_eval(render_result)
     except ValueError, TypeError, SyntaxError, MemoryError:
         return render_result
     if type(result) in RESULT_WRAPPERS:

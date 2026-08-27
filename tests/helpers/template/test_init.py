@@ -3,6 +3,7 @@
 from datetime import datetime
 import gc
 from unittest.mock import patch
+import warnings
 
 from freezegun import freeze_time
 import pytest
@@ -989,3 +990,14 @@ def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
     """Test template output exceeds maximum size."""
     with pytest.raises(TemplateError):
         render(hass, "{{ 'a' * 1024 * 257 }}")
+
+
+async def test_parse_result_does_not_warn(hass: HomeAssistant) -> None:
+    """Test a render that is not a literal does not warn while being parsed."""
+    # Appending a unit straight onto a number reads as an invalid decimal
+    # literal to the tokenizer, which warns on its way to refusing it.
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert template.Template("{{ 7.0 }}in", hass).async_render() == "7.0in"
+
+    assert [str(warning.message) for warning in caught] == []
