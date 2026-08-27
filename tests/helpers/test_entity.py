@@ -3047,13 +3047,16 @@ async def test_platform_state_cancelled_during_add(
 
 
 async def test_platform_state_fail_to_add_rollback_raises(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the entity is aborted even if the finish-failure rollback raises.
 
     add_to_platform_abort must still run if async_internal_will_remove_from_hass
     raises during rollback, e.g. because a concurrent registry-driven removal
-    already cleared entity_sources.
+    already cleared entity_sources. The rollback failure is logged separately
+    while the original add failure is surfaced.
     """
     entry = entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
@@ -3079,6 +3082,10 @@ async def test_platform_state_fail_to_add_rollback_raises(
     assert "test.test" not in platform.entities
     # The reserved state id is released even though the rollback raised.
     assert hass.states.async_available("test.test")
+    # The rollback failure is logged separately, and the original add failure
+    # (not the synthetic rollback KeyError) is surfaced as the reason.
+    assert "Error cleaning up entity test.test" in caplog.text
+    assert "Failed to add entity" in caplog.text
 
 
 async def test_platform_state_write_from_init(
