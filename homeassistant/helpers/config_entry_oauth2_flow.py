@@ -47,6 +47,13 @@ from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
+# Re-exported for integrations importing them from here since before they moved
+# to homeassistant.exceptions.
+__all__ = [
+    "ImplementationUnavailableError",
+    "UnknownImplementationError",
+]
+
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_IMPLEMENTATIONS: HassKey[dict[str, dict[str, AbstractOAuth2Implementation]]] = (
     HassKey("oauth2_impl")
