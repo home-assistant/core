@@ -11,7 +11,6 @@ Built from bluetti-registers' modbus-tcp/{balco260,ep2000}.json schemas,
 which still carry this classification as data.
 """
 
-
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -27,9 +26,15 @@ class ModbusFieldMetadata:
     category: EntityCategory | None = None
 
 
-_POWER = ModbusFieldMetadata(device_class=SensorDeviceClass.POWER, state_class=SensorStateClass.MEASUREMENT)
-_VOLTAGE = ModbusFieldMetadata(device_class=SensorDeviceClass.VOLTAGE, state_class=SensorStateClass.MEASUREMENT)
-_CURRENT = ModbusFieldMetadata(device_class=SensorDeviceClass.CURRENT, state_class=SensorStateClass.MEASUREMENT)
+_POWER = ModbusFieldMetadata(
+    device_class=SensorDeviceClass.POWER, state_class=SensorStateClass.MEASUREMENT
+)
+_VOLTAGE = ModbusFieldMetadata(
+    device_class=SensorDeviceClass.VOLTAGE, state_class=SensorStateClass.MEASUREMENT
+)
+_CURRENT = ModbusFieldMetadata(
+    device_class=SensorDeviceClass.CURRENT, state_class=SensorStateClass.MEASUREMENT
+)
 _ENERGY_DIAGNOSTIC = ModbusFieldMetadata(
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
@@ -58,7 +63,8 @@ MODBUS_FIELD_METADATA: dict[str, ModbusFieldMetadata] = {
     "d_inverter_fault": _DIAGNOSTIC,
     "d_inverter_type": _DIAGNOSTIC,
     "g_i_f": ModbusFieldMetadata(
-        device_class=SensorDeviceClass.FREQUENCY, state_class=SensorStateClass.MEASUREMENT
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pv_1_i_p": _POWER,
     "pv_1_i_v": _VOLTAGE,
@@ -88,7 +94,8 @@ MODBUS_FIELD_METADATA: dict[str, ModbusFieldMetadata] = {
     "b_soh": _DIAGNOSTIC_MEASUREMENT,
     "b_cycle_count": _DIAGNOSTIC_MEASUREMENT,
     "b_t_avg": ModbusFieldMetadata(
-        device_class=SensorDeviceClass.TEMPERATURE, state_class=SensorStateClass.MEASUREMENT
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "b_cell_count": _DIAGNOSTIC,
     "b_ntc_count": _DIAGNOSTIC,

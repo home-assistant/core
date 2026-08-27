@@ -24,8 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .application_credentials import async_ensure_default_credential
 from .const import DOMAIN, EVENT_TOKEN_EXPIRED
-from .coordinator import BluettiDeviceCoordinator
-from .modbus_coordinator import BluettiModbusCoordinator
+from .coordinator import BluettiDeviceCoordinator, BluettiModbusCoordinator
 from .modbus_support import modbus_dev_type_for_model
 from .models import BluettiData
 from .oauth import AsyncConfigEntryAuth, AuthTokenRefresh
@@ -49,7 +48,9 @@ class BluettiRuntimeData:
     # Defaults empty: local Modbus is optional/opt-in per device, so most
     # entries (and every existing test's BluettiRuntimeData construction)
     # never populate this.
-    modbus_coordinators: dict[str, BluettiModbusCoordinator] = field(default_factory=dict)
+    modbus_coordinators: dict[str, BluettiModbusCoordinator] = field(
+        default_factory=dict
+    )
 
 
 type BluettiConfigEntry = ConfigEntry[BluettiRuntimeData]
@@ -95,7 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         __LOGGER__.debug("OAuth implementation is: %s", implementation.__class__)
 
         http_session = async_get_clientsession(hass)
-        oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+        oauth_session = config_entry_oauth2_flow.OAuth2Session(
+            hass, entry, implementation
+        )
         auth = AsyncConfigEntryAuth(http_session, oauth_session)
 
         auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
@@ -110,7 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
             on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
         )
     except Exception as err:
-        raise ConfigEntryNotReady(f"BLUETTI setup failed: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     selected_products = [p for p in all_products if p.sn in enabled_devices]
 
@@ -142,7 +149,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     # run them concurrently instead of one-by-one - otherwise setup time
     # scales linearly with the number of devices on the account.
     await asyncio.gather(
-        *(coordinator.async_config_entry_first_refresh() for coordinator in coordinators.values())
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        )
     )
 
     modbus_coordinators: dict[str, BluettiModbusCoordinator] = {}
@@ -204,7 +214,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: BluettiConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: BluettiConfigEntry
+) -> None:
     """Reload the entry when its options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -222,8 +234,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> 
     # unit is first acquired.
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
+
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: BluettiConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: BluettiConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removing a single BLUETTI device from an existing entry.
 
@@ -236,7 +249,9 @@ async def async_remove_config_entry_device(
     cleanup and reload that HA already handles for a user-initiated removal.
     """
     device_ids = {
-        identifier for domain, identifier in device_entry.identifiers if domain == DOMAIN
+        identifier
+        for domain, identifier in device_entry.identifiers
+        if domain == DOMAIN
     }
     if not device_ids:
         return False
@@ -244,7 +259,9 @@ async def async_remove_config_entry_device(
     runtime_data = getattr(entry, "runtime_data", None)
     if runtime_data:
         runtime_data.bluetti_devices.devices = [
-            d for d in runtime_data.bluetti_devices.devices if d.device_id not in device_ids
+            d
+            for d in runtime_data.bluetti_devices.devices
+            if d.device_id not in device_ids
         ]
         for device_id in device_ids:
             coordinator = runtime_data.coordinators.pop(device_id, None)
@@ -269,7 +286,8 @@ async def async_remove_config_entry_device(
     new_modbus = {sn: cfg for sn, cfg in current_modbus.items() if sn not in device_ids}
     if new_devices != current_devices or new_modbus != current_modbus:
         hass.config_entries.async_update_entry(
-            entry, options={**entry.options, "devices": new_devices, "modbus": new_modbus}
+            entry,
+            options={**entry.options, "devices": new_devices, "modbus": new_modbus},
         )
 
     return True
@@ -292,5 +310,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> 
     for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
         entity_registry.async_remove(entity.entity_id)
 
-    store: storage.Store[Any] = storage.Store(hass, 1, f"{DOMAIN}_data_{entry.entry_id}.json")
+    store: storage.Store[Any] = storage.Store(
+        hass, 1, f"{DOMAIN}_data_{entry.entry_id}.json"
+    )
     await store.async_remove()

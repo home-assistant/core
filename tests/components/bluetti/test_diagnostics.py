@@ -8,11 +8,14 @@ from homeassistant.components.bluetti.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.components.bluetti.models import BluettiDevice
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_diagnostics_redacts_sensitive_data_and_lists_devices(hass):
+async def test_diagnostics_redacts_sensitive_data_and_lists_devices(
+    hass: HomeAssistant,
+) -> None:
     """Diagnostics redacts sensitive data and lists devices."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -26,10 +29,17 @@ async def test_diagnostics_redacts_sensitive_data_and_lists_devices(hass):
     entry.add_to_hass(hass)
 
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
         state_list=[
             {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "80", "fnType": "SENSOR",
+                "fnCode": "SOC",
+                "fnName": "Battery",
+                "fnValue": "80",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
             },
             # No sensorInfo at all - some SENSOR-type states never carry one.
@@ -52,24 +62,38 @@ async def test_diagnostics_redacts_sensitive_data_and_lists_devices(hass):
 
     # The real serial number (device_id) must not appear anywhere in the
     # dump - it's aliased to a stable "device_N" instead.
-    assert diagnostics["devices"] == [{
-        "device_id": "device_1",
-        "model": "AC200L",
-        "online": True,
-        "states": [
-            {
-                "fn_code": "SOC", "fn_type": "SENSOR", "fn_value": "80",
-                "sensor_info": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
-            },
-            {"fn_code": "Weird", "fn_type": "SENSOR", "fn_value": "1", "sensor_info": None},
-        ],
-    }]
+    assert diagnostics["devices"] == [
+        {
+            "device_id": "device_1",
+            "model": "AC200L",
+            "online": True,
+            "states": [
+                {
+                    "fn_code": "SOC",
+                    "fn_type": "SENSOR",
+                    "fn_value": "80",
+                    "sensor_info": {
+                        "sensorType": "SensorDeviceClass.BATTERY",
+                        "unit": None,
+                    },
+                },
+                {
+                    "fn_code": "Weird",
+                    "fn_type": "SENSOR",
+                    "fn_value": "1",
+                    "sensor_info": None,
+                },
+            ],
+        }
+    ]
 
     assert diagnostics["coordinators"]["device_1"]["last_update_success"] is True
     assert "SN1" not in diagnostics["coordinators"]
 
 
-async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(hass):
+async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(
+    hass: HomeAssistant,
+) -> None:
     """Diagnostics redacts serial number used as a modbus options key.
 
     Regression test: entry_options["modbus"] is keyed by the same real
@@ -78,12 +102,21 @@ async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(ha
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"auth_implementation": DOMAIN, "token": {}, "products": [{"sn": "SN1", "name": "Device"}]},
-        options={"devices": ["SN1"], "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}}},
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {},
+            "products": [{"sn": "SN1", "name": "Device"}],
+        },
+        options={
+            "devices": ["SN1"],
+            "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}},
+        },
     )
     entry.add_to_hass(hass)
 
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260"
+    )
     coordinator = MagicMock(last_update_success=True, update_interval="0:00:30")
     entry.runtime_data = BluettiRuntimeData(
         auth=MagicMock(),
@@ -94,11 +127,15 @@ async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(ha
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
-    assert diagnostics["entry_options"]["modbus"] == {"device_1": {"host": "10.2.1.60", "port": 502}}
+    assert diagnostics["entry_options"]["modbus"] == {
+        "device_1": {"host": "10.2.1.60", "port": 502}
+    }
     assert "SN1" not in str(diagnostics)
 
 
-async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devices(hass):
+async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devices(
+    hass: HomeAssistant,
+) -> None:
     """Diagnostics aliases are stable and correlate across multiple devices."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -107,8 +144,12 @@ async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devi
     )
     entry.add_to_hass(hass)
 
-    device1 = BluettiDevice(device_id="SN1", on_line="1", name="First", sn="SN1", model="AC200L")
-    device2 = BluettiDevice(device_id="SN2", on_line="0", name="Second", sn="SN2", model="EL400")
+    device1 = BluettiDevice(
+        device_id="SN1", on_line="1", name="First", sn="SN1", model="AC200L"
+    )
+    device2 = BluettiDevice(
+        device_id="SN2", on_line="0", name="Second", sn="SN2", model="EL400"
+    )
     coordinator1 = MagicMock(last_update_success=True, update_interval="0:00:30")
     coordinator2 = MagicMock(last_update_success=False, update_interval="0:00:30")
     entry.runtime_data = BluettiRuntimeData(

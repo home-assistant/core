@@ -1,23 +1,23 @@
 {
   "entity": {
     "sensor": {
-      "invworkstate": {
-        "default": "mdi:solar-power"
+      "acloadalltotalpower": {
+        "default": "mdi:power-socket-eu"
       },
       "chgfulltime": {
         "default": "mdi:clock-outline"
       },
-      "acloadalltotalpower": {
-        "default": "mdi:power-socket-eu"
-      },
       "dcloadalltotalpower": {
         "default": "mdi:current-dc"
       },
-      "pvalltotalpower": {
-        "default": "mdi:solar-power"
-      },
       "gridalltotalpower": {
         "default": "mdi:transmission-tower"
+      },
+      "invworkstate": {
+        "default": "mdi:solar-power"
+      },
+      "pvalltotalpower": {
+        "default": "mdi:solar-power"
       }
     }
   }

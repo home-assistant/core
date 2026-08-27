@@ -47,20 +47,25 @@ class BluettiOptionsFlowHandler(OptionsFlow):
     _product_client: ProductClient
     _products: list[UserProduct]
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Route to the add-devices form, or a menu if local Modbus is also configurable."""
         entry: ConfigEntry = self.config_entry
         enabled_devices = set(entry.options.get("devices", []))
         modbus_capable = [
             product
             for product in _parse_products(entry)
-            if product.sn in enabled_devices and modbus_dev_type_for_model(product.model)
+            if product.sn in enabled_devices
+            and modbus_dev_type_for_model(product.model)
         ]
 
         if not modbus_capable:
             return await self.async_step_add_devices(user_input)
 
-        return self.async_show_menu(step_id="init", menu_options=["add_devices", "configure_modbus"])
+        return self.async_show_menu(
+            step_id="init", menu_options=["add_devices", "configure_modbus"]
+        )
 
     async def async_step_add_devices(
         self, user_input: dict[str, Any] | None = None
@@ -80,7 +85,9 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             merged_devices = list(set(current_devices) | set(selected))
 
             existing_products = entry.data.get("products", [])
-            existing_sns = {p.get("sn") if isinstance(p, dict) else p.sn for p in existing_products}
+            existing_sns = {
+                p.get("sn") if isinstance(p, dict) else p.sn for p in existing_products
+            }
             new_products = [p for p in self._products if p.sn not in existing_sns]
             merged_products = existing_products + [p.model_dump() for p in new_products]
 
@@ -94,8 +101,19 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             # local Modbus connection would get silently wiped the next
             # time more devices are added here.
             return self.async_create_entry(
-                data={"devices": merged_devices, "modbus": entry.options.get("modbus", {})}
+                data={
+                    "devices": merged_devices,
+                    "modbus": entry.options.get("modbus", {}),
+                }
             )
+
+        # ApplicationProfile is a module-level singleton populated by
+        # config_flow.py's async_step_user - relying on that having already
+        # run in this process is a real cross-test hazard under pytest-xdist
+        # (each test file can get its own fresh worker process), so this
+        # flow (entered without going through async_step_user again) must
+        # load it itself too. Idempotent: re-reads the same static file.
+        await APPLICATION_PROFILE.load_config(self.hass)
 
         access_token = entry.data["token"]["access_token"]
         http_session = async_get_clientsession(self.hass)
@@ -151,7 +169,8 @@ class BluettiOptionsFlowHandler(OptionsFlow):
         modbus_capable = {
             product.sn: product
             for product in _parse_products(entry)
-            if product.sn in enabled_devices and modbus_dev_type_for_model(product.model)
+            if product.sn in enabled_devices
+            and modbus_dev_type_for_model(product.model)
         }
 
         errors: dict[str, str] = {}
@@ -197,26 +216,37 @@ class BluettiOptionsFlowHandler(OptionsFlow):
                 # immediately wipe out what the first one just set (including
                 # "devices"). Pass the full merged options as this single
                 # call's data instead.
-                return self.async_create_entry(data={**entry.options, "modbus": modbus_options})
+                return self.async_create_entry(
+                    data={**entry.options, "modbus": modbus_options}
+                )
 
         # Pre-fill with whatever the user just typed (re-showing the form
         # after a failed connectivity check), else the currently saved
         # connection for the default (first) device - reopening this step
         # to tweak an existing connection should not start from blank.
-        default_sn = (user_input or {}).get("device_sn") or next(iter(modbus_capable), None)
-        existing = entry.options.get("modbus", {}).get(default_sn, {}) if default_sn else {}
+        default_sn = (user_input or {}).get("device_sn") or next(
+            iter(modbus_capable), None
+        )
+        existing = (
+            entry.options.get("modbus", {}).get(default_sn, {}) if default_sn else {}
+        )
         default_host = (user_input or {}).get("host", existing.get("host", ""))
         default_port = (user_input or {}).get("port", existing.get("port", 502))
 
         schema = vol.Schema(
             {
                 vol.Required("device_sn", default=default_sn): vol.In(
-                    {sn: f"{product.name} ({sn})" for sn, product in modbus_capable.items()}
+                    {
+                        sn: f"{product.name} ({sn})"
+                        for sn, product in modbus_capable.items()
+                    }
                 ),
                 vol.Required("host", default=default_host): TextSelector(),
                 vol.Required("port", default=default_port): vol.All(
                     NumberSelector(
-                        NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)
+                        NumberSelectorConfig(
+                            mode=NumberSelectorMode.BOX, min=1, max=65535
+                        )
                     ),
                     vol.Coerce(int),
                 ),

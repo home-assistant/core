@@ -7,11 +7,14 @@ from modbus_connection.exceptions import ModbusConnectionError
 
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-def _entry(hass, *, products=None, devices=None, modbus=None) -> MockConfigEntry:
+def _entry(
+    hass: HomeAssistant, *, products=None, devices=None, modbus=None
+) -> MockConfigEntry:
     options = {"devices": devices or []}
     if modbus is not None:
         options["modbus"] = modbus
@@ -28,18 +31,25 @@ def _entry(hass, *, products=None, devices=None, modbus=None) -> MockConfigEntry
     return entry
 
 
-async def test_async_setup_entry_with_no_devices(hass):
+async def test_async_setup_entry_with_no_devices(hass: HomeAssistant) -> None:
     """Async setup entry with no devices."""
     entry = _entry(hass)
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -52,7 +62,7 @@ async def test_async_setup_entry_with_no_devices(hass):
     mock_stomp_cls.return_value.connect.assert_awaited_once()
 
 
-async def test_async_setup_entry_with_a_device(hass):
+async def test_async_setup_entry_with_a_device(hass: HomeAssistant) -> None:
     """Async setup entry with a device."""
     entry = _entry(
         hass,
@@ -61,15 +71,22 @@ async def test_async_setup_entry_with_a_device(hass):
     )
     status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -86,7 +103,9 @@ async def test_async_setup_entry_with_a_device(hass):
     mock_stomp_cls.return_value.connect.assert_awaited_once()
 
 
-async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(hass):
+async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
+    hass: HomeAssistant,
+) -> None:
     """Async setup entry with multiple devices refreshes concurrently."""
     # Each device's first refresh is run via asyncio.gather() instead of
     # sequentially, so setup time doesn't scale linearly with device count.
@@ -106,17 +125,26 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(ha
     async def fake_get_device_status(sn):
         return MagicMock(data=[status_data[sn]])
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
-        mock_product_cls.return_value.get_device_status = AsyncMock(side_effect=fake_get_device_status)
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            side_effect=fake_get_device_status
+        )
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -127,7 +155,9 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(ha
     assert all(c.last_update_success for c in coordinators.values())
 
 
-async def test_async_setup_entry_reimports_missing_oauth_credential(hass):
+async def test_async_setup_entry_reimports_missing_oauth_credential(
+    hass: HomeAssistant,
+) -> None:
     """Async setup entry reimports missing oauth credential."""
     # If the Application Credential backing the OAuth2 implementation was
     # ever lost (e.g. a partial backup restore), async_get_config_entry_
@@ -136,18 +166,27 @@ async def test_async_setup_entry_reimports_missing_oauth_credential(hass):
     # of failing forever.
     entry = _entry(hass)
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(side_effect=[ValueError("Implementation not available"), MagicMock()]),
-         ) as mock_get_impl, \
-         patch(
-             "homeassistant.components.bluetti.async_ensure_default_credential",
-             AsyncMock(),
-         ) as mock_ensure_credential, \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(
+                side_effect=[ValueError("Implementation not available"), MagicMock()]
+            ),
+        ) as mock_get_impl,
+        patch(
+            "homeassistant.components.bluetti.async_ensure_default_credential",
+            AsyncMock(),
+        ) as mock_ensure_credential,
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -159,22 +198,26 @@ async def test_async_setup_entry_reimports_missing_oauth_credential(hass):
     mock_stomp_cls.return_value.connect.assert_awaited_once()
 
 
-async def test_async_setup_entry_retries_on_failure(hass):
+async def test_async_setup_entry_retries_on_failure(hass: HomeAssistant) -> None:
     """Async setup entry retries on failure."""
     entry = _entry(hass)
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(side_effect=RuntimeError("boom")),
-         ):
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(side_effect=RuntimeError("boom")),
+        ),
+    ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_entry_retries_when_credential_stays_missing(hass):
+async def test_async_setup_entry_retries_when_credential_stays_missing(
+    hass: HomeAssistant,
+) -> None:
     """Async setup entry retries when credential stays missing."""
     # Re-importing the default credential doesn't help if the underlying
     # cause isn't a missing credential (e.g. the application_credentials
@@ -182,15 +225,17 @@ async def test_async_setup_entry_retries_when_credential_stays_missing(hass):
     # Home Assistant's normal ConfigEntryNotReady retry instead of raising.
     entry = _entry(hass)
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(side_effect=ValueError("Implementation not available")),
-         ), \
-         patch(
-             "homeassistant.components.bluetti.async_ensure_default_credential",
-             AsyncMock(),
-         ) as mock_ensure_credential:
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(side_effect=ValueError("Implementation not available")),
+        ),
+        patch(
+            "homeassistant.components.bluetti.async_ensure_default_credential",
+            AsyncMock(),
+        ) as mock_ensure_credential,
+    ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -199,28 +244,43 @@ async def test_async_setup_entry_retries_when_credential_stays_missing(hass):
 
 
 async def test_async_setup_entry_wires_up_modbus_coordinator_for_capable_device(
-    hass
-):
+    hass: HomeAssistant,
+) -> None:
     """Async setup entry wires up modbus coordinator for capable device."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
         modbus={"SN1": {"host": "10.2.1.60", "port": 502}},
     )
     status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls, \
-         patch("homeassistant.components.bluetti.async_get_unit") as mock_async_get_unit, \
-         patch("homeassistant.components.bluetti.get_device") as mock_get_device:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+        patch("homeassistant.components.bluetti.async_get_unit") as mock_async_get_unit,
+        patch("homeassistant.components.bluetti.get_device") as mock_get_device,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -238,14 +298,16 @@ async def test_async_setup_entry_wires_up_modbus_coordinator_for_capable_device(
     modbus_params = mock_async_get_unit.call_args.args[2]
     assert modbus_params.host == "10.2.1.60"
     assert modbus_params.port == 502
-    mock_get_device.assert_called_once_with("balco260", mock_async_get_unit.return_value)
+    mock_get_device.assert_called_once_with(
+        "balco260", mock_async_get_unit.return_value
+    )
     assert "SN1" in entry.runtime_data.modbus_coordinators
     assert entry.runtime_data.modbus_coordinators["SN1"].last_update_success
 
 
 async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from_loading(
-    hass
-):
+    hass: HomeAssistant,
+) -> None:
     """Modbus first refresh failure does not prevent cloud entities from loading."""
     # Local Modbus is opt-in/supplementary - a hiccup here at startup must
     # not fail the whole config entry (and take the cloud entities down
@@ -254,23 +316,38 @@ async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from
     # succeeds, same as the cloud path already promises.
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
         modbus={"SN1": {"host": "10.2.1.60", "port": 502}},
     )
     status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls, \
-         patch("homeassistant.components.bluetti.async_get_unit"), \
-         patch("homeassistant.components.bluetti.get_device") as mock_get_device:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+        patch("homeassistant.components.bluetti.async_get_unit"),
+        patch("homeassistant.components.bluetti.get_device") as mock_get_device,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -290,18 +367,27 @@ async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from
     assert not entry.runtime_data.modbus_coordinators["SN1"].last_update_success
 
 
-async def test_unloading_the_entry_disconnects_the_websocket(hass):
+async def test_unloading_the_entry_disconnects_the_websocket(
+    hass: HomeAssistant,
+) -> None:
     """Unloading the entry disconnects the websocket."""
     entry = _entry(hass)
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
 
@@ -314,7 +400,9 @@ async def test_unloading_the_entry_disconnects_the_websocket(hass):
     mock_stomp_cls.return_value.disconnect.assert_awaited_once()
 
 
-async def test_a_failed_first_refresh_still_disconnects_the_websocket(hass):
+async def test_a_failed_first_refresh_still_disconnects_the_websocket(
+    hass: HomeAssistant,
+) -> None:
     """A failed first refresh still disconnects the websocket, not just a full unload.
 
     Regression test: the websocket's disconnect must be registered via
@@ -330,15 +418,22 @@ async def test_a_failed_first_refresh_still_disconnects_the_websocket(hass):
         devices=["SN1"],
     )
 
-    with patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()), \
-         patch(
-             "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
-             AsyncMock(return_value=MagicMock()),
-         ), \
-         patch("homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session") as mock_session_cls, \
-         patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls, \
-         patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls:
-        mock_session_cls.return_value.token = {"access_token": "tok", "expires_at": time.time() + 10000}
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(

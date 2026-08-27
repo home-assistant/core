@@ -11,12 +11,13 @@ from pybluetti import UserProduct
 from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.options_flow import BluettiOptionsFlowHandler
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 from tests.common import MockConfigEntry
 
 
-def _flow(hass, entry) -> BluettiOptionsFlowHandler:
+def _flow(hass: HomeAssistant, entry) -> BluettiOptionsFlowHandler:
     flow = BluettiOptionsFlowHandler()
     flow.hass = hass
     flow.handler = entry.entry_id
@@ -49,7 +50,9 @@ def _patched_modbus(device):
         yield mock_get_device
 
 
-def _entry(hass, *, products=None, devices=None, modbus=None) -> MockConfigEntry:
+def _entry(
+    hass: HomeAssistant, *, products=None, devices=None, modbus=None
+) -> MockConfigEntry:
     options = {"devices": devices or []}
     if modbus is not None:
         options["modbus"] = modbus
@@ -66,7 +69,7 @@ def _entry(hass, *, products=None, devices=None, modbus=None) -> MockConfigEntry
     return entry
 
 
-async def test_shows_form_with_available_devices(hass):
+async def test_shows_form_with_available_devices(hass: HomeAssistant) -> None:
     """Shows form with available devices."""
     entry = _entry(hass, devices=["SN1"])
     flow = _flow(hass, entry)
@@ -75,8 +78,12 @@ async def test_shows_form_with_available_devices(hass):
         UserProduct(sn="SN2", name="New device", stateList=[], online="1"),
     ]
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=products)
         )
@@ -90,13 +97,17 @@ async def test_shows_form_with_available_devices(hass):
     assert result["step_id"] == "add_devices"
 
 
-async def test_no_devices_available_aborts(hass):
+async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
     """No devices available aborts."""
     entry = _entry(hass)
     flow = _flow(hass, entry)
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=[])
         )
@@ -106,14 +117,18 @@ async def test_no_devices_available_aborts(hass):
     assert result["reason"] == "no_devices_available"
 
 
-async def test_all_devices_already_enabled_aborts(hass):
+async def test_all_devices_already_enabled_aborts(hass: HomeAssistant) -> None:
     """All devices already enabled aborts."""
     entry = _entry(hass, devices=["SN1"])
     flow = _flow(hass, entry)
     products = [UserProduct(sn="SN1", name="Already added", stateList=[], online="1")]
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=products)
         )
@@ -123,21 +138,29 @@ async def test_all_devices_already_enabled_aborts(hass):
     assert result["reason"] == "all_devices_exists"
 
 
-async def test_fetch_failure_aborts_cannot_connect(hass):
+async def test_fetch_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:
     """Fetch failure aborts cannot connect."""
     entry = _entry(hass)
     flow = _flow(hass, entry)
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
-        mock_client_cls.return_value.get_user_products = AsyncMock(side_effect=RuntimeError("boom"))
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            side_effect=RuntimeError("boom")
+        )
         result = await flow.async_step_init(user_input=None)
 
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
 
 
-async def test_submit_binds_and_merges_devices_and_products(hass):
+async def test_submit_binds_and_merges_devices_and_products(
+    hass: HomeAssistant,
+) -> None:
     """Submit binds and merges devices and products."""
     entry = _entry(
         hass,
@@ -146,7 +169,9 @@ async def test_submit_binds_and_merges_devices_and_products(hass):
     )
     flow = _flow(hass, entry)
     flow._product_client = AsyncMock()
-    flow._products = [UserProduct(sn="SN2", name="New Device", stateList=[], online="1")]
+    flow._products = [
+        UserProduct(sn="SN2", name="New Device", stateList=[], online="1")
+    ]
 
     result = await flow.async_step_init(user_input={"devices": ["SN2"]})
 
@@ -160,7 +185,7 @@ async def test_submit_binds_and_merges_devices_and_products(hass):
     json.dumps(dict(updated.data), cls=JSONEncoder)  # must stay JSON-serializable
 
 
-async def test_submit_bind_failure_aborts_cannot_connect(hass):
+async def test_submit_bind_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:
     """Submit bind failure aborts cannot connect."""
     entry = _entry(hass)
     flow = _flow(hass, entry)
@@ -173,7 +198,7 @@ async def test_submit_bind_failure_aborts_cannot_connect(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_config_flow_exposes_options_flow(hass):
+async def test_config_flow_exposes_options_flow(hass: HomeAssistant) -> None:
     """Config flow exposes options flow."""
     entry = _entry(hass)
     flow = BluettiConfigFlow.async_get_options_flow(entry)
@@ -181,11 +206,21 @@ async def test_config_flow_exposes_options_flow(hass):
     assert isinstance(flow, BluettiOptionsFlowHandler)
 
 
-async def test_init_shows_menu_when_a_modbus_capable_device_is_enabled(hass):
+async def test_init_shows_menu_when_a_modbus_capable_device_is_enabled(
+    hass: HomeAssistant,
+) -> None:
     """Init shows menu when a modbus capable device is enabled."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
@@ -197,18 +232,34 @@ async def test_init_shows_menu_when_a_modbus_capable_device_is_enabled(hass):
     assert set(result["menu_options"]) == {"add_devices", "configure_modbus"}
 
 
-async def test_init_falls_through_to_add_devices_when_enabled_device_is_not_modbus_capable(hass):
+async def test_init_falls_through_to_add_devices_when_enabled_device_is_not_modbus_capable(
+    hass: HomeAssistant,
+) -> None:
     """Init falls through to add devices when enabled device is not modbus capable."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "AC200L", "stateList": [], "online": "1", "model": "AC200L"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "AC200L",
+                "stateList": [],
+                "online": "1",
+                "model": "AC200L",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
-        mock_client_cls.return_value.get_user_products = AsyncMock(return_value=SimpleNamespace(data=[]))
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(data=[])
+        )
         result = await flow.async_step_init(user_input=None)
 
     # AC200L doesn't support Modbus, so no menu is shown and this falls
@@ -218,13 +269,27 @@ async def test_init_falls_through_to_add_devices_when_enabled_device_is_not_modb
     assert result["reason"] == "no_devices_available"
 
 
-async def test_configure_modbus_shows_form_with_only_modbus_capable_enabled_devices(hass):
+async def test_configure_modbus_shows_form_with_only_modbus_capable_enabled_devices(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus shows form with only modbus capable enabled devices."""
     entry = _entry(
         hass,
         products=[
-            {"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"},
-            {"sn": "SN2", "name": "Other", "stateList": [], "online": "1", "model": "AC200L"},
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            },
+            {
+                "sn": "SN2",
+                "name": "Other",
+                "stateList": [],
+                "online": "1",
+                "model": "AC200L",
+            },
         ],
         devices=["SN1", "SN2"],
     )
@@ -241,11 +306,21 @@ def _schema_default(schema, key):
     return next(k for k in schema.schema if k == key).default()
 
 
-async def test_configure_modbus_prefills_existing_connection_for_the_default_device(hass):
+async def test_configure_modbus_prefills_existing_connection_for_the_default_device(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus prefills existing connection for the default device."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
         modbus={"SN1": {"host": "10.2.1.60", "port": 1502}},
     )
@@ -259,11 +334,21 @@ async def test_configure_modbus_prefills_existing_connection_for_the_default_dev
     assert _schema_default(schema, "port") == 1502
 
 
-async def test_configure_modbus_prefills_blank_when_nothing_saved_yet(hass):
+async def test_configure_modbus_prefills_blank_when_nothing_saved_yet(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus prefills blank when nothing saved yet."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
@@ -275,16 +360,28 @@ async def test_configure_modbus_prefills_blank_when_nothing_saved_yet(hass):
     assert _schema_default(schema, "port") == 502
 
 
-async def test_configure_modbus_preserves_just_typed_values_after_a_failed_attempt(hass):
+async def test_configure_modbus_preserves_just_typed_values_after_a_failed_attempt(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus preserves just typed values after a failed attempt."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
     device = MagicMock()
-    device.async_update = AsyncMock(side_effect=ModbusConnectionError("no route to host"))
+    device.async_update = AsyncMock(
+        side_effect=ModbusConnectionError("no route to host")
+    )
 
     with _patched_modbus(device):
         result = await flow.async_step_configure_modbus(
@@ -296,11 +393,21 @@ async def test_configure_modbus_preserves_just_typed_values_after_a_failed_attem
     assert _schema_default(schema, "port") == 1503
 
 
-async def test_configure_modbus_success_stores_connection_in_options(hass):
+async def test_configure_modbus_success_stores_connection_in_options(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus success stores connection in options."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
@@ -322,16 +429,28 @@ async def test_configure_modbus_success_stores_connection_in_options(hass):
     assert result["data"]["devices"] == ["SN1"]
 
 
-async def test_configure_modbus_connection_failure_reshows_form_with_error(hass):
+async def test_configure_modbus_connection_failure_reshows_form_with_error(
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus connection failure reshows form with error."""
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     flow = _flow(hass, entry)
     device = MagicMock()
-    device.async_update = AsyncMock(side_effect=ModbusConnectionError("no route to host"))
+    device.async_update = AsyncMock(
+        side_effect=ModbusConnectionError("no route to host")
+    )
 
     with _patched_modbus(device):
         result = await flow.async_step_configure_modbus(
@@ -346,8 +465,8 @@ async def test_configure_modbus_connection_failure_reshows_form_with_error(hass)
 
 
 async def test_configure_modbus_through_real_flow_manager_preserves_devices(
-    hass
-):
+    hass: HomeAssistant,
+) -> None:
     """Configure modbus through real flow manager preserves devices."""
     # Regression test for a real bug found via real-hardware testing:
     # OptionsFlowManager.async_finish_flow() applies async_create_entry's
@@ -357,7 +476,15 @@ async def test_configure_modbus_through_real_flow_manager_preserves_devices(
     # manager here is the only way to verify entry.options ends up correct.
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
     )
     device = MagicMock()
@@ -385,21 +512,33 @@ async def test_configure_modbus_through_real_flow_manager_preserves_devices(
 
 
 async def test_add_devices_through_real_flow_manager_preserves_modbus(
-    hass
-):
+    hass: HomeAssistant,
+) -> None:
     """Add devices through real flow manager preserves modbus."""
     # Mirror regression test: adding more devices afterwards must not wipe
     # an already-configured Modbus connection for another device.
     entry = _entry(
         hass,
-        products=[{"sn": "SN1", "name": "Balco", "stateList": [], "online": "1", "model": "Balco260"}],
+        products=[
+            {
+                "sn": "SN1",
+                "name": "Balco",
+                "stateList": [],
+                "online": "1",
+                "model": "Balco260",
+            }
+        ],
         devices=["SN1"],
         modbus={"SN1": {"host": "10.2.1.60", "port": 502}},
     )
     products = [UserProduct(sn="SN2", name="New Device", stateList=[], online="1")]
 
-    with patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"), \
-         patch("homeassistant.components.bluetti.options_flow.ProductClient") as mock_client_cls:
+    with (
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=products)
         )

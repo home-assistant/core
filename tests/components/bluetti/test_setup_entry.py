@@ -17,11 +17,14 @@ from homeassistant.components.bluetti.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-def _entry_with_devices(hass, devices: list[BluettiDevice], modbus_coordinators=None) -> MockConfigEntry:
+def _entry_with_devices(
+    hass: HomeAssistant, devices: list[BluettiDevice], modbus_coordinators=None
+) -> MockConfigEntry:
     for device in devices:
         device.coordinator = MagicMock()
     entry = MockConfigEntry(domain=DOMAIN)
@@ -38,25 +41,45 @@ def _entry_with_devices(hass, devices: list[BluettiDevice], modbus_coordinators=
     return entry
 
 
-async def test_sensor_setup_entry_creates_expected_entities(hass):
+async def test_sensor_setup_entry_creates_expected_entities(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry creates expected entities."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
         state_list=[
             {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "50", "fnType": "SENSOR",
+                "fnCode": "SOC",
+                "fnName": "Battery",
+                "fnValue": "50",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
             },
             {
-                "fnCode": "InvWorkState", "fnName": "Inverter", "fnValue": "1", "fnType": "SENSOR",
+                "fnCode": "InvWorkState",
+                "fnName": "Inverter",
+                "fnValue": "1",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.ENUM", "unit": None},
                 "supportModeValues": [{"code": "1", "name": "Grid"}],
             },
             {
-                "fnCode": "Weird", "fnName": "Weird sensor", "fnValue": "1", "fnType": "SENSOR",
+                "fnCode": "Weird",
+                "fnName": "Weird sensor",
+                "fnValue": "1",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.UNKNOWN", "unit": None},
             },
-            {"fnCode": "onLine", "fnName": "Online", "fnValue": "1", "fnType": "SENSOR"},
+            {
+                "fnCode": "onLine",
+                "fnName": "Online",
+                "fnValue": "1",
+                "fnType": "SENSOR",
+            },
         ],
     )
     entry = _entry_with_devices(hass, [device])
@@ -71,10 +94,14 @@ async def test_sensor_setup_entry_creates_expected_entities(hass):
     assert len(sensors) == 2
 
     enum_sensor = next(s for s in sensors if s._state_obj.fn_code == "InvWorkState")
-    assert enum_sensor.native_value == "Grid"  # exercises the support_mode_values branch
+    assert (
+        enum_sensor.native_value == "Grid"
+    )  # exercises the support_mode_values branch
 
 
-async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(hass):
+async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry survives sensor info missing unit key."""
     # Regression test for #101/#102: real API responses can omit the "unit"
     # key entirely from sensorInfo (not just set it to None) for types like
@@ -82,15 +109,27 @@ async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(hass):
     # the whole setup loop, silently dropping every not-yet-processed
     # sensor on every device - not just the one with the missing key.
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="EL400",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="EL400",
         state_list=[
             {
-                "fnCode": "InvWorkState", "fnName": "Inverter", "fnValue": "1", "fnType": "SENSOR",
-                "sensorInfo": {"sensorType": "SensorDeviceClass.ENUM"},  # no "unit" key at all
+                "fnCode": "InvWorkState",
+                "fnName": "Inverter",
+                "fnValue": "1",
+                "fnType": "SENSOR",
+                "sensorInfo": {
+                    "sensorType": "SensorDeviceClass.ENUM"
+                },  # no "unit" key at all
                 "supportModeValues": [{"code": "1", "name": "Grid"}],
             },
             {
-                "fnCode": "GridAllTotalPower", "fnName": "Grid Input Power", "fnValue": "100", "fnType": "SENSOR",
+                "fnCode": "GridAllTotalPower",
+                "fnName": "Grid Input Power",
+                "fnValue": "100",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.POWER", "unit": None},
             },
         ],
@@ -101,20 +140,35 @@ async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(hass):
     await sensor_setup_entry(hass, entry, added.extend)
 
     sensors = [e for e in added if isinstance(e, BluettiSensor)]
-    assert {s._state_obj.fn_code for s in sensors} == {"InvWorkState", "GridAllTotalPower"}
+    assert {s._state_obj.fn_code for s in sensors} == {
+        "InvWorkState",
+        "GridAllTotalPower",
+    }
 
 
-async def test_sensor_setup_entry_creates_energy_sensor_for_power_sensors(hass):
+async def test_sensor_setup_entry_creates_energy_sensor_for_power_sensors(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry creates energy sensor for power sensors."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="Balco260",
         state_list=[
             {
-                "fnCode": "PVAllTotalPower", "fnName": "PV Input Power", "fnValue": "100", "fnType": "SENSOR",
+                "fnCode": "PVAllTotalPower",
+                "fnName": "PV Input Power",
+                "fnValue": "100",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.POWER", "unit": None},
             },
             {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "50", "fnType": "SENSOR",
+                "fnCode": "SOC",
+                "fnName": "Battery",
+                "fnValue": "50",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
             },
         ],
@@ -132,21 +186,36 @@ async def test_sensor_setup_entry_creates_energy_sensor_for_power_sensors(hass):
     assert energy_sensors[0].native_unit_of_measurement == "kWh"
 
 
-async def test_sensor_setup_entry_creates_estimated_battery_power_sensors(hass):
+async def test_sensor_setup_entry_creates_estimated_battery_power_sensors(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry creates estimated battery power sensors."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="Balco260",
         state_list=[
             {
-                "fnCode": "PVAllTotalPower", "fnName": "PV Input Power", "fnValue": "500", "fnType": "SENSOR",
+                "fnCode": "PVAllTotalPower",
+                "fnName": "PV Input Power",
+                "fnValue": "500",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.POWER", "unit": None},
             },
             {
-                "fnCode": "GridAllTotalPower", "fnName": "Grid Input Power", "fnValue": "0", "fnType": "SENSOR",
+                "fnCode": "GridAllTotalPower",
+                "fnName": "Grid Input Power",
+                "fnValue": "0",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.POWER", "unit": None},
             },
             {
-                "fnCode": "ACLoadAllTotalPower", "fnName": "AC Load Power", "fnValue": "200", "fnType": "SENSOR",
+                "fnCode": "ACLoadAllTotalPower",
+                "fnName": "AC Load Power",
+                "fnValue": "200",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.POWER", "unit": None},
             },
         ],
@@ -158,8 +227,12 @@ async def test_sensor_setup_entry_creates_estimated_battery_power_sensors(hass):
 
     estimated = [e for e in added if isinstance(e, BluettiEstimatedBatteryPowerSensor)]
     assert len(estimated) == 2
-    charge = next(e for e in estimated if e.unique_id == "SN1_EstimatedBatteryChargePower")
-    discharge = next(e for e in estimated if e.unique_id == "SN1_EstimatedBatteryDischargePower")
+    charge = next(
+        e for e in estimated if e.unique_id == "SN1_EstimatedBatteryChargePower"
+    )
+    discharge = next(
+        e for e in estimated if e.unique_id == "SN1_EstimatedBatteryDischargePower"
+    )
     # 500 W PV - 200 W AC load = 300 W surplus available to charge.
     assert charge.native_value == 300.0
     assert discharge.native_value == 0.0
@@ -169,18 +242,29 @@ async def test_sensor_setup_entry_creates_estimated_battery_power_sensors(hass):
         "SN1_EstimatedBatteryDischargePower_energy",
     }
     energy_companions = [
-        e for e in added if isinstance(e, BluettiEnergySensor) and e.unique_id in energy_companion_ids
+        e
+        for e in added
+        if isinstance(e, BluettiEnergySensor) and e.unique_id in energy_companion_ids
     ]
     assert len(energy_companions) == 2
 
 
-async def test_sensor_setup_entry_skips_estimated_battery_sensors_when_data_missing(hass):
+async def test_sensor_setup_entry_skips_estimated_battery_sensors_when_data_missing(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry skips estimated battery sensors when data missing."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
         state_list=[
             {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "50", "fnType": "SENSOR",
+                "fnCode": "SOC",
+                "fnName": "Battery",
+                "fnValue": "50",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
             },
         ],
@@ -193,32 +277,48 @@ async def test_sensor_setup_entry_skips_estimated_battery_sensors_when_data_miss
     assert not any(isinstance(e, BluettiEstimatedBatteryPowerSensor) for e in added)
 
 
-async def test_sensor_setup_entry_with_no_matching_states_adds_nothing(hass):
+async def test_sensor_setup_entry_with_no_matching_states_adds_nothing(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry with no matching states adds nothing."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
+        ],
     )
     entry = _entry_with_devices(hass, [device])
     async_add_entities = MagicMock()
 
-    result = await sensor_setup_entry(hass, entry, async_add_entities)
+    await sensor_setup_entry(hass, entry, async_add_entities)
 
-    assert result is True
     async_add_entities.assert_not_called()
 
 
-async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_device(hass):
+async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_device(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry creates modbus sensors grouped with cloud device."""
 
     class _FakeInverterStatus(Enum):
         STANDBY = 0
 
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="Balco260",
         state_list=[
             {
-                "fnCode": "SOC", "fnName": "Battery", "fnValue": "50", "fnType": "SENSOR",
+                "fnCode": "SOC",
+                "fnName": "Battery",
+                "fnValue": "50",
+                "fnType": "SENSOR",
                 "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
             },
         ],
@@ -245,16 +345,28 @@ async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_devi
     # coordinator has completed a poll yet.
     modbus_coordinator.device.field_names.return_value = list(fields.keys())
 
-    entry = _entry_with_devices(hass, [device], modbus_coordinators={"SN1": modbus_coordinator})
+    entry = _entry_with_devices(
+        hass, [device], modbus_coordinators={"SN1": modbus_coordinator}
+    )
     added = []
 
     await sensor_setup_entry(hass, entry, added.extend)
 
-    modbus_sensors = {s._field_name: s for s in added if isinstance(s, BluettiModbusSensor)}
-    assert set(modbus_sensors) == {"b_cycle_count", "b_soc_high", "d_inverter_status", "g_i_f"}
+    modbus_sensors = {
+        s._field_name: s for s in added if isinstance(s, BluettiModbusSensor)
+    }
+    assert set(modbus_sensors) == {
+        "b_cycle_count",
+        "b_soc_high",
+        "d_inverter_status",
+        "g_i_f",
+    }
 
     cloud_sensor = next(e for e in added if isinstance(e, BluettiSensor))
-    assert modbus_sensors["b_cycle_count"].device_info["identifiers"] == cloud_sensor.device_info["identifiers"]
+    assert (
+        modbus_sensors["b_cycle_count"].device_info["identifiers"]
+        == cloud_sensor.device_info["identifiers"]
+    )
 
     assert modbus_sensors["g_i_f"].device_class == SensorDeviceClass.FREQUENCY
     assert modbus_sensors["g_i_f"].state_class == SensorStateClass.MEASUREMENT
@@ -267,7 +379,9 @@ async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_devi
     assert modbus_sensors["b_cycle_count"].native_value is None
 
 
-async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_completed(hass):
+async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_completed(
+    hass: HomeAssistant,
+) -> None:
     """Modbus sensors are created even when the first poll hasn't completed.
 
     Regression test: local Modbus is optional/supplementary, so a failed or
@@ -276,11 +390,15 @@ async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_complet
     from whatever the coordinator happened to have read by the time setup
     runs once.
     """
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260"
+    )
     modbus_coordinator = MagicMock(data=None)
     modbus_coordinator.device.field_names.return_value = ["b_soc_high"]
 
-    entry = _entry_with_devices(hass, [device], modbus_coordinators={"SN1": modbus_coordinator})
+    entry = _entry_with_devices(
+        hass, [device], modbus_coordinators={"SN1": modbus_coordinator}
+    )
     added = []
 
     await sensor_setup_entry(hass, entry, added.extend)
@@ -292,19 +410,22 @@ async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_complet
 
     # Once the coordinator's next poll actually succeeds, the same
     # already-created entity picks up the real value and unit.
-    modbus_coordinator.data = {"b_soc_high": ClientReturnValue(name="b_soc_high", unit="%", value=100)}
+    modbus_coordinator.data = {
+        "b_soc_high": ClientReturnValue(name="b_soc_high", unit="%", value=100)
+    }
     assert modbus_sensors[0].native_value == 100
     assert modbus_sensors[0].native_unit_of_measurement == "%"
 
 
-async def test_sensor_setup_entry_skips_modbus_coordinator_for_unknown_device(hass):
+async def test_sensor_setup_entry_skips_modbus_coordinator_for_unknown_device(
+    hass: HomeAssistant,
+) -> None:
     """Sensor setup entry skips modbus coordinator for unknown device."""
-    entry = _entry_with_devices(hass, [], modbus_coordinators={"UNKNOWN_SN": MagicMock(data={})})
+    entry = _entry_with_devices(
+        hass, [], modbus_coordinators={"UNKNOWN_SN": MagicMock(data={})}
+    )
     added = []
 
-    result = await sensor_setup_entry(hass, entry, added.extend)
+    await sensor_setup_entry(hass, entry, added.extend)
 
-    assert result is True
     assert added == []
-
-

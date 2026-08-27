@@ -14,48 +14,62 @@ from homeassistant.components.bluetti.models import (
 from homeassistant.exceptions import HomeAssistantError
 
 
-def test_state_is_switch_without_modes():
+def test_state_is_switch_without_modes() -> None:
     """State is switch without modes."""
-    state = BluettiState(fn_code="SetCtrlAc", fn_name="AC", fn_value="0", fn_type="SWITCH")
+    state = BluettiState(
+        fn_code="SetCtrlAc", fn_name="AC", fn_value="0", fn_type="SWITCH"
+    )
     assert state.is_switch() is True
     assert state.get_name_for_value() == "Off"
 
 
-def test_state_set_value_switch():
+def test_state_set_value_switch() -> None:
     """State set value switch."""
-    state = BluettiState(fn_code="SetCtrlAc", fn_name="AC", fn_value="0", fn_type="SWITCH")
+    state = BluettiState(
+        fn_code="SetCtrlAc", fn_name="AC", fn_value="0", fn_type="SWITCH"
+    )
     state.set_value("1")
     assert state.fn_value == "1"
     assert state.get_name_for_value() == "On"
 
 
-def test_state_get_name_for_value_falls_back_to_raw_value():
+def test_state_get_name_for_value_falls_back_to_raw_value() -> None:
     """State get name for value falls back to raw value."""
     modes = [{"code": "0", "name": "Standard"}]
     state = BluettiState(
-        fn_code="SetCtrlWorkMode", fn_name="Mode", fn_value="unmapped-value", fn_type="SELECT",
+        fn_code="SetCtrlWorkMode",
+        fn_name="Mode",
+        fn_value="unmapped-value",
+        fn_type="SELECT",
         support_mode_values=modes,
     )
     assert state.get_name_for_value() == "unmapped-value"
 
 
-def test_state_repr():
+def test_state_repr() -> None:
     """State repr."""
-    state = BluettiState(fn_code="SOC", fn_name="Battery", fn_value="80", fn_type="SENSOR")
+    state = BluettiState(
+        fn_code="SOC", fn_name="Battery", fn_value="80", fn_type="SENSOR"
+    )
     assert repr(state) == "<BluettiState SOC=80>"
 
 
-def test_device_repr():
+def test_device_repr() -> None:
     """Device repr."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
     assert repr(device) == "<BluettiDevice id=SN1 name=Test>"
 
 
-def test_state_select_valid_value():
+def test_state_select_valid_value() -> None:
     """State select valid value."""
     modes = [{"code": "0", "name": "Standard"}, {"code": "1", "name": "Silent"}]
     state = BluettiState(
-        fn_code="SetCtrlWorkMode", fn_name="Mode", fn_value="0", fn_type="SELECT",
+        fn_code="SetCtrlWorkMode",
+        fn_name="Mode",
+        fn_value="0",
+        fn_type="SELECT",
         support_mode_values=modes,
     )
     state.set_value("1")
@@ -63,24 +77,29 @@ def test_state_select_valid_value():
     assert state.get_name_for_value() == "Silent"
 
 
-def test_state_select_invalid_value_raises():
+def test_state_select_invalid_value_raises() -> None:
     """State select invalid value raises."""
     modes = [{"code": "0", "name": "Standard"}]
     state = BluettiState(
-        fn_code="SetCtrlWorkMode", fn_name="Mode", fn_value="0", fn_type="SELECT",
+        fn_code="SetCtrlWorkMode",
+        fn_name="Mode",
+        fn_value="0",
+        fn_type="SELECT",
         support_mode_values=modes,
     )
     with pytest.raises(ValueError):
         state.set_value("99")
 
 
-def test_device_get_state_returns_none_for_missing_code():
+def test_device_get_state_returns_none_for_missing_code() -> None:
     """Device get state returns none for missing code."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
     assert device.get_state("does-not-exist") is None
 
 
-def test_state_falls_back_to_fn_code_when_fn_name_is_blank():
+def test_state_falls_back_to_fn_code_when_fn_name_is_blank() -> None:
     """Some fn_codes come back from the API without a localized fnName.
 
     With has_entity_name = True, an empty entity name makes Home
@@ -89,57 +108,83 @@ def test_state_falls_back_to_fn_code_when_fn_name_is_blank():
     fall back to a non-empty name when building its states.
     """
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
         state_list=[{"fnCode": "SetCtrlWorkMode", "fnValue": "2", "fnType": "SELECT"}],
     )
     state = device.get_state("SetCtrlWorkMode")
     assert state.fn_name == "SetCtrlWorkMode"
 
 
-def test_device_battery_level_reads_soc_state():
+def test_device_battery_level_reads_soc_state() -> None:
     """Device battery level reads soc state."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SOC", "fnName": "Battery", "fnValue": "42", "fnType": "SENSOR"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SOC", "fnName": "Battery", "fnValue": "42", "fnType": "SENSOR"}
+        ],
     )
     assert device.battery_level == 42
 
 
-def test_device_battery_level_defaults_to_zero_without_soc():
+def test_device_battery_level_defaults_to_zero_without_soc() -> None:
     """Device battery level defaults to zero without soc."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
     assert device.battery_level == 0
 
 
-def test_device_online_property():
+def test_device_online_property() -> None:
     """Device online property."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
     assert device.online is True
     device.on_line = "0"
     assert device.online is False
 
 
-def test_bluetti_data_get_device_by_sn():
+def test_bluetti_data_get_device_by_sn() -> None:
     """Bluetti data get device by sn."""
     fake_hass = SimpleNamespace(loop=None)
-    product = SimpleNamespace(sn="SN1", online="1", name="Test", model="AC200L", stateList=[])
+    product = SimpleNamespace(
+        sn="SN1", online="1", name="Test", model="AC200L", stateList=[]
+    )
     data = BluettiData(fake_hass, [product])
     assert data.get_device_by_sn("SN1") is not None
     assert data.get_device_by_sn("unknown") is None
 
 
-async def test_async_refresh_from_api_updates_states():
+async def test_async_refresh_from_api_updates_states() -> None:
     """Async refresh from api updates states."""
     device = BluettiDevice(
-        device_id="SN1", on_line="0", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SOC", "fnName": "Battery", "fnValue": "10", "fnType": "SENSOR"}],
+        device_id="SN1",
+        on_line="0",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SOC", "fnName": "Battery", "fnValue": "10", "fnType": "SENSOR"}
+        ],
     )
     status_data = SimpleNamespace(
-        sn="SN1", online="1", isBindByCurUser="1",
+        sn="SN1",
+        online="1",
+        isBindByCurUser="1",
         stateList=[{"fnCode": "SOC", "fnValue": "77"}],
     )
     device._api_client = AsyncMock()
-    device._api_client.get_device_status.return_value = SimpleNamespace(data=[status_data])
+    device._api_client.get_device_status.return_value = SimpleNamespace(
+        data=[status_data]
+    )
 
     await device.async_refresh_from_api()
 
@@ -147,9 +192,11 @@ async def test_async_refresh_from_api_updates_states():
     assert device.get_state("SOC").fn_value == "77"
 
 
-async def test_async_refresh_from_api_raises_on_empty_data():
+async def test_async_refresh_from_api_raises_on_empty_data() -> None:
     """Async refresh from api raises on empty data."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
     device._api_client = AsyncMock()
     device._api_client.get_device_status.return_value = SimpleNamespace(data=[])
 
@@ -157,15 +204,25 @@ async def test_async_refresh_from_api_raises_on_empty_data():
         await device.async_refresh_from_api()
 
 
-async def test_async_refresh_from_api_ignores_mismatched_sn():
+async def test_async_refresh_from_api_ignores_mismatched_sn() -> None:
     """Async refresh from api ignores mismatched sn."""
     device = BluettiDevice(
-        device_id="SN1", on_line="0", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SOC", "fnName": "Battery", "fnValue": "10", "fnType": "SENSOR"}],
+        device_id="SN1",
+        on_line="0",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SOC", "fnName": "Battery", "fnValue": "10", "fnType": "SENSOR"}
+        ],
     )
-    status_data = SimpleNamespace(sn="OTHER-SN", online="1", isBindByCurUser="1", stateList=[])
+    status_data = SimpleNamespace(
+        sn="OTHER-SN", online="1", isBindByCurUser="1", stateList=[]
+    )
     device._api_client = AsyncMock()
-    device._api_client.get_device_status.return_value = SimpleNamespace(data=[status_data])
+    device._api_client.get_device_status.return_value = SimpleNamespace(
+        data=[status_data]
+    )
 
     await device.async_refresh_from_api()
 
@@ -174,11 +231,19 @@ async def test_async_refresh_from_api_ignores_mismatched_sn():
     assert device.get_state("SOC").fn_value == "10"
 
 
-async def test_set_state_value_applies_optimistic_update_and_notifies_coordinator():
+async def test_set_state_value_applies_optimistic_update_and_notifies_coordinator() -> (
+    None
+):
     """Set state value applies optimistic update and notifies coordinator."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
+        ],
     )
     device._api_client = AsyncMock()
     device._api_client.control_device.return_value = UnifyResponse(msgId="1", msgCode=0)
@@ -190,7 +255,7 @@ async def test_set_state_value_applies_optimistic_update_and_notifies_coordinato
     device.coordinator.async_set_updated_data.assert_called_once_with(device)
 
 
-async def test_set_state_value_raises_and_does_not_apply_on_server_error_code():
+async def test_set_state_value_raises_and_does_not_apply_on_server_error_code() -> None:
     """Set state value raises and does not apply on server error code.
 
     Regression test: a rejected command (nonzero msgCode) used to be
@@ -198,8 +263,14 @@ async def test_set_state_value_raises_and_does_not_apply_on_server_error_code():
     as successful even though the device's state never actually changed.
     """
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
+        ],
     )
     device._api_client = AsyncMock()
     device._api_client.control_device.return_value = UnifyResponse(msgId="1", msgCode=1)
@@ -212,7 +283,7 @@ async def test_set_state_value_raises_and_does_not_apply_on_server_error_code():
     device.coordinator.async_set_updated_data.assert_not_called()
 
 
-async def test_set_state_value_raises_and_does_not_apply_on_non_json_response():
+async def test_set_state_value_raises_and_does_not_apply_on_non_json_response() -> None:
     """control_device() returns a plain str for a non-JSON server response.
 
     Regression test: accessing .msgCode on that str used to crash with an
@@ -220,8 +291,14 @@ async def test_set_state_value_raises_and_does_not_apply_on_non_json_response():
     rejected command - it should raise the same way a bad msgCode does.
     """
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
+        ],
     )
     device._api_client = AsyncMock()
     device._api_client.control_device.return_value = "not json"
@@ -233,11 +310,17 @@ async def test_set_state_value_raises_and_does_not_apply_on_non_json_response():
     assert device.get_state("SetCtrlAc").fn_value == "0"
 
 
-async def test_set_state_value_wraps_api_errors():
+async def test_set_state_value_wraps_api_errors() -> None:
     """Set state value wraps api errors."""
     device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L",
-        state_list=[{"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}],
+        device_id="SN1",
+        on_line="1",
+        name="Test",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
+        ],
     )
     device._api_client = AsyncMock()
     device._api_client.control_device.side_effect = RuntimeError("boom")
@@ -246,9 +329,11 @@ async def test_set_state_value_wraps_api_errors():
         await device.set_state_value("SetCtrlAc", "1")
 
 
-async def test_set_state_value_unknown_fn_code_raises_value_error():
+async def test_set_state_value_unknown_fn_code_raises_value_error() -> None:
     """Set state value unknown fn code raises value error."""
-    device = BluettiDevice(device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L")
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
+    )
 
     with pytest.raises(ValueError):
         await device.set_state_value("does-not-exist", "1")

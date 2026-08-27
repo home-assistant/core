@@ -7,10 +7,10 @@ from homeassistant.components.bluetti import (
     _async_update_listener,
     async_remove_config_entry_device,
     async_remove_entry,
-    async_unload_entry,
 )
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.models import BluettiDevice
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -25,43 +25,7 @@ def _runtime_data(stomp_client) -> BluettiRuntimeData:
     )
 
 
-async def test_unload_entry_does_not_explicitly_shut_down_modbus_coordinators(hass):
-    """Unload entry does not explicitly shut down modbus coordinators."""
-    # DataUpdateCoordinator (constructed with config_entry=entry) already
-    # registers its own async_shutdown via config_entry.async_on_unload -
-    # an explicit call here would run BluettiModbusCoordinator's
-    # connection-closing side effect a second time. This is a regression
-    # test for that: a raw AsyncMock modbus_coordinator (not wired to any
-    # real config_entry.async_on_unload registration) must NOT be shut
-    # down by async_unload_entry itself.
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    modbus_coordinator = AsyncMock()
-    entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
-        bluetti_devices=MagicMock(devices=[]),
-        stomp_client=AsyncMock(),
-        coordinators={},
-        modbus_coordinators={"SN1": modbus_coordinator},
-    )
-
-    result = await async_unload_entry(hass, entry)
-
-    assert result is True
-    modbus_coordinator.async_shutdown.assert_not_awaited()
-
-
-async def test_unload_entry_without_runtime_data_does_not_raise(hass):
-    """A config entry that never finished setup has no runtime_data yet."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    result = await async_unload_entry(hass, entry)
-    assert result is True
-
-
-async def test_remove_entry_disconnects_websocket(hass):
+async def test_remove_entry_disconnects_websocket(hass: HomeAssistant) -> None:
     """Remove entry disconnects websocket."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -74,7 +38,9 @@ async def test_remove_entry_disconnects_websocket(hass):
     stomp_client.disconnect.assert_awaited_once()
 
 
-async def test_remove_entry_without_runtime_data_does_not_raise(hass):
+async def test_remove_entry_without_runtime_data_does_not_raise(
+    hass: HomeAssistant,
+) -> None:
     """Removing a config entry that never finished setup must not crash."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -82,7 +48,7 @@ async def test_remove_entry_without_runtime_data_does_not_raise(hass):
     await async_remove_entry(hass, entry)
 
 
-async def test_remove_entry_survives_disconnect_error(hass):
+async def test_remove_entry_survives_disconnect_error(hass: HomeAssistant) -> None:
     """Remove entry survives disconnect error."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -95,13 +61,16 @@ async def test_remove_entry_survives_disconnect_error(hass):
     await async_remove_entry(hass, entry)
 
 
-async def test_remove_entry_cleans_up_device_and_entity_registries(hass):
+async def test_remove_entry_cleans_up_device_and_entity_registries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Remove entry cleans up device and entity registries."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = _runtime_data(MagicMock())
 
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "SN1")},
@@ -109,28 +78,45 @@ async def test_remove_entry_cleans_up_device_and_entity_registries(hass):
         manufacturer="Bluetti",
         model="AC200L",
     )
-    entity_registry = er.async_get(hass)
     # Deliberately not linked to device_entry: device removal cascades to
     # its own entities, so this checks the explicit entity cleanup loop.
     entity_registry.async_get_or_create(
-        "sensor", DOMAIN, "SN1_standalone", config_entry=entry,
+        "sensor",
+        DOMAIN,
+        "SN1_standalone",
+        config_entry=entry,
     )
 
     await async_remove_entry(hass, entry)
 
-    assert device_registry.async_get_device_by_identifier((DOMAIN, "SN1"), entry.entry_id) is None
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "SN1_standalone") is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "SN1"), entry.entry_id)
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "SN1_standalone") is None
+    )
 
 
-async def test_remove_config_entry_device_stops_polling_and_updates_options(hass):
+async def test_remove_config_entry_device_stops_polling_and_updates_options(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Remove config entry device stops polling and updates options."""
     entry = MockConfigEntry(
-        domain=DOMAIN, options={"devices": ["SN1", "SN2"], "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}}}
+        domain=DOMAIN,
+        options={
+            "devices": ["SN1", "SN2"],
+            "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}},
+        },
     )
     entry.add_to_hass(hass)
 
-    device1 = BluettiDevice(device_id="SN1", on_line="1", name="First", sn="SN1", model="Balco260")
-    device2 = BluettiDevice(device_id="SN2", on_line="1", name="Second", sn="SN2", model="EL400")
+    device1 = BluettiDevice(
+        device_id="SN1", on_line="1", name="First", sn="SN1", model="Balco260"
+    )
+    device2 = BluettiDevice(
+        device_id="SN2", on_line="1", name="Second", sn="SN2", model="EL400"
+    )
     coordinator1 = AsyncMock()
     modbus_coordinator1 = AsyncMock()
     entry.runtime_data = BluettiRuntimeData(
@@ -141,7 +127,6 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(hass
         modbus_coordinators={"SN1": modbus_coordinator1},
     )
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "SN1")},
@@ -163,13 +148,14 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(hass
     assert entry.options["modbus"] == {}
 
 
-async def test_remove_config_entry_device_rejects_non_bluetti_device(hass):
+async def test_remove_config_entry_device_rejects_non_bluetti_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Remove config entry device rejects non bluetti device."""
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
     entry.runtime_data = _runtime_data(MagicMock())
 
-    device_registry = dr.async_get(hass)
     other_entry = MockConfigEntry(domain="other_domain")
     other_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -184,12 +170,13 @@ async def test_remove_config_entry_device_rejects_non_bluetti_device(hass):
     assert entry.options["devices"] == ["SN1"]
 
 
-async def test_remove_config_entry_device_without_runtime_data_does_not_raise(hass):
+async def test_remove_config_entry_device_without_runtime_data_does_not_raise(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """A device removed before the entry ever finished setup must not crash."""
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "SN1")},
@@ -202,13 +189,14 @@ async def test_remove_config_entry_device_without_runtime_data_does_not_raise(ha
     assert entry.options["devices"] == []
 
 
-async def test_remove_config_entry_device_leaves_options_untouched_when_already_absent(hass):
+async def test_remove_config_entry_device_leaves_options_untouched_when_already_absent(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Remove config entry device leaves options untouched when already absent."""
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN2"]})
     entry.add_to_hass(hass)
     entry.runtime_data = _runtime_data(MagicMock())
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "SN1")},
@@ -222,7 +210,7 @@ async def test_remove_config_entry_device_leaves_options_untouched_when_already_
     mock_update.assert_not_called()
 
 
-async def test_update_listener_reloads_entry(hass):
+async def test_update_listener_reloads_entry(hass: HomeAssistant) -> None:
     """Update listener reloads entry."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)

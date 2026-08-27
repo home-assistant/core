@@ -1,6 +1,5 @@
 """Diagnostics support for the BLUETTI integration."""
 
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -69,7 +68,8 @@ async def async_get_config_entry_diagnostics(
         # device with local Modbus configured would leak its serial here
         # even though "devices" above was redacted.
         entry_options["modbus"] = {
-            aliases.get(sn, sn): config for sn, config in entry_options["modbus"].items()
+            aliases.get(sn, sn): config
+            for sn, config in entry_options["modbus"].items()
         }
 
     return {

@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 import logging
-from typing import TypedDict
+from typing import TypedDict, override
 
 from bluetti_modbus_lib.modbus.client import ClientReturnValue
 
@@ -17,13 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BluettiConfigEntry
-from .entity import BluettiEntity
-from .modbus_coordinator import BluettiModbusCoordinator
-from .modbus_entity import BluettiModbusEntity
+from .coordinator import BluettiModbusCoordinator
+from .entity import BluettiEntity, BluettiModbusEntity
 from .modbus_field_metadata import modbus_metadata_for
 from .models import BluettiData, BluettiDevice, BluettiState
 
@@ -41,32 +40,34 @@ class BaseSensorMetaInfo(TypedDict):
     state_class: SensorStateClass | None
     unit: str | None
 
+
 class NamedSensorMetaInfo(BaseSensorMetaInfo):
     """BaseSensorMetaInfo plus the display name for one specific sensor."""
 
     name: str
 
+
 SENSOR_MAP: dict[str, BaseSensorMetaInfo] = {
-    "SensorDeviceClass.BATTERY":{
-        "device_class":SensorDeviceClass.BATTERY,
-        "state_class":SensorStateClass.MEASUREMENT,
-        "unit": PERCENTAGE
+    "SensorDeviceClass.BATTERY": {
+        "device_class": SensorDeviceClass.BATTERY,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": PERCENTAGE,
     },
-    "SensorDeviceClass.ENUM":{
-        "device_class":SensorDeviceClass.ENUM,
+    "SensorDeviceClass.ENUM": {
+        "device_class": SensorDeviceClass.ENUM,
         "state_class": None,
-        "unit": None
+        "unit": None,
     },
-    "SensorDeviceClass.DURATION":{
-        "device_class":SensorDeviceClass.DURATION,
+    "SensorDeviceClass.DURATION": {
+        "device_class": SensorDeviceClass.DURATION,
         "state_class": None,
-        "unit": "min"
+        "unit": "min",
     },
-    "SensorDeviceClass.POWER":{
-        "device_class":SensorDeviceClass.POWER,
-        "state_class":SensorStateClass.MEASUREMENT,
-        "unit": "W"
-    }
+    "SensorDeviceClass.POWER": {
+        "device_class": SensorDeviceClass.POWER,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": "W",
+    },
 }
 
 # Modbus fields with a direct cloud-sourced equivalent already surfaced
@@ -76,7 +77,13 @@ SENSOR_MAP: dict[str, BaseSensorMetaInfo] = {
 # device object reports is exposed, so new fields added in a future
 # bluetti-modbus release show up automatically instead of needing to be
 # added to an include-list.
-MODBUS_FIELDS_DUPLICATING_CLOUD = {"ac_o_p_total", "pv_i_p_total", "g_i_p_total", "b_soc_total", "b_soc"}
+MODBUS_FIELDS_DUPLICATING_CLOUD = {
+    "ac_o_p_total",
+    "pv_i_p_total",
+    "g_i_p_total",
+    "b_soc_total",
+    "b_soc",
+}
 
 
 def _power_value_getter(state: BluettiState) -> Callable[[], str | float | None]:
@@ -90,11 +97,12 @@ def _estimated_power_value_getter(
     """Bind `sensor` by value, not by the loop variable's final reference."""
     return lambda: sensor.native_value
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BluettiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Bluetti sensors from config entry."""
     bluetti_devices: BluettiData = config_entry.runtime_data.bluetti_devices
     entities: list[BluettiEntity | BluettiModbusEntity] = []
@@ -107,7 +115,8 @@ async def async_setup_entry(
                 if sensor_class is None:
                     __LOGGER__.warning(
                         "Unknown sensor type '%s' for fn_code=%s, skipping",
-                        sensor_type, state.fn_code,
+                        sensor_type,
+                        state.fn_code,
                     )
                     continue
                 meta: NamedSensorMetaInfo = {
@@ -118,7 +127,7 @@ async def async_setup_entry(
                     # processed sensor on every device (#101, #102).
                     "unit": state.sensor_info.get("unit") or sensor_class["unit"],
                     "device_class": sensor_class["device_class"],
-                    "state_class": sensor_class["state_class"]
+                    "state_class": sensor_class["state_class"],
                 }
                 entities.append(BluettiSensor(device, state, meta))
                 if meta["device_class"] == SensorDeviceClass.POWER:
@@ -139,22 +148,39 @@ async def async_setup_entry(
         ac_load_state = device.get_state("ACLoadAllTotalPower")
         if pv_state and grid_state and ac_load_state:
             for fn_code, name, charging in (
-                ("EstimatedBatteryChargePower", "Battery Charge Power (Estimated)", True),
-                ("EstimatedBatteryDischargePower", "Battery Discharge Power (Estimated)", False),
+                (
+                    "EstimatedBatteryChargePower",
+                    "Battery Charge Power (Estimated)",
+                    True,
+                ),
+                (
+                    "EstimatedBatteryDischargePower",
+                    "Battery Discharge Power (Estimated)",
+                    False,
+                ),
             ):
                 battery_sensor = BluettiEstimatedBatteryPowerSensor(
-                    device, pv_state, grid_state, ac_load_state,
-                    fn_code=fn_code, name=name, charging=charging,
+                    device,
+                    pv_state,
+                    grid_state,
+                    ac_load_state,
+                    fn_code=fn_code,
+                    name=name,
+                    charging=charging,
                 )
                 entities.append(battery_sensor)
                 entities.append(
                     BluettiEnergySensor(
-                        device, battery_sensor._state_obj,  # noqa: SLF001 - both classes live in this module
+                        device,
+                        battery_sensor._state_obj,  # noqa: SLF001 - both classes live in this module
                         _estimated_power_value_getter(battery_sensor),
                     )
                 )
 
-    for device_id, modbus_coordinator in config_entry.runtime_data.modbus_coordinators.items():
+    for (
+        device_id,
+        modbus_coordinator,
+    ) in config_entry.runtime_data.modbus_coordinators.items():
         modbus_device = bluetti_devices.get_device_by_sn(device_id)
         if modbus_device is None:
             continue
@@ -167,18 +193,20 @@ async def async_setup_entry(
         for field_name in modbus_coordinator.device.field_names():
             if field_name in MODBUS_FIELDS_DUPLICATING_CLOUD:
                 continue
-            entities.append(BluettiModbusSensor(modbus_device, modbus_coordinator, field_name))
+            entities.append(
+                BluettiModbusSensor(modbus_device, modbus_coordinator, field_name)
+            )
 
     if entities:
         async_add_entities(entities)
-
-    return True
 
 
 class BluettiSensor(BluettiEntity, SensorEntity):
     """Bluetti sensor for numeric or enum states."""
 
-    def __init__(self, device: BluettiDevice, state: BluettiState, meta: NamedSensorMetaInfo) -> None:
+    def __init__(
+        self, device: BluettiDevice, state: BluettiState, meta: NamedSensorMetaInfo
+    ) -> None:
         """Initialize the sensor from its owning device, state, and metadata."""
         super().__init__(device, state)
         self._meta = meta
@@ -189,6 +217,7 @@ class BluettiSensor(BluettiEntity, SensorEntity):
         self._attr_native_unit_of_measurement = meta["unit"]
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the state's current value, or its mode name if it's a mode."""
         if self._state_obj.support_mode_values:
@@ -233,11 +262,14 @@ class BluettiEnergySensor(BluettiEntity, RestoreSensor):
         self._last_power_w: float | None = None
         self._last_updated: datetime | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last integrated total and starting power reading."""
         await super().async_added_to_hass()
         last_data = await self.async_get_last_sensor_data()
-        if last_data is not None and isinstance(last_data.native_value, (int, float, str, Decimal)):
+        if last_data is not None and isinstance(
+            last_data.native_value, (int, float, str, Decimal)
+        ):
             self._total_kwh = float(last_data.native_value)
 
         self._last_power_w = self._current_power_w() if self.available else None
@@ -247,9 +279,10 @@ class BluettiEnergySensor(BluettiEntity, RestoreSensor):
         try:
             value = self._power_getter()
             return float(value) if value is not None else None
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         now = dt_util.utcnow()
         current_w = self._current_power_w() if self.available else None
@@ -269,6 +302,7 @@ class BluettiEnergySensor(BluettiEntity, RestoreSensor):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the total energy integrated so far, in kWh."""
         return round(self._total_kwh, 4)
@@ -302,7 +336,9 @@ class BluettiEstimatedBatteryPowerSensor(BluettiEntity, SensorEntity):
         charging: bool,
     ) -> None:
         """Initialize the estimator from the three real states it derives from."""
-        identity_state = BluettiState(fn_code=fn_code, fn_name=name, fn_value="0", fn_type="SENSOR")
+        identity_state = BluettiState(
+            fn_code=fn_code, fn_name=name, fn_value="0", fn_type="SENSOR"
+        )
         super().__init__(device, identity_state)
         self._pv_state = pv_state
         self._grid_state = grid_state
@@ -320,10 +356,11 @@ class BluettiEstimatedBatteryPowerSensor(BluettiEntity, SensorEntity):
                 + float(self._grid_state.fn_value)
                 - float(self._ac_load_state.fn_value)
             )
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the estimated charge or discharge power, whichever this sensor tracks."""
         net = self._net_power_w()
@@ -336,7 +373,10 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     """Sensor sourced from a device's optional local Modbus connection."""
 
     def __init__(
-        self, device: BluettiDevice, coordinator: BluettiModbusCoordinator, field_name: str
+        self,
+        device: BluettiDevice,
+        coordinator: BluettiModbusCoordinator,
+        field_name: str,
     ) -> None:
         """Initialize the sensor from its owning device and Modbus field name."""
         super().__init__(device, coordinator, field_name)
@@ -362,12 +402,16 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the field's unit, once the coordinator has actually read it."""
-        field: ClientReturnValue | None = (self.coordinator.data or {}).get(self._field_name)
+        field: ClientReturnValue | None = (self.coordinator.data or {}).get(
+            self._field_name
+        )
         return field.unit if field else None
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return the field's current value from the coordinator's last poll."""
         field = (self.coordinator.data or {}).get(self._field_name)

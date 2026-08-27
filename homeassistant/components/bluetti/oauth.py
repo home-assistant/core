@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientSession
 from pybluetti import ProductClient, UserProduct
@@ -21,7 +21,9 @@ __LOGGER__ = logging.getLogger(__name__)
 ISSUE_ID_OAUTH_EXPIRED = "oauth_expired"
 
 
-class OAuth2FlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """BLUETTI OAUTH2 handler."""
 
     DOMAIN = DOMAIN
@@ -33,11 +35,26 @@ class OAuth2FlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, doma
     entry: config_entries.ConfigEntry
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> config_entries.ConfigFlowResult:
+    async def async_step_select_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Select which BLUETTI devices to add.
+
+        Overridden by BluettiConfigFlow, which is the only concrete
+        subclass of this handler; kept here (rather than left undeclared)
+        so the call in async_oauth_create_entry below type-checks.
+        """
+        raise NotImplementedError
+
+    @override
+    async def async_oauth_create_entry(
+        self, data: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
         """Handle OAuth2 callback and create config entry."""
         self._oauth_data = data
         return await self.async_step_select_devices()
@@ -96,7 +113,9 @@ class AuthTokenRefresh:
     def start_token_check(self) -> None:
         """Check the token now, then schedule a daily check going forward."""
         # first clear old notify
-        persistent_notification.async_dismiss(self.hass,notification_id=NOTIFY_ID_TOKEN_EXPIRED)
+        persistent_notification.async_dismiss(
+            self.hass, notification_id=NOTIFY_ID_TOKEN_EXPIRED
+        )
         ir.async_delete_issue(self.hass, DOMAIN, ISSUE_ID_OAUTH_EXPIRED)
         if not self.is_token_valid():
             __LOGGER__.info("token have expired send notify")
@@ -106,12 +125,11 @@ class AuthTokenRefresh:
             unsub = async_track_time_interval(
                 self.hass,
                 self.async_check_token_expiry,  # callback to run
-                interval       # how often to run it
+                interval,  # how often to run it
             )
             self.entry.async_on_unload(unsub)
             __LOGGER__.info("token is valid after 24 hours to check again")
         self.hass.async_create_task(self.async_check_token_expiry())
-
 
     # check oauth2 token is ok
     def is_token_valid(self) -> bool:
@@ -126,7 +144,11 @@ class AuthTokenRefresh:
             return expire_timestamp > current_timestamp
 
         if "expires_in" in token and "created_at" in token:
-            expire_timestamp = cast("float", token["created_at"]) + cast("float", token["expires_in"]) - 30
+            expire_timestamp = (
+                cast("float", token["created_at"])
+                + cast("float", token["expires_in"])
+                - 30
+            )
             current_timestamp = time.time()
             return expire_timestamp > current_timestamp
 
@@ -143,8 +165,8 @@ class AuthTokenRefresh:
         persistent_notification.async_create(
             self.hass,
             notification_message,
-            title = "OAuth Expired",
-            notification_id = NOTIFY_ID_TOKEN_EXPIRED,
+            title="OAuth Expired",
+            notification_id=NOTIFY_ID_TOKEN_EXPIRED,
         )
         ir.async_create_issue(
             self.hass,
@@ -177,19 +199,28 @@ class AuthTokenRefresh:
             self.send_expired_notification()
             return
 
-        if remain_timestamp < 3600*24*7 :
+        if remain_timestamp < 3600 * 24 * 7:
             try:
                 __LOGGER__.info("start refresh token")
                 last_refesh = self.entry.data.get("last_token_refresh", 0.0)
                 # 1 hour only one time ,when server is 500 do not always refesh token
-                if current_timestamp - last_refesh < 3600 :
-                    __LOGGER__.info("last refesh token in 1 hour,this do not refesh return")
+                if current_timestamp - last_refesh < 3600:
+                    __LOGGER__.info(
+                        "last refesh token in 1 hour,this do not refesh return"
+                    )
                     return
                 last_refesh = current_timestamp
 
-                new_token = await self.oAuth2Session.implementation.async_refresh_token(self.oAuth2Session.token)
+                new_token = await self.oAuth2Session.implementation.async_refresh_token(
+                    self.oAuth2Session.token
+                )
                 self.hass.config_entries.async_update_entry(
-                    self.entry, data={**self.entry.data, "token": new_token,"last_token_refresh":last_refesh}
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        "token": new_token,
+                        "last_token_refresh": last_refesh,
+                    },
                 )
                 __LOGGER__.info("refresh token ok,then reload")
                 await self.hass.config_entries.async_reload(self.entry.entry_id)

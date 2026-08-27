@@ -1,7 +1,8 @@
 """Copyright (C) 2025 BLUETTI Corporation."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybluetti import ProductClient
 import voluptuous as vol
@@ -24,25 +25,46 @@ __LOGGER__ = logging.getLogger(__name__)
 class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
     """BLUETTI Custom Integration config flow."""
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         await APPLICATION_PROFILE.load_config(self.hass)
         await async_ensure_default_credential(self.hass)
         return await super().async_step_user(user_input)
 
+    @override
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration request by re-running the OAuth2 login."""
         return await super().async_step_reconfigure(user_input)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    @override
     async def async_step_select_devices(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let user select devices after OAuth2 login."""
         if user_input is not None:
             try:
-                await self._product_client.bind_devices({"bindSnList": user_input["devices"]})
+                await self._product_client.bind_devices(
+                    {"bindSnList": user_input["devices"]}
+                )
             except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
                 return self.async_abort(reason="cannot_connect")
@@ -58,8 +80,13 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 # unique_id have none set; fall back to the old title match
                 # once and backfill the unique_id so future lookups work.
                 for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    if entry.unique_id is None and entry.title == f"{INTEGRATION_NAME} Power Integration":
-                        self.hass.config_entries.async_update_entry(entry, unique_id=ACCOUNT_UNIQUE_ID)
+                    if (
+                        entry.unique_id is None
+                        and entry.title == f"{INTEGRATION_NAME} Power Integration"
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=ACCOUNT_UNIQUE_ID
+                        )
                         existing_entry = entry
                         break
 
@@ -72,9 +99,17 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 merged_devices = list(set(existing_devices + user_input["devices"]))
 
                 # Merge the product data (deduplicated)
-                existing_product_sns = {p.get("sn") if isinstance(p, dict) else p.sn for p in existing_products}
-                new_products = [p for p in self._products if p.sn not in existing_product_sns]
-                merged_products = existing_products + [p.model_dump() if hasattr(p, "model_dump") else p for p in new_products]
+                existing_product_sns = {
+                    p.get("sn") if isinstance(p, dict) else p.sn
+                    for p in existing_products
+                }
+                new_products = [
+                    p for p in self._products if p.sn not in existing_product_sns
+                ]
+                merged_products = existing_products + [
+                    p.model_dump() if hasattr(p, "model_dump") else p
+                    for p in new_products
+                ]
 
                 # async_update_entry's options= REPLACES entry.options
                 # wholesale - update it directly, before the helper below
@@ -104,10 +139,15 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 data={
                     "auth_implementation": self._oauth_data["auth_implementation"],
                     "token": self._oauth_data["token"],
-                    "products": [p.model_dump() for p in self._products]
+                    "products": [p.model_dump() for p in self._products],
                 },
                 options=user_input,
             )
+
+        # Normally already loaded by async_step_user above, but this step is
+        # also reachable directly (e.g. a fresh reauth/reconfigure context),
+        # so don't rely on that ordering - load_config is idempotent.
+        await APPLICATION_PROFILE.load_config(self.hass)
 
         http_session = async_get_clientsession(self.hass)
         access_token = self._oauth_data["token"]["access_token"]
@@ -147,7 +187,9 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
 
         # reconfigure token
         if "entry_id" in self.context:
-            cur_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+            cur_entry = self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            )
             if cur_entry is None:
                 return self.async_abort(reason="reconfigure_failed")
             __LOGGER__.info("reconfigure token")
@@ -163,8 +205,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(
-                    "devices",
-                    default=list(available_devices.keys())
+                    "devices", default=list(available_devices.keys())
                 ): cv.multi_select(available_devices)
             }
         )
@@ -176,6 +217,9 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: BluettiConfigEntry) -> BluettiOptionsFlowHandler:
+    @override
+    def async_get_options_flow(
+        config_entry: BluettiConfigEntry,
+    ) -> BluettiOptionsFlowHandler:
         """Return the options flow used to add more devices later."""
         return BluettiOptionsFlowHandler()

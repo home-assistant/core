@@ -9,10 +9,11 @@ from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.profile.application_profile import (
     APPLICATION_PROFILE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_async_get_authorization_server(hass):
+async def test_async_get_authorization_server(hass: HomeAssistant) -> None:
     """Async get authorization server."""
     server = await async_get_authorization_server(hass)
 
@@ -21,12 +22,12 @@ async def test_async_get_authorization_server(hass):
     assert server.token_url == f"{gateway_sso}/oauth2/token"
 
 
-def _stored_credential(hass):
+def _stored_credential(hass: HomeAssistant):
     collection = hass.data[application_credentials.DATA_COMPONENT]
     return collection.async_client_credentials(DOMAIN).get(DOMAIN)
 
 
-async def test_async_ensure_default_credential_imports_it(hass):
+async def test_async_ensure_default_credential_imports_it(hass: HomeAssistant) -> None:
     """Async ensure default credential imports it."""
     await async_setup_component(hass, "application_credentials", {})
 
@@ -37,7 +38,9 @@ async def test_async_ensure_default_credential_imports_it(hass):
     assert credential.client_id == "HomeAssistant"
 
 
-async def test_async_ensure_default_credential_is_idempotent(hass):
+async def test_async_ensure_default_credential_is_idempotent(
+    hass: HomeAssistant,
+) -> None:
     """Async ensure default credential is idempotent."""
     # A missing credential (e.g. lost in a partial backup restore) must be
     # safe to re-import on every setup attempt, not just the first one.

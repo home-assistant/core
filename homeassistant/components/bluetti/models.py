@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pybluetti import ProductClient, UnifyResponse, UserProduct
 
@@ -23,10 +23,13 @@ __LOGGER__ = logging.getLogger(__name__)
 
 manufacturer = "Bluetti"
 
+
 class BluettiData:
     """Data for the BLUETTI integration."""
 
-    def __init__(self, hass: HomeAssistant, devices: list[UserProduct] | None = None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, devices: list[UserProduct] | None = None
+    ) -> None:
         """Build the device list from the cloud account's bound products."""
         self.devices = [
             BluettiDevice(
@@ -38,7 +41,7 @@ class BluettiData:
                 name=dev.name or dev.sn,
                 sn=dev.sn,
                 model=dev.model or "Unknown",
-                state_list=dev.stateList or []
+                state_list=dev.stateList or [],
             )
             for dev in devices or []
         ]
@@ -71,6 +74,7 @@ class BluettiData:
                 device.coordinator.async_request_refresh(), self.loop
             )
 
+
 class BluettiState:
     """Represents a single function/state of the device."""
 
@@ -97,7 +101,9 @@ class BluettiState:
 
     def set_value(self, value: str) -> None:
         """Set the state value, validate if mode selection."""
-        if self.is_switch() or any(v["code"] == value for v in self.support_mode_values):
+        if self.is_switch() or any(
+            v["code"] == value for v in self.support_mode_values
+        ):
             self.fn_value = value
         else:
             raise ValueError(f"Invalid value {value} for {self.fn_code}")
@@ -111,6 +117,7 @@ class BluettiState:
                 return str(v["name"])
         return self.fn_value
 
+    @override
     def __repr__(self) -> str:
         """Return a debug representation showing the state's code and value."""
         return f"<BluettiState {self.fn_code}={self.fn_value}>"
@@ -147,7 +154,7 @@ class BluettiDevice:
                 fn_value=s.get("fnValue") or "",
                 fn_type=s.get("fnType") or "",
                 support_mode_values=s.get("supportModeValues"),
-                sensor_info = s.get("sensorInfo")
+                sensor_info=s.get("sensorInfo"),
             )
             for s in state_list or []
         ]
@@ -173,6 +180,7 @@ class BluettiDevice:
         self._entry = entry
         self._entry_id = entry.entry_id
 
+    @override
     def __repr__(self) -> str:
         """Return a debug representation showing the device's id and name."""
         return f"<BluettiDevice id={self.device_id} name={self.name}>"
@@ -201,7 +209,10 @@ class BluettiDevice:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"device_id": self.device_id, "error": str(err)},
+                translation_placeholders={
+                    "device_id": self.device_id,
+                    "error": str(err),
+                },
             ) from err
 
         # control_device() returns a plain str for a non-JSON server
@@ -281,7 +292,8 @@ class BluettiDevice:
             __LOGGER__.error(
                 "Cannot handle device unbinding: missing necessary references "
                 "(hass=%s, entry=%s)",
-                self._hass is not None, self._entry is not None,
+                self._hass is not None,
+                self._entry is not None,
             )
             return
 
@@ -298,7 +310,9 @@ class BluettiDevice:
 
             # 2. Find and delete all entities of the device
             device_entry = None
-            for dev_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+            for dev_entry in dr.async_entries_for_config_entry(
+                device_registry, entry_id
+            ):
                 if (DOMAIN, self.device_id) in dev_entry.identifiers:
                     device_entry = dev_entry
                     break
@@ -307,7 +321,9 @@ class BluettiDevice:
                 # Delete all entities of the device
                 entities_to_remove = [
                     entity_entry.entity_id
-                    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id)
+                    for entity_entry in er.async_entries_for_config_entry(
+                        entity_registry, entry_id
+                    )
                     if entity_entry.device_id == device_entry.id
                 ]
 
@@ -332,14 +348,19 @@ class BluettiDevice:
                 runtime_data = getattr(entry, "runtime_data", None)
                 if runtime_data:
                     runtime_data.bluetti_devices.devices = [
-                        d for d in runtime_data.bluetti_devices.devices
+                        d
+                        for d in runtime_data.bluetti_devices.devices
                         if d.device_id != self.device_id
                     ]
                     runtime_data.coordinators.pop(self.device_id, None)
-                    modbus_coordinator = runtime_data.modbus_coordinators.pop(self.device_id, None)
+                    modbus_coordinator = runtime_data.modbus_coordinators.pop(
+                        self.device_id, None
+                    )
                     if modbus_coordinator:
                         await modbus_coordinator.async_shutdown()
-                    __LOGGER__.debug("Removed device from runtime data: %s", self.device_id)
+                    __LOGGER__.debug(
+                        "Removed device from runtime data: %s", self.device_id
+                    )
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
                 __LOGGER__.warning("Error removing device from runtime data: %s", e)
 
@@ -349,7 +370,9 @@ class BluettiDevice:
                 current_devices = current_options.get("devices", [])
                 current_modbus = current_options.get("modbus", {})
                 new_modbus = {
-                    sn: cfg for sn, cfg in current_modbus.items() if sn != self.device_id
+                    sn: cfg
+                    for sn, cfg in current_modbus.items()
+                    if sn != self.device_id
                 }
 
                 if self.device_id in current_devices:
@@ -357,16 +380,24 @@ class BluettiDevice:
 
                     hass.config_entries.async_update_entry(
                         entry,
-                        options={**current_options, "devices": new_devices, "modbus": new_modbus}
+                        options={
+                            **current_options,
+                            "devices": new_devices,
+                            "modbus": new_modbus,
+                        },
                     )
-                    __LOGGER__.debug("Removed device from configuration entry: %s", self.device_id)
+                    __LOGGER__.debug(
+                        "Removed device from configuration entry: %s", self.device_id
+                    )
                 else:
                     __LOGGER__.warning(
                         "Device %s not in the device list of the configuration entry",
                         self.device_id,
                     )
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
-                __LOGGER__.error("Error updating configuration entry: %s", e, exc_info=True)
+                __LOGGER__.error(
+                    "Error updating configuration entry: %s", e, exc_info=True
+                )
                 # Even if the update fails, continue to display the notification
 
             # 6. Display persistent notification
@@ -383,7 +414,7 @@ class BluettiDevice:
                     hass,
                     title=notification_title,
                     message=notification_message,
-                    notification_id=notification_id
+                    notification_id=notification_id,
                 )
                 __LOGGER__.debug("Displayed unbinding notification: %s", self.device_id)
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
@@ -392,11 +423,15 @@ class BluettiDevice:
             # 7. Reload the configuration entry after a delay (ensure all cleanup operations are completed)
             async def _reload_after_cleanup() -> None:
                 try:
-                    await asyncio.sleep(1)  # Delay 1 second to ensure all cleanup operations are completed
+                    await asyncio.sleep(
+                        1
+                    )  # Delay 1 second to ensure all cleanup operations are completed
                     await hass.config_entries.async_reload(entry_id)
                     __LOGGER__.info("Reloaded configuration entry: %s", entry_id)
                 except Exception as e:  # noqa: BLE001 - best-effort: a failed reload is logged, not fatal
-                    __LOGGER__.error("Error reloading configuration entry: %s", e, exc_info=True)
+                    __LOGGER__.error(
+                        "Error reloading configuration entry: %s", e, exc_info=True
+                    )
 
             hass.async_create_task(_reload_after_cleanup())
 
