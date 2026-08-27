@@ -99,9 +99,7 @@ def _validator(annotation: Any) -> Any:
                 *(_validator(arg) for arg in sorted(non_none, key=_union_member_order))
             )
         )
-        # Not ``vol.Maybe``: ``voluptuous_openapi`` does not recognize probatio's
-        # ``Maybe`` class and would type the parameter as a string.
-        return vol.Any(None, inner) if allows_none else inner
+        return vol.Maybe(inner) if allows_none else inner
     if annotation is str:
         return str
     if annotation is bool:

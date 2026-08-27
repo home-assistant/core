@@ -6,9 +6,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from knx_telegram_store.mcp import QueryTelegramsResult, TelegramSummary
+from probatio import to_openapi
 import pytest
 import voluptuous as vol
-from voluptuous_openapi import convert
 from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
@@ -177,7 +177,7 @@ def test_integer_parameters_are_typed_for_the_llm(
 ) -> None:
     """Integer fields must not be advertised to the model as strings."""
     tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
-    converted = convert(tool.parameters)["properties"][parameter]
+    converted = to_openapi(tool.parameters)["properties"][parameter]
     assert {
         key: value
         for key, value in converted.items()
@@ -282,7 +282,7 @@ def test_pagination_bounds_are_enforced(tool_name: str, args: dict[str, Any]) ->
 def test_pagination_bounds_are_advertised_to_the_llm() -> None:
     """The model needs to see the bounds, not just be rejected by them."""
     tool = _tool(llm_api._build_tools(_mock_knx()), "list_dpts")
-    properties = convert(tool.parameters)["properties"]
+    properties = to_openapi(tool.parameters)["properties"]
     assert properties["limit"]["minimum"] == 1
     assert properties["limit"]["maximum"] == 1000
     assert properties["offset"]["minimum"] == 0
