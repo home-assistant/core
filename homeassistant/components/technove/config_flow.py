@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionError
+from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 import voluptuous as vol
 
 from homeassistant.components import onboarding
@@ -34,7 +34,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 station = await self._async_get_station(user_input[CONF_HOST])
-            except TechnoVEConnectionError:
+            except TechnoVEError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
@@ -98,7 +98,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_station = await self._async_get_station(discovery_info.host)
-        except TechnoVEConnectionError:
+        except TechnoVEError:
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(self.discovered_station.info.mac_address)

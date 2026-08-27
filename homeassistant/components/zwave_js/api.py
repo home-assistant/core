@@ -1,9 +1,11 @@
 """Websocket API for Z-Wave JS."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
+import logging
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
@@ -51,6 +53,7 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
+from zwave_js_server.model.statistics import RouteStatistics
 from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
@@ -103,12 +106,15 @@ if TYPE_CHECKING:
     from .models import ZwaveJSConfigEntry
 
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
+ERR_RF_TOGGLE_FAILED = "rf_toggle_failed"
 NODE_ID = "node_id"
 DEVICE_ID = "device_id"
 COMMAND_CLASS_ID = "command_class_id"
@@ -411,6 +417,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_network_neighbors)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -615,6 +622,83 @@ async def websocket_node_status(
 ) -> None:
     """Get the status of a Z-Wave JS node."""
     connection.send_result(msg[ID], node_status(node))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/network_neighbors",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_network_neighbors(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ZwaveJSConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Get the node IDs of the neighbors of all nodes in the network.
+
+    Reading the routing table can wedge older controllers when the radio is
+    on or reads overlap, so refreshes are serialized and done with RF off:
+    https://zwave-js.github.io/zwave-js/#/api/controller?id=getnodeneighbors
+    """
+    controller = driver.controller
+
+    async def restore_rf() -> bool:
+        """Turn the radio back on, returning False instead of raising."""
+        try:
+            return await controller.async_toggle_rf(True)
+        except BaseZwaveJSServerError:
+            return False
+
+    async def read_network_neighbors() -> tuple[bool, bool, dict[int, list[int]]]:
+        """Read the neighbors of all nodes while the radio is off."""
+        neighbors: dict[int, list[int]] = {}
+        rf_disabled = False
+        async with entry.runtime_data.network_neighbors_lock:
+            try:
+                rf_disabled = await controller.async_toggle_rf(False)
+                if rf_disabled:
+                    # Snapshot the nodes, inclusion/exclusion can mutate the
+                    # collection while it is being iterated
+                    for node in list(controller.nodes.values()):
+                        # Long range nodes are not part of the mesh
+                        if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                            continue
+                        try:
+                            neighbors[
+                                node.node_id
+                            ] = await controller.async_get_node_neighbors(node)
+                        except FailedCommand:
+                            continue
+            finally:
+                rf_restored = await restore_rf()
+                if not rf_restored:
+                    _LOGGER.error(
+                        "Failed to re-enable RF after reading the neighbors of"
+                        " the nodes of config entry %s",
+                        entry.entry_id,
+                    )
+        return rf_disabled, rf_restored, neighbors
+
+    # The refresh runs as its own task and is only abandoned on cancellation,
+    # so a closing connection can't interrupt it while the radio is off
+    rf_disabled, rf_restored, neighbors = await asyncio.shield(
+        hass.async_create_task(read_network_neighbors())
+    )
+    if not rf_disabled:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
+        return
+    if not rf_restored:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to re-enable RF")
+        return
+    connection.send_result(msg[ID], neighbors)
 
 
 @websocket_api.websocket_command(
@@ -2835,10 +2919,30 @@ def _get_node_statistics_dict(
         device = dev_reg.async_get_device_by_identifier(
             get_device_id(driver, node), entry.entry_id
         )
-        assert device
+        if device is None:
+            raise ValueError(f"Device for node {node.node_id} not found")
         return device.id
 
-    data: dict = {
+    def _get_route_statistics_dict(
+        route_statistics: RouteStatistics | None,
+    ) -> dict[str, Any] | None:
+        """Get dictionary of route statistics."""
+        if route_statistics is None:
+            return None
+        try:
+            data: dict[str, Any] = dict(route_statistics.as_dict())
+            for key in ("repeaters", "route_failed_between"):
+                if data[key]:
+                    data[key] = [_convert_node_to_device_id(node) for node in data[key]]
+        except KeyError, StopIteration, ValueError:
+            # The route may reference nodes that have been removed from the
+            # network (KeyError) or that don't have a device entry (ValueError),
+            # and async_get_config_entry_from_node raises StopIteration when
+            # the config entry is no longer loaded
+            return None
+        return data
+
+    return {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
@@ -2846,20 +2950,9 @@ def _get_node_statistics_dict(
         "timeout_response": statistics.timeout_response,
         "rtt": statistics.rtt,
         "rssi": statistics.rssi,
-        "lwr": statistics.lwr.as_dict() if statistics.lwr else None,
-        "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
+        "lwr": _get_route_statistics_dict(statistics.lwr),
+        "nlwr": _get_route_statistics_dict(statistics.nlwr),
     }
-    for key in ("lwr", "nlwr"):
-        if not data[key]:
-            continue
-        for key_2 in ("repeaters", "route_failed_between"):
-            if not data[key][key_2]:
-                continue
-            data[key][key_2] = [
-                _convert_node_to_device_id(node) for node in data[key][key_2]
-            ]
-
-    return data
 
 
 @websocket_api.require_admin
@@ -2910,7 +3003,7 @@ async def websocket_subscribe_node_statistics(
             {
                 "event": "statistics updated",
                 "source": "node",
-                "nodeId": node.node_id,
+                "node_id": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
             },
         )

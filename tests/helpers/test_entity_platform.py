@@ -1531,7 +1531,7 @@ async def test_device_info_called(
 async def test_device_info_not_overrides(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test device info is forwarded correctly."""
+    """Test re-registering a device does not override existing values."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -1556,9 +1556,6 @@ async def test_device_info_not_overrides(
                     unique_id="qwer",
                     device_info={
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
-                        "default_name": "default name 1",
-                        "default_model": "default model 1",
-                        "default_manufacturer": "default manufacturer 1",
                     },
                 )
             ]
@@ -2232,7 +2229,7 @@ async def test_invalid_entity_id(
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
-    entity2 = MockEntity(entity_id="valid.entity_id")
+    entity2 = MockEntity(entity_id="test_domain.valid_entity_id")
     await platform.async_add_entities(
         [entity, entity2], update_before_add=update_before_add
     )
@@ -2270,6 +2267,86 @@ async def test_invalid_entity_id_report_usage(
     # Ensure the entity was still added
     assert entity.hass is not None
     assert entity.platform is not None
+
+
+@pytest.mark.parametrize("update_before_add", [False, True])
+async def test_add_entity_unexpected_error_is_cleaned_up(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    update_before_add: bool,
+) -> None:
+    """Test an entity is aborted if an unexpected error occurs while adding it.
+
+    An unexpected exception must not leave the entity stuck mid-add; the
+    platform aborts it so its references to hass and the platform are released.
+    """
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="unique", entity_id="test_domain.mock")
+
+    with patch.object(
+        er.EntityRegistry, "async_get_or_create", side_effect=RuntimeError("boom")
+    ):
+        await platform.async_add_entities([entity], update_before_add=update_before_add)
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert (
+        "Error adding entity test_domain.mock for domain test_domain "
+        "with platform test_platform" in caplog.text
+    )
+
+
+async def test_add_entity_device_info_bad_key_is_cleaned_up(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity is aborted if its device info has an unexpected key.
+
+    The unexpected key raises a TypeError when the device info is passed as
+    keyword arguments to the device registry.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(hass, platform_name=config_entry.domain)
+    platform.config_entry = config_entry
+    entity = MockEntity(
+        unique_id="unique",
+        device_info={"identifiers": {("test", "dev1")}, "bogus_key": "boom"},
+    )
+
+    await platform.async_add_entities([entity])
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert not device_registry.devices
+    assert "Not adding entity, error adding device" in caplog.text
+    assert "bogus_key" in caplog.text
+
+
+async def test_add_entity_registry_error_is_cleaned_up(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity is aborted if registering it in the entity registry raises."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="unique", entity_id="test_domain.mock")
+
+    with patch.object(
+        er.EntityRegistry,
+        "async_get_or_create",
+        side_effect=HomeAssistantError("boom"),
+    ):
+        await platform.async_add_entities([entity])
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert (
+        "Not adding entity test_domain.mock, entity registry error: boom" in caplog.text
+    )
 
 
 async def test_wrong_domain_entity_id_report_usage(
@@ -2734,8 +2811,8 @@ async def test_device_name_defaulting_config_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_title: str,
-    entity_device_name: str,
-    entity_device_default_name: str,
+    entity_device_name: str | None,
+    entity_device_default_name: str | None,
     expected_device_name: str,
 ) -> None:
     """Test setting the device name based on input info."""
@@ -2767,8 +2844,11 @@ async def test_device_name_defaulting_config_entry(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert await entity_platform.async_setup_entry(config_entry)
-    await hass.async_block_till_done()
+    # `default_name` is deprecated in the device registry; suppress the deprecation
+    # report so it does not raise when the entity is added.
+    with patch.object(dr, "report_usage"):
+        assert await entity_platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, "1234"), config_entry.entry_id
@@ -2783,16 +2863,6 @@ async def test_device_name_defaulting_config_entry(
         # No identifiers
         ({}, 1),  # Empty device info does not prevent the entity from being created
         ({"name": "bla"}, 0),
-        ({"default_name": "bla"}, 0),
-        # Match multiple types
-        (
-            {
-                "identifiers": {("hue", "1234")},
-                "name": "bla",
-                "default_name": "yo",
-            },
-            0,
-        ),
     ],
 )
 async def test_device_type_error_checking(
@@ -2952,3 +3022,207 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+async def test_device_info_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a child device info creates a child device and binds the entity."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    has_entity_name=True,
+                    name="Power",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
+                        "name": "Outlet 1",
+                        "parent_device_id": parent.id,
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (config_entry.domain, "strip_outlet_1"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.parent_device_id == parent.id
+    assert child_device.name == "Outlet 1"
+
+    entity_id = entity_registry.async_get_entity_id(
+        "test_domain", config_entry.domain, "power"
+    )
+    # The child device's name is the device part of the generated entity id
+    assert entity_id == "test_domain.outlet_1_power"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == child_device.id
+
+    # The child device's name is the device part of the entity name
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Outlet 1 Power"
+
+
+async def test_device_info_child_device_invalid(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity with an invalid child device info is not added."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
+                        "name": "Outlet 1",
+                        "parent_device_id": "nonexistent-device-id",
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids()
+    assert not device_registry.child_devices
+    assert "Not adding entity, error adding device" in caplog.text
+
+
+async def test_device_info_parent_device_id_routing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test parent_device_id in device info routes to a child or a main device.
+
+    A device info carrying a parent_device_id creates a child device, while one
+    without a parent_device_id creates a main device.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="child",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "child")},
+                        "name": "Child",
+                        "parent_device_id": parent.id,
+                    },
+                ),
+                MockEntity(
+                    unique_id="main",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "main")},
+                        "name": "Main",
+                    },
+                ),
+                MockEntity(
+                    unique_id="main_explicit_none",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "main_none")},
+                        "name": "Main explicit none",
+                        "parent_device_id": None,
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    # A parent_device_id routes to a child device, not a main device
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (config_entry.domain, "child"), config_entry.entry_id
+    )
+    assert isinstance(child_device, dr.ChildDeviceEntry)
+    assert child_device.parent_device_id == parent.id
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (config_entry.domain, "child"), config_entry.entry_id
+        )
+        is None
+    )
+
+    # A device info without a parent_device_id routes to a main device, not a child
+    main_device = device_registry.async_get_device_by_identifier(
+        (config_entry.domain, "main"), config_entry.entry_id
+    )
+    assert isinstance(main_device, dr.DeviceEntry)
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (config_entry.domain, "main"), config_entry.entry_id
+        )
+        is None
+    )
+
+    # An explicit parent_device_id=None routes to a main device, not a child
+    main_none_device = device_registry.async_get_device_by_identifier(
+        (config_entry.domain, "main_none"), config_entry.entry_id
+    )
+    assert isinstance(main_none_device, dr.DeviceEntry)
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (config_entry.domain, "main_none"), config_entry.entry_id
+        )
+        is None
+    )

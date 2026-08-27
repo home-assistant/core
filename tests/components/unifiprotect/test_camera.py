@@ -1,5 +1,6 @@
 """Test the UniFi Protect camera platform."""
 
+from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -436,16 +437,21 @@ async def test_public_only_camera(
     # diagnostics have no public equivalent and degrade to None
     assert state.attributes["fps"] is None
 
-    # device identity degrades to name-only; the NVR link is omitted (resolving
-    # the NVR identity publicly is wired with the config-mode setup)
+    # device identity degrades to name-only, but the NVR link still resolves
+    # from the public bootstrap
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, public.mac), ufp.entry.entry_id
     )
     assert device is not None
-    assert device.via_device_id is None
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ufp.api.public_bootstrap.nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+    assert device.via_device_id == nvr_device.id
     assert device.name == camera.display_name
     assert device.model == camera.type
+    assert device.model_id == camera.type
 
     assert (
         await async_get_stream_source(hass, entity_id)
@@ -1091,3 +1097,40 @@ async def test_unadopted_camera_not_enumerated_from_public_frame(
 
     # still excluded, exactly like the startup enumeration
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+
+async def test_public_only_camera_end_to_end(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry with a camera in the bootstrap creates a working entity.
+
+    Exercises the real public-only setup path (not the generic ``ufp`` fixture
+    used by the other tests here), proving cameras and the alarm panel coexist
+    under ``PUBLIC_ONLY_PLATFORMS``.
+    """
+    ufp_public_only.api.base_url = "https://1.1.1.1"
+    # The stream-building test helper reads the private ``rtsps_url`` property,
+    # which needs a client with a bootstrap; keep that off the public client.
+    channel_api = Mock()
+    for channel in camera.channels:
+        channel._api = channel_api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    ufp_public_only.api.public_bootstrap.cameras = {camera.id: public}
+    ufp_public_only.api.get_public_api_camera_snapshot = AsyncMock()
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    high_id = f"camera.{camera.name}_high_resolution_channel".replace(" ", "_").lower()
+    state = hass.states.get(high_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert (
+        await async_get_stream_source(hass, high_id)
+        == camera.channels[0].rtsps_no_srtp_url
+    )
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1

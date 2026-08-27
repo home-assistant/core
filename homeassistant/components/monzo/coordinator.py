@@ -4,21 +4,23 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from pprint import pformat
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .webhook import MonzoWebhookManager
 
-type MonzoConfigEntry = ConfigEntry[MonzoCoordinator]
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -70,7 +72,32 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                 message += " Enabling debug logging for details."
             raise UpdateFailed(message) from err
 
-        return MonzoData(
+        data = MonzoData(
             accounts={account["id"]: account for account in accounts},
             pots={pot["id"]: pot for pot in pots},
         )
+        current_resource_ids = data.accounts.keys() | data.pots.keys()
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            resource_ids = {
+                identifier[1]
+                for identifier in device.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if resource_ids and resource_ids.isdisjoint(current_resource_ids):
+                device_registry.async_remove_device(device.id)
+
+        return data
+
+
+@dataclass
+class MonzoRuntimeData:
+    """Runtime data for a Monzo config entry."""
+
+    coordinator: MonzoCoordinator
+    webhook_manager: MonzoWebhookManager
+
+
+type MonzoConfigEntry = ConfigEntry[MonzoRuntimeData]

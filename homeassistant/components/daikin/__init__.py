@@ -127,16 +127,16 @@ async def async_migrate_unique_id(
     ):
         for connection in device_entry.connections:
             if connection[1] == old_unique_id:
-                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
+                mac_connection = {(CONNECTION_NETWORK_MAC, new_mac)}
 
                 _LOGGER.debug(
                     "Migrating device %s connections to %s",
                     device_entry.name,
-                    new_connections,
+                    mac_connection,
                 )
                 dev_reg.async_update_device(
                     device_entry.id,
-                    merge_connections=new_connections,
+                    new_connections=device_entry.connections | mac_connection,
                 )
 
         if device_entry.name is None:

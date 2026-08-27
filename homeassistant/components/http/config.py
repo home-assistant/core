@@ -150,10 +150,8 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [_ip_network_str]
-        ),
+        vol.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
+        vol.Optional(CONF_TRUSTED_PROXIES): vol.All(cv.ensure_list, [_ip_network_str]),
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
