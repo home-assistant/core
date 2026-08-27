@@ -1,6 +1,7 @@
 """Tests for the Model Context Protocol component."""
 
 import re
+import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -705,3 +706,31 @@ async def test_tool_call_http_error(
             ),
             create_llm_context(),
         )
+
+
+async def test_sse_client_does_not_build_ssl_context(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+) -> None:
+    """Test the SSE transport does not load certificates in the event loop."""
+    http_405 = httpx.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx.Response(405)
+    )
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Method not allowed", [http_405]
+    )
+    mock_sse_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    client_factory = mock_sse_client.call_args.kwargs["httpx_client_factory"]
+    with patch.object(ssl.SSLContext, "load_verify_locations") as mock_load_certs:
+        client = client_factory(headers={}, timeout=httpx.Timeout(5))
+
+    assert not mock_load_certs.called
+    await client.aclose()

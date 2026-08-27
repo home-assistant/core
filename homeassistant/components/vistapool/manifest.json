@@ -13,5 +13,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aioaquarite"],
   "quality_scale": "bronze",
-  "requirements": ["aioaquarite==0.8.0"]
+  "requirements": ["aioaquarite==0.9.0"]
 }

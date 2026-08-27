@@ -26,6 +26,8 @@ EVENT_CLOUD_EVENT = "cloud_event"
 
 REQUEST_TIMEOUT = 10
 
+PREVIEW_FEATURE_STT_V2 = "stt_v2"
+
 PREF_ENABLE_ALEXA = "alexa_enabled"
 PREF_ENABLE_GOOGLE = "google_enabled"
 PREF_ENABLE_REMOTE = "remote_enabled"
