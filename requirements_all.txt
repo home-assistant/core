@@ -1100,7 +1100,7 @@ gassist-text==0.0.14
 gatus-api==1.2.0
 
 # homeassistant.components.conversation
-gazetteer-matcher==1.0.0
+gazetteer-matcher==1.1.0
 
 # homeassistant.components.google
 gcal-sync==9.1.0

@@ -78,6 +78,7 @@ from .const import (
 from .entity import ConversationEntity
 from .gazetteer import (
     GazetteerFallback,
+    async_refers_back,
     async_refusal,
     async_targets_from_intent,
     join_speech,
@@ -746,12 +747,13 @@ class DefaultAgent(ConversationEntity):
                 interpretation.rejection_code,
                 interpretation.reason,
             )
-            if hassil_result is not None:
-                # hassil got far enough to say something specific about what was wrong.
-                return None
-
             refusal = async_refusal(interpretation)
             if refusal is None:
+                return None
+
+            if hassil_result is not None and not async_refers_back(interpretation):
+                # hassil got far enough to say something specific about what was wrong,
+                # except for a pronoun, which it reads as the name of a device.
                 return None
 
             return _make_error_result(

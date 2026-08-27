@@ -227,8 +227,9 @@ async def test_not_used_for_other_languages(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize("text", ["close them", "close them again", "close it now"])
 async def test_follow_up_pronoun_reuses_the_previous_target(
-    hass: HomeAssistant,
+    hass: HomeAssistant, text: str
 ) -> None:
     """Test "them" refers to what the last successful turn targeted."""
     async_mock_service(hass, "cover", "open_cover")
@@ -240,12 +241,129 @@ async def test_follow_up_pronoun_reuses_the_previous_target(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     result = await conversation.async_converse(
-        hass, "close them", result.conversation_id, Context(), None
+        hass, text, result.conversation_id, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(close_cover) == 1
     assert close_cover[0].data["entity_id"] == BEDROOM_BLINDS
+
+
+@pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("turn them back on", "Sorry, I'm not sure what them refers to."),
+        ("turn it off again", "Sorry, I'm not sure what it refers to."),
+    ],
+)
+async def test_an_unplaceable_pronoun_explains_itself(
+    hass: HomeAssistant, text: str, expected: str
+) -> None:
+    """Test a follow-up with nothing behind it is answered about the pronoun.
+
+    hassil reads "them back" as the name of a device and reports one nobody named.
+    """
+    result = await conversation.async_converse(hass, text, None, Context(), None)
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.speech["plain"]["speech"] == expected
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_pronoun_refused_over_the_action_names_the_target(
+    hass: HomeAssistant,
+) -> None:
+    """Test an action the antecedent cannot take is refused by naming it."""
+    async_mock_service(hass, "light", "turn_on")
+
+    result = await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "open them again", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I can't open the lights in Kitchen; that action doesn't apply."
+    )
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_them_reaches_every_target_a_coordinated_command_named(
+    hass: HomeAssistant,
+) -> None:
+    """Test "them" after two commands in one sentence acts on both targets."""
+    async_mock_service(hass, "cover", "open_cover")
+    close_cover = async_mock_service(hass, "cover", "close_cover")
+
+    result = await conversation.async_converse(
+        hass, "open the garage door and side window", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "close them", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert [call.data["entity_id"] for call in close_cover] == [
+        GARAGE_DOOR,
+        GARAGE_SHUTTERS,
+    ]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_it_is_refused_after_a_coordinated_command(hass: HomeAssistant) -> None:
+    """Test "it" names one thing, and two were named, so it picks out nothing."""
+    async_mock_service(hass, "cover", "open_cover")
+    close_cover = async_mock_service(hass, "cover", "close_cover")
+
+    result = await conversation.async_converse(
+        hass, "open the garage door and side window", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "close it", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, it could refer to more than one previous target."
+    )
+    assert not close_cover
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_them_acts_on_every_target_or_on_none(hass: HomeAssistant) -> None:
+    """Test one target the action cannot apply to holds back the rest."""
+    async_mock_service(hass, "light", "turn_off")
+    open_cover = async_mock_service(hass, "cover", "open_cover")
+
+    result = await conversation.async_converse(
+        hass,
+        "switch off the kichen lights and open the bedrom blinds",
+        None,
+        Context(),
+        None,
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    open_cover.clear()
+
+    result = await conversation.async_converse(
+        hass, "open them", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    # The blinds could have been opened, but half a command is worse than none.
+    assert not open_cover
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -532,8 +650,25 @@ async def test_a_custom_sentence_still_leaves_an_antecedent(
             "Hello from Home Assistant. Opening.",
         ),
         (["Opening", "", "  "], "Opening."),
+        (
+            ["Turned off the light", "Turned off the light"],
+            "Turned off the light.",
+        ),
+        (["Turned off the light", "Turned off the light."], "Turned off the light."),
+        (
+            ["Turned off the light", "Opening", "Turned off the light"],
+            "Turned off the light. Opening.",
+        ),
     ],
-    ids=["two_acknowledgements", "mixed_with_a_query", "already_punctuated", "empties"],
+    ids=[
+        "two_acknowledgements",
+        "mixed_with_a_query",
+        "already_punctuated",
+        "empties",
+        "repeated",
+        "repeated_with_punctuation",
+        "repeated_apart",
+    ],
 )
 def test_join_speech(parts: list[str], expected: str) -> None:
     """Test the frames of one command are spoken as sentences, not one clause."""
