@@ -132,9 +132,9 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
             serial, error_key = await _async_probe(merged)
             if error_key:
                 errors[CONF_HOST] = error_key
-            elif entry.unique_id and serial != entry.unique_id:
-                errors[CONF_HOST] = "serial_mismatch"
             else:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch(reason="serial_mismatch")
                 return self.async_update_reload_and_abort(entry, data=merged)
 
         return self.async_show_form(

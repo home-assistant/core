@@ -187,8 +187,8 @@ async def test_reconfigure_flow_serial_mismatch(
         result["flow_id"],
         {**USER_INPUT, CONF_HOST: "192.0.2.50"},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "serial_mismatch"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "serial_mismatch"
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
