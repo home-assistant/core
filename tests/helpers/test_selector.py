@@ -1903,7 +1903,9 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
         {"image_upload": True, "accept": []},
     ],
 )
-def test_media_selector_schema_error(schema) -> None:
+def test_media_selector_schema_error(
+    schema: dict[str, bool | list[str]],
+) -> None:
     """Test media selector with invalid config."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"media": schema})
