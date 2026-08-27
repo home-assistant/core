@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -37,7 +38,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -89,6 +90,10 @@ COVER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=CoverEntityStateAttribute, device_class=True
+)
+
 COVER_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -98,7 +103,9 @@ COVER_YAML_SCHEMA = vol.All(
     .extend(COVER_COMMON_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA)
     .extend(
-        make_template_entity_common_modern_schema(COVER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            COVER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+        ).schema
     ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
@@ -175,14 +182,17 @@ class CoverExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored cover state from a dict."""
-        return cls(
-            current_cover_position=restored["current_cover_position"],
-            current_cover_tilt_position=restored["current_cover_tilt_position"],
-            is_opening=restored["is_opening"],
-            is_closing=restored["is_closing"],
-        )
+        try:
+            return cls(
+                current_cover_position=restored["current_cover_position"],
+                current_cover_tilt_position=restored["current_cover_tilt_position"],
+                is_opening=restored["is_opening"],
+                is_closing=restored["is_closing"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
@@ -194,6 +204,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = CoverExtraStoredData
     _restore_state_properties = ("_attr_current_cover_position",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -205,7 +216,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
 
         self.setup_state_template(
             "_attr_current_cover_position",
-            template_validators.strenum(
+            tcv.strenum(
                 self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
             ),
             self._update_cover_state,
@@ -213,12 +224,12 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
         self.setup_template(
             CONF_POSITION,
             "_attr_current_cover_position",
-            template_validators.number(self, CONF_POSITION, 0, 100),
+            tcv.number(self, CONF_POSITION, 0, 100),
         )
         self.setup_template(
             CONF_TILT,
             "_attr_current_cover_tilt_position",
-            template_validators.number(self, CONF_TILT, 0, 100),
+            tcv.number(self, CONF_TILT, 0, 100),
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 

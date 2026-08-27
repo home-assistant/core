@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
     from homeassistant.auth.models import User
 
-    from .config import HassioConfig
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
@@ -91,6 +90,7 @@ EVENT_SUPPORTED_CHANGED = "supported_changed"
 EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
 EVENT_JOB = "job"
+EVENT_STORE_RELOADED = "store_reloaded"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
@@ -110,7 +110,6 @@ JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
-DATA_CONFIG_STORE: HassKey[HassioConfig] = HassKey("hassio_config_store")
 DATA_CORE_INFO: HassKey[HomeAssistantInfo] = HassKey("hassio_core_info")
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO: HassKey[HostInfo] = HassKey("hassio_host_info")
@@ -156,6 +155,18 @@ DATA_KEY_MOUNTS = "mounts"
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
+ENTRY_DATA_USER = "user"
+
+OPTION_ADD_ON_BACKUP_BEFORE_UPDATE = "add_on_backup_before_update"
+OPTION_ADD_ON_BACKUP_RETAIN_COPIES = "add_on_backup_retain_copies"
+OPTION_CORE_BACKUP_BEFORE_UPDATE = "core_backup_before_update"
+
+DEFAULT_UPDATE_OPTIONS = {
+    OPTION_ADD_ON_BACKUP_BEFORE_UPDATE: False,
+    OPTION_ADD_ON_BACKUP_RETAIN_COPIES: 1,
+    OPTION_CORE_BACKUP_BEFORE_UPDATE: False,
+}
+
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
 PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
@@ -163,8 +174,10 @@ PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 PLACEHOLDER_KEY_FREE_SPACE = "free_space"
+PLACEHOLDER_KEY_PORT = "port"
 PLACEHOLDER_KEY_REASON = "reason"
 
+ISSUE_KEY_ADDON_APP_PORT_CONFLICT = "issue_addon_app_port_conflict"
 ISSUE_KEY_ADDON_BOOT_FAIL = "issue_addon_boot_fail"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"

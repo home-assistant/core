@@ -8,6 +8,11 @@
         "default": "mdi:av-timer"
       }
     },
+    "number": {
+      "breeze_intensity": {
+        "default": "mdi:weather-windy"
+      }
+    },
     "sensor": {
       "fan_timer_remaining_time": {
         "default": "mdi:timer-outline"

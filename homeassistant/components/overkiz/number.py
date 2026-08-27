@@ -222,6 +222,9 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,

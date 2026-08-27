@@ -18,6 +18,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import (
+    set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
     trigger_health_update,
@@ -61,6 +62,28 @@ async def test_state_update(
     )
 
     assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "20"
+
+
+@pytest.mark.parametrize("device_fixture", ["multipurpose_sensor"])
+async def test_three_axis_none_value(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test three axis coordinate sensors handle a None value."""
+    set_attribute_value(devices, Capability.THREE_AXIS, Attribute.THREE_AXIS, None)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.theater_deck_door_x_coordinate").state == (
+        STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.theater_deck_door_y_coordinate").state == (
+        STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.theater_deck_door_z_coordinate").state == (
+        STATE_UNKNOWN
+    )
 
 
 @pytest.mark.parametrize(
@@ -393,3 +416,37 @@ async def test_availability_at_start(
         hass.states.get("sensor.theater_ac_office_granit_temperature").state
         == STATE_UNAVAILABLE
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_vc_stick_01001"])
+@pytest.mark.parametrize(
+    ("reported_state", "expected_state"),
+    [
+        ("usingVacuum", "using_vacuum"),
+        ("emptyingDustbin", "emptying_dustbin"),
+        ("UVCleaning", "uv_cleaning"),
+        ("UVPaused", "uv_paused"),
+        ("ready", "ready"),
+    ],
+)
+async def test_stick_cleaner_operating_state_is_mapped(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reported_state: str,
+    expected_state: str,
+) -> None:
+    """Test the stick cleaner states are mapped onto the entity options."""
+    await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "e1f93c0c-6fe0-c65a-a314-c8f7b163c86b",
+        Capability.SAMSUNG_CE_STICK_CLEANER_STATUS,
+        Attribute.OPERATING_STATE,
+        reported_state,
+    )
+
+    assert (state := hass.states.get("sensor.stick_vacuum"))
+    assert state.state == expected_state
