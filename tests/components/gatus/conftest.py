@@ -46,6 +46,7 @@ def mock_gatus_client() -> Generator[AsyncMock]:
                             success=True,
                             status=200,
                             duration=23123100,
+                            certificate_expiration=7776000000000000,
                             dns_rcode="NOERROR",
                         )
                     ],

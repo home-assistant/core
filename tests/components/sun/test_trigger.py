@@ -1,14 +1,17 @@
 """The tests for the sun automation."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 from typing import Any
 
+import astral
 from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import automation, sun
+from homeassistant.components.sun.trigger import _next_polar_transition
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -625,6 +628,298 @@ async def test_solar_noon_midnight_in_polar_regions(
     assert len(service_calls) == 1
 
 
+# --- Golden and blue hour triggers -------------------------------------------
+
+# For each golden/blue hour trigger, the (astral event, depression) of its
+# morning (rising, found as a "dawn") and evening (descending, a "dusk") boundary
+# crossing. depression is the negated boundary elevation astral expects.
+_GOLDEN_BLUE_CROSSINGS = {
+    ("sun.golden_hour_started", "morning"): ("dawn", 4),
+    ("sun.golden_hour_started", "evening"): ("dusk", -6),
+    ("sun.golden_hour_ended", "morning"): ("dawn", -6),
+    ("sun.golden_hour_ended", "evening"): ("dusk", 4),
+    ("sun.blue_hour_started", "morning"): ("dawn", 6),
+    ("sun.blue_hour_started", "evening"): ("dusk", 4),
+    ("sun.blue_hour_ended", "morning"): ("dawn", 4),
+    ("sun.blue_hour_ended", "evening"): ("dusk", 6),
+}
+
+
+@pytest.mark.parametrize(("trigger_key", "period"), list(_GOLDEN_BLUE_CROSSINGS))
+async def test_golden_blue_hour_trigger_fires(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    period: str,
+) -> None:
+    """Test the golden/blue hour triggers fire at the boundary for each period."""
+    event, depression = _GOLDEN_BLUE_CROSSINGS[trigger_key, period]
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(
+            hass,
+            {"platform": trigger_key, "options": {"period": period}},
+            {"period": "{{ trigger.period }}"},
+        )
+        expected = get_observer_astral_event_next(
+            get_astral_observer(hass), event, _TEST_DATETIME, depression=depression
+        )
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["period"] == period
+
+
+async def test_golden_blue_hour_trigger_any_fires_at_both_crossings(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that with period ``any`` the trigger fires at both daily crossings."""
+    with freeze_time(_TEST_DATETIME) as freezer:
+        await _arm_automation(
+            hass,
+            {"platform": "sun.golden_hour_started", "options": {"period": "any"}},
+            {},
+        )
+        observer = get_astral_observer(hass)
+        # The morning (rising to -4°) and evening (descending to 6°) crossings.
+        morning = get_observer_astral_event_next(
+            observer, "dawn", _TEST_DATETIME, depression=4
+        )
+        evening = get_observer_astral_event_next(
+            observer, "dusk", _TEST_DATETIME, depression=-6
+        )
+        first, second = sorted((morning, evening))
+
+        freezer.move_to(first + timedelta(seconds=1))
+        async_fire_time_changed(hass, first + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert len(service_calls) == 1
+
+        freezer.move_to(second + timedelta(seconds=1))
+        async_fire_time_changed(hass, second + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert len(service_calls) == 2
+
+
+async def test_golden_hour_defaults_to_any(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the golden hour trigger defaults to the ``any`` period."""
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(
+            hass,
+            {"platform": "sun.golden_hour_started"},
+            {"period": "{{ trigger.period }}"},
+        )
+        # The evening crossing (descending to 6°) is the next one after the anchor.
+        evening = get_observer_astral_event_next(
+            get_astral_observer(hass), "dusk", _TEST_DATETIME, depression=-6
+        )
+
+        async_fire_time_changed(hass, evening + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["period"] == "any"
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "period", "event", "depression"),
+    [
+        ("sun.golden_hour_started", "morning", "dawn", 4),
+        ("sun.golden_hour_ended", "evening", "dusk", 4),
+    ],
+)
+@pytest.mark.parametrize(
+    ("offset_type", "sign"),
+    [("before", -1), ("after", 1)],
+    ids=["before", "after"],
+)
+async def test_golden_blue_hour_trigger_offset(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    period: str,
+    event: str,
+    depression: int,
+    offset_type: str,
+    sign: int,
+) -> None:
+    """Test the golden/blue hour triggers apply a before/after time offset."""
+    offset = timedelta(hours=1)
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(
+            hass,
+            {
+                "platform": trigger_key,
+                "options": {
+                    "period": period,
+                    "offset": {"hours": 1},
+                    "offset_type": offset_type,
+                },
+            },
+            {},
+        )
+        observer = get_astral_observer(hass)
+        expected = get_observer_astral_event_next(
+            observer, event, _TEST_DATETIME, sign * offset, depression=depression
+        )
+        # The offset shifts the fire time away from the bare crossing time.
+        assert expected != get_observer_astral_event_next(
+            observer, event, _TEST_DATETIME, depression=depression
+        )
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+# --- Midnight sun and polar night triggers -----------------------------------
+
+# Precomputed solar-midnight/noon horizon crossings at Svalbard, serving as an
+# independent oracle for the crossing scheduler (truncated to whole seconds).
+_POLAR_TRIGGER_CASES = [
+    (
+        "sun.midnight_sun_started",
+        datetime(2015, 4, 1, 12, tzinfo=dt_util.UTC),
+        datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+    ),
+    (
+        "sun.midnight_sun_ended",
+        datetime(2015, 8, 1, 12, tzinfo=dt_util.UTC),
+        datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+    ),
+    (
+        "sun.polar_night_started",
+        datetime(2015, 10, 1, 12, tzinfo=dt_util.UTC),
+        datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+    ),
+    (
+        "sun.polar_night_ended",
+        datetime(2015, 2, 1, 12, tzinfo=dt_util.UTC),
+        datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+    ),
+]
+
+
+@pytest.mark.parametrize(("trigger_key", "now", "expected"), _POLAR_TRIGGER_CASES)
+async def test_midnight_sun_polar_night_trigger_fires(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    now: datetime,
+    expected: datetime,
+) -> None:
+    """Test the midnight sun/polar night triggers fire at the horizon crossing."""
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
+
+    with freeze_time(now):
+        await _arm_automation(hass, {"platform": trigger_key}, {})
+
+        # Two seconds' slack absorbs the sub-second part dropped from the oracle.
+        async_fire_time_changed(hass, expected + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_midnight_sun_trigger_stays_unscheduled_outside_polar(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a midnight sun trigger arms without error and never fires off the poles.
+
+    The default test location (San Diego) never has a midnight sun, so the trigger
+    is left unscheduled rather than raising when the automation is set up.
+    """
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(hass, {"platform": "sun.midnight_sun_started"}, {})
+
+        async_fire_time_changed(hass, _TEST_DATETIME + timedelta(days=400))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 0
+
+
+async def test_midnight_sun_trigger_offset_catches_pending_crossing(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a multi-day ``after`` offset still fires for an already-passed crossing.
+
+    With an ``after`` offset the fire time trails the crossing, so when the trigger
+    is (re)armed in the window between the two, the pending crossing must still be
+    found and scheduled rather than skipped to the next year.
+    """
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
+
+    # Midnight sun starts at the 2015-04-18 22:56 solar midnight; a 3-day "after"
+    # offset pushes the fire time to 2015-04-21. now sits between the two.
+    now = datetime(2015, 4, 20, 12, tzinfo=dt_util.UTC)
+    expected = datetime(2015, 4, 21, 22, 56, 36, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        await _arm_automation(
+            hass,
+            {
+                "platform": "sun.midnight_sun_started",
+                "options": {"offset": {"days": 3}, "offset_type": "after"},
+            },
+            {},
+        )
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("latitude", "has_crossing"),
+    [
+        (32.87, False),  # San Diego, well below the polar circle
+        (60.0, False),  # below the polar circle
+        (65.0, False),  # at the short-circuit threshold, still no polar period
+        (78.22, True),  # Svalbard, deep polar
+    ],
+)
+def test_next_polar_transition_short_circuits_non_polar(
+    latitude: float, has_crossing: bool
+) -> None:
+    """Test the crossing scan is skipped where no polar period can occur.
+
+    Below the polar circles the scan can never find a crossing, so it must
+    short-circuit rather than run its ~year-long loop in the event loop.
+    """
+    observer = astral.Observer(latitude, 15.0, 0)
+    result = _next_polar_transition(
+        observer, "midnight", _TEST_DATETIME, target_above=True, offset=timedelta(0)
+    )
+    assert (result is not None) is has_crossing
+
+
+def test_next_polar_transition_large_before_offset() -> None:
+    """Test a large ``before`` offset still reaches the following annual crossing.
+
+    A negative (before) offset advances the fire time, so the nearest crossing's
+    fire can already be in the past. Anchoring the scan on ``now - offset`` (not a
+    fixed lookback) must then carry it forward to next year's crossing instead of
+    returning None and leaving the trigger unscheduled.
+    """
+    observer = astral.Observer(*_SVALBARD[:2], 0)
+    now = datetime(2015, 2, 27, 12, tzinfo=dt_util.UTC)
+    # The 2015-04-18 crossing's fire (60 days earlier) is already past, so the
+    # next fire derives from the 2016-04-17 22:56:39 solar-midnight crossing.
+    expected = datetime(2016, 2, 17, 22, 56, 39, tzinfo=dt_util.UTC)
+    result = _next_polar_transition(
+        observer, "midnight", now, target_above=True, offset=timedelta(days=-60)
+    )
+    assert result == expected
+
+
 # --- Sun elevation triggers --------------------------------------------------
 
 
@@ -690,6 +985,14 @@ async def test_elevation_crossed_threshold_trigger(
         "sun.solar_midnight",
         "sun.dawn",
         "sun.dusk",
+        "sun.golden_hour_started",
+        "sun.golden_hour_ended",
+        "sun.blue_hour_started",
+        "sun.blue_hour_ended",
+        "sun.midnight_sun_started",
+        "sun.midnight_sun_ended",
+        "sun.polar_night_started",
+        "sun.polar_night_ended",
     ],
 )
 async def test_event_trigger_options(hass: HomeAssistant, trigger_key: str) -> None:
@@ -751,3 +1054,28 @@ async def test_dawn_dusk_twilight_validation(
     else:
         with pytest.raises(vol.Invalid):
             await async_validate_trigger_config(hass, [config])
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "period", "expectation"),
+    [
+        ("sun.golden_hour_started", "any", nullcontext()),
+        ("sun.golden_hour_started", "morning", nullcontext()),
+        ("sun.golden_hour_started", "evening", nullcontext()),
+        ("sun.golden_hour_started", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.blue_hour_ended", "any", nullcontext()),
+        ("sun.blue_hour_ended", "morning", nullcontext()),
+        ("sun.blue_hour_ended", "evening", nullcontext()),
+        ("sun.blue_hour_ended", "invalid", pytest.raises(vol.Invalid)),
+    ],
+)
+async def test_golden_blue_hour_period_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    period: str,
+    expectation: AbstractContextManager,
+) -> None:
+    """Test the golden/blue hour triggers validate the period option."""
+    config = {"platform": trigger_key, "options": {"period": period}}
+    with expectation:
+        await async_validate_trigger_config(hass, [config])

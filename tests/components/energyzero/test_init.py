@@ -28,10 +28,7 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@patch(
-    "homeassistant.components.energyzero.coordinator.EnergyZero._request",
-    side_effect=EnergyZeroConnectionError,
-)
+@patch("energyzero.api.rest.RESTClient._request", side_effect=EnergyZeroConnectionError)
 async def test_config_flow_entry_not_ready(
     mock_request: MagicMock,
     hass: HomeAssistant,

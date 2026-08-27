@@ -739,6 +739,28 @@
           "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "work_mode_battery": {
+        "name": "Work mode battery",
+        "state": {
+          "always_on_custom": "Always on custom",
+          "continuous_recording": "Always on continuous recording",
+          "custom": "Custom",
+          "detection_priority": "Detection priority",
+          "extended_recording": "AI extended recording",
+          "optimal_surveillance": "Optimal surveillance",
+          "power_saving": "Power saving",
+          "pre_recording": "Always on pre-recording",
+          "smart": "Smart power"
+        }
+      },
+      "work_mode_powered": {
+        "name": "Work mode powered",
+        "state": {
+          "alarm_based": "Alarm recording",
+          "continuous": "Continuous recording",
+          "custom": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]"
+        }
       }
     },
     "sensor": {
@@ -891,6 +913,9 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
       }
     },
     "time": {
@@ -935,9 +960,6 @@
     },
     "not_supported": {
       "message": "Function not supported by this device: {err}"
-    },
-    "service_entry_ex": {
-      "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"
