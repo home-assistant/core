@@ -86,7 +86,7 @@ async def test_dali_line_status_value_update(
 ) -> None:
     """Test the Lunatone sensor value update."""
     line_id = 0
-    entity_id = f"sensor.dali_line_{line_id}_dali_line_status"
+    entity_id = f"sensor.dali_line_{line_id}_status"
 
     line_statuses = iter((LineStatus.NO_POWER, LineStatus.OK))
 

@@ -57,7 +57,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup[sensor.dali_line_0_dali_line_status-entry]
+# name: test_setup[sensor.dali_line_0_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -78,7 +78,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dali_line_0_dali_line_status',
+    'entity_id': 'sensor.dali_line_0_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,12 +86,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'DALI line status',
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'DALI line status',
+    'original_name': 'Status',
     'platform': 'lunatone',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -101,11 +101,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[sensor.dali_line_0_dali_line_status-state]
+# name: test_setup[sensor.dali_line_0_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 0 DALI line status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 0 Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low_power',
         'no_power',
@@ -114,14 +114,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dali_line_0_dali_line_status',
+    'entity_id': 'sensor.dali_line_0_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ok',
   })
 # ---
-# name: test_setup[sensor.dali_line_1_dali_line_status-entry]
+# name: test_setup[sensor.dali_line_1_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -142,7 +142,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dali_line_1_dali_line_status',
+    'entity_id': 'sensor.dali_line_1_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -150,12 +150,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'DALI line status',
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'DALI line status',
+    'original_name': 'Status',
     'platform': 'lunatone',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -165,11 +165,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[sensor.dali_line_1_dali_line_status-state]
+# name: test_setup[sensor.dali_line_1_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 1 DALI line status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 1 Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low_power',
         'no_power',
@@ -178,7 +178,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dali_line_1_dali_line_status',
+    'entity_id': 'sensor.dali_line_1_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
