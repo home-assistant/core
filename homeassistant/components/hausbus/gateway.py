@@ -1,0 +1,192 @@
+"""Representation of a Haus-Bus gateway."""
+
+import asyncio
+import logging
+from typing import TYPE_CHECKING
+from weakref import WeakKeyDictionary
+
+from pyhausbus.ABusFeature import ABusFeature
+from pyhausbus.BusDataMessage import BusDataMessage
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.Configuration import (
+    Configuration,
+)
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
+from pyhausbus.HomeServer import HomeServer
+from pyhausbus.IBusDataListener import IBusDataListener
+from pyhausbus.ObjectId import ObjectId
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import DOMAIN, NEW_CHANNEL_ADDED
+
+if TYPE_CHECKING:
+    from . import HausbusConfigEntry
+
+LOGGER = logging.getLogger(__name__)
+
+# Guards _home_server_refs below. A plain module-level lock is fine here:
+# it only ever serializes the (very short) acquire/release critical
+# section, it holds no data of its own, and unrelated hass instances
+# contending on it briefly is harmless.
+_home_server_lock = asyncio.Lock()
+
+# HomeServer is a process-wide singleton (see pyhausbus.HomeServer), not
+# something scoped to a single hass instance, and it must be reachable
+# from a config flow before any config entry - and its runtime_data -
+# exists. So its reference count is tracked here, keyed on the HomeServer
+# instance itself, rather than in hass.data. Using a WeakKeyDictionary
+# also means this needs no manual reset between tests: a mocked HomeServer
+# is a fresh object per test and simply starts out with no entry.
+_home_server_refs: WeakKeyDictionary[HomeServer, int] = WeakKeyDictionary()
+
+
+async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
+    """Acquire a reference to the shared HomeServer, creating it on first use.
+
+    Every HomeServer() call in this process returns the very same object
+    until shutdown() is called. In-progress config flows (discovering
+    devices) and the active config entry's gateway can all hold a
+    reference to it at the same time, so teardown has to be reference
+    counted here rather than triggered by whichever caller happens to
+    finish first - otherwise one flow being aborted could tear down the
+    HomeServer that another flow, or the config entry, is still using.
+
+    Always pair a call to this with async_release_home_server(), passing
+    back the exact object this returned.
+    """
+    async with _home_server_lock:
+        home_server = await hass.async_add_executor_job(HomeServer)
+        _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
+        return home_server
+
+
+async def async_release_home_server(
+    hass: HomeAssistant, home_server: HomeServer
+) -> None:
+    """Release a HomeServer reference, shutting it down once no longer used."""
+    async with _home_server_lock:
+        refcount = _home_server_refs.get(home_server, 0) - 1
+        if refcount <= 0:
+            _home_server_refs.pop(home_server, None)
+            await hass.async_add_executor_job(home_server.shutdown)
+        else:
+            _home_server_refs[home_server] = refcount
+
+
+class HausbusGateway(IBusDataListener):
+    """Manages a Haus-Bus gateway."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: HausbusConfigEntry,
+        home_server: HomeServer,
+    ) -> None:
+        """Initialize the system."""
+        self.hass = hass
+        self.config_entry = config_entry
+        self.home_server = home_server
+        self.home_server.addBusEventListener(self)
+        self.home_server.addBusDeviceListener(self)
+
+        # Prevents duplicate channels from being dispatched more than once.
+        self.registered_channels: set[int] = set()
+        self.discovery_task: asyncio.Task[None] | None = None
+
+        # Channels discovered before the cover platform has finished setup
+        # cannot be consumed by its NEW_CHANNEL_ADDED listener yet. They are
+        # buffered here and flushed by async_flush_pending_channels() once
+        # async_forward_entry_setups() returns.
+        self._platform_ready: bool = False
+        self._pending_channels: list[tuple[ABusFeature, DeviceInfo]] = []
+
+    @classmethod
+    async def async_create(
+        cls, hass: HomeAssistant, config_entry: HausbusConfigEntry
+    ) -> HausbusGateway:
+        """Create the gateway, opening the Haus-Bus network connection."""
+        home_server = await async_acquire_home_server(hass)
+        return cls(hass, config_entry, home_server)
+
+    async def start_discovery(self) -> None:
+        """Start device discovery."""
+        LOGGER.debug("Search devices")
+        await self.hass.async_add_executor_job(self.home_server.searchDevices)
+
+    def newDeviceDetected(
+        self,
+        device_id: int,
+        model_type: str | None,
+        module_id: ModuleId,
+        configuration: Configuration,
+        channels: list[ABusFeature],
+    ) -> None:
+        """Handle new discovered Haus-Bus device."""
+        LOGGER.debug(
+            "newDeviceDetected: device_id %s model_type %s module_id %s configuration %s",
+            device_id,
+            model_type,
+            module_id,
+            configuration,
+        )
+
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device_id))},
+            manufacturer="HausBus",
+            model=model_type,
+            name=f"{model_type} {device_id}",
+            sw_version=module_id.getFirmwareId().getTemplateId()
+            + " "
+            + str(module_id.getMajorRelease())
+            + " "
+            + str(module_id.getMinorRelease()),
+            hw_version=module_id.getName(),
+        )
+
+        for channel in channels:
+            object_id = channel.getObjectId()
+            if object_id not in self.registered_channels:
+                self.registered_channels.add(object_id)
+                if self._platform_ready:
+                    self.hass.loop.call_soon_threadsafe(
+                        async_dispatcher_send,
+                        self.hass,
+                        NEW_CHANNEL_ADDED,
+                        channel,
+                        device_info,
+                    )
+                else:
+                    self._pending_channels.append((channel, device_info))
+
+    async def async_flush_pending_channels(self) -> None:
+        """Mark platform as ready and dispatch channels buffered before setup.
+
+        Call this once async_forward_entry_setups() has returned so that any
+        channels discovered during platform setup are delivered to the now-
+        registered NEW_CHANNEL_ADDED listeners.
+        """
+        self._platform_ready = True
+        for channel, device_info in self._pending_channels:
+            async_dispatcher_send(self.hass, NEW_CHANNEL_ADDED, channel, device_info)
+        self._pending_channels.clear()
+
+    def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
+        """Handle Haus-Bus messages."""
+        object_id = ObjectId(busDataMessage.getSenderObjectId())
+        device_id = object_id.getDeviceId()
+        data = busDataMessage.getData()
+
+        # ignore messages from own server
+        if self.home_server.is_internal_device(device_id):
+            return
+
+        LOGGER.debug("busDataReceived: data %s from %s", data, object_id)
+
+        self.hass.loop.call_soon_threadsafe(
+            async_dispatcher_send,
+            self.hass,
+            f"hausbus_update_{object_id.getValue()}",
+            data,
+        )
