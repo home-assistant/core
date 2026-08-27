@@ -274,6 +274,7 @@ type UpdateListenerType = Callable[
 STATE_KEYS = {
     "state",
     "reason",
+    "error_reason_translation_domain",
     "error_reason_translation_key",
     "error_reason_translation_placeholders",
 }
@@ -401,6 +402,7 @@ class ConfigEntry[_DataT = Any]:
     unique_id: str | None
     state: ConfigEntryState
     reason: str | None
+    error_reason_translation_domain: str | None
     error_reason_translation_key: str | None
     error_reason_translation_placeholders: dict[str, Any] | None
     pref_disable_new_entities: bool
@@ -533,6 +535,7 @@ class ConfigEntry[_DataT = Any]:
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
+        _setter(self, "error_reason_translation_domain", None)
         _setter(self, "error_reason_translation_key", None)
         _setter(self, "error_reason_translation_placeholders", None)
 
@@ -672,6 +675,7 @@ class ConfigEntry[_DataT = Any]:
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
             "reason": self.reason,
+            "error_reason_translation_domain": self.error_reason_translation_domain,
             "error_reason_translation_key": self.error_reason_translation_key,
             "error_reason_translation_placeholders": (
                 self.error_reason_translation_placeholders
@@ -787,6 +791,7 @@ class ConfigEntry[_DataT = Any]:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
         error_reason = None
+        error_reason_translation_domain = None
         error_reason_translation_key = None
         error_reason_translation_placeholders = None
 
@@ -804,6 +809,7 @@ class ConfigEntry[_DataT = Any]:
                 result = False
         except ConfigEntryError as exc:
             error_reason = str(exc) or "Unknown fatal config entry error"
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             logger.exception(
@@ -816,6 +822,7 @@ class ConfigEntry[_DataT = Any]:
             message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             auth_message = (
@@ -831,6 +838,7 @@ class ConfigEntry[_DataT = Any]:
             self.async_start_reauth_if_available(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             self._async_set_state(
@@ -839,6 +847,7 @@ class ConfigEntry[_DataT = Any]:
                 message or None,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             )
             wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
@@ -929,6 +938,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             )
 
     @callback
@@ -1110,6 +1120,7 @@ class ConfigEntry[_DataT = Any]:
         reason: str | None,
         error_reason_translation_key: str | None = None,
         error_reason_translation_placeholders: dict[str, str] | None = None,
+        error_reason_translation_domain: str | None = None,
     ) -> None:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
@@ -1117,6 +1128,9 @@ class ConfigEntry[_DataT = Any]:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        _setter(
+            self, "error_reason_translation_domain", error_reason_translation_domain
+        )
         _setter(self, "error_reason_translation_key", error_reason_translation_key)
         _setter(
             self,
@@ -3402,12 +3416,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> ConfigFlowResult:
         """Abort the config flow."""
         result = super().async_abort(
             reason=reason,
             description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
         )
         self._async_set_next_flow_if_valid(result, next_flow)
         return result
@@ -4120,8 +4136,18 @@ class EntityRegistryDisabledHandler:
     def _async_handle_reload(self, _now: Any) -> None:
         """Handle a reload."""
         self._remove_call_later = None
-        to_reload = self.changed
+        # An entry may have been removed since the reload was scheduled. Scheduling a
+        # reload for it raises UnknownEntry, which would leave the rest of the batch
+        # unreloaded with nothing to retry it.
+        to_reload = {
+            entry_id
+            for entry_id in self.changed
+            if self.hass.config_entries.async_get_entry(entry_id) is not None
+        }
         self.changed = set()
+
+        if not to_reload:
+            return
 
         _LOGGER.info(
             (

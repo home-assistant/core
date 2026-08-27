@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_state_snapshot[ac][climate.bedroom_ac-entry]
+# name: test_climate_state_snapshot[ac][climate.air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -47,7 +47,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -65,12 +65,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
-    'translation_key': None,
+    'translation_key': 'climate',
     'unique_id': '12345678_climate',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[ac][climate.bedroom_ac-state]
+# name: test_climate_state_snapshot[ac][climate.air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50.0,
@@ -84,7 +84,7 @@
         'full',
         'auto',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -116,14 +116,14 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_climate_state_snapshot[c3][climate.bedroom_ac_zone_1_thermostat-entry]
+# name: test_climate_state_snapshot[c3][climate.heat_pump_wi_fi_controller_zone_1_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -147,7 +147,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_zone_1_thermostat',
+    'entity_id': 'climate.heat_pump_wi_fi_controller_zone_1_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -170,11 +170,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[c3][climate.bedroom_ac_zone_1_thermostat-state]
+# name: test_climate_state_snapshot[c3][climate.heat_pump_wi_fi_controller_zone_1_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Zone 1 thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Zone 1 thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -188,14 +188,14 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_zone_1_thermostat',
+    'entity_id': 'climate.heat_pump_wi_fi_controller_zone_1_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_climate_state_snapshot[c3][climate.bedroom_ac_zone_2_thermostat-entry]
+# name: test_climate_state_snapshot[c3][climate.heat_pump_wi_fi_controller_zone_2_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -219,7 +219,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_zone_2_thermostat',
+    'entity_id': 'climate.heat_pump_wi_fi_controller_zone_2_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -242,11 +242,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[c3][climate.bedroom_ac_zone_2_thermostat-state]
+# name: test_climate_state_snapshot[c3][climate.heat_pump_wi_fi_controller_zone_2_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Zone 2 thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Zone 2 thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -260,14 +260,14 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 23.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_zone_2_thermostat',
+    'entity_id': 'climate.heat_pump_wi_fi_controller_zone_2_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_climate_state_snapshot[cc][climate.bedroom_ac-entry]
+# name: test_climate_state_snapshot[cc][climate.mdv_wi_fi_controller-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -308,7 +308,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.mdv_wi_fi_controller',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -326,12 +326,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
-    'translation_key': None,
+    'translation_key': 'climate',
     'unique_id': '12345678_climate',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[cc][climate.bedroom_ac-state]
+# name: test_climate_state_snapshot[cc][climate.mdv_wi_fi_controller-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
@@ -342,7 +342,7 @@
         'High',
         'Auto',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MDV Wi-Fi Controller',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -369,14 +369,14 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.mdv_wi_fi_controller',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_climate_state_snapshot[cf][climate.bedroom_ac-entry]
+# name: test_climate_state_snapshot[cf][climate.heat_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -400,7 +400,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.heat_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -418,16 +418,16 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
-    'translation_key': None,
+    'translation_key': 'climate',
     'unique_id': '12345678_climate',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[cf][climate.bedroom_ac-state]
+# name: test_climate_state_snapshot[cf][climate.heat_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -441,14 +441,14 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.heat_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
 # ---
-# name: test_climate_state_snapshot[fb][climate.bedroom_ac-entry]
+# name: test_climate_state_snapshot[fb][climate.electric_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -481,7 +481,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.electric_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -499,16 +499,16 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': None,
+    'translation_key': 'climate',
     'unique_id': '12345678_climate',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[fb][climate.bedroom_ac-state]
+# name: test_climate_state_snapshot[fb][climate.electric_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Heater',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -532,7 +532,7 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac',
+    'entity_id': 'climate.electric_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

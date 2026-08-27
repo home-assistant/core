@@ -26,9 +26,45 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "spa_connected": {
+        "name": "Spa connected"
+      }
+    },
+    "light": {
+      "light_zone": {
+        "name": "Light zone {zone}"
+      }
+    },
     "number": {
       "target_temperature": {
         "name": "Target temperature"
+      }
+    },
+    "sensor": {
+      "control_box_version": {
+        "name": "Control box version"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "fwss_version": {
+        "name": "FreshWater Salt System version"
+      },
+      "water_care_10_day_timer": {
+        "name": "Salt 10-day check timer"
+      },
+      "water_care_120_day_timer": {
+        "name": "Salt cartridge age"
+      },
+      "water_care_salt_value": {
+        "name": "Salt value"
+      },
+      "wifi_dongle_version": {
+        "name": "Wi-Fi dongle version"
       }
     }
   },
