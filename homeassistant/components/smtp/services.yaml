@@ -57,3 +57,4 @@ send_message:
           mode: dropdown
           translation_key: "priority"
           sort: false
+      example: highest
