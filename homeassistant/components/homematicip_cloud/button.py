@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_door_opener_authorization_channel
+from .helpers import get_door_opener_authorization_channel, handle_errors
 
 DOOR_OPENER_MODELS = {"HmIP-FLC", "HmIP-FDC"}
 
@@ -68,6 +68,7 @@ class HomematicipDoorOpenerButton(HomematicipGenericEntity, ButtonEntity):
         self._attr_icon = "mdi:door-open"
         self._auth_channel = auth_channel
 
+    @handle_errors
     @override
     async def async_press(self) -> None:
         """Pull the latch via the access-authorization channel.
@@ -75,4 +76,4 @@ class HomematicipDoorOpenerButton(HomematicipGenericEntity, ButtonEntity):
         This is the only path non-admin clients may use; the door-switch
         channel rejects them with CLIENT_ACCESS_DENIED.
         """
-        await self._auth_channel.async_pull_latch()
+        return await self._auth_channel.async_pull_latch()

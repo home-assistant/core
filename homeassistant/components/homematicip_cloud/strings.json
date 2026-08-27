@@ -143,6 +143,9 @@
     "device_not_found": {
       "message": "No matching Homematic IP device found for device ID {device_id}"
     },
+    "pull_latch_failed": {
+      "message": "{device_name} did not pull the latch, the access point returned {error_code}"
+    },
     "pull_latch_not_supported": {
       "message": "{device_name} is not a door opener and cannot pull a latch"
     }
@@ -236,8 +239,8 @@
       "description": "Pulls the latch of a door opener, optionally using the PIN of its access authorization.",
       "fields": {
         "device_id": {
-          "description": "The door opener device whose latch is pulled.",
-          "name": "Device"
+          "description": "The door opener devices whose latch is pulled.",
+          "name": "Devices"
         },
         "pin": {
           "description": "The PIN of the access authorization. Only needed if a PIN is configured for it.",

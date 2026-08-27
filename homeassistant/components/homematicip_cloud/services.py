@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
@@ -21,7 +21,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN
 from .hap import HomematicIPConfigEntry
-from .helpers import get_door_opener_authorization_channel
+from .helpers import get_door_opener_authorization_channel, is_error_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -383,7 +383,16 @@ async def _async_pull_latch(service: ServiceCall) -> None:
                 translation_key="pull_latch_not_supported",
                 translation_placeholders={"device_name": device.label},
             )
-        await channel.async_pull_latch(pin)
+        result = await channel.async_pull_latch(pin)
+        if is_error_response(result):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pull_latch_failed",
+                translation_placeholders={
+                    "device_name": device.label,
+                    "error_code": str(result.get("errorCode")),
+                },
+            )
 
 
 def _get_device(

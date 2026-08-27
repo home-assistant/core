@@ -12,7 +12,7 @@ from homeassistant.components.homematicip_cloud.services import (
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory
@@ -59,6 +59,47 @@ async def test_pull_latch(
         )
 
     mock_pull_latch.assert_awaited_once_with(expected_pin)
+
+
+async def test_pull_latch_rejected_by_access_point(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_lock_controller_device_data: dict[str, Any],
+) -> None:
+    """A rejected latch pull, a wrong PIN for instance, is not reported as success."""
+    entity_id = "button.universal_motorschloss_controller_door_opener"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Universal Motorschloss Controller"],
+        extra_devices=[full_flush_lock_controller_device_data],
+    )
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    auth_channel = next(
+        ch
+        for ch in hmip_device.functionalChannels
+        if ch.functionalChannelType.name == "ACCESS_AUTHORIZATION_CHANNEL"
+        and ch.channelRole == "DOOR_OPENER_ACTUATOR"
+    )
+
+    with (
+        patch.object(
+            auth_channel,
+            "async_pull_latch",
+            new_callable=AsyncMock,
+            return_value={"errorCode": "INVALID_AUTHORIZATION_PIN"},
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PULL_LATCH,
+            {ATTR_DEVICE_ID: entity_entry.device_id, ATTR_PIN: "0000"},
+            blocking=True,
+        )
 
 
 async def test_pull_latch_on_non_opener_device(

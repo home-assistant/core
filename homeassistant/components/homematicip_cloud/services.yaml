@@ -117,6 +117,7 @@ pull_latch:
       selector:
         device:
           integration: homematicip_cloud
+          multiple: true
     pin:
       example: "1234"
       selector:
