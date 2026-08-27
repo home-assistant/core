@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.collection_image.config_flow import IMAGE_MEDIA_URI
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -108,6 +109,7 @@ async def test_config_flow(
             "failed_browse",
             {"error": "Mock directory failed to browse"},
         ),
+        ([IMAGE_MEDIA_URI], "invalid_selection", {"error": IMAGE_MEDIA_URI}),
     ],
 )
 async def test_config_flow_error(
