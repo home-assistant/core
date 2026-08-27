@@ -1,6 +1,6 @@
 """Tests for the Bitvis Power Hub sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import find_listener_callback, setup_integration
 from .conftest import TEST_DEVICE_MAC
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -85,27 +86,18 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
     sample_payload: PayloadSample,
     diagnostic_payload: PayloadDiagnostic,
+    patch_shared_listener: MagicMock,
 ) -> None:
     """Test all entities with snapshot."""
-    mock_config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.bitvis.coordinator.BitvisDataUpdateCoordinator._async_setup",
-            new_callable=AsyncMock,
-        ),
-        patch("homeassistant.components.bitvis._PLATFORMS", [Platform.SENSOR]),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    with patch("homeassistant.components.bitvis._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
-        coordinator = mock_config_entry.runtime_data
-        coordinator._handle_sample(sample_payload)
-        coordinator._handle_diagnostic(diagnostic_payload)
-        await hass.async_block_till_done()
+    callback = find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)
+    callback(sample_payload, ("192.168.1.100", 1234))
+    callback(diagnostic_payload, ("192.168.1.100", 1234))
+    await hass.async_block_till_done()
 
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -128,15 +120,16 @@ async def test_entities_added_when_fields_become_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    patch_shared_listener: MagicMock,
 ) -> None:
     """Test that HAN sensors are created when their fields first appear."""
-    coordinator = mock_config_entry.runtime_data
     base_unique_id = mock_config_entry.unique_id
 
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 2.0
-    coordinator._handle_sample(
-        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample),
+        ("192.168.1.100", 1234),
     )
     await hass.async_block_till_done()
 
@@ -151,8 +144,9 @@ async def test_entities_added_when_fields_become_available(
     }
 
     payload.sample.phase_voltage_l1_v = 230.0
-    coordinator._handle_sample(
-        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample),
+        ("192.168.1.100", 1234),
     )
     await hass.async_block_till_done()
 
@@ -173,15 +167,15 @@ async def test_sensors_become_available_with_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    patch_shared_listener: MagicMock,
 ) -> None:
     """Test that sensors become available when data arrives."""
-    coordinator = mock_config_entry.runtime_data
-
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 2.0
     payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
-    coordinator._handle_sample(
-        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample),
+        ("192.168.1.100", 1234),
     )
     await hass.async_block_till_done()
 

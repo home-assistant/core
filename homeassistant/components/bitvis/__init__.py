@@ -14,16 +14,14 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:
     """Set up Bitvis Power Hub from a config entry."""
-    if entry.unique_id is None:
-        msg = "Config entry is missing unique_id (MAC address)"
-        raise ValueError(msg)
-
+    unique_id = entry.unique_id
+    assert unique_id is not None
     coordinator = BitvisDataUpdateCoordinator(
         hass,
         entry,
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.unique_id,
+        unique_id,
     )
 
     await coordinator.async_config_entry_first_refresh()

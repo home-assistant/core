@@ -261,7 +261,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_l2_delivered_by_client",
-        translation_key="power_active_phase_import",
+        translation_key="power_active_phase_export",
         translation_placeholders={"phase": "L2"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
