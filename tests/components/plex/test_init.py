@@ -210,7 +210,7 @@ async def test_setup_when_certificate_changed(
         """Mock the exception showing a mismatched hostname."""
 
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
-            # Shaped the way OpenSSL raises it: args are (verify_code, message)
+            # Shaped the way it is really raised: OSError args of (errno, message)
             self.__context__ = ssl.SSLCertVerificationError(
                 1,
                 "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:"
