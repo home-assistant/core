@@ -2513,8 +2513,18 @@ async def test_options_flow(
         assert mock_camera_config_entry.options == {CONF_USE_STREAM_FOR_STILLS: True}
         assert mock_camera_config_entry.state is ConfigEntryState.LOADED
 
-        # The reload listener re-ran async_setup_entry without a restart, so the
-        # (same, reused) mocked stream_rtsp_url was called again, this time HD.
         camera_module.stream_rtsp_url.assert_any_call(
             ANY, stream_resolution=StreamResolution.HD
         )
+
+
+async def test_options_flow_no_camera(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow aborts for entries with no camera configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_options"

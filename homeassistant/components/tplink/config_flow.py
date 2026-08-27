@@ -885,6 +885,9 @@ class TPLinkOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        if CONF_LIVE_VIEW not in self.config_entry.data:
+            return self.async_abort(reason="no_options")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

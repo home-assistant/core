@@ -404,6 +404,9 @@
     }
   },
   "options": {
+    "abort": {
+      "no_options": "This device has no configurable options."
+    },
     "step": {
       "init": {
         "data": {
