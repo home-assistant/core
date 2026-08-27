@@ -25,17 +25,17 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The BLUETTI integration needs to re-authenticate your account"
+        "description": "The BLUETTI integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "select_devices": {
-        "title": "Select BLUETTI devices",
         "data": {
           "devices": "[%key:component::bluetti::options::step::add_devices::data::devices%]"
         },
         "data_description": {
           "devices": "[%key:component::bluetti::options::step::add_devices::data_description::devices%]"
-        }
+        },
+        "title": "Select BLUETTI devices"
       }
     }
   },

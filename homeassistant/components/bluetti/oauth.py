@@ -177,7 +177,7 @@ class AuthTokenRefresh:
             translation_key="oauth_expired",
         )
 
-    # check token is in 7 day if in 7day refesh token
+    # check token is in 7 day if in 7day refresh token
     async def async_check_token_expiry(self, now: datetime | None = None) -> None:
         """Check whether the token needs a refresh, and refresh it if so.
 
@@ -202,14 +202,14 @@ class AuthTokenRefresh:
         if remain_timestamp < 3600 * 24 * 7:
             try:
                 __LOGGER__.info("start refresh token")
-                last_refesh = self.entry.data.get("last_token_refresh", 0.0)
-                # 1 hour only one time ,when server is 500 do not always refesh token
-                if current_timestamp - last_refesh < 3600:
+                last_refresh = self.entry.data.get("last_token_refresh", 0.0)
+                # 1 hour only one time ,when server is 500 do not always refresh token
+                if current_timestamp - last_refresh < 3600:
                     __LOGGER__.info(
-                        "last refesh token in 1 hour,this do not refesh return"
+                        "last refresh token in 1 hour,this do not refresh return"
                     )
                     return
-                last_refesh = current_timestamp
+                last_refresh = current_timestamp
 
                 new_token = await self.oAuth2Session.implementation.async_refresh_token(
                     self.oAuth2Session.token
@@ -219,7 +219,7 @@ class AuthTokenRefresh:
                     data={
                         **self.entry.data,
                         "token": new_token,
-                        "last_token_refresh": last_refesh,
+                        "last_token_refresh": last_refresh,
                     },
                 )
                 __LOGGER__.info("refresh token ok,then reload")
