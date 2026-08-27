@@ -1,7 +1,7 @@
 """Config flow for Raspberry Pi Power Supply Checker."""
 
 from collections.abc import Awaitable
-from typing import Any
+from typing import Any, override
 
 from rpi_bad_power import new_under_voltage
 
@@ -35,8 +35,15 @@ class RPiPowerFlow(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by onboarding."""
-        has_devices = await self._discovery_function(self.hass)
-
-        if not has_devices:
-            return self.async_abort(reason="no_devices_found")
+        if not await self._discovery_function(self.hass):
+            return self.async_abort(reason="not_supported")
         return self.async_create_entry(title=self._title, data={})
+
+    @override
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setup."""
+        if user_input is not None and not await self._discovery_function(self.hass):
+            return self.async_abort(reason="not_supported")
+        return await super().async_step_confirm(user_input)
