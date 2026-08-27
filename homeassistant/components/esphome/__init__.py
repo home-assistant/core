@@ -27,6 +27,7 @@ from .manager import (
     DEVICE_CONFLICT_ISSUE_FORMAT,
     ESPHomeManager,
     async_create_api_client,
+    async_get_manufacturer_model,
     cleanup_instance,
 )
 from .websocket_api import async_setup as async_setup_websocket_api
@@ -52,14 +53,16 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
+        manufacturer, model = async_get_manufacturer_model(device_info)
+
         ports.extend(
             SerialDevice(
                 device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
                 serial_number=(
                     device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
                 ),
-                manufacturer=device_info.manufacturer,
-                description=f"{device_info.model} ({proxy.name})",
+                manufacturer=manufacturer,
+                description=f"{model} ({proxy.name})",
             )
             for proxy in device_info.serial_proxies
         )
