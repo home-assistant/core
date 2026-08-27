@@ -8,10 +8,10 @@ from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus, SensorData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lunatone.sensor import DALI_LINE_STATUS_SENSOR_MAPPING
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import slugify
 
 from . import setup_integration
 
@@ -101,7 +101,7 @@ async def test_dali_line_status_value_update(
 
     entity = hass.states.get(entity_id)
     assert entity
-    assert entity.state == slugify(LineStatus.NO_POWER)
+    assert entity.state == DALI_LINE_STATUS_SENSOR_MAPPING[LineStatus.NO_POWER]
 
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -109,4 +109,4 @@ async def test_dali_line_status_value_update(
 
     entity = hass.states.get(entity_id)
     assert entity
-    assert entity.state == slugify(LineStatus.OK)
+    assert entity.state == DALI_LINE_STATUS_SENSOR_MAPPING[LineStatus.OK]

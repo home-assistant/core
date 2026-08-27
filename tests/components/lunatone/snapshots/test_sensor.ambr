@@ -65,10 +65,10 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
+        'no_power',
+        'not_reachable',
         'ok',
-        'lowpower',
-        'nopower',
-        'notreachable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -90,7 +90,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:current-ac',
+    'original_icon': None,
     'original_name': 'DALI line status',
     'platform': 'lunatone',
     'previous_unique_id': None,
@@ -106,12 +106,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 0 DALI line status',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:current-ac',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
+        'no_power',
+        'not_reachable',
         'ok',
-        'lowpower',
-        'nopower',
-        'notreachable',
       ]),
     }),
     'context': <ANY>,
@@ -130,10 +129,10 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
+        'no_power',
+        'not_reachable',
         'ok',
-        'lowpower',
-        'nopower',
-        'notreachable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -155,7 +154,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:current-ac',
+    'original_icon': None,
     'original_name': 'DALI line status',
     'platform': 'lunatone',
     'previous_unique_id': None,
@@ -171,12 +170,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 1 DALI line status',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:current-ac',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
+        'no_power',
+        'not_reachable',
         'ok',
-        'lowpower',
-        'nopower',
-        'notreachable',
       ]),
     }),
     'context': <ANY>,
