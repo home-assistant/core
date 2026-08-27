@@ -75,6 +75,7 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=(SensorEntityCapabilityAttribute, SensorEntityStateAttribute),
     device_class=True,
+    allowed_attributes=(SensorEntityCapabilityAttribute.OPTIONS,),
 )
 
 SENSOR_YAML_SCHEMA = vol.All(
