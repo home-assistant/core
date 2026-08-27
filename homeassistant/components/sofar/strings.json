@@ -399,9 +399,6 @@
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
       },
-      "serial_number": {
-        "name": "Serial number"
-      },
       "solar_generation_today": {
         "name": "Solar generation today"
       },
