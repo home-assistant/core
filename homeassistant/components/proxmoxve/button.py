@@ -29,17 +29,6 @@ from .helpers import is_granted
 PARALLEL_UPDATES = 1
 
 
-def _snapshot_name() -> str:
-    """Return the name to give a newly created snapshot.
-
-    Proxmox validates this as a `pve-configid` of at most 40 characters, and
-    the prefix and timestamp already take up 37 of those. So the guest name is
-    left out: any name longer than two characters pushed the total over the
-    limit, and the snapshot already lives under the guest it belongs to.
-    """
-    return f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
-
-
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox node button description."""
@@ -187,7 +176,9 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node)
             .qemu(vmid)
-            .snapshot.post(name=_snapshot_name())
+            .snapshot.post(
+                name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+            )
         ),
         permission=ProxmoxPermission.SNAPSHOT,
         entity_category=EntityCategory.CONFIG,
@@ -225,7 +216,9 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node)
             .lxc(vmid)
-            .snapshot.post(name=_snapshot_name())
+            .snapshot.post(
+                name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+            )
         ),
         permission=ProxmoxPermission.SNAPSHOT,
         entity_category=EntityCategory.CONFIG,
