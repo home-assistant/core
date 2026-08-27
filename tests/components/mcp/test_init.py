@@ -29,7 +29,6 @@ from .conftest import TEST_API_NAME
 
 from tests.common import MockConfigEntry
 
-TEST_ENTRY_ID = "01JZABCDEFGHIJKLMNOPQRSTUV"
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
     description="Search memory for relevant context based on a query.",
@@ -738,38 +737,38 @@ async def test_sse_client_does_not_build_ssl_context(
     await client.aclose()
 
 
-@pytest.mark.parametrize(
-    ("entry_data", "expected_api_id"),
-    [
-        pytest.param({}, f"mcp-{TEST_ENTRY_ID}", id="manual"),
-        pytest.param({CONF_SLUG: "a0d7b954_mcp"}, "mcp-a0d7b954_mcp", id="discovered"),
-    ],
-)
-async def test_llm_api_id(
-    hass: HomeAssistant,
-    mock_mcp_client: Mock,
-    entry_data: dict[str, str],
-    expected_api_id: str,
-) -> None:
-    """Test the LLM API id of a discovered server is stable across a reinstall.
-
-    A reinstall of the app creates a new config entry, so the id of a
-    discovered server is based on the app slug instead of the entry id.
-    """
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id=TEST_ENTRY_ID,
-        data={CONF_URL: "http://1.1.1.1/mcp", **entry_data},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
+async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
+    """Test the LLM API id of a discovered server survives a reinstall of the app."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
         tools=[SEARCH_MEMORY_TOOL],
     )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
-    assert api.id == expected_api_id
+    assert api.id == "mcp-a0d7b954_mcp"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    # Reinstalling the app discovers the server again as a new config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"
