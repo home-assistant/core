@@ -106,7 +106,7 @@ async def async_setup_entry(
     CoolBot appears without a reload.
     """
     coordinator = entry.runtime_data
-    known: set[str] = set()
+    known = coordinator.known_devices
 
     @callback
     def _add_new_devices() -> None:

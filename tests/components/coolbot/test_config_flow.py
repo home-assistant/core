@@ -201,6 +201,38 @@ async def test_reconfigure_flow_updates_credentials(
     assert mock_config_entry.data[CONF_PASSWORD] == "rotated"
 
 
+@pytest.mark.parametrize("flow", ["reauth", "reconfigure"])
+async def test_existing_entry_flows_allow_an_emptied_account(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    flow: str,
+) -> None:
+    """Credentials stay fixable after the last cooler is removed.
+
+    The device check guards entry creation only. Applying it here would leave
+    an entry whose password has expired with no way to update it, even though
+    setup supports an account with no coolers.
+    """
+    mock_config_entry.add_to_hass(hass)
+    mock_client.async_get_devices.return_value = []
+
+    if flow == "reauth":
+        result = await mock_config_entry.start_reauth_flow(hass)
+        user_input = {CONF_PASSWORD: "new-password"}
+    else:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: "new-password"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == f"{flow}_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
 async def test_reconfigure_flow_refuses_a_different_account(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:

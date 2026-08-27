@@ -152,6 +152,34 @@ async def test_staleness_is_logged_once_in_each_direction(
     assert "is reporting again" in caplog.text
 
 
+async def test_a_device_dropping_out_of_the_profile_is_logged(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Vanishing from a refresh is the other way a device goes unavailable.
+
+    Nothing iterating the refreshed devices can see this one, since it is no
+    longer among them.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [
+        make_device(unique_id="coolbot_other", name="Other")
+    ]
+    await _tick(hass)
+    assert "Walk-in cooler has stopped reporting" in caplog.text
+
+    caplog.clear()
+    await _tick(hass)
+    assert "has stopped reporting" not in caplog.text
+
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
+    assert "Walk-in cooler is reporting again" in caplog.text
+
+
 async def test_an_emptied_account_is_a_valid_update(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:

@@ -46,9 +46,18 @@ async def async_remove_config_entry_device(
     Devices are enumerated from the account profile, so one that still appears
     there would just be recreated; only genuinely gone devices may be removed.
     """
-    current = entry.runtime_data.data
-    return not any(
-        identifier in current
+    coordinator = entry.runtime_data
+    identifiers = {
+        identifier
         for domain, identifier in device_entry.identifiers
         if domain == DOMAIN
-    )
+    }
+    if any(identifier in coordinator.data for identifier in identifiers):
+        return False
+
+    # The entities are deleted along with the device, so drop the record of
+    # them; if this cooler is added to the account again, its entities have to
+    # be created afresh.
+    for identifier in identifiers:
+        coordinator.forget_device(identifier)
+    return True

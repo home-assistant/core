@@ -32,14 +32,20 @@ class CoolbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self._reauth_email: str | None = None
 
-    async def _async_validate(self, email: str, password: str) -> str | None:
-        """Return an error key, or None when the credentials work."""
+    async def _async_validate(
+        self, email: str, password: str, *, require_devices: bool = False
+    ) -> str | None:
+        """Return an error key, or None when the credentials work.
+
+        ``require_devices`` applies to creating an entry only, where an account
+        with no CoolBot would produce an integration with nothing in it. An
+        existing entry must still be able to fix its credentials after its last
+        cooler has been removed, which setup itself supports.
+        """
         session = async_get_clientsession(self.hass)
         client = CoolbotClient(email, password, session=session)
         try:
             await client.async_connect()
-            # A working login is not enough; an account with no CoolBot would
-            # produce an integration with nothing in it.
             devices = await client.async_get_devices(wait_for_live=False)
         except CoolbotAuthError:
             return "invalid_auth"
@@ -49,7 +55,7 @@ class CoolbotConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error validating CoolBot credentials")
             return "unknown"
         else:
-            if not any(device.is_provisioned for device in devices):
+            if require_devices and not any(device.is_provisioned for device in devices):
                 return "no_devices"
             return None
         finally:
@@ -74,7 +80,7 @@ class CoolbotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(email.lower())
             self._abort_if_unique_id_configured()
 
-            error = await self._async_validate(email, password)
+            error = await self._async_validate(email, password, require_devices=True)
             if error is None:
                 return self.async_create_entry(
                     title=email,

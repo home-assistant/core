@@ -42,8 +42,14 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             config_entry=entry,
         )
         self._client: CoolbotClient | None = None
-        #: Last known reporting state per device; absent until one first reports.
-        self._reporting: dict[str, bool] = {}
+        #: Last known name and reporting state per device, keyed by unique id;
+        #: absent until a device first reports. The name is kept so a device
+        #: that drops out of the profile can still be named in a log line.
+        self._reporting: dict[str, tuple[str, bool]] = {}
+        #: Devices that already have entities, so each refresh only adds coolers
+        #: that are new. Held here rather than in the platform so a removal can
+        #: clear it.
+        self.known_devices: set[str] = set()
 
     @override
     async def _async_setup(self) -> None:
@@ -135,27 +141,49 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
         A device that has not reported yet is not an outage: the cloud replays a
         cached snapshot on connect, so every device looks stale for the first few
-        seconds of a normal setup. Only a device that was reporting can stop.
+        seconds of a normal setup. Only a device that was reporting can stop,
+        whether it went stale or dropped out of the account's profile entirely.
         """
         for device in data.values():
             if not device.is_provisioned:
                 continue
             fresh = device_is_fresh(device)
-            was_fresh = self._reporting.get(device.unique_id)
-            if was_fresh is None:
+            known = self._reporting.get(device.unique_id)
+            if known is None:
                 if fresh:
-                    self._reporting[device.unique_id] = True
+                    self._reporting[device.unique_id] = (device.name, True)
                 continue
-            if fresh is was_fresh:
+            if fresh is known[1]:
                 continue
-            self._reporting[device.unique_id] = fresh
-            if fresh:
-                _LOGGER.info("%s is reporting again", device.name)
-            else:
-                _LOGGER.info(
-                    "%s has stopped reporting; its readings are marked unavailable",
-                    device.name,
-                )
+            self._reporting[device.unique_id] = (device.name, fresh)
+            self._log_transition(device.name, reporting=fresh)
+
+        # A device missing from a successful refresh has also stopped
+        # reporting: its entities go unavailable for want of any data, and
+        # nothing above sees it, because it is no longer in the mapping.
+        for unique_id, (name, was_fresh) in list(self._reporting.items()):
+            if was_fresh and unique_id not in data:
+                self._reporting[unique_id] = (name, False)
+                self._log_transition(name, reporting=False)
+
+    def _log_transition(self, name: str, *, reporting: bool) -> None:
+        """Log one device's change of reporting state."""
+        if reporting:
+            _LOGGER.info("%s is reporting again", name)
+        else:
+            _LOGGER.info(
+                "%s has stopped reporting; its readings are marked unavailable", name
+            )
+
+    def forget_device(self, unique_id: str) -> None:
+        """Forget a device that Home Assistant has removed.
+
+        Its entities go with it, so the same cooler returning to the account
+        has to have them created again rather than being filtered out as one
+        that already has them.
+        """
+        self.known_devices.discard(unique_id)
+        self._reporting.pop(unique_id, None)
 
     @override
     async def async_shutdown(self) -> None:
