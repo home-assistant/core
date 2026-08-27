@@ -190,7 +190,7 @@
       "name": "Blue hour started"
     },
     "dawn": {
-      "description": "Triggers at dawn, when civil, nautical, or astronomical twilight begins.",
+      "description": "Triggers at dawn, when civil, nautical, or astronomical dawn begins.",
       "fields": {
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
