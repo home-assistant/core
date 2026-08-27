@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -104,3 +105,46 @@ async def test_lock_open(
             LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
     assert hass.states.get(lock_id).state == LockState.UNLOCKED
+
+
+@pytest.mark.parametrize(
+    ("lock_state", "expected_state"),
+    [
+        ("locked", LockState.LOCKED),
+        ("unlocked", LockState.UNLOCKED),
+        ("locking", LockState.LOCKING),
+        ("unlocking", LockState.UNLOCKING),
+        ("jammed", LockState.JAMMED),
+        ("latchBoltLocked", LockState.LOCKED),
+        ("halfLocked", LockState.LOCKED),
+        # The webhook reports the very same states upper cased
+        ("LOCKED", LockState.LOCKED),
+        ("JAMMED", LockState.JAMMED),
+        # Anything the cloud adds later is unknown rather than unlocked
+        ("somethingNew", STATE_UNKNOWN),
+    ],
+)
+async def test_lock_states(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    lock_state: str,
+    expected_state: str,
+) -> None:
+    """Test every lock state the cloud reports."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="lock-id-1",
+            deviceName="lock-1",
+            deviceType="Smart Lock Ultra",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {"lockState": lock_state}
+
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("lock.lock_1").state == expected_state

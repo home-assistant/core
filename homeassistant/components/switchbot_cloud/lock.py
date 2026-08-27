@@ -2,7 +2,14 @@
 
 from typing import Any, override
 
-from switchbot_api import Device, LockCommands, LockV2Commands, Remote, SwitchBotAPI
+from switchbot_api import (
+    Device,
+    LockCommands,
+    LockV2Commands,
+    Remote,
+    SwitchBotAPI,
+    SwitchbotCloudDeviceLockState,
+)
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
@@ -10,6 +17,20 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
+
+# The cloud camel cases these when polled and upper cases them over the
+# webhook, so look them up by their lower cased value
+LOCK_STATES_BY_VALUE = {
+    state.value.lower(): state for state in SwitchbotCloudDeviceLockState
+}
+
+# A latch bolt or half locked door is secured, both are resting positions the
+# lock can be commanded into
+LOCKED_STATES = {
+    SwitchbotCloudDeviceLockState.LOCKED,
+    SwitchbotCloudDeviceLockState.LATCH_BOLT_LOCKED,
+    SwitchbotCloudDeviceLockState.HALF_LOCKED,
+}
 
 
 async def async_setup_entry(
@@ -44,7 +65,11 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
-            self._attr_is_locked = coord_data["lockState"].lower() == "locked"
+            state = LOCK_STATES_BY_VALUE.get(coord_data["lockState"].lower())
+            self._attr_is_locked = state in LOCKED_STATES if state else None
+            self._attr_is_locking = state is SwitchbotCloudDeviceLockState.LOCKING
+            self._attr_is_unlocking = state is SwitchbotCloudDeviceLockState.UNLOCKING
+            self._attr_is_jammed = state is SwitchbotCloudDeviceLockState.JAMMED
         if self.__model not in [
             "Smart Lock Lite",
             "Smart Lock Vision",
