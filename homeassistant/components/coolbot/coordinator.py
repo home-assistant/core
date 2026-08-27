@@ -116,10 +116,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:
-                # The MAC arrives as a replayed pin and this device's has not
-                # landed yet. Its unique_id would be a dash/slot fallback that
-                # changes once the MAC arrives, duplicating the device, so hold
-                # it back; a later refresh adds it under its stable identity.
+                # This device's MAC has not landed yet; it arrives as a replayed
+                # pin. Its unique_id would be a dash/slot fallback that changes
+                # once the MAC arrives, duplicating the device, so hold it back;
+                # a later refresh adds it under its stable identity.
                 _LOGGER.debug(
                     "Holding back %s until its MAC address arrives", device.name
                 )
