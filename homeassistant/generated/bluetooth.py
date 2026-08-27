@@ -259,7 +259,6 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
-        "manufacturer_id": 23562,
         "service_uuid": "00005550-0000-1000-8000-00805f9b34fb",
     },
     {
