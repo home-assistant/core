@@ -15,7 +15,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.auth.models import RefreshToken, User
+from homeassistant.auth.models import User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.onboarding import async_is_onboarded
@@ -49,20 +49,24 @@ from . import (  # noqa: F401
     update,
 )
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
-from .addon_panel import async_setup_addon_panel
+from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
-from .config import HassioConfig
+from .config import HassioConfigStore, StoredHassioConfig
+from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     DATA_HASSIO_HOST,
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    ENTRY_DATA_USER,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
+    OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
+    OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
+    OPTION_CORE_BACKUP_BEFORE_UPDATE,
     STATS_COORDINATOR,
 )
 from .coordinator import (
@@ -168,6 +172,81 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
     return addon_slug.replace("_", "-")
 
 
+async def _async_get_or_create_supervisor_user(
+    hass: HomeAssistant,
+    entry: ConfigEntry | None,
+    legacy_user_id: str | None = None,
+) -> User:
+    """Get or create the Supervisor system user."""
+    user: User | None = None
+
+    if entry is not None and (entry_user_id := entry.data.get(ENTRY_DATA_USER)):
+        user = await hass.auth.async_get_user(entry_user_id)
+
+    if user is None and legacy_user_id is not None:
+        user = await hass.auth.async_get_user(legacy_user_id)
+
+    if user is None:
+        user = await hass.auth.async_create_system_user(
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+        )
+        if entry is not None:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, ENTRY_DATA_USER: user.id},
+            )
+
+    # Migrate old Hass.io users to be admin.
+    if not user.is_admin:
+        await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
+
+    # Migrate old name
+    if user.name == "Hass.io":
+        await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
+
+    return user
+
+
+@callback
+def _async_migrate_legacy_options(
+    entry: ConfigEntry, legacy_data: StoredHassioConfig
+) -> dict[str, bool | int]:
+    """Merge legacy update options into entry options during migration.
+
+    While the legacy store exists, it is the source of truth for update options.
+    """
+    if not (legacy_update_config := legacy_data.get("update_config")):
+        return {}
+
+    option_updates: dict[str, bool | int] = {}
+
+    if (
+        entry.options.get(OPTION_ADD_ON_BACKUP_BEFORE_UPDATE)
+        != legacy_update_config["add_on_backup_before_update"]
+    ):
+        option_updates[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE] = legacy_update_config[
+            "add_on_backup_before_update"
+        ]
+
+    if (
+        entry.options.get(OPTION_ADD_ON_BACKUP_RETAIN_COPIES)
+        != legacy_update_config["add_on_backup_retain_copies"]
+    ):
+        option_updates[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] = legacy_update_config[
+            "add_on_backup_retain_copies"
+        ]
+
+    if (
+        entry.options.get(OPTION_CORE_BACKUP_BEFORE_UPDATE)
+        != legacy_update_config["core_backup_before_update"]
+    ):
+        option_updates[OPTION_CORE_BACKUP_BEFORE_UPDATE] = legacy_update_config[
+            "core_backup_before_update"
+        ]
+
+    return option_updates
+
+
 @callback
 def _check_deprecated_setup(hass: HomeAssistant) -> None:
     """Create issues for deprecated installation types and architectures."""
@@ -239,32 +318,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
     hass.data[DATA_HASSIO_HOST] = host
 
-    # Load the store
-    config_store = HassioConfig(hass)
-    await config_store.load()
-    hass.data[DATA_CONFIG_STORE] = config_store
+    legacy_store = HassioConfigStore(hass)
+    legacy_data = await legacy_store.async_load()
 
-    # Cache the Supervisor user. Create one if necessary
-    user: User | None = None
-    if (hassio_user := config_store.data.hassio_user) is not None:
-        user = await hass.auth.async_get_user(hassio_user)
-        if user:
-            # Migrate old Hass.io users to be admin.
-            if not user.is_admin:
-                await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
+    entry = async_get_hassio_entry(hass)
 
-            # Migrate old name
-            if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
+    legacy_user_id: str | None = None
+    if legacy_data is not None:
+        legacy_user_id = legacy_data.get("hassio_user")
 
-    if user is None:
-        user = await hass.auth.async_create_system_user(
-            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
-        )
-        config_store.update(hassio_user=user.id)
-
-    assert user is not None
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+    hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
+        hass, entry, legacy_user_id
+    )
 
     async_load_websocket_api(hass)
     hass.http.register_view(HassIOView(host, websession))
@@ -275,14 +340,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_addon_panel(hass)
     frontend.async_register_built_in_panel(hass, "app")
 
-    discovery_flow.async_create_flow(
-        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
-    )
+    if entry is None:
+        # Create the config entry directly instead of via the discovery flow
+        # helper, which defers flow creation until Home Assistant has started.
+        # All Supervisor data is fetched by the entry's coordinators, so on
+        # first boot deferring would leave system info unavailable during
+        # onboarding and race listeners of the started event.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+            ),
+            "hassio system config entry flow",
+        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    # Deprecated in 2026.8: remove this legacy store migration path after the
+    # deprecation window for .storage/hassio has elapsed.
+    legacy_store = HassioConfigStore(hass)
+    remove_legacy_store: bool = False
+    if (legacy_data := await legacy_store.async_load()) is not None:
+        option_updates = _async_migrate_legacy_options(entry, legacy_data)
+
+        if option_updates:
+            hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, **option_updates},
+            )
+
+        remove_legacy_store = True
+
+    # Async setup runs first unconditionally and always populates this field
+    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    if entry.data.get(ENTRY_DATA_USER) != user.id:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, ENTRY_DATA_USER: user.id},
+        )
+
     supervisor_client = get_supervisor_client(hass)
 
     try:
@@ -315,12 +412,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key="supervisor_update_pending",
             )
 
-    # Get or create a refresh token for the Supervisor user
-    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
-    if user.refresh_tokens:
-        refresh_token = list(user.refresh_tokens.values())[0]
-    else:
-        refresh_token = await hass.auth.async_create_refresh_token(user)
+    # Supervisor authenticates through its dedicated Unix socket.
+    for refresh_token in list(user.refresh_tokens.values()):
+        hass.auth.async_remove_refresh_token(refresh_token)
 
     # Set up coordinators — these can raise ConfigEntryNotReady.
     # Register listeners only after all refreshes succeed to avoid accumulation
@@ -330,6 +424,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = HassioMainDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
     hass.data[MAIN_COORDINATOR] = coordinator
+    entry.async_on_unload(async_setup_addon_panel_coordinator(hass, coordinator))
 
     jobs_coordinator = SupervisorJobsCoordinator(hass, entry)
     await jobs_coordinator.async_config_entry_first_refresh()
@@ -395,7 +490,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config))
 
-    async def update_hass_api(refresh_token: RefreshToken) -> None:
+    async def update_hass_api() -> None:
         """Update Home Assistant API data on Hass.io."""
         # hass.config.api is always set here: hassio depends on http, and the
         # http integration assigns hass.config.api during its async_setup.
@@ -403,7 +498,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         options = HomeAssistantOptions(
             ssl=hass.config.api.use_ssl,
             port=hass.config.api.port,
-            refresh_token=refresh_token.token,
+            refresh_token=None,
         )
 
         try:
@@ -415,7 +510,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Push initial config to Supervisor and refresh issues state
     await asyncio.gather(
-        update_hass_api(refresh_token),
+        update_hass_api(),
         push_config(None),
         issues_coordinator.async_refresh(),
     )
@@ -437,6 +532,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # If everything else has succeeded, remove the legacy store if it exists. This is done last to
+    # avoid removing it before it has been moved to the config entry and persisted to disk.
+    if remove_legacy_store:
+        await legacy_store.async_remove()
 
     return True
 

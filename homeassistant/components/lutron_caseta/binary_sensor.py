@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.const import ATTR_SUGGESTED_AREA, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -40,12 +41,12 @@ async def async_setup_entry(
     bridge = data.bridge
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(
-        LutronOccupancySensor(occupancy_group, data)
+        LutronOccupancySensor(hass, occupancy_group, data)
         for occupancy_group in occupancy_groups.values()
     )
     async_add_entities(
         (
-            LutronCasetaBatterySensor(device, data)
+            LutronCasetaBatterySensor(hass, device, data)
             for device in bridge.get_devices_by_domain(COVER_DOMAIN)
         ),
         update_before_add=True,
@@ -57,9 +58,11 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    def __init__(self, device, data):
+    def __init__(
+        self, hass: HomeAssistant, device: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Init an occupancy sensor."""
-        super().__init__(device, data)
+        super().__init__(hass, device, data)
         area = area_name_from_id(self._smartbridge.areas, device["area"])
         name = f"{area} {device['device_name']}"
         self._attr_name = name
@@ -67,8 +70,12 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Occupancy",
-            name=self.name,
-            via_device=(DOMAIN, self._bridge_device["serial"]),
+            name=name,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self._bridge_device["serial"]),
+                config_entry_id=data.config_entry_id,
+            ),
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -116,9 +123,11 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_should_poll = True
 
-    def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Initialize the battery sensor."""
-        super().__init__(device, data)
+        super().__init__(hass, device, data)
         # The base entity sets the shade name; remove it so the battery device
         # class provides the sensor name.
         if hasattr(self, "_attr_name"):

@@ -2,8 +2,6 @@
 
 from typing import Any, override
 
-from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
-
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.light import (
     ATTR_EFFECT,
@@ -12,18 +10,14 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDeviceType
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
+from .entity import LEDIrBaseEntity
 
 PARALLEL_UPDATES = 1
-
-CODES = {
-    LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
-    LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
-}
 
 
 SUPPORTED_EFFECTS = {
@@ -37,6 +31,28 @@ SUPPORTED_EFFECTS = {
         "mode_6",
         "mode_7",
         "mode_8",
+    ],
+    LEDIrDeviceType.GENERIC_40_KEY: [
+        "auto",
+        "fade3",
+        "fade7",
+        "flash",
+        "jump3",
+        "jump7",
+    ],
+    LEDIrDeviceType.GENERIC_44_KEY: [
+        "auto",
+        "fade3",
+        "fade7",
+        "flash",
+        "jump3",
+        "jump7",
+        "diy1",
+        "diy2",
+        "diy3",
+        "diy4",
+        "diy5",
+        "diy6",
     ],
 }
 
@@ -60,6 +76,50 @@ SUPPORTED_COLORS = {
         "dark_cyan",
         "plum",
     ],
+    LEDIrDeviceType.GENERIC_40_KEY: [
+        "red",
+        "green",
+        "blue",
+        "white",
+        "tomato",
+        "light_green",
+        "deep_blue",
+        "floral_white",
+        "orange",
+        "turquoise",
+        "purple",
+        "lavender_blush",
+        "yellowish",
+        "cyan",
+        "magenta",
+        "ghost_white",
+        "yellow",
+        "aqua",
+        "pink",
+        "light_cyan",
+    ],
+    LEDIrDeviceType.GENERIC_44_KEY: [
+        "red",
+        "green",
+        "blue",
+        "white",
+        "tomato",
+        "light_green",
+        "deep_blue",
+        "floral_white",
+        "orange",
+        "turquoise",
+        "purple",
+        "lavender_blush",
+        "yellowish",
+        "cyan",
+        "magenta",
+        "ghost_white",
+        "yellow",
+        "aqua",
+        "pink",
+        "light_cyan",
+    ],
 }
 
 
@@ -77,7 +137,7 @@ async def async_setup_entry(
     )
 
 
-class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
+class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEntity):
     """Represents a LED Infrared light entity."""
 
     _attr_assumed_state = True
@@ -96,15 +156,9 @@ class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
         infrared_entity_id: str,
     ) -> None:
         """Initialize the entity."""
-        self._attr_unique_id = entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-        )
-
+        super().__init__(entry, device_type)
         self._infrared_emitter_entity_id = infrared_entity_id
-
-        self._codes = CODES[device_type]
+        self._attr_unique_id = entry.entry_id
         self._attr_effect_list = SUPPORTED_EFFECTS.get(
             device_type, []
         ) + SUPPORTED_COLORS.get(device_type, [])
@@ -127,3 +181,27 @@ class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
         await self._send_command(self._codes.OFF.to_command())
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    @callback
+    def _async_handle_event(self, event_type: str) -> None:
+        """Handle event."""
+
+        if event_type in ("on", "off"):
+            self._attr_is_on = event_type == "on"
+        elif event_type in self._attr_effect_list:
+            self._attr_is_on = True
+            self._attr_effect = event_type
+
+        self.async_write_ha_state()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register event callback."""
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._entry.entry_id, self._async_handle_event
+            )
+        )
+
+        await super().async_added_to_hass()

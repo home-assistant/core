@@ -64,7 +64,9 @@ def media_player_only() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
     """Mock token generator."""
-    with patch("secrets.token_hex", return_value="mock_token") as token:
+    with patch(
+        "secrets.token_hex", return_value="mock_token_0123456789abcdef01234"
+    ) as token:
         yield token
 
 

@@ -6,7 +6,7 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 # Review Code Changes
 
 ## Scope:
-- Unless instructed otherwise, review the full branch changes against the target branch. Resolve the base to an available ref (prefer `upstream/<base>`, then `origin/<base>`, then local `<base>`) and review `git diff "$(git merge-base "$BASE_REF" HEAD)"..HEAD`; use `dev` as the default base.
+- Unless instructed otherwise, review the full changes (the ones from the branch plus uncommitted ones) against the target branch. Resolve the base to an available ref (prefer `upstream/<base>`, then `origin/<base>`, then local `<base>`) and review `git diff "$(git merge-base "$BASE_REF" HEAD)"`; use `dev` as the default base.
 
 ## Analyze the code changes for:
 - Code quality and style consistency
@@ -15,6 +15,10 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 - Security concerns
 - Test coverage
 - Documentation updates if needed
+
+## Quality scale:
+- If the changes include a `quality_scale.yaml` file, run a subagent to verify all the added or modified rules, following the `ha-quality-scale-verify` skill.
+- Include the verification results in the final review comments.
 
 ## Verification:
 - After the review, run parallel subagents for each finding to double-check it.
