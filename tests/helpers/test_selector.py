@@ -1862,6 +1862,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                         "entity_id": "sensor.abc",
                         "media_content_id": "abc",
                         "media_content_type": "def",
+                        "metadata": {},
                     },
                     {
                         "entity_id": "sensor.def",
@@ -1874,6 +1875,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "entity_id": "sensor.abc",
                     "media_content_id": "abc",
                     "media_content_type": "def",
+                    "metadata": {},
                 },
             ),
             (
@@ -1903,6 +1905,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     {
                         "media_content_id": "ghi",
                         "media_content_type": "jkl",
+                        "metadata": {},
                     },
                 ],
             ),
@@ -1925,11 +1928,11 @@ def test_media_selector_schema_multiple(
 ) -> None:
     """Test media selector with multiple selections."""
 
-    def ensure_list(data, root=True):
+    def ensure_list(data):
         if isinstance(data, list):
             return data
         # Multiple=true wraps single values in list.
-        return [data] if root and schema.get("multiple") else data
+        return [data] if schema.get("multiple") else data
 
     _test_selector(
         "media",
