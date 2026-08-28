@@ -25,18 +25,6 @@ from .const import FAKE_UUID
 SWITCH_ENTITY_ID = f"{SWITCH_DOMAIN}.lg_webos_tv_model_screen"
 
 
-async def _async_setup_and_enable_switch(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Set up webostv and enable the screen switch, disabled by default."""
-    await setup_webostv(hass)
-    entity_registry.async_update_entity(SWITCH_ENTITY_ID, disabled_by=None)
-    await hass.async_block_till_done()
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 async def test_screen_switch_setup(
     hass: HomeAssistant,
     client: AsyncMock,
@@ -53,13 +41,13 @@ async def test_screen_switch_setup(
     assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_screen_switch_state_updates(
     hass: HomeAssistant,
     client: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test screen switch state updates from client."""
-    await _async_setup_and_enable_switch(hass, entity_registry)
+    await setup_webostv(hass)
 
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
@@ -83,6 +71,7 @@ async def test_screen_switch_state_updates(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("service", "screen_state"),
     [
@@ -93,12 +82,11 @@ async def test_screen_switch_state_updates(
 async def test_screen_switch_commands(
     hass: HomeAssistant,
     client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     service: str,
     screen_state: bool,
 ) -> None:
     """Test the screen switch sets the screen state."""
-    await _async_setup_and_enable_switch(hass, entity_registry)
+    await setup_webostv(hass)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -110,15 +98,15 @@ async def test_screen_switch_commands(
     client.set_screen_state.assert_called_once_with(screen_state)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
 async def test_screen_switch_command_error(
     hass: HomeAssistant,
     client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     service: str,
 ) -> None:
     """Test a failing screen command raises a translated error."""
-    await _async_setup_and_enable_switch(hass, entity_registry)
+    await setup_webostv(hass)
     client.set_screen_state.side_effect = WebOsTvCommandError("Communication error")
 
     with pytest.raises(HomeAssistantError) as err:
@@ -133,15 +121,15 @@ async def test_screen_switch_command_error(
     assert err.value.translation_key == "communication_error"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
 async def test_screen_switch_not_supported(
     hass: HomeAssistant,
     client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     service: str,
 ) -> None:
     """Test a TV without screen control raises a translated error."""
-    await _async_setup_and_enable_switch(hass, entity_registry)
+    await setup_webostv(hass)
     client.set_screen_state.side_effect = WebOsTvServiceNotFoundError(
         "404 no such service or method"
     )
