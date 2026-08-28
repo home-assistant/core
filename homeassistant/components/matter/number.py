@@ -308,7 +308,8 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Eve temperature offset
+    # Eve temperature offset; shares the bounds of the generic schema below
+    # and will be merged into it under that schema's unique ID (follow-up PR)
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -316,7 +317,10 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
+            # Matter 1.4 raises this to the SignedTemperature type's usable
+            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
+            # limited to ±2.5°C; that will be enforced via cluster_revision
+            # filtering in a follow-up PR.
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
@@ -338,7 +342,10 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
+            # Matter 1.4 raises this to the SignedTemperature type's usable
+            # range (±127 in 0.1°C units; -128 is reserved). Matter 1.3 is
+            # limited to ±2.5°C; that will be enforced via cluster_revision
+            # filtering in a follow-up PR.
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
