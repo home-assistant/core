@@ -459,7 +459,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==94
+aiounifi==95
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
