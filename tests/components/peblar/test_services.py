@@ -12,6 +12,11 @@ from peblar import (
 import pytest
 
 from homeassistant.components.peblar.const import DOMAIN
+from homeassistant.components.peblar.services import (
+    SERVICE_ADD_RFID_TOKEN,
+    SERVICE_DELETE_RFID_TOKEN,
+    SERVICE_LIST_RFID_TOKENS,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -24,9 +29,9 @@ async def test_services_registered_on_setup(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test that RFID services are registered when entry is loaded."""
-    assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
-    assert hass.services.has_service(DOMAIN, "add_rfid_token")
-    assert hass.services.has_service(DOMAIN, "delete_rfid_token")
+    assert hass.services.has_service(DOMAIN, SERVICE_LIST_RFID_TOKENS)
+    assert hass.services.has_service(DOMAIN, SERVICE_ADD_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, SERVICE_DELETE_RFID_TOKEN)
 
 
 async def test_services_survive_entry_unload(
@@ -37,9 +42,9 @@ async def test_services_survive_entry_unload(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
-    assert hass.services.has_service(DOMAIN, "add_rfid_token")
-    assert hass.services.has_service(DOMAIN, "delete_rfid_token")
+    assert hass.services.has_service(DOMAIN, SERVICE_LIST_RFID_TOKENS)
+    assert hass.services.has_service(DOMAIN, SERVICE_ADD_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, SERVICE_DELETE_RFID_TOKEN)
 
 
 async def test_list_rfid_tokens(
@@ -61,7 +66,7 @@ async def test_list_rfid_tokens(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "list_rfid_tokens",
+        SERVICE_LIST_RFID_TOKENS,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -84,7 +89,7 @@ async def test_add_rfid_token(
     """Test add_rfid_token calls library with correct args."""
     await hass.services.async_call(
         DOMAIN,
-        "add_rfid_token",
+        SERVICE_ADD_RFID_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "uid": "AA:BB:CC:DD",
@@ -107,7 +112,7 @@ async def test_delete_rfid_token(
     """Test delete_rfid_token calls library with correct args."""
     await hass.services.async_call(
         DOMAIN,
-        "delete_rfid_token",
+        SERVICE_DELETE_RFID_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "uid": "AA:BB:CC:DD",
@@ -140,24 +145,23 @@ async def test_unloaded_config_entry_raises(
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            "list_rfid_tokens",
+            SERVICE_LIST_RFID_TOKENS,
             {"config_entry_id": init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
 
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_config_entry"
+    assert excinfo.value.translation_key == "service_config_entry_not_loaded"
 
 
 SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
-    ("list_rfid_tokens", "rfid_tokens", {}),
+    (SERVICE_LIST_RFID_TOKENS, "rfid_tokens", {}),
     (
-        "add_rfid_token",
+        SERVICE_ADD_RFID_TOKEN,
         "add_rfid_token",
         {"uid": "AA:BB:CC:DD", "description": "My Card"},
     ),
-    ("delete_rfid_token", "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
+    (SERVICE_DELETE_RFID_TOKEN, "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
 ]
 
 
@@ -243,11 +247,33 @@ async def test_invalid_config_entry_raises(
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            "list_rfid_tokens",
+            SERVICE_LIST_RFID_TOKENS,
             {"config_entry_id": "nonexistent-entry-id"},
             blocking=True,
             return_response=True,
         )
 
+    assert excinfo.value.translation_key == "service_config_entry_not_found"
+
+
+@pytest.mark.parametrize(("service", "method_name", "service_data"), SERVICE_CALLS)
+@pytest.mark.parametrize("mock_peblar", [{"HwHasRfid": False}], indirect=True)
+async def test_charger_without_rfid_reader(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    service: str,
+    method_name: str,
+    service_data: dict[str, Any],
+) -> None:
+    """A charger without a reader has no standalone list to manage."""
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"config_entry_id": init_integration.entry_id, **service_data},
+            blocking=True,
+            return_response=service == SERVICE_LIST_RFID_TOKENS,
+        )
+
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "invalid_config_entry"
+    assert excinfo.value.translation_key == "no_rfid_hardware"
