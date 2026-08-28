@@ -298,10 +298,9 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return the state of the device."""
         if not self._receiver.power_on:
             return MediaPlayerState.OFF
-        if (now_playing := self._now_playing) is not None:
-            if (state := PLAYBACK_STATES.get(now_playing.state)) is not None:
-                return state
-        return MediaPlayerState.ON
+        if (now_playing := self._now_playing) is None or now_playing.state is None:
+            return MediaPlayerState.ON
+        return PLAYBACK_STATES.get(now_playing.state, MediaPlayerState.ON)
 
     @override
     @property
@@ -349,9 +348,12 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_position(self) -> int | None:
         """Return the position of the current track, in seconds."""
-        if not self._has_streamer or not self._receiver.has_position:
+        if (
+            not self._has_streamer
+            or (position_ms := self._receiver.position_ms) is None
+        ):
             return None
-        return round(self._receiver.position_ms / 1000)
+        return round(position_ms / 1000)
 
     @override
     @property
