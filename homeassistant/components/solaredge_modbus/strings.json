@@ -59,99 +59,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "on_grid": {
-        "name": "On grid",
-        "state": {
-          "off": "[%key:common::state::no%]",
-          "on": "[%key:common::state::yes%]"
-        }
-      }
-    },
-    "number": {
-      "active_power_limit": {
-        "name": "Active power limit"
-      },
-      "backup_reserve": {
-        "name": "Backup reserve"
-      },
-      "charge_limit": {
-        "name": "Storage charge limit"
-      },
-      "cos_phi": {
-        "name": "Power factor setpoint"
-      },
-      "discharge_limit": {
-        "name": "Storage discharge limit"
-      },
-      "external_production_max": {
-        "name": "External production maximum"
-      },
-      "site_limit": {
-        "name": "Site export limit"
-      }
-    },
-    "select": {
-      "export_control_limit_type": {
-        "name": "Export limit type",
-        "state": {
-          "per_phase": "Per phase",
-          "total": "Total"
-        }
-      },
-      "export_control_mode": {
-        "name": "Export limitation",
-        "state": {
-          "disabled": "[%key:common::state::disabled%]",
-          "export_control_consumption_meter": "Consumption meter",
-          "export_control_export_import_meter": "Export and import meter",
-          "production_control": "Production control"
-        }
-      },
-      "storage_ac_charge_policy": {
-        "name": "Storage AC charge policy",
-        "state": {
-          "always": "Always",
-          "disabled": "[%key:common::state::disabled%]",
-          "fixed_energy_limit": "Fixed energy limit",
-          "percent_of_production": "Percentage of production"
-        }
-      },
-      "storage_command_mode": {
-        "name": "Storage command mode",
-        "state": {
-          "charge_from_clipped_solar": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_clipped_solar%]",
-          "charge_from_solar": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_solar%]",
-          "charge_from_solar_and_grid": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_solar_and_grid%]",
-          "discharge_to_maximize_export": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::discharge_to_maximize_export%]",
-          "discharge_to_minimize_import": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::discharge_to_minimize_import%]",
-          "maximize_self_consumption": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::maximize_self_consumption%]",
-          "solar_only": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::solar_only%]"
-        }
-      },
-      "storage_control_mode": {
-        "name": "Storage control mode",
-        "state": {
-          "backup_only": "Backup only",
-          "disabled": "[%key:common::state::disabled%]",
-          "maximize_self_consumption": "Maximize self-consumption",
-          "remote_control": "Remote control",
-          "time_of_use": "Time of use"
-        }
-      },
-      "storage_default_mode": {
-        "name": "Storage default mode",
-        "state": {
-          "charge_from_clipped_solar": "Charge from clipped solar",
-          "charge_from_solar": "Charge from solar",
-          "charge_from_solar_and_grid": "Charge from solar and grid",
-          "discharge_to_maximize_export": "Discharge to maximize export",
-          "discharge_to_minimize_import": "Discharge to minimize import",
-          "maximize_self_consumption": "Maximize self-consumption",
-          "solar_only": "Solar only"
-        }
-      }
-    },
     "sensor": {
       "current_phase_a": {
         "name": "Current phase A"
@@ -204,14 +111,6 @@
       },
       "voltage_phase_cn": {
         "name": "Voltage phase C-N"
-      }
-    },
-    "switch": {
-      "external_production": {
-        "name": "External production"
-      },
-      "negative_site_limit": {
-        "name": "Negative site limit"
       }
     }
   },
