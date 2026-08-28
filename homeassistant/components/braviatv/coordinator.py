@@ -150,7 +150,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if not name or not uri:
                 continue
             self.source_map[uri] = {**item, "name": name, "type": source_type}
-            if add_to_list and name not in self.source_list:
+            if add_to_list and not any(
+                name.lower() == existing.lower() for existing in self.source_list
+            ):
                 self.source_list.append(name)
 
     @override
@@ -294,6 +296,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if query.startswith(("extInput:", "tv:", "com.sony.dtv.")):
             return await self.async_source_start(query, source_type)
         coarse_uri = None
+        label_uri = None
         is_numeric_search = source_type == SourceType.CHANNEL and query.isnumeric()
         for uri, item in self.source_map.items():
             if item["type"] == source_type:
@@ -302,14 +305,19 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    # The generic name keeps working after a rename.
-                    for name in (item.get("name"), item.get("title")):
-                        if not name:
-                            continue
-                        if query.lower() == name.lower():
-                            return await self.async_source_start(uri, source_type)
-                        if query.lower() in name.lower():
-                            coarse_uri = uri
+                    folded = query.lower()
+                    title = (item.get("title") or "").lower()
+                    name = (item.get("name") or "").lower()
+                    # A generic name wins over a label, so labelling an input with
+                    # another one's name cannot capture it from an automation.
+                    if folded == title:
+                        return await self.async_source_start(uri, source_type)
+                    if folded == name:
+                        label_uri = label_uri or uri
+                    elif folded in title or folded in name:
+                        coarse_uri = uri
+        if label_uri:
+            return await self.async_source_start(label_uri, source_type)
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
         raise ValueError(f"Not found {source_type}: {query}")
