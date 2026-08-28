@@ -144,9 +144,22 @@ class BluettiModbusCoordinator(DataUpdateCoordinator[dict[str, ClientReturnValue
             raise self._update_failed(err) from err
 
         results: dict[str, ClientReturnValue] = {}
-        # bluetti_modbus_lib doesn't expose a public accessor for the fields
-        # that came back on the last read yet - tracked as a follow-up to
-        # request one upstream.
+        # bluetti-modbus (pinned to an exact version above, in manifest.json
+        # - not a floor - specifically so this doesn't silently start
+        # reading a different private layout on an unreviewed upgrade) has
+        # no public accessor for the fields that came back on the last
+        # read: only the private Component._values dict, inherited from the
+        # third-party modbus_connection package. self.device.field_names()/
+        # declared_fields/resolved_fields are the STATIC schema (what the
+        # device type CAN report), not what it actually read this cycle, so
+        # none of them can replace this. Requested a public accessor
+        # upstream (mirroring modbus_connection's own sibling class
+        # ManualComponent.values property, which already does exactly
+        # `return dict(self._values)` for the same underlying attribute):
+        # https://github.com/bluetti-community/bluetti-modbus/issues/27
+        # (opened 2026-08-28, with a ready branch linked from it).
+        # TODO(2026-08-28): switch to that accessor and drop this noqa once
+        # a release ships it.
         for name, value in self.device._values.items():  # noqa: SLF001
             field = self.device.get_field(name)
             assert field is not None, (
