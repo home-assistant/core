@@ -503,8 +503,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_abort(reason="oauth_implementation_unavailable")
 
         if user_input is not None:
-            self.flow_impl = implementations[user_input["implementation"]]
-            return await self.async_step_auth()
+            # Reauth and reconfigure steps pass the stored implementation, which is
+            # gone when its credentials were removed. Fall through to let the user
+            # pick or create credentials instead of failing the flow.
+            if (
+                implementation := implementations.get(user_input["implementation"])
+            ) is not None:
+                self.flow_impl = implementation
+                return await self.async_step_auth()
 
         if not implementations:
             if self.DOMAIN in await async_get_application_credentials(self.hass):

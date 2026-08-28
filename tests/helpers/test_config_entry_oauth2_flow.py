@@ -1719,3 +1719,105 @@ async def test_config_entry_implementation_unavailable_provider(
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_pick_implementation_falls_back_when_removed(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a stale implementation id does not break the flow.
+
+    Reauth and reconfigure steps pass the implementation stored on the entry, which
+    is gone once its credentials were removed.
+    """
+    mock_integration(
+        hass,
+        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+    )
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    class ReauthFlowHandler(flow_handler):
+        """Handler passing the stored implementation, like spotify and watts do."""
+
+        async def async_step_reauth(
+            self, entry_data: dict[str, Any]
+        ) -> config_entries.ConfigFlowResult:
+            """Perform reauth with the implementation stored on the entry."""
+            return await self.async_step_pick_implementation(
+                user_input={
+                    "implementation": self._get_reauth_entry().data[
+                        "auth_implementation"
+                    ]
+                }
+            )
+
+        async def async_oauth_create_entry(
+            self, data: dict
+        ) -> config_entries.ConfigFlowResult:
+            """Update the existing entry instead of creating a new one."""
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": "removed",
+            "token": {"refresh_token": REFRESH_TOKEN, "expires_at": 0},
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: ReauthFlowHandler}):
+        # The stale id falls through to the only implementation left
+        result = await config_entry.start_reauth_flow(hass)
+        assert result["type"] is data_entry_flow.FlowResultType.EXTERNAL_STEP
+
+        state = config_entry_oauth2_flow._encode_jwt(
+            hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": "https://example.com/auth/external/callback",
+            },
+        )
+        client = await hass_client_no_auth()
+        resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+        assert resp.status == 200
+
+        aioclient_mock.post(
+            TOKEN_URL,
+            json={
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "type": "bearer",
+                "expires_in": 60,
+            },
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # The entry points at an implementation that exists again
+    assert config_entry.data["auth_implementation"] == TEST_DOMAIN
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+
+
+async def test_pick_implementation_removed_without_any_left(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+) -> None:
+    """Test a stale implementation id aborts cleanly when nothing is available."""
+    flow = flow_handler()
+    flow.hass = hass
+    result = await flow.async_step_pick_implementation(
+        user_input={"implementation": "removed"}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "missing_configuration"
