@@ -95,12 +95,12 @@ async def async_setup_entry(
             translation_key="measurements_unavailable",
         )
 
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id,
-        **inverter_device_info(solaredge, serial_number),
-    )
+    # Built once here: every entity hangs on the same device.
     entry.runtime_data = SolarEdgeModbusRuntimeData(
-        readings=readings, inverter_device_id=inverter.id
+        readings=readings, device_info=inverter_device_info(solaredge, serial_number)
+    )
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **entry.runtime_data.device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

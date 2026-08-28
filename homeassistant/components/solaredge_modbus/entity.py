@@ -74,9 +74,7 @@ class SolarEdgeModbusInverterEntity(
         if TYPE_CHECKING:
             assert serial_number is not None
         self._attr_unique_id = f"{serial_number}_{description.key}"
-        self._attr_device_info = inverter_device_info(
-            entry.runtime_data.solaredge, serial_number
-        )
+        self._attr_device_info = entry.runtime_data.device_info
 
     @property
     @override

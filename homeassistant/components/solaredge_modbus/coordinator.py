@@ -7,6 +7,7 @@ from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -129,7 +130,7 @@ class SolarEdgeModbusRuntimeData:
     """Runtime data for a SolarEdge Modbus config entry."""
 
     readings: SolarEdgeModbusDataUpdateCoordinator
-    inverter_device_id: str
+    device_info: DeviceInfo
 
     @property
     def solaredge(self) -> SolarEdge:
