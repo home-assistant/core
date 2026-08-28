@@ -1279,6 +1279,9 @@
     }
   },
   "exceptions": {
+    "device_trigger_invalid_config": {
+      "message": "Invalid KNX telegram trigger configuration: {error}"
+    },
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
     },
