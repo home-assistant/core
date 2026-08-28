@@ -407,10 +407,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     async def _on_cloud_logout(event: CloudEvent) -> None:
-        """Forget a pending auto-login, hass_nabucasa cancels it on logout."""
+        """Clean up after a logout."""
+        nonlocal loaded
+
+        # Forget a pending auto-login, hass_nabucasa cancels it on logout.
         # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
         # the tokens, so a client re-reading the status would still see a session.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        # Allow _on_start to create a new config entry on the next login.
+        loaded = False
+        await _async_remove_config_entry(hass)
 
     cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
@@ -423,6 +429,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cloud.events.subscribe(event_type=CloudEventType.LOGOUT, handler=_on_cloud_logout)
 
     await cloud.initialize()
+
+    if not cloud.is_logged_in:
+        # Remove leftover config entries if the user is not logged in.
+        await _async_remove_config_entry(hass)
+
     http_api.async_setup(hass)
 
     account_link.async_setup(hass)
@@ -448,6 +459,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+async def _async_remove_config_entry(hass: HomeAssistant) -> None:
+    """Remove the config entry, it's recreated when a user logs in again."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(entry.entry_id)
 
 
 @callback
