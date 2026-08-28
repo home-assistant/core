@@ -97,30 +97,32 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
 
         if light_address is None:
             self._attr_unique_id = mac_address
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         else:
             # Real Gen4 fixtures are named by the user, so the device-name
             # prefix strip below is per-device data rather than static.
             self._attr_unique_id = f"{mac_address}_{light_address}"
-            fixture_name = next(
-                light.name
+            fixture = next(
+                light
                 for light in coordinator.data.state.light_fixtures
                 if light.address == light_address
             )
             self._attr_name = strip_device_name_prefix(
-                self.coordinator.data.info.device_name, fixture_name
+                self.coordinator.data.info.device_name, fixture.name
             )
 
-        if (
-            self._light.min_color_temp_kelvin is not None
-            and self._light.max_color_temp_kelvin is not None
-        ):
-            self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
-            self._attr_min_color_temp_kelvin = self._light.min_color_temp_kelvin
-            self._attr_max_color_temp_kelvin = self._light.max_color_temp_kelvin
-        else:
-            self._attr_color_mode = ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            if (
+                fixture.min_color_temp_kelvin is not None
+                and fixture.max_color_temp_kelvin is not None
+            ):
+                self._attr_color_mode = ColorMode.COLOR_TEMP
+                self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+                self._attr_min_color_temp_kelvin = fixture.min_color_temp_kelvin
+                self._attr_max_color_temp_kelvin = fixture.max_color_temp_kelvin
+            else:
+                self._attr_color_mode = ColorMode.BRIGHTNESS
+                self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def _light(self) -> Light | None:
@@ -156,7 +158,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of this light in Kelvin."""
-        return self._light.color_temp_kelvin
+        return self._light.color_temp_kelvin if self._light is not None else None
 
     @modernforms_exception_handler
     @override
