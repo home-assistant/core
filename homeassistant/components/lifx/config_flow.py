@@ -108,9 +108,14 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry: LIFXConfigEntry, host: str
     ) -> ConfigFlowResult:
         """Repair the host of an already configured entry and abort."""
-        if self.hass.config_entries.async_update_entry(
+        repaired = self.hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_HOST: host}
-        ) and entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
+        )
+        # A device answering DHCP is online, so a retrying entry is worth
+        # another attempt even when it kept the address it already had
+        if entry.state is ConfigEntryState.SETUP_RETRY or (
+            repaired and entry.state is ConfigEntryState.LOADED
+        ):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason="already_configured")
 
