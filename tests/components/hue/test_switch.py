@@ -74,7 +74,9 @@ async def test_motionaware_switch_device(
     entity_entry = entity_registry.async_get("switch.test_room_test_room_motionaware")
     assert entity_entry is not None
 
-    zone_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_ROOM_ID)})
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_ROOM_ID), mock_bridge_v2.config_entry.entry_id
+    )
     assert zone_device is not None
     assert entity_entry.device_id == zone_device.id
 
