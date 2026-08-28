@@ -603,13 +603,19 @@ class RoborockWetDryVacUpdateCoordinator(
             data = await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
+            if pushed := self._take_pushed_during_poll():
+                return {**(self.data or {}), **pushed}
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
-        finally:
-            pushed, self._pushed_during_poll = self._pushed_during_poll, None
-        return {**data, **pushed}
+        return {**data, **self._take_pushed_during_poll()}
+
+    @callback
+    def _take_pushed_during_poll(self) -> dict[RoborockDyadDataProtocol, StateType]:
+        """Return the values pushed while the poll was in flight, and stop recording."""
+        pushed, self._pushed_during_poll = self._pushed_during_poll, None
+        return pushed or {}
 
     @callback
     def _handle_push(self, values: dict[RoborockDyadDataProtocol, StateType]) -> None:

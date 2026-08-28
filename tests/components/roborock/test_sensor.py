@@ -202,3 +202,29 @@ async def test_dyad_push_during_poll_is_not_overwritten(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+
+
+async def test_dyad_push_survives_a_failed_poll(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push received during a poll survives that poll failing."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    async def push_then_fail(
+        protocols: list[RoborockDyadDataProtocol],
+    ) -> dict[RoborockDyadDataProtocol, Any]:
+        push_listener({RoborockDyadDataProtocol.POWER: 50})
+        raise RoborockException("Simulated failure")
+
+    dyad.query_values.side_effect = push_then_fail
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
