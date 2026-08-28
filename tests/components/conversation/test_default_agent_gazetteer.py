@@ -237,7 +237,7 @@ async def test_not_used_for_other_languages(hass: HomeAssistant) -> None:
 async def test_follow_up_pronoun_reuses_the_previous_target(
     hass: HomeAssistant, text: str
 ) -> None:
-    """Test "them" refers to what the last successful turn targeted."""
+    """Test a follow-up pronoun refers to what the last successful turn targeted."""
     async_mock_service(hass, "cover", "open_cover")
     close_cover = async_mock_service(hass, "cover", "close_cover")
 

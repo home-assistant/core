@@ -57,12 +57,7 @@ _TARGET_SCOPES = (
 
 @callback
 def async_refers_back(interpretation: Interpretation) -> bool:
-    """Return whether the matcher read the sentence as a follow-up ("it"/"them").
-
-    A pronoun is tagged wherever it appears, including where the matcher leaves it
-    alone: "it" is a grammatical subject in "how hot is it", and only some actions
-    take a follow-up at all. What it resolved is what says one was read.
-    """
+    """Return whether the matcher read the sentence as a follow-up ("it"/"them")."""
     if (interpretation.rejection_code or "").startswith(_ANAPHORA_PREFIX):
         return True
     return any(
