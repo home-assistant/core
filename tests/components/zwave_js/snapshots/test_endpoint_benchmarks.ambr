@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fibaro_fgr223_device_tree
+# name: test_device_tree[fibaro_fgr223]
   dict({
     'child_devices': list([
     ]),
@@ -354,7 +354,7 @@
     }),
   })
 # ---
-# name: test_heatit_z_trm2fx_device_tree
+# name: test_device_tree[heatit_z_trm2fx]
   dict({
     'child_devices': list([
     ]),
@@ -579,7 +579,7 @@
     }),
   })
 # ---
-# name: test_heatit_z_trm3_device_tree
+# name: test_device_tree[heatit_z_trm3]
   dict({
     'child_devices': list([
     ]),
@@ -764,7 +764,7 @@
     }),
   })
 # ---
-# name: test_heatit_z_trm6_device_tree
+# name: test_device_tree[heatit_z_trm6]
   dict({
     'child_devices': list([
     ]),
@@ -1059,7 +1059,7 @@
     }),
   })
 # ---
-# name: test_inovelli_lzw36_device_tree
+# name: test_device_tree[inovelli_lzw36]
   dict({
     'child_devices': list([
     ]),
@@ -1349,7 +1349,7 @@
     }),
   })
 # ---
-# name: test_merten_507801_device_tree
+# name: test_device_tree[merten_507801]
   dict({
     'child_devices': list([
     ]),
@@ -1469,7 +1469,7 @@
     }),
   })
 # ---
-# name: test_shelly_qnsh_001p10_device_tree
+# name: test_device_tree[shelly_qnsh_001p10]
   dict({
     'child_devices': list([
     ]),
@@ -1784,7 +1784,7 @@
     }),
   })
 # ---
-# name: test_vision_zl7432_device_tree
+# name: test_device_tree[vision_zl7432]
   dict({
     'child_devices': list([
     ]),
