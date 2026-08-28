@@ -93,7 +93,7 @@ async def test_set_webhooks_allowed_updates(
     mock_webhooks_config_entry: MockConfigEntry,
     mock_external_calls: None,
     mock_register_webhook: None,
-    mock_generate_secret_token,
+    mock_generate_secret_token: str,
 ) -> None:
     """Test the webhook is registered for the updates the integration handles.
 
