@@ -95,11 +95,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             ) from err
         finally:
             if not connected:
-                # The socket and its reader task exist from partway through
-                # connecting, and nothing else holds this client yet, so every
-                # way of leaving without it — a rejected login, an unexpected
-                # error, cancellation from a reload or shutdown — has to close
-                # it here or it is leaked for the lifetime of the entry.
+                # Nothing else holds this client yet, and its socket is already
+                # open, so every way of leaving without it has to close it here
+                # — cancellation included.
                 await _async_close_client(client)
 
         # Connecting reads the profile, so the clock starts here.

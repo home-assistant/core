@@ -20,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> b
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryAuthFailed, ConfigEntryNotReady:
-        # The socket may already be open (for example when the account reports
-        # no devices) and nothing else will close it once setup is abandoned.
+        # runtime_data is never assigned, so no unload path can reach the socket
+        # the first refresh already opened.
         await coordinator.async_shutdown()
         raise
     entry.runtime_data = coordinator
