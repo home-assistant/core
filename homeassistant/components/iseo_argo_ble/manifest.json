@@ -75,5 +75,5 @@
   "iot_class": "local_push",
   "loggers": ["iseo_argo_ble"],
   "quality_scale": "bronze",
-  "requirements": ["iseo-argo-ble==0.9.2"]
+  "requirements": ["iseo-argo-ble==0.9.3"]
 }

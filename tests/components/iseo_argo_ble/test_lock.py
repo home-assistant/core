@@ -1,7 +1,5 @@
 """Test the ISEO Argo BLE lock entity."""
 
-from datetime import timedelta
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,11 +7,12 @@ from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bluetooth import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-)
 from homeassistant.components.iseo_argo_ble.const import CONF_ENABLE_POLLING, DOMAIN
-from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL
+from homeassistant.components.iseo_argo_ble.lock import (
+    _AVAILABILITY_CHECK_INTERVAL,
+    _POLL_INTERVAL,
+    _UNAVAILABLE_AFTER,
+)
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -26,16 +25,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import iseo_advertisement, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
+from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 ENTITY_ID = "lock.iseo_lock"
 
@@ -86,6 +80,7 @@ async def test_firmware_version_is_reported(
 ) -> None:
     """Test the firmware version read from the lock lands on the device."""
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
@@ -104,6 +99,7 @@ async def test_state_follows_door_status(
     """Test the reported state follows the door status the lock advertises."""
     await setup_integration(hass, mock_config_entry)
 
+    await _advertise(hass, door_closed=True)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
     await _advertise(hass, door_closed=False)
@@ -124,6 +120,7 @@ async def test_unlock_keeps_unlocked_while_door_open(
 ) -> None:
     """Test an open door is not reported as locked after unlocking."""
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
     with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
@@ -163,6 +160,7 @@ async def test_unlock_assumes_locked_without_door_status(
     """Test a lock that never reports door status is assumed locked again."""
     mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == LockState.LOCKED
@@ -186,9 +184,8 @@ async def test_availability_recovers_from_an_advertisement(
 ) -> None:
     """Test the lock becomes available again on the next advertisement."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
-    # The lock goes out of range and an unlock fails.
+    # Out of range and never heard from, so there is nothing to connect to.
     with (
         patch(
             "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
@@ -200,11 +197,13 @@ async def test_availability_recovers_from_an_advertisement(
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # Hearing it again is enough; no connection is needed to recover.
+    # Hearing it again is enough to recover.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+    # Availability itself costs no connection: the one-off probe already ran.
     mock_iseo_client.read_state.reset_mock()
     await _advertise(hass, door_closed=True)
-
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
     mock_iseo_client.read_state.assert_not_called()
 
 
@@ -217,6 +216,7 @@ async def test_unavailable_when_lock_rejects_identity(
     """Test the lock becomes unavailable when it rejects the stored identity."""
     mock_iseo_client.read_state.side_effect = IseoAuthError("rejected")
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -224,24 +224,24 @@ async def test_unavailable_when_lock_rejects_identity(
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_unavailable_when_it_stops_advertising(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test the lock is unavailable once it stops being heard."""
+    """Test the lock is unavailable once its advertisements stop arriving."""
     await setup_integration(hass, mock_config_entry)
     await _advertise(hass, door_closed=True)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
-    monotonic_now = time.monotonic() + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
-    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow()
-            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(_UNAVAILABLE_AFTER + _AVAILABILITY_CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Hearing it again brings it straight back.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
@@ -257,6 +257,7 @@ async def test_advertisement_does_not_override_unsupported_door_status(
     """
     mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == LockState.LOCKED
@@ -289,6 +290,37 @@ async def test_advertisement_without_door_status_is_ignored(
     assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
 
 
+@pytest.mark.usefixtures("mock_derive_private_key")
+async def test_unlock_uses_the_last_advertised_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_ble_device: MagicMock,
+) -> None:
+    """Test unlocking still works when the manager has no device cached.
+
+    Clearing the advertisement history to keep passive callbacks flowing also
+    drops the manager's device cache, so the address lookup can come back empty
+    for a lock that is advertising perfectly well.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+            return_value=None,
+        ),
+        # No advertisement will arrive during the test; don't sit out the wait.
+        patch("homeassistant.components.iseo_argo_ble.lock._ADVERTISEMENT_WAIT", 0),
+    ):
+        await _unlock(hass)
+        await hass.async_block_till_done()
+
+    mock_iseo_client.gw_open.assert_called_once()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_no_connection_is_made_on_a_timer_by_default(
     hass: HomeAssistant,
@@ -302,6 +334,7 @@ async def test_no_connection_is_made_on_a_timer_by_default(
     connection the entity makes on its own.
     """
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
     mock_iseo_client.read_state.assert_awaited_once()
 
     mock_iseo_client.read_state.reset_mock()

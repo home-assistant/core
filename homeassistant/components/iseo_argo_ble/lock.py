@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
+from bleak.backends.device import BLEDevice
 from iseo_argo_ble import (
     IseoAuthError,
     IseoClient,
@@ -18,8 +19,8 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+    async_clear_advertisement_history,
     async_register_callback,
-    async_track_unavailable,
 )
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.lock import LockEntity
@@ -44,6 +45,15 @@ _RELOCK_DELAY = 5
 
 # Only used when the polling fallback is enabled; see CONF_ENABLE_POLLING.
 _POLL_INTERVAL = timedelta(seconds=30)
+
+# The lock advertises sparsely — minutes apart when nothing is happening — so
+# silence only means it is gone after a good while.
+_UNAVAILABLE_AFTER = timedelta(minutes=10)
+
+# How long to wait for an advertisement to make the lock reachable again before
+# connecting anyway and letting the retry logic take over.
+_ADVERTISEMENT_WAIT = 30
+_AVAILABILITY_CHECK_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(
@@ -102,10 +112,19 @@ class IseoLockEntity(LockEntity):
         self._attr_is_unlocking = False
         self._attr_available = True
         self._poll_suppress_until: datetime | None = None
+        self._last_advertisement: datetime | None = None
+        self._last_ble_device: BLEDevice | None = None
+        self._initial_read: asyncio.Task[None] | None = None
+        self._advertised = asyncio.Event()
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to advertisements and read the lock once for its firmware."""
+        """Start following the lock's advertisements.
+
+        Nothing is read over a connection here. After a restart no scanner has
+        seen the lock until it next advertises — minutes, on this hardware — so
+        connecting at setup only stalls the platform and fails.
+        """
         address = self._entry.data[CONF_ADDRESS]
         self.async_on_remove(
             async_register_callback(
@@ -116,15 +135,11 @@ class IseoLockEntity(LockEntity):
             )
         )
         self.async_on_remove(
-            async_track_unavailable(
-                self.hass, self._async_device_unavailable, address, connectable=False
+            async_track_time_interval(
+                self.hass, self._check_availability, _AVAILABILITY_CHECK_INTERVAL
             )
         )
         self.async_on_remove(self._cancel_relock_task)
-
-        # A single read on setup, for the firmware version and an initial state
-        # before the first advertisement lands. This is a one-off, not a timer.
-        await self._poll_state()
 
         if self._entry.options.get(CONF_ENABLE_POLLING, False):
             self.async_on_remove(
@@ -142,7 +157,22 @@ class IseoLockEntity(LockEntity):
         self, service_info: BluetoothServiceInfoBleak, _change: BluetoothChange
     ) -> None:
         """Apply the door state the lock encodes in its advertisement."""
+        self._last_advertisement = dt_util.utcnow()
+        self._last_ble_device = service_info.device
+        self._advertised.set()
         self._set_available(True)
+        self._async_schedule_initial_read()
+
+        # The lock encodes door state in the set of service UUIDs it advertises
+        # rather than in changing payload bytes, so without resetting the
+        # scanners' merge state the entity would never see the door close again.
+        #
+        # That same state is what the scanners hand out as their discovered
+        # device, so clearing it makes the lock unreachable until it advertises
+        # again. Leave it alone while a connection is being made, or the
+        # connection can never resolve a backend to reach it through.
+        if not self._ble_lock.locked():
+            async_clear_advertisement_history(self.hass, self._entry.data[CONF_ADDRESS])
 
         if self._door_status_supported is False:
             # The lock reported it does not support door status. Advertisements
@@ -152,8 +182,12 @@ class IseoLockEntity(LockEntity):
 
         state = parse_iseo_advertisement(list(service_info.service_uuids or []))
         if state is None or state.door_closed is None:
+            _LOGGER.debug(
+                "Advertisement carried no door state: %s", service_info.service_uuids
+            )
             return
 
+        _LOGGER.debug("Advertisement reports door_closed=%s", state.door_closed)
         self._door_status_supported = True
         self._attr_assumed_state = False
 
@@ -166,11 +200,17 @@ class IseoLockEntity(LockEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_device_unavailable(
-        self, _service_info: BluetoothServiceInfoBleak
-    ) -> None:
-        """Handle the lock no longer being seen by the bluetooth stack."""
-        self._set_available(False, "no advertisement received")
+    def _check_availability(self, _now: datetime) -> None:
+        """Mark the lock unavailable once its advertisements stop arriving.
+
+        Runs on a timer and never connects to the lock. Clearing the manager's
+        advertisement history to keep callbacks flowing also clears the data it
+        tracks devices by, so recency is tracked here instead.
+        """
+        if self._last_advertisement is None:
+            return
+        if dt_util.utcnow() - self._last_advertisement >= _UNAVAILABLE_AFTER:
+            self._set_available(False, "no advertisement received")
 
     def _cancel_relock_task(self) -> None:
         """Cancel any pending relock task."""
@@ -211,6 +251,71 @@ class IseoLockEntity(LockEntity):
         dev_reg.async_update_device(device.id, sw_version=fw_version)
         self._fw_version_set = True
 
+    async def _async_wait_until_reachable(self) -> None:
+        """Wait for an advertisement to put the lock back in a scanner's records.
+
+        Resetting the scanners' merge state to keep door updates flowing also
+        drops their record of the device, so a connection started just after an
+        advertisement has no path to route through and burns its retries. Call
+        this with _ble_lock held: that suppresses further clearing, so the next
+        advertisement sticks and the connection goes straight through.
+        """
+        address = self._entry.data[CONF_ADDRESS]
+        if async_ble_device_from_address(self.hass, address, connectable=True):
+            return
+
+        _LOGGER.debug("Waiting for an advertisement before connecting")
+        self._advertised.clear()
+        try:
+            async with asyncio.timeout(_ADVERTISEMENT_WAIT):
+                await self._advertised.wait()
+        except TimeoutError:
+            _LOGGER.debug(
+                "No advertisement in %ss, connecting anyway", _ADVERTISEMENT_WAIT
+            )
+
+    @callback
+    def _async_schedule_initial_read(self) -> None:
+        """Read the lock once, the first time a scanner has actually seen it.
+
+        The capability flags and firmware version only come over a connection,
+        and connecting before the lock has advertised cannot work. Runs off the
+        first advertisement instead, and retries on a later one if it fails.
+        """
+        if self._initial_read is not None or self._door_status_supported is not None:
+            return
+
+        async def _read() -> None:
+            try:
+                await self._poll_state()
+            finally:
+                self._initial_read = None
+
+        self._initial_read = self.hass.async_create_task(_read())
+        self.async_on_remove(self._cancel_initial_read)
+
+    def _cancel_initial_read(self) -> None:
+        """Cancel a pending first read."""
+        if self._initial_read is not None and not self._initial_read.done():
+            self._initial_read.cancel()
+
+    def _async_get_ble_device(self) -> BLEDevice | None:
+        """Return a device to connect to, falling back to the last advertised one.
+
+        Clearing the manager's advertisement history to keep passive callbacks
+        flowing also drops its device cache, so the lookup can come back empty
+        for a lock that is plainly right there and advertising.
+        """
+        from_manager = async_ble_device_from_address(
+            self.hass, self._entry.data[CONF_ADDRESS], connectable=True
+        )
+        _LOGGER.debug(
+            "BLE device lookup: manager=%s cached=%s",
+            from_manager,
+            self._last_ble_device,
+        )
+        return from_manager or self._last_ble_device
+
     async def _poll_state(self) -> None:
         """Read door state via TLV_INFO and update HA state."""
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
@@ -218,13 +323,7 @@ class IseoLockEntity(LockEntity):
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
             return
 
-        if not (
-            ble_device := async_ble_device_from_address(
-                self.hass,
-                self._entry.data[CONF_ADDRESS],
-                connectable=True,
-            )
-        ):
+        if not (ble_device := self._async_get_ble_device()):
             self._set_available(False, "device not found")
             return
 
@@ -237,6 +336,7 @@ class IseoLockEntity(LockEntity):
 
         try:
             async with self._ble_lock:
+                await self._async_wait_until_reachable()
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except IseoAuthError as exc:
@@ -323,13 +423,7 @@ class IseoLockEntity(LockEntity):
 
         self._set_unlocking()
 
-        if not (
-            ble_device := async_ble_device_from_address(
-                self.hass,
-                self._entry.data[CONF_ADDRESS],
-                connectable=True,
-            )
-        ):
+        if not (ble_device := self._async_get_ble_device()):
             self._set_locked(available=False)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -338,6 +432,7 @@ class IseoLockEntity(LockEntity):
 
         try:
             async with self._ble_lock:
+                await self._async_wait_until_reachable()
                 self.client.update_ble_device(ble_device)
                 await self.client.gw_open(remote_user_name="Home Assistant")
         except IseoAuthError as exc:
