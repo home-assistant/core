@@ -130,9 +130,11 @@ async def test_async_create_udp_client(
 ) -> None:
     """Test creating a UDP client configures broadcast addresses."""
     with (
-        patch("homeassistant.components.marstek.MarstekUDPClient") as mock_client_class,
         patch(
-            "homeassistant.components.marstek.network.async_get_ipv4_broadcast_addresses",
+            "homeassistant.components.marstek.helpers.MarstekUDPClient"
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.marstek.helpers.network.async_get_ipv4_broadcast_addresses",
             return_value=[IPv4Address("192.168.1.255")],
         ),
     ):
@@ -155,9 +157,11 @@ async def test_async_create_udp_client_cleans_up_on_broadcast_lookup_failure(
 ) -> None:
     """Test client creation cleans up when broadcast address lookup fails."""
     with (
-        patch("homeassistant.components.marstek.MarstekUDPClient") as mock_client_class,
         patch(
-            "homeassistant.components.marstek.network.async_get_ipv4_broadcast_addresses",
+            "homeassistant.components.marstek.helpers.MarstekUDPClient"
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.marstek.helpers.network.async_get_ipv4_broadcast_addresses",
             side_effect=OSError("network down"),
         ),
     ):
