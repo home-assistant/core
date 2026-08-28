@@ -597,7 +597,6 @@ async def test_form_enhanced_security(
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
-        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2451,7 +2450,6 @@ async def test_zeroconf_enhanced_security(
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
-        CONF_VERIFY_SSL: False,
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
@@ -2955,7 +2953,6 @@ async def test_reauth_enhanced_security(
         CONF_GEN: 2,
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "test password",
-        CONF_VERIFY_SSL: False,
     }
 
 
@@ -3627,7 +3624,6 @@ async def test_reconfigure_enhanced_security(
         CONF_HOST: "10.10.10.10",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_GEN: 2,
-        CONF_VERIFY_SSL: False,
     }
 
 
