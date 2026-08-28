@@ -157,7 +157,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
             return self.json_message(
                 f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
             )
-        return self.json(self._prepare_result_json(result))  # type: ignore[arg-type]
+        return self.json(self._prepare_result_json(result))
 
     @override
     def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
