@@ -227,10 +227,14 @@ async def test_entities_are_linked_to_subentries(
         assert (
             entity_registry.async_get(entity_id).config_subentry_id == cache_subentry_id
         )
-        if description.key == "favorite_points":
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == "10"
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{cache_code}_favorite_points"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "10"
 
     for description in TRACKABLE_SENSORS:
         entity_id = entity_registry.async_get_entity_id(
