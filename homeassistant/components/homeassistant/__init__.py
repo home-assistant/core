@@ -134,13 +134,15 @@ def _get_missing_cpu_features() -> list[str] | None:
         cpuinfo = CPUINFO_PATH.read_text(encoding="utf-8")
     except OSError:
         return None
-    flags: set[str] = set()
+    flags: set[str] | None = None
     for line in cpuinfo.splitlines():
         key, _, value = line.partition(":")
         if key.strip() == "flags":
-            flags = set(value.split())
-            break
-    if not flags:
+            cpu_flags = set(value.split())
+            if not cpu_flags:
+                return None
+            flags = cpu_flags if flags is None else flags & cpu_flags
+    if flags is None:
         return None
     return sorted(REQUIRED_X86_64_V2_FLAGS - flags)
 
