@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -7,14 +14,6 @@
       "wrong_account": "Token belongs to a different Discogs account."
     },
     "step": {
-      "user": {
-        "data": {
-          "token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "token": "Personal access token from Discogs developer settings."
-        }
-      },
       "reauth_confirm": {
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
@@ -23,14 +22,15 @@
           "token": "[%key:component::discogs::config::step::user::data_description::token%]"
         },
         "description": "Your Discogs token is no longer valid. Please provide a new one."
+      },
+      "user": {
+        "data": {
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "token": "Personal access token from Discogs developer settings."
+        }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -38,11 +38,11 @@
       "collection": {
         "name": "Collection"
       },
-      "wantlist": {
-        "name": "Wantlist"
-      },
       "random_record": {
         "name": "Random record"
+      },
+      "wantlist": {
+        "name": "Wantlist"
       }
     }
   }
