@@ -170,6 +170,8 @@ class BluettiSensor(BluettiEntity, SensorEntity):
         self._attr_device_class = meta["device_class"]
         self._attr_state_class = meta["state_class"]
         self._attr_native_unit_of_measurement = meta["unit"]
+        if meta["device_class"] == SensorDeviceClass.ENUM and state.support_mode_values:
+            self._attr_options = [str(v["name"]) for v in state.support_mode_values]
 
     @property
     @override

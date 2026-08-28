@@ -90,6 +90,7 @@ async def test_sensor_setup_entry_creates_expected_entities(
     assert (
         enum_sensor.native_value == "Grid"
     )  # exercises the support_mode_values branch
+    assert enum_sensor.options == ["Grid"]
 
 
 async def test_sensor_setup_entry_survives_sensor_info_missing_unit_key(
