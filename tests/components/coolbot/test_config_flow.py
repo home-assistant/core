@@ -44,6 +44,7 @@ async def test_user_flow_creates_entry(
     assert result["data"] == USER_INPUT
     assert result["result"].unique_id == TEST_EMAIL
     mock_client.async_close.assert_awaited()
+    await hass.async_block_till_done()
 
 
 async def test_user_flow_survives_a_failing_close(
@@ -58,6 +59,7 @@ async def test_user_flow_survives_a_failing_close(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
 
 
 async def test_user_flow_strips_and_lowercases_identity(
@@ -73,6 +75,7 @@ async def test_user_flow_strips_and_lowercases_identity(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_EMAIL] == TEST_EMAIL.upper()
     assert result["result"].unique_id == TEST_EMAIL
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -105,6 +108,7 @@ async def test_user_flow_errors_then_recovers(
         result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
 
 
 async def test_user_flow_rejects_account_with_no_devices(
@@ -156,6 +160,9 @@ async def test_reauth_flow_updates_password(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    # A successful flow schedules a reload rather than awaiting one, so let it
+    # finish here instead of leaving a task running into teardown.
+    await hass.async_block_till_done()
 
 
 async def test_reauth_flow_rejects_bad_password_then_recovers(
@@ -180,6 +187,7 @@ async def test_reauth_flow_rejects_bad_password_then_recovers(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "right-this-time"
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_flow_updates_credentials(
@@ -199,6 +207,7 @@ async def test_reconfigure_flow_updates_credentials(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "rotated"
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -241,6 +250,7 @@ async def test_existing_entry_flows_allow_an_emptied_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_flow_refuses_a_different_account(
