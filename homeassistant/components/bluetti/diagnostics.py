@@ -21,9 +21,19 @@ async def async_get_config_entry_diagnostics(
     # more than a token would be. Alias it to a stable per-dump "device_N"
     # instead of blanking it outright, so multiple devices in one dump can
     # still be told apart and cross-referenced against "coordinators" below.
+    # Built from every serial-bearing source, not just the live runtime
+    # devices: a device enabled in entry.options can be absent from
+    # runtime_data (e.g. its product data went stale between an account
+    # rebind and the next reload), and the entry_options aliasing below
+    # would otherwise fall through to the raw, unaliased serial for it.
+    all_device_ids = {
+        device.device_id for device in runtime_data.bluetti_devices.devices
+    }
+    all_device_ids.update(entry.options.get("devices", []))
+    all_device_ids.update(entry.options.get("modbus", {}))
     aliases = {
-        device.device_id: f"device_{i + 1}"
-        for i, device in enumerate(runtime_data.bluetti_devices.devices)
+        device_id: f"device_{i + 1}"
+        for i, device_id in enumerate(sorted(all_device_ids))
     }
 
     devices = [
@@ -66,9 +76,11 @@ async def async_get_config_entry_diagnostics(
     if "modbus" in entry_options:
         # Keyed by the same real serial numbers - alias the keys too, or a
         # device with local Modbus configured would leak its serial here
-        # even though "devices" above was redacted.
+        # even though "devices" above was redacted. The host is sensitive
+        # local-network information (the device's LAN IP or hostname) in
+        # its own right, independently of which device it belongs to.
         entry_options["modbus"] = {
-            aliases.get(sn, sn): config
+            aliases.get(sn, sn): async_redact_data(config, {"host"})
             for sn, config in entry_options["modbus"].items()
         }
 

@@ -7,7 +7,11 @@ from typing import Any, override
 from pybluetti import ProductClient, UnifyResponse
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -97,6 +101,20 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                         )
                         existing_entry = entry
                         break
+
+            if existing_entry and self.source not in (
+                SOURCE_REAUTH,
+                SOURCE_RECONFIGURE,
+            ):
+                # A plain "Add Integration" flow (not a reauth/reconfigure
+                # re-run of an existing entry) landing here means the user
+                # authenticated a second, different BLUETTI account while
+                # one is already configured. Reject it outright instead of
+                # falling into the merge-and-overwrite branch below: that
+                # branch replaces the stored token, which would leave the
+                # first account's retained devices using the second
+                # account's credentials and inaccessible.
+                return self.async_abort(reason="already_configured")
 
             if existing_entry:
                 # Merge into the existing integration entry

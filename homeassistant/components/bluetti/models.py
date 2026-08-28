@@ -352,7 +352,12 @@ class BluettiDevice:
                         for d in runtime_data.bluetti_devices.devices
                         if d.device_id != self.device_id
                     ]
-                    runtime_data.coordinators.pop(self.device_id, None)
+                    coordinator = runtime_data.coordinators.pop(self.device_id, None)
+                    if coordinator:
+                        # Without this, a failed delayed reload (e.g. this
+                        # unbind fires mid-retry) would leave the removed
+                        # coordinator's periodic polling active indefinitely.
+                        await coordinator.async_shutdown()
                     modbus_coordinator = runtime_data.modbus_coordinators.pop(
                         self.device_id, None
                     )

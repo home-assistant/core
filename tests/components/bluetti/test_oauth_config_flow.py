@@ -13,6 +13,7 @@ from homeassistant.components.bluetti.const import (
     DOMAIN,
     INTEGRATION_NAME,
 )
+from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.json import JSONEncoder
@@ -76,6 +77,11 @@ async def test_merge_into_existing_entry_by_unique_id(hass: HomeAssistant) -> No
     existing_entry.add_to_hass(hass)
 
     flow = _make_flow(hass)
+    # A plain fresh flow finding an existing entry aborts as
+    # already_configured instead of merging (see the reason for that in
+    # config_flow.py) - this test is specifically about the reconfigure/
+    # reauth re-run path, which is the only one allowed to merge/update.
+    flow.context["source"] = SOURCE_RECONFIGURE
     flow._products = [
         UserProduct(sn="SN1", name="New Device", stateList=[], online="1")
     ]
@@ -114,6 +120,7 @@ async def test_legacy_entry_without_unique_id_is_adopted(hass: HomeAssistant) ->
     legacy_entry.add_to_hass(hass)
 
     flow = _make_flow(hass)
+    flow.context["source"] = SOURCE_RECONFIGURE
     flow._products = [
         UserProduct(sn="SN1", name="New Device", stateList=[], online="1")
     ]
@@ -131,6 +138,58 @@ async def test_legacy_entry_without_unique_id_is_adopted(hass: HomeAssistant) ->
     updated = hass.config_entries.async_get_entry(legacy_entry.entry_id)
     assert updated.unique_id == ACCOUNT_UNIQUE_ID
     assert updated.options["devices"] == ["SN1"]
+
+
+async def test_second_account_via_fresh_flow_aborts_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """A plain (non-reauth/reconfigure) flow rejects a second account.
+
+    Regression test: authenticating a different BLUETTI account through a
+    fresh "Add Integration" flow while one is already configured used to
+    merge into the existing entry and overwrite its stored token with the
+    second account's - leaving the first account's retained devices
+    inaccessible. It must instead abort cleanly and leave the existing
+    entry untouched.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "original-token"},
+            "products": [
+                {"sn": "SN0", "name": "Existing", "stateList": [], "online": "1"}
+            ],
+        },
+        options={"devices": ["SN0"]},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    # _make_flow's flow.context == {} - self.source is None, matching a
+    # real "Add Integration" flow (never reauth/reconfigure).
+    flow._products = [
+        UserProduct(sn="SN1", name="Second Account Device", stateList=[], online="1")
+    ]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+
+    result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+    # The first account's entry must be untouched - same token, same
+    # devices, no second account's device merged in. (bind_devices() has
+    # already run against the cloud by this point - it's how the flow
+    # learns which account it's dealing with in the first place - so it's
+    # the local Home Assistant config entry, not the cloud-side bind, that
+    # must stay untouched here.)
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["token"] == {"access_token": "original-token"}
+    assert updated.options["devices"] == ["SN0"]
 
 
 async def test_bind_devices_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:

@@ -50,10 +50,11 @@ async def test_async_setup_entry_with_no_devices(hass: HomeAssistant) -> None:
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.bluetti_devices.devices == []
@@ -87,13 +88,14 @@ async def test_async_setup_entry_with_a_device(hass: HomeAssistant) -> None:
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
         )
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     devices = entry.runtime_data.bluetti_devices.devices
@@ -141,13 +143,14 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status
         )
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     coordinators = entry.runtime_data.coordinators
@@ -187,10 +190,11 @@ async def test_async_setup_entry_reimports_missing_oauth_credential(
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     mock_ensure_credential.assert_awaited_once_with(hass)
@@ -210,7 +214,7 @@ async def test_async_setup_entry_retries_on_failure(hass: HomeAssistant) -> None
         ),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -237,7 +241,7 @@ async def test_async_setup_entry_retries_when_credential_stays_missing(
         ) as mock_ensure_credential,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     mock_ensure_credential.assert_awaited_once_with(hass)
@@ -281,6 +285,7 @@ async def test_async_setup_entry_wires_up_modbus_coordinator_for_capable_device(
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -291,7 +296,7 @@ async def test_async_setup_entry_wires_up_modbus_coordinator_for_capable_device(
         mock_get_device.return_value = modbus_device
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     mock_async_get_unit.assert_called_once()
@@ -348,6 +353,7 @@ async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -359,7 +365,7 @@ async def test_modbus_first_refresh_failure_does_not_prevent_cloud_entities_from
         mock_get_device.return_value = modbus_device
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert "SN1" in entry.runtime_data.coordinators
@@ -388,14 +394,15 @@ async def test_unloading_the_entry_disconnects_the_websocket(
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_stomp_cls.return_value.disconnect.assert_awaited_once()
 
@@ -434,6 +441,7 @@ async def test_a_failed_first_refresh_still_disconnects_the_websocket(
             "access_token": "tok",
             "expires_at": time.time() + 10000,
         }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_device_status = AsyncMock(
@@ -441,7 +449,7 @@ async def test_a_failed_first_refresh_still_disconnects_the_websocket(
         )
 
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     mock_stomp_cls.return_value.disconnect.assert_awaited_once()

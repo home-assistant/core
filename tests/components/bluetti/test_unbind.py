@@ -109,12 +109,13 @@ async def test_handle_unbind_full_cleanup(
         device_id=device_entry.id,
     )
 
+    coordinator = AsyncMock()
     modbus_coordinator = AsyncMock()
     entry.runtime_data = BluettiRuntimeData(
         auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device, other_device]),
         stomp_client=MagicMock(),
-        coordinators={"SN1": MagicMock(), "SN2": MagicMock()},
+        coordinators={"SN1": coordinator, "SN2": MagicMock()},
         modbus_coordinators={"SN1": modbus_coordinator},
     )
 
@@ -142,6 +143,7 @@ async def test_handle_unbind_full_cleanup(
     assert entry.runtime_data.bluetti_devices.devices == [other_device]
     assert "SN1" not in entry.runtime_data.coordinators
     assert "SN1" not in entry.runtime_data.modbus_coordinators
+    coordinator.async_shutdown.assert_awaited_once()
     modbus_coordinator.async_shutdown.assert_awaited_once()
 
     # Removed from the config entry's enabled devices.

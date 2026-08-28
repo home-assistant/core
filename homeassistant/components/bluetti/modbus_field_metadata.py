@@ -5,7 +5,7 @@ state_class, and entity_category are Home Assistant entity concepts, not
 Modbus/protocol ones - they describe how a value should be presented in an
 HA UI, which is this integration's job, not the device library's. (Feedback
 from Paul Schoutsen, applied by removing the library's own
-FieldCategory/FieldStateClass/DeviceClass enums - see VENDORED.md.)
+FieldCategory/FieldStateClass/DeviceClass enums.)
 
 Built from bluetti-registers' modbus-tcp/{balco260,ep2000}.json schemas,
 which still carry this classification as data.

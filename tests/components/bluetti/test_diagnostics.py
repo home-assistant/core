@@ -128,9 +128,10 @@ async def test_diagnostics_redacts_serial_number_used_as_a_modbus_options_key(
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
     assert diagnostics["entry_options"]["modbus"] == {
-        "device_1": {"host": "10.2.1.60", "port": 502}
+        "device_1": {"host": "**REDACTED**", "port": 502}
     }
     assert "SN1" not in str(diagnostics)
+    assert "10.2.1.60" not in str(diagnostics)
 
 
 async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devices(
@@ -171,3 +172,42 @@ async def test_diagnostics_aliases_are_stable_and_correlate_across_multiple_devi
     assert diagnostics["coordinators"]["device_2"]["last_update_success"] is False
     assert "SN1" not in str(diagnostics)
     assert "SN2" not in str(diagnostics)
+
+
+async def test_diagnostics_aliases_a_device_absent_from_runtime_data(
+    hass: HomeAssistant,
+) -> None:
+    """Diagnostics aliases a device absent from runtime data.
+
+    Regression test: a device can be enabled in entry.options (and have a
+    local Modbus connection configured) while missing from runtime_data's
+    live device list (e.g. its product data went stale between an account
+    rebind and the next reload). The alias map must still be built to cover
+    it, or entry_options would fall back to leaking its real serial.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"auth_implementation": DOMAIN, "token": {}, "products": []},
+        options={
+            "devices": ["SN1", "SN_STALE"],
+            "modbus": {"SN_STALE": {"host": "10.2.1.61", "port": 502}},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="First", sn="SN1", model="AC200L"
+    )
+    coordinator = MagicMock(last_update_success=True, update_interval="0:00:30")
+    entry.runtime_data = BluettiRuntimeData(
+        auth=MagicMock(),
+        bluetti_devices=MagicMock(devices=[device]),
+        stomp_client=MagicMock(),
+        coordinators={"SN1": coordinator},
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert "SN_STALE" not in str(diagnostics)
+    assert set(diagnostics["entry_options"]["devices"]) == {"device_1", "device_2"}
+    assert set(diagnostics["entry_options"]["modbus"].keys()) == {"device_2"}

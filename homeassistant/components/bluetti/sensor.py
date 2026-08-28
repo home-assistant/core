@@ -349,7 +349,17 @@ class BluettiEstimatedBatteryPowerSensor(BluettiEntity, SensorEntity):
         self._attr_name = name
 
     def _net_power_w(self) -> float | None:
-        """Positive = surplus available to charge; negative = drawn from the battery."""
+        """Positive = surplus available to charge; negative = drawn from the battery.
+
+        Deliberately omits DC load from the balance: no diagnostics dump in
+        doc/diagnostics/ (nor the HACS custom_components/ version this was
+        ported from) has ever reported a DC-load fn_code for a model that
+        needs this estimate (Balco260 - a fixed AC-coupled unit with no DC
+        output port to speak of). If a model that both needs this estimate
+        and has real DC output ever shows up, this estimate would need that
+        term too - left out rather than guessed at, per this project's own
+        rule against inventing unverified fields.
+        """
         try:
             return (
                 float(self._pv_state.fn_value)

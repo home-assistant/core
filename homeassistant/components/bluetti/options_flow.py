@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -125,15 +125,30 @@ class BluettiOptionsFlowHandler(OptionsFlow):
         # load it itself too. Idempotent: re-reads the same static file.
         await APPLICATION_PROFILE.load_config(self.hass)
 
-        access_token = entry.data["token"]["access_token"]
         http_session = async_get_clientsession(self.hass)
-        product_client = ProductClient(
-            http_session,
-            APPLICATION_PROFILE.config["server"]["gateway"],
-            access_token,
-            on_auth_expired=lambda: self.hass.bus.fire(EVENT_TOKEN_EXPIRED),
-        )
         try:
+            # Reading entry.data["token"] directly would skip Home
+            # Assistant's refresh path - an options flow opened after the
+            # stored access token has expired (but the refresh token is
+            # still valid) would otherwise fail as cannot_connect for no
+            # real reason. Same OAuth2Session-backed refresh path setup
+            # uses in __init__.py.
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    self.hass, entry
+                )
+            )
+            oauth_session = config_entry_oauth2_flow.OAuth2Session(
+                self.hass, entry, implementation
+            )
+            await oauth_session.async_ensure_token_valid()
+            access_token = oauth_session.token["access_token"]
+            product_client = ProductClient(
+                http_session,
+                APPLICATION_PROFILE.config["server"]["gateway"],
+                access_token,
+                on_auth_expired=lambda: self.hass.bus.fire(EVENT_TOKEN_EXPIRED),
+            )
             products = await product_client.get_user_products()
         except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
             __LOGGER__.error("Failed to fetch BLUETTI products: %s", err)

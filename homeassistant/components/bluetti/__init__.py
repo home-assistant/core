@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
         auth_token_refresh.start_token_check()
 
-        # await oauth_session.async_ensure_token_valid()
+        await oauth_session.async_ensure_token_valid()
         access_token = oauth_session.token["access_token"]
         product_client = ProductClient(
             http_session,
@@ -130,14 +130,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         bluetti_devices.web_socket_message_handler,
         on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
     )
-    await stomp_client.connect()
-    # Registered as soon as the connection exists, not after setup fully
+    # Registered before connect() even starts, not after setup fully
     # succeeds: if a later step below (e.g. a device's first refresh) raises
     # ConfigEntryNotReady, Home Assistant still runs already-registered
     # async_on_unload callbacks before retrying setup - without this, each
     # retry would connect a new client without ever disconnecting the
     # previous attempt's.
     entry.async_on_unload(stomp_client.disconnect)
+    # connect() retries internally with its own exponential backoff on
+    # failure (see pybluetti's StompClient.reconnect) rather than raising -
+    # awaiting it directly here would block this entire setup (and the REST
+    # polling fallback it's meant to be independent of) until it eventually
+    # succeeds, possibly indefinitely. A background task tied to the entry's
+    # lifecycle means a slow or unavailable WSS endpoint never delays or
+    # blocks the cloud coordinators below from being set up.
+    entry.async_create_background_task(
+        hass, stomp_client.connect(), f"{DOMAIN}_websocket_connect_{entry.entry_id}"
+    )
 
     coordinators: dict[str, BluettiDeviceCoordinator] = {}
     for device in bluetti_devices.devices:

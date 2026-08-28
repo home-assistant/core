@@ -50,6 +50,23 @@ def _patched_modbus(device):
         yield mock_get_device
 
 
+@contextmanager
+def _patched_oauth():
+    """Patch the options flow's OAuth2Session-backed token refresh."""
+    with (
+        patch(
+            "homeassistant.components.bluetti.options_flow.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.options_flow.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+    ):
+        mock_session_cls.return_value.token = {"access_token": "tok"}
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        yield mock_session_cls
+
+
 def _entry(
     hass: HomeAssistant, *, products=None, devices=None, modbus=None
 ) -> MockConfigEntry:
@@ -79,6 +96,7 @@ async def test_shows_form_with_available_devices(hass: HomeAssistant) -> None:
     ]
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
@@ -103,6 +121,7 @@ async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
     flow = _flow(hass, entry)
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
@@ -124,6 +143,7 @@ async def test_all_devices_already_enabled_aborts(hass: HomeAssistant) -> None:
     products = [UserProduct(sn="SN1", name="Already added", stateList=[], online="1")]
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
@@ -144,6 +164,7 @@ async def test_fetch_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:
     flow = _flow(hass, entry)
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
@@ -273,6 +294,7 @@ async def test_init_falls_through_to_add_devices_when_enabled_device_is_not_modb
     flow = _flow(hass, entry)
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
@@ -555,6 +577,7 @@ async def test_add_devices_through_real_flow_manager_preserves_modbus(
     products = [UserProduct(sn="SN2", name="New Device", stateList=[], online="1")]
 
     with (
+        _patched_oauth(),
         patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
         patch(
             "homeassistant.components.bluetti.options_flow.ProductClient"
