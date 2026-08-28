@@ -255,6 +255,7 @@ async def test_ip_ban_manager_never_started(
     "os_info",
     "store_info",
     "supervisor_info",
+    "supervisor_root_info",
     "homeassistant_info",
     "host_info",
     "network_info",

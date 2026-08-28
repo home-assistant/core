@@ -23,11 +23,12 @@ ciso8601==2.3.3
 cronsim==2.7
 cryptography==48.0.1
 fnv-hash-fast==2.0.3
+gazetteer-matcher==1.1.0
 ha-ffmpeg==3.2.2
-hass-nabucasa==2.3.0
-hassil==3.11.0
+hass-nabucasa==2.7.0
+hassil==3.12.0
 home-assistant-bluetooth==2.0.0
-home-assistant-intents==2026.7.30
+home-assistant-intents==2026.8.25
 httpx==0.28.1
 ifaddr==0.2.0
 infrared-protocols==9.0.0
@@ -37,6 +38,7 @@ mutagen==1.48.1
 orjson==3.12.0
 packaging>=23.1
 Pillow==12.3.0
+probatio==0.11.3
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 py-cpuinfo==9.0.0
@@ -57,9 +59,6 @@ typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
 uv==0.12.5
-voluptuous-openapi==0.4.1
-voluptuous-serialize==2.7.0
-voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.24.5
 zeroconf==0.150.0

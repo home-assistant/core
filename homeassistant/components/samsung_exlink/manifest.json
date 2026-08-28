@@ -1,0 +1,13 @@
+{
+  "domain": "samsung_exlink",
+  "name": "Samsung TV via ExLink",
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/samsung_exlink",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["samsung_exlink"],
+  "quality_scale": "silver",
+  "requirements": ["samsung-exlink==1.1.0"]
+}

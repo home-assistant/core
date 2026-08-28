@@ -97,6 +97,12 @@ def mock_actron_api(mock_actron_api_class: MagicMock) -> Generator[AsyncMock]:
             return_value=[ActronAirSystemInfo(serial="123456")]
         )
 
+        # Mock realtime push
+        api.start_push = AsyncMock(return_value=True)
+        api.stop_push = AsyncMock()
+        api.subscribe_system_updates = MagicMock(return_value=MagicMock())
+        api.subscribe_connection_state = MagicMock(return_value=MagicMock())
+
         # Build status from fixture JSON
         status = ActronAirStatus.model_validate(
             json.loads(load_fixture("status.json", DOMAIN))
