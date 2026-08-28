@@ -133,6 +133,7 @@ OPTIONS_FLOW = {
     "times": SchemaFlowFormStep(
         _time_schema,
         validate_user_input=_validate_after_before,
+        suggested_values=_suggested_values,
     ),
 }
 

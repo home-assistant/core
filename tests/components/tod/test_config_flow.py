@@ -268,3 +268,30 @@ async def test_options_sun_events(hass: HomeAssistant) -> None:
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "after_mode") == "sunrise"
     assert get_schema_suggested_value(schema, "before_mode") == "sunset"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "after_mode": "time",
+            "before_mode": "time",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "times"
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, "after_time") is None
+    assert get_schema_suggested_value(schema, "before_time") is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "after_time": "09:00",
+            "before_time": "17:00",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "after_time": "09:00",
+        "before_time": "17:00",
+        "name": "My tod",
+    }
