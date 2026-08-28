@@ -42,6 +42,13 @@ MOCK_DEVICE_2 = MockDevice(
     reachable=True,
     host="192.168.1.1",
 )
+MOCK_DEVICE_3 = MockDevice(
+    mac="AA:AA:AA:BB:BB:BB",
+    hostname="device3",
+    ip="192.168.1.102",
+    reachable=True,
+    host="192.168.1.1",
+)
 
 
 @pytest.fixture

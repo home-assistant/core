@@ -1,7 +1,7 @@
 """Common callbacks for all Home Connect platforms."""
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import partial
 from typing import cast
 
@@ -10,7 +10,7 @@ from aiohomeconnect.model import EventKey
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -48,7 +48,7 @@ def _create_option_entities(
     known_entity_unique_ids: dict[str, str],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectEntity],
+        Sequence[HomeConnectEntity],
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -74,11 +74,11 @@ def _handle_paired_or_connected_appliance(
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
     get_entities_for_appliance: Callable[
-        [HomeConnectApplianceCoordinator], list[HomeConnectEntity]
+        [HomeConnectApplianceCoordinator], Sequence[Entity]
     ],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectEntity],
+        Sequence[HomeConnectEntity],
     ]
     | None,
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
@@ -91,7 +91,7 @@ def _handle_paired_or_connected_appliance(
     when they are turned off, so we need to check if the entities have been added
     already or it is the first time we see them when the appliance is connected.
     """
-    entities: list[HomeConnectEntity] = []
+    entities: list[Entity] = []
     entity_registry = er.async_get(hass)
     for appliance_coordinator in entry.runtime_data.appliance_coordinators.values():
         appliance_ha_id = appliance_coordinator.data.info.ha_id
@@ -161,12 +161,12 @@ def setup_home_connect_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     get_entities_for_appliance: Callable[
-        [HomeConnectApplianceCoordinator], list[HomeConnectEntity]
+        [HomeConnectApplianceCoordinator], Sequence[Entity]
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectEntity],
+        Sequence[HomeConnectEntity],
     ]
     | None = None,
 ) -> None:

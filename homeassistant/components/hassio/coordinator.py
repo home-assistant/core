@@ -50,6 +50,11 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.translation import (
+    LOCALE_EN,
+    async_get_cached_translations,
+    async_load_integrations,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -185,6 +190,46 @@ class SupervisorIssuesData:
     unhealthy_reasons: set[str]
     unsupported_reasons: set[str]
     issues: dict[UUID, Issue]
+
+
+@callback
+def presentable_issue_suggestions(
+    hass: HomeAssistant, issue: Issue
+) -> list[Suggestion]:
+    """Return the issue's suggestions the repair fix flow can present.
+
+    Filters out suggestions this Core version has no fix flow translation
+    for; an empty result means the repair is not fixable here. Filtered
+    suggestions stay applicable via the Supervisor API and CLI.
+    """
+    if not issue.suggestions:
+        return []
+
+    # Key availability is language independent — check against English,
+    # which is always cached, unlike the configured language right after
+    # a language switch
+    translations = async_get_cached_translations(hass, LOCALE_EN, "issues", DOMAIN)
+    prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    if not any(key.startswith(prefix) for key in translations):
+        # This version of Core shipped an unfixable repair for this issue
+        # (a repair is either always or never fixable per issue key) —
+        # drop all suggestions, including any would break the repair
+        return []
+
+    presentable = [
+        suggestion
+        for suggestion in issue.suggestions
+        # Either a menu option label or a dedicated step (e.g. the
+        # confirmation of a formerly sole suggestion) proves this Core
+        # knows the suggestion for this issue
+        if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
+        or f"{prefix}.{suggestion.key}.description" in translations
+    ]
+    # If nothing is presentable, keep everything: the fix flow strings for
+    # this issue exist, so the repair must stay fixable — and an unlabeled
+    # menu still beats a dead end. The frontend falls back to the raw
+    # option keys.
+    return presentable or issue.suggestions
 
 
 class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
@@ -342,7 +387,12 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -384,7 +434,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(issue.suggestions),
+            is_fixable=bool(presentable),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -433,6 +483,11 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
     @override
     async def _async_update_data(self) -> SupervisorIssuesData:
         """Update issues data from Supervisor resolution center."""
+        # Translations decide which suggestions a repair can present and
+        # with that its fixable state — make sure they are loaded before
+        # the repairs are created (no-op once cached).
+        await async_load_integrations(self.hass, {DOMAIN})
+
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:

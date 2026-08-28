@@ -287,6 +287,17 @@
     "slidePosition": 50
   },
   {
+    "deviceId": "07E6C4A290F2",
+    "deviceType": "Curtain4",
+    "hubDeviceId": "BBBBBBBBBB",
+    "calibrate": false,
+    "group": false,
+    "moving": false,
+    "battery": 100,
+    "version": "V6.3",
+    "slidePosition": 49
+  },
+  {
     "deviceId": "F6D5B3A190E2",
     "deviceType": "Roller Shade",
     "hubDeviceId": "BBBBBBBBBB",

@@ -277,7 +277,9 @@ async def test_single_segment_behavior(
     )
     assert mock_wled.segment.call_count == 1
     assert mock_wled.master.call_count == 2
-    mock_wled.segment.assert_called_with(on=True, segment_id=0, brightness=255)
+    mock_wled.segment.assert_called_with(
+        on=True, segment_id=0, brightness=255, transition=50
+    )
     mock_wled.master.assert_called_with(on=True, transition=50, brightness=42)
 
 

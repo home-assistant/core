@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.9.0.dev0"
+version = "2026.10.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -47,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==2.0.3",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==2.3.0",
+  "hass-nabucasa==2.7.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -75,9 +75,7 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.12.5",
-  "voluptuous==0.15.2",
-  "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.4.1",
+  "probatio==0.11.3",
   "yarl==1.24.5",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",
@@ -458,10 +456,9 @@ filterwarnings = [
   # Modify app state for testing
   "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
 
-  # -- Tests
-  # Ignore custom pytest marks
-  "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
-  "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
+  # -- HomeAssistant - design choice
+  # airOS 6 firmware negotiates nothing newer than TLS 1.0
+  "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:homeassistant.components.airos.helpers",
 
   # -- DeprecationWarning already fixed in our codebase
   # https://github.com/kurtmckee/feedparser/ - 6.0.12
@@ -641,7 +638,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.3"
+required-version = ">=0.16.4"
 
 [tool.ruff.lint]
 select = [
@@ -783,7 +780,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-voluptuous = "vol"
 "homeassistant.components.air_quality.PLATFORM_SCHEMA" = "AIR_QUALITY_PLATFORM_SCHEMA"
 "homeassistant.components.alarm_control_panel.PLATFORM_SCHEMA" = "ALARM_CONTROL_PANEL_PLATFORM_SCHEMA"
 "homeassistant.components.binary_sensor.PLATFORM_SCHEMA" = "BINARY_SENSOR_PLATFORM_SCHEMA"
