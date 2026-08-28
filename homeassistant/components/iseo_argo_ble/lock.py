@@ -319,7 +319,19 @@ class IseoLockEntity(LockEntity):
         ):
             return
 
-        self._initial_read = self.hass.async_create_task(self._poll_state())
+        self._initial_read = self.hass.async_create_task(self._async_probe())
+
+    async def _async_probe(self) -> None:
+        """Read the lock once, without letting a failure escape the task.
+
+        _poll_state translates the errors it expects, but the client can raise
+        others — a malformed handshake, for one — and an exception here would
+        surface as an unretrieved task exception rather than a retry.
+        """
+        try:
+            await self._poll_state()
+        except Exception:
+            _LOGGER.debug("Probing the lock failed; will retry", exc_info=True)
         self.async_on_remove(self._cancel_initial_read)
 
     def _cancel_initial_read(self) -> None:
