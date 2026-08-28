@@ -58,9 +58,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: that are new. Held here rather than in the platform so a removal can
         #: clear it.
         self.known_devices: set[str] = set()
-        #: Hardware details last written to the device registry, per unique id,
-        #: so an unchanged refresh does not touch the registry at all.
-        self._device_details: dict[str, tuple[str, str | None, str | None]] = {}
+        #: Name and hardware details last written to the device registry, per
+        #: unique id, so an unchanged refresh does not touch the registry at all.
+        self._device_details: dict[str, tuple[str, str, str | None, str | None]] = {}
         #: When the account profile was last read, connecting included.
         self._profile_read_at: datetime | None = None
 
@@ -186,16 +186,19 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         self._profile_read_at = now
 
     def _apply_late_device_details(self, data: dict[str, CoolbotDevice]) -> None:
-        """Record hardware details that replay after a cooler is created.
+        """Record device details that change after a cooler is created.
 
         Connecting waits for the pins that identify a cooler, not for all of
         them, so it can be registered before its model and firmware arrive.
         Device info is only read when an entity is added, so without this those
-        details would stay missing until the entry is reloaded.
+        details would stay missing until the entry is reloaded. The name rides
+        along so a cooler renamed in the account is renamed here too; a name
+        the user chose in Home Assistant still wins over it.
         """
         registry: dr.DeviceRegistry | None = None
         for unique_id, device in data.items():
             details = (
+                device.name,
                 device_model(device),
                 device.jumper_firmware,
                 device.jumper_hardware,
@@ -212,13 +215,15 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 # registered with whatever has replayed by then.
                 continue
             self._device_details[unique_id] = details
-            if (entry.model, entry.sw_version, entry.hw_version) == details:
+            current = (entry.name, entry.model, entry.sw_version, entry.hw_version)
+            if current == details:
                 continue
             registry.async_update_device(
                 entry.id,
-                model=details[0],
-                sw_version=details[1],
-                hw_version=details[2],
+                name=details[0],
+                model=details[1],
+                sw_version=details[2],
+                hw_version=details[3],
             )
 
     def _log_staleness_transitions(self, data: dict[str, CoolbotDevice]) -> None:

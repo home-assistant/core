@@ -151,6 +151,30 @@ async def test_hardware_details_that_replay_late_reach_the_registry(
     assert device.sw_version == "1.2.3"
 
 
+async def test_a_rename_in_the_account_reaches_the_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A cooler renamed in the CoolBot account is renamed here too.
+
+    Device info is only read when an entity is added, so without the refresh
+    writing the name to the registry the old name would stick until the entry
+    is reloaded.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [make_device(name="Flower cooler")]
+    await _tick(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Flower cooler"
+
+
 async def test_a_deleted_cooler_returning_gets_its_entities_back(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
