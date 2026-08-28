@@ -2417,14 +2417,15 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     await pipeline_input.validate()
     await pipeline_input.execute()
 
-    # Verify STT_VAD_START and STT_VAD_END events were emitted
+    # Verify STT_VAD_START and STT_VAD_END events were emitted exactly once
     event_types = [e.type for e in events]
     assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
     assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
     assert assist_pipeline.PipelineEventType.STT_END in event_types
-    # Synthetic STT_VAD_* events are emitted from _speech_to_text_stream
-    # (STT_VAD_START on the first chunk, STT_VAD_END when the stream exhausts),
-    # so both arrive before STT_END which is emitted after transcription.
+    assert event_types.count(assist_pipeline.PipelineEventType.STT_VAD_START) == 1
+    assert event_types.count(assist_pipeline.PipelineEventType.STT_VAD_END) == 1
+    # Both synthetic events are emitted after the successful transcription, so
+    # they arrive before STT_END (with STT_VAD_START before STT_VAD_END).
     vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
     stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
@@ -2444,7 +2445,7 @@ async def test_stt_vad_end_emitted_when_provider_abandons_stream_early(
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
-    """Test STT_VAD_END fires from ``finally`` when the provider stops consuming early."""
+    """Test STT_VAD_END is emitted when the provider stops consuming the stream early."""
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def stt_audio_stream() -> AsyncGenerator[bytes]:
@@ -2463,10 +2464,6 @@ async def test_stt_vad_end_emitted_when_provider_abandons_stream_early(
         prefers_noise_reduction_enabled=True,
     )
 
-    # Simulate an STT provider that abandons the stream early: consume only the
-    # first chunk, then break out of the loop and return a result without
-    # exhausting the async generator. The ``finally`` block in
-    # ``_speech_to_text_stream`` must still emit STT_VAD_END.
     async def _abandon_early(
         metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:
@@ -2508,15 +2505,18 @@ async def test_stt_vad_end_emitted_when_provider_abandons_stream_early(
     assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
     assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
     assert assist_pipeline.PipelineEventType.STT_END in event_types
-    # speech_to_text closes the abandoned stream after the provider returns,
-    # ensuring STT_VAD_END still precedes STT_END.
+    assert event_types.count(assist_pipeline.PipelineEventType.STT_VAD_START) == 1
+    assert event_types.count(assist_pipeline.PipelineEventType.STT_VAD_END) == 1
+    # The provider returned a successful result without exhausting the stream;
+    # both synthetic events are still emitted after transcription, before
+    # STT_END (with STT_VAD_START before STT_VAD_END).
     vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
     stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
     assert vad_start_idx < stt_end_idx
     assert vad_end_idx < stt_end_idx
     assert vad_start_idx < vad_end_idx
-    # Only the first chunk was consumed; STT_VAD_END reuses its timestamp.
+    # Only the first chunk was consumed; both events reuse its timestamp.
     assert events[vad_start_idx].data["timestamp"] == 0
     assert events[vad_end_idx].data["timestamp"] == 0
 
