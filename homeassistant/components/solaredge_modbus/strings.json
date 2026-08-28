@@ -225,6 +225,9 @@
     "link_settings_in_use": {
       "message": "The inverter cannot be set up with these link settings: {error}"
     },
+    "measurements_unavailable": {
+      "message": "The inverter did not report its measurements, so it is not yet known which sensors it offers."
+    },
     "no_solaredge_device": {
       "message": "The configured Modbus device does not answer as a SolarEdge inverter."
     },

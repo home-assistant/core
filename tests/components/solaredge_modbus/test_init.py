@@ -210,6 +210,25 @@ async def test_setup_retry_when_the_identity_is_unreadable(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_retry_when_the_measurements_are_unreadable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A first poll without the inverter block would cost the phase entities.
+
+    Which entities exist is decided once, from the inverter's DID, and without
+    it none of the phase measurements match. An entry accepted here would be
+    missing those entities until a reload, however well the inverter answers
+    after that.
+    """
+    mock_modbus_unit.fail_read(40069, ServerDeviceFailureError())
+
+    await _setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_retry_that_finds_nothing_keeps_the_first_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

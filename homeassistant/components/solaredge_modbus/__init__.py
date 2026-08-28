@@ -20,7 +20,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DOMAIN, SUBSYSTEM_COMMON
+from .const import CONF_UNIT_ID, DOMAIN, SUBSYSTEM_COMMON, SUBSYSTEM_INVERTER
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
     SolarEdgeModbusDataUpdateCoordinator,
@@ -85,6 +85,14 @@ async def async_setup_entry(
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="wrong_inverter",
+        )
+
+    # The platforms read the inverter's DID once, so without it the phase
+    # entities would stay missing until a reload.
+    if SUBSYSTEM_INVERTER in readings.data.failed:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="measurements_unavailable",
         )
 
     inverter = dr.async_get(hass).async_get_or_create(
