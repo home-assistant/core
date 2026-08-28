@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from .client import CloudClient
     from .helpers import FixedSizeQueueLogHandler
+    from .models import PendingAutoLogin
 
 DOMAIN = "cloud"
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
@@ -18,9 +19,14 @@ DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
 DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")
+DATA_PENDING_AUTO_LOGIN: HassKey[PendingAutoLogin | None] = HassKey(
+    "cloud_pending_auto_login"
+)
 EVENT_CLOUD_EVENT = "cloud_event"
 
 REQUEST_TIMEOUT = 10
+
+PREVIEW_FEATURE_STT_V2 = "stt_v2"
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
 PREF_ENABLE_GOOGLE = "google_enabled"

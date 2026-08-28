@@ -188,16 +188,24 @@ async def test_create_subscription(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_sink_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        SmartThingsSinkError("Sink error"),
+        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
+    ],
+)
+async def test_create_subscription_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    error: Exception,
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
-    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+    devices.create_subscription.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 

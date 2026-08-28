@@ -740,6 +740,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "beverly": {
+      "name": "Beverly",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",
@@ -1129,6 +1134,11 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "colmo": {
+      "name": "Colmo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "color_extractor": {
       "name": "ColorExtractor",
@@ -2160,8 +2170,8 @@
       "name": "Flexit",
       "integrations": {
         "flexit": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Flexit"
         },
@@ -3476,6 +3486,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iseo_argo_ble": {
+      "name": "ISEO Argo BLE Lock",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "iskra": {
       "name": "iskra",
       "integration_type": "hub",
@@ -3903,6 +3919,12 @@
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "librenms": {
+      "name": "LibreNMS",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4835,6 +4857,12 @@
       "name": "Neurio energy",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "nexblue": {
+      "name": "NexBlue",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nexen": {
@@ -6030,7 +6058,7 @@
       "name": "Remember The Milk",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "remote_calendar": {
       "integration_type": "service",
@@ -6560,6 +6588,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "silla_prism": {
+      "name": "Silla Prism",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "simplefin": {
       "name": "SimpleFin",
       "integration_type": "service",
@@ -6779,6 +6813,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "sofar": {
+      "name": "Sofar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "solaredge": {
       "name": "SolarEdge",
       "integrations": {
@@ -6894,6 +6934,12 @@
       "name": "Vanderbilt SPC",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_push"
+    },
+    "specialized_turbo": {
+      "name": "Specialized Turbo",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "speedtestdotnet": {
@@ -7469,6 +7515,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "toshiba_lifestyle": {
+      "name": "Toshiba Lifestyle",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "totalconnect": {
       "name": "Total Connect",
@@ -8440,7 +8491,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {

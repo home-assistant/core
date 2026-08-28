@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Iterator
+import contextlib
 import fcntl
 import json
 import os
@@ -444,3 +445,50 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
 
     # Lock file should still exist after second run (not unlinked)
     assert lock_file_path.exists()
+
+
+def _assert_hass_event_loop(loop: asyncio.AbstractEventLoop) -> None:
+    """Assert the loop carries the Home Assistant customizations."""
+    assert loop.time is runner.monotonic
+    assert isinstance(loop._default_executor, executor.InterruptibleThreadPoolExecutor)
+
+
+def test_sync_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test a synchronous test builds the async hass fixture on our loop."""
+    _assert_hass_event_loop(hass.loop)
+
+
+async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test an async test runs on our loop."""
+    _assert_hass_event_loop(asyncio.get_running_loop())
+    _assert_hass_event_loop(hass.loop)
+
+
+def test_create_event_loop() -> None:
+    """Test created loops are configured and leave the current loop alone."""
+    created: list[asyncio.AbstractEventLoop] = []
+    current: list[asyncio.AbstractEventLoop] = []
+
+    # A thread of its own starts out without a current event loop
+    def _create() -> None:
+        created.append(runner.create_event_loop())
+        created.append(runner.create_event_loop(debug=True))
+        with contextlib.suppress(RuntimeError):
+            current.append(asyncio.get_event_loop())
+
+    create_thread = threading.Thread(target=_create)
+    create_thread.start()
+    create_thread.join()
+
+    try:
+        for loop in created:
+            _assert_hass_event_loop(loop)
+        # The other loop is only debug free when the interpreter is, so is not
+        # asserted on: CI runs with -X dev and PYTHONASYNCIODEBUG set.
+        assert created[1].get_debug()
+        # asyncio.Runner only unsets the current loop when it set it itself, so
+        # a factory that sets it leaves a closed loop behind after asyncio.run()
+        assert current == []
+    finally:
+        for loop in created:
+            loop.close()
