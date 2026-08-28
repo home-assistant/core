@@ -1,6 +1,6 @@
 """SwitchBot via API integration."""
 
-from asyncio import gather
+from asyncio import Lock, gather
 from collections.abc import Awaitable, Callable
 import contextlib
 from dataclasses import dataclass, field
@@ -310,11 +310,13 @@ async def async_setup_entry(
     )
     entry.runtime_data = SwitchbotCloudData(api=api, devices=switchbot_devices)
 
-    await _initialize_webhook(hass, entry, api, coordinators_by_id)
+    # One at a time, so the cloud connecting cannot register a webhook next to
+    # the one being registered here
+    webhook_lock = Lock()
 
-    # Forwarded last, so a failure above cannot leave the platforms set up for a
-    # retry to set up a second time
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    async def _async_initialize_webhook() -> None:
+        async with webhook_lock:
+            await _initialize_webhook(hass, entry, api, coordinators_by_id)
 
     async def _handle_cloud_connection_change(
         state: cloud.CloudConnectionState,
@@ -326,11 +328,19 @@ async def async_setup_entry(
         and re-register it with SwitchBot's cloud so push devices work.
         """
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            await _initialize_webhook(hass, entry, api, coordinators_by_id)
+            await _async_initialize_webhook()
 
+    # Listening before the first attempt, so a cloud that connects while the
+    # entry is still setting up is not missed
     entry.async_on_unload(
         cloud.async_listen_connection_change(hass, _handle_cloud_connection_change)
     )
+
+    await _async_initialize_webhook()
+
+    # Forwarded last, so a failure above cannot leave the platforms set up for a
+    # retry to set up a second time
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

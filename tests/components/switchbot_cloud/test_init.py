@@ -427,11 +427,11 @@ async def test_setup_creates_cloudhook_when_cloud_active(
 
 async def test_setup_survives_the_cloud_going_away(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
-    mock_get_webook_configuration,
-    mock_delete_webhook,
-    mock_setup_webhook,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    mock_get_webook_configuration: AsyncMock,
+    mock_delete_webhook: AsyncMock,
+    mock_setup_webhook: AsyncMock,
 ) -> None:
     """Test the entry still loads when the cloud goes away mid-setup.
 
@@ -439,6 +439,10 @@ async def test_setup_survives_the_cloud_going_away(
     gone by the time it is used. The local URL carries it until the
     connection change listener creates the cloudhook.
     """
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
     await mock_cloud(hass)
     await hass.async_block_till_done()
 
@@ -462,6 +466,11 @@ async def test_setup_survives_the_cloud_going_away(
 
     assert entry.state is ConfigEntryState.LOADED
     assert CONF_CLOUDHOOK_URL not in entry.data
+    # SwitchBot was given the local URL to push to in the meantime
+    mock_setup_webhook.assert_called_once()
+    assert mock_setup_webhook.call_args[0][0].startswith(
+        "https://example.com/api/webhook/"
+    )
 
 
 async def test_setup_reuses_persisted_cloudhook(
