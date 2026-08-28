@@ -92,30 +92,38 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         if light_address is None:
             self._attr_unique_id = mac_address
         else:
-            # Real Gen4 fixtures are named by the user (e.g. "Uplight"), so
-            # this is per-device data rather than a fixed translated string.
-            # _attr_name takes priority over translation_key when resolving
-            # an entity's name, so the "light" translation_key above simply
-            # goes unused for these entities.
+            # Real Gen4 fixtures are named by the user, so the device-name
+            # prefix strip below is per-device data rather than static.
             self._attr_unique_id = f"{mac_address}_{light_address}"
+            fixture_name = next(
+                light.name
+                for light in coordinator.data.state.light_fixtures
+                if light.address == light_address
+            )
             self._attr_name = strip_device_name_prefix(
-                self.coordinator.data.info.device_name, self._light.name
+                self.coordinator.data.info.device_name, fixture_name
             )
 
     @property
-    def _light(self) -> Light:
-        """Return this entity's current fixture data."""
+    def _light(self) -> Light | None:
+        """Return this entity's current fixture data, if it still exists."""
         for light in self.coordinator.data.state.light_fixtures:
             if light.address == self._address:
                 return light
-        # A fixture disappearing mid-session (e.g. hardware reconfigured)
-        # shouldn't crash state updates -- fall back to the primary fixture.
-        return self.coordinator.data.state.light_fixtures[0]
+        return None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the fixture this entity represents still exists."""
+        return super().available and self._light is not None
 
     @property
     @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
+        if self._light is None:
+            return None
         return round(
             percentage_to_ranged_value(BRIGHTNESS_RANGE, self._light.brightness)
         )
@@ -124,7 +132,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return the state of the light."""
-        return bool(self._light.on)
+        return self._light is not None and bool(self._light.on)
 
     @modernforms_exception_handler
     @override

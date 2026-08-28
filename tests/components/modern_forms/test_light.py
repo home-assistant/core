@@ -179,6 +179,7 @@ async def test_light_state_gen4(
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ModernFormsFan Uplight"
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 204
 
     entry = entity_registry.async_get("light.modernformsfan_uplight")
     assert entry
@@ -188,10 +189,33 @@ async def test_light_state_gen4(
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ModernFormsFan Downlight"
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_BRIGHTNESS) is None
 
     entry = entity_registry.async_get("light.modernformsfan_downlight")
     assert entry
     assert entry.unique_id == "AA:BB:CC:00:11:22_3"
+
+
+async def test_light_unavailable_when_fixture_disappears_gen4(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test a Gen4 light entity goes unavailable if its fixture disappears."""
+    entry = await init_integration_gen4(hass, aioclient_mock)
+    coordinator = entry.runtime_data
+
+    state = hass.states.get("light.modernformsfan_uplight")
+    assert state
+    assert state.state == STATE_ON
+
+    coordinator.data.state.light_fixtures = [
+        light for light in coordinator.data.state.light_fixtures if light.address != 2
+    ]
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.modernformsfan_uplight")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_light_change_state_gen4(

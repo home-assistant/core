@@ -35,7 +35,7 @@ from homeassistant.components.modern_forms.entity import strip_device_name_prefi
         pytest.param(
             "Master Bedroom",
             "Master Bedroom",
-            "Master Bedroom",
+            None,
             id="fixture_named_exactly_like_device",
         ),
         pytest.param(
@@ -44,8 +44,16 @@ from homeassistant.components.modern_forms.entity import strip_device_name_prefi
             "Uplight",
             id="empty_device_name",
         ),
+        pytest.param(
+            "Fan",
+            "Fancy Light",
+            "Fancy Light",
+            id="prefix_without_separator_is_not_stripped",
+        ),
     ],
 )
-def test_strip_device_name_prefix(device_name: str, name: str, expected: str) -> None:
+def test_strip_device_name_prefix(
+    device_name: str, name: str, expected: str | None
+) -> None:
     """Test stripping a leading device-name prefix from a fixture name."""
     assert strip_device_name_prefix(device_name, name) == expected

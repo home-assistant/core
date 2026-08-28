@@ -8,20 +8,27 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
 
+_NAME_SEPARATORS = " -_"
 
-def strip_device_name_prefix(device_name: str, name: str) -> str:
+
+def strip_device_name_prefix(device_name: str, name: str) -> str | None:
     """Strip a leading device-name prefix from a vendor-set fixture name.
 
     Fixtures are commonly named "<device name> <role>" in the Modern Forms
     app (e.g. "Master Bedroom Uplight"), which would otherwise duplicate
     once HA's has_entity_name prepends the device name to build the
-    friendly name.
+    friendly name. The prefix must be followed by a separator (or nothing)
+    so a device named "Fan" doesn't mangle a fixture named "Fancy Light".
+    Returns None when the fixture name adds nothing beyond the device
+    name, so has_entity_name falls back to the device name alone instead
+    of repeating it.
     """
-    if device_name and name.lower().startswith(device_name.lower()):
-        stripped = name[len(device_name) :].lstrip(" -_")
-        if stripped:
-            return stripped
-    return name
+    if not device_name or not name.lower().startswith(device_name.lower()):
+        return name
+    rest = name[len(device_name) :]
+    if rest and rest[0] not in _NAME_SEPARATORS:
+        return name
+    return rest.lstrip(_NAME_SEPARATORS) or None
 
 
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
