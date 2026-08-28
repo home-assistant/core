@@ -1,8 +1,6 @@
 """Support for iCloud sensors."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
@@ -75,11 +73,13 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Battery state percentage."""
         return self._device.battery_level
 
     @property
+    @override
     def icon(self) -> str:
         """Battery state icon handling."""
         return icon_for_battery_level(
@@ -88,16 +88,19 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
         return self._device.extra_state_attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         if self._unsub_dispatcher:

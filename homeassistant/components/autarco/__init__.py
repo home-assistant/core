@@ -1,7 +1,5 @@
 """The Autarco integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from autarco import Autarco, AutarcoConnectionError

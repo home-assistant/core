@@ -13,8 +13,7 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         },
         "description": "To generate API key go to {developer_registration_url}"
       }
@@ -24,9 +23,6 @@
     "sensor": {
       "caqi": {
         "name": "Common air quality index"
-      },
-      "co": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       }
     }
   },

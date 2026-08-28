@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
-from aionanoleaf import InvalidToken, Nanoleaf, Unavailable
+from aionanoleaf2 import InvalidToken, Nanoleaf, Unavailable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,7 @@ class NanoleafCoordinator(DataUpdateCoordinator[None]):
         )
         self.nanoleaf = nanoleaf
 
+    @override
     async def _async_update_data(self) -> None:
         try:
             await self.nanoleaf.get_info()

@@ -1,7 +1,5 @@
 """Device automation helpers for entity."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger

@@ -1,7 +1,6 @@
 """Tests for the telegram_bot integration."""
 
-from collections.abc import AsyncGenerator, Generator
-from datetime import datetime
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -12,20 +11,22 @@ from telegram import (
     Chat,
     ChatFullInfo,
     Message,
+    Update,
     User,
     WebhookInfo,
 )
 from telegram.constants import ChatType
 
-from homeassistant.components.telegram_bot import (
+from homeassistant.components.telegram_bot.const import (
+    ATTR_MEDIA,
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_API_ENDPOINT,
+    CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
-)
-from homeassistant.components.telegram_bot.const import (
-    CONF_CHAT_ID,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -33,30 +34,9 @@ from homeassistant.components.telegram_bot.const import (
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_webhooks() -> dict[str, Any]:
-    """Fixture for a webhooks platform configuration."""
-    return {
-        DOMAIN: [
-            {
-                CONF_PLATFORM: PLATFORM_WEBHOOKS,
-                CONF_URL: "https://test",
-                CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
-                CONF_API_KEY: "1234567890:ABC",
-                CONF_ALLOWED_CHAT_IDS: [
-                    # "me"
-                    12345678,
-                    # Some chat
-                    -123456789,
-                ],
-            }
-        ]
-    }
 
 
 @pytest.fixture
@@ -68,6 +48,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
         data={
             CONF_PLATFORM: PLATFORM_POLLING,
             CONF_API_KEY: "mock api key",
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
@@ -84,6 +65,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -100,7 +82,7 @@ def mock_register_webhook() -> Generator[None]:
             AsyncMock(
                 return_value=WebhookInfo(
                     url="mock url",
-                    last_error_date=datetime.now(),
+                    last_error_date=dt_util.utcnow(),
                     has_custom_certificate=False,
                     pending_update_count=0,
                 )
@@ -124,12 +106,12 @@ def mock_external_calls() -> Generator[None]:
         type="PRIVATE",
         max_reaction_count=100,
         accent_color_id=0,
-        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True, True),
     )
-    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
+    test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
-        date=datetime.now(),
+        date=dt_util.utcnow(),
         chat=Chat(id=123456, type=ChatType.PRIVATE),
     )
 
@@ -143,13 +125,26 @@ def mock_external_calls() -> Generator[None]:
             super().__init__(*args, **kwargs)
             self._bot_user = test_user
 
+    def mock_send_media_group(*args: Any, **kwargs: Any) -> list[Message]:
+        chat_id: int = args[0]
+        return [
+            Message(
+                message_id=12345 + idx,
+                date=dt_util.utcnow(),
+                chat=Chat(id=chat_id, type=ChatType.PRIVATE),
+            )
+            for idx, _ in enumerate(kwargs[ATTR_MEDIA])
+        ]
+
     with (
         patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
         patch.object(BotMock, "get_chat", return_value=test_chat),
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
+        patch.object(BotMock, "send_message_draft", return_value=True),
         patch.object(BotMock, "send_photo", return_value=message),
+        patch.object(BotMock, "send_media_group", side_effect=mock_send_media_group),
         patch.object(BotMock, "send_sticker", return_value=message),
         patch.object(BotMock, "send_video", return_value=message),
         patch.object(BotMock, "send_document", return_value=message),
@@ -157,6 +152,25 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "send_animation", return_value=message),
         patch.object(BotMock, "send_location", return_value=message),
         patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(
+            BotMock,
+            "get_updates",
+            return_value=(
+                Update(
+                    1,
+                    Message(
+                        1,
+                        dt_util.utcnow(),
+                        Chat(
+                            id=123456,
+                            type=ChatType.PRIVATE,
+                            first_name="mock first_name",
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        patch.object(BotMock, "log_out", return_value=True),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield
@@ -241,7 +255,7 @@ def update_message_text():
 
 @pytest.fixture
 def unauthorized_update_message_text(update_message_text):
-    """Fixture for mocking an incoming update of type message/text that is not in our `allowed_chat_ids`."""
+    """Fixture for mocking an incoming unauthorized message/text."""
     update_message_text["message"]["from"]["id"] = 1234
     update_message_text["message"]["chat"]["id"] = 1234
     return update_message_text
@@ -270,6 +284,33 @@ def update_callback_query():
 
 
 @pytest.fixture
+def update_callback_inline_keyboard():
+    """Fixture for mocking a callback_query from inline keyboard."""
+    return {
+        "update_id": 1,
+        "callback_query": {
+            "id": "4382bfdwdsb323b2d9",
+            "from": {
+                "id": 12345678,
+                "type": "private",
+                "is_bot": False,
+                "last_name": "Test Lastname",
+                "first_name": "Test Firstname",
+                "username": "Testusername",
+            },
+            "message": {
+                "message_id": 101,
+                "chat": {"id": 987654321, "type": "private"},
+                "date": 1708181000,
+                "text": "command",
+            },
+            "chat_instance": "aaa111",
+            "data": "/command arg1 arg2",
+        },
+    }
+
+
+@pytest.fixture
 def mock_broadcast_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -277,6 +318,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             CONF_API_KEY: "mock api key",
         },
         options={ATTR_PARSER: PARSER_MD},
@@ -294,6 +336,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -307,6 +350,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
+            CONF_API_ENDPOINT: "http://mock/bot",
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
         options={ATTR_PARSER: PARSER_MD},
@@ -318,6 +362,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
                 title="mock chat",
             )
         ],
+        minor_version=2,
     )
 
 
@@ -328,37 +373,16 @@ async def webhook_bot(
     mock_register_webhook: None,
     mock_external_calls: None,
     mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
+) -> None:
     """Fixture for setting up a webhook telegram bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
     await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
-
-
-@pytest.fixture
-async def webhook_platform(
-    hass: HomeAssistant,
-    config_webhooks: dict[str, Any],
-    mock_register_webhook: None,
-    mock_external_calls: None,
-    mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
-    """Fixture for setting up the webhooks platform using appropriate config and mocks."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        config_webhooks,
-    )
-    await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
 
 
 @pytest.fixture
 def mock_polling_calls() -> Generator[None]:
-    """Fixture for setting up the polling platform using appropriate config and mocks."""
+    """Fixture for setting up the polling platform with config and mocks."""
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:

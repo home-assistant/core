@@ -1,9 +1,9 @@
 """Tests for the Google Generative AI Conversation integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, mock_open, patch
+from unittest.mock import AsyncMock, patch
 
-from google.genai.types import File, FileState
+import attr
 import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
@@ -27,7 +27,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -35,299 +34,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
 from tests.common import MockConfigEntry
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_without_images(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test generate content service."""
-    stubbed_generated_content = (
-        "I'm thrilled to welcome you all to the release "
-        "party for the latest version of Home Assistant!"
-    )
-
-    with patch(
-        "google.genai.models.AsyncModels.generate_content",
-        return_value=Mock(
-            text=stubbed_generated_content,
-            prompt_feedback=None,
-            candidates=[Mock()],
-        ),
-    ) as mock_generate:
-        response = await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "Write an opening speech for a Home Assistant release party"},
-            blocking=True,
-            return_response=True,
-        )
-
-    assert response == {
-        "text": stubbed_generated_content,
-    }
-    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_with_image(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test generate content service."""
-    stubbed_generated_content = (
-        "A mail carrier is at your front door delivering a package"
-    )
-
-    with (
-        patch(
-            "google.genai.models.AsyncModels.generate_content",
-            return_value=Mock(
-                text=stubbed_generated_content,
-                prompt_feedback=None,
-                candidates=[Mock()],
-            ),
-        ) as mock_generate,
-        patch(
-            "google.genai.files.Files.upload",
-            side_effect=[
-                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
-                File(name="context.txt", state=FileState.ACTIVE),
-            ],
-        ),
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("mimetypes.guess_type", return_value=["image/jpeg"]),
-    ):
-        response = await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    assert response == {
-        "text": stubbed_generated_content,
-    }
-    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_file_processing_succeeds(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test generate content service."""
-    stubbed_generated_content = (
-        "A mail carrier is at your front door delivering a package"
-    )
-
-    with (
-        patch(
-            "google.genai.models.AsyncModels.generate_content",
-            return_value=Mock(
-                text=stubbed_generated_content,
-                prompt_feedback=None,
-                candidates=[Mock()],
-            ),
-        ) as mock_generate,
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("builtins.open", mock_open(read_data="this is an image")),
-        patch("mimetypes.guess_type", return_value=["image/jpeg"]),
-        patch(
-            "google.genai.files.Files.upload",
-            side_effect=[
-                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
-                File(name="context.txt", state=FileState.PROCESSING),
-            ],
-        ),
-        patch(
-            "google.genai.files.AsyncFiles.get",
-            side_effect=[
-                File(name="context.txt", state=FileState.PROCESSING),
-                File(name="context.txt", state=FileState.ACTIVE),
-            ],
-        ),
-    ):
-        response = await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    assert response == {
-        "text": stubbed_generated_content,
-    }
-    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_file_processing_fails(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test generate content service."""
-    stubbed_generated_content = (
-        "A mail carrier is at your front door delivering a package"
-    )
-
-    with (
-        patch(
-            "google.genai.models.AsyncModels.generate_content",
-            return_value=Mock(
-                text=stubbed_generated_content,
-                prompt_feedback=None,
-                candidates=[Mock()],
-            ),
-        ),
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("builtins.open", mock_open(read_data="this is an image")),
-        patch("mimetypes.guess_type", return_value=["image/jpeg"]),
-        patch(
-            "google.genai.files.Files.upload",
-            side_effect=[
-                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
-                File(name="context.txt", state=FileState.PROCESSING),
-            ],
-        ),
-        patch(
-            "google.genai.files.AsyncFiles.get",
-            side_effect=[
-                File(name="context.txt", state=FileState.PROCESSING),
-                File(
-                    name="context.txt",
-                    state=FileState.FAILED,
-                    error={"message": "File processing failed"},
-                ),
-            ],
-        ),
-        pytest.raises(
-            HomeAssistantError,
-            match="File `context.txt` processing failed, reason: File processing failed",
-        ),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test generate content service handles errors."""
-    with (
-        patch(
-            "google.genai.models.AsyncModels.generate_content",
-            side_effect=API_ERROR_500,
-        ),
-        pytest.raises(
-            HomeAssistantError,
-            match="Error generating content: 500 internal-error. {'message': 'Internal Server Error', 'status': 'internal-error'}",
-        ),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_response_has_empty_parts(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test generate content service handles response with empty parts."""
-    with (
-        patch(
-            "google.genai.models.AsyncModels.generate_content",
-            return_value=Mock(
-                prompt_feedback=None,
-                candidates=[Mock(content=Mock(parts=[]))],
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Unknown error generating content"),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_with_image_not_allowed_path(
-    hass: HomeAssistant,
-) -> None:
-    """Test generate content service with an image in a not allowed path."""
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(
-            HomeAssistantError,
-            match=(
-                "Cannot read `doorbell_snapshot.jpg`, no access to path; "
-                "`allowlist_external_dirs` may need to be adjusted in "
-                "`configuration.yaml`"
-            ),
-        ),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": "doorbell_snapshot.jpg",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_with_image_not_exists(
-    hass: HomeAssistant,
-) -> None:
-    """Test generate content service with an image that does not exist."""
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("pathlib.Path.exists", return_value=False),
-        pytest.raises(
-            HomeAssistantError, match="`doorbell_snapshot.jpg` does not exist"
-        ),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": "doorbell_snapshot.jpg",
-            },
-            blocking=True,
-            return_response=True,
-        )
 
 
 @pytest.mark.parametrize(
@@ -361,55 +67,6 @@ async def test_config_entry_error(
         await hass.async_block_till_done()
         assert mock_config_entry.state == state
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_load_entry_with_unloaded_entries(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test loading an entry with unloaded entries."""
-    config_entries = hass.config_entries.async_entries(
-        "google_generative_ai_conversation"
-    )
-    runtime_data = config_entries[0].runtime_data
-    await hass.config_entries.async_unload(config_entries[0].entry_id)
-
-    entry = MockConfigEntry(
-        domain="google_generative_ai_conversation",
-        title="Google Generative AI Conversation",
-        data={
-            "api_key": "bla",
-        },
-        state=ConfigEntryState.LOADED,
-    )
-    entry.runtime_data = runtime_data
-    entry.add_to_hass(hass)
-
-    stubbed_generated_content = (
-        "I'm thrilled to welcome you all to the release "
-        "party for the latest version of Home Assistant!"
-    )
-
-    with patch(
-        "google.genai.models.AsyncModels.generate_content",
-        return_value=Mock(
-            text=stubbed_generated_content,
-            prompt_feedback=None,
-            candidates=[Mock()],
-        ),
-    ) as mock_generate:
-        response = await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "Write an opening speech for a Home Assistant release party"},
-            blocking=True,
-            return_response=True,
-        )
-
-    assert response == {
-        "text": stubbed_generated_content,
-    }
-    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
 
 
 async def test_migration_from_v1(
@@ -534,12 +191,12 @@ async def test_migration_from_v1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -557,12 +214,12 @@ async def test_migration_from_v1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -590,13 +247,17 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
@@ -611,13 +272,17 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 0,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 1,
@@ -632,13 +297,17 @@ async def test_migration_from_v1(
             ConfigEntryDisabler.USER,
             [
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 0,
                 },
                 {
-                    "conversation_entity_id": "conversation.google_generative_ai_conversation_2",
+                    "conversation_entity_id": (
+                        "conversation.google_generative_ai_conversation_2"
+                    ),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 1,
@@ -779,10 +448,10 @@ async def test_migration_from_v1_disabled(
     assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
     assert stt_subentries[0].title == DEFAULT_STT_NAME
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
@@ -795,8 +464,9 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -908,8 +578,8 @@ async def test_migration_from_v1_with_multiple_keys(
         assert subentry.data == RECOMMENDED_STT_OPTIONS
         assert subentry.title == DEFAULT_STT_NAME
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {entry.entry_id}
@@ -1040,12 +710,12 @@ async def test_migration_from_v1_with_same_keys(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1063,12 +733,12 @@ async def test_migration_from_v1_with_same_keys(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1080,19 +750,14 @@ async def test_migration_from_v1_with_same_keys(
 
 
 @pytest.mark.parametrize(
-    ("device_changes", "extra_subentries", "expected_device_subentries"),
+    "extra_subentries",
     [
         # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b0:
-        # Wrong device registry, no TTS subentry
-        (
-            {"add_config_entry_id": "mock_entry_id", "add_config_subentry_id": None},
-            [],
-            {"mock_entry_id": {None, "mock_id_1"}},
-        ),
-        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b1:
-        # Wrong device registry, TTS subentry created
-        (
-            {"add_config_entry_id": "mock_entry_id", "add_config_subentry_id": None},
+        # no TTS subentry
+        pytest.param([], id="without_tts_subentry"),
+        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b1
+        # or later: TTS subentry created
+        pytest.param(
             [
                 ConfigSubentryData(
                     data=RECOMMENDED_TTS_OPTIONS,
@@ -1102,22 +767,7 @@ async def test_migration_from_v1_with_same_keys(
                     unique_id=None,
                 )
             ],
-            {"mock_entry_id": {None, "mock_id_1"}},
-        ),
-        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b2
-        # or later: Correct device registry, TTS subentry created
-        (
-            {},
-            [
-                ConfigSubentryData(
-                    data=RECOMMENDED_TTS_OPTIONS,
-                    subentry_id="mock_id_3",
-                    subentry_type="tts",
-                    title=DEFAULT_TTS_NAME,
-                    unique_id=None,
-                )
-            ],
-            {"mock_entry_id": {"mock_id_1"}},
+            id="with_tts_subentry",
         ),
     ],
 )
@@ -1125,15 +775,11 @@ async def test_migration_from_v2_1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    device_changes: dict[str, str],
     extra_subentries: list[ConfigSubentryData],
-    expected_device_subentries: dict[str, set[str | None]],
 ) -> None:
     """Test migration from version 2.1.
 
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1 and add AI Task and STT subentries:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
+    This tests we add TTS, AI Task and STT subentries:
     - Add TTS subentry (Added in Home Assistant Core 2025.7.0b1)
     - Add AI Task subentry (Added in version 2.3)
     - Add STT subentry (Added in version 2.3)
@@ -1181,8 +827,6 @@ async def test_migration_from_v2_1(
         model="Generative AI",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(device_1.id, **device_changes)
-    assert device_1.config_entries_subentries == expected_device_subentries
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -1270,12 +914,12 @@ async def test_migration_from_v2_1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1293,12 +937,12 @@ async def test_migration_from_v2_1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1317,8 +961,9 @@ async def test_devices(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Assert that devices are created correctly."""
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
+    devices = sorted(
+        dr.async_entries_for_config_entry(device_registry, mock_config_entry.entry_id),
+        key=lambda d: d.name,
     )
     assert devices == snapshot
 
@@ -1545,13 +1190,19 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Google",
         model="Generative AI",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

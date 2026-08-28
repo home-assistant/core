@@ -1,9 +1,7 @@
 """Notify platform for PlayStation Network."""
 
-from __future__ import annotations
-
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
@@ -111,14 +109,15 @@ async def async_setup_entry(
 class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, NotifyEntity):
     """Base class of PlayStation Network notify entity."""
 
-    group: Group | None = None
+    psn_group: Group | None = None
 
     def _send_message(self, message: str) -> None:
         """Send message."""
         if TYPE_CHECKING:
-            assert self.group
-        self.group.send_message(message)
+            assert self.psn_group
+        self.psn_group.send_message(message)
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
 
@@ -155,7 +154,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
         group_id: str,
     ) -> None:
         """Initialize a notification entity."""
-        self.group = coordinator.psn.psn.group(group_id=group_id)
+        self.psn_group = coordinator.psn.psn.group(group_id=group_id)
         group_details = coordinator.data[group_id]
         self.entity_description = NotifyEntityDescription(
             key=group_id,
@@ -174,7 +173,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
 
 
 class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEntity):
-    """Representation of a PlayStation Network notify entity for sending direct messages."""
+    """PlayStation Network notify entity for direct messages."""
 
     coordinator: PlaystationNetworkFriendlistCoordinator
 
@@ -196,9 +195,10 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
 
         super().__init__(coordinator, self.entity_description)
 
+    @override
     def _send_message(self, message: str) -> None:
-        if not self.group:
-            self.group = self.coordinator.psn.psn.group(
+        if not self.psn_group:
+            self.psn_group = self.coordinator.psn.psn.group(
                 users_list=[self.coordinator.psn.friends_list[self.account_id]]
             )
         super()._send_message(message)

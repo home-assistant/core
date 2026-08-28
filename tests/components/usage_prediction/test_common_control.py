@@ -1,7 +1,5 @@
 """Test the common control usage prediction."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 import uuid
 
@@ -142,7 +140,7 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
     """Test handling of service calls with multiple entity IDs."""
     user_id = str(uuid.uuid4())
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     ent_reg.async_get_or_create(
         "light",
         "test",

@@ -1,7 +1,5 @@
 """Onboarding views."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
@@ -127,6 +125,18 @@ class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
             raise HTTPUnauthorized
 
         hass = request.app[KEY_HASS]
+        # Wait for hassio so Supervisor installations are detected correctly.
+        # Shield a hass-owned task so disconnects cannot cancel its setup future.
+        await asyncio.shield(
+            hass.async_create_task(
+                async_wait_component(hass, "hassio"), "onboarding wait hassio"
+            )
+        )
+
+        # Onboarding may have completed while waiting
+        if self._data["done"]:
+            raise HTTPUnauthorized
+
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 
@@ -283,7 +293,10 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
         hass = request.app[KEY_HASS]
-        refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
+        if not (refresh_token_id := request.get(KEY_HASS_REFRESH_TOKEN_ID)):
+            return self.json_message(
+                "Refresh token not available", HTTPStatus.FORBIDDEN
+            )
 
         async with self._lock:
             if self._async_is_done():

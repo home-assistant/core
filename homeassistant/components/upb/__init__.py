@@ -5,32 +5,33 @@ import logging
 import upb_lib
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
+from homeassistant.const import (
+    ATTR_COMMAND,
+    CONF_DEVICE,
+    CONF_FILE_PATH,
+    CONF_HOST,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    ATTR_ADDRESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_RATE,
-    DOMAIN,
-    EVENT_UPB_SCENE_CHANGED,
-)
+from .const import ATTR_ADDRESS, ATTR_BRIGHTNESS_PCT, ATTR_RATE, EVENT_UPB_SCENE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
+type UpbConfigEntry = ConfigEntry[upb_lib.UpbPim]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
     """Set up a new config_entry for UPB PIM."""
 
-    url = config_entry.data[CONF_HOST]
+    url = config_entry.data[CONF_DEVICE]
     file = config_entry.data[CONF_FILE_PATH]
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
     await upb.load_upstart_file()
     await upb.async_connect()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
+    config_entry.runtime_data = upb
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -57,29 +58,39 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
     """Unload the config_entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
     if unload_ok:
-        upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
-        upb.disconnect()
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        config_entry.runtime_data.disconnect()
     return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate entry."""
 
-    _LOGGER.debug("Migrating from version %s", entry.version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
-        # 1 -> 2: Unique ID from integer to string
+        # 1.1 -> 1.2: Unique ID from integer to string
         if entry.minor_version == 1:
-            minor_version = 2
             hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+                entry, unique_id=str(entry.unique_id), minor_version=2
+            )
+
+        # 1.2 -> 1.3: Migrate from legacy CONF_HOST URL to CONF_DEVICE
+        if entry.minor_version < 3:
+            # upb-lib is backward compatible with the older URL formats,
+            # but we need to move to CONF_DEVICE
+            device = entry.data[CONF_HOST]
+            file_path = entry.data[CONF_FILE_PATH]
+
+            hass.config_entries.async_update_entry(
+                entry,
+                data={CONF_DEVICE: device, CONF_FILE_PATH: file_path},
+                minor_version=3,
             )
 
     _LOGGER.debug("Migration successful")

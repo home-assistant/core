@@ -145,7 +145,7 @@
     "config_entry_not_ready": {
       "message": "Error while loading the config entry."
     },
-    "update_error": {
+    "update_failed": {
       "message": "Error while updating data from the API."
     }
   }

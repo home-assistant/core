@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
-from typing import Any
+from typing import Any, override
 
 from rachiopy import Rachio
 from requests.exceptions import Timeout
@@ -60,6 +60,7 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update smart hose timer data."""
         try:
@@ -92,6 +93,7 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
             update_interval=timedelta(minutes=30),
         )
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Retrieve data for the past week and the next 60 days."""
         _now: datetime = dt_util.now()

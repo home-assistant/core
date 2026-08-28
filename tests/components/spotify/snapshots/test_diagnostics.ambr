@@ -108,21 +108,7 @@
             'width': None,
           }),
         ]),
-        'name': 'Spotify Web API Testing playlist',
-        'object_type': 'playlist',
-        'owner': dict({
-          'display_name': 'JMPerez²',
-          'external_urls': dict({
-            'spotify': 'https://open.spotify.com/user/jmperezperez',
-          }),
-          'href': 'https://api.spotify.com/v1/users/jmperezperez',
-          'object_type': 'user',
-          'owner_id': 'jmperezperez',
-          'uri': 'spotify:user:jmperezperez',
-        }),
-        'playlist_id': '3cEYpjA9oz9GiPac4AsH4n',
-        'public': True,
-        'tracks': dict({
+        'items': dict({
           'items': list([
             dict({
               'added_at': '2015-01-15T12:39:22+00:00',
@@ -517,7 +503,6 @@
                     }),
                   ]),
                   'name': 'Safety Third',
-                  'publisher': 'Safety Third ',
                   'show_id': '1Y9ExMgMxoBVrgrfU7u0nD',
                   'total_episodes': 120,
                   'uri': 'spotify:show:1Y9ExMgMxoBVrgrfU7u0nD',
@@ -528,6 +513,20 @@
             }),
           ]),
         }),
+        'name': 'Spotify Web API Testing playlist',
+        'object_type': 'playlist',
+        'owner': dict({
+          'display_name': 'JMPerez²',
+          'external_urls': dict({
+            'spotify': 'https://open.spotify.com/user/jmperezperez',
+          }),
+          'href': 'https://api.spotify.com/v1/users/jmperezperez',
+          'object_type': 'user',
+          'owner_id': 'jmperezperez',
+          'uri': 'spotify:user:jmperezperez',
+        }),
+        'playlist_id': '3cEYpjA9oz9GiPac4AsH4n',
+        'public': True,
         'uri': 'spotify:playlist:3cEYpjA9oz9GiPac4AsH4n',
       }),
     }),

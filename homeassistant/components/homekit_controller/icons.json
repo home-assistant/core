@@ -30,9 +30,15 @@
     "sensor": {
       "valve_position": {
         "default": "mdi:pipe-valve"
+      },
+      "water_level": {
+        "default": "mdi:water"
       }
     },
     "switch": {
+      "airplay_enable": {
+        "default": "mdi:cast-variant"
+      },
       "lock_physical_controls": {
         "default": "mdi:lock-open"
       },

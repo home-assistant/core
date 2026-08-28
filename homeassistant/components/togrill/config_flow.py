@@ -1,8 +1,6 @@
 """Config flow for the ToGrill integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from togrill_bluetooth import SUPPORTED_DEVICES
@@ -10,6 +8,7 @@ from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import PacketA0Notify
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -19,7 +18,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, DOMAIN
 from .coordinator import LOGGER
 
 _TIMEOUT = 10
@@ -48,6 +47,7 @@ async def read_config_data(
         CONF_MODEL: info.name,
         CONF_ADDRESS: info.address,
         CONF_PROBE_COUNT: packet_a0.probe_count,
+        CONF_HAS_AMBIENT: packet_a0.ambient,
     }
 
 
@@ -71,6 +71,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             data=config_data,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -101,6 +102,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,6 +116,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_infos[address]
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address

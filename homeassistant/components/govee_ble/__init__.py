@@ -1,13 +1,10 @@
 """The Govee Bluetooth BLE integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
 from govee_ble import GoveeBluetoothDeviceData
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -31,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> 
         hass,
         _LOGGER,
         address=address,
-        mode=BluetoothScanningMode.ACTIVE,
         update_method=partial(process_service_info, hass, entry),
         device_data=data,
         entry=entry,

@@ -1,7 +1,5 @@
 """Alexa related errors."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 from homeassistant.core import HomeAssistant

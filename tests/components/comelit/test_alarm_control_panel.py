@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import AlarmDataObject, ComelitVedoAreaObject
-from aiocomelit.const import AlarmAreaState
+from aiocomelit.api import ComelitVedoAreaObject
+from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -55,8 +55,8 @@ async def test_entity_availability(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == AlarmControlPanelState.DISARMED
 
-    vedo_query = AlarmDataObject(
-        alarm_areas={
+    vedo_query = {
+        ALARM_AREA: {
             0: ComelitVedoAreaObject(
                 index=0,
                 name="Area0",
@@ -73,10 +73,10 @@ async def test_entity_availability(
                 human_status=human_status,
             )
         },
-        alarm_zones={
+        ALARM_ZONE: {
             0: ZONE0,
         },
-    )
+    }
 
     mock_vedo.get_all_areas_and_zones.return_value = vedo_query
 

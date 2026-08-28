@@ -1,0 +1,94 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This API key is already configured.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "Invalid API key provided",
+      "rate_limit_exceeded": "Too many requests to the API. Please try again later.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "station_already_configured": "The selected station for this company is already configured"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:component::fuelprices_dk::config::abort::invalid_api_key%]",
+      "rate_limit_exceeded": "[%key:component::fuelprices_dk::config::abort::rate_limit_exceeded%]"
+    },
+    "step": {
+      "company_selection": {
+        "data": {
+          "company": "Select company"
+        },
+        "data_description": {
+          "company": "The company you want to fetch prices from"
+        },
+        "description": "Select company"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your personal API key"
+        },
+        "description": "Your API key needs to be updated."
+      },
+      "station_selection": {
+        "data": {
+          "station": "Select station"
+        },
+        "data_description": {
+          "station": "The station you want to create sensors for"
+        },
+        "description": "Select station to show prices for"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your personal API key"
+        },
+        "description": "Enter your Fuelprices.dk API key\nIf you do not have an API key, you can get one for free at {website_url}"
+      }
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_api_key": "[%key:component::fuelprices_dk::config::abort::invalid_api_key%]",
+        "rate_limit_exceeded": "[%key:component::fuelprices_dk::config::abort::rate_limit_exceeded%]",
+        "station_already_configured": "[%key:component::fuelprices_dk::config::abort::station_already_configured%]"
+      },
+      "entry_type": "Station",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_api_key": "[%key:component::fuelprices_dk::config::abort::invalid_api_key%]",
+        "rate_limit_exceeded": "[%key:component::fuelprices_dk::config::abort::rate_limit_exceeded%]"
+      },
+      "initiate_flow": {
+        "user": "Add station"
+      },
+      "step": {
+        "company_selection": {
+          "data": {
+            "company": "[%key:component::fuelprices_dk::config::step::company_selection::data::company%]"
+          },
+          "data_description": {
+            "company": "[%key:component::fuelprices_dk::config::step::company_selection::data_description::company%]"
+          },
+          "description": "[%key:component::fuelprices_dk::config::step::company_selection::description%]"
+        },
+        "station_selection": {
+          "data": {
+            "station": "[%key:component::fuelprices_dk::config::step::station_selection::data::station%]"
+          },
+          "data_description": {
+            "station": "[%key:component::fuelprices_dk::config::step::station_selection::data_description::station%]"
+          },
+          "description": "[%key:component::fuelprices_dk::config::step::station_selection::description%]"
+        }
+      }
+    }
+  }
+}

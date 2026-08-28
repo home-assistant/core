@@ -1,12 +1,13 @@
 """The tests for the TTS component."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import io
 from pathlib import Path
 import tempfile
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import wave
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,10 +18,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.tts import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -65,7 +67,7 @@ async def test_config_entry_unload(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -154,7 +156,7 @@ async def test_service(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -175,7 +177,10 @@ async def test_service(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -217,7 +222,7 @@ async def test_service_default_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with default language and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -281,7 +286,7 @@ async def test_service_default_special_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with default special language and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -301,7 +306,10 @@ async def test_service_default_special_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -341,7 +349,7 @@ async def test_service_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with language."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -361,7 +369,10 @@ async def test_service_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -401,7 +412,7 @@ async def test_service_wrong_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -455,7 +466,7 @@ async def test_service_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -539,7 +550,7 @@ async def test_service_default_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with default options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -613,7 +624,7 @@ async def test_merge_default_service_options(
 
     This tests merging default and user provided options.
     """
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -680,7 +691,7 @@ async def test_service_wrong_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with wrong options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -736,7 +747,7 @@ async def test_service_clear_cache(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service clear cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -798,7 +809,7 @@ async def test_service_receive_voice(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -870,7 +881,7 @@ async def test_service_receive_voice_german(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1001,7 +1012,7 @@ async def test_service_without_cache(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1046,7 +1057,7 @@ async def test_setup_legacy_cache_dir(
     mock_provider: MockTTSProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     tts_data = MOCK_DATA
     cache_file = (
@@ -1084,7 +1095,7 @@ async def test_setup_cache_dir(
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     tts_data = MOCK_DATA
     cache_file = mock_tts_cache_dir / (
@@ -1170,7 +1181,7 @@ async def test_service_get_tts_error(
     service_data: dict[str, Any],
 ) -> None:
     """Set up a TTS platform with wrong get_tts_audio."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1692,7 +1703,7 @@ async def test_ws_list_engines_deprecated(
     mock_integration(hass, MockModule(domain="test_2"))
     mock_platform(hass, "test_2.tts", MockTTS(mock_provider_2))
     await async_setup_component(
-        hass, "tts", {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
+        hass, DOMAIN, {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
     )
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -1846,6 +1857,127 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
             pass
 
 
+async def _audio_data_gen() -> AsyncGenerator[bytes]:
+    """Yield test audio data."""
+    yield b"audio"
+
+
+@pytest.mark.parametrize(
+    ("from_extension", "audio_input", "expected_input"),
+    [
+        pytest.param(
+            "wav",
+            _audio_data_gen(),
+            ["-f", "wav", "-probesize", "32", "-i", "pipe:0"],
+            id="streaming_wav",
+        ),
+        pytest.param(
+            "wav",
+            Path("input.wav"),
+            ["-f", "wav", "-i", "input.wav"],
+            id="static_wav",
+        ),
+        pytest.param(
+            "mp3",
+            _audio_data_gen(),
+            ["-f", "mp3", "-i", "pipe:0"],
+            id="streaming_mp3",
+        ),
+    ],
+)
+async def test_async_convert_audio_probe_size(
+    hass: HomeAssistant,
+    from_extension: str,
+    audio_input: AsyncGenerator[bytes] | Path,
+    expected_input: list[str],
+) -> None:
+    """Test probe size is limited for streaming WAV conversion only."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass,
+            from_extension,
+            audio_input,
+            "flac",
+            to_sample_rate=48000,
+            to_sample_channels=1,
+            to_sample_bytes=2,
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    input_index = command.index("-i")
+    # FFmpeg input options are positional.
+    assert command[4 : input_index + 2] == expected_input
+    assert command[input_index + 2 :] == [
+        "-f",
+        "flac",
+        "-ar",
+        "48000",
+        "-ac",
+        "1",
+        "-sample_fmt",
+        "s16",
+        "pipe:1",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("to_bitrate", "expected_encoder_args"),
+    [
+        pytest.param(None, ["-q:a", "0"], id="default_vbr"),
+        pytest.param(48, ["-b:a", "48k"], id="cbr_48k"),
+    ],
+)
+async def test_async_convert_audio_mp3_bitrate(
+    hass: HomeAssistant,
+    to_bitrate: int | None,
+    expected_encoder_args: list[str],
+) -> None:
+    """Test that a preferred bitrate produces a constant bitrate MP3."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass,
+            "wav",
+            _audio_data_gen(),
+            "mp3",
+            to_sample_rate=24000,
+            to_sample_channels=1,
+            to_bitrate=to_bitrate,
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    input_index = command.index("-i")
+    assert command[input_index + 2 :] == [
+        "-f",
+        "mp3",
+        "-ar",
+        "24000",
+        "-ac",
+        "1",
+        *expected_encoder_args,
+        "pipe:1",
+    ]
+
+
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
@@ -1954,10 +2086,50 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert result_data == data
 
 
+async def test_result_stream_message_set_idempotent(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test setting a result stream message more than once."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message("hello")
+    cache_first = stream._result_cache.result()
+    stream.async_set_message("world")
+    assert stream._result_cache.result() is cache_first
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock stream TTS audio."""
+
+        async def gen_data():
+            async for msg in request.message_gen:
+                yield msg.encode()
+
+        return tts.TTSAudioResponse(
+            extension="mp3",
+            data_gen=gen_data(),
+        )
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        """Mock stream message."""
+        yield "h"
+
+    stream2 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream2.async_set_message_stream(stream_message())
+    cache_first = stream2._result_cache.result()
+    stream2.async_set_message_stream(stream_message())
+    assert stream2._result_cache.result() is cache_first
+
+
 async def test_tts_cache() -> None:
     """Test TTSCache."""
 
-    async def data_gen(queue: asyncio.Queue[bytes | None | Exception]):
+    async def data_gen(queue: asyncio.Queue[bytes | Exception | None]):
         while chunk := await queue.get():
             if isinstance(chunk, Exception):
                 raise chunk
@@ -2042,7 +2214,7 @@ async def test_async_internal_get_tts_audio_called(
     mock_tts_entity: MockTTSEntity,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that non-streaming entity has its async_internal_get_tts_audio method called."""
+    """Test non-streaming entity calls async_internal_get_tts_audio."""
 
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -2075,7 +2247,6 @@ async def test_stream_override(
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message("beer")
 
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
         with wave.open(wav_file, "wb") as wav_writer:
@@ -2087,6 +2258,10 @@ async def test_stream_override(
         wav_file.seek(0)
 
         stream.async_override_result(wav_file.name)
+
+        # An override without conversion is available directly on disk.
+        assert stream.async_get_media_path() == Path(wav_file.name)
+
         result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result
@@ -2115,7 +2290,6 @@ async def test_stream_override_with_conversion(
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
         },
     )
-    stream.async_set_message("beer")
 
     # Use a temp file here since ffmpeg will read it directly
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
@@ -2127,6 +2301,11 @@ async def test_stream_override_with_conversion(
 
         wav_file.seek(0)
         stream.async_override_result(wav_file.name)
+
+        # An override that needs conversion no longer matches the file on disk,
+        # so no path is exposed.
+        assert stream.async_get_media_path() is None
+
         result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result has the preferred format

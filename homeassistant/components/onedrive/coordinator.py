@@ -1,11 +1,11 @@
 """Coordinator for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from time import time
+from typing import override
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.const import DriveState
@@ -56,8 +56,15 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
         )
         self._client = client
 
+    @override
     async def _async_update_data(self) -> Drive:
         """Fetch data from API endpoint."""
+        expires_at = self.config_entry.data["token"]["expires_at"]
+        _LOGGER.debug(
+            "Token expiry: %s (in %s seconds)",
+            expires_at,
+            expires_at - time(),
+        )
 
         try:
             drive = await self._client.get_drive()

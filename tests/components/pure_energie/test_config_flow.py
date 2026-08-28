@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock
 
 from gridnet import GridNetConnectionError
+import pytest
 
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,10 +14,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant,
-    mock_pure_energie_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_pure_energie_config_flow: MagicMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -39,10 +39,9 @@ async def test_full_user_flow_implementation(
     assert result["result"].unique_id == "aabbccddeeff"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_zeroconf_flow_implementationn(
-    hass: HomeAssistant,
-    mock_pure_energie_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_pure_energie_config_flow: MagicMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(

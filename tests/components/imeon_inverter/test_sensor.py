@@ -38,7 +38,6 @@ async def test_sensors(
         ValueError,
     ],
 )
-@pytest.mark.asyncio
 async def test_sensor_unavailable_on_update_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

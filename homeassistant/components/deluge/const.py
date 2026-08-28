@@ -13,14 +13,19 @@ LOGGER = logging.getLogger(__package__)
 
 
 class DelugeGetSessionStatusKeys(enum.Enum):
-    """Enum representing the keys that get passed into the Deluge RPC `core.get_session_status` xml rpc method.
+    """Keys passed into the Deluge RPC `core.get_session_status`.
 
-    You can call `core.get_session_status` with no keys (so an empty list in deluge-client.DelugeRPCClient.call)
-    to get the full list of possible keys, but it seems to basically be a all of the session statistics
-    listed on this page: https://www.rasterbar.com/products/libtorrent/manual-ref.html#session-statistics
+    You can call `core.get_session_status` with no keys
+    (so an empty list in
+    deluge-client.DelugeRPCClient.call)
+    to get the full list of possible keys, but it seems to
+    basically be all of the session statistics listed on
+    this page:
+    https://www.rasterbar.com/products/libtorrent/manual-ref.html#session-statistics
     and a few others
 
-    there is also a list of deprecated keys that deluge will translate for you and issue a warning in the log:
+    there is also a list of deprecated keys that deluge
+    will translate for you and issue a warning in the log:
     https://github.com/deluge-torrent/deluge/blob/7f3f7f69ee78610e95bea07d99f699e9310c4e08/deluge/core/core.py#L58
 
     """
@@ -32,10 +37,11 @@ class DelugeGetSessionStatusKeys(enum.Enum):
 
 
 class DelugeSensorType(enum.StrEnum):
-    """Enum that distinguishes the different sensor types that the Deluge integration has.
+    """Sensor types for the Deluge integration.
 
-    This is mainly used to avoid passing strings around and to distinguish between similarly
-    named strings in `DelugeGetSessionStatusKeys`.
+    This is mainly used to avoid passing strings around
+    and to distinguish between similarly named strings
+    in `DelugeGetSessionStatusKeys`.
     """
 
     CURRENT_STATUS_SENSOR = "current_status"

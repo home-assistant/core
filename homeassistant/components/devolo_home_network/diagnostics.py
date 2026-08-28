@@ -1,7 +1,5 @@
 """Diagnostics support for devolo Home Network."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data

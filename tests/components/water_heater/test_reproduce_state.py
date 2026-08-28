@@ -6,6 +6,7 @@ from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
+    DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -33,11 +34,11 @@ async def test_reproducing_states(
         {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
     )
 
-    turn_on_calls = async_mock_service(hass, "water_heater", SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, "water_heater", SERVICE_TURN_OFF)
-    set_op_calls = async_mock_service(hass, "water_heater", SERVICE_SET_OPERATION_MODE)
-    set_temp_calls = async_mock_service(hass, "water_heater", SERVICE_SET_TEMPERATURE)
-    set_away_calls = async_mock_service(hass, "water_heater", SERVICE_SET_AWAY_MODE)
+    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    set_op_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_OPERATION_MODE)
+    set_temp_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    set_away_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_AWAY_MODE)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

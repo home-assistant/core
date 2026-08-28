@@ -32,7 +32,7 @@ async def test_switches(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_turn_on(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -67,7 +67,7 @@ async def test_turn_on(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -95,9 +95,9 @@ async def test_turn_off(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["switch_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
-    """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
+    """Test switch entity discovered from any (non-light) OnOff device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
     # by another platform (e.g. light, lock etc.).
@@ -107,7 +107,7 @@ async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None
     assert state.attributes["friendly_name"] == "Mock SwitchUnit"
 
 
-@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
     state = hass.states.get("switch.room_airconditioner_power")
@@ -116,32 +116,32 @@ async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> Non
     assert state.attributes["friendly_name"] == "Room AirConditioner Power"
 
 
-@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
 async def test_numeric_switch(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test numeric switch entity is discovered and working using an Eve Thermo fixture ."""
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    """Test numeric switch entity using an Eve Thermo fixture."""
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state
     assert state.state == "off"
     # name should be derived from description attribute
-    assert state.attributes["friendly_name"] == "Eve Thermo Child lock"
+    assert state.attributes["friendly_name"] == "Eve Thermo 20EBP1701 Child lock"
     # test attribute changes
     set_node_attribute(matter_node, 1, 516, 1, 1)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "on"
     set_node_attribute(matter_node, 1, 516, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "off"
     # test switch service
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.eve_thermo_child_lock"},
+        {"entity_id": "switch.eve_thermo_20ebp1701_child_lock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -156,7 +156,7 @@ async def test_numeric_switch(
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.eve_thermo_child_lock"},
+        {"entity_id": "switch.eve_thermo_20ebp1701_child_lock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 2
@@ -170,13 +170,13 @@ async def test_numeric_switch(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_matter_exception_on_command(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError by using a switch fixture."""
+    """Test MatterError converts to HomeAssistantError for switch."""
     state = hass.states.get("switch.mock_onoffpluginunit")
     assert state
     matter_client.send_device_command.side_effect = MatterError("Boom")
@@ -231,4 +231,109 @@ async def test_evse_sensor(
             maximumChargeCurrent=0,
         ),
         timed_request_timeout_ms=3000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_speaker"])
+async def test_speaker_mute_uses_onoff_commands(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test speaker mute switch uses On/Off commands instead of attribute writes."""
+
+    state = hass.states.get("switch.mock_speaker_mute")
+    assert state
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.mock_speaker_mute"},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+
+    set_node_attribute(matter_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.mock_speaker_mute")
+    assert state
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.mock_speaker_mute"},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.On(),
+    )
+
+    set_node_attribute(matter_node, 1, 6, 0, True)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.mock_speaker_mute")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_plug"])
+async def test_eve_child_lock(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the Eve child lock switch entity."""
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state
+    assert state.state == "off"
+    # test attribute changes
+    set_node_attribute(matter_node, 1, 319486977, 319422481, True)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state.state == "on"
+    set_node_attribute(matter_node, 1, 319486977, 319422481, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state.state == "off"
+    # test switch service
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.eve_energy_plug_child_lock"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.EveCluster.Attributes.ChildLock,
+        ),
+        value=True,
+    )
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.eve_energy_plug_child_lock"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.EveCluster.Attributes.ChildLock,
+        ),
+        value=False,
     )

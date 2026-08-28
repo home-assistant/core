@@ -1,7 +1,5 @@
 """Helper methods to handle the time in Home Assistant."""
 
-from __future__ import annotations
-
 import bisect
 from contextlib import suppress
 import datetime as dt
@@ -12,8 +10,6 @@ import zoneinfo
 
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
-
-from homeassistant.helpers.deprecation import deprecated_function
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC
@@ -131,6 +127,26 @@ def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
+def naive_now() -> dt.datetime:
+    """Get now as a naive datetime in system local time.
+
+    The returned datetime has no tzinfo.
+    Prefer the time zone aware `now` helper unless
+    a naive datetime is explicitly required.
+
+    A valid use case for a naive datetime is for example when
+    a 3rd party library requires a naive datetime in local time.
+    In that case, this helper can be used to get the current time
+    in the expected format.
+
+    Use time.time() when calculating a relative time.
+    For example, to calculate the time until a future event,
+    do `event_time - time.time()`
+    instead of `event_time - datetime.datetime.now().timestamp()`.
+    """
+    return dt.datetime.now()
+
+
 def as_utc(dattim: dt.datetime) -> dt.datetime:
     """Return a datetime as UTC time.
 
@@ -170,20 +186,6 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 # of UTC and the function call overhead.
 utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
 """Return a UTC time from a timestamp."""
-
-
-@deprecated_function("datetime.timestamp", breaks_in_ha_version="2026.1")
-def utc_to_timestamp(utc_dt: dt.datetime) -> float:
-    """Fast conversion of a datetime in UTC to a timestamp."""
-    # Taken from
-    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
-    return (
-        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
-        + utc_dt.hour * 3600
-        + utc_dt.minute * 60
-        + utc_dt.second
-        + (utc_dt.microsecond / 1000000)
-    )
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
@@ -349,9 +351,10 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
 
-    The date must be in the past or a ValueException will be raised.
+    The date must be in the past or a ValueError will be raised.
     """
 
     delta = (now() - date).total_seconds()
@@ -364,13 +367,14 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
 
 def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
-    """Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "time remaining" as a string.
 
-    The age can be in second, minute, hour, day, month and year.
+    The time remaining can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
 
-    The date must be in the future or a ValueException will be raised.
+    The date must be in the future or a ValueError will be raised.
     """
 
     delta = (date - now()).total_seconds()

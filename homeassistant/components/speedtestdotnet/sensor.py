@@ -1,10 +1,8 @@
 """Support for Speedtest.net internet speed testing sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -105,6 +103,7 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value for entity."""
         if self.coordinator.data:
@@ -113,6 +112,7 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.coordinator.data:

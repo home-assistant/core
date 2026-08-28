@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "remote_start": {
+        "default": "mdi:power"
+      },
+      "remote_stop": {
+        "default": "mdi:stop-circle-outline"
+      }
+    },
     "device_tracker": {
       "location": {
         "default": "mdi:car"

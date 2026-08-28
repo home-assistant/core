@@ -1,7 +1,5 @@
 """The test for the sensibo sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -43,7 +41,7 @@ async def test_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.kitchen_pure_aqi")
+    state = hass.states.get("sensor.kitchen_kitchen_pure_aqi")
     assert state.state == "moderate"
 
     mock_client.async_get_devices_data.return_value.parsed[
@@ -54,5 +52,5 @@ async def test_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.kitchen_pure_aqi")
+    state = hass.states.get("sensor.kitchen_kitchen_pure_aqi")
     assert state.state == STATE_UNKNOWN

@@ -1,7 +1,5 @@
 """Schema for config entries."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -92,7 +90,7 @@ TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
 
 
 def validate_area(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that template parameters are only used if area is using the relevant template."""
+    """Validate template params are only used with relevant template."""
     conf_set = set()
     for configs in DEFAULT_TEMPLATES.values():
         for conf in configs:

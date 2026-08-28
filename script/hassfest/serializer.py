@@ -1,7 +1,5 @@
 """Hassfest utils."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable, Mapping
 import shutil
 import subprocess
@@ -102,6 +100,6 @@ def format_python_namespace(
         for key, value in sorted(content.items())
     )
     if annotations:
-        # If we had any annotations, add __future__ and typing imports.
-        code = f"from __future__ import annotations\n\nfrom typing import Final\n{code}"
+        # If we had any annotations, add typing imports.
+        code = f"from typing import Final\n{code}"
     return format_python(code, generator=generator)

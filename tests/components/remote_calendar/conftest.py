@@ -9,7 +9,7 @@ import urllib
 import pytest
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -41,7 +41,12 @@ async def set_time_zone(hass: HomeAssistant, time_zone: str):
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for mock configuration entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_CALENDAR_NAME: CALENDAR_NAME, CONF_URL: CALENDER_URL}
+        domain=DOMAIN,
+        data={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
     )
 
 

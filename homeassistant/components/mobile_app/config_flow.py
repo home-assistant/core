@@ -1,6 +1,6 @@
 """Config flow for Mobile App."""
 
-from typing import Any
+from typing import Any, override
 import uuid
 
 from homeassistant.components import person
@@ -16,6 +16,7 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -46,7 +47,7 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
             "device_tracker",
             DOMAIN,
             user_input[ATTR_DEVICE_ID],
-            suggested_object_id=user_input[ATTR_DEVICE_NAME],
+            object_id_base=user_input[ATTR_DEVICE_NAME],
         )
         await person.async_add_user_device_tracker(
             self.hass, user_input[CONF_USER_ID], devt_entry.entity_id

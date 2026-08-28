@@ -1,11 +1,10 @@
 """The Fjäråskupan data update coordinator."""
 
-from __future__ import annotations
-
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import timedelta
 import logging
+from typing import override
 
 from fjaraskupan import (
     Device,
@@ -89,6 +88,7 @@ class FjaraskupanCoordinator(DataUpdateCoordinator[State]):
             update_interval=timedelta(seconds=120),
         )
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -104,6 +104,7 @@ class FjaraskupanCoordinator(DataUpdateCoordinator[State]):
             raise_on_entry_error=raise_on_entry_error,
         )
 
+    @override
     async def _async_update_data(self) -> State:
         """Handle an explicit update request."""
         if self._refresh_was_scheduled:
@@ -132,7 +133,7 @@ class FjaraskupanCoordinator(DataUpdateCoordinator[State]):
         self.async_set_updated_data(self.device.state)
 
     @asynccontextmanager
-    async def async_connect_and_update(self) -> AsyncIterator[Device]:
+    async def async_connect_and_update(self) -> AsyncGenerator[Device]:
         """Provide an up-to-date device for use during connections."""
         if (
             ble_device := async_ble_device_from_address(

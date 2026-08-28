@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_switch[load_platforms0][select.device1_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -43,8 +45,8 @@
 # name: test_switch[load_platforms0][select.device1_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device1 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device1 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -60,11 +62,12 @@
 # ---
 # name: test_switch[load_platforms0][select.device2_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -85,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -102,8 +106,8 @@
 # name: test_switch[load_platforms0][select.device2_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device2 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device2 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -119,11 +123,12 @@
 # ---
 # name: test_switch[load_platforms0][select.device3_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -144,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -161,8 +167,8 @@
 # name: test_switch[load_platforms0][select.device3_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device3 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device3 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -178,11 +184,12 @@
 # ---
 # name: test_switch[load_platforms0][select.device7_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -203,6 +210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -220,8 +228,8 @@
 # name: test_switch[load_platforms0][select.device7_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device7 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device7 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -237,11 +245,12 @@
 # ---
 # name: test_switch[load_platforms0][select.device8_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -262,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -279,8 +289,8 @@
 # name: test_switch[load_platforms0][select.device8_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device8 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device8 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -296,11 +306,12 @@
 # ---
 # name: test_switch[load_platforms0][select.device9_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',
@@ -321,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -338,8 +350,8 @@
 # name: test_switch[load_platforms0][select.device9_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device9 Volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device9 Volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
         'off',

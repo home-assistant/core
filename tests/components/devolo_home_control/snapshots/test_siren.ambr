@@ -2,14 +2,14 @@
 # name: test_siren
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -18,11 +18,12 @@
 # ---
 # name: test_siren.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
@@ -33,7 +34,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,6 +42,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -58,14 +60,14 @@
 # name: test_siren_change_default_tone
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -74,11 +76,12 @@
 # ---
 # name: test_siren_change_default_tone.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
@@ -89,7 +92,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,6 +100,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -114,14 +118,14 @@
 # name: test_siren_switching
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -130,11 +134,12 @@
 # ---
 # name: test_siren_switching.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
@@ -145,7 +150,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -153,6 +158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

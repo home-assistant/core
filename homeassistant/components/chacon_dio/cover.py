@@ -1,7 +1,7 @@
 """Cover Platform for Chacon Dio REV-SHUTTER devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from dio_chacon_wifi_api.const import DeviceTypeEnum, ShutterMoveEnum
 
@@ -49,18 +49,21 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
+    @override
     def _update_attr(self, data: dict[str, Any]) -> None:
-        """Recomputes the attributes values either at init or when the device state changes."""
+        """Recompute the attribute values on init or state change."""
         self._attr_available = data["connected"]
         self._attr_current_cover_position = data["openlevel"]
         self._attr_is_closing = data["movement"] == ShutterMoveEnum.DOWN.value
         self._attr_is_opening = data["movement"] == ShutterMoveEnum.UP.value
         self._attr_is_closed = self._attr_current_cover_position == 0
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover.
 
-        Closed status is effective after the server callback that triggers callback_device_state.
+        Closed status is effective after the server callback
+        that triggers callback_device_state.
         """
 
         _LOGGER.debug(
@@ -79,10 +82,12 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
                 self.target_id, ShutterMoveEnum.DOWN
             )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover.
 
-        Opened status is effective after the server callback that triggers callback_device_state.
+        Opened status is effective after the server callback
+        that triggers callback_device_state.
         """
 
         _LOGGER.debug(
@@ -99,6 +104,7 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
 
             await self.client.move_shutter_direction(self.target_id, ShutterMoveEnum.UP)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
 
@@ -110,10 +116,12 @@ class ChaconDioCover(ChaconDioEntity, CoverEntity):
 
         await self.client.move_shutter_direction(self.target_id, ShutterMoveEnum.STOP)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover open position in percentage.
 
-        Closing or opening status is effective after the server callback that triggers callback_device_state.
+        Closing or opening status is effective after the server
+        callback that triggers callback_device_state.
         """
         position: int = kwargs[ATTR_POSITION]
 

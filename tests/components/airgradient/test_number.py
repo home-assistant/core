@@ -3,12 +3,11 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError, Config
+from airgradient import AirGradientConnectionError, AirGradientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -19,14 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import async_load_config_fixture, setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -82,8 +76,8 @@ async def test_cloud_creates_no_number(
 
     assert len(hass.states.async_all()) == 0
 
-    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        await async_load_fixture(hass, "get_config_local.json", DOMAIN)
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_local.json")
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -92,8 +86,8 @@ async def test_cloud_creates_no_number(
 
     assert len(hass.states.async_all()) == 2
 
-    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        await async_load_fixture(hass, "get_config_cloud.json", DOMAIN)
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_cloud.json")
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -108,11 +102,14 @@ async def test_cloud_creates_no_number(
     [
         (
             AirGradientConnectionError("Something happened"),
-            "An error occurred while communicating with the Airgradient device: Something happened",
+            "An error occurred while communicating with the"
+            " Airgradient device: Something happened",
         ),
         (
             AirGradientError("Something else happened"),
-            "An unknown error occurred while communicating with the Airgradient device: Something else happened",
+            "An unknown error occurred while communicating"
+            " with the Airgradient device:"
+            " Something else happened",
         ),
     ],
 )

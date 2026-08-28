@@ -40,7 +40,7 @@ from homeassistant.components.squeezebox.const import (
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
 )
-from homeassistant.components.squeezebox.media_player import (
+from homeassistant.components.squeezebox.services import (
     ATTR_PARAMETERS,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
@@ -72,7 +72,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
+from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, VOLUME_STEP
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -218,7 +218,7 @@ async def test_squeezebox_volume_up(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume + TEST_VOLUME_STEP)
+        str(configured_player.volume + VOLUME_STEP)
     )
 
 
@@ -234,7 +234,7 @@ async def test_squeezebox_volume_down(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume - TEST_VOLUME_STEP)
+        str(configured_player.volume - VOLUME_STEP)
     )
 
 
@@ -516,7 +516,10 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     """Test play service call with announce and volume zero."""
     with pytest.raises(
         ServiceValidationError,
-        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+        match=(
+            "announce_volume must be a number greater than 0"
+            " and less than or equal to 1"
+        ),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

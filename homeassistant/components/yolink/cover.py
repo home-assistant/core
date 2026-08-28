@@ -1,8 +1,6 @@
 """YoLink Garage Door."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_FINGER, ATTR_GARAGE_DOOR_CONTROLLER
@@ -12,22 +10,20 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink garage door from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     entities = [
         YoLinkCoverEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -44,7 +40,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
     ) -> None:
         """Init YoLink garage door entity."""
@@ -56,6 +52,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (state_val := state.get("state")) is None:
@@ -75,10 +72,12 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         # it depends on paired device state, such as door sensor or contact sensor
         await self.call_device(ClientRequest("toggle", {}))
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()

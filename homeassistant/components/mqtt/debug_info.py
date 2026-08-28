@@ -1,7 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
 
-from __future__ import annotations
-
 from collections import deque
 from dataclasses import dataclass
 import datetime as dt
@@ -19,7 +17,7 @@ from .models import DATA_MQTT, PublishPayloadType
 STORED_MESSAGES = 10
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class TimestampedPublishMessage:
     """MQTT Message."""
 
@@ -28,6 +26,8 @@ class TimestampedPublishMessage:
     qos: int
     retain: bool
     timestamp: float
+    encoding: str | None
+    kwargs: dict[str, Any]
 
 
 def log_message(
@@ -37,6 +37,8 @@ def log_message(
     payload: PublishPayloadType,
     qos: int,
     retain: bool,
+    encoding: str | None,
+    **kwargs: Any,
 ) -> None:
     """Log an outgoing MQTT message."""
     entity_info = hass.data[DATA_MQTT].debug_info_entities.setdefault(
@@ -44,10 +46,16 @@ def log_message(
     )
     if topic not in entity_info["transmitted"]:
         entity_info["transmitted"][topic] = {
-            "messages": deque([], STORED_MESSAGES),
+            "messages": deque(maxlen=STORED_MESSAGES),
         }
     msg = TimestampedPublishMessage(
-        topic, payload, qos, retain, timestamp=time.monotonic()
+        topic,
+        payload,
+        qos,
+        retain,
+        timestamp=time.monotonic(),
+        encoding=encoding,
+        kwargs=kwargs,
     )
     entity_info["transmitted"][topic]["messages"].append(msg)
 
@@ -63,7 +71,7 @@ def add_subscription(
         if subscription not in entity_info["subscriptions"]:
             entity_info["subscriptions"][subscription] = {
                 "count": 1,
-                "messages": deque([], STORED_MESSAGES),
+                "messages": deque(maxlen=STORED_MESSAGES),
             }
         else:
             entity_info["subscriptions"][subscription]["count"] += 1

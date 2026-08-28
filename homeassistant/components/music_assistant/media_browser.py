@@ -1,7 +1,5 @@
 """Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -67,6 +65,49 @@ LIBRARY_MEDIA_CLASS_MAP = {
     LIBRARY_PODCASTS: MediaClass.PODCAST,
     LIBRARY_AUDIOBOOKS: MediaClass.DIRECTORY,  # audiobook is not accepted by HA
 }
+
+LIBRARY_MASS_MEDIA_TYPE_MAP = {
+    LIBRARY_ARTISTS: MASSMediaType.ARTIST,
+    LIBRARY_ALBUMS: MASSMediaType.ALBUM,
+    LIBRARY_TRACKS: MASSMediaType.TRACK,
+    LIBRARY_PLAYLISTS: MASSMediaType.PLAYLIST,
+    LIBRARY_RADIO: MASSMediaType.RADIO,
+    LIBRARY_PODCASTS: MASSMediaType.PODCAST,
+    LIBRARY_AUDIOBOOKS: MASSMediaType.AUDIOBOOK,
+}
+
+MUSIC_MASS_MEDIA_TYPES = [
+    MASSMediaType.ARTIST,
+    MASSMediaType.ALBUM,
+    MASSMediaType.TRACK,
+    MASSMediaType.PLAYLIST,
+]
+
+MEDIA_CLASS_MASS_MEDIA_TYPE_MAP = {
+    MediaClass.ARTIST: [MASSMediaType.ARTIST],
+    MediaClass.ALBUM: [MASSMediaType.ALBUM],
+    MediaClass.TRACK: [MASSMediaType.TRACK],
+    MediaClass.PLAYLIST: [MASSMediaType.PLAYLIST],
+    # music is the class a voice assistant picks for a plain "play something"
+    # request, so it has to mean music rather than the radio stations we
+    # happen to hand back to HA under the same class
+    MediaClass.MUSIC: MUSIC_MASS_MEDIA_TYPES,
+    MediaClass.DIRECTORY: [MASSMediaType.AUDIOBOOK],
+    MediaClass.PODCAST: [MASSMediaType.PODCAST],
+}
+
+SEARCHABLE_MASS_MEDIA_TYPES = [
+    MASSMediaType.ARTIST,
+    MASSMediaType.ALBUM,
+    MASSMediaType.TRACK,
+    MASSMediaType.PLAYLIST,
+    MASSMediaType.RADIO,
+    MASSMediaType.AUDIOBOOK,
+    MASSMediaType.PODCAST,
+]
+
+# an artist holds nothing else we can search or browse
+ARTIST_MASS_MEDIA_TYPES = [MASSMediaType.ALBUM, MASSMediaType.TRACK]
 
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
@@ -167,6 +208,7 @@ async def build_playlists_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_PLAYLISTS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, item, can_expand=True)
@@ -195,6 +237,7 @@ async def build_playlist_items_listing(
         title=playlist.name,
         can_play=True,
         can_expand=True,
+        can_search=True,
         children_media_class=MediaClass.TRACK,
         children=[
             build_item(mass, item, can_expand=False)
@@ -219,6 +262,7 @@ async def build_artists_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_ARTISTS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, artist, can_expand=True)
@@ -249,6 +293,8 @@ async def build_artist_items_listing(
         title=artist.name,
         can_play=True,
         can_expand=True,
+        can_search=True,
+        search_media_classes=[MediaClass.ALBUM, MediaClass.TRACK],
         children_media_class=MediaClass.ALBUM,
         children=[
             build_item(mass, album, can_expand=True)
@@ -269,6 +315,7 @@ async def build_albums_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_ALBUMS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, album, can_expand=True)
@@ -299,6 +346,7 @@ async def build_album_items_listing(
         title=album.name,
         can_play=True,
         can_expand=True,
+        can_search=True,
         children_media_class=MediaClass.TRACK,
         children=[
             build_item(mass, track, False) for track in tracks if track.available
@@ -317,6 +365,7 @@ async def build_tracks_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_TRACKS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, track, can_expand=False)
@@ -340,6 +389,7 @@ async def build_podcasts_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_PODCASTS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, podcast, can_expand=False)
@@ -363,6 +413,7 @@ async def build_audiobooks_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_AUDIOBOOKS],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, audiobook, can_expand=False)
@@ -386,6 +437,7 @@ async def build_radio_listing(mass: MusicAssistantClient) -> BrowseMedia:
         title=LIBRARY_TITLE_MAP[LIBRARY_RADIO],
         can_play=False,
         can_expand=True,
+        can_search=True,
         children_media_class=media_class,
         children=[
             build_item(mass, track, can_expand=False, media_class=media_class)
@@ -448,22 +500,70 @@ async def _search_within_album(
     )
 
 
+async def _search_within_playlist(
+    mass: MusicAssistantClient, playlist_uri: str, search_query: str, limit: int
+) -> SearchMedia:
+    """Search for tracks within a specific playlist."""
+    playlist = await mass.music.get_item_by_uri(playlist_uri)
+    tracks = await mass.music.get_playlist_tracks(playlist.item_id, playlist.provider)
+
+    # Filter tracks by search query
+    filtered_tracks = [
+        track
+        for track in tracks
+        if search_query.lower() in track.name.lower() and track.available
+    ]
+
+    return SearchMedia(
+        result=[
+            build_item(mass, track, can_expand=False)
+            for track in filtered_tracks[:limit]
+        ]
+    )
+
+
 async def _search_within_artist(
-    mass: MusicAssistantClient, artist_uri: str, search_query: str, limit: int
+    mass: MusicAssistantClient,
+    artist_uri: str,
+    search_query: str,
+    limit: int,
+    media_types: list[MASSMediaType],
 ) -> SearchResults:
     """Search for content within an artist's catalog."""
     artist = await mass.music.get_item_by_uri(artist_uri)
     search_query = f"{artist.name} - {search_query}"
     return await mass.music.search(
         search_query,
-        media_types=[MASSMediaType.ALBUM, MASSMediaType.TRACK],
+        media_types=media_types,
         limit=limit,
     )
 
 
 def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
-    """Map query to Music Assistant media types."""
+    """Map query to Music Assistant media types.
+
+    Returns nothing when the query rules out everything we could look for.
+    """
     media_types: list[MASSMediaType] = []
+
+    # searching inside an artist can never turn up more than their own
+    # albums and tracks, whatever the rest of the query asks for
+    allowed = (
+        ARTIST_MASS_MEDIA_TYPES
+        if "artist/" in (query.media_content_id or "")
+        else SEARCHABLE_MASS_MEDIA_TYPES
+    )
+
+    # an explicit filter is the only thing the user picked themselves, so it
+    # wins from the media type that merely surrounds the search, and asking
+    # for something unsearchable leaves nothing rather than everything
+    if query.media_filter_classes:
+        requested = {
+            media_type
+            for cls in query.media_filter_classes
+            for media_type in MEDIA_CLASS_MASS_MEDIA_TYPE_MAP.get(cls, ())
+        }
+        return [media_type for media_type in allowed if media_type in requested]
 
     match query.media_content_type:
         case MediaType.ARTIST:
@@ -482,34 +582,18 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
             media_types = [MASSMediaType.PODCAST]
         case _:
             # No specific type selected
-            if query.media_filter_classes:
-                # Map MediaClass to search types
-                mapping = {
-                    MediaClass.ARTIST: MASSMediaType.ARTIST,
-                    MediaClass.ALBUM: MASSMediaType.ALBUM,
-                    MediaClass.TRACK: MASSMediaType.TRACK,
-                    MediaClass.PLAYLIST: MASSMediaType.PLAYLIST,
-                    MediaClass.MUSIC: MASSMediaType.RADIO,
-                    MediaClass.DIRECTORY: MASSMediaType.AUDIOBOOK,
-                    MediaClass.PODCAST: MASSMediaType.PODCAST,
-                }
-                media_types = [
-                    mapping[cls] for cls in query.media_filter_classes if cls in mapping
-                ]
+            if library_media_type := LIBRARY_MASS_MEDIA_TYPE_MAP.get(
+                query.media_content_id or ""
+            ):
+                # Searching from a library listing scopes to that library,
+                # because the browse tree reports those pages as our own domain
+                # rather than as a concrete media type.
+                media_types = [library_media_type]
 
-    # Default to all types if none specified
-    if not media_types:
-        media_types = [
-            MASSMediaType.ARTIST,
-            MASSMediaType.ALBUM,
-            MASSMediaType.TRACK,
-            MASSMediaType.PLAYLIST,
-            MASSMediaType.RADIO,
-            MASSMediaType.AUDIOBOOK,
-            MASSMediaType.PODCAST,
-        ]
-
-    return media_types
+    # Default to everything we are allowed to look for if none specified
+    return [
+        media_type for media_type in media_types if media_type in allowed
+    ] or allowed
 
 
 def _process_search_results(
@@ -549,7 +633,8 @@ def _process_search_results(
                 continue
 
             # Create browse item
-            # Convert to string to get the original value since we're using MASSMediaType enum
+            # Convert to string to get the original value
+            # since we're using MASSMediaType enum
             str_media_type = media_type.value.lower()
             can_expand = _should_expand_media_type(str_media_type)
             media_class = _get_media_class_for_type(str_media_type)
@@ -567,7 +652,9 @@ def _process_search_results(
 
 def _should_expand_media_type(media_type: str) -> bool:
     """Determine if a media type should be expandable."""
-    return media_type in ("artist", "album", "playlist", "podcast")
+    # podcasts are left out because we cannot browse their episodes,
+    # which is also why the podcasts listing builds them non-expandable
+    return media_type in ("artist", "album", "playlist")
 
 
 def _get_media_class_for_type(media_type: str) -> MediaClass | None:
@@ -594,20 +681,27 @@ async def async_search_media(
         limit = 5  # Default limit per media type
         search_results: SearchResults | None = None
 
+        # Determine which media types to search
+        media_types = _get_media_types_from_query(query)
+        if not media_types:
+            # the query ruled out everything we could have looked for
+            return SearchMedia(result=[])
+
         # Handle media_content_id if provided (for contextual searches)
         if query.media_content_id:
             if "album/" in query.media_content_id:
                 return await _search_within_album(
                     mass, query.media_content_id, search_query, limit
                 )
+            if "playlist/" in query.media_content_id:
+                return await _search_within_playlist(
+                    mass, query.media_content_id, search_query, limit
+                )
             if "artist/" in query.media_content_id:
                 # For artists, we already run a search, so save the results
                 search_results = await _search_within_artist(
-                    mass, query.media_content_id, search_query, limit
+                    mass, query.media_content_id, search_query, limit, media_types
                 )
-
-        # Determine which media types to search
-        media_types = _get_media_types_from_query(query)
 
         # Execute search using the Music Assistant API if we haven't already done so
         if search_results is None:

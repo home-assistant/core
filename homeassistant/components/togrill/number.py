@@ -1,15 +1,15 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from datetime import timedelta
+from typing import Any, override
 
 from togrill_bluetooth.packets import (
     AlarmType,
     PacketA0Notify,
     PacketA6Write,
+    PacketA7Write,
     PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToGrillConfigEntry
-from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, MAX_PROBE_COUNT
 from .coordinator import ToGrillCoordinator
 from .entity import ToGrillEntity
 
@@ -71,7 +71,7 @@ def _get_temperature_descriptions(
 
     def _get_temperatures(
         coordinator: ToGrillCoordinator, alarm_type: AlarmType
-    ) -> tuple[None | float, None | float]:
+    ) -> tuple[float | None, float | None]:
         if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
             return None, None
 
@@ -123,12 +123,99 @@ def _get_temperature_descriptions(
     )
 
 
+def _get_timer_description(probe_number: int) -> ToGrillNumberEntityDescription:
+    def _get_timer(coordinator: ToGrillCoordinator) -> float | None:
+        if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
+            return None
+        return packet.time.total_seconds() / 60
+
+    def _set_timer(coordinator: ToGrillCoordinator, value: float) -> PacketWrite:
+        return PacketA7Write(
+            probe=probe_number,
+            time=timedelta(minutes=value),
+            unknown=1 if value else 0,
+        )
+
+    return ToGrillNumberEntityDescription(
+        key=f"timer_{probe_number}",
+        translation_key="timer",
+        translation_placeholders={"probe_number": f"{probe_number}"},
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=0,
+        native_max_value=720,
+        native_step=1,
+        mode=NumberMode.BOX,
+        icon="mdi:timer-outline",
+        set_packet=_set_timer,
+        get_value=_get_timer,
+        entity_supported=lambda x: probe_number <= x[CONF_PROBE_COUNT],
+        probe_number=probe_number,
+    )
+
+
+def _get_ambient_temperatures(
+    coordinator: ToGrillCoordinator, alarm_type: AlarmType
+) -> tuple[float | None, float | None]:
+    if not (packet := coordinator.get_packet(PacketA8Notify, 0)):
+        return None, None
+    if packet.alarm_type != alarm_type:
+        return None, None
+    return packet.temperature_1, packet.temperature_2
+
+
 ENTITY_DESCRIPTIONS = (
     *[
         description
         for probe_number in range(1, MAX_PROBE_COUNT + 1)
         for description in _get_temperature_descriptions(probe_number)
     ],
+    *[
+        _get_timer_description(probe_number)
+        for probe_number in range(1, MAX_PROBE_COUNT + 1)
+    ],
+    ToGrillNumberEntityDescription(
+        key="ambient_temperature_minimum",
+        translation_key="ambient_temperature_minimum",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=0,
+        native_max_value=400,
+        mode=NumberMode.BOX,
+        icon="mdi:thermometer-chevron-down",
+        set_packet=lambda coordinator, value: PacketA300Write(
+            probe=0,
+            minimum=None if value == 0.0 else value,
+            maximum=_get_ambient_temperatures(coordinator, AlarmType.TEMPERATURE_RANGE)[
+                1
+            ],
+        ),
+        get_value=lambda x: _get_ambient_temperatures(x, AlarmType.TEMPERATURE_RANGE)[
+            0
+        ],
+        entity_supported=lambda x: x.get(CONF_HAS_AMBIENT, False),
+    ),
+    ToGrillNumberEntityDescription(
+        key="ambient_temperature_maximum",
+        translation_key="ambient_temperature_maximum",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=0,
+        native_max_value=400,
+        mode=NumberMode.BOX,
+        icon="mdi:thermometer-chevron-up",
+        set_packet=lambda coordinator, value: PacketA300Write(
+            probe=0,
+            minimum=_get_ambient_temperatures(coordinator, AlarmType.TEMPERATURE_RANGE)[
+                0
+            ],
+            maximum=None if value == 0.0 else value,
+        ),
+        get_value=lambda x: _get_ambient_temperatures(x, AlarmType.TEMPERATURE_RANGE)[
+            1
+        ],
+        entity_supported=lambda x: x.get(CONF_HAS_AMBIENT, False),
+    ),
     ToGrillNumberEntityDescription(
         key="alarm_interval",
         translation_key="alarm_interval",
@@ -138,8 +225,8 @@ ENTITY_DESCRIPTIONS = (
         native_max_value=15,
         native_step=5,
         mode=NumberMode.BOX,
-        set_packet=lambda coordinator, x: (
-            PacketA6Write(temperature_unit=None, alarm_interval=round(x))
+        set_packet=lambda coordinator, x: PacketA6Write(
+            temperature_unit=None, alarm_interval=round(x)
         ),
         get_value=lambda x: (
             packet.alarm_interval if (packet := x.get_packet(PacketA0Notify)) else None
@@ -181,10 +268,12 @@ class ToGrillNumber(ToGrillEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self.entity_description.get_value(self.coordinator)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value on device."""
 

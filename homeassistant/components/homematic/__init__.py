@@ -3,6 +3,7 @@
 from datetime import datetime
 from functools import partial
 import logging
+from typing import Any
 
 from pyhomematic import HMConnection
 import voluptuous as vol
@@ -25,7 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import (
     ATTR_ADDRESS,
@@ -215,8 +218,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()
 
+    interfaces: dict[str, dict[str, Any]] = conf[CONF_INTERFACES]
+    hosts: dict[str, dict[str, Any]] = conf[CONF_HOSTS]
+
     # Create hosts-dictionary for pyhomematic
-    for rname, rconfig in conf[CONF_INTERFACES].items():
+    for rname, rconfig in interfaces.items():
         remotes[rname] = {
             "ip": rconfig.get(CONF_HOST),
             "port": rconfig.get(CONF_PORT),
@@ -232,7 +238,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "connect": True,
         }
 
-    for sname, sconfig in conf[CONF_HOSTS].items():
+    for sname, sconfig in hosts.items():
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
             "port": sconfig[CONF_PORT],
@@ -258,7 +264,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
     # Init homematic hubs
-    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in conf[CONF_HOSTS]]
+    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in hosts]
 
     def _hm_service_virtualkey(service: ServiceCall) -> None:
         """Service to handle virtualkey servicecalls."""
@@ -294,7 +300,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _service_handle_value(service: ServiceCall) -> None:
         """Service to call setValue method for HomeMatic system variable."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
         name = service.data[ATTR_NAME]
         value = service.data[ATTR_VALUE]
 
@@ -377,12 +383,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         homematic.setInstallMode(interface, t=time, mode=mode, address=address)
 
-    hass.services.register(
+    run_callback_threadsafe(
+        hass.loop,
+        async_register_admin_service,
+        hass,
         DOMAIN,
         SERVICE_SET_INSTALL_MODE,
         _service_handle_install_mode,
-        schema=SCHEMA_SERVICE_SET_INSTALL_MODE,
-    )
+        SCHEMA_SERVICE_SET_INSTALL_MODE,
+    ).result()
 
     def _service_put_paramset(service: ServiceCall) -> None:
         """Service to call the putParamset method on a HomeMatic connection."""
@@ -581,7 +590,7 @@ def _hm_event_handler(hass, interface, device, caller, attribute, value):
         channel = int(device.split(":")[1])
         address = device.split(":")[0]
         hmdevice = hass.data[DATA_HOMEMATIC].devices[interface].get(address)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         _LOGGER.error("Event handling channel convert error!")
         return
 

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiorussound.models import CallbackType
+from aiorussound.rio.models import CallbackType
 
 from homeassistant.core import HomeAssistant
 

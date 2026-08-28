@@ -1,11 +1,10 @@
 """Binary Sensor platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
 from homeassistant.components.binary_sensor import (
@@ -96,8 +95,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="charge_state_preconditioning_enabled",
         polling=True,
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_PreconditioningEnabled(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_PreconditioningEnabled(callback)
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -110,8 +110,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="charge_state_scheduled_charging_pending",
         polling=True,
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_ScheduledChargingPending(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_ScheduledChargingPending(callback)
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -134,6 +135,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="climate_state_cabin_overheat_protection_actively_cooling",
         polling=True,
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="climate_state_is_rear_defroster_on",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_RearDefrostEnabled(
+            callback
+        ),
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -191,9 +202,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="vehicle_state_fp_window",
         polling=True,
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_FrontPassengerWindow(
-            lambda value: callback(None if value is None else WINDOW_STATES.get(value))
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_FrontPassengerWindow(
+                lambda value: callback(
+                    None if value is None else WINDOW_STATES.get(value)
+                )
+            )
         ),
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -254,26 +268,30 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="automatic_blind_spot_camera",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_AutomaticBlindSpotCamera(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_AutomaticBlindSpotCamera(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="automatic_emergency_braking_off",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_AutomaticEmergencyBrakingOff(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_AutomaticEmergencyBrakingOff(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="blind_spot_collision_warning_chime",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_BlindSpotCollisionWarningChime(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_BlindSpotCollisionWarningChime(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="bms_full_charge_complete",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_BmsFullchargecomplete(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_BmsFullchargecomplete(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -285,8 +303,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="charge_port_cold_weather_mode",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_ChargePortColdWeatherMode(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_ChargePortColdWeatherMode(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -359,14 +378,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="emergency_lane_departure_avoidance",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_EmergencyLaneDepartureAvoidance(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_EmergencyLaneDepartureAvoidance(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="supercharger_session_trip_planner",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_SuperchargerSessionTripPlanner(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_SuperchargerSessionTripPlanner(callback)
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -379,15 +400,17 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="rear_display_hvac_enabled",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_RearDisplayHvacEnabled(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_RearDisplayHvacEnabled(callback)
+        ),
         streaming_firmware="2024.44.25",
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="offroad_lightbar_present",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_OffroadLightbarPresent(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_OffroadLightbarPresent(callback)
+        ),
         streaming_firmware="2024.44.25",
         entity_registry_enabled_default=False,
     ),
@@ -446,8 +469,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="defrost_for_preconditioning",
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_DefrostForPreconditioning(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_DefrostForPreconditioning(callback)
+        ),
         entity_registry_enabled_default=False,
         streaming_firmware="2024.44.25",
     ),
@@ -544,7 +568,7 @@ async def async_setup_entry(
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
@@ -587,6 +611,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
@@ -612,6 +637,7 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -648,6 +674,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
@@ -669,6 +696,7 @@ class TeslemetryEnergyInfoBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)

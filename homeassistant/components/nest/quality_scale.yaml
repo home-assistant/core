@@ -18,12 +18,16 @@ rules:
     comment: |
       The integration does a connection test in the configuration flow, however
       it does not fail if the user has ipv6 misconfigured.
+  docs-triggers: done
   entity-event-setup: done
   unique-config-entry: done
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
   test-before-setup: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
@@ -53,16 +57,16 @@ rules:
   entity-disabled-by-default: todo
   discovery: todo
   exception-translations: todo
-  devices: todo
+  devices: done
   docs-supported-devices: todo
   icon-translations: todo
   docs-known-limitations: todo
-  stale-devices: todo
+  stale-devices: done
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: todo
   entity-category: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo

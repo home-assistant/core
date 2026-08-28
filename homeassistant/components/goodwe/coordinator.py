@@ -1,10 +1,8 @@
 """Update coordinator for Goodwe."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from goodwe import Inverter, InverterError, RequestFailedException
 
@@ -51,10 +49,11 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.inverter: Inverter = inverter
         self._last_data: dict[str, Any] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the inverter."""
         try:
-            self._last_data = self.data if self.data else {}
+            self._last_data = self.data or {}
             return await self.inverter.read_runtime_data()
         except RequestFailedException as ex:
             # UDP communication with inverter is by definition unreliable.
@@ -84,7 +83,7 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def total_sensor_value(self, sensor: str) -> Any:
         """Answer current value of the 'total' (never 0) sensor."""
         val = self.data.get(sensor)
-        return val if val else self._last_data.get(sensor)
+        return val or self._last_data.get(sensor)
 
     def reset_sensor(self, sensor: str) -> None:
         """Reset sensor value to 0.

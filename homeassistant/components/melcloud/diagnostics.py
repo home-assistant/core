@@ -1,7 +1,5 @@
 """Diagnostics support for MelCloud."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -9,7 +7,7 @@ from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MelCloudConfigEntry
+from .coordinator import MelCloudConfigEntry
 
 TO_REDACT = {
     CONF_USERNAME,

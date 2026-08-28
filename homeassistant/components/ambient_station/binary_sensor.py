@@ -1,9 +1,7 @@
 """Support for Ambient Weather Station binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -402,6 +400,7 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
     entity_description: AmbientBinarySensorDescription
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the entity."""
         description = self.entity_description

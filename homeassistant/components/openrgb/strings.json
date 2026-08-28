@@ -65,9 +65,17 @@
           }
         }
       }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      }
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to OpenRGB SDK server {server_address}: {error}"
+    },
     "communication_error": {
       "message": "Failed to communicate with OpenRGB SDK server {server_address}: {error}"
     },
@@ -76,6 +84,9 @@
     },
     "openrgb_error": {
       "message": "An OpenRGB error occurred: {error}"
+    },
+    "profile_not_found": {
+      "message": "Profile `{profile}` not found"
     },
     "unsupported_effect": {
       "message": "Effect `{effect}` is not supported by {device_name}"

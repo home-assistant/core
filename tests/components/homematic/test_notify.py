@@ -1,5 +1,8 @@
 """The tests for the Homematic notification platform."""
 
+from unittest.mock import MagicMock, patch
+
+from homeassistant.components.homematic import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -9,11 +12,15 @@ from tests.common import assert_setup_component
 
 async def test_setup_full(hass: HomeAssistant) -> None:
     """Test valid configuration."""
-    await async_setup_component(
-        hass,
-        "homematic",
-        {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
-    )
+    with patch(
+        "homeassistant.components.homematic.HMConnection",
+        return_value=MagicMock(),
+    ):
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+        )
     with assert_setup_component(1, domain="notify") as handle_config:
         assert await async_setup_component(
             hass,
@@ -35,11 +42,15 @@ async def test_setup_full(hass: HomeAssistant) -> None:
 
 async def test_setup_without_optional(hass: HomeAssistant) -> None:
     """Test valid configuration without optional."""
-    await async_setup_component(
-        hass,
-        "homematic",
-        {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
-    )
+    with patch(
+        "homeassistant.components.homematic.HMConnection",
+        return_value=MagicMock(),
+    ):
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+        )
     with assert_setup_component(1, domain="notify") as handle_config:
         assert await async_setup_component(
             hass,

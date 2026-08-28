@@ -1,6 +1,6 @@
 """Roth Touchline SL climate integration implementation for Home Assistant."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TouchlineSLConfigEntry, TouchlineSLModuleCoordinator
 from .entity import TouchlineSLZoneEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -59,11 +61,13 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         self.set_attr()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.set_attr()
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -72,6 +76,7 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         await self.zone.set_temperature(temperature)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Assign the zone to a particular global schedule."""
         if not self.zone:

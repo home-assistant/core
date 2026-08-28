@@ -11,6 +11,8 @@ from homeassistant.components.bang_olufsen.const import (
 )
 
 from .const import (
+    TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+    TEST_BATTERY_SENSOR_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_MEDIA_PLAYER_ENTITY_ID_3,
@@ -20,10 +22,12 @@ from .const import (
 )
 
 
-def _get_button_entity_ids(id_prefix: str = "beosound_balance_11111111") -> list[str]:
+def _get_button_entity_ids(id_prefix: str = "living_room_balance") -> list[str]:
     """Return a list of button entity_ids that Mozart devices provide.
 
-    Beoconnect Core, Beosound A5, Beosound A9 and Beosound Premiere do not have (all of the) physical buttons and need filtering.
+    Beoconnect Core, Beosound A5, Beosound A9 and Beosound
+    Premiere do not have (all of the) physical buttons and
+    need filtering.
     """
     return [
         f"event.{id_prefix}_{underscore(button_type)}".replace("preset", "favorite_")
@@ -40,10 +44,10 @@ def get_premiere_entity_ids() -> list[str]:
     """Return a list of entity_ids that a Beosound Premiere provides."""
     buttons = [
         TEST_MEDIA_PLAYER_ENTITY_ID_3,
-        *_get_button_entity_ids("beosound_premiere_33333333"),
+        *_get_button_entity_ids("bedroom_premiere"),
     ]
-    buttons.remove("event.beosound_premiere_33333333_bluetooth")
-    buttons.remove("event.beosound_premiere_33333333_microphone")
+    buttons.remove("event.bedroom_premiere_bluetooth")
+    buttons.remove("event.bedroom_premiere_microphone")
     return buttons
 
 
@@ -51,9 +55,11 @@ def get_a5_entity_ids() -> list[str]:
     """Return a list of entity_ids that a Beosound A5 provides."""
     buttons = [
         TEST_MEDIA_PLAYER_ENTITY_ID_4,
-        *_get_button_entity_ids("beosound_a5_44444444"),
+        TEST_BATTERY_SENSOR_ENTITY_ID,
+        TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+        *_get_button_entity_ids("lounge_room_a5"),
     ]
-    buttons.remove("event.beosound_a5_44444444_microphone")
+    buttons.remove("event.lounge_room_a5_microphone")
     return buttons
 
 
@@ -66,7 +72,9 @@ def get_remote_entity_ids(
     remote_serial: str = TEST_REMOTE_SERIAL, device_serial: str = TEST_SERIAL_NUMBER
 ) -> list[str]:
     """Return a list of entity_ids that the Beoremote One provides."""
-    entity_ids: list[str] = []
+    entity_ids: list[str] = [
+        f"sensor.beoremote_one_{remote_serial}_{device_serial}_battery"
+    ]
 
     # Add remote light key Event entity ids
     entity_ids.extend(

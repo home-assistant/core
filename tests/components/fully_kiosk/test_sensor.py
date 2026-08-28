@@ -54,6 +54,18 @@ async def test_sensors_sensors(
     assert entry
     assert entry.unique_id == "abcdef-123456-screenOrientation"
 
+    state = hass.states.get("sensor.amazon_fire_battery_temperature")
+    assert state
+    assert state.state == "27"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Battery temperature"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = entity_registry.async_get("sensor.amazon_fire_battery_temperature")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-batteryTemperature"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
     state = hass.states.get("sensor.amazon_fire_foreground_app")
     assert state
     assert state.state == "de.ozerov.fully"

@@ -20,8 +20,8 @@ class SlideEntity(CoordinatorEntity[SlideCoordinator]):
             manufacturer="Innovation in Motion",
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.data["mac"])},
             name=coordinator.data["device_name"],
-            sw_version=coordinator.api_version,
-            hw_version=coordinator.data["board_rev"],
+            sw_version=str(coordinator.api_version),
+            hw_version=str(coordinator.data["board_rev"]),
             serial_number=coordinator.data["mac"],
             configuration_url=f"http://{coordinator.host}",
         )

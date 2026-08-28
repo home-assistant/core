@@ -1,19 +1,36 @@
 """Test the Teslemetry init."""
 
-from unittest.mock import AsyncMock, patch
+from copy import deepcopy
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InsufficientCredits,
+    InvalidResponse,
     InvalidToken,
+    LoginRequired,
+    RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry.const import DOMAIN
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry import STREAM_TOPICS, _get_access_token
+from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+
+# Coordinator constants
+from homeassistant.components.teslemetry.coordinator import (
+    ENERGY_HISTORY_INTERVAL,
+    INSUFFICIENT_CREDITS_RETRY_AFTER,
+    METADATA_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.components.teslemetry.models import TeslemetryData
+from homeassistant.components.teslemetry.oauth import TeslemetryImplementation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
@@ -23,15 +40,43 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import setup_platform
-from .const import PRODUCTS_MODERN, VEHICLE_DATA_ALT
+from . import mock_config_entry, setup_platform
+from .const import (
+    CONFIG_V1,
+    ENERGY_HISTORY,
+    LIVE_STATUS,
+    METADATA,
+    METADATA_NOSCOPE,
+    PRODUCTS_MODERN,
+    SITE_INFO,
+    UNIQUE_ID,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+    VEHICLE_DATA_ASLEEP,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
+    (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+]
+
+VEHICLE_ERRORS = [
+    *ERRORS,
+    (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -73,7 +118,7 @@ async def test_devices(
         assert device == snapshot(name=f"{device.identifiers}")
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -118,7 +163,7 @@ async def test_energy_site_refresh_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_add_listener: AsyncMock,
+    mock_add_listener: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
@@ -127,9 +172,11 @@ async def test_vehicle_stream(
     mock_add_listener.assert_called()
 
     state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.test_user_present")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     mock_add_listener.send(
@@ -143,9 +190,11 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
     assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.test_user_present")
+    assert state is not None
     assert state.state == STATE_ON
 
     mock_add_listener.send(
@@ -158,6 +207,24 @@ async def test_vehicle_stream(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_vehicle_asleep_polling(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Polling an offline/asleep vehicle loads and reports disconnected."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
     assert state.state == STATE_OFF
 
 
@@ -236,10 +303,43 @@ async def test_stale_device_removal(
 
         # Verify the device itself has been completely removed from the registry
         # since it had no other config entries
-        updated_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "stale-vin")}
+        updated_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "stale-vin"), entry.entry_id
         )
         assert updated_device is None
+
+
+async def test_skipped_energy_site_is_removed_as_stale_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test skipped energy sites do not block stale device removal."""
+    entry = await setup_platform(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "98765")},
+        manufacturer="Tesla",
+        name="Skipped Energy Site",
+    )
+
+    refreshed_metadata = deepcopy(METADATA)
+    refreshed_metadata["energy_sites"]["98765"] = {
+        "access": True,
+        "name": "Skipped Energy Site",
+    }
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=refreshed_metadata,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    updated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "98765"), entry.entry_id
+    )
+    assert updated_device is None
 
 
 async def test_device_retention_during_reload(
@@ -279,3 +379,951 @@ async def test_device_retention_during_reload(
     # Since the products data didn't change, we should have the same devices
     assert post_count == pre_count
     assert post_identifiers == original_identifiers
+
+
+async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
+    """Test successful config migration from version 1."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=UNIQUE_ID,
+        data=CONFIG_V1,
+    )
+
+    # Mock the migrate token endpoint response
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
+    ) as mock_migrate:
+        mock_migrate.return_value = {
+            "token": {
+                "access_token": "migrated_token",
+                "token_type": "Bearer",
+                "refresh_token": "migrated_refresh_token",
+                "expires_in": 3600,
+                "expires_at": time.time() + 3600,
+            }
+        }
+
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
+
+    assert mock_entry is not None
+    assert mock_entry.version == 2
+    # Verify data was converted to OAuth format
+    assert "token" in mock_entry.data
+    assert mock_entry.data["token"]["access_token"] == "migrated_token"
+    assert mock_entry.data["token"]["refresh_token"] == "migrated_refresh_token"
+    # Verify auth_implementation was added for OAuth2 flow compatibility
+    assert mock_entry.data["auth_implementation"] == DOMAIN
+    assert mock_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) -> None:
+    """Test config migration handles token endpoint errors."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=UNIQUE_ID,
+        data=CONFIG_V1,
+    )
+
+    # Mock the migrate token endpoint to raise an HTTP error
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
+    ) as mock_migrate:
+        mock_migrate.side_effect = ClientResponseError(
+            request_info=MagicMock(), history=(), status=400
+        )
+
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 1  # Version should remain unchanged on migration failure
+
+
+async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> None:
+    """Test that version 2 entries don't need migration."""
+    oauth_config = {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": "existing_oauth_token",
+            "token_type": "Bearer",
+            "refresh_token": "existing_refresh_token",
+            "expires_in": 3600,
+            "expires_at": 1234567890,
+        },
+    }
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,  # Already current version
+        unique_id=UNIQUE_ID,
+        data=oauth_config,
+    )
+
+    # Should not call the migrate endpoint since already version 2
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
+    ) as mock_migrate:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Migration should not be called
+        mock_migrate.assert_not_called()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.version == 2
+    # Verify data was not modified
+    assert entry.data == oauth_config
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
+    """Test migration fails for future versions."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,  # Future version
+        unique_id=UNIQUE_ID,
+        data={
+            "token": {
+                "access_token": "future_token",
+                "token_type": "Bearer",
+                "refresh_token": "future_refresh_token",
+                "expires_in": 3600,
+            }
+        },
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 3  # Version should remain unchanged
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that missing OAuth implementation triggers reauth."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Mock the implementation lookup to raise ValueError
+    with patch(
+        "homeassistant.components.teslemetry.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    # Should trigger reauth, not just fail silently
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+RETRY_EXCEPTIONS = [
+    (RateLimited(data={"after": 5}), 5.0),
+    (InvalidResponse(), 10.0),
+]
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_site_info_retry_exceptions(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test UpdateFailed with retry_after for site info coordinator."""
+    mock_site_info.side_effect = exception
+    entry = await setup_platform(hass)
+    # Retry exceptions during first refresh cause setup retry
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_site_info.call_count == 1
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_vehicle_data_retry_exceptions(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test UpdateFailed with retry_after for vehicle data coordinator."""
+    mock_vehicle_data.side_effect = exception
+    entry = await setup_platform(hass)
+    # Retry exceptions during first refresh cause setup retry
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_vehicle_data.call_count == 1
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_live_status_coordinator_retry_exceptions(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test live status coordinator raises UpdateFailed with retry_after."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)  # Initial call succeeds
+        if call_count == 2:
+            raise exception  # Second call raises exception
+        return deepcopy(LIVE_STATUS)  # Subsequent calls succeed
+
+    mock_live_status.side_effect = live_status_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
+
+    # The recovery/manual REST path still raises the exception
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # API was called exactly once for this refresh (no manual retry loop)
+    assert call_count == 2
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_energy_history_coordinator_retry_exceptions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test energy history coordinator raises UpdateFailed with retry_after."""
+    call_count = 0
+
+    def energy_history_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise exception  # First call raises exception
+        return ENERGY_HISTORY  # Subsequent calls succeed
+
+    mock_energy_history.side_effect = energy_history_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    # Energy history doesn't have first_refresh during setup
+    assert call_count == 0
+
+    # Trigger first coordinator refresh - this will raise the exception
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # API was called exactly once (no manual retry loop)
+    assert call_count == 1
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test live status coordinator handles auth errors."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise InvalidToken
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # The recovery/manual REST path surfaces the auth error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        # Auth error triggers reauth flow
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_generic_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test live status coordinator handles generic TeslaFleetError."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise TeslaFleetError
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # The recovery/manual REST path surfaces the error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_missing_token_data(hass: HomeAssistant) -> None:
+    """Test that missing token data in config entry triggers auth failure."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            # token is intentionally missing
+        },
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_vehicle_streaming_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test vehicle sw_version is updated when streaming reports new version."""
+    # Track listen_Version calls
+    version_listeners: list = []
+
+    def mock_listen_version(callback):
+        version_listeners.append(callback)
+        return lambda: None  # Return unsubscribe function
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_Version",
+        side_effect=mock_listen_version,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+    # Check initial device sw_version
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "2026.0.0"
+
+    # Simulate streaming version update
+    assert len(version_listeners) > 0
+    version_listeners[0]("2026.1.0 abc123")
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated (build hash removed)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "2026.1.0"
+
+
+async def test_vehicle_streaming_version_update_ignores_none(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test vehicle sw_version is not updated when streaming reports None."""
+    version_listeners: list = []
+
+    def mock_listen_version(callback):
+        version_listeners.append(callback)
+        return lambda: None
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_Version",
+        side_effect=mock_listen_version,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    original_version = device.sw_version
+
+    # Simulate streaming version update with None
+    assert len(version_listeners) > 0
+    version_listeners[0](None)
+    await hass.async_block_till_done()
+
+    # Check device sw_version was not changed
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == original_version
+
+
+async def test_vehicle_polling_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test vehicle sw_version updates when polling coordinator refreshes."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "2026.0.0"
+
+    # Update mock to return new version on next poll
+    updated_vehicle_data = deepcopy(VEHICLE_DATA)
+    updated_vehicle_data["response"]["vehicle_state"]["car_version"] = "2026.2.0 def456"
+    mock_vehicle_data.return_value = updated_vehicle_data
+
+    # Trigger coordinator refresh
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated (build hash removed)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "2026.2.0"
+
+
+@pytest.mark.parametrize(
+    ("keep_one_enabled", "expected_polled"),
+    [
+        (False, False),
+        (True, True),
+    ],
+    ids=["all_disabled", "one_enabled"],
+)
+async def test_vehicle_polling_stops_when_all_entities_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    keep_one_enabled: bool,
+    expected_polled: bool,
+) -> None:
+    """Test the vehicle coordinator stops polling once every entity is disabled.
+
+    With no listeners left, core unschedules the coordinator so the charged
+    vehicle_data poll stops entirely; a single enabled entity keeps it running.
+    """
+    vin = "LRW3F7EK4NC700000"
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if entity.unique_id.startswith(vin)
+    ]
+    keep = {vehicle_entities[0].unique_id} if keep_one_enabled else set()
+    for entity in vehicle_entities:
+        if entity.unique_id not in keep:
+            entity_registry.async_update_entity(
+                entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    # Flush the debounced reload that disabling entities schedules.
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A scheduled poll only fires while the coordinator still has a listener.
+    mock_vehicle_data.reset_mock()
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (mock_vehicle_data.call_count > 0) is expected_polled
+
+
+async def test_energy_site_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_add_listener: MagicMock,
+) -> None:
+    """Test energy site sw_version updates from a site_info stream event."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    site_id = "123456"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "23.44.0 eb113390"
+
+    # A slim site_info stream event carries the new version
+    updated_site_info = deepcopy(SITE_INFO["response"])
+    updated_site_info.pop("tariff_content_v2", None)
+    updated_site_info["version"] = "24.1.0 abc123"
+    mock_add_listener.send({"site_id": site_id, "site_info": updated_site_info})
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "24.1.0 abc123"
+
+
+# Exception translation tests
+
+
+async def test_live_status_auth_failed_forbidden(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test Forbidden exception during live_status triggers auth failure."""
+    mock_live_status.side_effect = Forbidden
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [[deepcopy(LIVE_STATUS), TeslaFleetError]],
+)
+async def test_live_status_coordinator_refresh_error(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    side_effect: list,
+) -> None:
+    """Test live status coordinator handles errors during refresh."""
+    mock_live_status.side_effect = side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        [InvalidToken],
+        [TeslaFleetError],
+        [ENERGY_HISTORY, {"response": {}}],
+    ],
+)
+async def test_energy_history_coordinator_refresh_errors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    side_effect: list,
+) -> None:
+    """Test energy history coordinator handles errors during refresh."""
+    mock_energy_history.side_effect = side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_dynamic_device_discovery_triggers_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that metadata coordinator triggers reload when new vehicle is added."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Update metadata to include a new vehicle with access
+    new_metadata = deepcopy(METADATA)
+    new_metadata["vehicles"]["5YJ3E1EA1NF000001"] = {
+        "proxy": True,
+        "access": True,
+        "polling": False,
+        "firmware": "2026.0.0",
+    }
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=new_metadata,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        # Advance time to trigger metadata coordinator refresh
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Verify reload was triggered due to new vehicle
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_dynamic_device_discovery_no_reload_for_scope_only_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test metadata refresh does not reload when only scopes change."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=deepcopy(METADATA_NOSCOPE),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+
+
+async def test_dynamic_device_discovery_no_reload_without_changes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that metadata coordinator refresh without changes does not reload."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Patch to use the same metadata (no changes)
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=deepcopy(METADATA),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        # Advance time to trigger metadata coordinator refresh
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Verify reload was NOT triggered since no subscription changes
+    mock_reload.assert_not_called()
+
+
+async def test_insufficient_credits_backs_off_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Running out of command credits should back off, not hammer the API every poll."""
+    call_count = 0
+
+    def vehicle_data_side_effect(**kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(VEHICLE_DATA)
+        raise InsufficientCredits
+
+    mock_vehicle_data.side_effect = vehicle_data_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert call_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+
+    coordinator = entry.runtime_data.vehicles[0].coordinator
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+
+
+def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
+    """Build an OAuth2Session for directly exercising _get_access_token."""
+    return OAuth2Session(hass, entry, TeslemetryImplementation(hass, DOMAIN, CLIENT_ID))
+
+
+async def test_get_access_token_dead_token_during_setup_triggers_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed.
+
+    OAuth servers commonly report a dead refresh token with a non-401 status
+    (e.g. 400 invalid_grant). Only recognizing status 401 let this fall
+    through to ConfigEntryNotReady, which retries setup indefinitely without
+    ever prompting the user to reauthenticate.
+    """
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=MagicMock(), status=400, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await _get_access_token(session)
+
+
+async def test_get_access_token_rate_limited_during_setup_is_not_fatal(
+    hass: HomeAssistant,
+) -> None:
+    """A 429 from the token endpoint during setup should back off, not be fatal."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestTransientError(
+                request_info=MagicMock(), status=429, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await _get_access_token(session)
+
+
+async def test_get_access_token_dead_token_after_setup_starts_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test a token dying after setup (re)starts reauth without tearing down.
+
+    The coordinator handles the rest once the exception is re-raised.
+    """
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.LOADED)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=MagicMock(), status=400, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(OAuth2TokenRequestReauthError),
+    ):
+        await _get_access_token(session)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+        for flow in flows
+    )
+
+
+async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
+    hass: HomeAssistant,
+) -> None:
+    """A transient token-refresh error after setup must not force reauth."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.LOADED)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestTransientError(
+                request_info=MagicMock(), status=429, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(OAuth2TokenRequestTransientError),
+    ):
+        await _get_access_token(session)
+    await hass.async_block_till_done()
+
+
+def test_stream_topic_allowlist() -> None:
+    """The stream subscribes to exactly the topics the integration consumes."""
+    assert [topic.value for topic in STREAM_TOPICS] == [
+        "state",
+        "vehicle_data",
+        "data",
+        "connectivity",
+        "credits",
+        "live_status",
+        "site_info",
+        "tariff_content_v2",
+    ]
+
+
+async def test_energy_stream_no_recurring_rest_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+) -> None:
+    """The live/info REST cold reads happen once and do not recur."""
+    await setup_platform(hass, [Platform.SENSOR])
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+    # Advancing well past the old 30-second poll intervals triggers no REST reads.
+    freezer.tick(ENERGY_HISTORY_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+
+async def test_energy_stream_unload_unsubscribes_and_closes_stream(
+    hass: HomeAssistant,
+) -> None:
+    """Unload runs each listener unsubscribe and closes the shared stream."""
+    live_unsub = MagicMock()
+    info_unsub = MagicMock()
+    tariff_unsub = MagicMock()
+
+    with (
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_LiveStatus",
+            return_value=live_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_SiteInfo",
+            return_value=info_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_TariffContentV2",
+            return_value=tariff_unsub,
+        ),
+        patch("teslemetry_stream.TeslemetryStream.close") as mock_close,
+    ):
+        entry = await setup_platform(hass, [Platform.SENSOR])
+        assert entry.state is ConfigEntryState.LOADED
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    live_unsub.assert_called_once()
+    info_unsub.assert_called_once()
+    tariff_unsub.assert_called_once()
+    mock_close.assert_called_once()
+
+
+async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+    mock_energy_info_stream: MagicMock,
+) -> None:
+    """A dropped stream marks energy entities unavailable until documents resume."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    # Both stream-driven coordinators start available from the setup cold read.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    # A stream disconnect fails the live and info/tariff coordinators.
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
+
+    # A streamed live_status document restores the live coordinator on reconnect.
+    live_status = deepcopy(LIVE_STATUS["response"])
+    live_status["solar_power"] = 456
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+    # A streamed site_info document restores the info/tariff coordinator.
+    slim_site_info = {
+        key: value
+        for key, value in deepcopy(SITE_INFO["response"]).items()
+        if key != "tariff_content_v2"
+    }
+    mock_energy_info_stream.send(slim_site_info)
+    await hass.async_block_till_done()
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]

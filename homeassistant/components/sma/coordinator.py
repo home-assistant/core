@@ -1,10 +1,9 @@
 """Coordinator for the SMA integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pysma import (
     SmaAuthenticationException,
@@ -61,6 +60,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         self._sma_device_info = DeviceInfo()
         self._sensors = Sensors()
 
+    @override
     async def _async_setup(self) -> None:
         """Setup the SMA Data Update Coordinator."""
         try:
@@ -74,15 +74,14 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SmaAuthenticationException as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> SMACoordinatorData:
         """Update the used SMA sensors."""
         try:
@@ -94,13 +93,11 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SmaAuthenticationException as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         return SMACoordinatorData(

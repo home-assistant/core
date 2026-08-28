@@ -1,7 +1,5 @@
 """Support for Zengge lights."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.light import PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA

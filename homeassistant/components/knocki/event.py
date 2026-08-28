@@ -1,5 +1,7 @@
 """Event entity for Knocki integration."""
 
+from typing import override
+
 from knocki import Event, EventType, KnockiClient, Trigger
 
 from homeassistant.components.event import EventEntity
@@ -64,6 +66,7 @@ class KnockiTrigger(EventEntity):
         )
         self._attr_unique_id = f"{trigger.device_id}_{trigger.details.trigger_id}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()

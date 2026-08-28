@@ -1,4 +1,9 @@
 {
+  "common": {
+    "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
+    "data_description_password": "Password for the user to connect Home Assistant to your FRITZ!Box.",
+    "data_description_username": "Name of the user to connect Home Assistant to your FRITZ!Box."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -20,12 +25,20 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
+        },
         "description": "Do you want to set up {name}?"
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
         },
         "description": "Update your login information for {name}."
       },
@@ -34,7 +47,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "[%key:component::fritzbox::common::data_description_host%]"
         },
         "description": "Update your configuration information for {name}."
       },
@@ -45,7 +58,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "[%key:component::fritzbox::common::data_description_host%]",
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
         },
         "description": "Enter your FRITZ!Box information."
       }
@@ -90,6 +105,15 @@
     },
     "change_settings_while_lock_enabled": {
       "message": "Can't change settings while manual access for telephone, app, or user interface is disabled on the device"
+    },
+    "connect_error": {
+      "message": "A connection error occurred while setting up the integration. The setup will be retried."
+    },
+    "connect_error_reload": {
+      "message": "A connection error occurred while updating the data from the FRITZ!Box. The integration is going to be reloaded to ensure a proper re-login."
+    },
+    "login_failed": {
+      "message": "Login failed, please check your username and password and try again."
     },
     "manual_switching_disabled": {
       "message": "Can't toggle switch while manual switching is disabled for the device."

@@ -1,0 +1,201 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'config': dict({
+      'host': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'coordinator': dict({
+      'last_exception': None,
+      'last_update_success': True,
+    }),
+    'device': dict({
+      'unique_id': '40580137858664',
+    }),
+    'ems': dict({
+      'ems_40580137858664': dict({
+        'model': 'EMS-1000',
+        'name': 'Homevolt EMS',
+        'sensors': dict({
+          'available_charging_energy': 998,
+          'available_charging_power': 6028,
+          'available_discharge_energy': 11216,
+          'available_discharge_power': 6028,
+          'average_rssi': -84.13,
+          'battery_state_of_charge': 91.7,
+          'charge_cycles': 21,
+          'energy_exported': 272392,
+          'energy_imported': 308147,
+          'exported_energy': 143130,
+          'frequency': 50.043,
+          'imported_energy': 106430,
+          'l1_current': 0.0,
+          'l1_l2_voltage': 406.7,
+          'l1_power': 0.0,
+          'l1_voltage': 234.0,
+          'l2_current': 0.0,
+          'l2_l3_voltage': 405.1,
+          'l2_power': 0.0,
+          'l2_voltage': 235.1,
+          'l3_current': 0.0,
+          'l3_l1_voltage': 403.7,
+          'l3_power': 0.0,
+          'l3_voltage': 232.6,
+          'power': -17,
+          'rssi': -84.0,
+          'schedule_id': 'schedule_1',
+          'schedule_max_discharge': 6028,
+          'schedule_max_power': 6028,
+          'schedule_power_setpoint': 0,
+          'schedule_type': 'idle',
+          'state_of_charge': 91.7,
+          'system_temperature': 9.3,
+          'tmax': 18.8,
+          'tmin': 9.7,
+        }),
+      }),
+    }),
+    'sensors': dict({
+      'available_charging_energy': dict({
+        'type': 'available_charging_energy',
+        'value': 998,
+      }),
+      'available_charging_power': dict({
+        'type': 'available_charging_power',
+        'value': 6028,
+      }),
+      'available_discharge_energy': dict({
+        'type': 'available_discharge_energy',
+        'value': 11216,
+      }),
+      'available_discharge_power': dict({
+        'type': 'available_discharge_power',
+        'value': 6028,
+      }),
+      'average_rssi': dict({
+        'type': 'average_rssi',
+        'value': -84.13,
+      }),
+      'battery_state_of_charge': dict({
+        'type': 'battery_state_of_charge',
+        'value': 91.7,
+      }),
+      'charge_cycles': dict({
+        'type': 'charge_cycles',
+        'value': 21,
+      }),
+      'energy_exported': dict({
+        'type': 'energy_exported',
+        'value': 272392,
+      }),
+      'energy_imported': dict({
+        'type': 'energy_imported',
+        'value': 308147,
+      }),
+      'exported_energy': dict({
+        'type': 'exported_energy',
+        'value': 143130,
+      }),
+      'frequency': dict({
+        'type': 'frequency',
+        'value': 50.043,
+      }),
+      'imported_energy': dict({
+        'type': 'imported_energy',
+        'value': 106430,
+      }),
+      'l1_current': dict({
+        'type': 'l1_current',
+        'value': 0.0,
+      }),
+      'l1_l2_voltage': dict({
+        'type': 'l1_l2_voltage',
+        'value': 406.7,
+      }),
+      'l1_power': dict({
+        'type': 'l1_power',
+        'value': 0.0,
+      }),
+      'l1_voltage': dict({
+        'type': 'l1_voltage',
+        'value': 234.0,
+      }),
+      'l2_current': dict({
+        'type': 'l2_current',
+        'value': 0.0,
+      }),
+      'l2_l3_voltage': dict({
+        'type': 'l2_l3_voltage',
+        'value': 405.1,
+      }),
+      'l2_power': dict({
+        'type': 'l2_power',
+        'value': 0.0,
+      }),
+      'l2_voltage': dict({
+        'type': 'l2_voltage',
+        'value': 235.1,
+      }),
+      'l3_current': dict({
+        'type': 'l3_current',
+        'value': 0.0,
+      }),
+      'l3_l1_voltage': dict({
+        'type': 'l3_l1_voltage',
+        'value': 403.7,
+      }),
+      'l3_power': dict({
+        'type': 'l3_power',
+        'value': 0.0,
+      }),
+      'l3_voltage': dict({
+        'type': 'l3_voltage',
+        'value': 232.6,
+      }),
+      'power': dict({
+        'type': 'power',
+        'value': -17,
+      }),
+      'rssi': dict({
+        'type': 'rssi',
+        'value': -84.0,
+      }),
+      'schedule_id': dict({
+        'type': 'schedule_id',
+        'value': 'schedule_1',
+      }),
+      'schedule_max_discharge': dict({
+        'type': 'schedule_max_discharge',
+        'value': 6028,
+      }),
+      'schedule_max_power': dict({
+        'type': 'schedule_max_power',
+        'value': 6028,
+      }),
+      'schedule_power_setpoint': dict({
+        'type': 'schedule_power_setpoint',
+        'value': 0,
+      }),
+      'schedule_type': dict({
+        'type': 'schedule_type',
+        'value': 'idle',
+      }),
+      'state_of_charge': dict({
+        'type': 'state_of_charge',
+        'value': 91.7,
+      }),
+      'system_temperature': dict({
+        'type': 'system_temperature',
+        'value': 9.3,
+      }),
+      'tmax': dict({
+        'type': 'tmax',
+        'value': 18.8,
+      }),
+      'tmin': dict({
+        'type': 'tmin',
+        'value': 9.7,
+      }),
+    }),
+  })
+# ---

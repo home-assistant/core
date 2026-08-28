@@ -1,104 +1,9 @@
 # serializer version: 1
-# name: test_buttons[air_purifier][button.air_purifier_reset_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.air_purifier_reset_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reset filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reset_filter_condition',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterMonitoringResetButton-113-65529',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[air_purifier][button.air_purifier_reset_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier Reset filter condition',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.air_purifier_reset_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[air_purifier][button.air_purifier_reset_filter_condition_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.air_purifier_reset_filter_condition_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reset filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reset_filter_condition',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterMonitoringResetButton-114-65529',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[air_purifier][button.air_purifier_reset_filter_condition_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier Reset filter condition',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.air_purifier_reset_filter_condition_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_buttons[aqara_door_window_p2][button.aqara_door_and_window_sensor_p2_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -133,8 +39,8 @@
 # name: test_buttons[aqara_door_window_p2][button.aqara_door_and_window_sensor_p2_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Aqara Door and Window Sensor P2 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Door and Window Sensor P2 Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.aqara_door_and_window_sensor_p2_identify',
@@ -146,8 +52,9 @@
 # ---
 # name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -165,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -182,8 +90,8 @@
 # name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Aqara Motion and Light Sensor P2 Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Motion and Light Sensor P2 Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_1',
@@ -195,8 +103,9 @@
 # ---
 # name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -214,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -231,8 +141,8 @@
 # name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Aqara Motion and Light Sensor P2 Identify (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Motion and Light Sensor P2 Identify (2)',
     }),
     'context': <ANY>,
     'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_2',
@@ -242,10 +152,62 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[aqara_multi_state_p100][button.multi_state_sensor_p100_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.multi_state_sensor_p100_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_multi_state_p100][button.multi_state_sensor_p100_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-State Sensor P100 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.multi_state_sensor_p100_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -263,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -280,8 +243,8 @@
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence Multi-Sensor FP300 1 Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.presence_multi_sensor_fp300_1_identify_1',
@@ -293,8 +256,9 @@
 # ---
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -329,8 +294,8 @@
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Identify (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence Multi-Sensor FP300 1 Identify (2)',
     }),
     'context': <ANY>,
     'entity_id': 'button.presence_multi_sensor_fp300_1_identify_2',
@@ -342,8 +307,9 @@
 # ---
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -361,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -378,8 +345,8 @@
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Identify (3)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence Multi-Sensor FP300 1 Identify (3)',
     }),
     'context': <ANY>,
     'entity_id': 'button.presence_multi_sensor_fp300_1_identify_3',
@@ -391,8 +358,9 @@
 # ---
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -410,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -427,8 +396,8 @@
 # name: test_buttons[aqara_presence_fp300][button.presence_multi_sensor_fp300_1_identify_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Identify (4)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence Multi-Sensor FP300 1 Identify (4)',
     }),
     'context': <ANY>,
     'entity_id': 'button.presence_multi_sensor_fp300_1_identify_4',
@@ -440,8 +409,9 @@
 # ---
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -476,8 +447,8 @@
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Climate Sensor W100 Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.climate_sensor_w100_identify_1',
@@ -489,8 +460,9 @@
 # ---
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -508,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -525,8 +498,8 @@
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Climate Sensor W100 Identify (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Identify (2)',
     }),
     'context': <ANY>,
     'entity_id': 'button.climate_sensor_w100_identify_2',
@@ -538,8 +511,9 @@
 # ---
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -557,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -574,8 +549,8 @@
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Climate Sensor W100 Identify (3)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Identify (3)',
     }),
     'context': <ANY>,
     'entity_id': 'button.climate_sensor_w100_identify_3',
@@ -587,8 +562,9 @@
 # ---
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -606,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -623,8 +600,8 @@
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Climate Sensor W100 Identify (4)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Identify (4)',
     }),
     'context': <ANY>,
     'entity_id': 'button.climate_sensor_w100_identify_4',
@@ -636,8 +613,9 @@
 # ---
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -655,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (5)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -672,8 +651,8 @@
 # name: test_buttons[aqara_sensor_w100][button.climate_sensor_w100_identify_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Climate Sensor W100 Identify (5)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Identify (5)',
     }),
     'context': <ANY>,
     'entity_id': 'button.climate_sensor_w100_identify_5',
@@ -683,10 +662,164 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (1)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Identify (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (2)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-2-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Identify (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (3)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-3-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_shutter_switch_h2][button.aqara_shutter_switch_h2_eu_identify_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Identify (3)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_shutter_switch_h2_eu_identify_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[aqara_thermostat_w500][button.floor_heating_thermostat_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -704,6 +837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -721,8 +855,8 @@
 # name: test_buttons[aqara_thermostat_w500][button.floor_heating_thermostat_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Floor Heating Thermostat Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.floor_heating_thermostat_identify_1',
@@ -734,8 +868,9 @@
 # ---
 # name: test_buttons[aqara_thermostat_w500][button.floor_heating_thermostat_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -753,6 +888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -770,8 +906,8 @@
 # name: test_buttons[aqara_thermostat_w500][button.floor_heating_thermostat_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Floor Heating Thermostat Identify (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Identify (2)',
     }),
     'context': <ANY>,
     'entity_id': 'button.floor_heating_thermostat_identify_2',
@@ -783,8 +919,9 @@
 # ---
 # name: test_buttons[aqara_u200][button.aqara_smart_lock_u200_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -802,6 +939,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -819,8 +957,8 @@
 # name: test_buttons[aqara_u200][button.aqara_smart_lock_u200_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Aqara Smart Lock U200 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.aqara_smart_lock_u200_identify',
@@ -832,8 +970,9 @@
 # ---
 # name: test_buttons[color_temperature_light][button.mock_color_temperature_light_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -851,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -861,67 +1001,18 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[color_temperature_light][button.mock_color_temperature_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Color Temperature Light Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_color_temperature_light_identify',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[dimmable_plugin_unit][button.dimmable_plugin_unit_identify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.dimmable_plugin_unit_identify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[dimmable_plugin_unit][button.dimmable_plugin_unit_identify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Dimmable Plugin Unit Identify',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.dimmable_plugin_unit_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -930,8 +1021,9 @@
 # ---
 # name: test_buttons[eberle_ute3000][button.connected_thermostat_ute_3000_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -949,6 +1041,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -959,15 +1052,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[eberle_ute3000][button.connected_thermostat_ute_3000_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Connected Thermostat UTE 3000 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Connected Thermostat UTE 3000 Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.connected_thermostat_ute_3000_identify',
@@ -979,8 +1072,9 @@
 # ---
 # name: test_buttons[ecovacs_deebot][button.ecodeebot_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -998,6 +1092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1015,8 +1110,8 @@
 # name: test_buttons[ecovacs_deebot][button.ecodeebot_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'ecodeebot Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ecodeebot Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.ecodeebot_identify',
@@ -1028,8 +1123,9 @@
 # ---
 # name: test_buttons[eufy_vacuum_omni_e28][button.2bavs_ab6031x_44pe_identify_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1047,6 +1143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1064,8 +1161,8 @@
 # name: test_buttons[eufy_vacuum_omni_e28][button.2bavs_ab6031x_44pe_identify_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': '2BAVS-AB6031X-44PE Identify (0)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2BAVS-AB6031X-44PE Identify (0)',
     }),
     'context': <ANY>,
     'entity_id': 'button.2bavs_ab6031x_44pe_identify_0',
@@ -1077,8 +1174,9 @@
 # ---
 # name: test_buttons[eufy_vacuum_omni_e28][button.2bavs_ab6031x_44pe_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1096,6 +1194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1113,8 +1212,8 @@
 # name: test_buttons[eufy_vacuum_omni_e28][button.2bavs_ab6031x_44pe_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': '2BAVS-AB6031X-44PE Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2BAVS-AB6031X-44PE Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.2bavs_ab6031x_44pe_identify_1',
@@ -1126,8 +1225,9 @@
 # ---
 # name: test_buttons[eve_contact_sensor][button.eve_door_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1145,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1155,15 +1256,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[eve_contact_sensor][button.eve_door_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Door Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Door Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_door_identify',
@@ -1175,8 +1276,9 @@
 # ---
 # name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1194,6 +1296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (bottom)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1211,8 +1314,8 @@
 # name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Energy 20ECN4101 Identify (bottom)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (bottom)',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_20ecn4101_identify_bottom',
@@ -1224,8 +1327,9 @@
 # ---
 # name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1243,6 +1347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (top)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1260,8 +1365,8 @@
 # name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Energy 20ECN4101 Identify (top)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (top)',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_20ecn4101_identify_top',
@@ -1273,8 +1378,9 @@
 # ---
 # name: test_buttons[eve_energy_plug][button.eve_energy_plug_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1292,6 +1398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1302,15 +1409,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[eve_energy_plug][button.eve_energy_plug_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Energy Plug Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_plug_identify',
@@ -1322,8 +1429,9 @@
 # ---
 # name: test_buttons[eve_energy_plug_patched][button.eve_energy_plug_patched_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1341,6 +1449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1358,8 +1467,8 @@
 # name: test_buttons[eve_energy_plug_patched][button.eve_energy_plug_patched_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Energy Plug Patched Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_plug_patched_identify',
@@ -1371,8 +1480,9 @@
 # ---
 # name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1390,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1407,8 +1518,8 @@
 # name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Shutter Switch 20ECI1701 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Shutter Switch 20ECI1701 Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_shutter_switch_20eci1701_identify',
@@ -1418,10 +1529,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-entry]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1431,7 +1543,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1439,6 +1551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1453,14 +1566,65 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-state]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Thermo Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.eve_thermo_20ecd1701_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_thermo_20ecd1701_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1469,8 +1633,9 @@
 # ---
 # name: test_buttons[eve_weather_sensor][button.eve_weather_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1488,6 +1653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1505,8 +1671,8 @@
 # name: test_buttons[eve_weather_sensor][button.eve_weather_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Weather Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Weather Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_weather_identify_1',
@@ -1518,8 +1684,9 @@
 # ---
 # name: test_buttons[eve_weather_sensor][button.eve_weather_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1537,6 +1704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1554,8 +1722,8 @@
 # name: test_buttons[eve_weather_sensor][button.eve_weather_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Eve Weather Identify (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Weather Identify (2)',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_weather_identify_2',
@@ -1567,8 +1735,9 @@
 # ---
 # name: test_buttons[extended_color_light][button.mock_extended_color_light_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1586,6 +1755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1596,15 +1766,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[extended_color_light][button.mock_extended_color_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Extended Color Light Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_extended_color_light_identify',
@@ -1614,155 +1784,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reset filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reset_filter_condition',
-    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-HepaFilterMonitoringResetButton-113-65529',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood Reset filter condition',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reset filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reset_filter_condition',
-    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-ActivatedCarbonFilterMonitoringResetButton-114-65529',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood Reset filter condition',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mocked_fan_switch_identify_fan',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (Fan)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mocked Fan Switch Identify (Fan)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mocked_fan_switch_identify_fan',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_buttons[haojai_switch][button.hjmt_6b_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1780,6 +1806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1797,8 +1824,8 @@
 # name: test_buttons[haojai_switch][button.hjmt_6b_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'HJMT-6B Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.hjmt_6b_identify_1',
@@ -1808,10 +1835,112 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[heiman_co_sensor][button.smart_co_sensor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.smart_co_sensor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[heiman_co_sensor][button.smart_co_sensor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smart_co_sensor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[heiman_co_sensor][button.smart_co_sensor_self_test-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.smart_co_sensor_self_test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Self-test',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Self-test',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'self_test_request',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmSelfTestRequest-92-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[heiman_co_sensor][button.smart_co_sensor_self_test-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Self-test',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smart_co_sensor_self_test',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[heiman_motion_sensor_m1][button.smart_motion_sensor_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1829,6 +1958,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1846,8 +1976,8 @@
 # name: test_buttons[heiman_motion_sensor_m1][button.smart_motion_sensor_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Smart motion sensor Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.smart_motion_sensor_identify_1',
@@ -1857,10 +1987,213 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.smoke_sensor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smoke_sensor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_self_test-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.smoke_sensor_self_test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Self-test',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Self-test',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'self_test_request',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmSelfTestRequest-92-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_self_test-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Self-test',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smoke_sensor_self_test',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_temporary_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.smoke_sensor_temporary_mute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temporary mute',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temporary mute',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temporary_mute_request',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-HeimanSmokeCoAlarmTemporaryMuteRequest-302775297-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[heiman_smoke_detector][button.smoke_sensor_temporary_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Temporary mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smoke_sensor_temporary_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[ikea_air_quality_monitor][button.alpstuga_air_quality_monitor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.alpstuga_air_quality_monitor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[ikea_air_quality_monitor][button.alpstuga_air_quality_monitor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ALPSTUGA air quality monitor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.alpstuga_air_quality_monitor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_identify_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1878,6 +2211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Load Control)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1895,8 +2229,8 @@
 # name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_identify_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'White Series OnOff Switch Identify (Load Control)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Identify (Load Control)',
     }),
     'context': <ANY>,
     'entity_id': 'button.white_series_onoff_switch_identify_load_control',
@@ -1906,10 +2240,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_pause-entry]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1918,8 +2253,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_laundrydryer_pause',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1927,37 +2262,40 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Pause',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pause',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_pause-state]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Pause',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_laundrydryer_pause',
+    'entity_id': 'button.inovelli_identify_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_resume-entry]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1966,8 +2304,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_laundrydryer_resume',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1975,37 +2313,40 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Resume',
+    'original_name': 'Identify (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'resume',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-2-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_resume-state]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Resume',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_laundrydryer_resume',
+    'entity_id': 'button.inovelli_identify_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_start-entry]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2014,8 +2355,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_laundrydryer_start',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2023,37 +2364,40 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (6)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Start',
+    'original_name': 'Identify (6)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'start',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_start-state]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Start',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (6)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_laundrydryer_start',
+    'entity_id': 'button.inovelli_identify_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_stop-entry]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_config-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2062,8 +2406,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_laundrydryer_stop',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2071,27 +2415,131 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Config)',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Stop',
+    'original_name': 'Identify (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'stop',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[laundry_dryer][button.mock_laundrydryer_stop-state]
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Stop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (Config)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_laundrydryer_stop',
+    'entity_id': 'button.inovelli_identify_config',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (Down)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (Down)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (Down)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.inovelli_identify_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (Up)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (Up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[inovelli_vtm31][button.inovelli_identify_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Identify (Up)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2100,8 +2548,9 @@
 # ---
 # name: test_buttons[longan_link_thermostat][button.longan_link_hvac_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2119,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2136,8 +2586,8 @@
 # name: test_buttons[longan_link_thermostat][button.longan_link_hvac_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Longan link HVAC Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.longan_link_hvac_identify',
@@ -2147,10 +2597,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_pause-entry]
+# name: test_buttons[mock_air_purifier][button.mock_air_purifier_reset_filter_condition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2160,7 +2611,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.microwave_oven_pause',
+    'entity_id': 'button.mock_air_purifier_reset_filter_condition',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2168,6 +2619,360 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterMonitoringResetButton-113-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_air_purifier][button.mock_air_purifier_reset_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Air Purifier Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_air_purifier_reset_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_air_purifier][button.mock_air_purifier_reset_filter_condition_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_air_purifier_reset_filter_condition_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterMonitoringResetButton-114-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_air_purifier][button.mock_air_purifier_reset_filter_condition_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Air Purifier Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_air_purifier_reset_filter_condition_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_chime][button.mock_chime_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_chime_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000009E-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_chime][button.mock_chime_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Chime Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_chime_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_dimmable_plugin_unit][button.dimmable_plugin_unit_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.dimmable_plugin_unit_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_dimmable_plugin_unit][button.dimmable_plugin_unit_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Plugin Unit Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dimmable_plugin_unit_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_extractor_hood][button.mock_extractor_hood_reset_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-HepaFilterMonitoringResetButton-113-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_extractor_hood][button.mock_extractor_hood_reset_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extractor hood Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-ActivatedCarbonFilterMonitoringResetButton-114-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extractor hood Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_fan][button.mocked_fan_switch_identify_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify (Fan)',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (Fan)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_fan][button.mocked_fan_switch_identify_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mocked Fan Switch Identify (Fan)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_laundrydryer_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2178,27 +2983,28 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_pause-state]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Oven Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Pause',
     }),
     'context': <ANY>,
-    'entity_id': 'button.microwave_oven_pause',
+    'entity_id': 'button.mock_laundrydryer_pause',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_resume-entry]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_resume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2208,7 +3014,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.microwave_oven_resume',
+    'entity_id': 'button.mock_laundrydryer_resume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2216,6 +3022,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2226,27 +3033,28 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_resume-state]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Oven Resume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Resume',
     }),
     'context': <ANY>,
-    'entity_id': 'button.microwave_oven_resume',
+    'entity_id': 'button.mock_laundrydryer_resume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_start-entry]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2256,7 +3064,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.microwave_oven_start',
+    'entity_id': 'button.mock_laundrydryer_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2264,6 +3072,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2274,27 +3083,28 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_start-state]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Oven Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Start',
     }),
     'context': <ANY>,
-    'entity_id': 'button.microwave_oven_start',
+    'entity_id': 'button.mock_laundrydryer_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_stop-entry]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2304,7 +3114,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.microwave_oven_stop',
+    'entity_id': 'button.mock_laundrydryer_stop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2312,6 +3122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2322,17 +3133,17 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[microwave_oven][button.microwave_oven_stop-state]
+# name: test_buttons[mock_laundry_dryer][button.mock_laundrydryer_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Stop',
     }),
     'context': <ANY>,
-    'entity_id': 'button.microwave_oven_stop',
+    'entity_id': 'button.mock_laundrydryer_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2341,8 +3152,9 @@
 # ---
 # name: test_buttons[mock_lock][button.mock_lock_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2360,6 +3172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2377,8 +3190,8 @@
 # name: test_buttons[mock_lock][button.mock_lock_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Lock Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_lock_identify',
@@ -2388,10 +3201,466 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_microwave_oven_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pause',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_pause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Pause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_microwave_oven_pause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_resume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_microwave_oven_resume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Resume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Resume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'resume',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_resume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Resume',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_microwave_oven_resume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_microwave_oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_microwave_oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_microwave_oven_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_microwave_oven][button.mock_microwave_oven_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_microwave_oven_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_occupancy_sensor][button.mock_occupancy_sensor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_occupancy_sensor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000018-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_occupancy_sensor][button.mock_occupancy_sensor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Occupancy Sensor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_occupancy_sensor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_occupancy_sensor_pir][button.mock_pir_occupancy_sensor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_pir_occupancy_sensor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000062-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_occupancy_sensor_pir][button.mock_pir_occupancy_sensor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PIR Occupancy Sensor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_pir_occupancy_sensor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_on_off_plugin_unit][button.mock_onoffpluginunit_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_onoffpluginunit_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_on_off_plugin_unit][button.mock_onoffpluginunit_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_onoffpluginunit_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_switch_unit][button.mock_switchunit_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_switchunit_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_switch_unit][button.mock_switchunit_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_switchunit_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[mock_temperature_sensor][button.mock_temperature_sensor_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_temperature_sensor_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000026-MatterNodeDevice-0-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[mock_temperature_sensor][button.mock_temperature_sensor_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Temperature Sensor Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_temperature_sensor_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[mock_thermostat][button.mock_thermostat_identify_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2409,6 +3678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2426,8 +3696,8 @@
 # name: test_buttons[mock_thermostat][button.mock_thermostat_identify_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Thermostat Identify (0)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Identify (0)',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_thermostat_identify_0',
@@ -2439,8 +3709,9 @@
 # ---
 # name: test_buttons[mock_thermostat][button.mock_thermostat_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2458,6 +3729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2475,8 +3747,8 @@
 # name: test_buttons[mock_thermostat][button.mock_thermostat_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Thermostat Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_thermostat_identify_1',
@@ -2486,10 +3758,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_1-entry]
+# name: test_buttons[mock_window_covering_pa_lift][button.longan_link_wncv_da01_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2499,7 +3772,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_1',
+    'entity_id': 'button.longan_link_wncv_da01_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2507,300 +3780,7 @@
     'labels': set({
     }),
     'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (1)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (1)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-2-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (2)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (6)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (6)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_config-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_config',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (Config)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_config-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (Config)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_config',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_down-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_down',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (Down)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_down-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (Down)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_down',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.inovelli_identify_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (Up)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (Up)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[occupancy_sensor][button.mock_occupancy_sensor_identify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_occupancy_sensor_identify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2811,67 +3791,18 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[occupancy_sensor][button.mock_occupancy_sensor_identify-state]
+# name: test_buttons[mock_window_covering_pa_lift][button.longan_link_wncv_da01_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Occupancy Sensor Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link WNCV DA01 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_occupancy_sensor_identify',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[on_off_plugin_unit][button.mock_onoffpluginunit_identify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_onoffpluginunit_identify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[on_off_plugin_unit][button.mock_onoffpluginunit_identify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock OnOffPluginUnit Identify',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_onoffpluginunit_identify',
+    'entity_id': 'button.longan_link_wncv_da01_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2880,8 +3811,9 @@
 # ---
 # name: test_buttons[onoff_light_with_levelcontrol_present][button.d215s_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2899,6 +3831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2909,15 +3842,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[onoff_light_with_levelcontrol_present][button.d215s_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'D215S Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D215S Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.d215s_identify',
@@ -2927,10 +3860,113 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[resideo_x2s_thermostat][button.x2s_smart_thermostat_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.x2s_smart_thermostat_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[resideo_x2s_thermostat][button.x2s_smart_thermostat_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X2S Smart Thermostat Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.x2s_smart_thermostat_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[roborock_saros_10][button.robotic_vacuum_cleaner_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.robotic_vacuum_cleaner_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000CA-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[roborock_saros_10][button.robotic_vacuum_cleaner_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robotic Vacuum Cleaner Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.robotic_vacuum_cleaner_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[secuyou_smart_lock][button.secuyou_smart_lock_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2948,6 +3984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2958,15 +3995,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[secuyou_smart_lock][button.secuyou_smart_lock_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Secuyou Smart Lock Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.secuyou_smart_lock_identify',
@@ -2978,8 +4015,9 @@
 # ---
 # name: test_buttons[silabs_dishwasher][button.dishwasher_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2997,6 +4035,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3014,8 +4053,8 @@
 # name: test_buttons[silabs_dishwasher][button.dishwasher_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Dishwasher Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_identify',
@@ -3027,8 +4066,9 @@
 # ---
 # name: test_buttons[silabs_dishwasher][button.dishwasher_pause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3046,6 +4086,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3063,7 +4104,7 @@
 # name: test_buttons[silabs_dishwasher][button.dishwasher_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_pause',
@@ -3075,8 +4116,9 @@
 # ---
 # name: test_buttons[silabs_dishwasher][button.dishwasher_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3094,6 +4136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3111,7 +4154,7 @@
 # name: test_buttons[silabs_dishwasher][button.dishwasher_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_start',
@@ -3123,8 +4166,9 @@
 # ---
 # name: test_buttons[silabs_dishwasher][button.dishwasher_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3142,6 +4186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3159,7 +4204,7 @@
 # name: test_buttons[silabs_dishwasher][button.dishwasher_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_stop',
@@ -3169,10 +4214,62 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[silabs_fan][button.sl_fan_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.sl_fan_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[silabs_fan][button.sl_fan_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL_Fan Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.sl_fan_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3190,6 +4287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3200,15 +4298,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'LaundryWasher Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.laundrywasher_identify',
@@ -3220,8 +4318,9 @@
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_pause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3239,6 +4338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3249,14 +4349,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.laundrywasher_pause',
@@ -3268,8 +4368,9 @@
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_resume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3287,6 +4388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3297,14 +4399,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Resume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Resume',
     }),
     'context': <ANY>,
     'entity_id': 'button.laundrywasher_resume',
@@ -3316,8 +4418,9 @@
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3335,6 +4438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3345,14 +4449,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.laundrywasher_start',
@@ -3364,8 +4468,9 @@
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_stop-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3383,6 +4488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3393,14 +4499,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_laundrywasher][button.laundrywasher_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.laundrywasher_stop',
@@ -3412,8 +4518,9 @@
 # ---
 # name: test_buttons[silabs_light_switch][button.light_switch_example_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3431,6 +4538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3448,8 +4556,8 @@
 # name: test_buttons[silabs_light_switch][button.light_switch_example_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Light switch example Identify (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light switch example Identify (1)',
     }),
     'context': <ANY>,
     'entity_id': 'button.light_switch_example_identify_1',
@@ -3459,10 +4567,62 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[silabs_range_hood][button.sl_rangehood_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.sl_rangehood_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-2-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[silabs_range_hood][button.sl_rangehood_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.sl_rangehood_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[silabs_refrigerator][button.refrigerator_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3480,6 +4640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3497,8 +4658,8 @@
 # name: test_buttons[silabs_refrigerator][button.refrigerator_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Refrigerator Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.refrigerator_identify',
@@ -3510,8 +4671,9 @@
 # ---
 # name: test_buttons[silabs_water_heater][button.water_heater_cancel_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3529,6 +4691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cancel boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3539,14 +4702,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel_boost',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementCancelBoost-148-65529',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementCancelBoost-148-65529',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[silabs_water_heater][button.water_heater_cancel_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Cancel boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Cancel boost',
     }),
     'context': <ANY>,
     'entity_id': 'button.water_heater_cancel_boost',
@@ -3556,156 +4719,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[smoke_detector][button.smoke_sensor_identify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.smoke_sensor_identify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[smoke_detector][button.smoke_sensor_identify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Smoke sensor Identify',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.smoke_sensor_identify',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[smoke_detector][button.smoke_sensor_self_test-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.smoke_sensor_self_test',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Self-test',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'self_test_request',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmSelfTestRequest-92-65529',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[smoke_detector][button.smoke_sensor_self_test-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke sensor Self-test',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.smoke_sensor_self_test',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[switch_unit][button.mock_switchunit_identify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_switchunit_identify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[switch_unit][button.mock_switchunit_identify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock SwitchUnit Identify',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_switchunit_identify',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_buttons[tado_smart_radiator_thermostat_x][button.smart_radiator_thermostat_x_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3723,6 +4741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3733,15 +4752,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[tado_smart_radiator_thermostat_x][button.smart_radiator_thermostat_x_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Smart Radiator Thermostat X Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Radiator Thermostat X Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.smart_radiator_thermostat_x_identify',
@@ -3751,10 +4770,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-entry]
+# name: test_buttons[wago_home_blind_control][button.home_blind_wi_fi_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3764,7 +4784,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.home_blind_wi_fi_identify_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3772,38 +4792,40 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-0-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-state]
+# name: test_buttons[wago_home_blind_control][button.home_blind_wi_fi_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Temperature Sensor Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.home_blind_wi_fi_identify_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify-entry]
+# name: test_buttons[wago_home_relay_16a][button.home_relay_16a_thread_identify_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3813,7 +4835,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.longan_link_wncv_da01_identify',
+    'entity_id': 'button.home_relay_16a_thread_identify_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3821,28 +4843,29 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify-state]
+# name: test_buttons[wago_home_relay_16a][button.home_relay_16a_thread_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Longan link WNCV DA01 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.longan_link_wncv_da01_identify',
+    'entity_id': 'button.home_relay_16a_thread_identify_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3851,8 +4874,9 @@
 # ---
 # name: test_buttons[yandex_smart_socket][button.yndx_00540_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3870,6 +4894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3880,15 +4905,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_buttons[yandex_smart_socket][button.yndx_00540_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'YNDX-00540 Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540 Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.yndx_00540_identify',

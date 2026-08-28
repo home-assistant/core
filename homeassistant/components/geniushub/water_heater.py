@@ -1,6 +1,6 @@
 """Support for Genius Hub water_heater devices."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -65,15 +65,18 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         self._min_temp = 30.0
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return list(HA_OPMODE_TO_GH)
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         return GH_STATE_TO_HA[self._zone.data["mode"]]
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set a new operation mode for this boiler."""
         await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])

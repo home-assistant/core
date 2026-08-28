@@ -1,7 +1,5 @@
 """Integration for Peblar EV chargers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from aiohttp import CookieJar
@@ -16,8 +14,11 @@ from peblar import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
@@ -25,6 +26,9 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -37,9 +41,14 @@ PLATFORMS = [
 ]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Peblar integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Set up Peblar from a config entry."""
-
     # Set up connection to the Peblar charger
     peblar = Peblar(
         host=entry.data[CONF_HOST],
@@ -50,10 +59,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         system_information = await peblar.system_information()
         api = await peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
     except PeblarConnectionError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady("Could not connect to Peblar charger") from err
     except PeblarAuthenticationError as err:
         raise ConfigEntryAuthFailed from err
     except PeblarError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             "Unknown error occurred while connecting to Peblar charger"
         ) from err

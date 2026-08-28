@@ -9,7 +9,7 @@ from google.protobuf import duration_pb2
 from google.type import localized_text_pb2
 import pytest
 
-from homeassistant.components.google_travel_time.const import DOMAIN
+from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -22,6 +22,7 @@ async def mock_config_fixture(
     """Mock a Google Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title=DEFAULT_NAME,
         data=data,
         options=options,
         entry_id="test",
@@ -54,6 +55,10 @@ def routes_mock() -> Generator[AsyncMock]:
             "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
             new=mock_client,
         ),
+        patch(
+            "homeassistant.components.google_travel_time.services.RoutesAsyncClient",
+            new=mock_client,
+        ),
     ):
         client_mock = mock_client.return_value
         client_mock.compute_routes.return_value = ComputeRoutesResponse(
@@ -75,6 +80,7 @@ def routes_mock() -> Generator[AsyncMock]:
                                 }
                             ),
                             "duration": duration_pb2.Duration(seconds=1620),
+                            "distance_meters": 21300,
                         }
                     )
                 ]

@@ -1,8 +1,7 @@
 """Support for the Mailgun mail notifications."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any, override
 
 from pymailgunner import (
     Client,
@@ -21,9 +20,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_SANDBOX, DOMAIN
+from . import CONF_SANDBOX
+from .const import DATA_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DATA_CONFIG]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),
         data.get(CONF_SANDBOX),
@@ -91,7 +92,8 @@ class MailgunNotificationService(BaseNotificationService):
             return False
         return True
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a mail to the recipient."""
 
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -110,5 +112,8 @@ class MailgunNotificationService(BaseNotificationService):
                 files=files,
             )
             _LOGGER.debug("Message sent: %s", resp)
-        except MailgunError:
-            _LOGGER.exception("Failed to send message")
+        except MailgunError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from err

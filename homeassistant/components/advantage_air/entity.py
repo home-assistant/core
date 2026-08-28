@@ -5,21 +5,22 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .models import AdvantageAirData
+from .coordinator import AdvantageAirCoordinator
 
 
-class AdvantageAirEntity(CoordinatorEntity):
+class AdvantageAirEntity(CoordinatorEntity[AdvantageAirCoordinator]):
     """Parent class for Advantage Air Entities."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, instance: AdvantageAirData) -> None:
+    def __init__(self, coordinator: AdvantageAirCoordinator) -> None:
         """Initialize common aspects of an Advantage Air entity."""
-        super().__init__(instance.coordinator)
+        super().__init__(coordinator)
         self._attr_unique_id: str = self.coordinator.data["system"]["rid"]
 
     def update_handle_factory(self, func, *keys):
@@ -41,22 +42,26 @@ class AdvantageAirEntity(CoordinatorEntity):
 class AdvantageAirAcEntity(AdvantageAirEntity):
     """Parent class for Advantage Air AC Entities."""
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
+    def __init__(self, coordinator: AdvantageAirCoordinator, ac_key: str) -> None:
         """Initialize common aspects of an Advantage Air ac entity."""
-        super().__init__(instance)
+        super().__init__(coordinator)
 
         self.ac_key: str = ac_key
         self._attr_unique_id += f"-{ac_key}"
 
         self._attr_device_info = DeviceInfo(
-            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.data["system"]["rid"]),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
             name=self.coordinator.data["aircons"][self.ac_key]["info"]["name"],
         )
         self.async_update_ac = self.update_handle_factory(
-            instance.api.aircon.async_update_ac, self.ac_key
+            coordinator.api.aircon.async_update_ac, self.ac_key
         )
 
     @property
@@ -73,14 +78,16 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
 class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     """Parent class for Advantage Air Zone Entities."""
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize common aspects of an Advantage Air zone entity."""
-        super().__init__(instance, ac_key)
+        super().__init__(coordinator, ac_key)
 
         self.zone_key: str = zone_key
         self._attr_unique_id += f"-{zone_key}"
         self.async_update_zone = self.update_handle_factory(
-            instance.api.aircon.async_update_zone, self.ac_key, self.zone_key
+            coordinator.api.aircon.async_update_zone, self.ac_key, self.zone_key
         )
 
     @property
@@ -93,22 +100,28 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
 
     _attr_name = None
 
-    def __init__(self, instance: AdvantageAirData, thing: dict[str, Any]) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, thing: dict[str, Any]
+    ) -> None:
         """Initialize common aspects of an Advantage Air Things entity."""
-        super().__init__(instance)
+        super().__init__(coordinator)
 
         self._id = thing["id"]
         self._attr_unique_id += f"-{self._id}"
 
         self._attr_device_info = DeviceInfo(
-            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.data["system"]["rid"]),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model="MyPlace",
             name=thing["name"],
         )
         self.async_update_value = self.update_handle_factory(
-            instance.api.things.async_update_value, self._id
+            coordinator.api.things.async_update_value, self._id
         )
 
     @property
@@ -117,7 +130,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         return self.coordinator.data["myThings"]["things"][self._id]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the thing is considered on."""
         return self._data["value"] > 0
 

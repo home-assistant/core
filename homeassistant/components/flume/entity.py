@@ -1,6 +1,6 @@
 """Platform for shared base classes for sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -52,6 +52,7 @@ class FlumeEntity[
             configuration_url="https://portal.flumewater.com",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Request an update when added."""
         await super().async_added_to_hass()

@@ -1,9 +1,7 @@
 """Config flow for Dremel 3D Printer (3D20, 3D40, 3D45)."""
 
-from __future__ import annotations
-
 from json.decoder import JSONDecodeError
-from typing import Any
+from typing import Any, override
 
 from dremel3dpy import Dremel3DPrinter
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -25,6 +23,7 @@ class Dremel3DPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -40,7 +39,7 @@ class Dremel3DPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             api = await self.hass.async_add_executor_job(Dremel3DPrinter, host)
-        except (ConnectTimeout, HTTPError, JSONDecodeError):
+        except ConnectTimeout, HTTPError, JSONDecodeError:
             errors = {"base": "cannot_connect"}
         except Exception:  # noqa: BLE001
             LOGGER.exception("An unknown error has occurred")

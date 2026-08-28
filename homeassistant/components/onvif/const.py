@@ -18,6 +18,7 @@ CONF_DEVICE_ID = "deviceid"
 CONF_HARDWARE = "hardware"
 CONF_SNAPSHOT_AUTH = "snapshot_auth"
 CONF_ENABLE_WEBHOOKS = "enable_webhooks"
+CONF_MORE_OPTIONS = "more_options"
 DEFAULT_ENABLE_WEBHOOKS = True
 
 ATTR_PAN = "pan"

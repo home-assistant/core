@@ -1,7 +1,5 @@
 """The Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from pythonkuma.update import UpdateChecker
 
 from homeassistant.const import Platform
@@ -45,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeKumaConfigEntry) -
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: UptimeKumaConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a stale device from a config entry."""
 

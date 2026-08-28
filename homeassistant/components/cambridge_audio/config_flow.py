@@ -1,7 +1,7 @@
 """Config flow for Cambridge Audio."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aiostreammagic import StreamMagicClient
 import voluptuous as vol
@@ -29,6 +29,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -81,6 +82,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -89,7 +89,9 @@ async def test_statistics_no_price(
     suez_client.get_price.side_effect = PySuezError("will fail")
     suez_client.fetch_all_daily_data.return_value = [
         TelemetryMeasure(
-            (datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"), 0.5, 0.5
+            dt_util.utcnow().date().strftime("%Y-%m-%d %H:%M:%S"),
+            0.5,
+            0.5,
         )
     ]
 
@@ -103,7 +105,7 @@ async def test_statistics_no_price(
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.now() - timedelta(days=1),
+        dt_util.utcnow() - timedelta(days=1),
         None,
         [statistic_id],
         "hour",
@@ -200,7 +202,7 @@ async def test_statistics(
     # New daily data retrieved
     suez_client.fetch_all_daily_data.return_value = [
         TelemetryMeasure(
-            date=(datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"),
+            date=dt_util.utcnow().date().strftime("%Y-%m-%d %H:%M:%S"),
             volume=0.5,
             index=0.5 * (121 + 1),
         )

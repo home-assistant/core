@@ -26,7 +26,9 @@ from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
 
-ENTITY_ID = f"media_player.kaleidescape_device_{MOCK_SERIAL}"
+from tests.common import MockConfigEntry
+
+ENTITY_ID = f"media_player.theater_kaleidescape_device_{MOCK_SERIAL}"
 FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"
 
 
@@ -158,11 +160,13 @@ async def test_services(hass: HomeAssistant, mock_device: MagicMock) -> None:
     assert mock_device.previous.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_device", "mock_integration")
-async def test_device(device_registry: dr.DeviceRegistry) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_device(
+    device_registry: dr.DeviceRegistry, mock_integration: MockConfigEntry
+) -> None:
     """Test device attributes."""
-    device = device_registry.async_get_device(
-        identifiers={("kaleidescape", MOCK_SERIAL)}
+    device = device_registry.async_get_device_by_identifier(
+        ("kaleidescape", MOCK_SERIAL), mock_integration.entry_id
     )
     assert device.name == FRIENDLY_NAME
     assert device.model == "Strato"

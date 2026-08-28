@@ -1,1 +1,1 @@
-"""The actiontec component."""
+"""The Actiontec integration."""

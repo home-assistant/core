@@ -9,8 +9,15 @@ from homeassistant.components.mcp_server.const import DOMAIN
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def ensure_homeassistant_loaded(hass: HomeAssistant) -> None:
+    """Ensure homeassistant component is loaded."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture

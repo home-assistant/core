@@ -1,7 +1,5 @@
 """Support for switching devices via Pilight to on and off."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.switch import (

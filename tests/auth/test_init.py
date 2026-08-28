@@ -32,6 +32,8 @@ from tests.common import (
     flush_store,
 )
 
+INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
+
 
 @pytest.fixture
 def mock_hass(hass: HomeAssistant) -> HomeAssistant:
@@ -172,12 +174,12 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     credential = step["result"]
     assert credential is not None
 
@@ -241,12 +243,12 @@ async def test_login_as_existing_user(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
     user = await manager.async_get_user_by_credentials(credential)
@@ -285,9 +287,7 @@ async def test_linking_user_to_two_auth_providers(
     user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
-    step = await manager.login_flow.async_init(
-        ("insecure_example", "another-provider"), context={"credential_only": True}
-    )
+    step = await manager.login_flow.async_init(("insecure_example", "another-provider"))
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )
@@ -299,7 +299,8 @@ async def test_linking_user_to_two_auth_providers(
     await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
-    # Linking a credential to a user while the credential is already linked to another user should raise
+    # Linking a credential to a user while the credential is
+    # already linked to another user should raise
     user_2 = await manager.async_create_user("User 2")
     with pytest.raises(ValueError):
         await manager.async_link_user(user_2, new_credential)
@@ -577,6 +578,26 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
+async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
+    """Test that deactivating a user removes their refresh tokens."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+
+    refresh_token1 = await manager.async_create_refresh_token(user, CLIENT_ID)
+    refresh_token2 = await manager.async_create_refresh_token(user, "other-client")
+    assert len(user.refresh_tokens) == 2
+    assert manager.async_get_refresh_token(refresh_token1.id) == refresh_token1
+    assert manager.async_get_refresh_token(refresh_token2.id) == refresh_token2
+
+    await manager.async_deactivate_user(user)
+
+    # Verify user is deactivated and all refresh tokens are removed
+    assert user.is_active is False
+    assert len(user.refresh_tokens) == 0
+    assert manager.async_get_refresh_token(refresh_token1.id) is None
+    assert manager.async_get_refresh_token(refresh_token2.id) is None
+
+
 async def test_remove_refresh_token(hass: HomeAssistant) -> None:
     """Test that we can remove a refresh token."""
     manager = await auth.auth_manager_from_config(hass, [], [])
@@ -819,14 +840,14 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request auth module input form
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -834,7 +855,7 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Invalid code error
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
     assert step["errors"] == {"base": "invalid_code"}
 
@@ -843,7 +864,7 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -894,21 +915,21 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request select auth module
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "select_mfa_module"
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"multi_factor_auth_module": "module2"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -916,7 +937,7 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -962,13 +983,13 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
@@ -976,7 +997,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
             step["flow_id"], {"pin": "test-pin"}
         )
         # login flow abort due session timeout
-        assert step["type"] == data_entry_flow.FlowResultType.ABORT
+        assert step["type"] is data_entry_flow.FlowResultType.ABORT
         assert step["reason"] == "login_expired"
 
 
@@ -1319,7 +1340,7 @@ async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with invalid json payload."""
     jws = jwt.PyJWS()
     token_with_invalid_json = jws.encode(
-        b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b"invalid", INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_with_invalid_json) is None
@@ -1329,7 +1350,7 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with not a dict json payload."""
     jws = jwt.PyJWS()
     token_not_a_dict_json = jws.encode(
-        b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b'["invalid"]', INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_not_a_dict_json) is None

@@ -20,6 +20,7 @@ from homeassistant.components.forked_daapd.const import (
     SUPPORTED_FEATURES_ZONE,
 )
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -38,6 +39,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -50,6 +52,7 @@ from homeassistant.components.media_player import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     MediaPlayerEnqueue,
@@ -65,6 +68,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_mock_signal
 
@@ -367,7 +372,7 @@ def test_master_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
-    assert state.attributes[ATTR_MEDIA_CONTENT_ID] == 12322
+    assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "12322"
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert state.attributes[ATTR_MEDIA_DURATION] == 0.05
     assert state.attributes[ATTR_MEDIA_POSITION] == 0.005
@@ -459,6 +464,89 @@ async def test_zone(hass: HomeAssistant, mock_api_object: Mock) -> None:
     )
     output_id = SAMPLE_OUTPUTS_ON[2]["id"]
     mock_api_object.change_output.assert_any_call(output_id, selected=True)
+
+
+async def test_join_players(hass: HomeAssistant, mock_api_object: Mock) -> None:
+    """Test joining players enables the corresponding outputs."""
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_JOIN,
+        {ATTR_GROUP_MEMBERS: [TEST_ZONE_ENTITY_NAMES[2], TEST_MASTER_ENTITY_NAME]},
+    )
+    mock_api_object.change_output.assert_called_once_with(
+        SAMPLE_OUTPUTS_ON[2]["id"], selected=True
+    )
+
+
+async def test_join_players_unknown_entity(
+    hass: HomeAssistant, mock_api_object: Mock
+) -> None:
+    """Test joining an unknown entity raises."""
+    with pytest.raises(
+        ServiceValidationError, match="media_player.nonexistent not found"
+    ):
+        await _service_call(
+            hass,
+            TEST_MASTER_ENTITY_NAME,
+            SERVICE_JOIN,
+            {ATTR_GROUP_MEMBERS: ["media_player.nonexistent"]},
+        )
+    mock_api_object.change_output.assert_not_called()
+
+
+async def test_join_players_foreign_entity(
+    hass: HomeAssistant,
+    mock_api_object: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test joining an entity from another platform raises."""
+    entity_registry.async_get_or_create(MP_DOMAIN, "other_platform", "some_unique_id")
+    with pytest.raises(ServiceValidationError, match="not an output"):
+        await _service_call(
+            hass,
+            TEST_MASTER_ENTITY_NAME,
+            SERVICE_JOIN,
+            {ATTR_GROUP_MEMBERS: ["media_player.other_platform_some_unique_id"]},
+        )
+    mock_api_object.change_output.assert_not_called()
+
+
+async def test_join_players_stale_output(
+    hass: HomeAssistant,
+    mock_api_object: Mock,
+    get_request_return_values: dict[str, Any],
+) -> None:
+    """Test joining a zone whose output disappeared from the server raises."""
+    get_request_return_values["outputs"] = SAMPLE_OUTPUTS_UNSELECTED[:2]
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    await updater_update(["outputs"])
+    await hass.async_block_till_done()
+    with pytest.raises(ServiceValidationError, match="no longer exists"):
+        await _service_call(
+            hass,
+            TEST_MASTER_ENTITY_NAME,
+            SERVICE_JOIN,
+            {ATTR_GROUP_MEMBERS: [TEST_ZONE_ENTITY_NAMES[2]]},
+        )
+    mock_api_object.change_output.assert_not_called()
+
+
+async def test_unjoin_players(hass: HomeAssistant, mock_api_object: Mock) -> None:
+    """Test unjoining disables all outputs."""
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_UNJOIN)
+    mock_api_object.set_enabled_outputs.assert_called_once_with([])
+
+
+@pytest.mark.usefixtures("mock_api_object")
+def test_group_members(hass: HomeAssistant) -> None:
+    """Test group_members lists the master and all selected outputs."""
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [
+        TEST_MASTER_ENTITY_NAME,
+        TEST_ZONE_ENTITY_NAMES[0],
+        TEST_ZONE_ENTITY_NAMES[1],
+    ]
 
 
 async def test_last_outputs_master(hass: HomeAssistant, mock_api_object: Mock) -> None:

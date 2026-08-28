@@ -16,6 +16,9 @@ from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUA
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import ComponentSetup, ExpectedCredentials
@@ -357,7 +360,8 @@ async def test_send_text_command_media_player(
     )
     assert status == http.HTTPStatus.NOT_FOUND
 
-    # Assert that both audio responses can still be served before the 5 minutes expiration
+    # Assert that both audio responses can still be served before
+    # the 5 minutes expiration
     freezer.tick(timedelta(minutes=4, seconds=59))
     async_fire_time_changed(hass)
     status, response = await fetch_api_url(hass_client, audio_url1)
@@ -492,3 +496,20 @@ async def test_conversation_agent_language_changed(
     mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "es-ES")])
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

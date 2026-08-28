@@ -1,7 +1,5 @@
 """Client for SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
@@ -32,7 +30,7 @@ if TYPE_CHECKING:
 
 
 def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
-    """Use this function with `hass.async_add_executor_job` to asynchronously get `SSHClientConnectionOptions`."""
+    """Get `SSHClientConnectionOptions` for use with `hass.async_add_executor_job`."""
 
     return SSHClientConnectionOptions(
         known_hosts=None,
@@ -179,7 +177,8 @@ class BackupAgentClient:
         if not await self.sftp.exists(metadata.file_path):
             await self.sftp.unlink(metadata.metadata_file)
             raise FileNotFoundError(
-                f"File at provided remote location: {metadata.file_path} does not exist."
+                "File at provided remote location:"
+                f" {metadata.file_path} does not exist."
             )
 
         LOGGER.debug("Removing file at path: %s", metadata.file_path)
@@ -188,7 +187,7 @@ class BackupAgentClient:
         await self.sftp.unlink(metadata.metadata_file)
 
     async def async_list_backups(self) -> list[AgentBackup]:
-        """Iterate through a list of metadata files and return a list of `AgentBackup` objects."""
+        """Iterate through metadata files and return a list of `AgentBackup` objects."""
 
         backups: list[AgentBackup] = []
 
@@ -219,7 +218,7 @@ class BackupAgentClient:
         iterator: AsyncIterator[bytes],
         backup: AgentBackup,
     ) -> None:
-        """Accept `iterator` as bytes iterator and write backup archive to SFTP Server."""
+        """Accept `iterator` as bytes iterator and write backup archive."""
 
         file_path = (
             f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
@@ -246,8 +245,10 @@ class BackupAgentClient:
     async def iter_file(self, backup_id: str) -> AsyncFileIterator:
         """Return Async File Iterator object.
 
-        `SFTPClientFile` object (that would be returned with `sftp.open`) is not an iterator.
-        So we return custom made class - `AsyncFileIterator` that would allow iteration on file object.
+        `SFTPClientFile` object (that would be returned with
+        `sftp.open`) is not an iterator. So we return custom
+        made class - `AsyncFileIterator` that would allow
+        iteration on file object.
 
         Raises:
         ------
@@ -296,7 +297,9 @@ class BackupAgentClient:
             )
         except (OSError, PermissionDenied) as e:
             raise BackupAgentError(
-                "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-install the integration"
+                "Failure while attempting to establish SSH"
+                " connection. Please check SSH credentials"
+                " and if changed, re-install the integration"
             ) from e
 
         # Configure SFTP Client Connection
@@ -305,7 +308,8 @@ class BackupAgentClient:
             await self.sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
-                "Failed to create SFTP client. Re-installing integration might be required"
+                "Failed to create SFTP client."
+                " Re-installing integration might be required"
             ) from e
 
         return self

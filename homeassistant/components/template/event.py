@@ -1,7 +1,5 @@
 """Support for events which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 
@@ -12,6 +10,8 @@ from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -33,7 +33,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -55,10 +55,15 @@ EVENT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(
+        EventEntityCapabilityAttribute,
+        EventEntityStateAttribute,
+    )
+)
+
 EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(
-        EVENT_DOMAIN, DEFAULT_NAME
-    ).schema
+    make_template_entity_common_schema(EVENT_DOMAIN, DEFAULT_NAME).schema
 )
 
 
@@ -119,18 +124,32 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._event_type_template = config[CONF_EVENT_TYPE]
-        self._event_types_template = config[CONF_EVENT_TYPES]
-
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         self._event_type = None
         self._attr_event_types = []
+
+        self.setup_template(
+            CONF_EVENT_TYPES,
+            "_attr_event_types",
+            None,
+            self._update_event_types,
+        )
+        self.setup_template(
+            CONF_EVENT_TYPE,
+            "_event_type",
+            None,
+            self._update_event_type,
+        )
 
     @callback
     def _update_event_types(self, event_types: Any) -> None:
@@ -179,25 +198,6 @@ class StateEventEntity(TemplateEntity, AbstractTemplateEvent):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateEvent.__init__(self, config)
 
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        self.add_template_attribute(
-            "_attr_event_types",
-            self._event_types_template,
-            None,
-            self._update_event_types,
-            none_on_template_error=True,
-        )
-        self.add_template_attribute(
-            "_event_type",
-            self._event_type_template,
-            None,
-            self._update_event_type,
-            none_on_template_error=True,
-        )
-        super()._async_setup_templates()
-
 
 class TriggerEventEntity(TriggerEntity, AbstractTemplateEvent, RestoreEntity):
     """Event entity based on trigger data."""
@@ -217,21 +217,3 @@ class TriggerEventEntity(TriggerEntity, AbstractTemplateEvent, RestoreEntity):
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateEvent.__init__(self, config)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        for key, updater in (
-            (CONF_EVENT_TYPES, self._update_event_types),
-            (CONF_EVENT_TYPE, self._update_event_type),
-        ):
-            updater(self._rendered[key])
-
-        self.async_set_context(self.coordinator.data["context"])
-        self.async_write_ha_state()

@@ -1,10 +1,8 @@
 """Config flow for FYTA integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -73,6 +71,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

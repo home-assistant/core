@@ -6,16 +6,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -280,6 +273,7 @@
         "name": "Charging power status",
         "state": {
           "fault": "[%key:common::state::fault%]",
+          "initialization": "Initialization",
           "no_power_available": "No power",
           "power_available_but_not_activated": "Power available",
           "providing_power": "Providing power"
@@ -362,6 +356,12 @@
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
     },
+    "image_error": {
+      "message": "Unable to load vehicle image from: {url}"
+    },
+    "invalid_image_type": {
+      "message": "Invalid image type: {image_type}"
+    },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },
@@ -373,6 +373,37 @@
     },
     "update_failed": {
       "message": "Unable to update data."
+    }
+  },
+  "selector": {
+    "service_param_image": {
+      "options": {
+        "exterior_back": "Exterior back",
+        "exterior_back_left": "Exterior back left",
+        "exterior_back_right": "Exterior back right",
+        "exterior_front": "Exterior front",
+        "exterior_front_left": "Exterior front left",
+        "exterior_front_right": "Exterior front right",
+        "exterior_side_left": "Exterior side left",
+        "exterior_side_right": "Exterior side right",
+        "interior": "Interior"
+      }
+    }
+  },
+  "services": {
+    "get_image_url": {
+      "description": "Retrieves the URL for one or more vehicle-specific images.",
+      "fields": {
+        "entry": {
+          "description": "The entry to retrieve the vehicle images for.",
+          "name": "Entry"
+        },
+        "images": {
+          "description": "The image types to retrieve. Leave empty to get all images.",
+          "name": "Images"
+        }
+      },
+      "name": "Get image URL"
     }
   }
 }

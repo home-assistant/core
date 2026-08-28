@@ -1,6 +1,7 @@
 """Entity for the SleepIQ integration."""
 
 from abc import abstractmethod
+from typing import override
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
@@ -11,9 +12,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ENTITY_TYPES, ICON_OCCUPIED
-from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator
+from .coordinator import (
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+    SleepIQSleepDataCoordinator,
+)
 
-type _DataCoordinatorType = SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator
+type _DataCoordinatorType = (
+    SleepIQDataUpdateCoordinator
+    | SleepIQPauseUpdateCoordinator
+    | SleepIQSleepDataCoordinator
+)
 
 
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
@@ -62,6 +71,7 @@ class SleepIQBedEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()

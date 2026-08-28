@@ -1,7 +1,5 @@
 """Helper classes for Google Cloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import operator
@@ -48,6 +46,8 @@ async def async_tts_voices(
     list_voices_response = await client.list_voices()
     for voice in list_voices_response.voices:
         language_code = voice.language_codes[0]
+        if not voice.name.startswith(language_code):
+            continue
         if language_code not in voices:
             voices[language_code] = []
         voices[language_code].append(voice.name)
@@ -62,7 +62,8 @@ def tts_options_schema(
     """Return schema for TTS options with default values from config or constants."""
     # If we are called from the config flow we want the defaults to be from constants
     # to allow clearing the current value (passed as suggested_value) in the UI.
-    # If we aren't called from the config flow we want the defaults to be from the config.
+    # If we aren't called from the config flow we want the
+    # defaults to be from the config.
     defaults = {} if from_config_flow else config_options
     return vol.Schema(
         {

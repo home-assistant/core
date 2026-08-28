@@ -1,11 +1,9 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
+from uiprotect.data import Camera, ModelType, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -47,8 +45,11 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if isinstance(device, Camera) and (
-            device.has_speaker or device.has_removable_speaker
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if (
+            device.model is ModelType.CAMERA
+            and isinstance(device, Camera)
+            and (device.has_speaker or device.has_removable_speaker)
         ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 
@@ -76,6 +77,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
@@ -101,12 +103,14 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
 
         volume_int = int(volume * 100)
         await self.device.set_speaker_volume(volume_int)
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
 
@@ -118,6 +122,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             await self.device.stop_audio()
             self._async_updated_event(self.device)
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -155,6 +160,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
 
         self._async_updated_event(self.device)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

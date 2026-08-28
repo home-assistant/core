@@ -1,10 +1,9 @@
 """Support for Ecowitt Weather Stations."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import datetime
-from typing import Final
+import logging
+from typing import Final, override
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
@@ -15,18 +14,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     UV_INDEX,
     EntityCategory,
+    UnitOfConductivity,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
@@ -38,6 +37,11 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
+
 
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
@@ -57,11 +61,45 @@ _IMPERIAL: Final = (
 )
 
 
+_RAIN_COUNT_SENSORS_STATE_CLASS_MAPPING: Final = {
+    "eventrainin": SensorStateClass.TOTAL_INCREASING,
+    "hourlyrainin": None,
+    "totalrainin": SensorStateClass.TOTAL_INCREASING,
+    "dailyrainin": SensorStateClass.TOTAL_INCREASING,
+    "weeklyrainin": SensorStateClass.TOTAL_INCREASING,
+    "monthlyrainin": SensorStateClass.TOTAL_INCREASING,
+    "yearlyrainin": SensorStateClass.TOTAL_INCREASING,
+    "last24hrainin": None,
+    "eventrainmm": SensorStateClass.TOTAL_INCREASING,
+    "hourlyrainmm": None,
+    "totalrainmm": SensorStateClass.TOTAL_INCREASING,
+    "dailyrainmm": SensorStateClass.TOTAL_INCREASING,
+    "weeklyrainmm": SensorStateClass.TOTAL_INCREASING,
+    "monthlyrainmm": SensorStateClass.TOTAL_INCREASING,
+    "yearlyrainmm": SensorStateClass.TOTAL_INCREASING,
+    "last24hrainmm": None,
+    "erain_piezo": SensorStateClass.TOTAL_INCREASING,
+    "hrain_piezo": None,
+    "drain_piezo": SensorStateClass.TOTAL_INCREASING,
+    "wrain_piezo": SensorStateClass.TOTAL_INCREASING,
+    "mrain_piezo": SensorStateClass.TOTAL_INCREASING,
+    "yrain_piezo": SensorStateClass.TOTAL_INCREASING,
+    "last24hrain_piezo": None,
+    "erain_piezomm": SensorStateClass.TOTAL_INCREASING,
+    "hrain_piezomm": None,
+    "drain_piezomm": SensorStateClass.TOTAL_INCREASING,
+    "wrain_piezomm": SensorStateClass.TOTAL_INCREASING,
+    "mrain_piezomm": SensorStateClass.TOTAL_INCREASING,
+    "yrain_piezomm": SensorStateClass.TOTAL_INCREASING,
+    "last24hrain_piezomm": None,
+}
+
+
 ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.HUMIDITY: SensorEntityDescription(
         key="HUMIDITY",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.DEGREE: SensorEntityDescription(
@@ -84,19 +122,19 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.PM25: SensorEntityDescription(
         key="PM25",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.PM10: SensorEntityDescription(
         key="PM10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.BATTERY_PERCENTAGE: SensorEntityDescription(
         key="BATTERY_PERCENTAGE",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -111,7 +149,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
         key="CO2_PPM",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LUX: SensorEntityDescription(
@@ -175,11 +213,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_KM",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_MILES",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -223,13 +263,19 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.PERCENTAGE: SensorEntityDescription(
         key="PERCENTAGE",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.SOIL_MOISTURE: SensorEntityDescription(
         key="SOIL_MOISTURE",
         device_class=SensorDeviceClass.MOISTURE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.SOIL_EC: SensorEntityDescription(
+        key="SOIL_EC",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
@@ -246,13 +292,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.PM1: SensorEntityDescription(
         key="PM1",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.PM4: SensorEntityDescription(
         key="PM4",
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -285,15 +331,15 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Only total rain needs state class for long-term statistics
-        if sensor.key in (
-            "totalrainin",
-            "totalrainmm",
+        if sensor.stype in (
+            EcoWittSensorTypes.RAIN_COUNT_INCHES,
+            EcoWittSensorTypes.RAIN_COUNT_MM,
         ):
-            description = dataclasses.replace(
-                description,
-                state_class=SensorStateClass.TOTAL_INCREASING,
-            )
+            if sensor.key not in _RAIN_COUNT_SENSORS_STATE_CLASS_MAPPING:
+                _LOGGER.warning("Unknown rain count sensor: %s", sensor.key)
+                return
+            state_class = _RAIN_COUNT_SENSORS_STATE_CLASS_MAPPING[sensor.key]
+            description = dataclasses.replace(description, state_class=state_class)
 
         async_add_entities([EcowittSensorEntity(sensor, description)])
 
@@ -316,6 +362,7 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.ecowitt.value

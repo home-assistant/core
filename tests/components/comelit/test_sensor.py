@@ -3,12 +3,18 @@
 from unittest.mock import AsyncMock, patch
 
 from aiocomelit.api import (
-    AlarmDataObject,
     ComelitSerialBridgeObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
-from aiocomelit.const import OTHER, WATT, AlarmAreaState, AlarmZoneState
+from aiocomelit.const import (
+    ALARM_AREA,
+    ALARM_ZONE,
+    OTHER,
+    WATT,
+    AlarmAreaState,
+    AlarmZoneState,
+)
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
@@ -56,8 +62,8 @@ async def test_sensor_state_unknown(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == AlarmZoneState.REST.value
 
-    vedo_query = AlarmDataObject(
-        alarm_areas={
+    vedo_query = {
+        ALARM_AREA: {
             0: ComelitVedoAreaObject(
                 index=0,
                 name="Area0",
@@ -74,7 +80,7 @@ async def test_sensor_state_unknown(
                 human_status=AlarmAreaState.UNKNOWN,
             )
         },
-        alarm_zones={
+        ALARM_ZONE: {
             0: ComelitVedoZoneObject(
                 index=0,
                 name="Zone0",
@@ -83,7 +89,7 @@ async def test_sensor_state_unknown(
                 human_status=AlarmZoneState.UNKNOWN,
             )
         },
-    )
+    }
 
     mock_vedo.get_all_areas_and_zones.return_value = vedo_query
 
@@ -160,7 +166,7 @@ async def test_vedo_sensor_dynamic(
 
     entity_id_2 = "sensor.zone1"
 
-    mock_vedo.get_all_areas_and_zones.return_value["alarm_zones"] = {
+    mock_vedo.get_all_areas_and_zones.return_value[ALARM_ZONE] = {
         0: ComelitVedoZoneObject(
             index=0,
             name="Zone0",

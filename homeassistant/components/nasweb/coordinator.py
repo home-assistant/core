@@ -1,13 +1,11 @@
 """Message routing coordinators for handling NASweb push notifications."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
@@ -23,11 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 
 KEY_INPUTS = "inputs"
 KEY_OUTPUTS = "outputs"
+KEY_THERMOSTAT = "thermostat"
 KEY_ZONES = "zones"
 
 
 class NotificationCoordinator:
-    """Coordinator redirecting push notifications for this integration to appropriate NASwebCoordinator."""
+    """Coordinator redirecting push notifications for this integration.
+
+    Redirects to appropriate NASwebCoordinator.
+    """
 
     def __init__(self) -> None:
         """Initialize coordinator."""
@@ -104,6 +106,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_THERMOSTAT: self.webio_api.thermostat,
             KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(data)
@@ -113,6 +116,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
         return self._last_update is not None
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -160,11 +164,15 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             self.async_update_listeners()
 
     def _schedule_last_update_check(self) -> None:
-        """Schedule a task to trigger entities state update after `STATUS_UPDATE_MAX_TIME_INTERVAL`.
+        """Schedule a task to trigger entities state update.
 
-        This method schedules a task (`_handle_max_update_interval`) to be executed after
-        `STATUS_UPDATE_MAX_TIME_INTERVAL` seconds without status update, which enables entities
-        to change their state to unavailable. After each status update this task is rescheduled.
+        Triggers after `STATUS_UPDATE_MAX_TIME_INTERVAL`.
+        This method schedules a task
+        (`_handle_max_update_interval`) to be executed after
+        `STATUS_UPDATE_MAX_TIME_INTERVAL` seconds without
+        status update, which enables entities to change their
+        state to unavailable. After each status update this
+        task is rescheduled.
         """
         self._async_unsub_last_update_check()
         now = self._hass.loop.time()
@@ -199,6 +207,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_THERMOSTAT: self.webio_api.thermostat,
             KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(new_data)

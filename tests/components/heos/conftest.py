@@ -1,7 +1,5 @@
 """Configuration for HEOS tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
@@ -26,7 +24,6 @@ from pyheos import (
     const,
 )
 import pytest
-import pytest_asyncio
 
 from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -81,7 +78,7 @@ def new_heos_mock_fixture(controller: MockHeos) -> Iterator[Mock]:
         yield new_mock
 
 
-@pytest_asyncio.fixture(name="controller", autouse=True)
+@pytest.fixture(name="controller", autouse=True)
 async def controller_fixture(
     players: dict[int, HeosPlayer],
     favorites: dict[int, MediaItem],

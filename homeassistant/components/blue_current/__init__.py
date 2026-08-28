@@ -1,7 +1,5 @@
 """The Blue Current integration."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 from typing import Any
@@ -149,7 +147,8 @@ class Connector:
         """Update the charge point data."""
         charge_point = self.charge_points[evse_id]
         if update_type == CHARGEPOINT_SETTINGS:
-            # Update the plug and charge object. The library parses this object to a bool instead of an object.
+            # Update the plug and charge object. The library
+            # parses this object to a bool instead of an object.
             plug_and_charge = charge_point.get(PLUG_AND_CHARGE)
             if plug_and_charge is not None:
                 plug_and_charge[VALUE] = data[PLUG_AND_CHARGE]
@@ -181,7 +180,8 @@ class Connector:
                     await self.client.connect(self.on_data, self.on_open)
                 except RequestLimitReached:
                     LOGGER.warning(
-                        "Request limit reached. reconnecting at 00:00 (Europe/Amsterdam)"
+                        "Request limit reached. reconnecting at"
+                        " 00:00 (Europe/Amsterdam)"
                     )
                     delay = self.client.get_next_reset_delta().seconds
                 except WebsocketError:

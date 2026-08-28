@@ -3,8 +3,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -25,7 +25,6 @@
       'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -35,8 +34,9 @@
 # name: test_update_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -72,20 +73,20 @@
 # name: test_update_state[Air Purifier 131s][update.air_purifier_131s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 131s Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.air_purifier_131s_firmware',
@@ -99,8 +100,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -121,7 +122,6 @@
       'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -131,8 +131,9 @@
 # name: test_update_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -150,6 +151,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -168,20 +170,20 @@
 # name: test_update_state[Air Purifier 200s][update.air_purifier_200s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 200s Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.air_purifier_200s_firmware',
@@ -195,8 +197,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -217,7 +219,6 @@
       'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -227,8 +228,9 @@
 # name: test_update_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -246,6 +248,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -264,20 +267,20 @@
 # name: test_update_state[Air Purifier 400s][update.air_purifier_400s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 400s Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.air_purifier_400s_firmware',
@@ -291,8 +294,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -313,7 +316,6 @@
       'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -323,8 +325,9 @@
 # name: test_update_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -342,6 +345,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -360,20 +364,20 @@
 # name: test_update_state[Air Purifier 600s][update.air_purifier_600s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 600s Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.air_purifier_600s_firmware',
@@ -383,12 +387,206 @@
     'state': 'on',
   })
 # ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'update',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'update.cs158_af_air_fryer_cooking_firmware',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Firmware',
+      'options': dict({
+      }),
+      'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+      'original_icon': None,
+      'original_name': 'Firmware',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'CS158Cooking',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][update.cs158_af_air_fryer_cooking_firmware]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.cs158_af_air_fryer_cooking_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'update',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'update.cs158_af_air_fryer_standby_firmware',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Firmware',
+      'options': dict({
+      }),
+      'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+      'original_icon': None,
+      'original_name': 'Firmware',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'CS158Standby',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][update.cs158_af_air_fryer_standby_firmware]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.cs158_af_air_fryer_standby_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_update_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -409,7 +607,6 @@
       'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -419,8 +616,9 @@
 # name: test_update_state[Dimmable Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -438,6 +636,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -456,25 +655,35 @@
 # name: test_update_state[Dimmable Light][update.dimmable_light_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'firmware',
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Dimmable Light Firmware',
-      'supported_features': <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Light Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.dimmable_light_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Dimmer Switch][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -495,7 +704,6 @@
       'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -505,8 +713,9 @@
 # name: test_update_state[Dimmer Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -524,6 +733,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -542,20 +752,20 @@
 # name: test_update_state[Dimmer Switch][update.dimmer_switch_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Dimmer Switch Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Switch Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.dimmer_switch_firmware',
@@ -569,8 +779,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -591,7 +801,6 @@
       'model_id': None,
       'name': 'Humidifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -601,8 +810,9 @@
 # name: test_update_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -620,6 +830,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -638,20 +849,20 @@
 # name: test_update_state[Humidifier 200s][update.humidifier_200s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Humidifier 200s Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.humidifier_200s_firmware',
@@ -665,8 +876,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -687,7 +898,6 @@
       'model_id': None,
       'name': 'Humidifier 6000s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -697,8 +907,9 @@
 # name: test_update_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -716,6 +927,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -734,20 +946,20 @@
 # name: test_update_state[Humidifier 6000s][update.humidifier_6000s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Humidifier 6000s Firmware',
-      'in_progress': False,
-      'installed_version': None,
-      'latest_version': None,
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.humidifier_6000s_firmware',
@@ -761,8 +973,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -783,7 +995,6 @@
       'model_id': None,
       'name': 'Humidifier 600S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -793,8 +1004,9 @@
 # name: test_update_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -812,6 +1024,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -830,20 +1043,20 @@
 # name: test_update_state[Humidifier 600S][update.humidifier_600s_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Humidifier 600S Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.humidifier_600s_firmware',
@@ -857,8 +1070,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -879,7 +1092,6 @@
       'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -889,8 +1101,9 @@
 # name: test_update_state[Outlet][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -908,6 +1121,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -926,20 +1140,20 @@
 # name: test_update_state[Outlet][update.outlet_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Outlet Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.outlet_firmware',
@@ -953,8 +1167,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -975,7 +1189,6 @@
       'model_id': None,
       'name': 'SmartTowerFan',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -985,8 +1198,9 @@
 # name: test_update_state[SmartTowerFan][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1004,6 +1218,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1022,20 +1237,20 @@
 # name: test_update_state[SmartTowerFan][update.smarttowerfan_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'SmartTowerFan Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.smarttowerfan_firmware',
@@ -1049,8 +1264,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1071,7 +1286,6 @@
       'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1081,8 +1295,9 @@
 # name: test_update_state[Temperature Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1100,6 +1315,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1118,20 +1334,20 @@
 # name: test_update_state[Temperature Light][update.temperature_light_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Temperature Light Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Light Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.temperature_light_firmware',
@@ -1145,8 +1361,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1167,7 +1383,6 @@
       'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1177,8 +1392,9 @@
 # name: test_update_state[Wall Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1196,6 +1412,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1214,20 +1431,20 @@
 # name: test_update_state[Wall Switch][update.wall_switch_firmware]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Wall Switch Firmware',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Switch Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.wall_switch_firmware',
@@ -1235,5 +1452,103 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# ---
+# name: test_update_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CoreBreeze 432S][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'update',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'update.corebreeze_432s_firmware',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Firmware',
+      'options': dict({
+      }),
+      'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+      'original_icon': None,
+      'original_name': 'Firmware',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'corebreeze432s',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CoreBreeze 432S][update.corebreeze_432s_firmware]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.corebreeze_432s_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

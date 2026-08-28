@@ -53,7 +53,7 @@ async def test_async_setup_entry_not_ready(
     config_entry_with_uid: MockConfigEntry,
     mocked_plug_legacy_no_auth: MagicMock,
 ) -> None:
-    """Test that it throws ConfigEntryNotReady when exception occurs during legacy setup."""
+    """Test it throws ConfigEntryNotReady when exception occurs during legacy setup."""
     with patch_setup(mocked_plug_legacy_no_auth):
         await hass.config_entries.async_setup(config_entry_with_uid.entry_id)
     assert config_entry_with_uid.state is ConfigEntryState.SETUP_RETRY
@@ -68,7 +68,9 @@ async def test_device_info(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.connections == {("mac", "aa:bb:cc:dd:ee:ff")}
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

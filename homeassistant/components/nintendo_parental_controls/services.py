@@ -3,12 +3,13 @@
 from enum import StrEnum
 import logging
 
+from pynintendoparental.device import Device
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_BONUS_TIME, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry
@@ -20,6 +21,7 @@ class NintendoParentalServices(StrEnum):
     """Store keys for Nintendo Parental services."""
 
     ADD_BONUS_TIME = "add_bonus_time"
+    UPDATE_PIN_CODE = "update_pin_code"
 
 
 @callback
@@ -38,34 +40,60 @@ def async_setup_services(
             }
         ),
     )
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        NintendoParentalServices.UPDATE_PIN_CODE,
+        async_update_pin_code,
+        vol.Schema(
+            {
+                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(CONF_PIN): cv.string,
+            }
+        ),
+    )
 
 
-def _get_nintendo_device_id(dev: dr.DeviceEntry) -> str | None:
-    """Get the Nintendo device ID from a device entry."""
-    for identifier in dev.identifiers:
+def _get_nintendo_device(hass: HomeAssistant, device_id: str) -> Device:
+    """Get the Nintendo device from a device ID."""
+    config_entry: NintendoParentalControlsConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id
+    )
+    nintendo_device_id = None
+    for identifier in device.identifiers:
         if identifier[0] == DOMAIN:
-            return identifier[1].split("_")[-1]
-    return None
+            nintendo_device_id = identifier[1].split("_")[-1]
+            break
+    if (
+        nintendo_device_id
+        and nintendo_device_id in config_entry.runtime_data.api.devices
+    ):
+        return config_entry.runtime_data.api.devices[nintendo_device_id]
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_device",
+    )
 
 
 async def async_add_bonus_time(call: ServiceCall) -> None:
     """Add bonus time to a device."""
-    config_entry: NintendoParentalControlsConfigEntry | None
     data = call.data
     device_id: str = data[ATTR_DEVICE_ID]
     bonus_time: int = data[ATTR_BONUS_TIME]
-    device = dr.async_get(call.hass).async_get(device_id)
-    if device is None:
-        raise HomeAssistantError(
+    device = _get_nintendo_device(call.hass, device_id)
+    return await device.add_extra_time(bonus_time)
+
+
+async def async_update_pin_code(call: ServiceCall) -> None:
+    """Update the PIN code for a device."""
+    data = call.data
+    device_id: str = data[ATTR_DEVICE_ID]
+    new_pin: str = data[CONF_PIN]
+    if not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 8:
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_not_found",
+            translation_key="invalid_pin_length",
         )
-    for entry_id in device.config_entries:
-        config_entry = call.hass.config_entries.async_get_entry(entry_id)
-        if config_entry is not None and config_entry.domain == DOMAIN:
-            break
-    nintendo_device_id = _get_nintendo_device_id(device)
-    if config_entry and nintendo_device_id:
-        await config_entry.runtime_data.api.devices[nintendo_device_id].add_extra_time(
-            bonus_time
-        )
+    device = _get_nintendo_device(call.hass, device_id)
+    return await device.set_new_pin(new_pin)

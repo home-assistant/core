@@ -1,10 +1,9 @@
 """Sensor platform for Airobot thermostat."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from pyairobotrest.models import ThermostatStatus
 
@@ -15,9 +14,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     EntityCategory,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -28,6 +26,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
 from . import AirobotConfigEntry
+from .coordinator import AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 0
@@ -53,12 +52,13 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         value_fn=lambda status: status.temp_air,
     ),
     AirobotSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.hum_air,
     ),
@@ -74,7 +74,7 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
     AirobotSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.co2,
         supported_fn=lambda status: status.has_co2_sensor,
@@ -136,7 +136,7 @@ class AirobotSensor(AirobotEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: AirobotDataUpdateCoordinator,
         description: AirobotSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -145,6 +145,7 @@ class AirobotSensor(AirobotEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.status)

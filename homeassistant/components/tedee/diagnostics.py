@@ -1,7 +1,5 @@
 """Diagnostics support for tedee."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -10,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from . import TedeeConfigEntry
 
 TO_REDACT = {
-    "lock_id",
+    "id",
 }
 
 

@@ -1,7 +1,5 @@
 """Code to handle the Plenticore API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 
@@ -31,6 +29,7 @@ class PlenticoreDataFormatter:
         15: "Shutdown",
         16: "ImproperDcVoltage",
         17: "ESB",
+        18: "DcCheck",
     }
 
     EM_STATES = {
@@ -52,7 +51,7 @@ class PlenticoreDataFormatter:
         """Return the given state value as rounded integer."""
         try:
             return round(float(state))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return state
 
     @staticmethod
@@ -67,7 +66,7 @@ class PlenticoreDataFormatter:
                 int_value = round(value)
 
             return str(int_value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return ""
 
     @staticmethod
@@ -75,7 +74,7 @@ class PlenticoreDataFormatter:
         """Return the given state value as float rounded to three decimal places."""
         try:
             return round(float(state), 3)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return state
 
     @staticmethod
@@ -83,7 +82,7 @@ class PlenticoreDataFormatter:
         """Return the given state value as energy value, scaled to kWh."""
         try:
             return round(float(state) / 1000, 1)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return state
 
     @staticmethod
@@ -91,7 +90,7 @@ class PlenticoreDataFormatter:
         """Return a readable string of the inverter state."""
         try:
             value = int(state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return state
 
         return PlenticoreDataFormatter.INVERTER_STATES.get(value)
@@ -101,7 +100,7 @@ class PlenticoreDataFormatter:
         """Return a readable state of the energy manager."""
         try:
             value = int(state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return state
 
         return PlenticoreDataFormatter.EM_STATES.get(value)

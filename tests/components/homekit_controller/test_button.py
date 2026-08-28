@@ -50,7 +50,8 @@ async def test_press_button(
         hass, get_next_aid(), create_switch_with_setup_button
     )
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # button.
     button = Helper(
         hass,
         "button.testdevice_setup",
@@ -81,7 +82,8 @@ async def test_ecobee_clear_hold_press_button(
         hass, get_next_aid(), create_switch_with_ecobee_clear_hold_button
     )
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # button.
     clear_hold = Helper(
         hass,
         "button.testdevice_clear_hold",

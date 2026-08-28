@@ -1,5 +1,6 @@
 """Test numbers for ToGrill integration."""
 
+from datetime import timedelta
 from unittest.mock import Mock
 
 from bleak.exc import BleakError
@@ -9,6 +10,7 @@ from togrill_bluetooth.exceptions import BaseError
 from togrill_bluetooth.packets import (
     PacketA0Notify,
     PacketA6Write,
+    PacketA7Write,
     PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
@@ -75,6 +77,150 @@ async def test_setup(
         mock_client.mocked_notify(packet)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "packets",
+    [
+        pytest.param([], id="no_data"),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            id="ambient_with_range",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=None,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            id="ambient_wrong_alarm_type",
+        ),
+    ],
+)
+async def test_setup_with_ambient(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_entry_with_ambient: MockConfigEntry,
+    mock_client: Mock,
+    packets,
+) -> None:
+    """Test the numbers with ambient sensor enabled."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry_with_ambient, [Platform.NUMBER])
+
+    for packet in packets:
+        mock_client.mocked_notify(packet)
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_entry_with_ambient.entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    ("packets", "entity_id", "value", "write_packet"),
+    [
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_minimum_temperature",
+            10.0,
+            PacketA300Write(probe=0, minimum=10.0, maximum=300.0),
+            id="ambient_minimum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_minimum_temperature",
+            0.0,
+            PacketA300Write(probe=0, minimum=None, maximum=300.0),
+            id="ambient_minimum_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_maximum_temperature",
+            350.0,
+            PacketA300Write(probe=0, minimum=5.0, maximum=350.0),
+            id="ambient_maximum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_maximum_temperature",
+            0.0,
+            PacketA300Write(probe=0, minimum=5.0, maximum=None),
+            id="ambient_maximum_clear",
+        ),
+    ],
+)
+async def test_set_ambient_number(
+    hass: HomeAssistant,
+    mock_entry_with_ambient: MockConfigEntry,
+    mock_client: Mock,
+    packets,
+    entity_id,
+    value,
+    write_packet,
+) -> None:
+    """Test setting ambient temperature numbers."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry_with_ambient, [Platform.NUMBER])
+
+    for packet in packets:
+        mock_client.mocked_notify(packet)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={
+            ATTR_VALUE: value,
+        },
+        target={
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+
+    mock_client.write.assert_any_call(write_packet)
 
 
 @pytest.mark.parametrize(
@@ -179,6 +325,32 @@ async def test_setup(
             15,
             PacketA6Write(temperature_unit=None, alarm_interval=15),
             id="alarm_interval",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.probe_1_timer",
+            10.0,
+            PacketA7Write(probe=1, time=timedelta(minutes=10), unknown=1),
+            id="timer",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.probe_1_timer",
+            0.0,
+            PacketA7Write(probe=1, time=timedelta(0), unknown=0),
+            id="timer_stop",
         ),
     ],
 )
@@ -298,3 +470,28 @@ async def test_set_number_disconnected(
             },
             blocking=True,
         )
+
+
+async def test_timer_readback(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+) -> None:
+    """Test that a running timer is reported back in minutes."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
+
+    mock_client.mocked_notify(
+        PacketA8Notify(
+            probe=1,
+            alarm_type=None,
+            time=timedelta(minutes=30),
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.probe_1_timer")
+    assert state is not None
+    assert float(state.state) == 30.0

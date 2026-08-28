@@ -14,7 +14,7 @@
   "firmwareVersion": "1.10.0",
   "zwavePlusVersion": 2,
   "name": "Window Blind Controller",
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/snapshot/build/node_modules/@zwave-js/config/config/devices/0x045a/Z-CM-V01.json",
     "isEmbedded": true,

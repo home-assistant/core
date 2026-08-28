@@ -1,8 +1,8 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-from __future__ import annotations
-
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
+from typing import override
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -20,20 +21,24 @@ REQUESTED_DATA_SETS = [
     DataSetType.HOURLY_FORECAST,
 ]
 
-STALE_DATA_THRESHOLD = timedelta(hours=1)
+STALE_DATA_THRESHOLD = timedelta(hours=1).total_seconds()
+
+HOURLY_FORECAST_DURATION = timedelta(days=7)
+
+type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
 
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
-    last_updated_at: datetime | None = None
+    last_updated_at: float | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WeatherKitConfigEntry,
         client: WeatherKitApiClient,
     ) -> None:
         """Initialize."""
@@ -61,26 +66,30 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
+    @override
     async def _async_update_data(self):
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
+            dt_now = dt_util.utcnow()
             updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
+                hourly_start=dt_now,
+                hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None
-                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD
+                and time.time() - self.last_updated_at > STALE_DATA_THRESHOLD
             ):
                 raise UpdateFailed(exception) from exception
 
             LOGGER.debug("Using stale data because update failed: %s", exception)
             return self.data
         else:
-            self.last_updated_at = datetime.now()
+            self.last_updated_at = time.time()
             return updated_data

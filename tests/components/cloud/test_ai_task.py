@@ -1,7 +1,5 @@
 """Tests for the Home Assistant Cloud AI Task entity."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,6 +16,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task, conversation
+from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.ai_task import (
     CloudAITaskEntity,
     async_prepare_image_generation_attachments,
@@ -38,7 +37,7 @@ def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudAITaskEntity:
     )
     cloud.is_logged_in = True
     cloud.valid_subscription = True
-    entry = MockConfigEntry(domain="cloud")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entity = CloudAITaskEntity(cloud, entry)
     entity.entity_id = "ai_task.cloud_ai_task"

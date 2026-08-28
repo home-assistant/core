@@ -1,7 +1,5 @@
 """Update helpers for Supervisor."""
 
-from __future__ import annotations
-
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
     HomeAssistantUpdateOptions,

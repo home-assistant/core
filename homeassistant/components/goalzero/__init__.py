@@ -1,7 +1,5 @@
 """The Goal Zero Yeti integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from goalzero import Yeti, exceptions

@@ -1,7 +1,5 @@
 """Diagnostics support for derivative."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry

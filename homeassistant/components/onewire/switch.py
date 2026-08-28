@@ -1,10 +1,8 @@
 """Support for 1-Wire environment switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import os
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -204,16 +202,19 @@ class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         if (state := self._state) is None:
             return None
         return state == "1"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._write_value(b"1")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._write_value(b"0")

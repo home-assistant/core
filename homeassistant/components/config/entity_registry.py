@@ -1,7 +1,5 @@
 """HTTP views to interact with the entity registry."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -11,13 +9,12 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
-from homeassistant.helpers.entity_component import async_get_entity_suggested_object_id
 from homeassistant.helpers.json import json_dumps
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +31,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
     websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_get_settings)
+    websocket_api.async_register_command(hass, websocket_update_settings)
     return True
 
 
@@ -155,8 +154,8 @@ def websocket_get_entities(
     {
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
+        vol.Optional("aliases"): [vol.Any(str, None)],
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
         # Categories is a mapping of key/value (scope/category_id) pairs.
         # If passed in, we update/adjust only the provided scope(s).
@@ -212,7 +211,7 @@ def websocket_update_entity(
         )
         return
 
-    changes = {}
+    changes: dict[str, Any] = {}
 
     for key in (
         "area_id",
@@ -227,12 +226,19 @@ def websocket_update_entity(
             changes[key] = msg[key]
 
     if "aliases" in msg:
-        # Convert aliases to a set
-        changes["aliases"] = set(msg["aliases"])
+        # Sanitize aliases by removing:
+        #   - Trailing and leading whitespace characters in the individual aliases
+        #   - Empty strings
+        changes["aliases"] = aliases = []
+        for alias in msg["aliases"]:
+            if alias is None:
+                aliases.append(er.COMPUTED_NAME)
+            elif alias := alias.strip():
+                aliases.append(alias)
 
     if "labels" in msg:
-        # Convert labels to a set
-        changes["labels"] = set(msg["labels"])
+        labels = set(msg["labels"])
+        changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
@@ -349,27 +355,59 @@ def websocket_get_automatic_entity_ids(
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
             continue
-        try:
-            suggested = async_get_entity_suggested_object_id(hass, entity_id)
-        except HomeAssistantError as err:
-            # This is raised if the entity has no object.
-            _LOGGER.debug(
-                "Unable to get suggested object ID for %s, entity ID: %s (%s)",
-                entry.entity_id,
-                entity_id,
-                err,
-            )
-            automatic_entity_ids[entity_id] = None
-            continue
-        suggested_entity_id = registry.async_generate_entity_id(
-            entry.domain,
-            suggested or f"{entry.platform}_{entry.unique_id}",
-            current_entity_id=entity_id,
+        new_entity_id = registry.async_regenerate_entity_id(
+            entry,
             reserved_entity_ids=reserved_entity_ids,
         )
-        automatic_entity_ids[entity_id] = suggested_entity_id
-        reserved_entity_ids.add(suggested_entity_id)
+        automatic_entity_ids[entity_id] = new_entity_id
+        reserved_entity_ids.add(new_entity_id)
 
     connection.send_message(
         websocket_api.result_message(msg["id"], automatic_entity_ids)
     )
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "config/entity_registry/settings/get"}
+)
+@callback
+def websocket_get_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry settings command."""
+    registry = er.async_get(hass)
+    connection.send_result(
+        msg["id"], {"entity_id_parts": registry.settings.entity_id_parts}
+    )
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/settings/update",
+        vol.Optional("entity_id_parts"): vol.Any(
+            None,
+            vol.All(
+                [vol.Coerce(er.EntityNamePart)],
+                vol.Unique(),
+                vol.Contains(er.EntityNamePart.ENTITY),
+                vol.Contains(er.EntityNamePart.DEVICE),
+            ),
+        ),
+    }
+)
+@callback
+def websocket_update_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle update entity registry settings command."""
+    registry = er.async_get(hass)
+    changes: dict[str, Any] = {}
+    if "entity_id_parts" in msg:
+        changes["entity_id_parts"] = msg["entity_id_parts"]
+    settings = registry.async_update_settings(**changes)
+    connection.send_result(msg["id"], {"entity_id_parts": settings.entity_id_parts})

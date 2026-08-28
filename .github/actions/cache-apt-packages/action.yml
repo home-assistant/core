@@ -1,0 +1,52 @@
+name: Cache and install APT packages
+description: >-
+  Wraps awalsh128/cache-apt-pkgs-action with the workarounds Home Assistant CI
+  needs. Removes the conflicting Microsoft apt source before any apt run, and
+  points the dynamic linker at the host's multiarch lib subdirectories so
+  shared libraries that rely on update-alternatives or postinst-managed paths
+  (eg libblas, liblapack pulled in by ffmpeg) stay reachable since the upstream
+  action does not execute postinst scripts on cache restore.
+
+inputs:
+  packages:
+    description: Space-delimited list of apt packages to install.
+    required: true
+  version:
+    description: Cache version. Bump to invalidate the cache.
+    required: false
+    default: "1"
+  execute_install_scripts:
+    description: >-
+      Pass-through to awalsh128/cache-apt-pkgs-action. Postinst scripts are not
+      actually cached by the upstream action, so this is largely a no-op today.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Remove conflicting Microsoft apt source
+      shell: bash
+      run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+    - name: Install apt packages via cache
+      uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+      with:
+        packages: ${{ inputs.packages }}
+        version: ${{ inputs.version }}
+        execute_install_scripts: ${{ inputs.execute_install_scripts }}
+    - name: Refresh dynamic linker cache
+      shell: bash
+      run: |
+        # awalsh128/cache-apt-pkgs-action does not run postinst scripts on
+        # cache restore, so update-alternatives symlinks (eg the one libblas
+        # creates at /usr/lib/<multiarch>/libblas.so.3) are never produced.
+        # Add every /usr/lib/<multiarch> subdirectory that holds shared
+        # libraries to the ldconfig search path so the dynamic linker still
+        # finds them.  Use dpkg-architecture to derive the host's multiarch
+        # tuple so this works on non-x86_64 runners too.
+        multiarch="$(dpkg-architecture -qDEB_HOST_MULTIARCH)"
+        find "/usr/lib/${multiarch}" -mindepth 2 -maxdepth 2 \
+          -name '*.so.*' -printf '%h\n' \
+          | sort -u \
+          | sudo tee /etc/ld.so.conf.d/zzz-cache-apt-extras.conf > /dev/null
+        sudo ldconfig

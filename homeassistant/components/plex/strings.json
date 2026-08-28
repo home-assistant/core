@@ -29,18 +29,20 @@
       },
       "select_server": {
         "data": {
-          "server": "Server"
+          "server_id": "Server"
         },
         "description": "Multiple servers available, select one:",
         "title": "Select Plex server"
       },
       "user": {
-        "description": "Continue to {plex_server_url} to link a Plex server."
-      },
-      "user_advanced": {
-        "data": {
-          "setup_method": "Setup method"
+        "description": "A Plex server can be set up in Home Assistant in two different ways.\n\nYou can link your Plex account by logging in via plex.tv, which will automatically discover and connect your servers, or you can manually enter the server address and token.",
+        "menu_options": {
+          "manual_setup": "Enter manually",
+          "website_auth": "Link Plex account (recommended)"
         }
+      },
+      "website_auth": {
+        "description": "Something went wrong connecting to Plex. Please try again."
       }
     }
   },

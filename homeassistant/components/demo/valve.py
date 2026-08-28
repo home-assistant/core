@@ -1,16 +1,17 @@
 """Demo valve platform that implements valves."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature, ValveState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
+
+from . import DOMAIN
 
 OPEN_CLOSE_DELAY = 2  # Used to give a realistic open/close experience in frontend
 
@@ -23,10 +24,10 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoValve("Front Garden", ValveState.OPEN),
-            DemoValve("Orchard", ValveState.CLOSED),
-            DemoValve("Back Garden", ValveState.CLOSED, position=70),
-            DemoValve("Trees", ValveState.CLOSED, position=30),
+            DemoValve("valve_1", "Front Garden", ValveState.OPEN),
+            DemoValve("valve_2", "Orchard", ValveState.CLOSED),
+            DemoValve("valve_3", "Back Garden", ValveState.CLOSED, position=70),
+            DemoValve("valve_4", "Trees", ValveState.CLOSED, position=30),
         ]
     )
 
@@ -34,17 +35,24 @@ async def async_setup_entry(
 class DemoValve(ValveEntity):
     """Representation of a Demo valve."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         state: str,
         moveable: bool = True,
         position: int | None = None,
     ) -> None:
         """Initialize the valve."""
-        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
         if moveable:
             self._attr_supported_features = (
                 ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
@@ -65,25 +73,30 @@ class DemoValve(ValveEntity):
         )
 
     @property
+    @override
     def current_valve_position(self) -> int:
         """Return current position of valve."""
         return self._position
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return true if valve is opening."""
         return self._state == ValveState.OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return true if valve is closing."""
         return self._state == ValveState.CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if valve is closed."""
         return self._state == ValveState.CLOSED
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         self._state = ValveState.OPENING
@@ -92,6 +105,7 @@ class DemoValve(ValveEntity):
         self._state = ValveState.OPEN
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
         self._state = ValveState.CLOSING
@@ -100,6 +114,7 @@ class DemoValve(ValveEntity):
         self._state = ValveState.CLOSED
         self.async_write_ha_state()
 
+    @override
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
         self._state = ValveState.OPEN if self._position > 0 else ValveState.CLOSED
@@ -108,6 +123,7 @@ class DemoValve(ValveEntity):
             self._unsub_listener_valve = None
         self.async_write_ha_state()
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         if position == self._position:

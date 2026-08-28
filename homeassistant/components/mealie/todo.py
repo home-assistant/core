@@ -1,8 +1,15 @@
 """Todo platform for Mealie."""
 
-from __future__ import annotations
+from dataclasses import asdict
+from typing import override
 
-from aiomealie import MealieError, MutateShoppingItem, ShoppingItem, ShoppingList
+from aiomealie import (
+    MealieConnectionError,
+    MealieError,
+    MutateShoppingItem,
+    ShoppingItem,
+    ShoppingList,
+)
 
 from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
@@ -11,7 +18,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -116,10 +123,12 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         return self.coordinator.data[self._shopping_list_id].items
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of To-do items."""
         return [_convert_api_item(item) for item in self.shopping_items]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the list."""
         position = 0
@@ -145,6 +154,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item on the list."""
         list_items = self.shopping_items
@@ -196,6 +206,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the list."""
         try:
@@ -212,6 +223,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
@@ -262,6 +274,22 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if shopping list no longer available."""
         return super().available and self._shopping_list_id in self.coordinator.data
+
+    async def async_get_shopping_list_items(self) -> ServiceResponse:
+        """Get structured shopping list items."""
+        client = self.coordinator.client
+        try:
+            shopping_items = await client.get_shopping_items(self._shopping_list_id)
+        except MealieConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
+        return {
+            "name": self.shopping_list.name,
+            "items": [asdict(item) for item in shopping_items.items],
+        }

@@ -9,15 +9,14 @@ Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ADVANCE_WARNING_SENSOR,
@@ -95,15 +94,29 @@ class DwdWeatherWarningsSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
+    def _filter_expired_warnings(
+        self, warnings: list[dict[str, Any]] | None
+    ) -> list[dict[str, Any]]:
+        if warnings is None:
+            return []
+
+        now = dt_util.utcnow()
+        return [warning for warning in warnings if warning[API_ATTR_WARNING_END] > now]
+
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            return self.coordinator.api.current_warning_level
+            warnings = self.coordinator.api.current_warnings
+        else:
+            warnings = self.coordinator.api.expected_warnings
 
-        return self.coordinator.api.expected_warning_level
+        warnings = self._filter_expired_warnings(warnings)
+        return max((w.get(API_ATTR_WARNING_LEVEL, 0) for w in warnings), default=0)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         data = {
@@ -117,6 +130,7 @@ class DwdWeatherWarningsSensor(
         else:
             searched_warnings = self.coordinator.api.expected_warnings
 
+        searched_warnings = self._filter_expired_warnings(searched_warnings)
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
         for i, warning in enumerate(searched_warnings, 1):
@@ -140,6 +154,7 @@ class DwdWeatherWarningsSensor(
         return data
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.coordinator.api.data_valid

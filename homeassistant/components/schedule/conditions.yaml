@@ -1,0 +1,19 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: schedule
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+is_off: *condition_common
+is_on: *condition_common

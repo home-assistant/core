@@ -1,13 +1,11 @@
 """Backup platform for the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 from http import HTTPStatus
 import logging
 import random
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from hass_nabucasa import Cloud, CloudApiError, CloudApiNonRetryableError, CloudError
@@ -18,6 +16,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
@@ -80,6 +79,7 @@ class CloudBackupAgent(BackupAgent):
         self._cloud = cloud
         self._hass = hass
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -101,11 +101,13 @@ class CloudBackupAgent(BackupAgent):
 
         return ChunkAsyncStreamIterator(content)
 
+    @override
     async def async_upload_backup(
         self,
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -136,6 +138,7 @@ class CloudBackupAgent(BackupAgent):
                     base64md5hash=base64md5hash,
                     metadata=metadata,
                     size=size,
+                    on_progress=on_progress,
                 )
                 break
             except CloudApiNonRetryableError as err:
@@ -169,6 +172,7 @@ class CloudBackupAgent(BackupAgent):
                 )
                 await asyncio.sleep(retry_timer)
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -187,6 +191,7 @@ class CloudBackupAgent(BackupAgent):
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to delete backup") from err
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups = await self._async_list_backups()
@@ -202,6 +207,7 @@ class CloudBackupAgent(BackupAgent):
         _LOGGER.debug("Cloud backups: %s", backups)
         return backups
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

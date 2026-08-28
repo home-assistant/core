@@ -1,9 +1,7 @@
 """Config flow for Tuya."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from tuya_sharing import LoginControl
 import voluptuous as vol
@@ -37,6 +35,7 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.__login_control = LoginControl()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -17,7 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 GATEWAY_IMPORT_PATH = "homeassistant.components.screenlogic.ScreenLogicGateway"
-GATEWAY_DISCOVERY_IMPORT_PATH = "homeassistant.components.screenlogic.coordinator.async_discover_gateways_by_unique_id"
+GATEWAY_DISCOVERY_IMPORT_PATH = (
+    "homeassistant.components.screenlogic"
+    ".coordinator.async_discover_gateways_by_unique_id"
+)
 
 
 def num_key_string_to_int(data: dict) -> dict:

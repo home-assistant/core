@@ -45,7 +45,7 @@
     {
       "label": "Ruff",
       "type": "shell",
-      "command": "pre-commit run ruff-check --all-files",
+      "command": "prek run ruff-check --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -57,9 +57,9 @@
       "problemMatcher": []
     },
     {
-      "label": "Pre-commit",
+      "label": "Prek",
       "type": "shell",
-      "command": "pre-commit run --show-diff-on-failure",
+      "command": "prek run --show-diff-on-failure",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -120,7 +120,7 @@
     {
       "label": "Generate Requirements",
       "type": "shell",
-      "command": "./script/gen_requirements_all.py",
+      "command": "${command:python.interpreterPath} -m script.gen_requirements_all",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -132,7 +132,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Install all Requirements",
+      "label": "Install all production Requirements",
       "type": "shell",
       "command": "uv pip install -r requirements_all.txt",
       "group": {
@@ -146,9 +146,9 @@
       "problemMatcher": []
     },
     {
-      "label": "Install all Test Requirements",
+      "label": "Install all (test & production) Requirements",
       "type": "shell",
-      "command": "uv pip install -r requirements.txt -r requirements_test_all.txt",
+      "command": "uv pip install -r requirements_all.txt -r requirements_test.txt",
       "group": {
         "kind": "build",
         "isDefault": true

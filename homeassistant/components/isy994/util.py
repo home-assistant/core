@@ -1,11 +1,9 @@
 """ISY utils."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
-from .const import _LOGGER
+from .const import LOGGER
 from .models import IsyConfigEntry
 
 
@@ -31,7 +29,7 @@ def _async_cleanup_registry_entries(hass: HomeAssistant, entry: IsyConfigEntry) 
         if entity_registry.async_is_registered(entities[entity]):
             entity_registry.async_remove(entities[entity])
 
-    _LOGGER.debug(
+    LOGGER.debug(
         ("Cleaning up ISY entities: removed %s extra entities for config entry %s"),
         len(extra_entities),
         entry.entry_id,

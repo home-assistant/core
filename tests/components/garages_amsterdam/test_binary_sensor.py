@@ -1,7 +1,5 @@
 """Tests the binary sensors provided by the Garages Amsterdam integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion

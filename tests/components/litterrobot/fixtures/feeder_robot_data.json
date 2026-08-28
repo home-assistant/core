@@ -1,0 +1,70 @@
+{
+  "id": 1,
+  "name": "Test",
+  "serial": "RF1C000001",
+  "timezone": "America/Denver",
+  "isEighthCupEnabled": false,
+  "created_at": "2021-12-15T06:45:00.000000+00:00",
+  "household_id": 1,
+  "state": {
+    "id": 1,
+    "info": {
+      "level": 2,
+      "power": true,
+      "online": true,
+      "acPower": true,
+      "dcPower": false,
+      "gravity": false,
+      "chuteFull": false,
+      "fwVersion": "1.0.0",
+      "onBoarded": true,
+      "unitMeals": 0,
+      "motorJammed": false,
+      "chuteFullExt": false,
+      "panelLockout": false,
+      "unitPortions": 0,
+      "autoNightMode": true,
+      "mealInsertSize": 1
+    },
+    "updated_at": "2022-09-08T15:07:00.000000+00:00",
+    "active_schedule": {
+      "id": "1",
+      "name": "Feeding",
+      "meals": [
+        {
+          "id": "1",
+          "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          "hour": 6,
+          "name": "Breakfast",
+          "skip": null,
+          "minute": 30,
+          "paused": false,
+          "portions": 3,
+          "mealNumber": 1,
+          "scheduleId": null
+        }
+      ],
+      "created_at": "2021-12-17T07:07:31.047747+00:00"
+    }
+  },
+  "feeding_snack": [
+    { "timestamp": "2022-09-04T03:03:00.000000+00:00", "amount": 0.125 },
+    { "timestamp": "2022-08-30T16:34:00.000000+00:00", "amount": 0.25 }
+  ],
+  "feeding_meal": [
+    {
+      "timestamp": "2022-09-08T18:00:00.000000+00:00",
+      "amount": 0.125,
+      "meal_name": "Lunch",
+      "meal_number": 2,
+      "meal_total_portions": 2
+    },
+    {
+      "timestamp": "2022-09-08T12:00:00.000000+00:00",
+      "amount": 0.125,
+      "meal_name": "Breakfast",
+      "meal_number": 1,
+      "meal_total_portions": 1
+    }
+  ]
+}

@@ -1,7 +1,5 @@
 """Support for ZoneMinder binary sensors."""
 
-from __future__ import annotations
-
 from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.binary_sensor import (

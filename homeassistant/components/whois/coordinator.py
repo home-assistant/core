@@ -1,0 +1,57 @@
+"""DataUpdateCoordinator for the Whois integration."""
+
+from functools import partial
+from typing import override
+
+from whoisdomain import Domain, query as whoisdomain_query
+from whoisdomain.exceptions import (
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
+)
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+
+type WhoisConfigEntry = ConfigEntry[WhoisCoordinator]
+
+
+class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
+    """Class to manage fetching WHOIS data."""
+
+    config_entry: WhoisConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: WhoisConfigEntry) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> Domain | None:
+        """Query WHOIS for domain information."""
+        try:
+            return await self.hass.async_add_executor_job(
+                partial(
+                    whoisdomain_query,
+                    self.config_entry.data[CONF_DOMAIN],
+                    whoisOnly=True,
+                )
+            )
+        except UnknownTldError as ex:
+            raise UpdateFailed("Could not set up whois, TLD is unknown") from ex
+        except (
+            FailedParsingWhoisOutputError,
+            WhoisCommandFailedError,
+            UnknownDateFormatError,
+        ) as ex:
+            raise UpdateFailed("An error occurred during WHOIS lookup") from ex

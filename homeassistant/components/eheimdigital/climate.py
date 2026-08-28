@@ -1,6 +1,6 @@
 """EHEIM Digital climate."""
 
-from typing import Any
+from typing import Any, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
@@ -35,7 +35,7 @@ async def async_setup_entry(
     entry: EheimDigitalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the callbacks for the coordinator so climate entities can be added as devices are found."""
+    """Set up callbacks to add climate entities as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
@@ -83,6 +83,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
         self._async_update_attrs()
 
     @exception_handler
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         if preset_mode in HEATER_PRESET_TO_HEATER_MODE:
@@ -91,12 +92,14 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
             )
 
     @exception_handler
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new temperature."""
         if ATTR_TEMPERATURE in kwargs:
             await self._device.set_target_temperature(kwargs[ATTR_TEMPERATURE])
 
     @exception_handler
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the heating mode."""
         match hvac_mode:
@@ -105,6 +108,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
             case HVACMode.AUTO:
                 await self._device.set_active(active=True)
 
+    @override
     def _async_update_attrs(self) -> None:
         if self._device.temperature_unit == HeaterUnit.CELSIUS:
             self._attr_min_temp = 18

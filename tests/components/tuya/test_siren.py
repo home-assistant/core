@@ -1,10 +1,9 @@
 """Test Tuya siren platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
@@ -18,12 +17,19 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN]):
+        yield
+
+
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -38,7 +44,54 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["sp_sdd5f5f2dl5wydjf"],
+)
+@pytest.mark.parametrize(
+    ("updates", "expected_state", "last_reported"),
+    [
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"basic_wdr": False}, "off", "2024-01-01T00:00:20+00:00"),
+        # Update with dpcode - state should change, last_reported advances
+        ({"siren_switch": True}, "on", "2024-01-01T00:01:00+00:00"),
+        # Update with multiple properties including dpcode - state should change
+        (
+            {"basic_wdr": False, "siren_switch": True},
+            "on",
+            "2024-01-01T00:01:00+00:00",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2024-01-01")
+async def test_selective_state_update(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+    updates: dict[str, Any],
+    expected_state: str,
+    last_reported: str,
+) -> None:
+    """Test skip_update/last_reported."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await check_selective_state_update(
+        hass,
+        mock_device,
+        notification_helper,
+        freezer,
+        entity_id="siren.c9_siren",
+        dpcode="siren_switch",
+        initial_state="off",
+        updates=updates,
+        expected_state=expected_state,
+        last_reported=last_reported,
+    )
+
+
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sp_sdd5f5f2dl5wydjf"],
@@ -65,7 +118,7 @@ async def test_action(
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test siren action."""
-    entity_id = "siren.c9"
+    entity_id = "siren.c9_siren"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)

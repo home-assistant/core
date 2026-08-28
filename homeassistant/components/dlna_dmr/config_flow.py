@@ -1,13 +1,11 @@
 """Config flow for DLNA DMR."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -78,12 +76,14 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Define the config flow to handle options."""
         return DlnaDmrOptionsFlowHandler()
 
+    @override
     async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user.
 
@@ -138,6 +138,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -170,6 +171,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_ignore(
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:

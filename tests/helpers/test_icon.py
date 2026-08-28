@@ -41,7 +41,7 @@ def test_battery_icon() -> None:
         else:
             postfix_charging = "-charging-100"
         if 5 < level < 95:
-            postfix = f"-{int(round(level / 10 - 0.01)) * 10}"
+            postfix = f"-{round(level / 10 - 0.01) * 10}"
         elif level <= 5:
             postfix = "-alert"
         else:
@@ -188,10 +188,12 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=icon.build_resources,
     ) as mock_build:
         load1 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 3  # entity_component, services, triggers
+        # conditions, entity_component, services, triggers
+        assert len(mock_build.mock_calls) == 4
 
         load2 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 3  # entity_component, services, triggers
+        # conditions, entity_component, services, triggers
+        assert len(mock_build.mock_calls) == 4
 
         assert load1 == load2
 

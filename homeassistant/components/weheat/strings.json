@@ -3,16 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_devices_found": "Could not find any heat pumps on this account",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "You can only reauthenticate this account with the same user."
     },
     "create_entry": {
@@ -83,8 +76,35 @@
       "electricity_used": {
         "name": "Electricity used"
       },
+      "electricity_used_cooling": {
+        "name": "Electricity used cooling"
+      },
+      "electricity_used_defrost": {
+        "name": "Electricity used defrost"
+      },
+      "electricity_used_dhw": {
+        "name": "Electricity used DHW"
+      },
+      "electricity_used_heating": {
+        "name": "Electricity used heating"
+      },
+      "electricity_used_standby": {
+        "name": "Electricity used standby"
+      },
       "energy_output": {
         "name": "Total energy output"
+      },
+      "energy_output_cooling": {
+        "name": "Energy output cooling"
+      },
+      "energy_output_defrost": {
+        "name": "Energy output defrost"
+      },
+      "energy_output_dhw": {
+        "name": "Energy output DHW"
+      },
+      "energy_output_heating": {
+        "name": "Energy output heating"
       },
       "heat_pump_state": {
         "state": {

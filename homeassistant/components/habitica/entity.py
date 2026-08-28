@@ -1,8 +1,6 @@
 """Base entity for Habitica."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from habiticalib import ContentData, UserData
@@ -10,6 +8,7 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_URL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,14 +58,14 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
         )
 
         if subentry:
-            self._attr_device_info.update(
-                DeviceInfo(
-                    via_device=(
-                        (
-                            DOMAIN,
-                            f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
-                        )
-                    )
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (
+                        DOMAIN,
+                        f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
+                    ),
+                    config_entry_id=coordinator.config_entry.entry_id,
                 )
             )
 
@@ -91,6 +90,7 @@ class HabiticaPartyMemberBase(HabiticaBase):
         super().__init__(coordinator, entity_description, subentry)
 
     @property
+    @override
     def user(self) -> UserData | None:
         """Return the user data of the party member."""
         if TYPE_CHECKING:
@@ -99,11 +99,13 @@ class HabiticaPartyMemberBase(HabiticaBase):
         return self.party_coordinator.data.members.get(UUID(self.subentry.unique_id))
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
 
         return super().available and self.user is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -137,6 +139,10 @@ class HabiticaPartyBase(CoordinatorEntity[HabiticaPartyCoordinator]):
             model=NAME,
             name=coordinator.data.party.summary,
             identifiers={(DOMAIN, unique_id)},
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, config_entry.unique_id),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
         self.content = content

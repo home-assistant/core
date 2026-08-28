@@ -99,7 +99,7 @@ async def test_create_entry_gps(
     hass.states.async_set(
         DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LONGITUDE: 7.610263},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -114,7 +114,7 @@ async def test_create_entry_gps(
     hass.states.async_set(
         DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     mock_dwdwfsapi.__bool__.return_value = False
@@ -143,7 +143,7 @@ async def test_create_entry_gps(
 async def test_config_flow_already_configured(
     hass: HomeAssistant, mock_dwdwfsapi: MagicMock
 ) -> None:
-    """Test aborting, if the warncell ID / name is already configured during the config."""
+    """Test aborting if the warncell ID / name is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=DEMO_CONFIG_ENTRY_REGION.copy(),

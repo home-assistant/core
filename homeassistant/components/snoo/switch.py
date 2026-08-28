@@ -1,10 +1,8 @@
 """Support for Snoo Switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from python_snoo.containers import SnooData, SnooDevice
 from python_snoo.exceptions import SnooCommandException
@@ -68,10 +66,12 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
     entity_description: SnooSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
@@ -85,9 +85,10 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_failed",
-                translation_placeholders={"name": str(self.name), "status": "on"},
+                translation_placeholders={"name": str(self.name)},
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         try:
@@ -101,5 +102,5 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_failed",
-                translation_placeholders={"name": str(self.name), "status": "off"},
+                translation_placeholders={"name": str(self.name)},
             ) from err

@@ -3,7 +3,7 @@
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from hko import HKO, HKOError
@@ -94,6 +94,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=15),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via HKO library."""
         try:
@@ -119,7 +120,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for item in data[API_TEMPERATURE][API_DATA]
                     if item[API_PLACE] == self.location
                 ),
-                0,
+                None,
             ),
         }
 

@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from bleak_retry_connector import bleak_manager
 from dbus_fast.aio import message_bus
 from habluetooth import BaseHaRemoteScanner
 import habluetooth.util as habluetooth_utils
@@ -19,12 +18,6 @@ from . import (
     FakeScanner,
     patch_bleak_backend_type,
 )
-
-
-@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
-def disable_bluez_manager_socket():
-    """Mock the bluez manager socket."""
-    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
 
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")
@@ -45,7 +38,7 @@ def disable_bluetooth_auto_recovery():
 def mock_operating_system_85():
     """Mock running Home Assistant Operating system 8.5."""
     with (
-        patch("homeassistant.components.hassio.is_hassio", return_value=True),
+        patch("homeassistant.helpers.hassio.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.get_os_info",
             return_value={
@@ -67,7 +60,7 @@ def mock_operating_system_85():
 def mock_operating_system_90():
     """Mock running Home Assistant Operating system 9.0."""
     with (
-        patch("homeassistant.components.hassio.is_hassio", return_value=True),
+        patch("homeassistant.helpers.hassio.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.get_os_info",
             return_value={

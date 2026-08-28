@@ -1,9 +1,8 @@
 """Data update coordinator for the EHEIM Digital integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
+from typing import override
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
@@ -23,6 +22,8 @@ from .const import DOMAIN, LOGGER
 type AsyncSetupDeviceEntitiesCallback = Callable[[dict[str, EheimDigitalDevice]], None]
 
 type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
+
+MAIN_DEVICE_TIMEOUT = 2
 
 
 class EheimDigitalUpdateCoordinator(
@@ -44,6 +45,7 @@ class EheimDigitalUpdateCoordinator(
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.main_device_added_event = asyncio.Event()
+        self.main_device_complete_event = asyncio.Event()
         self.hub = EheimDigitalHub(
             host=self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
@@ -53,6 +55,7 @@ class EheimDigitalUpdateCoordinator(
             main_device_added_event=self.main_device_added_event,
         )
         self.known_devices: set[str] = set()
+        self.incomplete_devices: set[str] = set()
         self.platform_callbacks: set[AsyncSetupDeviceEntitiesCallback] = set()
 
     def add_platform_callback(
@@ -70,26 +73,55 @@ class EheimDigitalUpdateCoordinator(
         This function is called from the library whenever a new device is added.
         """
 
-        if device_address not in self.known_devices:
+        if self.hub.devices[device_address].is_missing_data:
+            self.incomplete_devices.add(device_address)
+            return
+
+        if (
+            device_address not in self.known_devices
+            or device_address in self.incomplete_devices
+        ):
             for platform_callback in self.platform_callbacks:
                 platform_callback({device_address: self.hub.devices[device_address]})
+            if device_address in self.incomplete_devices:
+                self.incomplete_devices.remove(device_address)
+
+    def _async_check_main_device_complete(self) -> None:
+        """Flag the main device as ready once the rest of its data arrived."""
+        if (main := self.hub.main) is not None and not main.is_missing_data:
+            self.main_device_complete_event.set()
 
     async def _async_receive_callback(self) -> None:
+        self._async_check_main_device_complete()
+        if any(self.incomplete_devices):
+            for device_address in self.incomplete_devices.copy():
+                if not self.hub.devices[device_address].is_missing_data:
+                    await self._async_device_found(
+                        device_address, EheimDeviceType.VERSION_UNDEFINED
+                    )
         self.async_set_updated_data(self.hub.devices)
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self.hub.connect()
-            async with asyncio.timeout(2):
+            async with asyncio.timeout(MAIN_DEVICE_TIMEOUT):
                 # This event gets triggered when the first message is received from
                 # the device, it contains the data necessary to create the main device.
                 # This removes the race condition where the main device is accessed
                 # before the response from the device is parsed.
                 await self.main_device_added_event.wait()
             await self.hub.update()
+            async with asyncio.timeout(MAIN_DEVICE_TIMEOUT):
+                # A device is announced as soon as it is seen, but the packet
+                # carrying the values its device entry is built from can arrive
+                # after that, so wait for the rest of the main device as well.
+                self._async_check_main_device_complete()
+                await self.main_device_complete_event.wait()
         except (TimeoutError, EheimDigitalClientError) as err:
             raise ConfigEntryNotReady from err
 
+    @override
     async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
         try:
             await self.hub.update()

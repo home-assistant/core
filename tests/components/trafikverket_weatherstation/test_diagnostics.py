@@ -1,7 +1,5 @@
 """Test Trafikverket Weatherstation diagnostics."""
 
-from __future__ import annotations
-
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant

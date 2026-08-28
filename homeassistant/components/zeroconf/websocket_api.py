@@ -1,7 +1,5 @@
 """The zeroconf integration websocket apis."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial
@@ -17,8 +15,8 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
-from .const import DOMAIN, REQUEST_TIMEOUT
-from .discovery import DATA_DISCOVERY, ZeroconfDiscovery
+from .const import DATA_DISCOVERY, DATA_INSTANCE, REQUEST_TIMEOUT
+from .discovery import ZeroconfDiscovery
 from .models import HaAsyncZeroconf
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,7 +155,7 @@ async def ws_subscribe_discovery(
 ) -> None:
     """Handle subscribe advertisements websocket command."""
     discovery = hass.data[DATA_DISCOVERY]
-    aiozc: HaAsyncZeroconf = hass.data[DOMAIN]
+    aiozc = hass.data[DATA_INSTANCE]
     await _DiscoverySubscription(
         hass, connection, msg["id"], aiozc, discovery
     ).async_start()

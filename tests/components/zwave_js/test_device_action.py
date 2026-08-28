@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+from probatio import to_field_list
 import pytest
-import voluptuous_serialize
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node
@@ -38,7 +38,9 @@ async def test_get_actions(
     node = lock_schlage_be469
     driver = client.driver
     assert driver
-    device = device_registry.async_get_device(identifiers={get_device_id(driver, node)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
     assert device
     binary_sensor = entity_registry.async_get(
         "binary_sensor.touchscreen_deadbolt_low_battery_level"
@@ -105,8 +107,8 @@ async def test_get_actions(
         assert action in actions
 
     # Test that we don't return actions for a controller node
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, client.driver.controller.nodes[1]), integration.entry_id
     )
     assert device
     assert (
@@ -126,7 +128,9 @@ async def test_get_actions_meter(
     node = aeon_smart_switch_6
     driver = client.driver
     assert driver
-    device = device_registry.async_get_device(identifiers={get_device_id(driver, node)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
     assert device
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device.id
@@ -148,7 +152,9 @@ async def test_actions(
     driver = client.driver
     assert driver
     device_id = get_device_id(driver, node)
-    device = device_registry.async_get_device(identifiers={device_id})
+    device = device_registry.async_get_device_by_identifier(
+        device_id, integration.entry_id
+    )
     assert device
 
     climate = entity_registry.async_get("climate.z_wave_thermostat")
@@ -302,7 +308,9 @@ async def test_actions_legacy(
     driver = client.driver
     assert driver
     device_id = get_device_id(driver, node)
-    device = device_registry.async_get_device(identifiers={device_id})
+    device = device_registry.async_get_device_by_identifier(
+        device_id, integration.entry_id
+    )
     assert device
 
     climate = entity_registry.async_get("climate.z_wave_thermostat")
@@ -360,7 +368,9 @@ async def test_actions_multiple_calls(
     driver = client.driver
     assert driver
     device_id = get_device_id(driver, node)
-    device = device_registry.async_get_device({device_id})
+    device = device_registry.async_get_device_by_identifier(
+        device_id, integration.entry_id
+    )
     assert device
     climate = entity_registry.async_get("climate.z_wave_thermostat")
     assert climate
@@ -410,7 +420,9 @@ async def test_lock_actions(
     driver = client.driver
     assert driver
     device_id = get_device_id(driver, node)
-    device = device_registry.async_get_device(identifiers={device_id})
+    device = device_registry.async_get_device_by_identifier(
+        device_id, integration.entry_id
+    )
     assert device
     lock = entity_registry.async_get("lock.touchscreen_deadbolt")
     assert lock
@@ -484,7 +496,9 @@ async def test_reset_meter_action(
     driver = client.driver
     assert driver
     device_id = get_device_id(driver, node)
-    device = device_registry.async_get_device(identifiers={device_id})
+    device = device_registry.async_get_device_by_identifier(
+        device_id, integration.entry_id
+    )
     assert device
     sensor = entity_registry.async_get("sensor.smart_switch_6_electric_consumed_kwh")
     assert sensor
@@ -530,8 +544,9 @@ async def test_get_action_capabilities(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected action capabilities."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_radio_thermostat_ct100_plus),
+        integration.entry_id,
     )
     assert device
 
@@ -547,7 +562,7 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -583,29 +598,29 @@ async def test_get_action_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     cc_options = [
-        (133, "Association"),
-        (89, "Association Group Information"),
-        (128, "Battery"),
-        (129, "Clock"),
-        (112, "Configuration"),
-        (90, "Device Reset Locally"),
-        (122, "Firmware Update Meta Data"),
-        (135, "Indicator"),
-        (114, "Manufacturer Specific"),
-        (96, "Multi Channel"),
-        (142, "Multi Channel Association"),
-        (49, "Multilevel Sensor"),
-        (115, "Powerlevel"),
-        (68, "Thermostat Fan Mode"),
-        (69, "Thermostat Fan State"),
-        (64, "Thermostat Mode"),
-        (66, "Thermostat Operating State"),
-        (67, "Thermostat Setpoint"),
-        (134, "Version"),
-        (94, "Z-Wave Plus Info"),
+        ("133", "Association"),
+        ("89", "Association Group Information"),
+        ("128", "Battery"),
+        ("129", "Clock"),
+        ("112", "Configuration"),
+        ("90", "Device Reset Locally"),
+        ("122", "Firmware Update Meta Data"),
+        ("135", "Indicator"),
+        ("114", "Manufacturer Specific"),
+        ("96", "Multi Channel"),
+        ("142", "Multi Channel Association"),
+        ("49", "Multilevel Sensor"),
+        ("115", "Powerlevel"),
+        ("68", "Thermostat Fan Mode"),
+        ("69", "Thermostat Fan State"),
+        ("64", "Thermostat Mode"),
+        ("66", "Thermostat Operating State"),
+        ("67", "Thermostat Setpoint"),
+        ("134", "Version"),
+        ("94", "Z-Wave Plus Info"),
     ]
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -642,18 +657,18 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
             "name": "value",
             "required": True,
             "options": [
-                (0, "Disabled"),
-                (1, "0.5° F"),
-                (2, "1.0° F"),
-                (3, "1.5° F"),
-                (4, "2.0° F"),
+                ("0", "Disabled"),
+                ("1", "0.5° F"),
+                ("2", "1.0° F"),
+                ("3", "1.5° F"),
+                ("4", "2.0° F"),
             ],
             "type": "select",
         }
@@ -675,7 +690,7 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -730,7 +745,7 @@ async def test_get_action_capabilities_lock_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"type": "string", "name": "code_slot", "required": True}]
 
@@ -747,7 +762,7 @@ async def test_get_action_capabilities_lock_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {"type": "string", "name": "code_slot", "required": True},
@@ -767,7 +782,9 @@ async def test_get_action_capabilities_meter_triggers(
     node = aeon_smart_switch_6
     driver = client.driver
     assert driver
-    device = device_registry.async_get_device(identifiers={get_device_id(driver, node)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
     assert device
     capabilities = await device_action.async_get_action_capabilities(
         hass,
@@ -781,7 +798,7 @@ async def test_get_action_capabilities_meter_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"type": "string", "name": "value", "optional": True, "required": False}]
 
@@ -824,7 +841,9 @@ async def test_unavailable_entity_actions(
     node = lock_schlage_be469
     driver = client.driver
     assert driver
-    device = device_registry.async_get_device(identifiers={get_device_id(driver, node)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
     assert device
     binary_sensor = entity_registry.async_get(entity_id_unavailable)
     assert binary_sensor
@@ -835,3 +854,22 @@ async def test_unavailable_entity_actions(
         action.get("entity_id") == entity_id_unavailable for action in actions
     )
     assert not any(action.get("entity_id") == binary_sensor.id for action in actions)
+
+
+def test_action_schema_coerces_string_command_class() -> None:
+    """Test that SET_VALUE action schema accepts both int and string command_class."""
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_action.SET_VALUE_SCHEMA(
+            {
+                "device_id": "device123",
+                "domain": DOMAIN,
+                "type": "set_value",
+                "command_class": command_class_value,
+                "property": "targetMode",
+                "value": 255,
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

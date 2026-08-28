@@ -1,12 +1,10 @@
 """A sensor that monitors trends in other components."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Mapping
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 import numpy as np
 import voluptuous as vol
@@ -21,7 +19,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -35,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -114,7 +112,6 @@ async def async_setup_platform(
     for sensor_name, sensor_config in config[CONF_SENSORS].items():
         entities.append(
             SensorTrend(
-                hass,
                 name=sensor_config.get(CONF_FRIENDLY_NAME, sensor_name),
                 entity_id=sensor_config[CONF_ENTITY_ID],
                 attribute=sensor_config.get(CONF_ATTRIBUTE),
@@ -144,7 +141,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             SensorTrend(
-                hass,
                 name=entry.title,
                 entity_id=entry.options[CONF_ENTITY_ID],
                 attribute=entry.options.get(CONF_ATTRIBUTE),
@@ -156,6 +152,7 @@ async def async_setup_entry(
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,
+                device=async_entity_id_to_device(hass, entry.options[CONF_ENTITY_ID]),
             )
         ]
     )
@@ -170,7 +167,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         entity_id: str,
@@ -183,6 +179,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         unique_id: str | None = None,
         device_class: BinarySensorDeviceClass | None = None,
         sensor_entity_id: str | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._entity_id = entity_id
@@ -196,20 +193,17 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            entity_id,
-        )
+        self.device_entry = device
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._attr_name,
             ATTR_GRADIENT: self._gradient,
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,
@@ -217,6 +211,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Complete device setup after being added to hass."""
 

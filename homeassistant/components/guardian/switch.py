@@ -1,10 +1,8 @@
 """Switches for the Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aioguardian import Client
 
@@ -139,22 +137,26 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self._client = data.client
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.off_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.on_fn(self._client)

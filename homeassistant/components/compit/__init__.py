@@ -10,7 +10,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 
 

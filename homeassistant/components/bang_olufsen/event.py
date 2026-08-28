@@ -1,8 +1,6 @@
 """Event entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from mozart_api.models import PairedRemote
 
@@ -16,20 +14,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .const import (
-    BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
-    BEO_REMOTE_KEYS,
-    BEO_REMOTE_SUBMENU_CONTROL,
-    BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DOMAIN,
-    MANUFACTURER,
     BeoModel,
     WebsocketNotification,
 )
 from .entity import BeoEntity
-from .util import get_device_buttons, get_remotes
+from .util import get_device_buttons, get_remote_keys, get_remotes
 
 PARALLEL_UPDATES = 0
 
@@ -40,56 +33,34 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Event entities from config entry."""
-    entities: list[BeoEvent] = []
-
-    async_add_entities(
+    entities: list[BeoEvent] = [
         BeoButtonEvent(config_entry, button_type)
         for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
-    )
+    ]
 
     # Check for connected Beoremote One
     remotes = await get_remotes(config_entry.runtime_data.client)
 
     for remote in remotes:
-        # Add Light keys
         entities.extend(
             [
-                BeoRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                )
-                for key_type in BEO_REMOTE_KEYS
-            ]
-        )
-
-        # Add Control keys
-        entities.extend(
-            [
-                BeoRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                )
-                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+                BeoRemoteKeyEvent(config_entry, remote, key_type)
+                for key_type in get_remote_keys()
             ]
         )
 
     # If the remote is no longer available, then delete the device.
-    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # The remote may appear as being available to the device
+    # after it has been unpaired on the remote
     # As it has to be removed from the device on the app.
 
     device_registry = dr.async_get(hass)
-    devices = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry.entry_id
-    )
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     for device in devices:
         if device.model == BeoModel.BEOREMOTE_ONE and device.serial_number not in {
             remote.serial_number for remote in remotes
         }:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
     async_add_entities(new_entities=entities)
 
@@ -127,6 +98,7 @@ class BeoButtonEvent(BeoEvent):
 
         self._button_type = button_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket button events."""
         self.async_on_remove(
@@ -165,12 +137,6 @@ class BeoRemoteKeyEvent(BeoEvent):
         self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
-            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
-            model=BeoModel.BEOREMOTE_ONE,
-            serial_number=remote.serial_number,
-            sw_version=remote.app_version,
-            manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, self._unique_id),
         )
 
         # Make the native key name Home Assistant compatible
@@ -178,6 +144,7 @@ class BeoRemoteKeyEvent(BeoEvent):
 
         self._key_type = key_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket Beoremote One key events."""
         self.async_on_remove(

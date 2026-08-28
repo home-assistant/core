@@ -1,9 +1,7 @@
 """Config flow for Vodafone Station integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiovodafone import exceptions as aiovodafone_exceptions
 from aiovodafone.models import get_device_type, init_device_class
@@ -22,13 +20,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
-    _LOGGER,
     CONF_DEVICE_DETAILS,
     DEFAULT_HOST,
     DEFAULT_USERNAME,
     DEVICE_TYPE,
     DEVICE_URL,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import VodafoneConfigEntry
 from .utils import async_client_session
@@ -83,12 +81,14 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VodafoneConfigEntry,
     ) -> VodafoneStationOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VodafoneStationOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,7 +114,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         except aiovodafone_exceptions.ModelNotSupported:
             errors["base"] = "model_not_supported"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
@@ -150,7 +150,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiovodafone_exceptions.CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -193,7 +193,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_update_reload_and_abort(

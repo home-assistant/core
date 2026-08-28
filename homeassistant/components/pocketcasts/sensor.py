@@ -1,9 +1,8 @@
 """Support for Pocket Casts."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pycketcasts import pocketcasts
 import voluptuous as vol
@@ -59,11 +58,13 @@ class PocketCastsSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return SENSOR_NAME
 
     @property
+    @override
     def native_value(self):
         """Return the sensor state."""
         return self._state

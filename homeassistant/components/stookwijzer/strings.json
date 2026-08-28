@@ -28,14 +28,8 @@
     }
   },
   "exceptions": {
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "no_data_received": {
       "message": "No data received from Stookwijzer."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     }
   },
   "issues": {

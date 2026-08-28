@@ -267,7 +267,7 @@ async def test_subscribe_connection_allocations_invalid_config_entry_id(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test bluetooth subscribe_connection_allocations for an invalid config entry id."""
+    """Test subscribe_connection_allocations, invalid entry."""
     client = await hass_ws_client()
     await client.send_json(
         {
@@ -461,7 +461,7 @@ async def test_subscribe_scanner_state(
         response = await client.receive_json()
     assert response["success"]
 
-    # Should receive initial state for existing scanner
+    # hci0 has passive_scan=False so AUTO falls back to ACTIVE.
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {

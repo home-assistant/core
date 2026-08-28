@@ -1,8 +1,6 @@
 """Light platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysaunum import SaunumException
 
@@ -14,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import LeilSaunaConfigEntry
 from .const import DOMAIN
 from .entity import LeilSaunaEntity
+
+if TYPE_CHECKING:
+    from .coordinator import LeilSaunaCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -35,17 +36,19 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
         # Override unique_id to differentiate from climate entity
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if light is on."""
         return self.coordinator.data.light_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         try:
@@ -58,6 +61,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         try:

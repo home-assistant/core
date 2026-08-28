@@ -1,7 +1,5 @@
 """Provides diagnostics for ZHA."""
 
-from __future__ import annotations
-
 import dataclasses
 from importlib.metadata import version
 from typing import Any
