@@ -142,6 +142,7 @@ class IseoLockEntity(LockEntity):
             )
         )
         self.async_on_remove(self._cancel_relock_task)
+        self.async_on_remove(self._cancel_initial_read)
 
         if self._entry.options.get(CONF_ENABLE_POLLING, False):
             self.async_on_remove(
@@ -314,8 +315,12 @@ class IseoLockEntity(LockEntity):
         # Checking done() rather than None: eagerly started tasks can finish
         # before the assignment below, which would leave a completed task here
         # forever and skip every retry.
-        if self._probed or (
-            self._initial_read is not None and not self._initial_read.done()
+        if (
+            self._probed
+            # A rejected identity does not recover on its own, so retrying only
+            # wakes the lock on every advertisement for a read that cannot work.
+            or self._identity_rejected
+            or (self._initial_read is not None and not self._initial_read.done())
         ):
             return
 
@@ -332,7 +337,6 @@ class IseoLockEntity(LockEntity):
             await self._poll_state()
         except Exception:
             _LOGGER.debug("Probing the lock failed; will retry", exc_info=True)
-        self.async_on_remove(self._cancel_initial_read)
 
     def _cancel_initial_read(self) -> None:
         """Cancel a pending first read."""

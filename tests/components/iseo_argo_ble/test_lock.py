@@ -527,3 +527,24 @@ async def test_probe_retries_when_the_first_read_fails(
     await _advertise(hass, door_closed=True)
 
     mock_iseo_client.read_state.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_probe_stops_retrying_a_rejected_identity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a rejected identity is not retried on every advertisement.
+
+    It cannot recover without re-enrolling, so retrying only wakes the lock.
+    """
+    mock_iseo_client.read_state.side_effect = IseoAuthError("rejected")
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.reset_mock()
+    await _advertise(hass, door_closed=True)
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.assert_not_called()
