@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -92,6 +92,7 @@ def mock_dsm_with_usb():
                 )
             ],
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.external_usb = Mock(

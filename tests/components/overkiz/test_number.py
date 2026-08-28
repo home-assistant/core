@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,7 +19,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, build_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+)
 
 from tests.common import snapshot_platform
 
@@ -42,6 +47,16 @@ COMFORT_ROOM_TEMPERATURE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "ovp://1234-5678-1698/374762#1",
     "number.maple_residence_terrace_radiator_comfort_room_temperature",
+)
+TOWEL_DRYER_BOOST_MODE_DURATION = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/5237136#1",
+    "number.my_home_bathroom_towel_dryer_boost_mode_duration",
+)
+TOWEL_DRYER_DRYING_DURATION = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/5237136#1",
+    "number.my_home_bathroom_towel_dryer_drying_duration",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -78,30 +93,72 @@ async def test_number_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("device", "value", "command_name"),
+    [
+        pytest.param(
+            EXPECTED_NUMBER_OF_SHOWER, 3, "setExpectedNumberOfShower", id="shower"
+        ),
+        pytest.param(
+            TOWEL_DRYER_BOOST_MODE_DURATION,
+            45,
+            "setTowelDryerBoostModeDuration",
+            id="towel_dryer_boost_mode_duration",
+        ),
+        pytest.param(
+            TOWEL_DRYER_DRYING_DURATION,
+            90,
+            "setDryingDuration",
+            id="towel_dryer_drying_duration",
+        ),
+    ],
+)
 async def test_number_set_value(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    value: int,
+    command_name: str,
 ) -> None:
     """Test setting a number value sends the correct command."""
-    await setup_overkiz_integration(fixture=EXPECTED_NUMBER_OF_SHOWER.fixture)
-
-    state = hass.states.get(EXPECTED_NUMBER_OF_SHOWER.entity_id)
-    assert state
-    assert state.state == "4"
+    await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: EXPECTED_NUMBER_OF_SHOWER.entity_id, ATTR_VALUE: 3},
+        {ATTR_ENTITY_ID: device.entity_id, ATTR_VALUE: value},
         blocking=True,
     )
 
     assert_command_call(
         mock_client,
-        device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
-        command_name="setExpectedNumberOfShower",
-        parameters=[3],
+        device_url=device.device_url,
+        command_name=command_name,
+        parameters=[value],
+    )
+
+
+async def test_number_inverted_memorized_position_set(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test that setting a cover's "My position" inverts before sending."""
+    await setup_overkiz_integration(fixture=OFFICE_BLINDS_MEMORIZED_POSITION.fixture)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id, ATTR_VALUE: 15},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=OFFICE_BLINDS_MEMORIZED_POSITION.device_url,
+        command_name="setMemorized1Position",
+        parameters=[85],
     )
 
 
@@ -136,8 +193,7 @@ async def test_number_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
                 device_states=[
                     {
@@ -172,8 +228,7 @@ async def test_number_unavailability(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+            device_unavailable_event(
                 device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
             )
         ],

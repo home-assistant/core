@@ -10,6 +10,7 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,6 +24,7 @@ FIXTURES = [
     "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
+    "aqara_shutter_switch_h2",
     "aqara_thermostat_w500",
     "aqara_u200",
     "atios_knx_bridge",
@@ -51,11 +53,13 @@ FIXTURES = [
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_storage",
+    "mock_chime",
     "mock_cooktop",
     "mock_dimmable_light",
     "mock_dimmable_plugin_unit",
     "mock_door_lock",
     "mock_door_lock_with_unbolt",
+    "mock_doorbell",
     "mock_extractor_hood",
     "mock_fan",
     "mock_flow_sensor",
@@ -78,6 +82,7 @@ FIXTURES = [
     "mock_pressure_sensor",
     "mock_pump",
     "mock_room_airconditioner",
+    "mock_soil_sensor",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",
@@ -104,6 +109,8 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "wago_home_blind_control",
+    "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
 ]
@@ -124,19 +131,19 @@ async def _setup_integration_with_nodes(
     hass: HomeAssistant,
     client: MagicMock,
     nodes: list[MatterNode],
-) -> MatterNode:
+) -> None:
     """Set up Matter integration with nodes."""
     client.get_nodes.return_value = nodes
 
     def _get_node(node_id: int) -> MatterNode:
         try:
-            next(node for node in nodes if node.node_id == node_id)
+            return next(node for node in nodes if node.node_id == node_id)
         except StopIteration as err:
             raise KeyError(f"Node with id {node_id} not found") from err
 
     client.get_node.side_effect = _get_node
     config_entry = MockConfigEntry(
-        domain="matter", data={"url": "http://mock-matter-server-url"}
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
     )
     config_entry.add_to_hass(hass)
 
@@ -209,15 +216,44 @@ async def trigger_subscription_callback(
     client: MagicMock,
     event: EventType = EventType.ATTRIBUTE_UPDATED,
     data: Any = None,
+    node_id: int | None = None,
+    attribute_path: str | None = None,
 ) -> None:
-    """Trigger a subscription callback."""
-    # trigger callback on all subscribers
+    """Trigger matching subscription callbacks or broadcast when filters are omitted."""
     for sub in client.subscribe_events.call_args_list:
-        callback = sub.kwargs["callback"]
-        event_filter = sub.kwargs.get("event_filter")
-        if event_filter in (None, event):
-            callback(event, data)
+        kwargs = sub.kwargs
+        if kwargs.get("event_filter") not in (None, event):
+            continue
+        if node_id is not None and kwargs.get("node_filter") not in (None, node_id):
+            continue
+        if attribute_path is not None and kwargs.get("attr_path_filter") not in (
+            None,
+            attribute_path,
+        ):
+            continue
+        kwargs["callback"](event, data)
     await hass.async_block_till_done()
+
+
+async def set_node_attribute_and_notify(
+    hass: HomeAssistant,
+    client: MagicMock,
+    node: MatterNode,
+    *,
+    endpoint: int,
+    cluster_id: int,
+    attribute_id: int,
+    value: Any,
+) -> None:
+    """Set a node attribute and fire the matching ATTRIBUTE_UPDATED subscription."""
+    set_node_attribute(node, endpoint, cluster_id, attribute_id, value)
+    await trigger_subscription_callback(
+        hass,
+        client,
+        data=value,
+        node_id=node.node_id,
+        attribute_path=f"{endpoint}/{cluster_id}/{attribute_id}",
+    )
 
 
 @cache

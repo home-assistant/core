@@ -3,7 +3,7 @@
 import logging
 from numbers import Number
 import re
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .config import HassioUpdateParametersDict
+from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
@@ -30,7 +30,6 @@ from .const import (
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -225,9 +224,7 @@ def websocket_update_config_info(
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
+    connection.send_result(msg["id"], async_get_update_options(hass))
 
 
 @callback
@@ -246,10 +243,23 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
+    entry = async_get_hassio_entry(hass)
+    if entry is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Hassio config entry is not available",
+        )
+        return
+
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **async_get_update_options(hass, entry),
+            **changes,
+        },
     )
     connection.send_result(msg["id"])

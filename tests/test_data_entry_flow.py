@@ -3,7 +3,6 @@
 import asyncio
 import dataclasses
 import logging
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -253,6 +252,30 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert form["reason"] == "True"
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
+
+
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test the abort reason can be translated by another integration."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(
+                reason="some_reason", translation_domain=translation_domain
+            )
+
+    result = await manager.async_init("test")
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "some_reason"
+    assert result.get("translation_domain") == translation_domain
 
 
 async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
@@ -972,6 +995,59 @@ async def test_abort_flow_exception_finish_flow(hass: HomeAssistant) -> None:
     assert form["description_placeholders"] == {"placeholder": "yo"}
 
 
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_flow_exception_step_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test AbortFlow can be translated by another integration from a step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain=translation_domain
+            )
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form.get("translation_domain") == translation_domain
+
+
+async def test_abort_flow_exception_finish_flow_translation_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test AbortFlow can be translated by another integration when finishing."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            return self.async_create_entry(title="init", data=input)
+
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_key, *, context, data):
+            return TestFlow()
+
+        async def async_finish_flow(self, flow, result):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain="homeassistant"
+            )
+
+    manager = FlowManager(hass)
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form["translation_domain"] == "homeassistant"
+
+
 async def test_init_unknown_flow(manager: MockFlowManager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
@@ -1275,32 +1351,21 @@ def test_nested_section_in_serializer() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("context", "expected_show_advanced"),
-    [
-        # The property is deprecated and now unconditionally returns True
-        ({}, True),
-        ({"show_advanced_options": False}, True),
-        ({"show_advanced_options": True}, True),
-    ],
-)
 async def test_show_advanced_options(
     manager: MockFlowManager,
-    context: dict[str, Any],
-    expected_show_advanced: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test FlowHandler show_advanced_options property."""
+    """Test FlowHandler show_advanced_options property is deprecated and always True."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
         async def async_step_init(self, info):
-            assert self.show_advanced_options == expected_show_advanced
+            assert self.show_advanced_options is True
             return self.async_create_entry(title="hello", data={})
 
-    await manager.async_init("test", context=context, data={})
+    await manager.async_init("test", context={}, data={})
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 

@@ -18,9 +18,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -49,7 +55,8 @@ rules:
     status: done
     comment: |
       Coordinators are used and asyncio.Lock mutex across them ensure proper
-      rate limiting. Platforms are read-only.
+      rate limiting. Modbus coordinators use a separate transport that
+      serializes its requests internally. Platforms are read-only.
   reauthentication-flow:
     status: exempt
     comment: |

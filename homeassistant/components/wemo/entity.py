@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from pywemo.exceptions import ActionException
 
@@ -35,6 +35,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._name_suffix
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         wemo_name: str = self.wemo.name
@@ -50,6 +51,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._unique_id_suffix
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
         serial_number: str = self.wemo.serial_number
@@ -58,6 +60,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._device_info

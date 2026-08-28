@@ -1,7 +1,7 @@
 """Config flow for the Home Assistant SkyConnect integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, override
 
 from universal_silabs_flasher.flasher import Zbt1Flasher
 
@@ -79,6 +79,7 @@ class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     ZIGBEE_BAUDRATE = 115200
     _flasher_cls = Zbt1Flasher
 
+    @override
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
         placeholders = {
@@ -136,6 +137,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -147,6 +149,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
         return HomeAssistantSkyConnectOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         if await self.async_set_unique_id(discovery_info.serial_number):
@@ -190,6 +193,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
         return self._async_flow_finished()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._usb_info is not None
@@ -217,6 +221,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
 ):
     """Multi-PAN options flow for Home Assistant SkyConnect."""
 
+    @override
     async def _async_serial_port_settings(
         self,
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
@@ -227,6 +232,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
             flow_control=True,
         )
 
+    @override
     async def _async_zha_physical_discovery(self) -> dict[str, Any]:
         """Return ZHA discovery data when multiprotocol FW is not used.
 
@@ -240,14 +246,33 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
         """Return the hardware variant."""
         return get_hardware_variant(self.config_entry)
 
+    @override
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return f"{self._hw_variant.short_name} Multiprotocol"
 
+    @override
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return self._hw_variant.full_name
 
+    @override
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    @override
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "skyconnect_zigbee_ncp"
+
+    @property
+    @override
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return Zbt1Flasher  # type: ignore[no-any-return]
+
+    @override
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -292,6 +317,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._probed_firmware_info is not None

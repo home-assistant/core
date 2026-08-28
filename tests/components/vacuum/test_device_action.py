@@ -141,8 +141,8 @@ async def test_action(
         },
     )
 
-    dock_calls = async_mock_service(hass, "vacuum", "return_to_base")
-    clean_calls = async_mock_service(hass, "vacuum", "start")
+    dock_calls = async_mock_service(hass, DOMAIN, "return_to_base")
+    clean_calls = async_mock_service(hass, DOMAIN, "start")
 
     hass.bus.async_fire("test_event_dock")
     await hass.async_block_till_done()
@@ -192,7 +192,7 @@ async def test_action_legacy(
         },
     )
 
-    dock_calls = async_mock_service(hass, "vacuum", "return_to_base")
+    dock_calls = async_mock_service(hass, DOMAIN, "return_to_base")
 
     hass.bus.async_fire("test_event_dock")
     await hass.async_block_till_done()

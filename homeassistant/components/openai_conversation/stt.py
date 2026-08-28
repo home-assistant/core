@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterable
 import io
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 import wave
 
 from openai import OpenAIError
@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -42,6 +44,7 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
     """OpenAI Speech to text entity."""
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         # https://developers.openai.com/api/docs/guides/speech-to-text#supported-languages
@@ -108,17 +111,20 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
         ]
 
     @property
+    @override
     def supported_formats(self) -> list[stt.AudioFormats]:
         """Return a list of supported formats."""
         # https://developers.openai.com/api/docs/guides/speech-to-text#transcriptions
         return [stt.AudioFormats.WAV, stt.AudioFormats.OGG]
 
     @property
+    @override
     def supported_codecs(self) -> list[stt.AudioCodecs]:
         """Return a list of supported codecs."""
         return [stt.AudioCodecs.PCM, stt.AudioCodecs.OPUS]
 
     @property
+    @override
     def supported_bit_rates(self) -> list[stt.AudioBitRates]:
         """Return a list of supported bit rates."""
         return [
@@ -129,6 +135,7 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
         ]
 
     @property
+    @override
     def supported_sample_rates(self) -> list[stt.AudioSampleRates]:
         """Return a list of supported sample rates."""
         return [
@@ -144,10 +151,12 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
         ]
 
     @property
+    @override
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO, stt.AudioChannels.CHANNEL_STEREO]
 
+    @override
     async def async_process_audio_stream(
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:

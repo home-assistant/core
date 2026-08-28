@@ -17,6 +17,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
     CONF_VIA,
+    DOMAIN,
     MAX_VIA,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
@@ -111,7 +112,7 @@ async def test_flow_user_init_data_success(
 ) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -160,7 +161,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
 ) -> None:
     """Test errors in user step."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
@@ -206,7 +207,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
 ) -> None:
     """Test errors in time mode step."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -255,7 +256,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     """Test we abort user data set when entry is already configured."""
 
     entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
+        domain=DOMAIN,
         data=MOCK_USER_DATA_STEP,
         unique_id=unique_id_from_config(MOCK_USER_DATA_STEP),
     )
@@ -267,7 +268,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": "user"}
         )
 
         result = await hass.config_entries.flow.async_configure(

@@ -8,19 +8,38 @@ from pyecobee import (
     ECOBEE_REFRESH_TOKEN,
     ECOBEE_USERNAME,
     Ecobee,
+    EcobeeAuthFailedError,
+    EcobeeAuthMfaRequiredError,
+    EcobeeAuthUnknownError,
     ExpiredTokenError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, PLATFORMS
+from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER, PLATFORMS
+from .services import async_setup_services
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 type EcobeeConfigEntry = ConfigEntry[EcobeeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the ecobee integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
@@ -40,12 +59,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     )
 
     if not await runtime_data.refresh():
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_refresh_tokens",
+        )
 
     await runtime_data.update()
 
     if runtime_data.ecobee.thermostats is None:
-        _LOGGER.error("No ecobee devices found to set up")
+        LOGGER.error("No ecobee devices found to set up")
         return False
 
     entry.runtime_data = runtime_data
@@ -94,15 +116,38 @@ class EcobeeData:
         """Get the latest data from ecobee.com."""
         try:
             await self._hass.async_add_executor_job(self.ecobee.update)
-            _LOGGER.debug("Updating ecobee")
+            LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.debug("Refreshing expired ecobee tokens")
+            LOGGER.debug("Refreshing expired ecobee tokens")
             await self.refresh()
 
     async def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
-        _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
-        if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
+        LOGGER.debug("Refreshing ecobee tokens and updating config entry")
+        try:
+            success = await self._hass.async_add_executor_job(
+                self.ecobee.refresh_tokens
+            )
+        except EcobeeAuthMfaRequiredError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="mfa_reauthentication_needed",
+            ) from err
+        except EcobeeAuthFailedError as err:
+            if self.ecobee.config.get(ECOBEE_USERNAME):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="credentials_rejected",
+                ) from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="credentials_rejected",
+            ) from err
+        except EcobeeAuthUnknownError:
+            LOGGER.exception("Unexpected error refreshing ecobee tokens")
+            return False
+
+        if success:
             data = {}
             if self.ecobee.config.get(ECOBEE_API_KEY):
                 data = {
@@ -122,7 +167,7 @@ class EcobeeData:
                 data=data,
             )
             return True
-        _LOGGER.error("Error refreshing ecobee tokens")
+        LOGGER.error("Error refreshing ecobee tokens")
         return False
 
 

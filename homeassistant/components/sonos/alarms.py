@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from soco import SoCo, SoCoException
 from soco.alarms import Alarm, Alarms
@@ -38,6 +38,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
         """Get an Alarm instance."""
         return self.alarms.get(alarm_id)
 
+    @override
     async def async_update_entities(
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
@@ -75,6 +76,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
             await self.async_update_entities(speaker.soco, event_id)
 
     @soco_error()
+    @override
     def update_cache(
         self,
         soco: SoCo,
@@ -122,6 +124,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
         self.last_processed_event_id = self.alarms.last_id
         return True
 
+    @override
     def add_speaker(self, soco: SoCo) -> None:
         """Update any skipped alarms when speaker is added."""
         self.alarms.update_skipped(soco)

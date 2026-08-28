@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aiohttp import ClientResponseError
 from pymiele import MieleDevice
@@ -151,10 +151,12 @@ class MieleSwitch(MieleEntity, SwitchEntity):
 
     entity_description: MieleSwitchDescription
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         await self.async_turn_switch(self.entity_description.on_cmd_data)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self.async_turn_switch(self.entity_description.off_cmd_data)
@@ -180,11 +182,13 @@ class MielePowerSwitch(MieleSwitch):
     entity_description: MieleSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.action.power_off_enabled
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
@@ -192,6 +196,7 @@ class MielePowerSwitch(MieleSwitch):
             self.action.power_off_enabled or self.action.power_on_enabled
         )
 
+    @override
     async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
         """Set switch to mode."""
         try:
@@ -216,6 +221,7 @@ class MieleSuperSwitch(MieleSwitch):
     entity_description: MieleSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return (

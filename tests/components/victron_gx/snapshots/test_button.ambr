@@ -39,7 +39,7 @@
 # name: test_all_button_entities_snapshot[button.victron_venus_device_reboot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Victron Venus Device reboot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Venus Device reboot',
     }),
     'context': <ANY>,
     'entity_id': 'button.victron_venus_device_reboot',

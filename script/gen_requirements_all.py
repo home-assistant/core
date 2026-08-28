@@ -17,10 +17,9 @@ from script.hassfest.model import Config, Integration
 # Requirements which can't be installed on all systems because they
 # rely on additional system packages. Requirements listed in
 # EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt and requirements_test_all.txt.
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
@@ -77,6 +76,15 @@ grpcio==1.78.0
 grpcio-status==1.78.0
 grpcio-reflection==1.78.0
 
+# boto3 and botocore are shared requirements of multiple integrations,
+# with botocore also being a transitive dependency of aiobotocore, which
+# only accepts a narrow botocore version range. Pin them together so a
+# runtime requirement install cannot pull in a botocore version that is
+# incompatible with aiobotocore.
+# see https://github.com/home-assistant/core/issues/167399
+boto3==1.42.97
+botocore==1.42.97
+
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
@@ -106,7 +114,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.3.2
+numpy==2.5.2
 pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
@@ -207,7 +215,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
@@ -217,7 +225,12 @@ aiomqtt>=2.5.0
 
 # aiofile 3.10.0 crashes on import due to KeyError on package metadata
 # https://github.com/mosquito/aiofile/pull/106
-aiofile==3.9.0
+aiofile>=3.10.1
+# caio 0.12.2 includes 'tests' package in wheel
+# Fixed upstream in https://github.com/mosquito/caio/pull/75
+# but not released yet. Pin here to prevent hassfest failure.
+# Update manually once next release is available.
+caio<0.12.3
 
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0
@@ -240,6 +253,10 @@ azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
 setuptools==81.0.0
+
+# Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
+# https://github.com/home-assistant/core/issues/175832
+cffi==2.0.0
 """
 
 GENERATED_MESSAGE = (

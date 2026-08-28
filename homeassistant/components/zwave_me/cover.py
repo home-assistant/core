@@ -1,6 +1,6 @@
 """Representation of a cover."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -46,14 +46,17 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
         value = kwargs[ATTR_POSITION]
@@ -61,11 +64,13 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
             self.device.id, f"exact?level={min(value, 99)!s}"
         )
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         self.controller.zwave_api.send_command(self.device.id, "stop")
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -80,6 +85,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         return self.device.level
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed.
 

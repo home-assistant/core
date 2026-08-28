@@ -3,10 +3,11 @@
 import logging
 
 import caldav
+from caldav.lib.error import DAVError
 
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import WARNED_CALENDARS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ async def async_get_calendars(
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
-            except KeyError:
+            except KeyError, DAVError:
                 needs_warning.append((str(calendar.url), calendar.name, component))
 
                 if component in ASSUMED_COMPONENTS:
@@ -43,9 +44,7 @@ async def async_get_calendars(
     calendars, needs_warning = await hass.async_add_executor_job(_get_calendars)
 
     if needs_warning:
-        warned_calendars: set[tuple[str, str]] = hass.data.setdefault(
-            DOMAIN, {}
-        ).setdefault("warned_calendars", set())
+        warned_calendars = hass.data.setdefault(WARNED_CALENDARS, set())
         for url, name, comp in needs_warning:
             # This workaround and warning can be removed when we upgrade to caldav 3.0
             if (url, comp) not in warned_calendars:

@@ -12,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    from matter_ble_proxy import MatterBleProxy
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 
@@ -28,6 +29,7 @@ class MatterEntryData:
 
     adapter: MatterAdapter
     listen_task: asyncio.Task
+    ble_proxy: MatterBleProxy | None = None
 
 
 type MatterConfigEntry = ConfigEntry[MatterEntryData]
@@ -55,16 +57,23 @@ def get_operational_instance_id(
     return f"{fabric_id_hex}-{node_id_hex}"
 
 
+def get_device_endpoint(endpoint: MatterEndpoint) -> MatterEndpoint:
+    """Return the endpoint the HA device for the given MatterEndpoint is derived from.
+
+    All endpoints of a composed device are represented by a single HA device, derived
+    from the compose parent.
+    Example: Philips Hue motion sensor on Hue Hub (bridged to Matter).
+    """
+    return endpoint.node.get_compose_parent(endpoint.endpoint_id) or endpoint
+
+
 def get_device_id(
     server_info: ServerInfoMessage,
     endpoint: MatterEndpoint,
 ) -> str:
     """Return HA device_id for the given MatterEndpoint."""
     operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
-    # if this is a composed device we need to get the compose parent
-    # example: Philips Hue motion sensor on Hue Hub (bridged to Matter)
-    if compose_parent := endpoint.node.get_compose_parent(endpoint.endpoint_id):
-        endpoint = compose_parent
+    endpoint = get_device_endpoint(endpoint)
     if endpoint.is_bridged_device:
         # Append endpoint ID if this endpoint is a bridged device
         postfix = str(endpoint.endpoint_id)
@@ -74,11 +83,23 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
+def get_node_device_identifier(
+    server_info: ServerInfoMessage, node_id: int
+) -> tuple[str, str]:
+    """Return the device registry identifier for the node-level device of a node."""
+    fabric_id_hex = f"{server_info.compressed_fabric_id:016X}"
+    node_id_hex = f"{node_id:016X}"
+    return (
+        DOMAIN,
+        f"{ID_TYPE_DEVICE_ID}_{fabric_id_hex}-{node_id_hex}-MatterNodeDevice",
+    )
+
+
 @callback
 def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
     """Get node id from ha device id."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(ha_device_id)
+    device = dev_reg.async_get(ha_device_id, include_child_devices=False)
     if device is None:
         raise MissingNode(f"Invalid device ID: {ha_device_id}")
     return get_node_from_device_entry(hass, device)

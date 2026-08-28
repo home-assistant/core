@@ -6,7 +6,7 @@ from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trig
 from .const import DOMAIN, VacuumActivity
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "docked": make_entity_target_state_trigger(DOMAIN, VacuumActivity.DOCKED),
+    "returned_to_dock": make_entity_target_state_trigger(DOMAIN, VacuumActivity.DOCKED),
     "errored": make_entity_target_state_trigger(DOMAIN, VacuumActivity.ERROR),
     "paused_cleaning": make_entity_target_state_trigger(DOMAIN, VacuumActivity.PAUSED),
     "started_cleaning": make_entity_target_state_trigger(

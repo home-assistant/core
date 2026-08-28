@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import ValuesView
 from datetime import timedelta
 import logging
+from typing import override
 
 from canary.api import Api
 from canary.model import Location, Reading
@@ -60,6 +61,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
             "readings": readings_by_device_id,
         }
 
+    @override
     async def _async_update_data(self) -> CanaryData:
         """Fetch data from Canary."""
 

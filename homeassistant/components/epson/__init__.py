@@ -88,10 +88,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1 or config_entry.minor_version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1 and config_entry.minor_version == 1:
         new_data = {**config_entry.data}
         new_data[CONF_CONNECTION_TYPE] = HTTP

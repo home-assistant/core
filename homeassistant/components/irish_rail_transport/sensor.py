@@ -1,7 +1,7 @@
 """Support for Irish Rail RTPI information."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
@@ -93,16 +93,19 @@ class IrishRailTransportSensor(SensorEntity):
         self._times = []
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times:
@@ -129,6 +132,7 @@ class IrishRailTransportSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES

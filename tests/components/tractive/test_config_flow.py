@@ -134,15 +134,23 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
     first_entry.add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     with patch("aiotractive.api.API.user_id", return_value="USERID"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -152,7 +160,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 async def test_reauthentication(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
@@ -185,7 +193,7 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
 async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication failure."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
@@ -215,7 +223,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
 async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication with connection error."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
@@ -245,7 +253,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
 async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication with rate limit error."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
@@ -280,7 +288,7 @@ async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None
 async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication failure."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
@@ -310,7 +318,7 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
 async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication with no existing entry."""
     old_entry = MockConfigEntry(
-        domain="tractive",
+        domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )

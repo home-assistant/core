@@ -1,6 +1,5 @@
 """Support for Google Sheets."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from google.auth.exceptions import RefreshError
@@ -21,6 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
@@ -69,7 +69,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
     add_created_column = call.data[ADD_CREATED_COLUMN]
-    now = str(datetime.now())
+    now = str(dt_util.now())
     rows = []
     for d in call.data[DATA]:
         row_data = ({"created": now} | d) if add_created_column else d

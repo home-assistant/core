@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "The Microsoft Teams integration has been removed from Home Assistant.\n\nThe [Office 365 Connectors]({url}) used by this integration to send messages to Microsoft Teams have been discontinued by Microsoft and are no longer supported.\n\nTo resolve this issue, remove the Microsoft Teams integration configuration from your `configuration.yaml` file and restart Home Assistant.\n\nOnce the configuration has been removed and Home Assistant has restarted, this issue will no longer be shown.",
+      "title": "Microsoft Teams integration has been removed"
+    }
+  }
+}

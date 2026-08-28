@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiolifx.aiolifx import (
     Light,
@@ -34,12 +34,12 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    _LOGGER,
     ATTR_REMAINING,
     DEFAULT_ATTEMPTS,
     DOMAIN,
     IDENTIFY_WAVEFORM,
     LIFX_128ZONE_CEILING_PRODUCT_IDS,
+    LOGGER,
     MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE,
     MAX_UPDATE_TIME,
     MESSAGE_RETRIES,
@@ -108,14 +108,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=f"{config_entry.title} ({self.device.ip_addr})",
             update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 
@@ -337,6 +337,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             )
         return calls
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         device = self.device

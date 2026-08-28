@@ -4,8 +4,8 @@ from http import HTTPStatus
 from typing import Any, Generic, TypeVar
 
 from aiohttp import web
+from probatio import to_field_list
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
@@ -47,7 +47,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = voluptuous_serialize.convert(
+            data["data_schema"] = to_field_list(
                 schema, custom_serializer=cv.custom_serializer
             )
         return data
@@ -60,7 +60,6 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
         vol.Schema(
             {
                 vol.Required("handler"): str,
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -93,7 +92,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
-        return {"show_advanced_options": data["show_advanced_options"]}
+        return {}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):

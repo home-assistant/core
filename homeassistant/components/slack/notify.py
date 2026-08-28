@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
@@ -20,6 +20,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,6 +35,7 @@ from .const import (
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
     DATA_CLIENT,
+    DOMAIN,
     SLACK_DATA,
 )
 from .utils import upload_file_to_slack
@@ -271,16 +273,19 @@ class SlackNotificationService(BaseNotificationService):
             elif isinstance(result, ClientError):
                 _LOGGER.error("Error while sending message to %s: %r", target, result)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
         data = kwargs.get(ATTR_DATA) or {}
 
         try:
             DATA_SCHEMA(data)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except vol.Invalid as err:
-            _LOGGER.error("Invalid message data: %s", err)
-            data = {}
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_message_data",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         title = kwargs.get(ATTR_TITLE)
         targets = _async_sanitize_channel_names(

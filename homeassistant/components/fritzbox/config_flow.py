@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import ipaddress
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -84,6 +84,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             return RESULT_NO_DEVICES_FOUND
         return RESULT_SUCCESS
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -110,6 +111,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -144,6 +146,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow._host == self._host

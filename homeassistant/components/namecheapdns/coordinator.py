@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError
 
@@ -41,6 +42,7 @@ class NamecheapDnsUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.session = async_get_clientsession(hass)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Namecheap DNS."""
         host = self.config_entry.data[CONF_HOST]

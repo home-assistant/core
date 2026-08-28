@@ -1,7 +1,7 @@
 """Matter water heater platform."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable
@@ -108,6 +108,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             raise HomeAssistantError(f"Error sending Boost command: {err}") from err
         self._update_from_device()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
@@ -121,6 +122,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 matter_attribute=matter_attribute,
             )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
@@ -152,15 +154,18 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.WaterHeaterManagement.Commands.CancelBoost()
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
         await self.async_set_operation_mode("eco")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off water heater."""
         await self.async_set_operation_mode("off")
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._attr_current_temperature = self._get_temperature_in_degrees(

@@ -9,6 +9,14 @@ ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
 
 
+class AlarmControlPanelEntityStateAttribute(StrEnum):
+    """State attributes for alarm control panel entities."""
+
+    CODE_FORMAT = "code_format"
+    CHANGED_BY = "changed_by"
+    CODE_ARM_REQUIRED = "code_arm_required"
+
+
 class AlarmControlPanelState(StrEnum):
     """Alarm control panel entity states."""
 

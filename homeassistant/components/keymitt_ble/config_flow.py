@@ -1,7 +1,7 @@
 """Adds config flow for MicroBot."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.backends.device import BLEDevice
 from microbot import (
@@ -51,6 +51,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._bdaddr: str | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -68,6 +69,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_init()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

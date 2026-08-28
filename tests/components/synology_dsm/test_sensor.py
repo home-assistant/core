@@ -24,6 +24,7 @@ from .common import (
     mock_dsm_external_usb_devices_usb0,
     mock_dsm_external_usb_devices_usb1,
     mock_dsm_external_usb_devices_usb2,
+    mock_dsm_hardware,
     mock_dsm_information,
     mock_dsm_storage_get_disk,
     mock_dsm_storage_get_volume,
@@ -49,6 +50,7 @@ def mock_dsm_with_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             get_disk=mock_dsm_storage_get_disk,
@@ -83,6 +85,7 @@ def mock_dsm_without_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.logout = AsyncMock(return_value=True)
@@ -396,10 +399,35 @@ async def test_hub_device_info_mac_connections(
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test that the hub DeviceInfo includes MAC address connections."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), setup_dsm_with_usb.mock_entry.entry_id
+    )
     assert device is not None
     assert device.connections == {
         ("mac", "00:11:32:xx:xx:59"),
         ("mac", "00:11:32:xx:xx:5a"),
     }
+
+
+async def test_storage_device_via_device(
+    hass: HomeAssistant,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test that storage/USB child devices link to the hub via via_device_id."""
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entry_id = setup_dsm_with_usb.mock_entry.entry_id
+    hub_device = dev_reg.async_get_device_by_identifier((DOMAIN, SERIAL), entry_id)
+    assert hub_device is not None
+
+    volume_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_volume_1"), entry_id
+    )
+    assert volume_device is not None
+    assert volume_device.via_device_id == hub_device.id
+
+    usb_partition_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_USB Disk 1 Partition 1"), entry_id
+    )
+    assert usb_partition_device is not None
+    assert usb_partition_device.via_device_id == hub_device.id

@@ -52,20 +52,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "animal_lens_0": {
-        "name": "Animal lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "animal_lens_1": {
-        "name": "Animal lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "crossline_dog_cat": {
         "name": "Crossline {zone_name} animal",
         "state": {
@@ -96,20 +82,6 @@
       },
       "face": {
         "name": "Face",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "face_lens_0": {
-        "name": "Face lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "face_lens_1": {
-        "name": "Face lens 1",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -171,20 +143,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "motion_lens_0": {
-        "name": "Motion lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "motion_lens_1": {
-        "name": "Motion lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "non-motor_vehicle": {
         "name": "Bicycle",
         "state": {
@@ -199,20 +157,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "package_lens_0": {
-        "name": "Package lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "package_lens_1": {
-        "name": "Package lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "person": {
         "name": "Person",
         "state": {
@@ -220,36 +164,8 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "person_lens_0": {
-        "name": "Person lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "person_lens_1": {
-        "name": "Person lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "pet": {
         "name": "Pet",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "pet_lens_0": {
-        "name": "Pet lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "pet_lens_1": {
-        "name": "Pet lens 1",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -276,28 +192,8 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "vehicle_lens_0": {
-        "name": "Vehicle lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "vehicle_lens_1": {
-        "name": "Vehicle lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "visitor": {
         "name": "Visitor"
-      },
-      "visitor_lens_0": {
-        "name": "Visitor lens 0"
-      },
-      "visitor_lens_1": {
-        "name": "Visitor lens 1"
       }
     },
     "button": {
@@ -306,6 +202,9 @@
       },
       "guard_set": {
         "name": "Guard set current position"
+      },
+      "pre_siren": {
+        "name": "Pre-siren"
       },
       "ptz_auto": {
         "name": "PTZ continuous rotation"
@@ -345,6 +244,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
@@ -582,6 +484,15 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "f50": "50 Hz",
+          "f60": "60 Hz",
+          "off": "[%key:common::state::off%]",
+          "other": "Other"
+        }
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -647,7 +558,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
@@ -827,6 +739,28 @@
           "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "work_mode_battery": {
+        "name": "Work mode battery",
+        "state": {
+          "always_on_custom": "Always on custom",
+          "continuous_recording": "Always on continuous recording",
+          "custom": "Custom",
+          "detection_priority": "Detection priority",
+          "extended_recording": "AI extended recording",
+          "optimal_surveillance": "Optimal surveillance",
+          "power_saving": "Power saving",
+          "pre_recording": "Always on pre-recording",
+          "smart": "Smart power"
+        }
+      },
+      "work_mode_powered": {
+        "name": "Work mode powered",
+        "state": {
+          "alarm_based": "Alarm recording",
+          "continuous": "Continuous recording",
+          "custom": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]"
+        }
       }
     },
     "sensor": {
@@ -950,8 +884,14 @@
       "pre_record": {
         "name": "Pre-recording"
       },
+      "pre_siren_on_event": {
+        "name": "Pre-siren on event"
+      },
       "privacy_mask": {
         "name": "Privacy mask"
+      },
+      "privacy_mask_lens": {
+        "name": "Privacy mask lens {channel}"
       },
       "privacy_mode": {
         "name": "Privacy mode"
@@ -973,6 +913,17 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "name": "Floodlight schedule end"
+      },
+      "floodlight_schedule_start": {
+        "name": "Floodlight schedule start"
       }
     }
   },
@@ -1010,9 +961,6 @@
     "not_supported": {
       "message": "Function not supported by this device: {err}"
     },
-    "service_entry_ex": {
-      "message": "Reolink {service_name} error: config entry not found or not loaded"
-    },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"
     },
@@ -1022,6 +970,9 @@
     "timeout": {
       "message": "Timeout waiting on a response: {err}"
     },
+    "uid_mismatch": {
+      "message": "UID {uid} of Reolink camera \"{name}\" did not match the stored configuration UID {conf_uid}, please check the connection details"
+    },
     "unexpected": {
       "message": "Unexpected Reolink error: {err}"
     },
@@ -1030,6 +981,9 @@
     },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "webhook_no_url": {
+      "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
     }
   },
   "issues": {

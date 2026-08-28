@@ -1,5 +1,7 @@
 """Support for tracking iBeacon devices."""
 
+from typing import override
+
 from ibeacon_ble import iBeaconAdvertisement
 
 from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
@@ -66,11 +68,13 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseScannerEntity):
         self._active = True
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected."""
         return self._active
 
     @callback
+    @override
     def _async_seen(
         self,
         ibeacon_advertisement: iBeaconAdvertisement,
@@ -81,6 +85,7 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseScannerEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_unavailable(self) -> None:
         """Set unavailable."""
         self._active = False

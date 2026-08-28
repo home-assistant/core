@@ -3,13 +3,14 @@
 from collections.abc import Iterable
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -47,6 +48,23 @@ def create_elk_entities(
     return entities
 
 
+def create_elk_system_device_info(elk: Elk, prefix: str, mac: str | None) -> DeviceInfo:
+    """Return the device info for the ElkM1 system device."""
+    device_name = "ElkM1"
+    if prefix:
+        device_name += f" {prefix}"
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{prefix}_system")},
+        manufacturer="ELK Products, Inc.",
+        model="M1",
+        name=device_name,
+        sw_version=elk.panel.elkm1_version,
+    )
+    if mac:
+        device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
+    return device_info
+
+
 def generate_unique_id(prefix: str, element: Element) -> str:
     """Generate a unique id."""
     # unique_id starts with elkm1_ iff there is no prefix
@@ -81,11 +99,13 @@ class ElkEntity(Entity):
         self._attr_name = element.name
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique id of the element."""
         return self._unique_id
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the default attributes of the element."""
         dict_as_str = {}
@@ -94,6 +114,7 @@ class ElkEntity(Entity):
         return {**dict_as_str, **self.initial_attrs()}
 
     @property
+    @override
     def available(self) -> bool:
         """Is the entity available to be updated."""
         return self._elk.is_connected()
@@ -115,18 +136,26 @@ class ElkEntity(Entity):
         self._element_changed(element, changeset)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes and update entity state."""
         self._element.add_callback(self._element_callback)
         self._element_changed(self._element, {})
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
+        config_entry = self.platform.config_entry
+        assert config_entry
         return DeviceInfo(
             name=self._element.name,
             identifiers={(DOMAIN, self._unique_id)},
-            via_device=(DOMAIN, f"{self._prefix}_system"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{self._prefix}_system"),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
 
 
@@ -134,18 +163,7 @@ class ElkAttachedEntity(ElkEntity):
     """An elk entity that is attached to the elk system."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
-        device_name = "ElkM1"
-        if self._prefix:
-            device_name += f" {self._prefix}"
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._prefix}_system")},
-            manufacturer="ELK Products, Inc.",
-            model="M1",
-            name=device_name,
-            sw_version=self._elk.panel.elkm1_version,
-        )
-        if self._mac:
-            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return device_info
+        return create_elk_system_device_info(self._elk, self._prefix, self._mac)

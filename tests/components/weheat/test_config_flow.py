@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from weheat.exceptions import ApiException
 
 from homeassistant.components.weheat.const import (
     DOMAIN,
@@ -142,6 +143,35 @@ async def test_reauth(
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == expected_reason
     assert entry.unique_id == USER_UUID_1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "side_effect",
+    [ApiException(status=500, reason="Internal Server Error"), None],
+)
+async def test_api_error_during_create_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    side_effect: Exception | None,
+) -> None:
+    """Test config flow aborts when the API call fails or returns no user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    with patch(
+        "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
+        side_effect=side_effect,
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_failed"
 
 
 async def handle_oauth(

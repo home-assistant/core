@@ -39,7 +39,7 @@
 # name: test_switch_entities_snapshot[switch.r_900_force_domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'R 900 Force domestic hot water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900 Force domestic hot water',
     }),
     'context': <ANY>,
     'entity_id': 'switch.r_900_force_domestic_hot_water',

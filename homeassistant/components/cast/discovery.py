@@ -2,7 +2,7 @@
 
 import logging
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pychromecast.discovery
 import pychromecast.models
@@ -67,14 +67,17 @@ def setup_internal_discovery(
     class CastListener(pychromecast.discovery.AbstractCastListener):
         """Listener for discovering chromecasts."""
 
+        @override
         def add_cast(self, uuid, _):
             """Handle zeroconf discovery of a new chromecast."""
             discover_chromecast(hass, browser.devices[uuid], config_entry)
 
+        @override
         def update_cast(self, uuid, _):
             """Handle zeroconf discovery of an updated chromecast."""
             discover_chromecast(hass, browser.devices[uuid], config_entry)
 
+        @override
         def remove_cast(self, uuid, service, cast_info):
             """Handle zeroconf discovery of a removed chromecast."""
             _remove_chromecast(

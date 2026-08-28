@@ -1,7 +1,7 @@
 """Pushover platform for notify component."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
@@ -24,12 +24,12 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_RETRY,
     ATTR_SOUND,
+    ATTR_TAGS,
     ATTR_TIMESTAMP,
     ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,27 +41,38 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
-    if discovery_info is None:
-        return None
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
-    return PushoverNotificationService(
-        hass, pushover_api, discovery_info[CONF_USER_KEY]
+    if TYPE_CHECKING:
+        assert discovery_info is not None
+    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
+    if TYPE_CHECKING:
+        assert entry is not None
+    service = PushoverNotificationService(
+        hass, entry.runtime_data.api, discovery_info[CONF_USER_KEY], entry.entry_id
     )
+    entry.runtime_data.notify_service = service
+
+    return service
 
 
 class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
     def __init__(
-        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
+        self,
+        hass: HomeAssistant,
+        pushover: PushoverAPI,
+        user_key: str,
+        entry_id: str,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
+        self._entry_id = entry_id
+        # Maps receipt id -> list of tags assigned when the message was sent.
+        self._receipt_tags: dict[str, list[str]] = {}
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -78,6 +89,10 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
+        tags: list[str] = data.get(ATTR_TAGS, [])
+
+        if isinstance(tags, str):
+            tags = [tags]
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
@@ -100,7 +115,7 @@ class PushoverNotificationService(BaseNotificationService):
                 image = None
 
         try:
-            self.pushover.send_message(
+            result = self.pushover.send_message(
                 user=self._user_key,
                 message=message,
                 device=",".join(kwargs.get(ATTR_TARGET, [])),
@@ -119,3 +134,66 @@ class PushoverNotificationService(BaseNotificationService):
             )
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
+
+        # Only track receipts for tagged messages. Untagged priority-2 messages
+        # are intentionally not tracked: they cannot be cancelled programmatically
+        # and can only be acknowledged by the user via the Pushover app.
+        # This allows sending both cancellable (tagged) and non-cancellable
+        # (untagged) emergency messages in parallel.
+        if isinstance(result, dict) and "receipt" in result and tags:
+            receipt: str = result["receipt"]
+            self._receipt_tags[receipt] = tags
+            _LOGGER.debug(
+                "Entry %s: stored receipt %s with tags %s",
+                self._entry_id,
+                receipt,
+                tags,
+            )
+
+    def cancel_by_tag(self, tag: str) -> None:
+        """Cancel receipts matching tag, or all receipts when tag is empty.
+
+        Called from the executor; blocking I/O is acceptable here.
+        """
+        # Take a snapshot to avoid RuntimeError if send_message modifies
+        # _receipt_tags concurrently from another executor thread.
+        receipt_tags_snapshot = dict(self._receipt_tags)
+
+        if not receipt_tags_snapshot:
+            _LOGGER.debug("Entry %s: no receipts to cancel", self._entry_id)
+            return
+
+        if tag:
+            receipts_to_cancel = [
+                receipt
+                for receipt, msg_tags in receipt_tags_snapshot.items()
+                if tag in msg_tags
+            ]
+            _LOGGER.debug(
+                "Entry %s: cancelling receipts with tag %r: %s",
+                self._entry_id,
+                tag,
+                receipts_to_cancel,
+            )
+        else:
+            receipts_to_cancel = list(receipt_tags_snapshot)
+            _LOGGER.debug(
+                "Entry %s: cancelling all receipts: %s",
+                self._entry_id,
+                receipts_to_cancel,
+            )
+
+        if not receipts_to_cancel:
+            _LOGGER.debug("Entry %s: no receipts found for tag %r", self._entry_id, tag)
+            return
+
+        for receipt in receipts_to_cancel:
+            try:
+                self.pushover.cancel_receipt(receipt)
+                _LOGGER.debug("Entry %s: cancelled receipt %s", self._entry_id, receipt)
+            except BadAPIRequestError:
+                _LOGGER.exception(
+                    "Entry %s: failed to cancel receipt %s", self._entry_id, receipt
+                )
+            finally:
+                self._receipt_tags.pop(receipt, None)

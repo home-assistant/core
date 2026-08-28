@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant.components.energy import data, is_configured
+from homeassistant.components.energy import DOMAIN, data, is_configured
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
@@ -24,7 +24,7 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture(autouse=True)
 async def setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Set up the integration."""
-    assert await async_setup_component(hass, "energy", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 @pytest.fixture

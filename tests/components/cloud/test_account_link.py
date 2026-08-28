@@ -6,13 +6,20 @@ import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientResponseError, RequestInfo
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.cloud import account_link
 from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
@@ -246,3 +253,54 @@ async def test_implementation(
         )
         is impl
     )
+
+
+def _mock_client_response_error(status: int) -> ClientResponseError:
+    """Create a ClientResponseError with the given status."""
+    return ClientResponseError(
+        request_info=RequestInfo(
+            url=URL("https://example.com/token"),
+            method="POST",
+            headers={},
+            real_url=URL("https://example.com/token"),
+        ),
+        history=(),
+        status=status,
+        message="error",
+    )
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_exception"),
+    [
+        (400, OAuth2TokenRequestReauthError),
+        (401, OAuth2TokenRequestReauthError),
+        (403, OAuth2TokenRequestReauthError),
+        (429, OAuth2TokenRequestTransientError),
+        (500, OAuth2TokenRequestTransientError),
+        (503, OAuth2TokenRequestTransientError),
+        (302, OAuth2TokenRequestError),
+    ],
+)
+async def test_refresh_token_error(
+    hass: HomeAssistant,
+    status: int,
+    expected_exception: type[OAuth2TokenRequestError],
+) -> None:
+    """Test that _async_refresh_token wraps ClientResponseError."""
+    hass.data[DATA_CLOUD] = None
+    impl = account_link.CloudOAuth2Implementation(hass, "test")
+
+    with (
+        patch(
+            "hass_nabucasa.account_link.async_fetch_access_token",
+            side_effect=_mock_client_response_error(status),
+        ),
+        pytest.raises(expected_exception) as exc_info,
+    ):
+        await impl._async_refresh_token(
+            {"refresh_token": "mock-refresh", "access_token": "mock-access"}
+        )
+
+    assert exc_info.value.status == status
+    assert exc_info.value.domain == "test"

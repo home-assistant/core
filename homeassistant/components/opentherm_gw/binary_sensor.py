@@ -1,6 +1,7 @@
 """Support for OpenTherm Gateway binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyotgw import vars as gw_vars
 
@@ -411,6 +412,7 @@ class OpenThermBinarySensor(OpenThermStatusEntity, BinarySensorEntity):
     entity_description: OpenThermBinarySensorEntityDescription
 
     @callback
+    @override
     def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
         state = status[self.entity_description.device_description.data_source].get(

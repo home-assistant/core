@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 from collections.abc import Callable
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
+from homeassistant.util import dt as dt_util
 
 
 def test_boolean() -> None:
@@ -802,7 +803,7 @@ def test_date() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().date())
+    schema(dt_util.now().date())
     schema("2016-11-23")
 
 
@@ -814,7 +815,7 @@ def test_time() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().time())
+    schema(dt_util.now().time())
     schema("23:42:00")
     schema("23:42")
 
@@ -826,7 +827,7 @@ def test_datetime() -> None:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    schema(datetime.now())
+    schema(dt_util.now())
     schema("2016-11-23T18:59:08")
 
 
@@ -1387,11 +1388,11 @@ def test_key_value_schemas() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema({"mode": "number", "data": "string-value"})
-    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected int at 'data'"
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema({"mode": "string", "data": 1})
-    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected str at 'data'"
 
     for mode, data in (("number", 1), ("string", "hello")):
         schema({"mode": mode, "data": data})
@@ -1426,11 +1427,11 @@ def test_key_value_schemas_with_default() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema({"mode": "number", "data": "string-value"})
-    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected int at 'data'"
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema({"mode": "string", "data": 1})
-    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected str at 'data'"
 
     for mode, data in (("number", 1), ("string", "hello")):
         schema({"mode": mode, "data": data})
@@ -1505,11 +1506,11 @@ def test_key_value_schemas_without_default_no_list_alternatives() -> None:
         ),
         (
             {"event": None},
-            r"string value is None for dictionary value @ data\['event'\]",
+            r"string value is None at 'event'",
         ),
         (
             {"device_id": None},
-            r"string value is None for dictionary value @ data\['device_id'\]",
+            r"string value is None at 'device_id'",
         ),
         (
             {"scene": "light.kitchen"},
@@ -1960,7 +1961,7 @@ async def test_trigger_backwards_compatibility() -> None:
         cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
     with pytest.raises(
         vol.Invalid,
-        match=re.escape("required key not provided @ data['trigger']"),
+        match=re.escape("required key not provided at 'trigger'"),
     ):
         cv._trigger_pre_validator({})
 
@@ -2012,7 +2013,7 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     assert len(caplog.records) == 0
 
     # Check error handling if data is not a dict
-    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+    with pytest.raises(vol.Invalid, match="expected a mapping"):
         renamed_schema([])
 
 
@@ -2034,7 +2035,7 @@ def test_stop_action_schema_error_false_with_response() -> None:
     assert config["response_variable"] == "result"
 
 
-_COMMENT_SCHEMA_PARAMS = [
+_NOTE_SCHEMA_PARAMS = [
     pytest.param(
         cv.TRIGGER_BASE_SCHEMA,
         {"platform": "event"},
@@ -2053,20 +2054,20 @@ _COMMENT_SCHEMA_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(("validator", "base_config"), _NOTE_SCHEMA_PARAMS)
 @pytest.mark.usefixtures("hass")
-def test_base_schemas_accept_comment(
+def test_base_schemas_accept_note(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
 ) -> None:
-    """Test that the comment field is accepted and stripped from the output."""
-    validated = validator({**base_config, "comment": "Single line"})
-    assert "comment" not in validated
+    """Test that the note field is accepted and stripped from the output."""
+    validated = validator({**base_config, "note": "Single line"})
+    assert "note" not in validated
 
 
-@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(("validator", "base_config"), _NOTE_SCHEMA_PARAMS)
 @pytest.mark.parametrize(
-    "invalid_comment",
+    "invalid_note",
     [
         pytest.param(None, id="none"),
         pytest.param(42, id="int"),
@@ -2076,11 +2077,47 @@ def test_base_schemas_accept_comment(
     ],
 )
 @pytest.mark.usefixtures("hass")
-def test_base_schemas_reject_invalid_comment(
+def test_base_schemas_reject_invalid_note(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
-    invalid_comment: Any,
+    invalid_note: Any,
 ) -> None:
-    """Test that script, condition, trigger base schemas reject non-string comments."""
+    """Test that script, condition, trigger base schemas reject non-string notes."""
     with pytest.raises(vol.Invalid):
-        validator({**base_config, "comment": invalid_comment})
+        validator({**base_config, "note": invalid_note})
+
+
+_CHOOSE_OPTION_BASE_CONFIG = {
+    "conditions": [
+        {"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"}
+    ],
+    "sequence": [{"action": "test.foo"}],
+}
+
+
+@pytest.mark.usefixtures("hass")
+def test_choose_option_accepts_note() -> None:
+    """Test that the note field is accepted and stripped from a choose option."""
+    validated = cv.script_action(
+        {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": "Single line"}]}
+    )
+    assert "note" not in validated["choose"][0]
+
+
+@pytest.mark.parametrize(
+    "invalid_note",
+    [
+        pytest.param(None, id="none"),
+        pytest.param(42, id="int"),
+        pytest.param(True, id="bool"),
+        pytest.param([], id="list"),
+        pytest.param({}, id="dict"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_choose_option_rejects_invalid_note(invalid_note: Any) -> None:
+    """Test that choose option schemas reject non-string notes."""
+    with pytest.raises(vol.Invalid):
+        cv.script_action(
+            {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": invalid_note}]}
+        )

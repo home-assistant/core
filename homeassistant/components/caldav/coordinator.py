@@ -1,10 +1,9 @@
 """Data update coordinator for caldav."""
 
 from datetime import date, datetime, time, timedelta
-from functools import partial
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import caldav
 
@@ -54,22 +53,24 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        # Get event list from the current calendar
-        vevent_list = await hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_date,
-                end=end_date,
-                event=True,
-                expand=True,
-            )
+        return await hass.async_add_executor_job(self._get_events, start_date, end_date)
+
+    def _get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Fetch and parse events in a specific time frame."""
+        vevent_list = self.calendar.search(
+            start=start_date,
+            end=end_date,
+            event=True,
+            expand=True,
         )
         event_list = []
         for event in vevent_list:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
             event_list.append(
@@ -90,21 +91,29 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         return event_list
 
+    @override
     async def _async_update_data(self) -> CalendarEvent | None:
         """Get the latest data."""
         start_of_today = dt_util.start_of_local_day()
         start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
+        event, offset = await self.hass.async_add_executor_job(
+            self._get_next_event, start_of_today, start_of_tomorrow
+        )
+        self.offset = offset
+        return event
+
+    def _get_next_event(
+        self, start_of_today: datetime, start_of_tomorrow: datetime
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Fetch and parse the next matching event."""
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_of_today,
-                end=start_of_tomorrow,
-                event=True,
-                expand=True,
-            ),
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
         )
 
         # Create new events for each recurrence of an event that happens today.
@@ -113,10 +122,10 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today: date | datetime
                 _start_of_tomorrow: datetime | date
@@ -129,7 +138,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
+                    new_vevent = new_event.vobject_instance.vevent  # type: ignore[attr-defined]
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -138,9 +147,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 elif _start_of_tomorrow <= start_dt:
                     break
         vevents = [
-            event.instance.vevent
+            event.vobject_instance.vevent
             for event in results + new_events
-            if hasattr(event.instance, "vevent")
+            if hasattr(event.vobject_instance, "vevent")
         ]
 
         # dtstart can be a date or datetime depending if the event lasts a
@@ -167,15 +176,13 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 len(vevents),
                 self.calendar.name,
             )
-            self.offset = None
-            return None
+            return None, None
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
             get_attr_value(vevent, "summary") or "", OFFSET
         )
-        self.offset = offset
-        return CalendarEvent(
+        next_event = CalendarEvent(
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
@@ -188,6 +195,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 else None
             ),
         )
+        return next_event, offset
 
     @staticmethod
     def is_matching(vevent, search):

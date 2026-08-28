@@ -1,6 +1,6 @@
 """Support for Homekit fans."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import (
@@ -51,6 +51,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     preset_automatic_value: int = TargetFanStateValues.AUTOMATIC
 
     @callback
+    @override
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
         self._async_clear_property_cache(
@@ -65,6 +66,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         )
         super()._async_reconfigure()
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         types = [
@@ -78,6 +80,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return types
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(self.on_characteristic) == 1
@@ -100,6 +103,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100)
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed percentage."""
         if not self.is_on:
@@ -110,18 +114,21 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         )
 
     @property
+    @override
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         direction = self.service.value(CharacteristicsTypes.ROTATION_DIRECTION)
         return HK_DIRECTION_TO_HA[direction]
 
     @property
+    @override
     def oscillating(self) -> bool:
         """Return whether or not the fan is currently oscillating."""
         oscillating = self.service.value(CharacteristicsTypes.SWING_MODE)
         return oscillating == 1
 
     @cached_property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
@@ -141,6 +148,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return features
 
     @cached_property
+    @override
     def speed_count(self) -> int:
         """Speed count for the fan."""
         return round(
@@ -149,11 +157,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         )
 
     @cached_property
+    @override
     def preset_modes(self) -> list[str]:
         """Return the preset modes."""
         return [PRESET_AUTO] if self.service.has(self.preset_char) else []
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
@@ -163,6 +173,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             return PRESET_AUTO
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if self.service.has(self.preset_char):
@@ -174,12 +185,14 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
                 }
             )
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
@@ -197,12 +210,14 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
         await self.async_put_characteristics(characteristics)
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -230,6 +245,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if characteristics:
             await self.async_put_characteristics(characteristics)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified fan off."""
         await self.async_put_characteristics({self.on_characteristic: False})

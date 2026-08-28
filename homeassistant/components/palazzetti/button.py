@@ -1,5 +1,7 @@
 """Support for Palazzetti buttons."""
 
+from typing import override
+
 from pypalazzetti.exceptions import CommunicationError
 
 from homeassistant.components.button import ButtonEntity
@@ -37,6 +39,7 @@ class PalazzettiSilentButtonEntity(PalazzettiEntity, ButtonEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-silent"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:

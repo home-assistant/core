@@ -39,8 +39,8 @@
 # name: test_binary_sensor[binary_sensor.ctd_000001-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'CTD 000001',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CTD 000001',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ctd_000001',
@@ -90,7 +90,7 @@
 # name: test_binary_sensor[binary_sensor.tuin_weersensor_raining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Weersensor Raining',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Weersensor Raining',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.tuin_weersensor_raining',
@@ -140,7 +140,7 @@
 # name: test_binary_sensor[binary_sensor.tuin_weersensor_twilight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Weersensor Twilight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Weersensor Twilight',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.tuin_weersensor_twilight',

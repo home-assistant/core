@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -16,10 +16,10 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import (
-    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfLength,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -74,6 +74,7 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         sendvalue = int(value)
@@ -82,6 +83,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         await self.write_attribute(value=sendvalue)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -95,6 +97,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterRangeNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         send_value = self.entity_description.ha_to_device(value)
@@ -110,6 +113,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # get the value from the primary attribute and convert
@@ -143,6 +147,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
@@ -155,6 +160,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -348,7 +354,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="pump_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             translation_key="pump_setpoint",
             native_max_value=100,
             native_min_value=0.5,
@@ -358,7 +364,7 @@ DISCOVERY_SCHEMAS = [
                     None if x is None else min(x, 200) / 2
                 )  # Matter range (1-200, capped at 200)
             ),
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5-100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,
@@ -472,15 +478,20 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="valve_configuration_and_control_default_open_duration",
             native_max_value=65534,
-            native_min_value=1,
+            native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
+            # use 0 to indicate that no default duration is configured
+            device_to_ha=lambda x: 0 if x is None else x,
+            ha_to_device=lambda x: None if x == 0 else int(x),
         ),
         entity_class=MatterNumber,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
         ),
         allow_multi=True,
+        # allow None value to account for the 'no default' state
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -510,7 +521,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterRangeNumberEntityDescription(
             key="speaker_setpoint",
             translation_key="speaker_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
                 level=int(value)
             ),
@@ -633,5 +644,67 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.DoorLock.Attributes.UserCodeTemporaryDisableTime,
         ),
+    ),
+    # WAGO specific attributes on the WindowCovering cluster.
+    # The travel times are also re-measured by the device on every full
+    # travel between the end positions, so they can change without a write.
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoTravelTimeUp",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_up",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=300,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            # device stores the travel times in units of 10 ms
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoTravelTimeUp,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoTravelTimeDown",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_down",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=300,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoTravelTimeDown,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="WagoSlatRotationTime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="slat_rotation_time",
+            device_class=NumberDeviceClass.DURATION,
+            native_max_value=10,
+            native_min_value=0,
+            native_step=0.1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            # device stores the slat rotation time in milliseconds
+            device_to_ha=lambda x: None if x is None else x / 1000,
+            ha_to_device=lambda x: round(x * 1000),
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoSlatRotationTime,),
+        vendor_id=(5428,),
     ),
 ]

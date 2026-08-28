@@ -15,6 +15,7 @@ from .const import (
 from .coordinator import WallboxConfigEntry, WallboxCoordinator, check_token_validity
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,

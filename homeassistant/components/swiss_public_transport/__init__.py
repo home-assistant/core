@@ -86,12 +86,11 @@ async def async_setup_entry(
             },
         ) from e
     except OpendataTransportError as e:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
-                **PLACEHOLDERS,
+                "stationboard_url": PLACEHOLDERS["stationboard_url"],
                 "config_title": entry.title,
                 "error": str(e),
             },
@@ -120,10 +119,6 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 3:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
         new_unique_id = unique_id_from_config(config_entry.data)
@@ -133,9 +128,7 @@ async def async_migrate_entry(
             device_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_update_device(
-                dev.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(dev.id)
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, "None_departure"

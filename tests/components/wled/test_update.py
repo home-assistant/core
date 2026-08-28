@@ -8,6 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Releases, WLEDError
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOME_ASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -25,6 +29,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -186,3 +192,44 @@ async def test_update_stay_beta(
     )
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="1.0.0b5")
+
+
+async def test_update_entities(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_wled_releases: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update entity async_update method."""
+    await async_setup_component(hass, HOME_ASSISTANT_DOMAIN, {})
+
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
+    mock_wled_releases.releases.assert_called_once()
+
+    mock_wled_releases.releases.return_value = Releases(
+        beta="1.0.0b5",
+        nightly=None,
+        repo="wled/WLED",
+        stable="16.0.0",
+    )
+
+    await hass.services.async_call(
+        HOME_ASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: state.entity_id},
+        blocking=True,
+    )
+
+    # Ensure we pass the debouncer interval to allow async_request_refresh to execute
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # releases() should be called twice: once on setup, once for the manual update
+    assert mock_wled_releases.releases.call_count == 2
+
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "16.0.0"

@@ -1,6 +1,7 @@
 """Base for Hass.io entities."""
 
 from collections.abc import Callable
+from typing import override
 
 from aiohasupervisor.models import CIFSMountResponse, HostInfo, NFSMountResponse, OSInfo
 from aiohasupervisor.models.base import ContainerStats
@@ -54,10 +55,12 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         return self._stats
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._stats is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to stats updates."""
         await super().async_added_to_hass()
@@ -105,10 +108,12 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
         return data.addons[self._addon_slug]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._addon_slug in self.coordinator.data.addons
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to addon info updates."""
         await super().async_added_to_hass()
@@ -136,6 +141,7 @@ class HassioOSEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "OS")})
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.os is not None
@@ -232,6 +238,7 @@ class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         return self._mount.name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.mount_name in self.coordinator.data.mounts

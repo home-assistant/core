@@ -41,7 +41,7 @@ def storage_setup_named_tag(
             }
         else:
             hass_storage[DOMAIN] = items
-        entity_registry = er.async_get(hass)
+        entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         entry = entity_registry.async_get_or_create(DOMAIN, DOMAIN, TEST_TAG_ID)
         entity_registry.async_update_entity(entry.entity_id, name=TEST_TAG_NAME)
         config = {DOMAIN: {}}

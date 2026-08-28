@@ -1,0 +1,13 @@
+{
+  "domain": "lg_tv_rs232",
+  "name": "LG TV via Serial",
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/lg_tv_rs232",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["lg_rs232_tv"],
+  "quality_scale": "silver",
+  "requirements": ["lg-rs232-tv==1.2.0"]
+}

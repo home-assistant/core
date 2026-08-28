@@ -1,6 +1,6 @@
 """Platform for UPB light integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -61,6 +61,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         self._attr_brightness: int = self._element.status
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._element.dimmable:
@@ -68,11 +69,13 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._element.dimmable:
@@ -80,10 +83,12 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return LightEntityFeature.FLASH
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the current brightness."""
         return self._attr_brightness != 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if flash := kwargs.get(ATTR_FLASH):
@@ -93,6 +98,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
             brightness = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
             self._element.turn_on(brightness, rate)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         rate = kwargs.get(ATTR_TRANSITION, -1)
@@ -117,6 +123,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         """Request the device to update its status."""
         self._element.update_status()
 
+    @override
     def _element_changed(self, element, changeset):
         status = self._element.status
         self._attr_brightness = round(status * 2.55) if status else 0

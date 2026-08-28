@@ -20,7 +20,7 @@
   },
   "exceptions": {
     "no_advertisement": {
-      "message": "The device with address {address} is not advertising; Make sure it is in range and powered on."
+      "message": "The device with address {address} is not advertising: {reason}"
     }
   }
 }

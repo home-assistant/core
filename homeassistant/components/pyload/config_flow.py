@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
@@ -103,6 +103,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: HassioServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -218,6 +219,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

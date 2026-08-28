@@ -39,7 +39,7 @@
 # name: test_buttons[healer_fixture][button.test_user_allocate_all_stat_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Allocate all stat points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Allocate all stat points',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_allocate_all_stat_points',
@@ -89,8 +89,8 @@
 # name: test_buttons[healer_fixture][button.test_user_blessing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_healAll.png',
-      'friendly_name': 'test-user Blessing',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_healAll.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Blessing',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_blessing',
@@ -140,8 +140,8 @@
 # name: test_buttons[healer_fixture][button.test_user_buy_a_health_potion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
-      'friendly_name': 'test-user Buy a health potion',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Buy a health potion',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_buy_a_health_potion',
@@ -191,8 +191,8 @@
 # name: test_buttons[healer_fixture][button.test_user_healing_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_heal.png',
-      'friendly_name': 'test-user Healing light',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_heal.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Healing light',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_healing_light',
@@ -242,8 +242,8 @@
 # name: test_buttons[healer_fixture][button.test_user_protective_aura-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_protectAura.png',
-      'friendly_name': 'test-user Protective aura',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_protectAura.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Protective aura',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_protective_aura',
@@ -293,7 +293,7 @@
 # name: test_buttons[healer_fixture][button.test_user_revive_from_death-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Revive from death',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Revive from death',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_revive_from_death',
@@ -343,8 +343,8 @@
 # name: test_buttons[healer_fixture][button.test_user_searing_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_brightness.png',
-      'friendly_name': 'test-user Searing brightness',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_brightness.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Searing brightness',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_searing_brightness',
@@ -394,7 +394,7 @@
 # name: test_buttons[healer_fixture][button.test_user_start_my_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Start my day',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Start my day',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_start_my_day',
@@ -444,7 +444,7 @@
 # name: test_buttons[rogue_fixture][button.test_user_allocate_all_stat_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Allocate all stat points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Allocate all stat points',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_allocate_all_stat_points',
@@ -494,8 +494,8 @@
 # name: test_buttons[rogue_fixture][button.test_user_buy_a_health_potion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
-      'friendly_name': 'test-user Buy a health potion',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Buy a health potion',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_buy_a_health_potion',
@@ -545,7 +545,7 @@
 # name: test_buttons[rogue_fixture][button.test_user_revive_from_death-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Revive from death',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Revive from death',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_revive_from_death',
@@ -595,7 +595,7 @@
 # name: test_buttons[rogue_fixture][button.test_user_start_my_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Start my day',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Start my day',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_start_my_day',
@@ -645,8 +645,8 @@
 # name: test_buttons[rogue_fixture][button.test_user_stealth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_stealth.png',
-      'friendly_name': 'test-user Stealth',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_stealth.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Stealth',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_stealth',
@@ -696,8 +696,8 @@
 # name: test_buttons[rogue_fixture][button.test_user_tools_of_the_trade-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_toolsOfTrade.png',
-      'friendly_name': 'test-user Tools of the trade',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_toolsOfTrade.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Tools of the trade',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_tools_of_the_trade',
@@ -747,7 +747,7 @@
 # name: test_buttons[warrior_fixture][button.test_user_allocate_all_stat_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Allocate all stat points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Allocate all stat points',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_allocate_all_stat_points',
@@ -797,8 +797,8 @@
 # name: test_buttons[warrior_fixture][button.test_user_buy_a_health_potion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
-      'friendly_name': 'test-user Buy a health potion',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Buy a health potion',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_buy_a_health_potion',
@@ -848,8 +848,8 @@
 # name: test_buttons[warrior_fixture][button.test_user_defensive_stance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_defensiveStance.png',
-      'friendly_name': 'test-user Defensive stance',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_defensiveStance.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Defensive stance',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_defensive_stance',
@@ -899,8 +899,8 @@
 # name: test_buttons[warrior_fixture][button.test_user_intimidating_gaze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_intimidate.png',
-      'friendly_name': 'test-user Intimidating gaze',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_intimidate.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Intimidating gaze',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_intimidating_gaze',
@@ -950,7 +950,7 @@
 # name: test_buttons[warrior_fixture][button.test_user_revive_from_death-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Revive from death',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Revive from death',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_revive_from_death',
@@ -1000,7 +1000,7 @@
 # name: test_buttons[warrior_fixture][button.test_user_start_my_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Start my day',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Start my day',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_start_my_day',
@@ -1050,8 +1050,8 @@
 # name: test_buttons[warrior_fixture][button.test_user_valorous_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_valorousPresence.png',
-      'friendly_name': 'test-user Valorous presence',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_valorousPresence.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Valorous presence',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_valorous_presence',
@@ -1101,7 +1101,7 @@
 # name: test_buttons[wizard_fixture][button.test_user_allocate_all_stat_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Allocate all stat points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Allocate all stat points',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_allocate_all_stat_points',
@@ -1151,8 +1151,8 @@
 # name: test_buttons[wizard_fixture][button.test_user_buy_a_health_potion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
-      'friendly_name': 'test-user Buy a health potion',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Buy a health potion',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_buy_a_health_potion',
@@ -1202,8 +1202,8 @@
 # name: test_buttons[wizard_fixture][button.test_user_chilling_frost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_frost.png',
-      'friendly_name': 'test-user Chilling frost',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_frost.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Chilling frost',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_chilling_frost',
@@ -1253,8 +1253,8 @@
 # name: test_buttons[wizard_fixture][button.test_user_earthquake-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_earth.png',
-      'friendly_name': 'test-user Earthquake',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_earth.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Earthquake',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_earthquake',
@@ -1304,8 +1304,8 @@
 # name: test_buttons[wizard_fixture][button.test_user_ethereal_surge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_mpheal.png',
-      'friendly_name': 'test-user Ethereal surge',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_mpheal.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Ethereal surge',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_ethereal_surge',
@@ -1355,7 +1355,7 @@
 # name: test_buttons[wizard_fixture][button.test_user_revive_from_death-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Revive from death',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Revive from death',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_revive_from_death',
@@ -1405,7 +1405,7 @@
 # name: test_buttons[wizard_fixture][button.test_user_start_my_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Start my day',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Start my day',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_user_start_my_day',

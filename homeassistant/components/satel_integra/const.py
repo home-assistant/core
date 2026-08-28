@@ -1,6 +1,6 @@
 """Constants for the Satel Integra integration."""
 
-DEFAULT_CONF_ARM_HOME_MODE = 1
+DEFAULT_CONF_ARM_HOME_MODE = "1"
 DEFAULT_PORT = 7094
 
 DOMAIN = "satel_integra"

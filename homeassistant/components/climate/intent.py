@@ -1,5 +1,7 @@
 """Intents for the climate integration."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -35,6 +37,7 @@ class SetTemperatureIntent(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

@@ -2,7 +2,9 @@
 
 from collections.abc import Generator
 from typing import Any
+from unittest.mock import patch
 
+import attr
 import pytest
 
 from homeassistant.components.device_tracker import (
@@ -11,6 +13,8 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
+    CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     BaseScannerEntity,
@@ -18,9 +22,15 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
     TrackerEntity,
+    TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_FRIENDLY_NAME,
@@ -33,7 +43,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -109,6 +123,7 @@ async def create_mock_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entities: list[Entity],
+    config_subentry_id: str | None = None,
 ) -> MockConfigEntry:
     """Create a device tracker platform with the specified entities."""
 
@@ -118,7 +133,7 @@ async def create_mock_platform(
         async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
-        async_add_entities(entities)
+        async_add_entities(entities, config_subentry_id=config_subentry_id)
 
     mock_platform(
         hass,
@@ -474,6 +489,19 @@ async def test_load_unload_entry_tracker(
     assert not state
 
 
+def test_tracking_type_capability_attribute() -> None:
+    """Test the tracking_type capability attribute set by each base class."""
+    assert MockTrackerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
+    assert MockBaseScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+    assert MockScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+
+
 @pytest.mark.parametrize(
     (
         "battery_level",
@@ -683,15 +711,31 @@ async def test_load_unload_entry_tracker(
             None,
             1.0,
             2.0,
+            STATE_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.home"],
+                ATTR_LATITUDE: 1.0,
+                ATTR_LONGITUDE: 2.0,
+            },
+            id="in_zones_wins_over_lat_long",
+        ),
+        pytest.param(
+            None,
+            [],
+            None,
+            50.0,
+            60.0,
             STATE_NOT_HOME,
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
                 ATTR_IN_ZONES: [],
-                ATTR_LATITUDE: 1.0,
-                ATTR_LONGITUDE: 2.0,
+                ATTR_LATITUDE: 50.0,
+                ATTR_LONGITUDE: 60.0,
             },
-            id="in_zones_ignored_when_lat_long_set",
+            id="empty_in_zones_wins_over_lat_long",
         ),
         pytest.param(
             None,
@@ -751,7 +795,9 @@ async def test_tracker_entity_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
-    assert state.attributes == expected_attributes
+    assert state.attributes == expected_attributes | {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
 
 
 async def test_base_scanner_entity_state(
@@ -768,6 +814,7 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
     assert entity_state.state == STATE_NOT_HOME
@@ -782,6 +829,7 @@ async def test_base_scanner_entity_state(
     # entity_id is reported.
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: ["zone.home"],
     }
 
@@ -794,6 +842,7 @@ async def test_base_scanner_entity_state(
     # is_connected is None -> empty in_zones (always reported).
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
 
@@ -887,8 +936,331 @@ async def test_base_scanner_entity_in_zones_when_connected(
     assert entity_state.state == STATE_HOME
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: expected_in_zones,
     }
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_option(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test the associated_zone entity option overrides which zone in_zones reports.
+
+    The scanner reports being connected to a non-default zone; state and in_zones
+    must follow the configured zone, and a zone enclosing the configured one is
+    included in in_zones too.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    hass.states.async_set(
+        "zone.kitchen",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 50},
+    )
+    await hass.async_block_till_done()
+
+    base_scanner_entity._connected = True
+
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Default: no option set -> associated with zone.home.
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.home"]
+
+    # Set the option -> associated_zone replaces zone.home; zone.home now shows
+    # up via the enclosing-zones lookup.
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    assert base_scanner_entity._scanner_option_associated_zone == "zone.kitchen"
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    # zone.kitchen is the configured zone -> state is the zone's name.
+    assert entity_state.state == "kitchen"
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.kitchen", "zone.home"]
+
+    # Clearing the option falls back to zone.home.
+    entity_registry.async_update_entity_options(entity_id, DOMAIN, None)
+    await hass.async_block_till_done()
+
+    assert base_scanner_entity._scanner_option_associated_zone == "zone.home"
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.home"]
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_removed_after_set(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test scanner state and repair issue when associated zone is removed.
+
+    When the user picks a zone via the associated_zone option and then deletes
+    that zone, the scanner falls back to ``state == "unknown"`` and a repair
+    issue is opened prompting the user to reconfigure.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    hass.states.async_set(
+        "zone.kitchen",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 50},
+    )
+    await hass.async_block_till_done()
+
+    base_scanner_entity._connected = True
+
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    # Sanity check before removal.
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == "kitchen"
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.kitchen", "zone.home"]
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Remove the associated zone.
+    hass.states.async_remove("zone.kitchen")
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+    assert entity_state.attributes[ATTR_IN_ZONES] == []
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "associated_zone_missing"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "zone": "zone.kitchen",
+    }
+
+    # Restore the zone -> issue is cleared, state recovers.
+    hass.states.async_set(
+        "zone.kitchen",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 50},
+    )
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == "kitchen"
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.kitchen", "zone.home"]
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_missing_at_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test repair issue is created when the configured zone is missing at setup."""
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    await hass.async_block_till_done()
+
+    # Pre-register the entity option pointing at a zone that does not exist.
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        TEST_DOMAIN,
+        base_scanner_entity.unique_id,
+        suggested_object_id="entity1",
+    )
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.never_existed"},
+    )
+
+    base_scanner_entity._connected = True
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+    assert entity_state.attributes[ATTR_IN_ZONES] == []
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "zone": "zone.never_existed",
+    }
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_issue_cleared_on_option_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test the repair issue is cleared when the user clears the option."""
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    await hass.async_block_till_done()
+
+    base_scanner_entity._connected = True
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.never_existed"},
+    )
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Clearing the option restores the default and clears the repair issue.
+    entity_registry.async_update_entity_options(entity_id, DOMAIN, None)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_issue_cleared_on_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test the repair issue is cleared when the entity is removed from hass."""
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    await hass.async_block_till_done()
+
+    base_scanner_entity._connected = True
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.never_existed"},
+    )
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_option_set_before_add(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test associated_zone option set before the entity is added is honored."""
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    hass.states.async_set(
+        "zone.kitchen",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 50},
+    )
+    await hass.async_block_till_done()
+
+    # Pre-register the entity with the option set before the platform is set up.
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        TEST_DOMAIN,
+        base_scanner_entity.unique_id,
+        suggested_object_id="entity1",
+    )
+    entity_registry.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        {CONF_ASSOCIATED_ZONE: "zone.kitchen"},
+    )
+
+    base_scanner_entity._connected = True
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert base_scanner_entity._scanner_option_associated_zone == "zone.kitchen"
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == "kitchen"
+    assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.kitchen", "zone.home"]
 
 
 @pytest.mark.parametrize(
@@ -922,11 +1294,12 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
-        ATTR_FRIENDLY_NAME: "Device from other integration",
+        ATTR_FRIENDLY_NAME: hostname,
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -1034,6 +1407,101 @@ def test_base_tracker_entity() -> None:
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
         entity.state_attributes  # noqa: B018
+
+
+def test_battery_level_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding battery_level in a subclass logs a warning."""
+    error_message = "is overriding the deprecated battery_level property"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def battery_level(self) -> int | None:
+            return 50
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override battery_level
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
+
+
+async def test_attr_location_name_deprecation_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setting _attr_location_name logs a deprecation warning."""
+    error_message = "is setting the deprecated _attr_location_name attribute"
+
+    class _Subclass(TrackerEntity):
+        pass
+
+    # No warning when _attr_location_name is unset (default None)
+    entity_no_attr = _Subclass()
+    entity_no_attr.hass = hass
+    assert entity_no_attr.location_name is None
+    assert error_message not in caplog.text
+
+    # Warning fires when _attr_location_name has a non-None value
+    entity = _Subclass()
+    entity.hass = hass
+    entity._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message in caplog.text
+
+    # Warning does not fire again on subsequent access for the same instance
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message not in caplog.text
+
+    # Warning is suppressed for this instance even after the cached value is
+    # invalidated by a subsequent _attr_location_name assignment.
+    entity._attr_location_name = "another_zone"
+    caplog.clear()
+    assert entity.location_name == "another_zone"
+    assert error_message not in caplog.text
+
+    # A fresh instance warns once again
+    entity_new = _Subclass()
+    entity_new.hass = hass
+    entity_new._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity_new.location_name == "the_zone"
+    assert error_message in caplog.text
+
+
+def test_location_name_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding location_name in a subclass logs a warning."""
+    error_message = "is overriding the deprecated location_name property"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def location_name(self) -> str | None:
+            return "custom"
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override location_name
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1149,6 +1617,327 @@ async def test_register_mac_ignored(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
+)
+async def test_register_mac_ignores_child_device_created(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    scanner_entity: MockScannerEntity,
+    entity_id: str,
+    mac_address: str,
+    unique_id: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the MAC listener skips a newly created child device.
+
+    Registering a scanner MAC installs a device-registry create listener. A child
+    device has no connections attribute, so the listener must resolve it to None
+    (include_child_devices=False) and skip it, instead of raising AttributeError
+    while reading connections.
+    """
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    caplog.clear()
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "parent")},
+    )
+    device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "child")},
+        parent_device_id=parent.id,
+    )
+    await hass.async_block_till_done()
+
+    # The listener must not have raised while handling the child's create event.
+    assert "Error running job" not in caplog.text
+
+    # A child device has no MAC, so the scanner entity stays disabled.
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.fixture
+def allow_deprecated_device_registry_apis() -> Generator[None]:
+    """Allow tests to call the deprecated device registry APIs without raising.
+
+    A restored composite device can only be retrieved with async_get_device, so tests
+    exercising composite devices keep calling it; downgrade the deprecation report to a
+    log instead of raising.
+    """
+    real_report_usage = dr.report_usage
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = dr.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = dr.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = dr.ReportBehavior.LOG
+        real_report_usage(what, **kwargs)
+
+    with patch.object(dr, "report_usage", _log_only):
+        yield
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
+async def test_scanner_entity_attaches_to_split_of_composite_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a scanner entity attaches to its config entry's split device."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={(TEST_DOMAIN, "own")},
+    )
+    other_split = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    # Simulate a migration split: both devices share the pre-migration composite id
+    device_registry._devices[own_split.id] = attr.evolve(
+        own_split, composite_device_id=old_id
+    )
+    device_registry._devices[other_split.id] = attr.evolve(
+        other_split, composite_device_id=old_id
+    )
+    # async_get_device now resolves the shared MAC to the synthesized composite
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry._devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Attached to its own split, not the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
+async def test_scanner_entity_composite_device_without_own_split(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A composite with no split owned by the scanner's config entry.
+
+    The tracked device is known to other integrations, so the scanner registers
+    its own device instead of attaching to another config entry's split.
+    """
+    mac = TEST_MAC_ADDRESS
+    other_entry_1 = MockConfigEntry(domain="other_1")
+    other_entry_1.add_to_hass(hass)
+    other_entry_2 = MockConfigEntry(domain="other_2")
+    other_entry_2.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    # Both splits belong to other config entries, none to the scanner's
+    for entry, identifier in ((other_entry_1, "one"), (other_entry_2, "two")):
+        split = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={("other", identifier)},
+        )
+        device_registry._devices[split.id] = attr.evolve(
+            split, composite_device_id=old_id
+        )
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry._devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # The scanner registers its own device instead of using a foreign split
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+
+
+async def test_scanner_entity_attaches_to_own_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the scanner reuses its config entry's device when several share the MAC."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    own_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.shared_mac_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.shared_mac_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_device.id
+
+
+@pytest.mark.parametrize(
+    ("hostname", "expected_device_name"),
+    [
+        pytest.param("tracked-host", "tracked-host", id="hostname"),
+        pytest.param(None, TEST_MAC_ADDRESS, id="no-hostname-falls-back-to-mac"),
+    ],
+)
+async def test_scanner_entity_registers_own_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    expected_device_name: str,
+) -> None:
+    """Test the scanner registers its own device when the MAC is known elsewhere."""
+    mac = TEST_MAC_ADDRESS
+    foreign_ids = set()
+    for domain in ("other_1", "other_2"):
+        entry = MockConfigEntry(domain=domain)
+        entry.add_to_hass(hass)
+        foreign_ids.add(
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                identifiers={(domain, "x")},
+            ).id
+        )
+
+    scanner_entity = MockScannerEntity(
+        mac_address=mac, hostname=hostname, unique_id=f"{mac}_scanner"
+    )
+    scanner_entity.entity_id = "device_tracker.shared_mac_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.shared_mac_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    assert entity_entry.device_id not in foreign_ids
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+    assert own_device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
+    assert own_device.name == expected_device_name
+
+
+async def test_scanner_entity_own_device_in_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the scanner's own device is created in the entity's config subentry."""
+    mac = TEST_MAC_ADDRESS
+    subentry_id = "mock-subentry-id"
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        subentries_data=(
+            ConfigSubentryData(
+                data={},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                title="Mock subentry",
+                unique_id=None,
+            ),
+        ),
+    )
+    config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.subentry_scanner"
+    await create_mock_platform(
+        hass, config_entry, [scanner_entity], config_subentry_id=subentry_id
+    )
+
+    entity_entry = entity_registry.async_get("device_tracker.subentry_scanner")
+    assert entity_entry is not None
+    assert entity_entry.config_subentry_id == subentry_id
+    assert entity_entry.device_id is not None
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+    assert own_device.config_subentry_id == subentry_id
+
+
+async def test_scanner_entity_prunes_composite_identifiers(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test re-registration prunes composite relics from the scanner's split device.
+
+    Splits of a pre-migration composite keep the identifiers and connections copied
+    from the composite until the owning config entry re-registers the device; the
+    scanner's registration provides only the MAC connection, dropping the rest.
+    """
+    mac = TEST_MAC_ADDRESS
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "copied-identifier")},
+    )
+    device_registry._devices[own_split.id] = attr.evolve(
+        own_split,
+        composite_device_id="composite00000000000000000000000",
+        has_composite_identifiers=True,
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+    device = device_registry.async_get(own_split.id)
+    assert device is not None
+    assert device.identifiers == set()
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
 
 
 async def test_connected_device_registered(
@@ -1284,4 +2073,5 @@ async def test_tracker_entity_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
-    assert state.attributes == {}
+    # Capability attributes are reported even when the entity is unavailable.
+    assert state.attributes == {ATTR_TRACKING_TYPE: TrackingType.POSITION}
