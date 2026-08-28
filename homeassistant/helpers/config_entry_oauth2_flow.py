@@ -47,10 +47,25 @@ from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-# Re-exported for integrations importing it from here since before it moved
-# to homeassistant.exceptions.
 __all__ = [
+    "AUTH_CALLBACK_PATH",
+    "HEADER_FRONTEND_BASE",
+    "MY_AUTH_CALLBACK_PATH",
+    "AbstractOAuth2FlowHandler",
+    "AbstractOAuth2Implementation",
+    # Re-exported since integrations imported it from here before it moved
+    # to homeassistant.exceptions.
     "ImplementationUnavailableError",
+    "LocalOAuth2Implementation",
+    "LocalOAuth2ImplementationWithPkce",
+    "OAuth2AuthorizeCallbackView",
+    "OAuth2Session",
+    "async_add_implementation_provider",
+    "async_get_config_entry_implementation",
+    "async_get_implementations",
+    "async_get_redirect_uri",
+    "async_oauth2_request",
+    "async_register_implementation",
 ]
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"

@@ -1067,3 +1067,31 @@ async def test_reauth_flow_missing_implementation(
     # Instead of erroring out, the user can pick or create credentials again
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=SCOPES,
+    )
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # The entry now points at an implementation that exists again
+    assert config_entry.data["auth_implementation"] == AUTH_DOMAIN
+    assert config_entry.data[CONF_TOKEN]
+    assert len(mock_setup_entry.mock_calls) == 1
