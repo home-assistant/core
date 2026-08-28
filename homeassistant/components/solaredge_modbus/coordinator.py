@@ -113,7 +113,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             if subsystem not in self._silent:
                 self._silent.add(subsystem)
                 LOGGER.warning(
-                    "%s: %s did not answer and its entities are unavailable: %s",
+                    "%s: %s did not answer this poll and kept its previous values: %s",
                     self.name,
                     subsystem,
                     error,

@@ -219,6 +219,9 @@
     "communication_error": {
       "message": "An error occurred while communicating with the SolarEdge inverter: {error}"
     },
+    "identity_unavailable": {
+      "message": "The inverter did not report its identity, so it cannot be confirmed as the one this entry was set up for."
+    },
     "link_settings_in_use": {
       "message": "The inverter cannot be set up with these link settings: {error}"
     },

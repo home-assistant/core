@@ -20,7 +20,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DOMAIN
+from .const import CONF_UNIT_ID, DOMAIN, SUBSYSTEM_COMMON
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
     SolarEdgeModbusDataUpdateCoordinator,
@@ -70,12 +70,18 @@ async def async_setup_entry(
     readings = SolarEdgeModbusDataUpdateCoordinator(hass, entry, solaredge)
     await readings.async_config_entry_first_refresh()
 
-    # Identity arrives with that first read. An address or device ID can end up
-    # pointing at another inverter (a reused DHCP lease, a changed setting), and
-    # every identity here derives from the entry's serial, so stop rather than
-    # hang this entry's name and history on a different device.
-    probed = solaredge.common.serial_number
-    if probed is not None and probed != serial_number:
+    # Identity arrives with that first read, and a poll can come back without
+    # it. Nothing can be checked then, so try again rather than accept the
+    # entry: an address or device ID can end up pointing at another inverter (a
+    # reused DHCP lease, a changed setting), and every identity here derives
+    # from the entry's serial number.
+    if SUBSYSTEM_COMMON in readings.data.failed:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="identity_unavailable",
+        )
+
+    if solaredge.common.serial_number != serial_number:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="wrong_inverter",

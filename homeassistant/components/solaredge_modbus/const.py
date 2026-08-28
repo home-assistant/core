@@ -18,6 +18,7 @@ DEFAULT_PORT: Final = 1502
 DEFAULT_UNIT_ID: Final = 1
 
 # Sub-system names as the library reports them in an UpdateReport.
+SUBSYSTEM_COMMON: Final = "common"
 SUBSYSTEM_INVERTER: Final = "inverter"
 
 # Local Modbus is cheap to read and PV production moves fast.

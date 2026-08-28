@@ -3,8 +3,9 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusTimeoutError, ServerDeviceFailureError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
 
 from homeassistant.components.solaredge_modbus.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import SERIAL_NUMBER, tcp_data
+from .conftest import SERIAL_NUMBER, async_seed_unit, tcp_data
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -157,25 +158,56 @@ async def test_setup_error_when_not_a_solaredge_device(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_error_when_another_inverter_answers(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+@pytest.mark.parametrize(
+    "serial_registers",
+    [
+        pytest.param([20308, 18501, 21041, 12851], id="another inverter"),
+        pytest.param([0, 0, 0, 0], id="no serial number"),
+    ],
+)
+async def test_setup_error_when_the_identity_does_not_match(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    serial_registers: list[int],
 ) -> None:
-    """An address that now holds a different inverter must not adopt its data.
+    """An address that no longer holds this inverter must not adopt its data.
 
     Every identity in this integration derives from the entry's serial number,
-    so loading a different device would hang this entry's name and history on
-    the wrong inverter.
+    so loading a device that reports another one, or none at all, would hang
+    this entry's name and history on the wrong inverter.
     """
+    await async_seed_unit(
+        hass, mock_modbus_connection.for_unit(2), serial_registers=serial_registers
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="SolarEdge SE10000H",
-        unique_id="OTHER123",
-        data=tcp_data(),
+        unique_id=SERIAL_NUMBER,
+        data=tcp_data(unit_id=2),
     )
 
     await _setup(hass, entry)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_retry_when_the_identity_is_unreadable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll without the identity block proves nothing, so setup tries again.
+
+    The rest of the device can answer perfectly well while the identity block
+    does not, and accepting the entry then would skip the check that this is
+    still the same inverter. A device fault says exactly that, where silence
+    from the first block on would mean a dead link.
+    """
+    mock_modbus_unit.fail_read(40004, ServerDeviceFailureError())
+
+    await _setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_retry_that_finds_nothing_keeps_the_first_poll(
