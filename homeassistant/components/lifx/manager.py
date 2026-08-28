@@ -47,7 +47,12 @@ from homeassistant.helpers.target import (
 
 from .const import ATTR_THEME, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
-from .util import device_error, find_hsbk
+from .util import (
+    device_error,
+    overwrites_existing_color,
+    parse_hsbk_changes,
+    replace_hsbk,
+)
 
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
 SERVICE_EFFECT_FLAME = "effect_flame"
@@ -325,11 +330,19 @@ class LIFXManager:
         return Theme(cls._build_palette(palette))
 
     @staticmethod
-    def hsbk_from_service_data(
+    async def hsbk_from_service_data(
         device: Light, service_data: Mapping[str, object]
     ) -> HSBK | None:
         """Merge the requested color components onto a device's current color."""
-        return find_hsbk(device.state.color, **service_data)
+        changes = parse_hsbk_changes(**service_data)
+        if all(value is None for value in changes.values()):
+            return None
+        base = device.state.color
+        if not overwrites_existing_color(changes):
+            # The omitted components are kept, so a color changed outside Home
+            # Assistant has to be read before it is merged over
+            base, _, _ = await device.get_color()
+        return replace_hsbk(base, changes)
 
     @staticmethod
     async def _async_power_on(devices: Sequence[Light], power_on: bool) -> None:
@@ -450,6 +463,9 @@ class LIFXManager:
         """Start the software-based Pulse effect."""
         # Unspecified color components come from each device, so every device
         # gets its own effect
+        colors = await asyncio.gather(
+            *(self.hsbk_from_service_data(device, service.data) for device in devices)
+        )
         await asyncio.gather(
             *(
                 self.effects_conductor.start(
@@ -458,11 +474,11 @@ class LIFXManager:
                         mode=service.data.get(ATTR_MODE, PULSE_MODE_BLINK),
                         period=service.data.get(ATTR_PERIOD),
                         cycles=service.data.get(ATTR_CYCLES),
-                        color=self.hsbk_from_service_data(device, service.data),
+                        color=color,
                     ),
                     [device],
                 )
-                for device in devices
+                for device, color in zip(devices, colors, strict=True)
             )
         )
 

@@ -134,6 +134,7 @@ def _create_mock_device(
     device.serial = state.serial
     device.state = state
     device.refresh_state = AsyncMock()
+    device.get_color = AsyncMock(return_value=(state.color, state.power, state.label))
     device.close = AsyncMock()
     device.set_power = AsyncMock()
     device.set_color = AsyncMock()

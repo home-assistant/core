@@ -93,6 +93,7 @@ from . import (
     async_trigger_update,
 )
 from .helpers import (
+    LABEL,
     MockDevice,
     assert_color_written,
     create_mock_ceiling_light,
@@ -316,6 +317,26 @@ async def test_effect_pulse_uses_public_effect(
     assert effect.cycles == 4
     assert effect.color == HSBK(120.0, 0.5, 128 / 255, 3500)
     assert participants == [device]
+
+
+async def test_effect_pulse_reads_color_before_merging(
+    hass: HomeAssistant, mock_effect_conductor: MagicMock
+) -> None:
+    """Test pulse merges a partial color over what the device reports now."""
+    device = create_mock_light()
+    await async_setup_lifx_entry(hass, device)
+    device.get_color.return_value = (HSBK(120.0, 1.0, 1.0, 3500), 65535, LABEL)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    device.get_color.assert_awaited_once()
+    effect, _ = mock_effect_conductor.start.await_args.args
+    assert effect.color == HSBK(120.0, 1.0, 128 / 255, 3500)
 
 
 async def test_effect_colorloop_uses_public_effect_defaults(
