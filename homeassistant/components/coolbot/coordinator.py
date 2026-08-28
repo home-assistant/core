@@ -152,10 +152,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 # once the MAC arrives, duplicating the device, so it cannot be
                 # published under that id.
                 if (already_seen := seen_by_slot.get(device.target)) is not None:
-                    # Reconnecting only waits for the first replayed pin, which
-                    # need not be this device's MAC. Carrying the last snapshot
-                    # over the gap avoids reporting an outage that is not
-                    # happening and flapping its entities for a cycle.
+                    # A reconnect waits for each expected MAC, so reaching here
+                    # means that replay was incomplete or timed out. Carrying
+                    # the last snapshot over the gap avoids reporting an outage
+                    # that is not happening and flapping its entities.
                     data[already_seen.unique_id] = already_seen
                     continue
                 _LOGGER.debug(
@@ -188,10 +188,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
     def _apply_late_device_details(self, data: dict[str, CoolbotDevice]) -> None:
         """Record hardware details that replay after a cooler is created.
 
-        Connecting returns once the first pin has replayed, so a cooler can be
-        registered before its model and firmware pins arrive. Device info is
-        only read when an entity is added, so without this those details would
-        stay missing until the entry is reloaded.
+        Connecting waits for the pins that identify a cooler, not for all of
+        them, so it can be registered before its model and firmware arrive.
+        Device info is only read when an entity is added, so without this those
+        details would stay missing until the entry is reloaded.
         """
         registry: dr.DeviceRegistry | None = None
         for unique_id, device in data.items():

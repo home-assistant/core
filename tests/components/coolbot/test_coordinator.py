@@ -129,9 +129,9 @@ async def test_a_reconnect_before_the_mac_replays_does_not_flap(
 ) -> None:
     """A known cooler survives a refresh that arrives before its MAC does.
 
-    Reconnecting only waits for the first replayed pin, which need not be this
-    cooler's MAC. Dropping it for that one cycle would report an outage that is
-    not happening and flap its entities.
+    A reconnect waits for each expected MAC to replay, so this is reached only
+    when that replay is incomplete or times out. Dropping the cooler for that
+    cycle would report an outage that is not happening and flap its entities.
     """
     assert await setup_integration(hass, mock_config_entry)
 

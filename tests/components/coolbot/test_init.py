@@ -124,9 +124,9 @@ async def test_hardware_details_that_replay_late_reach_the_registry(
 ) -> None:
     """Model and firmware pins can replay after the cooler is created.
 
-    Connecting returns once the first pin has replayed, and device info is only
-    read when an entity is added, so these details would otherwise stay missing
-    until the entry is reloaded.
+    Connecting waits for the pins that identify a cooler, not for all of them,
+    and device info is only read when an entity is added, so these details
+    would otherwise stay missing until the entry is reloaded.
     """
     mock_client.async_get_devices.return_value = [
         make_device(coolbot_hardware=None, jumper_firmware=None)
