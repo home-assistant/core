@@ -3,19 +3,46 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "mqtt_not_configured": "MQTT is not configured",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_supported": "Device not supported"
+    },
+    "error": {
+      "invalid_mac": "Enter a valid MAC address, for example 58:2D:34:12:A4:C2"
     },
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       },
-      "user": {
+      "bluetooth_device": {
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
         },
         "description": "[%key:component::bluetooth::config::step::user::description%]"
+      },
+      "mqtt_device": {
+        "data": {
+          "mac": "Device MAC address",
+          "model": "Model"
+        },
+        "data_description": {
+          "mac": "Devices that recently published data are listed automatically. If your device is not in the list, enter its MAC address."
+        },
+        "description": "Set up a Qingping device connected to the MQTT broker."
+      },
+      "user": {
+        "menu_options": {
+          "bluetooth_device": "Bluetooth device",
+          "mqtt_device": "MQTT device (Wi-Fi)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "cgr1w": "Qingping Indoor Environment Monitor"
       }
     }
   }

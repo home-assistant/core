@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.qingping.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from . import (
     LIGHT_AND_SIGNAL_SERVICE_INFO,
@@ -14,6 +14,18 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def _async_start_bluetooth_user_flow(hass: HomeAssistant) -> FlowResult:
+    """Start the user flow and choose the Bluetooth device path."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "bluetooth_device"}
+    )
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -81,10 +93,7 @@ async def test_async_step_bluetooth_not_qingping(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
     """Test setup from service info cache with no devices found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
+    result = await _async_start_bluetooth_user_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
@@ -100,12 +109,9 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             "homeassistant.components.qingping.config_flow.bluetooth.async_request_active_scan"
         ) as mock_request_active_scan,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_bluetooth_user_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "bluetooth_device"
     mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
         "homeassistant.components.qingping.async_setup_entry", return_value=True
@@ -133,12 +139,9 @@ async def test_async_step_user_replace_ignored(hass: HomeAssistant) -> None:
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
         return_value=[LIGHT_AND_SIGNAL_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_bluetooth_user_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "bluetooth_device"
     with patch(
         "homeassistant.components.qingping.async_setup_entry", return_value=True
     ):
@@ -158,12 +161,9 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
         return_value=[LIGHT_AND_SIGNAL_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_bluetooth_user_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "bluetooth_device"
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -196,10 +196,7 @@ async def test_async_step_user_with_found_devices_already_setup(
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
         return_value=[LIGHT_AND_SIGNAL_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_bluetooth_user_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
@@ -256,10 +253,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
         return_value=[LIGHT_AND_SIGNAL_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_bluetooth_user_flow(hass)
         assert result["type"] is FlowResultType.FORM
 
     with patch(

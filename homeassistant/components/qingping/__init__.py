@@ -9,18 +9,31 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
+
+from .const import CONF_CONNECTION_TYPE, CONNECTION_BLUETOOTH, CONNECTION_MQTT
+from .coordinator import QingpingMqttCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-type QingpingConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
+type QingpingConfigEntry = ConfigEntry[
+    PassiveBluetoothProcessorCoordinator | QingpingMqttCoordinator
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> bool:
-    """Set up Qingping BLE device from a config entry."""
+    """Set up Qingping from a config entry."""
+    if entry.data.get(CONF_CONNECTION_TYPE, CONNECTION_BLUETOOTH) == CONNECTION_MQTT:
+        mqtt_coordinator = entry.runtime_data = QingpingMqttCoordinator(
+            hass, entry, entry.data[CONF_MAC]
+        )
+        await mqtt_coordinator.async_config_entry_first_refresh()
+        await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+        return True
+
     address = entry.unique_id
     assert address is not None
     data = QingpingBluetoothDeviceData()
