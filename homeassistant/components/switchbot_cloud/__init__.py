@@ -310,9 +310,11 @@ async def async_setup_entry(
     )
     entry.runtime_data = SwitchbotCloudData(api=api, devices=switchbot_devices)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     await _initialize_webhook(hass, entry, api, coordinators_by_id)
+
+    # Forwarded last, so a failure above cannot leave the platforms set up for a
+    # retry to set up a second time
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _handle_cloud_connection_change(
         state: cloud.CloudConnectionState,
@@ -445,12 +447,16 @@ async def _async_get_webhook_url(
             return str(entry.data[CONF_CLOUDHOOK_URL])
         if cloud.async_is_connected(hass):
             webhook_id = entry.data[CONF_WEBHOOK_ID]
-            cloudhook_url = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
-            hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
-            )
-            _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
-            return cloudhook_url
+            # The cloud can go away between being asked and being used
+            with contextlib.suppress(cloud.CloudNotAvailable):
+                cloudhook_url = await cloud.async_get_or_create_cloudhook(
+                    hass, webhook_id
+                )
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
+                )
+                _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
+                return cloudhook_url
 
     return webhook.async_generate_url(
         hass,
