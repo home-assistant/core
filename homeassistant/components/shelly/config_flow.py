@@ -241,16 +241,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return {CONF_VERIFY_SSL: verify_ssl}
 
     @staticmethod
-    def _check_enhanced_security(info: dict[str, Any], port: int) -> int:
-        """Return the discovered port, ignoring enhanced_security for port selection.
-
-        The enhanced_security flag indicates stronger certificate validation, but does not
-        necessarily mean HTTPS is enabled. Devices may have enhanced_security enabled
-        but still use HTTP if no HTTPS certificate is uploaded. Always use the discovered port.
-        """
-        return port
-
-    @staticmethod
     def _get_name_from_mac_and_ble_model(
         mac: str, parsed_data: dict[str, int | str]
     ) -> str:
@@ -451,7 +441,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.host = host
-        self.port = self._check_enhanced_security(self.info, port)
+        self.port = port
         self.verify_ssl = verify_ssl
 
         if get_info_auth(self.info):
@@ -1046,8 +1036,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Device appeared on network but can't connect - allow retry
             return None
 
-        self.port = self._check_enhanced_security(self.info, self.port)
-
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
             return await self.async_step_credentials()
@@ -1192,7 +1180,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         self.host = host
-        self.port = self._check_enhanced_security(self.info, port)
+        self.port = port
         self.verify_ssl = verify_ssl
         self.context.update(
             {
@@ -1278,8 +1266,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             if get_device_entry_gen(reauth_entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
 
-            port = self._check_enhanced_security(info, port)
-
             try:
                 await validate_input(
                     self.hass, host, port, info, user_input, verify_ssl
@@ -1333,8 +1319,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="another_device")
-
-                port = self._check_enhanced_security(info, port)
 
                 data_updates: dict[str, Any] = {
                     CONF_HOST: host,
