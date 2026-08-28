@@ -77,8 +77,6 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
-    # Uno receivers need to omit is_closed_state, since OpenClosedState is
-    # unreliable on them and stays open however far the awning is retracted
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING_UNO,
         device_class=CoverDeviceClass.AWNING,
@@ -88,7 +86,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.UNDEPLOY,
         stop_command=OverkizCommand.STOP,
         invert_position=False,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
     # uiClass is Awning
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_HORIZONTAL_AWNING_UNO,
