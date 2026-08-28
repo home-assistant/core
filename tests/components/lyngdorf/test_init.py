@@ -69,6 +69,23 @@ async def test_unload_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_unload_releases_receiver_subscriptions(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test every receiver subscription is released when the entry unloads."""
+    unsubscribe = mock_receiver.on_change.return_value
+    registered = mock_receiver.on_change.call_count
+    assert registered > 0
+    assert unsubscribe.call_count == 0
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert unsubscribe.call_count == registered
+
+
 async def test_zone_b_via_device_id(
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
