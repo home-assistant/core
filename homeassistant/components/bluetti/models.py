@@ -433,20 +433,20 @@ class BluettiDevice:
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
                 __LOGGER__.warning("Error displaying notification: %s", e)
 
-            # 7. Reload the configuration entry after a delay (ensure all cleanup operations are completed)
-            async def _reload_after_cleanup() -> None:
-                try:
-                    await asyncio.sleep(
-                        1
-                    )  # Delay 1 second to ensure all cleanup operations are completed
-                    await hass.config_entries.async_reload(entry_id)
-                    __LOGGER__.info("Reloaded configuration entry: %s", entry_id)
-                except Exception as e:  # noqa: BLE001 - best-effort: a failed reload is logged, not fatal
-                    __LOGGER__.error(
-                        "Error reloading configuration entry: %s", e, exc_info=True
-                    )
-
-            hass.async_create_task(_reload_after_cleanup())
+            # No explicit reload here: step 5 above already calls
+            # async_update_entry(entry, options=...) whenever the device was
+            # actually removed from the options, which fires this entry's
+            # own _async_update_listener (registered in __init__.py) and
+            # reloads it - a second, explicitly-scheduled reload here used to
+            # run right after that one (both funnel through the same
+            # entry.setup_lock, so they'd serialize rather than corrupt
+            # anything, but the entry would still reload twice for one
+            # unbind). Worse, this used to fire unconditionally after a fixed
+            # 1-second delay even when the device was NOT in the options list
+            # (the else branch above) - a reload that accomplished nothing -
+            # and, being delayed, could run after the entry itself had since
+            # been unloaded or removed (async_reload() raises UnknownEntry in
+            # that case, previously swallowed silently by the except below).
 
             __LOGGER__.info("Device unbinding processing completed: %s", self.device_id)
 

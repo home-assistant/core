@@ -101,21 +101,36 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             new_products = [p for p in self._products if p.sn not in existing_sns]
             merged_products = existing_products + [p.model_dump() for p in new_products]
 
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, "products": merged_products}
-            )
-
             # async_create_entry's data REPLACES entry.options wholesale (see
             # OptionsFlowManager.async_finish_flow) - carry the existing
             # "modbus" key forward explicitly, or configuring a device's
             # local Modbus connection would get silently wiped the next
             # time more devices are added here.
-            return self.async_create_entry(
-                data={
-                    "devices": merged_devices,
-                    "modbus": entry.options.get("modbus", {}),
-                }
+            merged_options = {
+                "devices": merged_devices,
+                "modbus": entry.options.get("modbus", {}),
+            }
+
+            # A single upfront async_update_entry() call for both the new
+            # products (data) and the new device list (options) - entry
+            # already has _async_update_listener registered, which reloads
+            # it on any change. Returning async_create_entry(data=...)
+            # below still makes OptionsFlowManager perform its own
+            # async_update_entry(entry, options=...) call afterward (that's
+            # the only sanctioned way to persist an options flow's result) -
+            # applying the exact same merged_options here first means that
+            # second call finds entry.options already equal and is a
+            # genuine no-op (ConfigEntries._async_update_entry only fires
+            # listeners/reloads when something actually differs), instead
+            # of reloading the entry a second time for one "add devices"
+            # action.
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, "products": merged_products},
+                options=merged_options,
             )
+
+            return self.async_create_entry(data=merged_options)
 
         # ApplicationProfile is a module-level singleton populated by
         # config_flow.py's async_step_user - relying on that having already

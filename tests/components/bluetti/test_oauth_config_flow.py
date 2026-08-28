@@ -13,7 +13,7 @@ from homeassistant.components.bluetti.const import (
     DOMAIN,
     INTEGRATION_NAME,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.json import JSONEncoder
@@ -106,6 +106,68 @@ async def test_merge_into_existing_entry_by_unique_id(hass: HomeAssistant) -> No
     assert stored_sns == {"SN0", "SN1"}
     # Must not raise: this is what Home Assistant does to persist the entry.
     json.dumps(dict(updated.data), cls=JSONEncoder)
+
+
+async def test_merge_into_existing_entry_reloads_exactly_once(
+    hass: HomeAssistant,
+) -> None:
+    """Merging into a LOADED entry must reload it exactly once, not three times.
+
+    Regression test: the merge branch used to call async_update_entry()
+    twice for one merge - once directly for options={"devices": ...}, once
+    indirectly via _abort_if_unique_id_configured()'s own data= update for
+    the token/products - each firing this entry's _async_update_listener
+    (registered on it, matching a real loaded entry) and reloading it, plus
+    a third explicit reload from _abort_if_unique_id_configured's own
+    reload_on_update=True (which only schedules one when the entry is
+    LOADED/SETUP_RETRY - hence mock_state below). entry.setup_lock
+    serializes these rather than corrupting anything, but the entry would
+    still fully unload+setup three times for one merge.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "original-token"},
+            "products": [
+                {"sn": "SN0", "name": "Existing", "stateList": [], "online": "1"}
+            ],
+        },
+        options={"devices": ["SN0"]},
+    )
+    existing_entry.add_to_hass(hass)
+    existing_entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    reload_calls = []
+
+    async def _fake_reload(entry_id: str) -> bool:
+        reload_calls.append(entry_id)
+        return True
+
+    existing_entry.add_update_listener(
+        lambda hass, entry: hass.config_entries.async_reload(entry.entry_id)
+    )
+
+    flow = _make_flow(hass)
+    flow.context["source"] = SOURCE_RECONFIGURE
+    flow._products = [
+        UserProduct(sn="SN1", name="New Device", stateList=[], online="1")
+    ]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+
+    with (
+        patch.object(hass.config_entries, "async_reload", _fake_reload),
+        pytest.raises(AbortFlow) as exc_info,
+    ):
+        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+
+    assert exc_info.value.reason == "success"
+    await hass.async_block_till_done()
+
+    assert reload_calls == [existing_entry.entry_id]
 
 
 async def test_legacy_entry_without_unique_id_is_adopted(hass: HomeAssistant) -> None:

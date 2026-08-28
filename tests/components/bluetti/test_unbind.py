@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.bluetti import BluettiRuntimeData
+from homeassistant.components.bluetti import BluettiRuntimeData, _async_update_listener
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
 from homeassistant.core import HomeAssistant
@@ -85,7 +85,18 @@ async def test_handle_unbind_full_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Handle unbind full cleanup."""
+    """Handle unbind full cleanup.
+
+    mock_reload's assert_awaited_once_with below is also a regression check
+    for a fixed duplicate-reload bug: the options update a few lines below
+    (options={..., "devices": new_devices, "modbus": new_modbus}) fires this
+    listener once. _handle_unbind() used to ALSO schedule its own explicit
+    reload after a fixed 1-second delay on top of that - two reloads
+    (serialized by entry.setup_lock, not concurrent, but still one full
+    unload+setup too many) for a single unbind, and unconditionally even
+    when the device wasn't in the options list to begin with, so it could
+    also fire after the entry itself was gone.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         options={
@@ -130,6 +141,12 @@ async def test_handle_unbind_full_cleanup(
     device._hass = hass
     device._entry = entry
     device._entry_id = entry.entry_id
+
+    # Mirrors what async_setup_entry() registers on a real, fully-loaded
+    # entry - _handle_unbind() itself no longer reloads explicitly (see the
+    # regression test below), it relies entirely on this listener firing
+    # from its own options update.
+    entry.add_update_listener(_async_update_listener)
 
     with (
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,

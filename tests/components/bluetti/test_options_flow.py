@@ -607,3 +607,62 @@ async def test_add_devices_through_real_flow_manager_preserves_modbus(
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert set(updated.options["devices"]) == {"SN1", "SN2"}
     assert updated.options["modbus"] == {"SN1": {"host": "10.2.1.60", "port": 502}}
+
+
+async def test_add_devices_through_real_flow_manager_reloads_exactly_once(
+    hass: HomeAssistant,
+) -> None:
+    """Adding devices through the real options flow must reload the entry once.
+
+    Regression test: async_step_add_devices used to call async_update_entry()
+    twice for one "add devices" submission - once directly for
+    entry.data["products"], once indirectly via OptionsFlowManager's own
+    async_update_entry(entry, options=result["data"]) when finishing the
+    flow - each firing this entry's _async_update_listener (registered on
+    it here, matching a real loaded entry) and reloading it.
+    entry.setup_lock serializes these rather than corrupting anything, but
+    the entry would still fully unload+setup twice for one "add devices"
+    action.
+    """
+    entry = _entry(
+        hass,
+        products=[{"sn": "SN1", "name": "Existing", "stateList": [], "online": "1"}],
+        devices=["SN1"],
+    )
+    entry.add_update_listener(
+        lambda hass, entry: hass.config_entries.async_reload(entry.entry_id)
+    )
+
+    products = [UserProduct(sn="SN2", name="New Device", stateList=[], online="1")]
+    reload_calls = []
+
+    async def _fake_reload(entry_id: str) -> bool:
+        reload_calls.append(entry_id)
+        return True
+
+    with (
+        _patched_oauth(),
+        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.options_flow.ProductClient"
+        ) as mock_client_cls,
+        patch.object(hass.config_entries, "async_reload", _fake_reload),
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(data=products)
+        )
+        mock_client_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
+        )
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == "form"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"devices": ["SN2"]}
+        )
+
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert reload_calls == [entry.entry_id]

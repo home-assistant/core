@@ -137,25 +137,44 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                     for p in new_products
                 ]
 
-                # async_update_entry's options= REPLACES entry.options
-                # wholesale - update it directly, before the helper below
-                # reloads the entry, so a per-device Modbus connection
-                # configured through the options flow isn't silently wiped
-                # out by adding more devices here.
+                token_updates = {
+                    "auth_implementation": self._oauth_data["auth_implementation"],
+                    "token": self._oauth_data["token"],
+                    "products": merged_products,
+                }
+
+                # A single async_update_entry() call for both the new
+                # token/products (data) and the new device list (options) -
+                # existing_entry already has _async_update_listener
+                # registered (from its own setup), which reloads it on any
+                # change. _abort_if_unique_id_configured() below applies
+                # this same `token_updates` to entry.data itself (that's how
+                # it detects "already configured" vs. "needs an update") -
+                # without applying it here first too, that would be a
+                # second, separate async_update_entry() call, firing the
+                # listener (and reloading the entry) again, and, since this
+                # entry is normally LOADED, reload_on_update=True would
+                # schedule a third explicit reload on top of that. Applying
+                # the exact same data here upfront means the helper's own
+                # internal update finds nothing changed and is a genuine
+                # no-op (ConfigEntries._async_update_entry only fires
+                # listeners/reloads when something actually differs) -
+                # options= REPLACES entry.options wholesale, so this also
+                # keeps a per-device Modbus connection configured through
+                # the options flow from being silently wiped out by adding
+                # more devices here.
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
+                    data={**existing_entry.data, **token_updates},
                     options={**existing_entry.options, "devices": merged_devices},
                 )
 
-                # Updates entry.data, reloads the entry to pick up the new
-                # devices, and aborts the flow - all in one call, using the
-                # same unique_id lookup as async_set_unique_id() above.
+                # Aborts the flow, using the same unique_id lookup as
+                # async_set_unique_id() above; the data= update inside is a
+                # no-op per the comment above, so reload_on_update has
+                # nothing left to trigger here.
                 self._abort_if_unique_id_configured(
-                    updates={
-                        "auth_implementation": self._oauth_data["auth_implementation"],
-                        "token": self._oauth_data["token"],
-                        "products": merged_products,
-                    },
+                    updates=token_updates,
                     reload_on_update=True,
                     error="success",
                 )
