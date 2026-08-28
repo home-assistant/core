@@ -1848,7 +1848,6 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
             {
                 "accept": ["image/*"],
                 "image_upload": True,
-                "clearable": True,
             },
             (
                 {
