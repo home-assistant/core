@@ -1785,9 +1785,9 @@ async def test_tool_search(
     } in tools
     for tool in tools:
         if tool["name"] in (
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "tool_search_tool_bm25",
         ):
             assert "defer_loading" not in tool

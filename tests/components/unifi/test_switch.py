@@ -735,6 +735,34 @@ PDU_DEVICE_1 = {
     "x_has_ssh_hostkey": True,
 }
 
+UPS_DEVICE_1 = deepcopy(PDU_DEVICE_1)
+UPS_DEVICE_1.update(
+    {
+        "device_id": "mock-ups",
+        "mac": "02:00:00:00:00:01",
+        "model": "USPDA2B",
+        "name": "Dummy UPS 2U Pro",
+        "type": "usp",
+        "outlet_table": [
+            {
+                "index": 1,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "outlet_caps": 65539,
+            }
+        ],
+        "outlet_overrides": [
+            {
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "relay_state": True,
+                "index": 1,
+            }
+        ],
+    }
+)
+
 WLAN = {
     "_id": "012345678910111213141516",
     "bc_filter_enabled": False,
@@ -1455,6 +1483,7 @@ async def test_object_oriented_network_configs(
         ([OUTLET_UP1], "plug_outlet_1", 1, 1),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_usb_outlet_1", 1, 2),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_outlet_2", 2, 2),
+        ([UPS_DEVICE_1], "dummy_ups_2u_pro_outlet_1", 1, 1),
     ],
 )
 async def test_outlet_switches(

@@ -16,7 +16,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import area_registry as ar, label_registry as lr
 from homeassistant.util.dt import utcnow
 
 from tests.common import ANY
@@ -113,10 +113,13 @@ async def test_list_areas(
 async def test_create_area(
     client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
     mock_temperature_humidity_entity: None,
 ) -> None:
     """Test create entry."""
+    label_registry.async_create("label_1")
+    label_registry.async_create("label_2")
     # Create area with only mandatory parameters
     await client.send_json_auto_id(
         {"name": "mock", "type": "config/area_registry/create"}
@@ -261,10 +264,13 @@ async def test_delete_non_existing_area(
 async def test_update_area(
     client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
     mock_temperature_humidity_entity: None,
 ) -> None:
     """Test update entry."""
+    label_registry.async_create("label_1")
+    label_registry.async_create("label_2")
     created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
     freezer.move_to(created_at)
     area = area_registry.async_create("mock 1")
@@ -370,6 +376,69 @@ async def test_update_area(
         "modified_at": modified_at.timestamp(),
     }
     assert len(area_registry.areas) == 1
+
+
+async def test_create_area_strips_unknown_labels(
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test labels not in the label registry are stripped when creating an area."""
+    label_registry.async_create("label_1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/create",
+            "name": "mock",
+            "labels": ["label_1", "missing"],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["labels"] == ["label_1"]
+    assert area_registry.async_get_area(msg["result"]["area_id"]).labels == {"label_1"}
+
+
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(["label_1", "missing"], {"label_1"}, id="strip_unknown"),
+        pytest.param(["label_1", "stale_label"], {"label_1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
+    ],
+)
+async def test_update_area_strips_unknown_labels(
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the area is cleaned up when the area is
+    next saved, even if the client sends it back.
+    """
+    # Seed a stale label via the helper layer, bypassing WS stripping
+    area = area_registry.async_create("mock", labels={"stale_label"})
+    label_registry.async_create("label_1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/update",
+            "area_id": area.id,
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert set(msg["result"]["labels"]) == expected_labels
+    assert area_registry.async_get_area(area.id).labels == expected_labels
 
 
 async def test_update_area_with_same_name(

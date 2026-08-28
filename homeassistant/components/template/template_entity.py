@@ -43,8 +43,9 @@ from homeassistant.helpers.template import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_AVAILABILITY, CONF_PICTURE
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
+from .validators import log_validation_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,18 +123,8 @@ class _TemplateAttribute:
         try:
             validated = self.validator(result)
         except vol.Invalid as ex:
-            _LOGGER.error(
-                (
-                    "Error validating template result '%s' "
-                    "from template '%s' "
-                    "for attribute '%s' in entity %s "
-                    "validation message '%s'"
-                ),
-                result,
-                self.template,
-                self._attribute,
-                self._entity.entity_id,
-                ex.msg,
+            log_validation_error(
+                result, self.template, self._attribute, self._entity.entity_id, ex
             )
             assert self.on_update
             self.on_update(None)
@@ -523,6 +514,29 @@ class TemplateEntity(AbstractTemplateEntity):
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
+
+        # Handle attributes as a template.
+        elif (template := self._attributes_template) is not None:
+
+            def _update_attributes(result: dict | TemplateError) -> None:
+                if isinstance(result, TemplateError):
+                    self._attr_extra_state_attributes = {}
+                    return
+
+                try:
+                    self._attr_extra_state_attributes = vol.All(
+                        dict,
+                        validate_attributes(self.entity_id, self._blocked_attributes),
+                    )(result)
+                except vol.Invalid as err:
+                    log_validation_error(
+                        result, template, CONF_ATTRIBUTES, self.entity_id, err
+                    )
+                    self._attr_extra_state_attributes = {}
+
+            self.add_template_attribute(
+                CONF_ATTRIBUTES, template, on_update=_update_attributes
+            )
 
         # Iterate all dynamic templates and add listeners.
         for entity_template in self._templates.values():

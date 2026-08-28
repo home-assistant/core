@@ -5,7 +5,7 @@ from datetime import timedelta
 import os
 from pathlib import PurePath
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
@@ -174,7 +174,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
@@ -310,9 +310,9 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=None)
     )
 
 
@@ -326,7 +326,7 @@ async def test_setup_api_push_api_data_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
 
 
@@ -347,9 +347,9 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=None)
     )
 
 
@@ -362,23 +362,16 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=80, refresh_token=ANY)
-    )
-    refresh_token = (
-        supervisor_client.homeassistant.set_options.mock_calls[0].args[0].refresh_token
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
     hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN
     assert hassio_user.name == "Supervisor"
-    for token in hassio_user.refresh_tokens.values():
-        if token.token == refresh_token:
-            break
-    else:
-        pytest.fail("refresh token not found")
+    assert not hassio_user.refresh_tokens
 
 
 async def test_setup_adds_admin_group_to_user(hass: HomeAssistant) -> None:
@@ -399,6 +392,7 @@ async def test_setup_adds_admin_group_to_user(hass: HomeAssistant) -> None:
         assert result
 
     assert user.is_admin
+    assert not user.refresh_tokens
 
 
 async def test_setup_migrate_user_name(hass: HomeAssistant) -> None:
@@ -418,6 +412,7 @@ async def test_setup_migrate_user_name(hass: HomeAssistant) -> None:
         assert result
 
     assert user.name == "Supervisor"
+    assert not user.refresh_tokens
 
 
 async def test_setup_api_existing_hassio_user(
@@ -425,7 +420,10 @@ async def test_setup_api_existing_hassio_user(
 ) -> None:
     """Test setup uses the user from config entry data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
-    token = await hass.auth.async_create_refresh_token(user)
+    refresh_tokens = [
+        await hass.auth.async_create_refresh_token(user) for _ in range(2)
+    ]
+    access_token = hass.auth.async_create_access_token(refresh_tokens[0])
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={ENTRY_DATA_USER: user.id},
@@ -438,10 +436,12 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=80, refresh_token=token.token)
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
+    assert not user.refresh_tokens
+    assert hass.auth.async_validate_access_token(access_token) is None
 
 
 async def test_setup_migrates_legacy_hassio_store_to_config_entry(
@@ -451,7 +451,7 @@ async def test_setup_migrates_legacy_hassio_store_to_config_entry(
 ) -> None:
     """Test setup migrates legacy hassio store user/options into config entry."""
     user = await hass.auth.async_create_system_user("Hass.io test")
-    token = await hass.auth.async_create_refresh_token(user)
+    await hass.auth.async_create_refresh_token(user)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -483,10 +483,11 @@ async def test_setup_migrates_legacy_hassio_store_to_config_entry(
     assert entry.options[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] == 2
     assert entry.options[OPTION_CORE_BACKUP_BEFORE_UPDATE] is True
 
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=80, refresh_token=token.token)
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
+    assert not user.refresh_tokens
 
 
 async def test_setup_migrates_legacy_options_over_default_entry_options(
@@ -496,7 +497,7 @@ async def test_setup_migrates_legacy_options_over_default_entry_options(
 ) -> None:
     """Test legacy update options override default config entry options."""
     user = await hass.auth.async_create_system_user("Hass.io test")
-    token = await hass.auth.async_create_refresh_token(user)
+    await hass.auth.async_create_refresh_token(user)
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -533,8 +534,9 @@ async def test_setup_migrates_legacy_options_over_default_entry_options(
     assert entry.options[OPTION_CORE_BACKUP_BEFORE_UPDATE] is True
 
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=80, refresh_token=token.token)
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
+    assert not user.refresh_tokens
 
 
 async def test_setup_core_push_config(
@@ -548,7 +550,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     supervisor_client.supervisor.set_options.assert_called_once_with(
         SupervisorOptions(timezone="testzone")
     )
@@ -573,7 +575,7 @@ async def test_setup_core_push_config_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     assert "Failed to update Supervisor options: boom" in caplog.text
 
 
@@ -589,7 +591,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
 
 
 async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
@@ -1320,7 +1322,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert len(supervisor_client.mock_calls) == 16
+    assert len(supervisor_client.mock_calls) == 17
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -2040,6 +2042,15 @@ async def test_supervisor_issues_not_set_on_coordinator_failure(
     If a coordinator first-refresh raises ConfigEntryNotReady the issues
     listener must not be registered, preventing accumulation across retries.
     """
+    user = await hass.auth.async_create_system_user("Hass.io test")
+    refresh_token = await hass.auth.async_create_refresh_token(user)
+    access_token = hass.auth.async_create_access_token(refresh_token)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={ENTRY_DATA_USER: user.id},
+        unique_id=DOMAIN,
+    )
+    config_entry.add_to_hass(hass)
     supervisor_root_info.side_effect = SupervisorError()
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {})
@@ -2048,3 +2059,5 @@ async def test_supervisor_issues_not_set_on_coordinator_failure(
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert DATA_KEY_SUPERVISOR_ISSUES not in hass.data
+    assert not user.refresh_tokens
+    assert hass.auth.async_validate_access_token(access_token) is None
