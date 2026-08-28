@@ -11,7 +11,6 @@ from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FrontierSiliconConfigEntry
@@ -57,10 +56,9 @@ async def async_setup_entry(
             _ = await description.is_on_fn(afsapi)()
         except FSNotImplementedError:
             continue
-        except FSConnectionError as err:
-            raise PlatformNotReady(
-                "Could not connect to Frontier Silicon device during setup."
-            ) from err
+        except FSConnectionError:
+            _LOGGER.warning("Could not connect to Frontier Silicon device during setup")
+            continue
         available_switches.append(description)
 
     async_add_entities(
