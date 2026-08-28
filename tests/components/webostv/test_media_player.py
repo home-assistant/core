@@ -416,6 +416,48 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
     client.set_channel.assert_called_once_with(ch_id)
 
 
+async def test_play_media_channel_name_over_number(hass: HomeAssistant, client) -> None:
+    """Test that an exact channel name match takes precedence over a channel number match."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    client.tv_state.channels = [
+        {"channelNumber": "1", "channelName": "20", "channelId": "ch_name_match"},
+        {"channelNumber": "20", "channelName": "Ch 20", "channelId": "ch_number_match"},
+    ]
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+        ATTR_MEDIA_CONTENT_ID: "20",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.set_channel.assert_called_once_with("ch_name_match")
+
+
+async def test_play_media_duplicate_channel_number_selects_first(
+    hass: HomeAssistant, client
+) -> None:
+    """Test that the first channel is selected when two channels share the same number."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    client.tv_state.channels = [
+        {"channelNumber": "5", "channelName": "TV Channel", "channelId": "ch_first"},
+        {"channelNumber": "5", "channelName": "Radio Channel", "channelId": "ch_last"},
+    ]
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+        ATTR_MEDIA_CONTENT_ID: "5",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.set_channel.assert_called_once_with("ch_first")
+
+
 async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
     """Test finding live TV app id in update sources."""
     await setup_webostv(hass)

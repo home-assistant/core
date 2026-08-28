@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING, Any, override
 from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
@@ -21,7 +24,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_set_assistant_option,
     async_should_expose,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.core import (
     CoreState,
     Event,
@@ -115,12 +118,12 @@ def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
         return False
 
     if (
-        domain == "binary_sensor"
+        domain == BINARY_SENSOR_DOMAIN
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
     ):
         return True
 
-    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
         return True
 
     return False

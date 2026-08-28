@@ -419,7 +419,7 @@ async def test_validate_entity(
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
     assert res["result"]["error_base"].startswith("required key not provided")
 
     # invalid group_select data
@@ -443,7 +443,7 @@ async def test_validate_entity(
     assert res["success"], res
     assert res["result"]["success"] is False
     # This shall test that a required key of the second GroupSelect schema is missing
-    # and not yield the "extra keys not allowed" error of the first GroupSelect Schema
+    # and not yield the "not a valid option" error of the first GroupSelect Schema
     assert res["result"]["errors"][0]["path"] == [
         "data",
         "knx",
@@ -451,8 +451,37 @@ async def test_validate_entity(
         "ga_blue_brightness",
     ]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
     assert res["result"]["error_base"].startswith("required key not provided")
+
+    # partially configured group_select option
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.LIGHT,
+            "data": {
+                "entity": {"name": "test_name"},
+                "knx": {
+                    "color": {
+                        "ga_hue": {"write": "1/2/3"},
+                        # ga_saturation is missing - which is required
+                    }
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    # the error of the option the user started configuring shall be reported,
+    # not a "required key" error of one of the other options
+    assert res["result"]["errors"][0]["path"] == [
+        "data",
+        "knx",
+        "color",
+        "ga_saturation",
+    ]
+    assert res["result"]["errors"][0]["code"] == "required"
 
 
 ########
@@ -481,7 +510,7 @@ async def test_update_expose_error(
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "write"]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
 
 
 async def test_validate_expose(

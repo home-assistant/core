@@ -2450,7 +2450,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Chasing Tape Light (unsupported)',
+    'model': 'Chasing Tape Light',
     'model_id': 'expmpw4xxd0kkifb',
     'name': 'Chasing Tape Light',
     'name_by_user': None,

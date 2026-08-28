@@ -131,10 +131,18 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
     ),
     ProxmoxVMButtonEntityDescription(
+        key="pause",
+        translation_key="pause",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.suspend.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ProxmoxVMButtonEntityDescription(
         key="hibernate",
         translation_key="hibernate",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).qemu(vmid).status.suspend.post()
+            coordinator.proxmox.nodes(node).qemu(vmid).status.suspend.post(todisk=1)
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -169,11 +177,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
             coordinator.proxmox.nodes(node)
             .qemu(vmid)
             .snapshot.post(
-                name=(
-                    "homeassistant_snapshot_"
-                    f"{coordinator.data[node].vms[vmid]['name']}_"
-                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
-                )
+                name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
             )
         ),
         permission=ProxmoxPermission.SNAPSHOT,
@@ -213,11 +217,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
             coordinator.proxmox.nodes(node)
             .lxc(vmid)
             .snapshot.post(
-                name=(
-                    "homeassistant_snapshot_"
-                    f"{coordinator.data[node].containers[vmid]['name']}_"
-                    f"{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
-                )
+                name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
             )
         ),
         permission=ProxmoxPermission.SNAPSHOT,
@@ -378,7 +378,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             self._node_name,
-            self.vm_data["vmid"],
+            self.device_id,
         )
 
 
@@ -394,5 +394,5 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             self._node_name,
-            self.container_data["vmid"],
+            self.device_id,
         )
