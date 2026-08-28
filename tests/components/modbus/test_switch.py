@@ -507,7 +507,7 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus_ha) -> Non
 )
 async def test_switch_verify_coil_inverted(
     hass: HomeAssistant,
-    mock_modbus_ha,
+    mock_modbus_ha: mock.AsyncMock,
     coil_value: int,
     expected_state: str,
 ) -> None:
