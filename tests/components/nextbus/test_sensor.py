@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
 
+from homeassistant.components.nextbus import NEXTBUS_KEY
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -262,3 +263,27 @@ async def test_unload_entry(
     assert state is not None
     assert state.attributes["upcoming"] == "5"
     assert state.state == "2019-03-28T21:09:35+00:00"
+
+
+async def test_unload_final_entry_cleans_up_shared_coordinator(
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
+) -> None:
+    """Test that unloading the final entry shuts down the shared coordinator."""
+    config_entry1 = await assert_setup_sensor(hass, CONFIG_BASIC)
+    config_entry2 = await assert_setup_sensor(
+        hass, CONFIG_BASIC_2, route_title=ROUTE_TITLE_2
+    )
+    coordinator: NextBusDataUpdateCoordinator = config_entry1.runtime_data
+
+    await hass.config_entries.async_unload(config_entry1.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+    assert coordinator._shutdown_requested
+    assert hass.data[NEXTBUS_KEY] == {}
