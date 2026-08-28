@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class MarstekSharedData:
     """Shared runtime data for all Marstek config entries."""
 
@@ -29,7 +29,7 @@ class MarstekSharedData:
     entry_count: int = 0
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class MarstekRuntimeData:
     """Runtime data for a Marstek config entry."""
 
@@ -114,14 +114,14 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
         _LOGGER.debug("Start polling device: %s", self.device_ip)
         current_data = self.data or {}
 
-        try:
-            if self.udp_client.is_polling_paused(self.device_ip):
-                _LOGGER.debug(
-                    "Polling paused for device: %s, skipping update", self.device_ip
-                )
-                return current_data
+        if self.udp_client.is_polling_paused(self.device_ip):
+            _LOGGER.debug(
+                "Polling paused for device: %s, skipping update", self.device_ip
+            )
+            return current_data
 
-            return await self.udp_client.get_device_status(
+        try:
+            current_data = await self.udp_client.get_device_status(
                 self.device_ip,
                 previous_data=current_data,
             )
@@ -131,3 +131,5 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, object]]):
                 translation_key="device_update_failed",
                 translation_placeholders={"host": self.device_ip},
             ) from err
+
+        return current_data

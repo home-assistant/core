@@ -2,9 +2,6 @@
 
 import logging
 
-from aiomarstek import MarstekUDPClient
-
-from homeassistant.components import network
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -20,24 +17,11 @@ from .coordinator import (
     MarstekRuntimeData,
     MarstekSharedData,
 )
+from .helpers import async_create_udp_client
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-async def async_create_udp_client(hass: HomeAssistant) -> MarstekUDPClient:
-    """Create a configured UDP client for this Home Assistant instance."""
-    client = MarstekUDPClient()
-    try:
-        await client.async_setup()
-        addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    except TimeoutError, OSError, TypeError:
-        await client.async_cleanup()
-        raise
-
-    client.set_broadcast_addresses([str(address) for address in addresses])
-    return client
 
 
 def _async_get_shared_data(
@@ -69,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
                 translation_domain=DOMAIN,
                 translation_key="udp_client_setup_failed",
             ) from err
-        shared_data = MarstekSharedData(udp_client)
+        shared_data = MarstekSharedData(udp_client=udp_client)
     shared_data.entry_count += 1
 
     coordinator = MarstekDataUpdateCoordinator(hass, entry, shared_data.udp_client)

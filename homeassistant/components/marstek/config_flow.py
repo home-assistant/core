@@ -16,15 +16,13 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import async_create_udp_client
 from .const import DOMAIN
+from .helpers import async_create_udp_client
 from .models import MarstekDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_MANUAL_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
-ABORT_MISSING_UNIQUE_ID = "missing_unique_id"
-ERROR_UNSUPPORTED_DEVICE = "unsupported_device"
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,87 +44,77 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
         """Handle broadcast device discovery."""
+        errors: dict[str, str] = {}
+        data_schema = vol.Schema({})
+
         if user_input and CONF_DEVICE in user_input:
             host = self.discovered_device_options[str(user_input[CONF_DEVICE])].ip
             try:
                 device = await self._async_get_device_from_host(host)
             except TimeoutError, OSError:
-                return self.async_show_form(
-                    step_id="discover",
-                    data_schema=vol.Schema({}),
-                    errors={"base": "cannot_connect"},
-                )
+                errors["base"] = "cannot_connect"
             except TypeError:
-                return self.async_show_form(
-                    step_id="discover",
-                    data_schema=vol.Schema({}),
-                    errors={"base": "device_not_found"},
-                )
-            return await self._async_create_entry_from_device(device)
-
-        _LOGGER.debug("Starting device discovery")
-        try:
-            udp_client: MarstekUDPClient | None = None
+                errors["base"] = "device_not_found"
+            else:
+                return await self._async_create_entry_from_device(device)
+        else:
+            _LOGGER.debug("Starting device discovery")
             try:
-                udp_client = await async_create_udp_client(self.hass)
-                discovered_devices = await udp_client.discover_devices()
-            finally:
-                if udp_client is not None:
-                    await udp_client.async_cleanup()
-        except TimeoutError, OSError, TypeError:
-            return self.async_show_form(
-                step_id="discover",
-                data_schema=vol.Schema({}),
-                errors={"base": "discovery_failed"},
-            )
+                udp_client: MarstekUDPClient | None = None
+                try:
+                    udp_client = await async_create_udp_client(self.hass)
+                    discovered_devices = await udp_client.discover_devices()
+                finally:
+                    if udp_client is not None:
+                        await udp_client.async_cleanup()
+            except TimeoutError, OSError, TypeError:
+                errors["base"] = "discovery_failed"
+            else:
+                if not discovered_devices:
+                    errors["base"] = "no_devices_found"
+                else:
+                    normalized_devices = [
+                        MarstekDeviceInfo.from_response(device)
+                        for device in discovered_devices
+                    ]
+                    supported_devices = [
+                        device for device in normalized_devices if device.is_supported
+                    ]
+                    if not supported_devices:
+                        errors["base"] = "unsupported_device"
+                    else:
+                        _LOGGER.debug(
+                            "Discovered %d supported devices out of %d total",
+                            len(supported_devices),
+                            len(normalized_devices),
+                        )
+                        self.discovered_device_options = {}
 
-        if not discovered_devices:
-            return self.async_show_form(
-                step_id="discover",
-                data_schema=vol.Schema({}),
-                errors={"base": "no_devices_found"},
-            )
-
-        normalized_devices = [
-            MarstekDeviceInfo.from_response(device) for device in discovered_devices
-        ]
-        supported_devices = [
-            device for device in normalized_devices if device.is_supported
-        ]
-        if not supported_devices:
-            return self.async_show_form(
-                step_id="discover",
-                data_schema=vol.Schema({}),
-                errors={"base": ERROR_UNSUPPORTED_DEVICE},
-            )
-
-        _LOGGER.debug(
-            "Discovered %d supported devices out of %d total",
-            len(supported_devices),
-            len(normalized_devices),
-        )
-        self.discovered_device_options = {}
-
-        device_options: list[SelectOptionDict] = []
-        for index, device in enumerate(supported_devices):
-            device_label = device.display_name
-            if any(option["label"] == device_label for option in device_options):
-                device_label = f"{device_label} #{index + 1}"
-            device_key = str(index)
-            self.discovered_device_options[device_key] = device
-            device_options.append(
-                SelectOptionDict(value=device_key, label=device_label)
-            )
+                        device_options: list[SelectOptionDict] = []
+                        for index, device in enumerate(supported_devices):
+                            device_label = device.display_name
+                            if any(
+                                option["label"] == device_label
+                                for option in device_options
+                            ):
+                                device_label = f"{device_label} #{index + 1}"
+                            device_key = str(index)
+                            self.discovered_device_options[device_key] = device
+                            device_options.append(
+                                SelectOptionDict(value=device_key, label=device_label)
+                            )
+                        data_schema = vol.Schema(
+                            {
+                                vol.Required(CONF_DEVICE): SelectSelector(
+                                    SelectSelectorConfig(options=device_options)
+                                )
+                            }
+                        )
 
         return self.async_show_form(
             step_id="discover",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE): SelectSelector(
-                        SelectSelectorConfig(options=device_options)
-                    )
-                }
-            ),
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_manual(
@@ -147,7 +135,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "device_not_found"
             else:
                 if not device.is_supported:
-                    errors["base"] = ERROR_UNSUPPORTED_DEVICE
+                    errors["base"] = "unsupported_device"
                     return self.async_show_form(
                         step_id="manual",
                         data_schema=STEP_MANUAL_DATA_SCHEMA,
@@ -179,11 +167,11 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create a config entry from normalized Marstek device data."""
         if not device.is_supported:
-            return self.async_abort(reason=ERROR_UNSUPPORTED_DEVICE)
+            return self.async_abort(reason="unsupported_device")
 
         unique_id = device.stable_id
         if not unique_id:
-            return self.async_abort(reason=ABORT_MISSING_UNIQUE_ID)
+            return self.async_abort(reason="missing_unique_id")
 
         _LOGGER.debug(
             "Check device uniqueness: IP=%s, MAC=%s, unique_id=%s",
