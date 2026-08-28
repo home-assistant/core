@@ -435,12 +435,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(
-        key="serial_number",
-        component="identity",
-        translation_key="serial_number",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
         key="grid_frequency",
         component="grid",
         translation_key="grid_frequency",

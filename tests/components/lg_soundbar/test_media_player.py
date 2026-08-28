@@ -4,7 +4,16 @@ from unittest.mock import MagicMock
 
 import temescal
 
-from homeassistant.components.media_player import ATTR_INPUT_SOURCE_LIST
+from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
+    SERVICE_SELECT_SOURCE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import find_update_callback, setup_integration
@@ -122,3 +131,119 @@ async def test_source_unknown_before_any_response(
     await setup_integration(hass, mock_config_entry)
 
     assert "source" not in hass.states.get(ENTITY_ID).attributes
+
+
+# An SG10TY reports these alongside indices temescal knows about. They sit past
+# the end of the library's table, which has been read-only since 2023.
+UNMAPPED_EQUALISERS = [23, 24, 25, 26]
+
+AVAILABLE_EQUALISERS = [
+    temescal.equalisers.index("Standard"),
+    temescal.equalisers.index("Cinema"),
+    *UNMAPPED_EQUALISERS,
+]
+
+
+def send_eq_view_info(callback: MagicMock, current_equaliser: int) -> None:
+    """Report the given equaliser as the current one via the callback."""
+    callback(
+        {
+            "msg": "EQ_VIEW_INFO",
+            "data": {
+                "i_curr_eq": current_equaliser,
+                "ai_eq_list": AVAILABLE_EQUALISERS,
+            },
+        }
+    )
+
+
+async def test_sound_modes_beyond_the_library_table_are_offered(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that equalisers the library cannot name are still offered."""
+    await setup_integration(hass, mock_config_entry)
+
+    send_eq_view_info(find_update_callback(mock_temescal), 23)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_SOUND_MODE_LIST] == [
+        "Cinema",
+        "Standard",
+        "Unknown (23)",
+        "Unknown (24)",
+        "Unknown (25)",
+        "Unknown (26)",
+    ]
+    assert state.attributes[ATTR_SOUND_MODE] == "Unknown (23)"
+
+
+async def test_selecting_a_sound_mode_beyond_the_library_table(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an equaliser the library cannot name can be selected."""
+    await setup_integration(hass, mock_config_entry)
+
+    send_eq_view_info(find_update_callback(mock_temescal), 0)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Unknown (25)"},
+        blocking=True,
+    )
+
+    mock_temescal.return_value.set_eq.assert_called_once_with(25)
+
+
+async def test_selecting_a_named_sound_mode(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an equaliser the library can name is still selectable."""
+    await setup_integration(hass, mock_config_entry)
+
+    send_eq_view_info(find_update_callback(mock_temescal), 0)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Cinema"},
+        blocking=True,
+    )
+
+    mock_temescal.return_value.set_eq.assert_called_once_with(
+        temescal.equalisers.index("Cinema")
+    )
+
+
+async def test_selecting_a_source_the_device_does_not_offer(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a known function outside of ai_func_list stays selectable."""
+    await setup_integration(hass, mock_config_entry)
+
+    send_func_view_info(find_update_callback(mock_temescal), "Bluetooth")
+    await hass.async_block_till_done()
+
+    assert "E-ARC" not in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "E-ARC"},
+        blocking=True,
+    )
+
+    mock_temescal.return_value.set_func.assert_called_once_with(
+        temescal.functions.index("E-ARC")
+    )

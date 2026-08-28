@@ -118,7 +118,6 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
     assert result.get("title") is None
     assert result.get("data") is None
 
-    # Check that metadata is retained
     media_key = next(
         key
         for key in result["data_schema"].schema
