@@ -142,7 +142,8 @@ async def init_integration_gen4(
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
     mock_type: Callable[
-        [str, str, dict[str, Any]], Coroutine[Any, Any, AiohttpClientMockResponse]
+        [HomeAssistant, str, URL, dict[str, Any]],
+        Coroutine[Any, Any, AiohttpClientMockResponse],
     ] = modern_forms_gen4_call_mock,
 ) -> MockConfigEntry:
     """Set up the Modern Forms integration against a mock Gen4 device."""
