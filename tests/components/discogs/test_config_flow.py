@@ -26,9 +26,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             "homeassistant.components.discogs.config_flow.discogs_client.Client",
             return_value=mock_client,
         ),
-        patch(
-            "homeassistant.components.discogs.async_setup_entry", return_value=True
-        ),
+        patch("homeassistant.components.discogs.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -120,9 +118,7 @@ async def test_flow_errors_then_success(
             "homeassistant.components.discogs.config_flow.discogs_client.Client",
             return_value=mock_client,
         ),
-        patch(
-            "homeassistant.components.discogs.async_setup_entry", return_value=True
-        ),
+        patch("homeassistant.components.discogs.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

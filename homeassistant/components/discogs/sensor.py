@@ -11,11 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import (
-    DiscogsConfigEntry,
-    DiscogsData,
-    DiscogsDataUpdateCoordinator,
-)
+from .coordinator import DiscogsConfigEntry, DiscogsData, DiscogsDataUpdateCoordinator
 
 UNIT_RECORDS = "records"
 
@@ -65,9 +61,7 @@ async def async_setup_entry(
     )
 
 
-class DiscogsSensor(
-    CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntity
-):
+class DiscogsSensor(CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntity):
     """Representation of a Discogs sensor."""
 
     entity_description: DiscogsSensorEntityDescription
