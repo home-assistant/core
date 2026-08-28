@@ -207,9 +207,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_discovery_info")
 
-        self._async_abort_entries_match({CONF_URL: url})
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._async_abort_entries_match({CONF_URL: url})
         self.data[CONF_URL] = url
         self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name

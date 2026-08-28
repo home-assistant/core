@@ -1094,13 +1094,22 @@ async def test_hassio_discovery_invalid_url(
     assert result["reason"] == "invalid_discovery_info"
 
 
+@pytest.mark.parametrize(
+    "entry_url",
+    [
+        pytest.param("http://1.1.1.1:9999/mcp", id="app_moved"),
+        pytest.param(MCP_SERVER_URL, id="app_restarted"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_hassio_discovery_updates_url(hass: HomeAssistant) -> None:
-    """Test the app moving to another URL updates the existing entry."""
+async def test_hassio_discovery_updates_url(
+    hass: HomeAssistant, entry_url: str
+) -> None:
+    """Test discovery of an already configured app keeps its entry up to date."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ADDON_DISCOVERY_INFO.uuid,
-        data={CONF_URL: "http://1.1.1.1:9999/mcp"},
+        data={CONF_URL: entry_url},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)
