@@ -79,6 +79,9 @@ ATTR_SPREAD = "spread"
 
 # The firmware effect palette is carried in a fixed sixteen color field
 EFFECT_PALETTE_MAX = 16
+EFFECT_PALETTE_MIN = 2
+# The Sky effect palette maps onto six named slots rather than the full field
+EFFECT_SKY_PALETTE_MAX = 6
 
 EFFECT_FLAME_DEFAULT_SPEED = 3
 
@@ -203,7 +206,9 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
-            cv.ensure_list, [HSBK_SCHEMA], vol.Length(min=1, max=EFFECT_PALETTE_MAX)
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            vol.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )
@@ -225,7 +230,7 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
         ATTR_CLOUD_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
         ATTR_CLOUD_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
         ATTR_PALETTE: vol.All(
-            cv.ensure_list, [HSBK_SCHEMA], vol.Length(min=1, max=EFFECT_PALETTE_MAX)
+            cv.ensure_list, [HSBK_SCHEMA], vol.Length(min=1, max=EFFECT_SKY_PALETTE_MAX)
         ),
     }
 )
@@ -238,7 +243,9 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
-            cv.ensure_list, [HSBK_SCHEMA], vol.Length(min=1)
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            vol.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )

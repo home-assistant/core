@@ -1654,3 +1654,57 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
     options = services[service]["fields"][ATTR_THEME]["selector"]["select"]["options"]
 
     assert options == sorted(ThemeLibrary.get_available_themes())
+
+
+@pytest.mark.parametrize(
+    ("service", "factory", "palette"),
+    [
+        pytest.param(
+            SERVICE_EFFECT_MORPH,
+            create_mock_matrix_light,
+            [(0, 100, 100, 3500)],
+            id="morph-below-minimum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_MORPH,
+            create_mock_matrix_light,
+            [(0, 100, 100, 3500)] * 17,
+            id="morph-above-maximum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_SKY,
+            create_mock_matrix_light,
+            [(0, 100, 100, 3500)] * 7,
+            id="sky-above-maximum",
+        ),
+        pytest.param(
+            SERVICE_PAINT_THEME,
+            create_mock_light,
+            [(0, 100, 100, 3500)],
+            id="paint-theme-below-minimum",
+        ),
+        pytest.param(
+            SERVICE_PAINT_THEME,
+            create_mock_light,
+            [(0, 100, 100, 3500)] * 17,
+            id="paint-theme-above-maximum",
+        ),
+    ],
+)
+async def test_palette_bounds_match_the_documented_action(
+    hass: HomeAssistant,
+    service: str,
+    factory: Callable[[], MockDevice],
+    palette: list[tuple[int, int, int, int]],
+) -> None:
+    """Test palettes outside the documented bounds are rejected."""
+    device = factory()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PALETTE: palette},
+            blocking=True,
+        )
