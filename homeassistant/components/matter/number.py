@@ -319,7 +319,7 @@ DISCOVERY_SCHEMAS = [
             # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
-            native_step=0.5,
+            native_step=0.1,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
             ha_to_device=lambda x: round(x * 10),
@@ -341,7 +341,7 @@ DISCOVERY_SCHEMAS = [
             # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
-            native_step=0.5,
+            native_step=0.1,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
             ha_to_device=lambda x: round(x * 10),
