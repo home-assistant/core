@@ -98,6 +98,30 @@ async def test_new_entry_products_are_json_serializable(hass: HomeAssistant) -> 
     json.dumps(result["data"], cls=JSONEncoder)
 
 
+async def test_new_entry_only_caches_selected_products(hass: HomeAssistant) -> None:
+    """New entry only caches selected products.
+
+    Regression test: entry.data["products"] used to cache every product on
+    the account, not just the ones the user actually selected. A device
+    left unselected here (SN2) would then, when added later via the
+    options flow, look like it was "already cached" and reuse this stale
+    snapshot instead of a fresh get_user_products() fetch.
+    """
+    flow = _make_flow(hass)
+    flow._products = [
+        UserProduct(sn="SN1", name="Device 1", stateList=[], online="1"),
+        UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
+    ]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+
+    result = await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+
+    assert result["type"] == "create_entry"
+    stored_sns = {p["sn"] for p in result["data"]["products"]}
+    assert stored_sns == {"SN1"}
+
+
 async def test_new_entry_gets_account_unique_id(hass: HomeAssistant) -> None:
     """New entry gets account unique id."""
     flow = _make_flow(hass)
@@ -108,6 +132,45 @@ async def test_new_entry_gets_account_unique_id(hass: HomeAssistant) -> None:
     await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
 
     assert flow.unique_id == ACCOUNT_UNIQUE_ID
+
+
+async def test_merge_into_existing_entry_only_caches_selected_products(
+    hass: HomeAssistant,
+) -> None:
+    """Merging into an existing entry only caches selected products.
+
+    Same regression as test_new_entry_only_caches_selected_products, but
+    for the merge branch (reconfigure/reauth re-run finding an existing
+    entry) rather than fresh entry creation.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "products": [
+                {"sn": "SN0", "name": "Existing", "stateList": [], "online": "1"}
+            ]
+        },
+        options={"devices": ["SN0"]},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context["source"] = SOURCE_RECONFIGURE
+    flow._products = [
+        UserProduct(sn="SN1", name="New Device", stateList=[], online="1"),
+        UserProduct(sn="SN2", name="Not Selected", stateList=[], online="1"),
+    ]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+
+    with pytest.raises(AbortFlow):
+        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    stored_sns = {p["sn"] for p in updated.data["products"]}
+    assert stored_sns == {"SN0", "SN1"}
 
 
 async def test_merge_into_existing_entry_by_unique_id(hass: HomeAssistant) -> None:

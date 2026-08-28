@@ -54,7 +54,14 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             existing_sns = {
                 p.get("sn") if isinstance(p, dict) else p.sn for p in existing_products
             }
-            new_products = [p for p in self._products if p.sn not in existing_sns]
+            # Only merge in the products actually selected this time - self._products
+            # holds every product on the account, and merging all of it would cache
+            # stale metadata for devices the user left unchecked.
+            new_products = [
+                p
+                for p in self._products
+                if p.sn in selected and p.sn not in existing_sns
+            ]
             merged_products = existing_products + [p.model_dump() for p in new_products]
 
             merged_options = {"devices": merged_devices}

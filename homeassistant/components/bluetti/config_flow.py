@@ -113,6 +113,15 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
                 return self.async_abort(reason="cannot_connect")
 
+            # Only cache the products the user actually selected - self._products
+            # holds every product on the account, and caching all of it means a
+            # device added later (already present in this snapshot) would reuse
+            # this stale data instead of the fresh get_user_products() fetch
+            # that runs when it's actually added.
+            selected_products = [
+                p for p in self._products if p.sn in user_input["devices"]
+            ]
+
             if existing_entry:
                 # Merge into the existing integration entry
                 existing_devices = existing_entry.options.get("devices", [])
@@ -127,7 +136,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                     for p in existing_products
                 }
                 new_products = [
-                    p for p in self._products if p.sn not in existing_product_sns
+                    p for p in selected_products if p.sn not in existing_product_sns
                 ]
                 merged_products = existing_products + [
                     p.model_dump() if hasattr(p, "model_dump") else p
@@ -160,7 +169,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 data={
                     "auth_implementation": self._oauth_data["auth_implementation"],
                     "token": self._oauth_data["token"],
-                    "products": [p.model_dump() for p in self._products],
+                    "products": [p.model_dump() for p in selected_products],
                 },
                 options=user_input,
             )

@@ -199,6 +199,37 @@ async def test_submit_binds_and_merges_devices_and_products(
     json.dumps(dict(updated.data), cls=JSONEncoder)  # must stay JSON-serializable
 
 
+async def test_submit_only_caches_selected_products(hass: HomeAssistant) -> None:
+    """Submit only caches selected products.
+
+    Regression test: new_products used to include every product the fresh
+    get_user_products() fetch returned that wasn't already cached, not just
+    the ones the user actually checked in the form - so an available but
+    unselected device's data got cached anyway, as if it had been added.
+    """
+    entry = _entry(
+        hass,
+        products=[{"sn": "SN1", "name": "Existing", "stateList": [], "online": "1"}],
+        devices=["SN1"],
+    )
+    flow = _flow(hass, entry)
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+    flow._products = [
+        UserProduct(sn="SN2", name="Selected", stateList=[], online="1"),
+        UserProduct(sn="SN3", name="Left Unchecked", stateList=[], online="1"),
+    ]
+
+    result = await flow.async_step_init(user_input={"devices": ["SN2"]})
+
+    assert result["type"] == "create_entry"
+    assert set(result["data"]["devices"]) == {"SN1", "SN2"}
+
+    updated = hass.config_entries.async_get_entry(entry.entry_id)
+    stored_sns = {p["sn"] for p in updated.data["products"]}
+    assert stored_sns == {"SN1", "SN2"}
+
+
 async def test_submit_bind_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:
     """Submit bind failure aborts cannot connect."""
     entry = _entry(hass)
