@@ -130,18 +130,22 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if self.control_result:
-            return cast(bool, self.control_result["current_pos"] == 0)
-
         if not self._positioning:
             # An uncalibrated roller parks its position on 101, so the direction
             # it last travelled in is all there is to go on
             last_direction = self.coordinator.device.status["rollers"][0].get(
                 "last_direction"
             )
+            if self.control_result:
+                last_direction = self.control_result.get(
+                    "last_direction", last_direction
+                )
             if not last_direction:
                 return None
             return cast(str, last_direction) == "close"
+
+        if self.control_result:
+            return cast(bool, self.control_result["current_pos"] == 0)
 
         return cast(int, self.block.rollerPos) == 0
 

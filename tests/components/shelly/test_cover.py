@@ -1,7 +1,7 @@
 """Tests for Shelly cover platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -149,6 +149,46 @@ async def test_block_device_roller_without_positioning(
     assert (state := hass.states.get("cover.test_name"))
     assert state.state == expected_state
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_block_device_roller_without_positioning_stopped(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test stopping an uncalibrated roller keeps it on its last direction."""
+    settings = deepcopy(mock_block_device.settings)
+    settings["rollers"][0]["positioning"] = False
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+
+    status = deepcopy(mock_block_device.status)
+    status["rollers"] = [{"current_pos": 101, "last_direction": "close"}]
+    monkeypatch.setattr(mock_block_device, "status", status)
+
+    # An uncalibrated roller answers a command with position 101 as well
+    monkeypatch.setattr(
+        mock_block_device.blocks[ROLLER_BLOCK_ID],
+        "set_state",
+        AsyncMock(
+            side_effect=lambda go, roller_pos=0: {"current_pos": 101, "state": go}
+        ),
+    )
+
+    await init_integration(hass, 1)
+
+    entity_id = "cover.test_name"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == CoverState.CLOSED
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == CoverState.CLOSED
 
 
 async def test_block_device_no_roller_blocks(
