@@ -2,24 +2,38 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import Any, override
+
+from peblar import PackageType
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
+    UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarVersionDataUpdateCoordinator,
     PeblarVersionInformation,
 )
 from .entity import PeblarEntity
+from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
+
+
+def _customization_update_pending(versions: PeblarVersionInformation) -> bool:
+    """Return whether a customization package is waiting to be installed."""
+    return (
+        versions.available.customization is not None
+        and versions.available.customization != versions.current.customization
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -29,12 +43,14 @@ class PeblarUpdateEntityDescription(UpdateEntityDescription):
     available_fn: Callable[[PeblarVersionInformation], str | None]
     has_fn: Callable[[PeblarVersionInformation], bool] = lambda _: True
     installed_fn: Callable[[PeblarVersionInformation], str | None]
+    package_type: PackageType
 
 
 DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
     PeblarUpdateEntityDescription(
         key="firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
+        package_type=PackageType.FIRMWARE,
         installed_fn=lambda x: x.current.firmware,
         has_fn=lambda x: x.available.firmware is not None,
         available_fn=lambda x: x.available.firmware,
@@ -42,6 +58,7 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
     PeblarUpdateEntityDescription(
         key="customization",
         translation_key="customization",
+        package_type=PackageType.CUSTOMIZATION,
         available_fn=lambda x: x.available.customization,
         has_fn=lambda x: x.available.customization is not None,
         installed_fn=lambda x: x.current.customization,
@@ -74,6 +91,8 @@ class PeblarUpdateEntity(
 
     entity_description: PeblarUpdateEntityDescription
 
+    _attr_supported_features = UpdateEntityFeature.INSTALL
+
     @property
     @override
     def installed_version(self) -> str | None:
@@ -85,3 +104,27 @@ class PeblarUpdateEntity(
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.entity_description.available_fn(self.coordinator.data)
+
+    @peblar_exception_handler
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install the package the charger has on offer."""
+        if (
+            self.entity_description.package_type is PackageType.FIRMWARE
+            and _customization_update_pending(self.coordinator.data)
+        ):
+            # Peblar's own web interface installs the customization package
+            # first and waits for the charger to come back before it touches
+            # the firmware. Doing it the other way around is not a sequence
+            # the charger is put through anywhere else.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="customization_update_first",
+            )
+
+        await self.coordinator.peblar.update(
+            package_type=self.entity_description.package_type
+        )
+        self.coordinator.async_refresh_after_restart()

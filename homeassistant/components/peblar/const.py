@@ -16,6 +16,11 @@ CONF_UID: Final = "uid"
 EVENT_STREAM_RETRY_MINIMUM: Final = timedelta(seconds=5)
 EVENT_STREAM_RETRY_MAXIMUM: Final = timedelta(minutes=5)
 
+# How long to keep waiting for a charger to come back after it was asked to
+# install a package. Peblar's own web interface allows ten minutes for the
+# reboot, and gives up after that.
+UPDATE_RESTART_TIMEOUT: Final = timedelta(minutes=10)
+
 LOGGER = logging.getLogger(__package__)
 
 PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {

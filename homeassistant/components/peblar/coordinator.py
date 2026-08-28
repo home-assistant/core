@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Concatenate, override
 
 from peblar import (
@@ -20,11 +20,12 @@ from peblar import (
 )
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, UPDATE_RESTART_TIMEOUT
 
 
 @dataclass(kw_only=True)
@@ -111,6 +112,8 @@ class PeblarVersionDataUpdateCoordinator(
 ):
     """Class to manage fetching Peblar version information."""
 
+    config_entry: PeblarConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, entry: PeblarConfigEntry, peblar: Peblar
     ) -> None:
@@ -132,6 +135,58 @@ class PeblarVersionDataUpdateCoordinator(
             current=await self.peblar.current_versions(),
             available=await self.peblar.available_versions(),
         )
+
+    @callback
+    def async_refresh_after_restart(self) -> None:
+        """Read the versions again once the charger has restarted.
+
+        Installing a package returns long before the charger is done: it
+        downloads, then reboots on its own, which Peblar's own web
+        interface allows hours for. Rather than guess at a delay, wait for
+        the charger to drop off and come back, which the data poll notices
+        every ten seconds. Peblar waits for the same two moments.
+
+        Without this a charger that just updated keeps offering the update
+        it already took, until the two hourly version poll comes round.
+        """
+        entry = self.config_entry
+        data_coordinator = entry.runtime_data.data_coordinator
+        went_down = False
+        unsubscribes: list[CALLBACK_TYPE] = []
+
+        @callback
+        def _stop_waiting() -> None:
+            while unsubscribes:
+                unsubscribes.pop()()
+
+        @callback
+        def _give_up(_now: datetime) -> None:
+            """Stop waiting for a charger that never came back."""
+            _stop_waiting()
+
+        @callback
+        def _handle_data_coordinator_update() -> None:
+            nonlocal went_down
+            if not data_coordinator.last_update_success:
+                went_down = True
+                return
+
+            # Still reachable, so the charger has not started rebooting yet.
+            if not went_down:
+                return
+
+            _stop_waiting()
+            entry.async_create_task(
+                self.hass, self.async_request_refresh(), eager_start=False
+            )
+
+        unsubscribes.append(
+            data_coordinator.async_add_listener(_handle_data_coordinator_update)
+        )
+        unsubscribes.append(
+            async_call_later(self.hass, UPDATE_RESTART_TIMEOUT, _give_up)
+        )
+        entry.async_on_unload(_stop_waiting)
 
 
 class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
