@@ -27,6 +27,8 @@ UNIT_RECORDS = "records"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional("name"): cv.string,
+        vol.Optional("monitored_conditions"): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
