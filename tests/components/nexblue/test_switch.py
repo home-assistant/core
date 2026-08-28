@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nexblue.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -37,6 +37,19 @@ async def test_switch_entities_snapshot(
         snapshot,
         init_integration.entry_id,
     )
+
+
+async def test_charger_removed_from_list_becomes_unavailable(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a charger missing from a refresh does not raise an exception."""
+    mock_client.async_list_chargers.return_value = []
+
+    await init_integration.runtime_data.async_refresh()
+
+    assert hass.states.get("switch.nb123456_charging").state == STATE_UNAVAILABLE
 
 
 async def test_turn_on_starts_charging(

@@ -80,8 +80,9 @@ class NexBlueChargingSwitch(
             return self._assumed_is_on
 
         self._assumed_is_on = None
-        status = self.coordinator.data[self._serial_number]
-        assert status is not None
+        status = self.coordinator.data.get(self._serial_number)
+        if status is None:
+            return False
         return status.charging_state == 2
 
     @override
@@ -108,7 +109,7 @@ class NexBlueChargingSwitch(
         self._assumed_state_expires_at = time.monotonic() + ASSUMED_STATE_SECONDS
         self.async_write_ha_state()
         self._schedule_command_refreshes()
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     def _schedule_command_refreshes(self) -> None:
         """Refresh while cloud and charger state catch up after a command."""
@@ -116,7 +117,7 @@ class NexBlueChargingSwitch(
         @callback
         def _request_refresh(_now: datetime) -> None:
             """Request a refresh from the Home Assistant event loop."""
-            self.hass.async_create_task(self.coordinator.async_request_refresh())
+            self.hass.async_create_task(self.coordinator.async_refresh())
 
         for delay in COMMAND_REFRESH_DELAYS:
             cancel = async_call_later(self.hass, delay, _request_refresh)
