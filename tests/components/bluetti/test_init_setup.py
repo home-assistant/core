@@ -267,6 +267,74 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
     assert all(c.last_update_success for c in coordinators.values())
 
 
+async def test_device_unbound_during_first_refresh_is_not_set_up(
+    hass: HomeAssistant,
+) -> None:
+    """A device unbound during its own first refresh must not still load.
+
+    Regression test: entry.runtime_data used to be assigned after the
+    first-refresh gather, not before - a device reporting
+    isBindByCurUser="0" on that very first refresh triggers
+    _handle_unbind(), which needs runtime_data to exist to remove the
+    device from bluetti_devices/coordinators. With no runtime_data yet,
+    that step silently did nothing, and the device was set up anyway once
+    runtime_data was assigned right after - even though its device/entity
+    registry entries had just been deleted by the same _handle_unbind()
+    call.
+    """
+    entry = _entry(
+        hass,
+        products=[
+            {"sn": "SN1", "name": "Device 1", "stateList": [], "online": "1"},
+            {"sn": "SN2", "name": "Device 2", "stateList": [], "online": "1"},
+        ],
+        devices=["SN1", "SN2"],
+    )
+    status_data = {
+        "SN1": MagicMock(sn="SN1", isBindByCurUser="0", online="1", stateList=[]),
+        "SN2": MagicMock(sn="SN2", isBindByCurUser="1", online="1", stateList=[]),
+    }
+
+    async def fake_get_device_status(sn):
+        return MagicMock(data=[status_data[sn]])
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+        patch(
+            "homeassistant.components.bluetti.models.persistent_notification.async_create"
+        ),
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            side_effect=fake_get_device_status
+        )
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "SN1" not in entry.runtime_data.coordinators
+    assert "SN2" in entry.runtime_data.coordinators
+    assert [d.device_id for d in entry.runtime_data.bluetti_devices.devices] == ["SN2"]
+
+    updated = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated.options["devices"] == ["SN2"]
+
+
 async def test_async_setup_entry_retries_on_failure(hass: HomeAssistant) -> None:
     """Async setup entry retries on failure."""
     entry = _entry(hass)

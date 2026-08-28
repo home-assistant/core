@@ -70,12 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         await oauth_session.async_ensure_token_valid()
         access_token = oauth_session.token["access_token"]
 
-        # Registered before start_token_check() below - its background
-        # refresh task relies on this listener to reload the entry.
-        entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
         auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
-        auth_token_refresh.start_token_check()
         product_client = ProductClient(
             http_session,
             GATEWAY_URL,
@@ -114,6 +109,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         device.bind_runtime(product_client, hass, entry)
         coordinators[device.device_id] = BluettiDeviceCoordinator(hass, entry, device)
 
+    # Assigned before the first refresh below, not after: a device already
+    # unbound in the cloud triggers _handle_unbind() during that refresh,
+    # which needs runtime_data to exist to remove the device - otherwise
+    # it's set up anyway once this entry's runtime_data is assigned.
+    entry.runtime_data = BluettiRuntimeData(
+        auth=auth,
+        bluetti_devices=bluetti_devices,
+        stomp_client=stomp_client,
+        coordinators=coordinators,
+    )
+
     # Each device's first refresh is an independent network round-trip, so
     # run them concurrently instead of one-by-one - otherwise setup time
     # scales linearly with the number of devices on the account.
@@ -124,14 +130,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         )
     )
 
-    entry.runtime_data = BluettiRuntimeData(
-        auth=auth,
-        bluetti_devices=bluetti_devices,
-        stomp_client=stomp_client,
-        coordinators=coordinators,
-    )
-
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    # Both wait until here: start_token_check()'s background refresh needs
+    # this listener registered first, and neither may run any earlier or
+    # an unbind during the first refresh above would race a reload here.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    auth_token_refresh.start_token_check()
 
     __LOGGER__.info("bluetti init ok")
 
