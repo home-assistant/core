@@ -76,6 +76,15 @@ grpcio==1.78.0
 grpcio-status==1.78.0
 grpcio-reflection==1.78.0
 
+# boto3 and botocore are shared requirements of multiple integrations,
+# with botocore also being a transitive dependency of aiobotocore, which
+# only accepts a narrow botocore version range. Pin them together so a
+# runtime requirement install cannot pull in a botocore version that is
+# incompatible with aiobotocore.
+# see https://github.com/home-assistant/core/issues/167399
+boto3==1.42.97
+botocore==1.42.97
+
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
@@ -216,7 +225,12 @@ aiomqtt>=2.5.0
 
 # aiofile 3.10.0 crashes on import due to KeyError on package metadata
 # https://github.com/mosquito/aiofile/pull/106
-aiofile==3.9.0
+aiofile>=3.10.1
+# caio 0.12.2 includes 'tests' package in wheel
+# Fixed upstream in https://github.com/mosquito/caio/pull/75
+# but not released yet. Pin here to prevent hassfest failure.
+# Update manually once next release is available.
+caio<0.12.3
 
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0

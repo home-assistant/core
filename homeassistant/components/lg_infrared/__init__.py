@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-PLATFORMS = [Platform.BUTTON, Platform.EVENT, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.EVENT, Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 

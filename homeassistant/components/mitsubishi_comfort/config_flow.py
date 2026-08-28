@@ -88,14 +88,15 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         changed IP.
         """
         mac = dr.format_mac(discovery_info.macaddress)
-        device = dr.async_get(self.hass).async_get_device(
+        devices = dr.async_get(self.hass).async_get_devices(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
+        device_entry_ids = {device.config_entry_id for device in devices}
         entry = next(
             (
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
-                if device is not None and entry.entry_id in device.config_entries
+                if entry.entry_id in device_entry_ids
             ),
             None,
         )

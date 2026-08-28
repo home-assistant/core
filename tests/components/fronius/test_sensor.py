@@ -322,31 +322,37 @@ async def test_gen24_storage(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    solar_net = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_12345678")}
+    solar_net = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_12345678"), config_entry.entry_id
     )
     assert solar_net.configuration_url == "http://fronius"
     assert solar_net.manufacturer == "Fronius"
     assert solar_net.name == "SolarNet"
 
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345678"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
     assert inverter_1.model == "Gen24"
     assert inverter_1.name == "Gen24 Storage"
 
-    meter = device_registry.async_get_device(identifiers={(DOMAIN, "1234567890")})
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890"), config_entry.entry_id
+    )
     assert meter.manufacturer == "Fronius"
     assert meter.model == "Smart Meter TS 65A-3"
     assert meter.name == "Smart Meter TS 65A-3"
 
-    ohmpilot = device_registry.async_get_device(identifiers={(DOMAIN, "23456789")})
+    ohmpilot = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "23456789"), config_entry.entry_id
+    )
     assert ohmpilot.manufacturer == "Fronius"
     assert ohmpilot.model == "Ohmpilot 6"
     assert ohmpilot.name == "Ohmpilot"
     assert ohmpilot.sw_version == "1.0.25-3"
 
-    storage = device_registry.async_get_device(
-        identifiers={(DOMAIN, "P030T020Z2001234567     ")}
+    storage = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "P030T020Z2001234567     "), config_entry.entry_id
     )
     assert storage.manufacturer == "BYD"
     assert storage.model == "BYD Battery-Box Premium HV"
@@ -376,8 +382,8 @@ async def test_primo_s0(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    solar_net = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_123.4567890")}
+    solar_net = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_123.4567890"), config_entry.entry_id
     )
     assert solar_net.configuration_url == "http://fronius"
     assert solar_net.manufacturer == "Fronius"
@@ -385,18 +391,22 @@ async def test_primo_s0(
     assert solar_net.name == "SolarNet"
     assert solar_net.sw_version == "3.18.7-1"
 
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "123456")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
     assert inverter_1.model == "Primo 5.0-1"
     assert inverter_1.name == "Primo 5.0-1"
 
-    inverter_2 = device_registry.async_get_device(identifiers={(DOMAIN, "234567")})
+    inverter_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "234567"), config_entry.entry_id
+    )
     assert inverter_2.manufacturer == "Fronius"
     assert inverter_2.model == "Primo 3.0-1"
     assert inverter_2.name == "Primo 3.0-1"
 
-    meter = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_123.4567890:S0 Meter at inverter 1")}
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_123.4567890:S0 Meter at inverter 1"), config_entry.entry_id
     )
     assert meter.manufacturer == "Fronius"
     assert meter.model == "S0 Meter at inverter 1"

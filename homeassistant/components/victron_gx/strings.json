@@ -266,6 +266,15 @@
       "alternator_charge_current_limit": {
         "name": "[%key:component::victron_gx::common::charge_current_limit%]"
       },
+      "charger_ac_in_current_limit": {
+        "name": "AC input current limit"
+      },
+      "evcharger_max_set_current": {
+        "name": "Max charging current"
+      },
+      "evcharger_min_set_current": {
+        "name": "Min charging current"
+      },
       "evcharger_set_current": {
         "name": "Charge current setpoint"
       },
@@ -401,6 +410,13 @@
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
           "passthrough": "[%key:component::victron_gx::common::passthrough%]"
+        }
+      },
+      "battery_bms_mode": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "evcharger_mode": {
@@ -1109,12 +1125,6 @@
       },
       "evcharger_current": {
         "name": "[%key:component::victron_gx::common::current%]"
-      },
-      "evcharger_max_set_current": {
-        "name": "Maximum set current"
-      },
-      "evcharger_min_set_current": {
-        "name": "Minimum set current"
       },
       "evcharger_position": {
         "name": "Position",
@@ -1899,6 +1909,16 @@
       "system_heartbeat": {
         "name": "GX system heartbeat"
       },
+      "system_pv_on_grid_current_phase": {
+        "name": "PV on grid current {phase}"
+      },
+      "system_pv_on_grid_phases": {
+        "name": "PV on grid phases",
+        "unit_of_measurement": "phases"
+      },
+      "system_pv_on_grid_power_phase": {
+        "name": "PV on grid power {phase}"
+      },
       "system_pv_on_output_current_phase": {
         "name": "PV on output current {phase}"
       },
@@ -2293,6 +2313,9 @@
       "vebus_hub4_disable_charge": {
         "name": "Hub4 disable charge"
       },
+      "vebus_hub4_disable_feed_in": {
+        "name": "Hub4 disable feed-in"
+      },
       "vebus_hub4_do_not_feed_in_overvoltage": {
         "name": "Hub4 do not feed in on overvoltage"
       },
@@ -2327,6 +2350,16 @@
     },
     "cannot_connect": {
       "message": "Cannot connect to the GX device at {host}."
+    }
+  },
+  "issues": {
+    "deprecated_sensor": {
+      "description": "The legacy sensor `{entity_id}` has been removed and replaced by a number entity on the same device. Update any dashboards, automations, scripts, or templates that use the legacy sensor, then disable it. The legacy sensor will be removed after the next restart.",
+      "title": "Legacy EV charger sensor removed"
+    },
+    "deprecated_sensor_in_use": {
+      "description": "The legacy sensor `{entity_id}` has been removed and replaced by a number entity on the same device. It is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the number entity, then disable the legacy sensor. It will be removed after the next restart.",
+      "title": "Legacy EV charger sensor in use"
     }
   }
 }

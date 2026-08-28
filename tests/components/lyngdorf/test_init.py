@@ -69,6 +69,23 @@ async def test_unload_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_zone_b_via_device_id(
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that Zone B's via_device_id points at the main device."""
+    assert init_integration.unique_id
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, init_integration.unique_id), init_integration.entry_id
+    )
+    zone_b_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{init_integration.unique_id}_zone_b"), init_integration.entry_id
+    )
+    assert main_device is not None
+    assert zone_b_device is not None
+    assert zone_b_device.via_device_id == main_device.id
+
+
 @pytest.mark.parametrize(
     ("serial", "expected_mac_connections"),
     [
@@ -104,9 +121,34 @@ async def test_mac_connection_registered_when_serial_is_mac(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, serial.lower())})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, serial.lower()), entry.entry_id
+    )
     assert device is not None
     mac_connections = {
         value for kind, value in device.connections if kind == dr.CONNECTION_NETWORK_MAC
     }
     assert mac_connections == expected_mac_connections
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_no_zone_b_device_for_model_without_zone_b(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test no Zone B device is created for a model without Zone B."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        return_value=LyngdorfModel.TDAI_3400,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_zone_b"), mock_config_entry.entry_id
+    )
+    assert device is None

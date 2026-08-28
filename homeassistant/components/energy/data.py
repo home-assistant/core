@@ -172,6 +172,9 @@ class BatterySourceType(TypedDict):
     # statistic_id of a sensor (unit %) reporting the battery state of charge
     stat_soc: NotRequired[str]
 
+    # usable capacity in kWh, used to weight the combined state of charge
+    capacity: NotRequired[float]
+
     # An optional custom name for display in energy graphs
     name: NotRequired[str]
 
@@ -506,6 +509,9 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         vol.Optional("stat_soc"): str,
+        vol.Optional("capacity"): vol.All(
+            vol.Coerce(float), vol.Range(min=0, min_included=False)
+        ),
         vol.Optional("name"): str,
     }
 )

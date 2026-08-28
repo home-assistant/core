@@ -24,11 +24,11 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 def _mock_access_control(
@@ -88,11 +88,14 @@ def _mock_access_control(
 
 
 def _device_id(
-    device_registry: dr.DeviceRegistry, client: MagicMock, node: Node
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    node: Node,
+    config_entry_id: str,
 ) -> str:
     """Resolve the HA device_id for a mocked Z-Wave node."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), config_entry_id
     )
     assert device is not None
     return device.id
@@ -103,9 +106,10 @@ def _lock_entity_id(
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     node: Node,
+    config_entry_id: str,
 ) -> str:
     """Resolve the HA lock entity_id for a mocked Z-Wave node."""
-    device_id = _device_id(device_registry, client, node)
+    device_id = _device_id(device_registry, client, node, config_entry_id)
     for entry in entity_registry.entities.values():
         if entry.device_id == device_id and entry.entity_id.startswith("lock."):
             return entry.entity_id
@@ -124,7 +128,11 @@ async def test_set_user_new_user_auto_find(
     api = _mock_access_control(lock_schlage_be469)
     api.add_user.return_value = AddUserResult(user=SetUserResult.OK)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -166,7 +174,11 @@ async def test_set_user_existing_user(
     """With a user_id, set_user updates the existing user via setUser."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -220,7 +232,11 @@ async def test_set_user_no_slots(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_name": "Charlie",
             },
@@ -245,7 +261,11 @@ async def test_set_user_new_user_with_credential(
     """A new user and its credential are written in one addUser call."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -305,7 +325,11 @@ async def test_set_user_rolls_back_on_credential_failure(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_name": "Alice",
                 "credential_type": "pin_code",
@@ -343,7 +367,11 @@ async def test_set_user_rollback_failure_still_raises_credential_error(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_name": "Alice",
                 "credential_type": "pin_code",
@@ -392,7 +420,11 @@ async def test_set_user_new_user_credential_slot_allocation(
     user2.user_id = 2
     api.get_users_cached.return_value = [user1, user2]
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -454,7 +486,11 @@ async def test_set_user_existing_user_with_credential(
         supports_users_without_credentials=supports_users_without_credentials,
     )
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -504,7 +540,11 @@ async def test_set_user_existing_user_explicit_credential_slot(
     """An explicit credential_slot is honored on the existing-user path."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -554,7 +594,11 @@ async def test_set_user_invalid_pin(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "credential_type": "pin_code",
                 "credential_data": "abcd",
@@ -586,7 +630,11 @@ async def test_set_user_requires_credential_on_user_code_cc(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_name": "Alice",
             },
@@ -616,7 +664,11 @@ async def test_delete_user(
         "delete_user",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
-                entity_registry, device_registry, client, lock_schlage_be469
+                entity_registry,
+                device_registry,
+                client,
+                lock_schlage_be469,
+                integration.entry_id,
             ),
             "user_id": 3,
         },
@@ -642,7 +694,11 @@ async def test_delete_all_users(
         "delete_all_users",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
-                entity_registry, device_registry, client, lock_schlage_be469
+                entity_registry,
+                device_registry,
+                client,
+                lock_schlage_be469,
+                integration.entry_id,
             ),
         },
         blocking=True,
@@ -662,7 +718,11 @@ async def test_get_credential_capabilities(
     """Test get_credential_capabilities returns capability data."""
     _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -716,7 +776,11 @@ async def test_get_credential_capabilities_not_supported(
             "get_credential_capabilities",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 )
             },
             blocking=True,
@@ -758,7 +822,11 @@ async def test_get_users(
     api.get_all_credentials_cached.return_value = [credential]
 
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -800,7 +868,11 @@ async def test_set_credential_auto_slot(
     api = _mock_access_control(lock_schlage_be469)
 
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
     result = await hass.services.async_call(
         DOMAIN,
@@ -833,7 +905,11 @@ async def test_set_credential_explicit_slot(
     """Test set_credential with explicit user_id and slot."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -871,10 +947,14 @@ async def test_set_credential_multi_target(
     api2 = _mock_access_control(lock_august_pro)
 
     entity_1 = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
     entity_2 = _lock_entity_id(
-        entity_registry, device_registry, client, lock_august_pro
+        entity_registry, device_registry, client, lock_august_pro, integration.entry_id
     )
     result = await hass.services.async_call(
         DOMAIN,
@@ -935,7 +1015,11 @@ async def test_set_user_rejection_raises(
             "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "user_name": "Guest",
@@ -1008,7 +1092,11 @@ async def test_set_credential_rejection_raises(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
@@ -1042,7 +1130,11 @@ async def test_set_credential_requires_user_id(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "credential_type": "pin_code",
                 "credential_data": "1234",
@@ -1076,7 +1168,11 @@ async def test_set_credential_type_not_supported(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
@@ -1124,7 +1220,11 @@ async def test_set_credential_no_available_slots(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
@@ -1167,7 +1267,11 @@ async def test_set_credential_pin_not_digits(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
@@ -1195,7 +1299,11 @@ async def test_set_credential_password_allows_non_digits(
     """Password credentials must not be subject to the PIN-only digit check."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     result = await hass.services.async_call(
@@ -1237,7 +1345,11 @@ async def test_set_credential_length_validation(
             "set_credential",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
@@ -1276,7 +1388,11 @@ async def test_delete_credential(
         "delete_credential",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
-                entity_registry, device_registry, client, lock_schlage_be469
+                entity_registry,
+                device_registry,
+                client,
+                lock_schlage_be469,
+                integration.entry_id,
             ),
             "user_id": 1,
             "credential_type": "pin_code",
@@ -1312,7 +1428,11 @@ async def test_delete_all_credentials(
         "delete_all_credentials",
         {
             ATTR_ENTITY_ID: _lock_entity_id(
-                entity_registry, device_registry, client, lock_schlage_be469
+                entity_registry,
+                device_registry,
+                client,
+                lock_schlage_be469,
+                integration.entry_id,
             ),
             "user_id": 1,
         },
@@ -1341,7 +1461,11 @@ async def test_set_credential_id_range_validation(
 
     payload: dict = {
         ATTR_ENTITY_ID: _lock_entity_id(
-            entity_registry, device_registry, client, lock_schlage_be469
+            entity_registry,
+            device_registry,
+            client,
+            lock_schlage_be469,
+            integration.entry_id,
         ),
         "user_id": 1,
         "credential_type": "pin_code",
@@ -1380,7 +1504,11 @@ async def test_delete_user_rejects_oversize_user_id(
             "delete_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 70000,
             },
@@ -1411,10 +1539,18 @@ async def test_mutation_supports_multi_target(
         {
             ATTR_ENTITY_ID: [
                 _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 _lock_entity_id(
-                    entity_registry, device_registry, client, lock_august_pro
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_august_pro,
+                    integration.entry_id,
                 ),
             ],
             "user_id": 3,
@@ -1456,10 +1592,14 @@ async def test_get_users_supports_multi_target(
     api2.get_users_cached.return_value = [user_2]
 
     entity_1 = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
     entity_2 = _lock_entity_id(
-        entity_registry, device_registry, client, lock_august_pro
+        entity_registry, device_registry, client, lock_august_pro, integration.entry_id
     )
 
     result = await hass.services.async_call(
@@ -1592,7 +1732,11 @@ async def test_server_error_wrapped_with_translation_key(
     getattr(api, failing_attr).side_effect = FailedZWaveCommand("boom", 1, "boom")
 
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     with pytest.raises(HomeAssistantError) as exc:
@@ -1636,7 +1780,11 @@ async def test_delete_all_credentials_failure_wrapped(
             "delete_all_credentials",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 7,
             },
@@ -1684,7 +1832,11 @@ async def test_delete_all_credentials_partial_failure(
             "delete_all_credentials",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 7,
             },
@@ -1729,7 +1881,11 @@ async def test_delete_all_credentials_single_failure_unwrapped(
             "delete_all_credentials",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
+                    entity_registry,
+                    device_registry,
+                    client,
+                    lock_schlage_be469,
+                    integration.entry_id,
                 ),
                 "user_id": 7,
             },
@@ -1778,7 +1934,11 @@ async def test_service_access_control_not_supported(
     api = _mock_access_control(lock_schlage_be469)
     api.is_supported.return_value = False
     entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
     )
 
     with pytest.raises(HomeAssistantError) as exc:
@@ -1794,3 +1954,63 @@ async def test_service_access_control_not_supported(
     # The guard runs before anything else, so no capability query is issued.
     api.is_supported.assert_called_once_with()
     api.get_user_capabilities_cached.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "returns_response"),
+    [
+        pytest.param("set_user", {}, True, id="set_user"),
+        pytest.param("delete_user", {"user_id": 1}, False, id="delete_user"),
+        pytest.param("delete_all_users", {}, False, id="delete_all_users"),
+        pytest.param(
+            "set_credential",
+            {"user_id": 1, "credential_type": "pin_code", "credential_data": "1234"},
+            True,
+            id="set_credential",
+        ),
+        pytest.param(
+            "delete_credential",
+            {"user_id": 1, "credential_type": "pin_code", "credential_slot": 1},
+            False,
+            id="delete_credential",
+        ),
+        pytest.param(
+            "delete_all_credentials", {"user_id": 1}, False, id="delete_all_credentials"
+        ),
+    ],
+)
+async def test_service_requires_admin(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    hass_read_only_user: MockUser,
+    service: str,
+    service_data: dict[str, int | str],
+    returns_response: bool,
+) -> None:
+    """Every mutating user/credential service rejects non-admin users."""
+    # Grant control of all entities, so the call is only rejected for not being admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+    api = _mock_access_control(lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry,
+        device_registry,
+        client,
+        lock_schlage_be469,
+        integration.entry_id,
+    )
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+            return_response=returns_response,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    api.is_supported.assert_not_called()

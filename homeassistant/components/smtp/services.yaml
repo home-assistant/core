@@ -1,0 +1,46 @@
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: smtp
+  fields:
+    title:
+      required: false
+      selector:
+        text:
+      example: Home Assistant
+      default: Home Assistant
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: Hello World
+    html:
+      required: false
+      selector:
+        text:
+          multiline: true
+    attachments:
+      required: false
+      selector:
+        object:
+          label_field: media_source
+          description_field: filename
+          multiple: true
+          fields:
+            media_source:
+              required: true
+              selector:
+                media:
+                  accept:
+                    - "*"
+            filename:
+              required: false
+              selector:
+                text:
+            content_id:
+              required: false
+              selector:
+                text:
+          translation_key: attachments

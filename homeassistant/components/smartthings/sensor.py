@@ -1061,17 +1061,17 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key="x_coordinate",
                 translation_key="x_coordinate",
-                value_fn=lambda value: value[0],
+                value_fn=lambda value: value[0] if value else None,
             ),
             SmartThingsSensorEntityDescription(
                 key="y_coordinate",
                 translation_key="y_coordinate",
-                value_fn=lambda value: value[1],
+                value_fn=lambda value: value[1] if value else None,
             ),
             SmartThingsSensorEntityDescription(
                 key="z_coordinate",
                 translation_key="z_coordinate",
-                value_fn=lambda value: value[2],
+                value_fn=lambda value: value[2] if value else None,
             ),
         ]
     },
@@ -1264,6 +1264,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="stick_cleaner_operating_state",
                 options=list(STICK_CLEANER_STATUS.values()),
                 device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: STICK_CLEANER_STATUS.get(value, value),
             )
         ]
     },

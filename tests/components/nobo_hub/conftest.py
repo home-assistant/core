@@ -106,10 +106,12 @@ def mock_nobo_class(
                 "temp_eco_c": "17",
             },
         }
-        model = MagicMock()
-        # Direct assignment overrides MagicMock's auto-attr for `.name`.
-        model.name = "Panel heater"
-        model.has_temp_sensor = True
+        model = pynobo_nobo.Model(
+            model_id="183",
+            type="THERMOSTAT_FLOOR",
+            name="Panel heater",
+            has_temp_sensor=True,
+        )
         hub.components = {
             "200000059091": {
                 "serial": "200000059091",

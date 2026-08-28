@@ -8,10 +8,15 @@ from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import (
     GoogleHealthApiError,
-    HealthApiForbiddenException,
+    HealthApiScopeInsufficientException,
+    HealthApiServiceDisabledException,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -58,6 +63,12 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        return await self.async_step_user(user_input)
+
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         scopes = data.get(CONF_TOKEN, {}).get("scope", "").split()
@@ -71,24 +82,31 @@ class OAuth2FlowHandler(
 
         try:
             identity = await api.get_identity()
-        except HealthApiForbiddenException as err:
+        except HealthApiServiceDisabledException as err:
             _LOGGER.error("Error getting Google Health identity: %s", err)
             return self.async_abort(
                 reason="api_not_enabled",
                 description_placeholders={"url": API_CONSOLE_URL},
             )
+        except HealthApiScopeInsufficientException as err:
+            _LOGGER.error("Error getting Google Health identity: %s", err)
+            return self.async_abort(reason="missing_profile_scope")
         except GoogleHealthApiError as err:
             _LOGGER.error("Error getting Google Health identity: %s", err)
             return self.async_abort(reason="cannot_connect")
 
         if not identity.health_user_id:
             _LOGGER.error("Google Health identity has no health_user_id")
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="missing_profile_scope")
 
         await self.async_set_unique_id(identity.health_user_id)
-        if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            if self.source == SOURCE_REAUTH:
+                entry = self._get_reauth_entry()
+            else:
+                entry = self._get_reconfigure_entry()
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(entry, data=data)
         self._abort_if_unique_id_configured()
 
         display_name = None
@@ -96,7 +114,7 @@ class OAuth2FlowHandler(
             try:
                 userinfo = await api.get_user_info()
                 display_name = userinfo.given_name or userinfo.name
-            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+            except GoogleHealthApiError as err:
                 _LOGGER.warning("Error fetching user profile name: %s", err)
 
         return self.async_create_entry(

@@ -52,11 +52,19 @@ RGB_LIGHT = FixtureDevice(
     "io://1234-5678-3293/14608095",
     "light.light_terras_rgb",
 )
+# RTS is one-way, thus this dimmable light can only be dimmed via the
+# stepPositive/stepNegative buttons and is exposed as an on/off light.
+RTS_DIMMABLE_LIGHT = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "light.palm_court_led_strip",
+)
 
 SNAPSHOT_FIXTURES = [
     ONOFF_LIGHT,
     DIMMABLE_LIGHT,
     RGB_LIGHT,
+    RTS_DIMMABLE_LIGHT,
 ]
 
 

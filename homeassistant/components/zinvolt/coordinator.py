@@ -40,6 +40,7 @@ class BatteryData:
 class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
     """Class for Zinvolt devices."""
 
+    config_entry: ZinvoltConfigEntry
     battery_units: dict[str, Unit]
 
     def __init__(

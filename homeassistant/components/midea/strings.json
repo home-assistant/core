@@ -1,0 +1,723 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "device_auth_failed": "Could not connect with the provided configuration",
+      "invalid_device_id_for_ip": "The device ID does not match the selected IP address",
+      "invalid_device_ip": "Could not find a supported device at this IP address",
+      "invalid_token": "Token and key must be valid hexadecimal strings",
+      "ip_address_mismatch": "The IP address does not match the discovered device",
+      "login_failed": "Could not log in to the selected cloud server",
+      "no_devices": "No devices found",
+      "preset_login_failed": "Could not log in with the preset account",
+      "protocol_mismatch": "The protocol does not match the discovered device",
+      "token_unavailable": "Could not get a valid token and key from the cloud",
+      "type_mismatch": "The type does not match the discovered device"
+    },
+    "step": {
+      "auth_method": {
+        "data": {
+          "login_mode": "Login mode"
+        },
+        "data_description": {
+          "login_mode": "How to authenticate with the Midea cloud"
+        },
+        "description": "Choose how you want to authenticate.",
+        "title": "Authentication"
+      },
+      "auto": {
+        "data": {
+          "device": "Device"
+        },
+        "data_description": {
+          "device": "Select the discovered device to configure"
+        },
+        "title": "Select a discovered device"
+      },
+      "list": {
+        "description": "{table}",
+        "title": "Discovered appliances"
+      },
+      "login_credentials": {
+        "data": {
+          "account": "Account",
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "Server"
+        },
+        "data_description": {
+          "account": "Your Midea cloud account username or email address",
+          "password": "Your Midea cloud account password",
+          "server": "The Midea cloud server for your region"
+        },
+        "title": "Cloud login"
+      },
+      "manually": {
+        "data": {
+          "device_id": "Device ID",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "key": "Key",
+          "model": "Model",
+          "port": "[%key:common::config_flow::data::port%]",
+          "protocol": "Protocol",
+          "subtype": "Subtype",
+          "token": "Token",
+          "type": "Type"
+        },
+        "data_description": {
+          "device_id": "The device ID of your Midea appliance",
+          "ip_address": "The local IP address of your Midea appliance",
+          "key": "The key of your Midea appliance (hexadecimal string)",
+          "model": "The model of your Midea appliance",
+          "port": "The local port used by your Midea appliance",
+          "protocol": "The protocol used by your Midea appliance",
+          "subtype": "The subtype of your Midea appliance",
+          "token": "The token of your Midea appliance (hexadecimal string)",
+          "type": "The type of your Midea appliance"
+        },
+        "title": "Configure manually"
+      },
+      "search": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"
+        },
+        "title": "Search devices"
+      },
+      "user": {
+        "menu_options": {
+          "list": "List all appliances only",
+          "manually": "Configure manually",
+          "search": "Search automatically"
+        },
+        "title": "Set up Midea"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "arofene_link": {
+        "name": "Methanal"
+      },
+      "fall_asleep_status": {
+        "name": "Fall asleep"
+      },
+      "filter_cleaning_reminder": {
+        "name": "Filter cleaning"
+      },
+      "full_dust": {
+        "name": "Full dust"
+      },
+      "header_exist": {
+        "name": "Header"
+      },
+      "led_status": {
+        "name": "LED"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
+      "rinse_aid": {
+        "name": "Rinse aid"
+      },
+      "salt": {
+        "name": "Salt"
+      },
+      "screen_status": {
+        "name": "Screen"
+      },
+      "tank_full": {
+        "name": "Tank full"
+      }
+    },
+    "button": {
+      "start": {
+        "name": "Start"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "full": "Full",
+              "silent": "Silent"
+            }
+          }
+        }
+      },
+      "climate_zone1": {
+        "name": "Zone 1 thermostat"
+      },
+      "climate_zone2": {
+        "name": "Zone 2 thermostat"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "circulation": "Circulation",
+              "comfort": "Comfort",
+              "customize": "Customize",
+              "eco": "Eco",
+              "induction": "Induction",
+              "natural": "Natural",
+              "silent": "Silent",
+              "sleep": "Sleep",
+              "smart": "Smart",
+              "soft": "Soft",
+              "strong": "Strong",
+              "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "dry_level": {
+        "name": "Dry level"
+      },
+      "flushing_days": {
+        "name": "Flushing days"
+      },
+      "heating_level": {
+        "name": "Heating level"
+      },
+      "leak_water_protection_value": {
+        "name": "Leak water protection value"
+      },
+      "seat_temp_level": {
+        "name": "Seat temperature level"
+      },
+      "vacation_days": {
+        "name": "Vacation days"
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "water_temp_level": {
+        "name": "Water temperature level"
+      }
+    },
+    "select": {
+      "detect_mode": {
+        "name": "Detect mode",
+        "state": {
+          "methanal": "Formaldehyde",
+          "off": "Off",
+          "pm_25": "PM2.5"
+        }
+      },
+      "direction": {
+        "name": "Direction",
+        "state": {
+          "oscillate": "Oscillate"
+        }
+      },
+      "fan_speed": {
+        "name": "Fan speed",
+        "state": {
+          "auto": "Auto",
+          "high": "High",
+          "low": "Low",
+          "lowest": "Lowest",
+          "medium": "Medium",
+          "off": "Off",
+          "standby": "Standby"
+        }
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "fast": "Fast",
+          "manual": "Manual",
+          "sleep": "Sleep",
+          "smoke": "Smoke",
+          "standby": "Standby"
+        }
+      },
+      "oscillation_angle": {
+        "name": "Oscillation angle",
+        "state": {
+          "off": "Off"
+        }
+      },
+      "oscillation_mode": {
+        "name": "Oscillation mode",
+        "state": {
+          "both": "Both",
+          "curve_8": "Curve 8",
+          "curve_w": "Curve W",
+          "off": "Off",
+          "oscillation": "Oscillation",
+          "reserved": "Reserved",
+          "tilting": "Tilting"
+        }
+      },
+      "rate_select": {
+        "name": "Power rate limit"
+      },
+      "screen_display": {
+        "name": "Screen display",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
+        }
+      },
+      "silent_level": {
+        "name": "Silent level",
+        "state": {
+          "off": "Off",
+          "silent": "Silent",
+          "super_silent": "Super silent"
+        }
+      },
+      "tilting_angle": {
+        "name": "Tilting angle",
+        "state": {
+          "minus_60": "Minus 60",
+          "off": "Off",
+          "plus_60": "Plus 60"
+        }
+      },
+      "water_level_set": {
+        "name": "Water level setting"
+      },
+      "wind_lr_angle": {
+        "name": "Airflow horizontal",
+        "state": {
+          "left": "Left",
+          "left_mid": "Left middle",
+          "middle": "Middle",
+          "off": "Off",
+          "right": "Right",
+          "right_mid": "Right middle"
+        }
+      },
+      "wind_ud_angle": {
+        "name": "Airflow vertical",
+        "state": {
+          "down": "Down",
+          "down_mid": "Down middle",
+          "middle": "Middle",
+          "off": "Off",
+          "up": "Up",
+          "up_mid": "Up middle"
+        }
+      }
+    },
+    "sensor": {
+      "bathing_leaving_temperature": {
+        "name": "Bathing leaving temperature"
+      },
+      "bottom_compartment_temperature": {
+        "name": "Bottom compartment temperature"
+      },
+      "bottom_temperature": {
+        "name": "Bottom temperature"
+      },
+      "compressor_current": {
+        "name": "Compressor current"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
+      },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
+      "compressor_temperature": {
+        "name": "Compressor temperature"
+      },
+      "compressor_voltage": {
+        "name": "Compressor voltage"
+      },
+      "condenser_temperature": {
+        "name": "Condenser temperature"
+      },
+      "current_energy_consumption": {
+        "name": "Current energy consumption"
+      },
+      "dehydration_time": {
+        "name": "Dehydration time"
+      },
+      "discharge_pipe_temperature": {
+        "name": "Discharge pipe temperature"
+      },
+      "dry_temperature": {
+        "name": "Dry temperature"
+      },
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "evaporator_temperature": {
+        "name": "Evaporator temperature"
+      },
+      "filter_available_days": {
+        "name": "Filter {filter_number} available days"
+      },
+      "filter_life": {
+        "name": "Filter life"
+      },
+      "filter_life_level": {
+        "name": "Filter {filter_number} life level"
+      },
+      "flex_zone_actual_temp": {
+        "name": "Flex zone actual temperature"
+      },
+      "flex_zone_setting_temp": {
+        "name": "Flex zone setting temperature"
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
+      "freezer_actual_temp": {
+        "name": "Freezer actual temperature"
+      },
+      "freezer_setting_temp": {
+        "name": "Freezer setting temperature"
+      },
+      "hcho": {
+        "name": "Formaldehyde"
+      },
+      "heating_leaving_temperature": {
+        "name": "Heating leaving temperature"
+      },
+      "heating_power": {
+        "name": "Heating power"
+      },
+      "humidity_compensate": {
+        "name": "Humidity compensation"
+      },
+      "humidity_raw": {
+        "name": "Raw humidity"
+      },
+      "in_tds": {
+        "name": "In TDS"
+      },
+      "indoor_coil_temperature": {
+        "name": "Indoor coil temperature"
+      },
+      "indoor_fan_speed": {
+        "name": "Indoor fan speed"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "keep_warm_time": {
+        "name": "Keep warm time"
+      },
+      "middle_compartment_temperature": {
+        "name": "Middle compartment temperature"
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "appetizing_congee": "Appetizing congee",
+          "assorte_rice": "Assorted rice",
+          "baby_congee": "Baby congee",
+          "baby_rice": "Baby rice",
+          "baby_side": "Baby side",
+          "bean_rice_congee": "Bean rice congee",
+          "black_buckwheat_rice": "Black buckwheat rice",
+          "boil_congee": "Boil congee",
+          "boil_egg": "Boil egg",
+          "canton_soup": "Canton soup",
+          "chop": "Chop",
+          "clean": "Clean",
+          "coarse_congee": "Coarse congee",
+          "coarse_rice": "Coarse rice",
+          "congee_coup": "Congee soup",
+          "cook_congee": "Cook congee",
+          "cook_rice": "Cook rice",
+          "cook_soup": "Cook soup",
+          "corn": "Corn",
+          "corn_congee": "Corn congee",
+          "crispy_rice": "Crispy rice",
+          "delicious_steam": "Delicious steam",
+          "diy": "DIY",
+          "earthen_pot_congee": "Earthen pot congee",
+          "egg": "Egg",
+          "egg_custard": "Egg custard",
+          "eight_treasures_congee": "Eight treasures congee",
+          "eight_treasures_rice": "Eight treasures rice",
+          "essence_rice": "Essence rice",
+          "factory_test": "Factory test",
+          "fast_boil": "Fast boil",
+          "fast_congee": "Fast congee",
+          "fast_cook_rice": "Fast cook rice",
+          "fast_rice": "Fast rice",
+          "few_rice": "Few rice",
+          "firewood_rice": "Firewood rice",
+          "five_ceeals_rice": "Five cereals rice",
+          "four_color_vegetables": "Four color vegetables",
+          "fragrant_dense_congee": "Fragrant dense congee",
+          "fragrant_rice": "Fragrant rice",
+          "fruit_vegetable_paste": "Fruit vegetable paste",
+          "green_buckwheat_rice": "Green buckwheat rice",
+          "gruel": "Gruel",
+          "heat_rice": "Heat rice",
+          "hot_fast_rice": "Hot fast rice",
+          "hot_spring_egg": "Hot spring egg",
+          "infant_congee": "Infant congee",
+          "iron_pan_rice": "Iron pan rice",
+          "keep_fresh": "Keep fresh",
+          "keep_warm": "Keep warm",
+          "low_sugar_rice": "Low sugar rice",
+          "luscious_boiled": "Luscious boiled",
+          "luscious_rice": "Luscious rice",
+          "make_cake": "Make cake",
+          "millet_congee": "Millet congee",
+          "millet_mixed_rice": "Millet mixed rice",
+          "no_water_treat": "No water treat",
+          "normal": "Normal",
+          "normal_continus": "Normal continuous",
+          "northeast_stew": "Northeast stew",
+          "nutrition_stew": "Nutrition stew",
+          "older_rice": "Older rice",
+          "olla_pan_rice": "Olla pan rice",
+          "one_two_cook": "One two cook",
+          "online_celebrity_rice": "Online celebrity rice",
+          "original_steame": "Original steam",
+          "pork_porridge": "Pork porridge",
+          "pottery_jar_soup": "Pottery jar soup",
+          "quick_freeze_bun": "Quick freeze bun",
+          "red_potato": "Red potato",
+          "regimen_congee": "Regimen congee",
+          "regimen_soup": "Regimen soup",
+          "reserve": "Reserve",
+          "resveratrol_rice": "Resveratrol rice",
+          "rice_paste": "Rice paste",
+          "rice_soup": "Rice soup",
+          "rice_wine": "Rice wine",
+          "roughage_rice": "Roughage rice",
+          "service": "Service",
+          "shelled_rice": "Shelled rice",
+          "smart": "Smart",
+          "soup_rice": "Soup rice",
+          "sprout_rice": "Sprout rice",
+          "standard_cook_rice": "Standard cook rice",
+          "steam_corn": "Steam corn",
+          "steam_egg": "Steam egg",
+          "steam_red_potato": "Steam red potato",
+          "steam_ribs": "Steam ribs",
+          "steame_fish": "Steamed fish",
+          "steep_rice": "Steep rice",
+          "stew_soup": "Stew soup",
+          "stewing": "Stewing",
+          "stone_bowl_rice": "Stone bowl rice",
+          "sushi_rice": "Sushi rice",
+          "trichromatic_coarse_grain": "Trichromatic coarse grain",
+          "uncap_boil": "Uncap boil",
+          "vegetable_porridge": "Vegetable porridge",
+          "vegetable_rice": "Vegetable rice",
+          "warm_milk": "Warm milk",
+          "yellow_wheat_rice": "Yellow wheat rice",
+          "yoghourt": "Yoghourt"
+        }
+      },
+      "out_tds": {
+        "name": "Out TDS"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "pmv": {
+        "name": "Predicted mean vote"
+      },
+      "realtime_power": {
+        "name": "Real-time power"
+      },
+      "refrigerator_actual_temp": {
+        "name": "Refrigerator actual temperature"
+      },
+      "refrigerator_setting_temp": {
+        "name": "Refrigerator setting temperature"
+      },
+      "remaining_days": {
+        "name": "Remaining days"
+      },
+      "right_flex_zone_actual_temp": {
+        "name": "Right flex zone actual temperature"
+      },
+      "right_flex_zone_setting_temp": {
+        "name": "Right flex zone setting temperature"
+      },
+      "salt_available": {
+        "name": "Salt available"
+      },
+      "seat_temperature": {
+        "name": "Seat temperature"
+      },
+      "soak_time": {
+        "name": "Soak time"
+      },
+      "softwater_available": {
+        "name": "Soft water available"
+      },
+      "tank_actual_temperature": {
+        "name": "Tank temperature"
+      },
+      "tank_level": {
+        "name": "Tank level"
+      },
+      "target_compressor_frequency": {
+        "name": "Target compressor frequency"
+      },
+      "target_indoor_fan_speed": {
+        "name": "Target indoor fan speed"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "temp_tw_in": {
+        "name": "Water inlet temperature"
+      },
+      "temp_tw_out": {
+        "name": "Water outlet temperature"
+      },
+      "temperature_compensate": {
+        "name": "Temperature compensation"
+      },
+      "temperature_raw": {
+        "name": "Raw temperature"
+      },
+      "top_compartment_temperature": {
+        "name": "Top compartment temperature"
+      },
+      "top_temperature": {
+        "name": "Top temperature"
+      },
+      "total_energy_consumption": {
+        "name": "Total energy consumption"
+      },
+      "total_produced_energy": {
+        "name": "Total produced energy"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "use_days": {
+        "name": "Days of use"
+      },
+      "variable_mode": {
+        "name": "Variable mode",
+        "state": {
+          "cold_drink": "Cold drink",
+          "dry_zone": "Dry zone",
+          "freeze_warm": "Freeze warm",
+          "fresh_product": "Fresh product",
+          "none": "None",
+          "partial_freezing": "Partial freezing",
+          "soft_freezing": "Soft freezing",
+          "zero_fresh": "Zero fresh"
+        }
+      },
+      "wash_time": {
+        "name": "Wash time"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
+      },
+      "water_consumption_average": {
+        "name": "Water consumption average"
+      },
+      "water_consumption_big": {
+        "name": "Water consumption aggregated"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    },
+    "switch": {
+      "anion": {
+        "name": "Anion"
+      },
+      "aux_heating": {
+        "name": "Auxiliary heating"
+      },
+      "disinfect": {
+        "name": "Disinfect"
+      },
+      "night_light": {
+        "name": "Night light"
+      },
+      "out_silent": {
+        "name": "Outdoor silent mode"
+      },
+      "prompt_tone": {
+        "name": "Prompt tone"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "self_clean": {
+        "name": "Self clean"
+      },
+      "smart_eye": {
+        "name": "Smart eye"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "tbh": {
+        "name": "TBH"
+      },
+      "zone1_curve": {
+        "name": "Zone 1 curve"
+      },
+      "zone2_curve": {
+        "name": "Zone 2 curve"
+      }
+    },
+    "time": {
+      "timing_regeneration": {
+        "name": "Regeneration time"
+      }
+    }
+  },
+  "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
+    "e1_device_off": {
+      "message": "Turn on the dishwasher before starting a wash cycle."
+    },
+    "unsupported_hvac_mode": {
+      "message": "HVAC mode {hvac_mode} is not supported by this device."
+    }
+  },
+  "selector": {
+    "login_mode": {
+      "options": {
+        "account": "Your account credentials",
+        "preset": "Preset cloud credentials"
+      }
+    }
+  }
+}

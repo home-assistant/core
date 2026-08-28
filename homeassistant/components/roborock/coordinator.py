@@ -237,6 +237,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                 self._handle_trait_update
             )
         )
+        self._unsubs.append(
+            self.properties_api.home.add_update_listener(self._handle_trait_update)
+        )
 
     async def update_map(self) -> None:
         """Update the currently selected map."""

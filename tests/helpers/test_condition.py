@@ -2800,10 +2800,14 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
 _MODERN_SUN_CONDITIONS = (
     "sun.elevation",
     "sun.is_ascending",
+    "sun.is_blue_hour",
     "sun.is_descending",
     "sun.is_evening_twilight",
+    "sun.is_golden_hour",
+    "sun.is_midnight_sun",
     "sun.is_morning_twilight",
     "sun.is_night",
+    "sun.is_polar_night",
     "sun.is_set",
     "sun.is_up",
 )
@@ -3130,7 +3134,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
@@ -3243,7 +3247,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3506,7 +3510,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | None | UndefinedType,
+    valid_unit: str | UndefinedType | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -6354,3 +6358,18 @@ async def test_async_unload_invokes_async_unload_hook(
 
     unload_hook.assert_called_once()
     assert checker._unloaded is True
+
+
+async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
+    """Test that async_from_config does not raise an error for an empty state value."""
+    hass.states.async_set("sensor.temperature", "100")
+
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": [],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert not test.async_check()

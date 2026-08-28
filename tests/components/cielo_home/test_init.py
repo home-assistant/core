@@ -24,7 +24,7 @@ async def test_async_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
 
-    entity_reg = er.async_get(hass)
+    entity_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entities = [
         e
         for e in entity_reg.entities.values()
