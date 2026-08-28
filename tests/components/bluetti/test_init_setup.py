@@ -1,5 +1,6 @@
 """Tests for async_setup_entry() in __init__.py."""
 
+import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -116,6 +117,66 @@ async def test_setup_with_an_expired_but_refreshable_token_does_not_notify(
 
     assert entry.state is ConfigEntryState.LOADED
     mock_notify.assert_not_called()
+
+
+async def test_setup_succeeds_and_rest_coordinator_runs_when_websocket_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """The REST polling coordinator must work even if the WebSocket never connects.
+
+    Regression coverage for the fix that made stomp_client.connect() a
+    background task instead of an inline await: a real, permanently
+    unreachable WSS endpoint means pybluetti's StompClient.connect() never
+    returns (it retries with its own growing exponential backoff, awaiting
+    itself again on every failure - see reconnect()) - simulated here with
+    an AsyncMock that never resolves. Before that fix, awaiting connect()
+    directly would have hung this whole test (and, for real, the whole
+    config entry setup) instead of asserting anything.
+    """
+    entry = _entry(
+        hass,
+        products=[{"sn": "SN1", "name": "Device", "stateList": [], "online": "1"}],
+        devices=["SN1"],
+    )
+    status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])
+
+    async def _never_connects() -> None:
+        await asyncio.Event().wait()  # never set - simulates an endpoint
+        # that's never reachable, matching StompClient's real retry-forever
+        # behavior on a permanent failure.
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_stomp_cls.return_value.connect = AsyncMock(side_effect=_never_connects)
+        mock_stomp_cls.return_value.disconnect = AsyncMock()
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            return_value=MagicMock(data=[status_data])
+        )
+
+        # Deliberately not wait_background_tasks=True here: that would wait
+        # for the never-resolving connect() task too, hanging this test -
+        # exactly the point being verified is that setup doesn't need to.
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "SN1" in entry.runtime_data.coordinators
+    assert entry.runtime_data.coordinators["SN1"].last_update_success
 
 
 async def test_async_setup_entry_with_a_device(hass: HomeAssistant) -> None:
