@@ -612,9 +612,7 @@ def async_set_service_schema(
     }
 
     if "target" in schema:
-        # The descriptions loaded from a services.yaml are validated, so validate
-        # the ones registered this way too, rather than let a target nothing can
-        # read reach everything that walks the descriptions
+        # Match validation applied to descriptions loaded from services.yaml.
         try:
             description["target"] = TargetSelector.CONFIG_SCHEMA(schema["target"])
         except vol.Invalid as err:
