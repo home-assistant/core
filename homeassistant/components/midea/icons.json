@@ -1,5 +1,22 @@
 {
   "entity": {
+    "binary_sensor": {
+      "header_exist": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "full": "mdi:fan-chevron-up",
+              "silent": "mdi:fan-chevron-down"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
@@ -21,6 +38,38 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "filter_life": {
+        "default": "mdi:air-filter"
+      },
+      "filter_life_level": {
+        "default": "mdi:air-filter"
+      },
+      "hcho": {
+        "default": "mdi:molecule"
+      },
+      "in_tds": {
+        "default": "mdi:water"
+      },
+      "indoor_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "mode": {
+        "default": "mdi:auto-mode"
+      },
+      "out_tds": {
+        "default": "mdi:water-plus"
+      },
+      "pmv": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tank_level": {
+        "default": "mdi:cup-water"
+      },
+      "target_indoor_fan_speed": {
+        "default": "mdi:fan-clock"
       }
     }
   }

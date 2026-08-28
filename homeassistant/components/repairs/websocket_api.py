@@ -22,6 +22,7 @@ from homeassistant.helpers.data_entry_flow import (
 
 from .const import DOMAIN
 from .issue_handler import RepairsFlowManager
+from .models import RepairsFlowResult
 
 
 @callback
@@ -109,11 +110,11 @@ def ws_list_issues(
 
 
 def _prepare_repairs_flow_result_json(
-    result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+    result: RepairsFlowResult,
+    prepare_result_json: Callable[[RepairsFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to serializable JSON dict."""
-    entry: ConfigEntry | None = result.pop("result", None)  # type: ignore[typeddict-item]
+    entry: ConfigEntry | None = result.pop("result", None)
     data = prepare_result_json(result)
     if entry is not None:
         # Overwrite the ConfigEntry object with its json representation for frontend.
@@ -121,7 +122,7 @@ def _prepare_repairs_flow_result_json(
     return data
 
 
-class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowResult]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -159,14 +160,14 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         return self.json(self._prepare_result_json(result))  # type: ignore[arg-type]
 
     @override
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
-class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
+class RepairsFlowResourceView(
+    FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
+):
     """View to interact with the option flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
@@ -192,8 +193,6 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         return result
 
     @override
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)

@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.47.1
+async-upnp-client==0.48.1
 atomicwrites-homeassistant==1.4.1
 attrs==26.1.0
 audioop-lts==0.2.2
@@ -33,14 +33,15 @@ cryptography==48.0.1
 dbus-fast==5.0.22
 file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
+gazetteer-matcher==1.0.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==6.26.7
-hass-nabucasa==2.3.0
-hassil==3.11.0
+hass-nabucasa==2.7.0
+hassil==3.12.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260729.7
-home-assistant-intents==2026.7.30
+home-assistant-frontend==20260826.1
+home-assistant-intents==2026.8.25
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -51,7 +52,7 @@ orjson==3.12.0
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
-probatio==0.11.1
+probatio==0.11.3
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.13.0
@@ -64,7 +65,7 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
-serialx==1.8.2
+serialx==1.9.0
 SQLAlchemy==2.0.52
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0

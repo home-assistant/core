@@ -9,7 +9,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import automation, group, person, script, websocket_api
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.homeassistant import scene
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
     area_registry as ar,
@@ -249,21 +252,21 @@ class Searcher:
 
             # For an automation, we want to unwrap the groups, to ensure we
             # relate this automation to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an automation, we want to unwrap the scenes, to ensure we
             # relate this automation to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is part of an automation.
             # This makes the automation return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback
@@ -583,21 +586,21 @@ class Searcher:
 
             # For an script, we want to unwrap the groups, to ensure we
             # relate this script to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an script, we want to unwrap the scenes, to ensure we
             # relate this script to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is nested.
             # This makes the script return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback

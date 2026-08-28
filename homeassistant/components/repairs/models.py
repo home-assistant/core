@@ -89,11 +89,14 @@ class RepairsFlow(
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> RepairsFlowResult:
         """Abort the flow (leave the issue unrepaired)."""
         result: RepairsFlowResult = super().async_abort(
-            reason=reason, description_placeholders=description_placeholders
+            reason=reason,
+            description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
         )
 
         self._async_set_next_flow_if_valid(result, next_flow)

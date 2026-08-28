@@ -3420,3 +3420,43 @@ async def test_get_service_config_entry_none(hass: HomeAssistant) -> None:
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that we can get a device and its config entry."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+
+    assert service.async_get_device_and_config_entry(hass, domain, device.id) == (
+        device,
+        entry,
+    )
+
+    # Device doesn't exist
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, "unknown_device_id")
+    assert err.value.translation_key == "service_device_not_found"
+
+    # Device exists, but is not owned by a config entry of the domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, "another_domain", device.id)
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Mock device",
+        "domain": "another_domain",
+    }
+
+    # Device exists, but its config entry is not loaded
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, device.id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"

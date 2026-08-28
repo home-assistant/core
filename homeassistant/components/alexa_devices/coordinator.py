@@ -11,6 +11,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
     AmazonDevice,
@@ -92,7 +93,13 @@ async def alexa_config_entry_errors() -> AsyncGenerator[None]:
             translation_key="cannot_connect_with_error",
             translation_placeholders={"error": repr(err)},
         ) from err
-    except (CannotRetrieveData, ValueError, KeyError, StopIteration) as err:
+    except (
+        CannotRetrieveData,
+        NoOnlineDevicesError,
+        ValueError,
+        KeyError,
+        StopIteration,
+    ) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
@@ -187,7 +194,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="cannot_connect_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except CannotRetrieveData as err:
+        except (CannotRetrieveData, NoOnlineDevicesError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data_with_error",
