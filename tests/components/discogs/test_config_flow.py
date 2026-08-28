@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import discogs_client
 import pytest
+import requests
 
 from homeassistant.components.discogs.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -89,6 +90,8 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
     [
         (discogs_client.exceptions.HTTPError("Unauthorized", 401), "invalid_auth"),
         (discogs_client.exceptions.HTTPError("Rate Limited", 429), "cannot_connect"),
+        (requests.ConnectionError("Connection refused"), "cannot_connect"),
+        (requests.Timeout("Request timed out"), "cannot_connect"),
         (RuntimeError("Something went wrong"), "unknown"),
     ],
 )

@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 import discogs_client
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -102,6 +103,8 @@ def _validate_token(token: str) -> tuple[str, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "cannot_connect"
+    except (requests.ConnectionError, requests.Timeout):
+        errors["base"] = "cannot_connect"
     except Exception:  # noqa: BLE001
         LOGGER.exception("Unexpected error validating Discogs token")
         errors["base"] = "unknown"
