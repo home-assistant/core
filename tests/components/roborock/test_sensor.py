@@ -101,12 +101,14 @@ async def test_dyad_push_updates_state(
     """Test an unsolicited device push updates state without waiting for a poll."""
     dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
     assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
 
     push_listener = dyad.add_listener.call_args[0][0]
     push_listener({RoborockDyadDataProtocol.POWER: 50})
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
 
 
 async def test_dyad_push_unsubscribed_on_unload(
