@@ -79,7 +79,7 @@ async def test_coordinator_raises_update_failed_on_non_auth_api_error(
 
 @pytest.mark.parametrize("msg_code", [401, 805])
 async def test_coordinator_raises_auth_failed_on_auth_error_codes(
-    hass: HomeAssistant, msg_code
+    hass: HomeAssistant, msg_code: int
 ) -> None:
     """Coordinator raises auth failed on auth error codes."""
     device = _make_device()
