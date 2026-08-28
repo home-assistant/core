@@ -7,7 +7,6 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN, PLATFORMS
@@ -20,13 +19,11 @@ type IseoConfigEntry = ConfigEntry[IseoClient]
 async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
     """Set up ISEO Argo BLE Lock from a config entry."""
     address = entry.data[CONF_ADDRESS]
+    # Not being cached yet is the normal state after a restart: no scanner has
+    # seen the lock until it next advertises, minutes later. Set up anyway and
+    # let the entity follow the advertisements; every operation resolves a
+    # device of its own before connecting.
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
-    if ble_device is None:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"address": address},
-        )
 
     priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
     priv = await hass.async_add_executor_job(derive_private_key, priv_int, SECP224R1())
