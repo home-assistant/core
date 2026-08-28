@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "name": "Primary Bedroom",
+  "avgTemperature": 74.5,
+  "avgHumidity": 54,
+  "accessories": [
+    {
+      "id": 1,
+      "sensorType": "IndoorAirSensor",
+      "temperature": 74.5,
+      "status": "Ok",
+      "detectMotion": true
+    }
+  ]
+}

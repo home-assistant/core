@@ -148,6 +148,13 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         value_fn=lambda room, _: room.room_avg_temp,
         suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
+    LyricSensorAccessoryEntityDescription(
+        key="accessory_status",
+        translation_key="accessory_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda _, accessory: accessory.status,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
+    ),
 ]
 
 
