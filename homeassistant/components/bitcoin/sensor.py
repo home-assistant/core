@@ -54,10 +54,11 @@ class BitcoinSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[BitcoinSensorEntityDescription, ...] = (
+    # No state class: reconfiguring the currency changes the unit, and
+    # currencies are not convertible, which would break long term statistics.
     BitcoinSensorEntityDescription(
         key="exchangerate",
         translation_key="exchangerate",
-        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         unit_from_currency=True,
         value_fn=lambda data: data.exchange_rate,
