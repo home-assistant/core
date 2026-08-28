@@ -383,7 +383,13 @@ async def test_all_devices_exists_aborts(hass: HomeAssistant) -> None:
 
 
 async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> None:
-    """When re-running the flow for an existing entry_id, only the token is refreshed."""
+    """Re-running the flow for an existing entry_id refreshes the token.
+
+    Regression test: the reload used to be an explicit call after
+    async_update_entry() - on a loaded entry (mock_state below), that
+    update already fires the registered update listener, which reloads -
+    the explicit call was a second, redundant reload.
+    """
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ACCOUNT_UNIQUE_ID,
@@ -396,6 +402,10 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
         options={"devices": []},
     )
     existing_entry.add_to_hass(hass)
+    existing_entry.mock_state(hass, ConfigEntryState.LOADED)
+    existing_entry.add_update_listener(
+        lambda hass, entry: hass.config_entries.async_reload(entry.entry_id)
+    )
 
     flow = _make_flow(hass)
     flow.context = {"entry_id": existing_entry.entry_id}
@@ -412,6 +422,7 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
             return_value=SimpleNamespace(data=[product], is_ok=lambda: True)
         )
         result = await flow.async_step_select_devices(user_input=None)
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "success"
@@ -419,6 +430,52 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
 
     updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
     assert updated.data["token"] == {"access_token": "tok", "expires_at": 9999999999}
+
+
+async def test_reconfigure_token_updates_auth_implementation_too(
+    hass: HomeAssistant,
+) -> None:
+    """A different Application Credential picked during reconfigure must stick.
+
+    Regression test: only "token" was persisted on reconfigure, silently
+    keeping the old auth_implementation even if the user picked a
+    different Application Credential during this OAuth login - later
+    token refreshes would then use the wrong credentials.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "old_credential",
+            "token": {"access_token": "old"},
+            "products": [],
+        },
+        options={"devices": []},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context = {"entry_id": existing_entry.entry_id}
+    flow._oauth_data["auth_implementation"] = "new_credential"
+    product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
+
+    with (
+        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.config_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(data=[product], is_ok=lambda: True)
+        )
+        result = await flow.async_step_select_devices(user_input=None)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "success"
+
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["auth_implementation"] == "new_credential"
 
 
 async def test_reconfigure_token_rejects_a_different_account(

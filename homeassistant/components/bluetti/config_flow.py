@@ -225,9 +225,16 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 return self.async_abort(reason="wrong_account")
 
             __LOGGER__.info("reconfigure token")
-            new_data = {**cur_entry.data, "token": self._oauth_data["token"]}
+            # auth_implementation too, not just token - the user could have
+            # picked a different Application Credential during this login.
+            new_data = {
+                **cur_entry.data,
+                "auth_implementation": self._oauth_data["auth_implementation"],
+                "token": self._oauth_data["token"],
+            }
+            # async_update_entry() already fires the entry's registered
+            # update listener, which reloads it.
             self.hass.config_entries.async_update_entry(cur_entry, data=new_data)
-            await self.hass.config_entries.async_reload(cur_entry.entry_id)
             return self.async_abort(reason="success")
 
         # All the account's devices are already added
