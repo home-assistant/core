@@ -5,15 +5,20 @@ import enum
 from typing import Any, override
 
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareNotSupportedFeatureError,
+)
 from PyViCare.PyViCareVentilationDevice import (
     VentilationDevice as PyViCareVentilationDevice,
 )
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
 
@@ -101,7 +106,16 @@ class ViCareQuickmodeSwitch(ViCareEntity, SwitchEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Activate the quickmode."""
-        self._api.activateVentilationQuickmode(self._quickmode)
+        try:
+            self._api.activateVentilationQuickmode(self._quickmode)
+        except PyViCareCommandError as err:
+            # Only one quickmode runs at a time, and the device refuses the
+            # second one rather than switching over.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="quickmode_not_activated",
+                translation_placeholders={"quickmode": self._quickmode},
+            ) from err
 
     @override
     def turn_off(self, **kwargs: Any) -> None:

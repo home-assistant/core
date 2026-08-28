@@ -661,7 +661,7 @@
     },
     "switch": {
       "quickmode_comfort": {
-        "name": "Comfort"
+        "name": "Intensive"
       },
       "quickmode_eco": {
         "name": "Eco"
@@ -688,6 +688,9 @@
     },
     "program_unknown": {
       "message": "Cannot translate preset {preset} into a valid ViCare program"
+    },
+    "quickmode_not_activated": {
+      "message": "Unable to activate ViCare quickmode {quickmode}. Only one quickmode can run at a time, so deactivate the running one first and try again in a few seconds."
     }
   },
   "issues": {

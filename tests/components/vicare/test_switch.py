@@ -3,7 +3,10 @@
 from unittest.mock import patch
 
 import pytest
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareNotSupportedFeatureError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -16,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import MODULE, setup_integration
@@ -78,7 +82,7 @@ async def test_switch_created_per_available_quickmode(
         "switch.model0_silent",
         "switch.model1_boost",
         "switch.model1_silent",
-        "switch.model2_comfort",
+        "switch.model2_intensive",
         "switch.model2_eco",
     }
 
@@ -93,7 +97,7 @@ async def test_switch_state_follows_quickmode(
 
     await setup_switch_platform(hass, mock_config_entry, mock_vicare)
 
-    assert hass.states.get("switch.model2_comfort").state == STATE_ON
+    assert hass.states.get("switch.model2_intensive").state == STATE_ON
     assert hass.states.get("switch.model2_eco").state == STATE_OFF
 
 
@@ -108,7 +112,7 @@ async def test_turn_on_activates_quickmode(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.model2_comfort"},
+        {ATTR_ENTITY_ID: "switch.model2_intensive"},
         blocking=True,
     )
 
@@ -168,9 +172,31 @@ async def test_turn_on_error_is_raised(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.model2_comfort"},
+            {ATTR_ENTITY_ID: "switch.model2_intensive"},
             blocking=True,
         )
+
+
+async def test_turn_on_refused_while_another_quickmode_runs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the device refusing a second quickmode reads as a clear error."""
+    mock_vicare = MockPyViCare(VENTILATION_FIXTURES)
+    await setup_switch_platform(hass, mock_config_entry, mock_vicare)
+    mock_vicare.devices[2].service.setProperty.side_effect = PyViCareCommandError(
+        {"statusCode": 400, "extendedPayload": "COMMAND_NOT_EXECUTABLE"}
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.model2_intensive"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "quickmode_not_activated"
 
 
 def activate_quickmode(mock_vicare: MockPyViCare, device: int, quickmode: str) -> None:
