@@ -109,8 +109,8 @@ class ViCareQuickmodeSwitch(ViCareEntity, SwitchEntity):
         try:
             self._api.activateVentilationQuickmode(self._quickmode)
         except PyViCareCommandError as err:
-            # Only one quickmode runs at a time, and the device refuses the
-            # second one rather than switching over.
+            # Any failed command lands here, but the one users hit is the
+            # device refusing a second quickmode instead of switching over.
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="quickmode_not_activated",

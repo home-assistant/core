@@ -690,7 +690,7 @@
       "message": "Cannot translate preset {preset} into a valid ViCare program"
     },
     "quickmode_not_activated": {
-      "message": "Unable to activate ViCare quickmode {quickmode}. Only one quickmode can run at a time, so deactivate the running one first and try again in a few seconds."
+      "message": "Unable to activate ViCare quickmode {quickmode}. Only one quickmode can be active at a time; another one may already be running."
     }
   },
   "issues": {
