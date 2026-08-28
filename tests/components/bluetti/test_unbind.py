@@ -435,6 +435,39 @@ async def test_handle_unbind_survives_config_entry_update_error(
     device._handle_unbind.assert_awaited_once()
 
 
+async def test_handle_unbind_leaves_registries_untouched_when_persistence_fails(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Handle unbind leaves the device/entity registries untouched when persistence fails.
+
+    Regression test: the device and entity registry entries used to be
+    deleted *before* persisting the removal to the config entry, not
+    after. Removing an entity from the entity registry tears down its
+    live CoordinatorEntity; once nothing is listening, the coordinator
+    stops scheduling itself - so even with the coordinator object itself
+    never explicitly shut down (see
+    test_handle_unbind_survives_config_entry_update_error above), a failed
+    persistence used to leave no live entity behind to actually drive that
+    "retry on the next poll" in a real system. Registry cleanup must not
+    happen at all until persistence has actually succeeded.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry.add_to_hass(hass)
+    device, device_entry = _bound_device_with_registry_entries(hass, entry)
+
+    with patch.object(
+        hass.config_entries, "async_update_entry", side_effect=RuntimeError("boom")
+    ):
+        await device._handle_unbind()
+        await hass.async_block_till_done()
+
+    assert device._unbind_processed is False
+    assert device_registry.async_get(device_entry.id) is not None
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "SN1_SOC") is not None
+
+
 async def test_handle_unbind_survives_notification_error(hass: HomeAssistant) -> None:
     """Handle unbind survives notification error."""
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
@@ -500,8 +533,13 @@ async def test_handle_unbind_survives_unexpected_outer_error(
 ) -> None:
     """Handle unbind survives unexpected outer error.
 
-    The removal was never confirmed persisted here (the error happens
-    before step 5 even runs), so this must retry on the next refresh too.
+    Persistence (step 2) already succeeded before the registry search
+    below raises, so this is correctly marked processed - the device is
+    already removed from the config entry's options, which is what
+    actually matters; retrying wouldn't change that. The outermost
+    try/except exists so a single bad device (an unexpected error past
+    every step's own except) never breaks setup, not to protect this
+    specific step.
     """
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
@@ -514,4 +552,6 @@ async def test_handle_unbind_survives_unexpected_outer_error(
         # unexpected so a single bad device doesn't break setup.
         await device._handle_unbind()
 
-    assert device._unbind_processed is False
+    assert device._unbind_processed is True
+    updated = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated.options["devices"] == []

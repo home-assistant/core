@@ -256,10 +256,10 @@ class BluettiDevice:
         entry = self._entry
         entry_id = self._entry_id or entry.entry_id
 
-        # Only step 5 (persisting the removal) decides this - steps 2-4 and
-        # 6 are all idempotent against an already-removed device, so it's
-        # safe (and necessary) to retry the whole method on the next
-        # refresh if persistence itself fails.
+        # Only step 2 (persisting the removal) decides this - steps 3-5 are
+        # all idempotent against an already-removed device, so it's safe
+        # (and necessary) to retry the whole method on the next refresh if
+        # persistence itself fails.
         persistence_ok = False
 
         try:
@@ -269,45 +269,18 @@ class BluettiDevice:
             device_registry = dr.async_get(hass)
             entity_registry = er.async_get(hass)
 
-            # 2. Find and delete all entities of the device
-            device_entry = None
-            for dev_entry in dr.async_entries_for_config_entry(
-                device_registry, entry_id
-            ):
-                if (DOMAIN, self.device_id) in dev_entry.identifiers:
-                    device_entry = dev_entry
-                    break
-
-            if device_entry:
-                # Delete all entities of the device
-                entities_to_remove = [
-                    entity_entry.entity_id
-                    for entity_entry in er.async_entries_for_config_entry(
-                        entity_registry, entry_id
-                    )
-                    if entity_entry.device_id == device_entry.id
-                ]
-
-                for entity_id in entities_to_remove:
-                    try:
-                        entity_registry.async_remove(entity_id)
-                        __LOGGER__.debug("Deleted entity: %s", entity_id)
-                    except Exception as e:  # noqa: BLE001 - one entity's removal must not block the rest
-                        __LOGGER__.warning("Error deleting entity %s: %s", entity_id, e)
-
-                # 3. Delete the device registry
-                try:
-                    device_registry.async_remove_device(device_entry.id)
-                    __LOGGER__.debug("Deleted device registry: %s", device_entry.id)
-                except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
-                    __LOGGER__.warning("Error deleting device registry: %s", e)
-            else:
-                __LOGGER__.warning("Device registry not found: %s", self.device_id)
-
-            # 4. Remove the device from the configuration entry - persist
-            # this before touching the coordinator below, so a failure here
-            # leaves the coordinator alive to naturally retry via its own
-            # next poll (persistence_ok stays False either way).
+            # 2. Remove the device from the configuration entry - persist
+            # this FIRST, before touching either registry below. Removing
+            # an entity from the entity registry tears down its live
+            # CoordinatorEntity; once nothing is listening, the
+            # coordinator stops scheduling itself, so if this step ran
+            # after the registry deletions and then failed, there would be
+            # no live coordinator left to retry on its own next poll -
+            # only a config entry stuck claiming the device is still
+            # enabled. Persisting first means a failure here leaves
+            # everything (registries, coordinator) untouched and the
+            # device still enabled, so this whole method simply runs again
+            # next refresh.
             try:
                 current_options = dict(entry.options)
                 current_devices = current_options.get("devices", [])
@@ -352,6 +325,44 @@ class BluettiDevice:
                     "Error updating configuration entry: %s", e, exc_info=True
                 )
                 # Even if the update fails, continue to display the notification
+
+            # 3. Find and delete all entities of the device - only once
+            # persistence above actually succeeded (see the comment on
+            # step 2).
+            device_entry = None
+            if persistence_ok:
+                for dev_entry in dr.async_entries_for_config_entry(
+                    device_registry, entry_id
+                ):
+                    if (DOMAIN, self.device_id) in dev_entry.identifiers:
+                        device_entry = dev_entry
+                        break
+
+            if device_entry:
+                # Delete all entities of the device
+                entities_to_remove = [
+                    entity_entry.entity_id
+                    for entity_entry in er.async_entries_for_config_entry(
+                        entity_registry, entry_id
+                    )
+                    if entity_entry.device_id == device_entry.id
+                ]
+
+                for entity_id in entities_to_remove:
+                    try:
+                        entity_registry.async_remove(entity_id)
+                        __LOGGER__.debug("Deleted entity: %s", entity_id)
+                    except Exception as e:  # noqa: BLE001 - one entity's removal must not block the rest
+                        __LOGGER__.warning("Error deleting entity %s: %s", entity_id, e)
+
+                # 4. Delete the device registry
+                try:
+                    device_registry.async_remove_device(device_entry.id)
+                    __LOGGER__.debug("Deleted device registry: %s", device_entry.id)
+                except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
+                    __LOGGER__.warning("Error deleting device registry: %s", e)
+            elif persistence_ok:
+                __LOGGER__.warning("Device registry not found: %s", self.device_id)
 
             # 5. Remove the device (and its coordinator) from the runtime
             # data - only once persistence above actually succeeded, so a
