@@ -463,8 +463,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_remove_config_entry(hass: HomeAssistant) -> None:
     """Remove the config entry, it's recreated when a user logs in again."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        await hass.config_entries.async_remove(entry.entry_id)
+    if entries := hass.config_entries.async_entries(DOMAIN):
+        # The manifest sets single_config_entry, so there is at most one entry.
+        await hass.config_entries.async_remove(entries[0].entry_id)
 
 
 @callback
