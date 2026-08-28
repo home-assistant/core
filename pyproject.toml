@@ -64,7 +64,6 @@ dependencies = [
   "orjson==3.12.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "py-cpuinfo==9.0.0",
   "python-slugify==8.0.4",
   "PyYAML==6.0.3",
   "requests==2.34.2",

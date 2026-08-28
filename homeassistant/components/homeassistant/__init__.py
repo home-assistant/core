@@ -4,11 +4,11 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+from pathlib import Path
 import platform
 import struct
 from typing import Any
 
-from cpuinfo import cpuinfo
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core_config
@@ -102,6 +102,20 @@ DEPRECATION_URL = (
     "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
 )
 
+CPUINFO_PATH = Path("/proc/cpuinfo")
+
+# /proc/cpuinfo flag names for the x86-64-v2 baseline recent NumPy
+# builds require on x86_64. https://github.com/numpy/numpy/issues/31939
+REQUIRED_X86_64_V2_FLAGS = {
+    "pni",
+    "ssse3",
+    "sse4_1",
+    "sse4_2",
+    "popcnt",
+    "lahf_lm",
+    "cx16",
+}
+
 
 def _is_32_bit() -> bool:
     size = struct.calcsize("P")
@@ -116,21 +130,19 @@ def _get_missing_cpu_features() -> list[str] | None:
     """
     if platform.machine() not in ("x86_64", "AMD64"):
         return None
-    flags = cpuinfo.get_cpu_info().get("flags")
+    try:
+        cpuinfo = CPUINFO_PATH.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    flags: set[str] = set()
+    for line in cpuinfo.splitlines():
+        key, _, value = line.partition(":")
+        if key.strip() == "flags":
+            flags = set(value.split())
+            break
     if not flags:
         return None
-    # /proc/cpuinfo flag names for the x86-64-v2 baseline recent NumPy
-    # builds require on x86_64. https://github.com/numpy/numpy/issues/31939
-    required_features = {
-        "pni",
-        "ssse3",
-        "sse4_1",
-        "sse4_2",
-        "popcnt",
-        "lahf_lm",
-        "cx16",
-    }
-    return sorted(required_features - set(flags))
+    return sorted(REQUIRED_X86_64_V2_FLAGS - flags)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
