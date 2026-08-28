@@ -1,7 +1,9 @@
 """Test Roborock Sensors."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol
@@ -13,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -146,3 +148,30 @@ async def test_dyad_push_before_first_successful_poll(
 
     assert hass.states.get("sensor.dyad_pro_battery").state == "50"
     assert hass.states.get("sensor.dyad_pro_status").state == STATE_UNKNOWN
+
+
+async def test_dyad_partial_push_does_not_postpone_poll(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a partial push leaves the fallback poll schedule untouched."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    dyad.query_values.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+    assert dyad.query_values.call_count == 0
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert dyad.query_values.call_count == 1

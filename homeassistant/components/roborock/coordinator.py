@@ -607,7 +607,15 @@ class RoborockWetDryVacUpdateCoordinator(
     @callback
     def _handle_push(self, values: dict[RoborockDyadDataProtocol, StateType]) -> None:
         """Apply an unsolicited state push from the device."""
-        self.async_set_updated_data({**(self.data or {}), **values})
+        data = {**(self.data or {}), **values}
+        if all(protocol in values for protocol in self.request_protocols):
+            self.async_set_updated_data(data)
+            return
+        # A partial push must not postpone the poll, or a protocol the device
+        # never pushes would stay stale for as long as pushes keep arriving.
+        self.data = data
+        self.last_update_success = True
+        self.async_update_listeners()
 
     @override
     async def async_shutdown(self) -> None:
