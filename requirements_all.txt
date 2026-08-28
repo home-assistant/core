@@ -1306,7 +1306,7 @@ holidays==0.103
 home-assistant-frontend==20260826.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.8.25
+home-assistant-intents==2026.8.28
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
