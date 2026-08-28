@@ -247,8 +247,6 @@ class DenonDevice(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
             hw_version=config_entry.data[CONF_TYPE],
-            # A receiver that reports no serial number has no unique id, so all
-            # of its zones share the entry id instead
             identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],

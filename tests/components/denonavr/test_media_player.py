@@ -95,8 +95,9 @@ async def setup_denonavr(
     return mock_entry
 
 
+@pytest.mark.usefixtures("client")
 async def test_setup_without_serial_number(
-    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test a receiver reporting no serial number still gets its media player."""
     entry = await setup_denonavr(hass, serial_number=None)
