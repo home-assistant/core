@@ -121,17 +121,20 @@ async def test_a_connect_that_never_succeeds_closes_the_client(
     mock_client.async_close.assert_awaited()
 
 
-async def test_a_reconnect_before_the_mac_replays_does_not_flap(
+async def test_a_replaced_slot_does_not_resurrect_its_predecessor(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A known cooler survives a refresh that arrives before its MAC does.
+    """A slot left unidentified by a timed-out replay is held back.
 
-    A reconnect waits for each expected MAC to replay, so this is reached only
-    when that replay is incomplete or times out. Dropping the cooler for that
-    cycle would report an outage that is not happening and flap its entities.
+    The client drops a slot's cached MAC when its replay times out, because
+    the slot may hold replacement hardware by then. Restoring the previous
+    occupant on a slot match would republish an identity the client refused
+    to vouch for — and keep a replaced cooler in the data forever, where
+    device removal refuses to delete it. It goes unavailable instead, and
+    comes back if its own MAC ever replays.
     """
     assert await setup_integration(hass, mock_config_entry)
 
@@ -140,9 +143,17 @@ async def test_a_reconnect_before_the_mac_replays_does_not_flap(
     ]
     await _tick(hass)
 
+    assert mock_config_entry.runtime_data.data == {}
+    assert "Walk-in cooler has stopped reporting" in caplog.text
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
+    )
+
+    # The same cooler answering again under its own MAC is the recovery path.
+    mock_client.async_get_devices.return_value = [make_device()]
+    await _tick(hass)
     assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
-    assert "has stopped reporting" not in caplog.text
-    # Whatever unit it is displayed in, the reading must still be there.
+    assert "Walk-in cooler is reporting again" in caplog.text
     assert (
         hass.states.get("sensor.walk_in_cooler_room_temperature").state != "unavailable"
     )

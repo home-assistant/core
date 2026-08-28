@@ -140,24 +140,18 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         # authoritative, and treating it as an error would retain the previous
         # devices forever, leaving the last removed cooler undeletable and a
         # reload stuck retrying.
-        # Devices already seen, by dashboard slot: the slot is stable across a
-        # reconnect, while the unique id is not until the MAC has replayed.
-        seen_by_slot = {device.target: device for device in (self.data or {}).values()}
-
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:
-                # This device's MAC has not landed yet; it arrives as a replayed
-                # pin. Its unique_id would be a dash/slot fallback that changes
-                # once the MAC arrives, duplicating the device, so it cannot be
-                # published under that id.
-                if (already_seen := seen_by_slot.get(device.target)) is not None:
-                    # A reconnect waits for each expected MAC, so reaching here
-                    # means that replay was incomplete or timed out. Carrying
-                    # the last snapshot over the gap avoids reporting an outage
-                    # that is not happening and flapping its entities.
-                    data[already_seen.unique_id] = already_seen
-                    continue
+                # This device cannot be named yet: its MAC has never replayed,
+                # or the client dropped the cached one when a replay timed out,
+                # because the slot may hold replacement hardware by then.
+                # Its unique_id would be a dash/slot fallback that changes once
+                # the MAC arrives, duplicating the device — and republishing
+                # the slot's previous occupant instead would restore an
+                # identity the client just refused to vouch for. Held back;
+                # a device it displaced goes unavailable rather than being
+                # carried as if it were still on the account.
                 _LOGGER.debug(
                     "Holding back %s until its MAC address arrives", device.name
                 )
