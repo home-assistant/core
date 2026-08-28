@@ -382,8 +382,12 @@ class BluettiDevice:
                 notification_title = "BLUETTI device has been unbound"
                 notification_message = (
                     f"Device **{self.name}** ({self.device_id}) has been unbound in the cloud, "
-                    f"and has been automatically removed from the Home Assistant integration.\n\n"
-                    f"If this is a mistake, please re-add the device."
+                    + (
+                        "and has been automatically removed from the Home Assistant integration.\n\n"
+                        "If this is a mistake, please re-add the device."
+                        if persistence_ok
+                        else "but Home Assistant could not remove it yet and will retry automatically."
+                    )
                 )
 
                 persistent_notification.async_create(
