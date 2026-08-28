@@ -10,9 +10,11 @@ from pybluetti import ProductClient, UserProduct
 
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVENT_TOKEN_EXPIRED, NOTIFY_ID_TOKEN_EXPIRED
 
@@ -102,8 +104,15 @@ class AuthTokenRefresh:
         self.hass = hass
         self.entry = entry
         self.oAuth2Session = oauth_session
+        self._unsub_next_check: CALLBACK_TYPE | None = None
         unsub = hass.bus.async_listen(EVENT_TOKEN_EXPIRED, self.on_token_expired_event)
         entry.async_on_unload(unsub)
+        # Single registration for whichever check is currently scheduled -
+        # _schedule_next_check() replaces self._unsub_next_check on every
+        # reschedule instead of registering a new on_unload callback each
+        # time, which would otherwise grow unbounded over the entry's
+        # lifetime.
+        entry.async_on_unload(self._cancel_next_check)
 
     async def on_token_expired_event(self, event: Event[Any]) -> None:
         """Notify the user when the API reports the token has expired."""
@@ -111,7 +120,7 @@ class AuthTokenRefresh:
         self.send_expired_notification()
 
     def start_token_check(self) -> None:
-        """Check the token now, then schedule a daily check going forward."""
+        """Check the token now; each check reschedules the next one itself."""
         # first clear old notify
         persistent_notification.async_dismiss(
             self.hass, notification_id=NOTIFY_ID_TOKEN_EXPIRED
@@ -120,21 +129,39 @@ class AuthTokenRefresh:
         if not self.is_token_valid():
             __LOGGER__.info("token have expired send notify")
             self.send_expired_notification()
-        else:
-            interval = timedelta(days=1)
-            unsub = async_track_time_interval(
-                self.hass,
-                self.async_check_token_expiry,  # callback to run
-                interval,  # how often to run it
-            )
-            self.entry.async_on_unload(unsub)
-            __LOGGER__.info("token is valid after 24 hours to check again")
         # Entry-scoped so it's canceled on unload, rather than a bare
         # hass-level task outliving the entry.
         self.entry.async_create_background_task(
             self.hass,
             self.async_check_token_expiry(),
             name="bluetti_initial_token_expiry_check",
+        )
+
+    def _cancel_next_check(self) -> None:
+        """Cancel whichever future check is currently scheduled, if any."""
+        if self._unsub_next_check is not None:
+            self._unsub_next_check()
+            self._unsub_next_check = None
+
+    def _schedule_next_check(self) -> None:
+        """Schedule the next expiry check, sooner the closer the token is to expiring.
+
+        A fixed daily interval would reach a short-lived token (one that
+        expires in under a day) too late - it would already be expired and
+        handed to the fixed-token REST/WebSocket clients by the time the
+        next check ran. Halving the remaining time each check (capped
+        between 5 minutes and 1 day) always checks again well before the
+        token could expire, without polling needlessly often for the
+        common case of a long-lived token.
+        """
+        self._cancel_next_check()
+        expire_timestamp = self.oAuth2Session.token.get("expires_at")
+        if expire_timestamp is None:
+            return
+        remaining = timedelta(seconds=expire_timestamp - time.time())
+        delay = min(timedelta(days=1), max(timedelta(minutes=5), remaining / 2))
+        self._unsub_next_check = async_track_point_in_time(
+            self.hass, self.async_check_token_expiry, dt_util.utcnow() + delay
         )
 
     # check oauth2 token is ok
@@ -187,12 +214,13 @@ class AuthTokenRefresh:
     async def async_check_token_expiry(self, now: datetime | None = None) -> None:
         """Check whether the token needs a refresh, and refresh it if so.
 
-        Registered directly as the callback for async_track_time_interval,
-        which always calls it with the current UTC time - `now` must be
-        accepted even though this method doesn't use it, or every timer
-        fire raises TypeError and silently breaks the daily proactive
-        check. Also called manually with no argument (start_token_check,
-        on a fresh timer registration), which is why it stays optional.
+        Registered directly as the callback for async_track_point_in_time,
+        which always calls it with the point in time it fired at - `now`
+        must be accepted even though this method doesn't use it, or every
+        fire raises TypeError and silently breaks the proactive check.
+        Also called manually with no argument (start_token_check, on the
+        first check), which is why it stays optional. Reschedules itself
+        at the end - see _schedule_next_check.
         """
         __LOGGER__.info("check token is expired")
         expire_timestamp = self.oAuth2Session.token.get("expires_at")
@@ -215,24 +243,40 @@ class AuthTokenRefresh:
                     )
                     if remain_timestamp < 0:
                         self.send_expired_notification()
-                    return
-                last_refresh = current_timestamp
+                else:
+                    last_refresh = current_timestamp
 
-                new_token = await self.oAuth2Session.implementation.async_refresh_token(
-                    self.oAuth2Session.token
-                )
-                # async_update_entry() already fires the registered update
-                # listener, which reloads - no separate reload needed here.
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        "token": new_token,
-                        "last_token_refresh": last_refresh,
-                    },
-                )
-                __LOGGER__.info("refresh token ok")
+                    new_token = (
+                        await self.oAuth2Session.implementation.async_refresh_token(
+                            self.oAuth2Session.token
+                        )
+                    )
+                    # async_update_entry() already fires the registered
+                    # update listener, which reloads - no separate reload
+                    # needed here.
+                    self.hass.config_entries.async_update_entry(
+                        self.entry,
+                        data={
+                            **self.entry.data,
+                            "token": new_token,
+                            "last_token_refresh": last_refresh,
+                        },
+                    )
+                    __LOGGER__.info("refresh token ok")
+            except OAuth2TokenRequestReauthError:
+                # Non-recoverable: the refresh token itself is invalid or
+                # revoked. Calling the implementation directly here (rather
+                # than going through OAuth2Session, whose own
+                # async_ensure_token_valid() would otherwise do this) means
+                # nothing else starts reauth on our behalf - an entry with
+                # no device coordinator has no other request that would.
+                __LOGGER__.error("refresh token failed: refresh token is invalid")
+                self.entry.async_start_reauth_if_available(self.hass)
+                if remain_timestamp < 0:
+                    self.send_expired_notification()
             except Exception as e:  # noqa: BLE001 - OAuth SDK call at a system boundary; logged, not fatal
                 __LOGGER__.error("refresh token failed: %s", e)
                 if remain_timestamp < 0:
                     self.send_expired_notification()
+
+        self._schedule_next_check()

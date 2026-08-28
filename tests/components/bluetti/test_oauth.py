@@ -1,5 +1,6 @@
 """Tests for oauth.py: OAuth2FlowHandler helpers and AuthTokenRefresh."""
 
+from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -15,6 +16,7 @@ from homeassistant.components.bluetti.oauth import (
     OAuth2FlowHandler,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
@@ -177,21 +179,17 @@ async def test_start_token_check_invalid_token_sends_notification(
     refresher.async_check_token_expiry.assert_awaited_once()
 
 
-async def test_start_token_check_valid_token_schedules_interval(
+async def test_start_token_check_valid_token_runs_the_check_once(
     hass: HomeAssistant,
 ) -> None:
-    """Start token check valid token schedules interval."""
+    """Start token check valid token runs the check once."""
     refresher, _entry = _refresher(hass, {"expires_at": time.time() + 1000})
     refresher.send_expired_notification = MagicMock()
     refresher.async_check_token_expiry = AsyncMock()
 
-    with patch(
-        "homeassistant.components.bluetti.oauth.async_track_time_interval"
-    ) as mock_track:
-        refresher.start_token_check()
-        await hass.async_block_till_done()
+    refresher.start_token_check()
+    await hass.async_block_till_done()
 
-    mock_track.assert_called_once()
     refresher.send_expired_notification.assert_not_called()
     refresher.async_check_token_expiry.assert_awaited_once()
 
@@ -232,9 +230,8 @@ async def test_start_token_check_clears_issue_when_token_becomes_valid(
         translation_key="oauth_expired",
     )
 
-    with patch("homeassistant.components.bluetti.oauth.async_track_time_interval"):
-        refresher.start_token_check()
-        await hass.async_block_till_done()
+    refresher.start_token_check()
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID_OAUTH_EXPIRED) is None
 
@@ -388,6 +385,152 @@ async def test_async_check_token_expiry_refreshes_and_reloads(
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated.data["token"] == {"access_token": "new"}
     mock_reload.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_async_check_token_expiry_starts_reauth_on_invalid_refresh_token(
+    hass: HomeAssistant,
+) -> None:
+    """A revoked/invalid refresh token must start the standard reauth flow.
+
+    Regression test: calling the implementation directly (rather than
+    going through OAuth2Session.async_ensure_token_valid(), which handles
+    this itself) meant nothing started reauth when the refresh token was
+    no longer valid - an entry with no device coordinator has no other
+    request that would.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() + 100}
+    session.implementation.async_refresh_token = AsyncMock(
+        side_effect=OAuth2TokenRequestReauthError(
+            domain=DOMAIN, request_info=MagicMock()
+        )
+    )
+    refresher = AuthTokenRefresh(hass, entry, session)
+
+    with patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth:
+        await refresher.async_check_token_expiry()
+
+    mock_start_reauth.assert_called_once_with(hass)
+
+
+async def test_async_check_token_expiry_notifies_and_starts_reauth_when_already_expired(
+    hass: HomeAssistant,
+) -> None:
+    """An already-expired token with an invalid refresh token does both."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() - 10}
+    session.implementation.async_refresh_token = AsyncMock(
+        side_effect=OAuth2TokenRequestReauthError(
+            domain=DOMAIN, request_info=MagicMock()
+        )
+    )
+    refresher = AuthTokenRefresh(hass, entry, session)
+    refresher.send_expired_notification = MagicMock()
+
+    with patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth:
+        await refresher.async_check_token_expiry()
+
+    mock_start_reauth.assert_called_once_with(hass)
+    refresher.send_expired_notification.assert_called_once()
+
+
+async def test_schedule_next_check_halves_remaining_time(hass: HomeAssistant) -> None:
+    """The next check is scheduled at half the remaining time, not fixed.
+
+    Regression test: a fixed daily interval reached a short-lived token
+    too late - it could already be expired by the time the next check ran.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() + 3600 * 4}  # 4 hours left
+    refresher = AuthTokenRefresh(hass, entry, session)
+
+    with patch(
+        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+    ) as mock_track:
+        refresher._schedule_next_check()
+
+    mock_track.assert_called_once()
+    scheduled_at = mock_track.call_args.args[2]
+    delay = scheduled_at - dt_util.utcnow()
+    assert timedelta(hours=1, minutes=55) < delay < timedelta(hours=2, minutes=5)
+
+
+async def test_schedule_next_check_caps_at_one_day(hass: HomeAssistant) -> None:
+    """A long-lived token is still checked at most once a day."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() + 3600 * 24 * 30}  # 30 days left
+    refresher = AuthTokenRefresh(hass, entry, session)
+
+    with patch(
+        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+    ) as mock_track:
+        refresher._schedule_next_check()
+
+    scheduled_at = mock_track.call_args.args[2]
+    delay = scheduled_at - dt_util.utcnow()
+    assert timedelta(hours=23, minutes=55) < delay < timedelta(days=1, minutes=5)
+
+
+async def test_schedule_next_check_floors_at_five_minutes(hass: HomeAssistant) -> None:
+    """An already-expired token is still checked no more than every 5 minutes."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() - 100}
+    refresher = AuthTokenRefresh(hass, entry, session)
+
+    with patch(
+        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+    ) as mock_track:
+        refresher._schedule_next_check()
+
+    scheduled_at = mock_track.call_args.args[2]
+    delay = scheduled_at - dt_util.utcnow()
+    assert timedelta(minutes=4, seconds=55) < delay < timedelta(minutes=5, seconds=5)
+
+
+async def test_schedule_next_check_does_nothing_without_expires_at(
+    hass: HomeAssistant,
+) -> None:
+    """Nothing to schedule against without an expires_at in the token."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {}
+    refresher = AuthTokenRefresh(hass, entry, session)
+
+    with patch(
+        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+    ) as mock_track:
+        refresher._schedule_next_check()
+
+    mock_track.assert_not_called()
+
+
+async def test_schedule_next_check_cancels_the_previous_one(
+    hass: HomeAssistant,
+) -> None:
+    """Rescheduling must not leave the previous callback registered too."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() + 1000}
+    refresher = AuthTokenRefresh(hass, entry, session)
+    previous_unsub = MagicMock()
+    refresher._unsub_next_check = previous_unsub
+
+    with patch("homeassistant.components.bluetti.oauth.async_track_point_in_time"):
+        refresher._schedule_next_check()
+
+    previous_unsub.assert_called_once()
 
 
 async def test_async_check_token_expiry_refresh_failure_is_logged(
