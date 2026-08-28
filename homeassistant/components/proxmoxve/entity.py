@@ -129,7 +129,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         self.entity_description = entity_description
         self._vm_data = vm_data
         self._node_name = node_data.node["node"]
-        self.device_id = vm_data["vmid"]
+        self.device_id = int(vm_data["vmid"])
         self.device_name = vm_data["name"]
 
         self._attr_device_info = DeviceInfo(
@@ -187,7 +187,8 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         self.entity_description = entity_description
         self._container_data = container_data
         self._node_name = node_data.node["node"]
-        self.device_id = container_data["vmid"]
+        # Proxmox hands out a container vmid as a string, a VM one as an int
+        self.device_id = int(container_data["vmid"])
         self.device_name = container_data["name"]
 
         self._attr_device_info = DeviceInfo(
