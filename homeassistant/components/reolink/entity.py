@@ -174,12 +174,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
+        sub_channel: int | None = None,
         coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkChannelCoordinatorEntity."""
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
+        self._sub_channel = sub_channel
         if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
             self._attr_unique_id = (
                 f"{self._host.unique_id}"
@@ -338,7 +340,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
         assert chime.channel is not None
-        super().__init__(reolink_data, chime.channel, coordinator)
+        super().__init__(reolink_data, chime.channel, coordinator=coordinator)
         self._chime = chime
 
         self._attr_unique_id = (
