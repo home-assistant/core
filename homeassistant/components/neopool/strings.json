@@ -69,7 +69,7 @@
         "name": "Temperature setpoint"
       },
       "hidro": {
-        "name": "Hydrolisis target production level"
+        "name": "Hydrolysis target production level"
       },
       "hidro_cover_reduction": {
         "name": "Cover reduction (when covered)"

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import Any, override
@@ -10,6 +11,7 @@ from neopool_modbus.capabilities import (
     has_heating_relay,
     is_chlorine_module_present,
     is_hydrolysis_present,
+    is_ph_module_present,
     is_redox_module_present,
     is_temperature_active,
 )
@@ -67,6 +69,22 @@ def _support_heating_temp(data: dict[str, Any]) -> bool:
     return has_heating_relay(data) and is_temperature_active(data)
 
 
+def _support_ph_max(data: dict[str, Any]) -> bool:
+    """Require a pH module and a valid acid relay GPIO (or none reported)."""
+    return is_ph_module_present(data) and (
+        "MBF_PAR_PH_ACID_RELAY_GPIO" not in data
+        or is_valid_relay_gpio(data["MBF_PAR_PH_ACID_RELAY_GPIO"] or 0)
+    )
+
+
+def _support_ph_min(data: dict[str, Any]) -> bool:
+    """Require a pH module and a valid base relay GPIO (or none reported)."""
+    return is_ph_module_present(data) and (
+        "MBF_PAR_PH_BASE_RELAY_GPIO" not in data
+        or is_valid_relay_gpio(data["MBF_PAR_PH_BASE_RELAY_GPIO"] or 0)
+    )
+
+
 def _hidro_precision(data: dict[str, Any]) -> int:
     """0 decimals in percent mode, 1 decimal in g/h mode."""
     return 0 if is_hydrolysis_in_percent(data) else 1
@@ -115,10 +133,7 @@ NUMBER_DESCRIPTIONS: dict[str, NeoPoolNumberEntityDescription] = {
         setpoint=SetpointKind.PH_MAX,
         scale=100.0,
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda data: (
-            "MBF_PAR_PH_ACID_RELAY_GPIO" not in data
-            or is_valid_relay_gpio(data["MBF_PAR_PH_ACID_RELAY_GPIO"] or 0)
-        ),
+        supported_fn=_support_ph_max,
     ),
     "MBF_PAR_PH2": NeoPoolNumberEntityDescription(
         key="MBF_PAR_PH2",
@@ -130,10 +145,7 @@ NUMBER_DESCRIPTIONS: dict[str, NeoPoolNumberEntityDescription] = {
         setpoint=SetpointKind.PH_MIN,
         scale=100.0,
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda data: (
-            "MBF_PAR_PH_BASE_RELAY_GPIO" not in data
-            or is_valid_relay_gpio(data["MBF_PAR_PH_BASE_RELAY_GPIO"] or 0)
-        ),
+        supported_fn=_support_ph_min,
     ),
     "MBF_PAR_RX1": NeoPoolNumberEntityDescription(
         key="MBF_PAR_RX1",
@@ -304,9 +316,11 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel any pending debounced write when the entity is removed."""
+        """Cancel and await any pending debounced write when removed."""
         if self._pending_write_task is not None and not self._pending_write_task.done():
             self._pending_write_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._pending_write_task
         await super().async_will_remove_from_hass()
 
     @override
@@ -321,12 +335,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
     async def _debounced_write(self) -> None:
         """Debounced write via the appropriate lib high-level API."""
+        task = asyncio.current_task()
         client = self.coordinator.client
         desc = self.entity_description
         try:
             await asyncio.sleep(self._debounce_delay)
             pending = self._pending_value or 0
-            raw = int(pending * desc.scale)
+            raw = round(pending * desc.scale)
             if desc.setpoint is not None:
                 await client.async_set_setpoint(desc.setpoint, raw)
                 # Merge the decoded value; native_value reads it back verbatim.
@@ -340,12 +355,16 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             self.coordinator.async_set_updated_data(
                 {**self.coordinator.data, **overrides}
             )
-            await self.coordinator.async_request_refresh()
+            self.coordinator.request_refresh_with_followup()
         except asyncio.CancelledError:
             pass
         except (NeoPoolError, OSError, TimeoutError) as err:
             # Background write: log and drop; the next poll restores state.
             _LOGGER.warning("Failed to write %s: %s", self.entity_description.key, err)
+        finally:
+            # Clear the pending value only if a newer write has not superseded us.
+            if self._pending_write_task is task:
+                self._pending_value = None
 
     @property
     def suggested_display_precision(self) -> int | None:
@@ -358,6 +377,14 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the actual number value."""
+        # While a debounced write is pending, surface the requested value so the
+        # UI reflects it optimistically instead of the stale coordinator value.
+        if (
+            self._pending_write_task is not None
+            and not self._pending_write_task.done()
+            and self._pending_value is not None
+        ):
+            return self._pending_value
         raw = self._decode_raw()
         if self.suggested_display_precision == 0 and raw is not None:
             return float(round(raw))
