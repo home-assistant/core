@@ -1,5 +1,6 @@
 """Test the Frontier Silicon switch entity."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -69,6 +70,33 @@ async def test_init_device_not_ready(
 
     entities = er.async_entries_for_device(entity_registry, device_entry.id)
     expected_entities = 1
+    assert len(entities) == expected_entities
+
+
+async def test_init_device_not_ready_transient_connection_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_afsapi: AsyncMock,
+) -> None:
+    """Test that entity is added if there is a only a transient connection error."""
+
+    def transient_connection_error_generator() -> Generator[FSConnectionError | bool]:
+        """Generate a transient connection error, then always yield a good result."""
+        yield FSConnectionError
+        while True:
+            yield True
+
+    mock_afsapi.get_dst.side_effect = transient_connection_error_generator()
+    await setup_integration(hass, config_entry)
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device_entry = devices[0]
+
+    entities = er.async_entries_for_device(entity_registry, device_entry.id)
+    expected_entities = 2
     assert len(entities) == expected_entities
 
 

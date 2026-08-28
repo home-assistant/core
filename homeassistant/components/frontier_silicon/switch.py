@@ -51,15 +51,24 @@ async def async_setup_entry(
 
     # only add switch entities for nodes which exist on the target device
     available_switches = []
+    max_tries_per_entity = 3
     for description in SWITCHES:
-        try:
-            _ = await description.is_on_fn(afsapi)()
-        except FSNotImplementedError:
-            continue
-        except FSConnectionError:
+        connection_attempt_succeeded = False
+        num_tries = 0
+        while num_tries < max_tries_per_entity:
+            num_tries += 1
+            try:
+                _ = await description.is_on_fn(afsapi)()
+            except FSNotImplementedError:
+                continue
+            except FSConnectionError:
+                # retry in case the connection error is transient
+                continue
+            available_switches.append(description)
+            connection_attempt_succeeded = True
+            break
+        if not connection_attempt_succeeded:
             _LOGGER.warning("Could not connect to Frontier Silicon device during setup")
-            continue
-        available_switches.append(description)
 
     async_add_entities(
         [
