@@ -1,7 +1,6 @@
 """Fixtures for the Willow integration tests."""
 
 from collections.abc import Generator
-import copy
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -20,7 +19,11 @@ from homeassistant.components.willow.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 USER_ID = 42
 ACCESS_TOKEN = "mock-access-token"
@@ -31,33 +34,6 @@ REFRESH_TOKEN = "mock-refresh-token"
 # to the integration domain. That value is the auth_implementation stored on
 # entries created by the flow.
 IMPL_DOMAIN = DOMAIN
-
-PROFILE = {
-    "id": USER_ID,
-    "username": "garden@example.com",
-    "profile_image": None,
-}
-
-DEVICES = [
-    {
-        "id": 1,
-        "sensor_id": "SENSOR123",
-        "battery_life": 88,
-        "version": "1.2.3",
-        "user_plant": {
-            "id": 10,
-            "name": "Basil",
-            "location": "Kitchen",
-        },
-        "latest_reading": {
-            "timestamp": "2026-05-08T12:00:00+00:00",
-            "temperature": 21.5,
-            "humidity": 55.0,
-            "moisture": 30.0,
-            "light": 1200.0,
-        },
-    }
-]
 
 
 @pytest.fixture
@@ -72,18 +48,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_willow_client() -> Generator[MagicMock]:
     """Patch WillowClient wherever it is instantiated."""
-    client = MagicMock()
-    client.get_profile = AsyncMock(return_value=dict(copy.deepcopy(PROFILE)))
-    client.get_devices = AsyncMock(
-        return_value=[dict(copy.deepcopy(device)) for device in DEVICES]
-    )
     with (
-        patch("homeassistant.components.willow.WillowClient", return_value=client),
+        patch(
+            "homeassistant.components.willow.WillowClient", autospec=True
+        ) as client_class,
         patch(
             "homeassistant.components.willow.config_flow.WillowClient",
-            return_value=client,
+            new=client_class,
         ),
     ):
+        client = client_class.return_value
+        client.get_profile.return_value = load_json_object_fixture(
+            "profile.json", DOMAIN
+        )
+        client.get_devices.return_value = load_json_array_fixture(
+            "devices.json", DOMAIN
+        )
         yield client
 
 

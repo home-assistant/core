@@ -77,9 +77,12 @@ async def test_refresh_token_without_refresh_token_is_noop(
     implementation: WillowOAuth2Implementation,
 ) -> None:
     """Refreshing a token that has no refresh_token returns it unchanged."""
-    token = {"access_token": "abc"}
+    token = {"access_token": "abc", "expires_in": 3600}
 
-    assert await implementation._async_refresh_token(token) is token
+    new_token = await implementation.async_refresh_token(token)
+
+    assert new_token["access_token"] == "abc"
+    assert new_token["expires_in"] == 3600
     assert len(aioclient_mock.mock_calls) == 0
 
 
@@ -94,7 +97,7 @@ async def test_refresh_token_normalizes_expiry(
         json={"access_token": "new", "refresh_token": "keep"},
     )
 
-    token = await implementation._async_refresh_token({"refresh_token": "old"})
+    token = await implementation.async_refresh_token({"refresh_token": "old"})
 
     assert token["access_token"] == "new"
     assert token["expires_in"] == DEFAULT_EXPIRES_IN

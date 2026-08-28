@@ -8,6 +8,7 @@ from pywillow import WillowAuthError
 
 from homeassistant.components.willow.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -18,6 +19,8 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
+
+ENTITY_ID = "sensor.kitchen_basil_temperature"
 
 
 async def test_setup_unload(
@@ -74,37 +77,28 @@ async def test_setup_retries_when_implementation_missing(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_poll_fails_on_authentication_error(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(WillowAuthError, id="auth_error"),
+        pytest.param(TimeoutError("boom"), id="api_error"),
+    ],
+)
+async def test_poll_failure_marks_entities_unavailable(
     hass: HomeAssistant,
     mock_willow_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
 ) -> None:
-    """A rejected access token during the poll marks the coordinator failed."""
+    """A failed poll marks the sensors unavailable."""
     await setup_integration(hass, mock_config_entry)
-    mock_willow_client.get_devices.side_effect = WillowAuthError
+    mock_willow_client.get_devices.side_effect = side_effect
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
-
-
-async def test_periodic_poll_fails_on_api_error(
-    hass: HomeAssistant,
-    mock_willow_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A non-auth API error during periodic refresh marks the coordinator failed."""
-    await setup_integration(hass, mock_config_entry)
-    mock_willow_client.get_devices.side_effect = TimeoutError("boom")
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

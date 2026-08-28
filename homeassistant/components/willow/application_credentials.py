@@ -48,6 +48,7 @@ class WillowOAuth2Implementation(LocalOAuth2Implementation):
 
     def _normalize_token(self, token: dict) -> dict:
         """Normalize Willow token response."""
+        # Willow tokens have no expiry, so we use a long-lived default
         if token.get("expires_in") is None:
             token["expires_in"] = DEFAULT_EXPIRES_IN
 
