@@ -7,13 +7,13 @@
       "no_serial_number": "[%key:component::solaredge_modbus::config::error::no_serial_number%]",
       "no_solaredge_device": "[%key:component::solaredge_modbus::config::error::no_solaredge_device%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The device at that address and device ID is a different inverter than the one this entry is set up for."
+      "wrong_device": "The inverter answering on that connection and device ID is a different one than this entry is set up for."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ev_charger": "That device is a SolarEdge EV charger. It answers as an inverter, but serves no measurements over Modbus.",
       "no_serial_number": "The inverter did not report a serial number, which is needed to identify it.",
-      "no_solaredge_device": "The device at that address and device ID does not answer as a SolarEdge inverter."
+      "no_solaredge_device": "No SolarEdge inverter answers on that connection and device ID."
     },
     "step": {
       "reconfigure": {
@@ -172,7 +172,7 @@
       "message": "The configured Modbus device does not answer as a SolarEdge inverter."
     },
     "wrong_inverter": {
-      "message": "The device at this address is a different inverter than the one this entry was set up for. Reconfigure the entry to point at the right device."
+      "message": "A different inverter is answering than the one this entry was set up for. Reconfigure the entry to point at the right device."
     }
   }
 }

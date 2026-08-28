@@ -206,7 +206,6 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @override
-    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
