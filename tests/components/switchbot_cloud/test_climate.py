@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import configure_integration
 
@@ -257,6 +258,44 @@ async def test_air_conditioner_restore_state(
     assert state.state == "cool"
     assert state.attributes[ATTR_FAN_MODE] == "high"
     assert state.attributes[ATTR_TEMPERATURE] == 25
+
+
+@pytest.mark.parametrize(
+    ("restored_temperature", "expected_temperature"),
+    [
+        pytest.param(75, 75, id="restored_as_published"),
+        pytest.param(19381607032619749376, 70, id="corrupted_falls_back_to_default"),
+    ],
+)
+async def test_air_conditioner_restore_state_in_fahrenheit(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    restored_temperature: float,
+    expected_temperature: float,
+) -> None:
+    """Test the target temperature is restored in the unit it was published in."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entity_id = "climate.climate_1"
+    mock_restore_cache(
+        hass,
+        (State(entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}),),
+    )
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
 
 
 async def test_air_conditioner_no_last_state(

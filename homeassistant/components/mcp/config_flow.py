@@ -14,7 +14,7 @@ from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
@@ -360,9 +360,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             # doesn't restrict the connection handshake itself) and proceed directly to OAuth discovery.
             return await self.async_step_auth_discovery()
 
-        self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
-            self.hass, config_entry
-        )
+        try:
+            self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
+                self.hass, config_entry
+            )
+        except UnknownImplementationError:
+            # The credentials were removed, let the user pick or create new ones
+            return await self.async_step_auth_discovery()
         return await self.async_step_auth()
 
 

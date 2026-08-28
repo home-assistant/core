@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .const import (
@@ -109,7 +110,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
     ]
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature = 21
+    _attr_target_temperature = 21.0
     _attr_target_temperature_step = 1
     _attr_precision = 1
     _attr_name = None
@@ -131,10 +132,23 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         self._attr_fan_mode = last_state.attributes.get(
             ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
-        self._attr_target_temperature = last_state.attributes.get(
-            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
-            self._attr_target_temperature,
-        )
+        if (
+            temperature := last_state.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            )
+        ) is not None:
+            # The attribute was published in the unit of the system, not the one
+            # this entity reports in, so it converts back on the way in
+            temperature = round(
+                TemperatureConverter.convert(
+                    temperature,
+                    self.hass.config.units.temperature_unit,
+                    self.temperature_unit,
+                )
+            )
+            # A state written before that conversion was made can hold anything
+            if self.min_temp <= temperature <= self.max_temp:
+                self._attr_target_temperature = temperature
 
     def _get_mode(self, hvac_mode: HVACMode) -> int:
         """Return the SwitchBot mode for the command.
