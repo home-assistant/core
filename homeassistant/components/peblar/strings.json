@@ -208,7 +208,7 @@
       "fields": {
         "config_entry_id": {
           "description": "The Peblar EV charger to add the RFID token to.",
-          "name": "Config entry"
+          "name": "Peblar EV charger"
         },
         "description": {
           "description": "A human-readable label for this RFID token.",
@@ -226,7 +226,7 @@
       "fields": {
         "config_entry_id": {
           "description": "The Peblar EV charger to delete the RFID token from.",
-          "name": "Config entry"
+          "name": "Peblar EV charger"
         },
         "uid": {
           "description": "The unique identifier of the RFID token to delete.",
@@ -240,7 +240,7 @@
       "fields": {
         "config_entry_id": {
           "description": "The Peblar EV charger to list RFID tokens for.",
-          "name": "Config entry"
+          "name": "Peblar EV charger"
         }
       },
       "name": "List RFID tokens"
