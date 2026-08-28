@@ -8,6 +8,11 @@
         "default": "mdi:alert"
       }
     },
+    "button": {
+      "socket_unlock": {
+        "default": "mdi:lock-open"
+      }
+    },
     "number": {
       "charge_current_limit": {
         "default": "mdi:speedometer"
@@ -61,6 +66,13 @@
       },
       "force_single_phase": {
         "default": "mdi:power-cycle"
+      },
+      "socket_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open-variant",
+          "on": "mdi:lock"
+        }
       }
     },
     "update": {
