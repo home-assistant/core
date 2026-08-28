@@ -27,6 +27,11 @@ __LOGGER__ = logging.getLogger(__name__)
 # themselves, so there is no need to limit concurrent updates.
 PARALLEL_UPDATES = 0
 
+# Models the estimated-battery-power balance (PV + grid - AC load, no DC
+# load term) has actually been validated against - see
+# BluettiEstimatedBatteryPowerSensor._net_power_w's docstring.
+_ESTIMATED_BATTERY_POWER_MODELS = {"Balco260"}
+
 
 class BaseSensorMetaInfo(TypedDict):
     """Static per-sensor-type metadata looked up from SENSOR_MAP."""
@@ -117,11 +122,18 @@ async def async_setup_entry(
 
         # Some models (e.g. Balco260) don't report battery charge/discharge
         # power directly - approximate it from the power balance of what
-        # they do report (PV + grid input - AC load).
+        # they do report (PV + grid input - AC load). Restricted to models
+        # this formula is actually validated for - see
+        # _ESTIMATED_BATTERY_POWER_MODELS.
         pv_state = device.get_state("PVAllTotalPower")
         grid_state = device.get_state("GridAllTotalPower")
         ac_load_state = device.get_state("ACLoadAllTotalPower")
-        if pv_state and grid_state and ac_load_state:
+        if (
+            device.model in _ESTIMATED_BATTERY_POWER_MODELS
+            and pv_state
+            and grid_state
+            and ac_load_state
+        ):
             for fn_code, name, charging in (
                 (
                     "EstimatedBatteryChargePower",
