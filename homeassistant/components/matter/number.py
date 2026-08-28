@@ -314,10 +314,8 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Eve temperature offset
-    # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
-    # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
-    # schema wins by default, so the conservative bound is assumed.
+    # Eve temperature offset; identical to the generic schema below (will be
+    # merged into it in a follow-up PR). See that schema for the range rationale.
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -348,7 +346,6 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
@@ -364,9 +361,8 @@ DISCOVERY_SCHEMAS = [
         vendor_id=(4874,),  # Eve Systems
         cluster_revision_min=THERMOSTAT_EXTENDED_CALIBRATION_REVISION,
     ),
-    # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
-    # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
-    # schema wins by default, so the conservative bound is assumed.
+    # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
+    # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -388,7 +384,8 @@ DISCOVERY_SCHEMAS = [
         ),
         cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
     ),
-    # Temperature offset, extended range (Matter 1.4+)
+    # Temperature offset, extended range (Matter 1.4+): SignedTemperature's
+    # usable range, ±127 in 0.1°C units (-128 is reserved).
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -396,7 +393,6 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
