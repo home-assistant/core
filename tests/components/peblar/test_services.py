@@ -1,13 +1,20 @@
 """Tests for the Peblar integration services."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
-from peblar import PeblarRfidToken
+from peblar import (
+    PeblarAuthenticationError,
+    PeblarConnectionError,
+    PeblarError,
+    PeblarRfidToken,
+)
 import pytest
 
 from homeassistant.components.peblar.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -22,41 +29,17 @@ async def test_services_registered_on_setup(
     assert hass.services.has_service(DOMAIN, "delete_rfid_token")
 
 
-async def test_services_removed_when_last_entry_unloaded(
+async def test_services_survive_entry_unload(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test RFID services are unregistered when the last Peblar entry unloads."""
-    assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
-
-    await hass.config_entries.async_unload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.services.has_service(DOMAIN, "list_rfid_tokens")
-    assert not hass.services.has_service(DOMAIN, "add_rfid_token")
-    assert not hass.services.has_service(DOMAIN, "delete_rfid_token")
-
-
-async def test_services_not_removed_while_other_entry_loaded(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_peblar: MagicMock,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test RFID services persist when a second entry is still loaded."""
-    second_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=mock_config_entry.data,
-        unique_id="second-charger",
-    )
-    second_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(second_entry.entry_id)
-    await hass.async_block_till_done()
-
+    """Test RFID services stay registered when the last Peblar entry unloads."""
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, "list_rfid_tokens")
+    assert hass.services.has_service(DOMAIN, "add_rfid_token")
+    assert hass.services.has_service(DOMAIN, "delete_rfid_token")
 
 
 async def test_list_rfid_tokens(
@@ -165,6 +148,90 @@ async def test_unloaded_config_entry_raises(
 
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "invalid_config_entry"
+
+
+SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
+    ("list_rfid_tokens", "rfid_tokens", {}),
+    (
+        "add_rfid_token",
+        "add_rfid_token",
+        {"uid": "AA:BB:CC:DD", "description": "My Card"},
+    ),
+    ("delete_rfid_token", "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
+]
+
+
+@pytest.mark.parametrize(("service", "method_name", "service_data"), SERVICE_CALLS)
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (PeblarConnectionError("Could not connect"), "communication_error"),
+        (PeblarError("Something went wrong"), "unknown_error"),
+    ],
+)
+async def test_service_communication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    service: str,
+    method_name: str,
+    service_data: dict[str, Any],
+    error: Exception,
+    translation_key: str,
+) -> None:
+    """Test Peblar library errors are translated into Home Assistant errors."""
+    getattr(mock_peblar, method_name).side_effect = error
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"config_entry_id": init_integration.entry_id, **service_data},
+            blocking=True,
+            return_response=service == "list_rfid_tokens",
+        )
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == translation_key
+    assert excinfo.value.translation_placeholders == {"error": str(error)}
+
+
+@pytest.mark.parametrize(("service", "method_name", "service_data"), SERVICE_CALLS)
+async def test_service_authentication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    init_integration: MockConfigEntry,
+    service: str,
+    method_name: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test an authentication error triggers a reauthentication flow."""
+    getattr(mock_peblar, method_name).side_effect = PeblarAuthenticationError(
+        "Authentication error"
+    )
+    mock_peblar.login.side_effect = PeblarAuthenticationError("Authentication error")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"config_entry_id": init_integration.entry_id, **service_data},
+            blocking=True,
+            return_response=service == "list_rfid_tokens",
+        )
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "authentication_error"
+    assert not excinfo.value.translation_placeholders
+
+    await hass.async_block_till_done()
+    assert init_integration.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"].get("source") == SOURCE_REAUTH
+    assert flows[0]["context"].get("entry_id") == init_integration.entry_id
 
 
 async def test_invalid_config_entry_raises(

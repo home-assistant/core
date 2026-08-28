@@ -1,8 +1,10 @@
 """Services for the Peblar integration."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import cast
 
-from peblar import Peblar
+from peblar import Peblar, PeblarAuthenticationError, PeblarConnectionError, PeblarError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -14,7 +16,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.json import JsonValueType
 
@@ -52,13 +54,46 @@ def _get_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
     ).runtime_data.user_configuration_coordinator.peblar
 
 
+@asynccontextmanager
+async def _handle_peblar_errors(
+    hass: HomeAssistant, entry_id: str
+) -> AsyncIterator[None]:
+    """Translate Peblar library errors into Home Assistant errors."""
+    try:
+        yield
+
+    except PeblarAuthenticationError as error:
+        # Reload the config entry to trigger reauth flow
+        hass.config_entries.async_schedule_reload(entry_id)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from error
+
+    except PeblarConnectionError as error:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(error)},
+        ) from error
+
+    except PeblarError as error:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_error",
+            translation_placeholders={"error": str(error)},
+        ) from error
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register RFID management services."""
 
     async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
-        peblar = _get_peblar(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        tokens = await peblar.rfid_tokens()
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        peblar = _get_peblar(hass, entry_id)
+        async with _handle_peblar_errors(hass, entry_id):
+            tokens = await peblar.rfid_tokens()
         return cast(
             dict[str, JsonValueType],
             LIST_RESPONSE_SCHEMA(
@@ -75,15 +110,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
     async def _handle_add_rfid_token(call: ServiceCall) -> None:
-        peblar = _get_peblar(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        await peblar.add_rfid_token(
-            rfid_token_uid=call.data[CONF_UID],
-            rfid_token_description=call.data[CONF_DESCRIPTION],
-        )
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        peblar = _get_peblar(hass, entry_id)
+        async with _handle_peblar_errors(hass, entry_id):
+            await peblar.add_rfid_token(
+                rfid_token_uid=call.data[CONF_UID],
+                rfid_token_description=call.data[CONF_DESCRIPTION],
+            )
 
     async def _handle_delete_rfid_token(call: ServiceCall) -> None:
-        peblar = _get_peblar(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        await peblar.delete_rfid_token(uid=call.data[CONF_UID])
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        peblar = _get_peblar(hass, entry_id)
+        async with _handle_peblar_errors(hass, entry_id):
+            await peblar.delete_rfid_token(uid=call.data[CONF_UID])
 
     async_register_admin_service(
         hass,
@@ -118,11 +157,3 @@ def async_setup_services(hass: HomeAssistant) -> None:
             }
         ),
     )
-
-
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unregister RFID management services."""
-    hass.services.async_remove(DOMAIN, "list_rfid_tokens")
-    hass.services.async_remove(DOMAIN, "add_rfid_token")
-    hass.services.async_remove(DOMAIN, "delete_rfid_token")
