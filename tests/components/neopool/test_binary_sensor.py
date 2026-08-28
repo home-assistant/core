@@ -9,9 +9,10 @@ from neopool_modbus.decoders import encode_device_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform as ep, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from . import setup_integration
@@ -20,29 +21,22 @@ from .conftest import MOCK_POOL_DATA
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-def _binary_by_key(hass: HomeAssistant, key: str):
-    """Return the live binary_sensor entity object for a given _key, or None."""
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("binary_sensor.")
-                and getattr(ent, "_key", None) == key
-            ):
-                return ent
-    return None
-
-
-def _binary_state(hass: HomeAssistant, entity_registry: er.EntityRegistry, key: str):
-    """Return the HA state object of the binary_sensor with a given key."""
-    entity = _binary_by_key(hass, key)
-    if entity is None:
+def _binary_state(hass: HomeAssistant, entry: MockConfigEntry, key: str):
+    """Return the HA state object of the binary_sensor for a coordinator key."""
+    registry = er.async_get(hass)
+    suffix = f"_{key.lower()}"
+    entries = [
+        e
+        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if e.domain == BINARY_SENSOR_DOMAIN and e.unique_id.endswith(suffix)
+    ]
+    if not entries:
         return None
-    return hass.states.get(entity.entity_id)
+    return hass.states.get(entries[0].entity_id)
 
 
 async def test_direct_key_reflects_coordinator_value(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
@@ -56,8 +50,8 @@ async def test_direct_key_reflects_coordinator_value(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Filtration Pump")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Filtration Pump")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -67,15 +61,14 @@ async def test_direct_key_reflects_coordinator_value(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Filtration Pump")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Filtration Pump")
     assert state is not None
     assert state.state == STATE_OFF
 
 
 async def test_pool_cover_inverts_hardware_value(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
@@ -94,8 +87,8 @@ async def test_pool_cover_inverts_hardware_value(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Pool Cover")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Pool Cover")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -106,15 +99,14 @@ async def test_pool_cover_inverts_hardware_value(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Pool Cover")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Pool Cover")
     assert state is not None
     assert state.state == STATE_ON
 
 
 async def test_pool_cover_none_yields_unknown(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
@@ -129,8 +121,8 @@ async def test_pool_cover_none_yields_unknown(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Pool Cover")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Pool Cover")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -138,7 +130,6 @@ async def test_pool_cover_none_yields_unknown(
 @pytest.mark.parametrize("pump_state", [False, None])
 async def test_pool_cover_unknown_when_filtration_not_running(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
@@ -158,26 +149,25 @@ async def test_pool_cover_unknown_when_filtration_not_running(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Pool Cover")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "Pool Cover")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_measurement_module_off_when_filtration_off(
+async def test_measurement_module_reads_raw_bit(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Measurement-module sensors report OFF when the filtration pump is idle."""
-    await setup_integration(hass, mock_config_entry_binary_sensor)
+    """Measurement-module sensors report the raw device bit, even with filtration off.
 
-    entity = _binary_by_key(hass, "pH measurement active")
-    assert entity is not None
-    entity_id = entity.entity_id
+    The controller keeps measuring the probes regardless of the filtration
+    pump state, so the entity must not force the value off.
+    """
+    await setup_integration(hass, mock_config_entry_binary_sensor)
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
@@ -186,28 +176,26 @@ async def test_measurement_module_off_when_filtration_off(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(
+        hass, mock_config_entry_binary_sensor, "pH measurement active"
+    )
+    assert state is not None
+    assert state.state == STATE_ON
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
-        "pH measurement active": True,
-        "Filtration Pump": True,
+        "pH measurement active": False,
+        "Filtration Pump": False,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "pH measurement active": True,
-        "Filtration Pump": None,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(
+        hass, mock_config_entry_binary_sensor, "pH measurement active"
+    )
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
@@ -272,8 +260,10 @@ async def test_device_time_drift(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Device Time Out Of Sync")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(
+        hass, mock_config_entry_binary_sensor, "Device Time Out Of Sync"
+    )
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -286,7 +276,9 @@ async def test_device_time_drift(
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = _binary_state(hass, entity_registry, "Device Time Out Of Sync")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = _binary_state(
+        hass, mock_config_entry_binary_sensor, "Device Time Out Of Sync"
+    )
     assert state is not None
     assert state.state == STATE_ON

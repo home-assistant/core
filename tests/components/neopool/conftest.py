@@ -83,6 +83,14 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH pump active": False,
     "pH acid pump active": False,
     "Filtration Pump": False,
+    # Measurement / module "active" bits. The controller keeps measuring the
+    # probes regardless of filtration state, so these read True even though the
+    # filtration pump above is off.
+    "pH measurement active": True,
+    "Redox measurement active": True,
+    "Chlorine measurement active": True,
+    "Conductivity measurement active": True,
+    "HIDRO Module active": True,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
     "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
