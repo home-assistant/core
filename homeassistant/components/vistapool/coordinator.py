@@ -41,6 +41,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_id: str = pool_id
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
+        self._push_connected = True
 
         super().__init__(
             hass,
@@ -61,34 +62,48 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
             ) from err
 
+    @property
+    def push_connected(self) -> bool:
+        """Whether pool data is still flowing in from the subscription."""
+        return self._push_connected
+
     async def subscribe(self) -> None:
         """Subscribe to Firestore real-time updates via the library."""
 
         def _on_data(data: dict[str, Any]) -> None:
             """Callback from the Firestore thread; push data to the HA loop."""
-            self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, data)
+            self.hass.loop.call_soon_threadsafe(self._async_handle_push, data)
 
         self.subscription = await self.api.subscribe_pool_resilient(
             self.pool_id, _on_data, on_health=self._async_on_subscription_health
         )
 
     @callback
+    def _async_handle_push(self, data: dict[str, Any]) -> None:
+        """Apply a snapshot; its arrival is what proves the connection is up."""
+        if not self._push_connected:
+            self._push_connected = True
+            _LOGGER.info("Reconnected to %s, entities are available again", self.name)
+        self.async_set_updated_data(data)
+
+    @callback
     def _async_on_subscription_health(self, healthy: bool) -> None:
         """Mark entities unavailable while the push connection is down.
 
-        Without a polling interval the last snapshot would otherwise stay
-        on display as if it were current. Recovery needs no action here:
-        resubscribing delivers a fresh snapshot, which restores
-        availability through async_set_updated_data.
+        Tracked separately from last_update_success: an optimistic update
+        or a manual refresh sets that flag back to True while the
+        subscription is still down, and the health callback only fires on
+        transitions, so it would not correct it. Only an incoming snapshot
+        clears this.
         """
-        if healthy:
+        if healthy or not self._push_connected:
             return
-        self.async_set_update_error(
-            UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-            )
+        self._push_connected = False
+        _LOGGER.warning(
+            "Lost the connection to %s, entities are unavailable until it recovers",
+            self.name,
         )
+        self.async_update_listeners()
 
     @override
     async def async_shutdown(self) -> None:
