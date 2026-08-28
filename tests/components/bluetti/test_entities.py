@@ -105,6 +105,27 @@ async def test_sensor_unavailable_when_device_offline(hass: HomeAssistant) -> No
     assert entity.available is False
 
 
+async def test_power_switch_state_stays_available_while_device_offline(
+    hass: HomeAssistant,
+) -> None:
+    """The power switch itself must stay controllable when offline."""
+    coordinator = _make_coordinator(hass)
+    coordinator.device.on_line = "0"
+    state = BluettiState(
+        fn_code="SetCtrlPowerOn", fn_name="Power", fn_value="1", fn_type="SWITCH"
+    )
+    meta = {
+        "name": state.fn_name,
+        "unit": None,
+        "device_class": None,
+        "state_class": None,
+    }
+
+    entity = BluettiSensor(coordinator.device, state, meta)
+
+    assert entity.available is True
+
+
 async def test_sensor_unavailable_when_coordinator_update_failed(
     hass: HomeAssistant,
 ) -> None:
