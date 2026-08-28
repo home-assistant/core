@@ -71,7 +71,7 @@
             'netout': 524288,
             'status': 'running',
             'uptime': 43200,
-            'vmid': 200,
+            'vmid': '200',
           }),
           '201': dict({
             'cpu': 0.05,
@@ -85,7 +85,7 @@
             'netout': 524288,
             'status': 'stopped',
             'uptime': 43200,
-            'vmid': 201,
+            'vmid': '201',
           }),
         }),
         'node': dict({

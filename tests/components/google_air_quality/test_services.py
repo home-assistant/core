@@ -74,4 +74,4 @@ async def test_get_forecast_service_unknown_subentry(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "device_not_found"
+    assert exc_info.value.translation_key == "service_device_not_found"
