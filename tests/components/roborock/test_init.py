@@ -120,8 +120,7 @@ async def test_device_serial_number(
     Dyad Pro is a shared device whose home data carries no serial number.
     """
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-    await hass.async_block_till_done()
-    await asyncio.gather(*mock_roborock_entry._background_tasks)
+    await hass.async_block_till_done(wait_background_tasks=True)
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_roborock_entry.entry_id
     )
