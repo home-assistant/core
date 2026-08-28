@@ -77,6 +77,11 @@ INPUTS = [
         "icon": "meta:playbackdevice",
     },
     {
+        "uri": "extInput:widi?port=1",
+        "connection": False,
+        "icon": "meta:wifidisplay",
+    },
+    {
         "uri": "extInput:scart?port=1",
         "title": "AV1",
         "connection": False,
@@ -85,7 +90,7 @@ INPUTS = [
     },
 ]
 
-PLAYING_INFO = {"uri": "extInput:hdmi?port=2", "title": "HDMI 2", "source": "HDMI"}
+PLAYING_INFO = {"uri": "extInput:hdmi?port=3", "title": "HDMI 3", "source": "HDMI"}
 
 
 @pytest.fixture
@@ -138,8 +143,12 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         "Streaming box",
         "Straße",
     ]
-    # The playing input is reported with the same name used in the source list.
+    # HDMI 3 is labelled "game console"; it is reported with the spelling that is
+    # actually in the list, never with one that is missing from it.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
+    assert (
+        state.attributes[ATTR_INPUT_SOURCE] in state.attributes[ATTR_INPUT_SOURCE_LIST]
+    )
 
 
 @pytest.mark.parametrize(
@@ -154,6 +163,8 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         ("HDMI 4", "extInput:hdmi?port=4"),
         ("HDMI 5", "extInput:hdmi?port=5"),
         ("Streaming box", "extInput:cec?type=player&port=1"),
+        # A partial name still resolves, as it did before.
+        ("Streaming", "extInput:cec?type=player&port=1"),
         ("straße", "extInput:scart?port=1"),
     ],
 )

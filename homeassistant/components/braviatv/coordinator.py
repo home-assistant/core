@@ -149,11 +149,17 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             name = item.get("label") or title
             if not name or not uri:
                 continue
+            if add_to_list:
+                # Reuse the spelling already listed, so the source reported while
+                # playing is always one of the names offered in the list.
+                known = next(
+                    (s for s in self.source_list if s.lower() == name.lower()), None
+                )
+                if known is None:
+                    self.source_list.append(name)
+                else:
+                    name = known
             self.source_map[uri] = {**item, "name": name, "type": source_type}
-            if add_to_list and not any(
-                name.lower() == existing.lower() for existing in self.source_list
-            ):
-                self.source_list.append(name)
 
     @override
     async def _async_update_data(self) -> None:
