@@ -1343,7 +1343,6 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
 
     accept: list[str]
     multiple: bool
-    remove_metadata: bool
 
 
 @SELECTORS.register("media")
