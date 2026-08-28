@@ -18,27 +18,53 @@
     "step": {
       "reconfigure": {
         "data": {
+          "baudrate": "[%key:component::solaredge_modbus::config::step::serial::data::baudrate%]",
+          "device": "[%key:component::solaredge_modbus::config::step::serial::data::device%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "[%key:component::solaredge_modbus::config::step::user::data_description::host%]",
-          "port": "[%key:component::solaredge_modbus::config::step::user::data_description::port%]"
+          "baudrate": "[%key:component::solaredge_modbus::config::step::serial::data_description::baudrate%]",
+          "device": "[%key:component::solaredge_modbus::config::step::serial::data_description::device%]",
+          "host": "[%key:component::solaredge_modbus::config::step::tcp::data_description::host%]",
+          "port": "[%key:component::solaredge_modbus::config::step::tcp::data_description::port%]"
         },
-        "description": "Update how this inverter is reached, for example after it moved to another address or its device ID changed.",
+        "description": "Update how this inverter is reached, for example after it moved to another address or its bus was rewired.",
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data::unit_id%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
-              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data_description::unit_id%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
             },
-            "name": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::name%]"
+            "name": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::name%]"
           }
         }
       },
-      "user": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port"
+        },
+        "data_description": {
+          "baudrate": "The baud rate of the RS485 bus, as configured on the inverter. The SolarEdge default is 115200.",
+          "device": "The serial port the inverter's RS485 bus is wired to."
+        },
+        "description": "Set up an inverter wired to this machine over RS485.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
+            },
+            "name": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::name%]"
+          }
+        }
+      },
+      "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -47,7 +73,7 @@
           "host": "The hostname or IP address of your SolarEdge inverter. Modbus TCP has to be enabled on the inverter first, in the installer settings.",
           "port": "The TCP port the inverter listens on for Modbus requests. The SolarEdge default is 1502."
         },
-        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "description": "Set up an inverter reached over the network.",
         "sections": {
           "more_options": {
             "data": {
@@ -58,6 +84,13 @@
             },
             "name": "More options"
           }
+        }
+      },
+      "user": {
+        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "menu_options": {
+          "serial": "Serial (RS485)",
+          "tcp": "Network (Modbus TCP)"
         }
       },
       "zeroconf_confirm": {

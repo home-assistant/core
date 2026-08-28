@@ -9,13 +9,16 @@ import pytest
 
 from homeassistant.components.solaredge_modbus.config_flow import SECTION_MORE_OPTIONS
 from homeassistant.components.solaredge_modbus.const import (
+    CONF_BAUDRATE,
     CONF_UNIT_ID,
+    DEFAULT_BAUDRATE,
     DEFAULT_UNIT_ID,
     DOMAIN,
+    TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigEntryState
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -25,6 +28,7 @@ from .conftest import HOST, PORT, SERIAL_NUMBER, UNIT_ID, async_seed_unit, tcp_d
 from tests.common import MockConfigEntry
 
 TITLE = "SolarEdge SE10000H"
+SERIAL_PORT = "/dev/ttyUSB0"
 
 # An inverter announcing itself, as captured from a real one.
 DISCOVERY_HOST = "10.148.42.116"
@@ -60,6 +64,49 @@ def _user_input(unit_id: int = UNIT_ID) -> dict[str, Any]:
     }
 
 
+def _serial_input(
+    baudrate: int = DEFAULT_BAUDRATE, unit_id: int = UNIT_ID
+) -> dict[str, Any]:
+    """Form input for the serial step, with the sectioned device ID."""
+    return {
+        CONF_DEVICE: SERIAL_PORT,
+        CONF_BAUDRATE: baudrate,
+        SECTION_MORE_OPTIONS: {CONF_UNIT_ID: unit_id},
+    }
+
+
+def _serial_entry(baudrate: int = DEFAULT_BAUDRATE) -> MockConfigEntry:
+    """A config entry for an inverter on an RS485 bus."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=SERIAL_NUMBER,
+        data={
+            CONF_TYPE: TYPE_SERIAL,
+            CONF_DEVICE: SERIAL_PORT,
+            CONF_BAUDRATE: baudrate,
+            CONF_UNIT_ID: UNIT_ID,
+        },
+    )
+
+
+async def _start_user_flow(hass: HomeAssistant, connection_type: str) -> str:
+    """Open the flow, pick a connection type, and return the flow ID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": connection_type}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == connection_type
+
+    return result["flow_id"]
+
+
 def _model_registers(model: str) -> dict[int, int]:
     """Registers holding a model name in the SunSpec common block."""
     padded = model.ljust(32, "\0").encode()
@@ -71,12 +118,7 @@ def _model_registers(model: str) -> dict[int, int]:
 
 async def test_user_flow_tcp(hass: HomeAssistant) -> None:
     """An inverter on the network is probed and its entry created."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
 
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     await hass.async_block_till_done()
@@ -87,18 +129,31 @@ async def test_user_flow_tcp(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == SERIAL_NUMBER  # the inverter serial
 
 
+async def test_user_flow_serial(hass: HomeAssistant) -> None:
+    """An inverter on an RS485 bus is probed and its entry created."""
+    flow_id = await _start_user_flow(hass, TYPE_SERIAL)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, _serial_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        CONF_TYPE: TYPE_SERIAL,
+        CONF_DEVICE: SERIAL_PORT,
+        CONF_BAUDRATE: DEFAULT_BAUDRATE,
+        CONF_UNIT_ID: UNIT_ID,
+    }
+    assert result["result"].unique_id == SERIAL_NUMBER
+
+
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
     """An unresponsive device surfaces cannot_connect, then the flow recovers."""
     mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
 
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     assert result["type"] is FlowResultType.FORM
@@ -125,12 +180,7 @@ async def test_user_flow_partial_answer(
     """
     mock_modbus_unit.fail_read(40069, ServerDeviceFailureError())
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
 
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     assert result["type"] is FlowResultType.FORM
@@ -154,12 +204,7 @@ async def test_user_flow_no_solaredge_device(
     unit = mock_modbus_connection.for_unit(2)
     unit.holding.update(dict.fromkeys(range(40000, 40004), 0))
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input(2))
 
     assert result["type"] is FlowResultType.FORM
@@ -175,12 +220,7 @@ async def test_user_flow_no_serial_number(
     await async_seed_unit(hass, unit)
     unit.holding.update(dict.fromkeys(range(40052, 40068), 0))
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input(3))
 
     assert result["type"] is FlowResultType.FORM
@@ -195,12 +235,7 @@ async def test_user_flow_ev_charger(
     await async_seed_unit(hass, unit)
     unit.holding.update(_model_registers("SE-EV-SA-KIT"))
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input(4))
 
     assert result["type"] is FlowResultType.FORM
@@ -213,12 +248,7 @@ async def test_user_flow_already_configured(
     """Setting up the same inverter twice aborts."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    flow_id = result["flow_id"]
+    flow_id = await _start_user_flow(hass, TYPE_TCP)
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
 
     assert result["type"] is FlowResultType.ABORT
@@ -300,6 +330,77 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_new_line_settings(hass: HomeAssistant) -> None:
+    """New line settings need the entry off the bus before they can be probed."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _serial_input(baudrate=9600)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BAUDRATE] == 9600
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_flow_new_line_settings_cannot_connect(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A failed probe puts the entry back on the bus it was taken off."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _serial_input(baudrate=9600)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert entry.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+    # Setting the entry back up runs into the same dead device, so it lands in
+    # retry rather than staying unloaded with nothing scheduled to fix it.
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reconfigure_flow_new_line_settings_wrong_device(
+    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
+) -> None:
+    """A rejected reconfigure puts the entry back on the bus it was taken off."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await async_seed_unit(
+        hass,
+        mock_modbus_connection.for_unit(2),
+        serial_registers=OTHER_SERIAL_REGISTERS,
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _serial_input(baudrate=9600, unit_id=2)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert entry.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
