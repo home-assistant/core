@@ -10,7 +10,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.iseo_argo_ble import config_flow
-from homeassistant.components.iseo_argo_ble.const import CONF_PRIV_SCALAR, DOMAIN
+from homeassistant.components.iseo_argo_ble.const import (
+    CONF_ENABLE_POLLING,
+    CONF_PRIV_SCALAR,
+    DOMAIN,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -352,3 +356,47 @@ async def test_generate_identity() -> None:
     assert priv is not None
     # SECP224R1 is 224 bits
     assert priv.key_size == 224
+
+
+@pytest.mark.usefixtures("mock_iseo_client", "mock_derive_private_key")
+async def test_options_flow_enables_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ble_device: MagicMock,
+) -> None:
+    """Test the polling fallback can be turned on and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ENABLE_POLLING: True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_ENABLE_POLLING: True}
+
+
+@pytest.mark.usefixtures("mock_iseo_client", "mock_derive_private_key")
+async def test_options_flow_defaults_to_no_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ble_device: MagicMock,
+) -> None:
+    """Test the fallback is off unless the user opts in."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ENABLE_POLLING: False}
+    )
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.options == {CONF_ENABLE_POLLING: False}

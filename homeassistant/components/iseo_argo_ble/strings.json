@@ -17,7 +17,7 @@
         "title": "ISEO lock discovered"
       },
       "gw_register": {
-        "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
+        "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.\n\nThe same scan also turns on the lock's **Door Status Advice** setting, which makes it report door state in its Bluetooth advertisements. Home Assistant then follows the lock without ever connecting to it on a timer.",
         "title": "Register gateway"
       },
       "user": {
@@ -28,6 +28,20 @@
           "address": "Select the ISEO lock to set up."
         },
         "description": "Select your lock from the list of nearby ISEO locks, sorted by signal strength. If your lock is not listed, make sure it is powered on and within Bluetooth range, then click Submit to scan again."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_polling": "Connect to the lock to read door status"
+        },
+        "data_description": {
+          "enable_polling": "Connect to the lock every 30 seconds instead of following its advertisements."
+        },
+        "description": "This setting only changes how Home Assistant reads the door state; nothing is sent to the lock either way.\n\nBy default it listens to the advertisements the lock already broadcasts, which is faster and costs the lock nothing. Turn on polling instead if Home Assistant does not hear the lock reliably — at the edge of Bluetooth range, or with no Bluetooth proxy nearby. It connects to the lock every 30 seconds.\n\nNeither option helps if the lock reports no door status at all: that needs a door sensor and the lock's **Door Status Advice** setting, which Home Assistant enables during setup and you can also turn on for the lock in the ISEO Argo app.",
+        "title": "Door status updates"
       }
     }
   },

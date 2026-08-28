@@ -5,12 +5,26 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
-from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState
+from iseo_argo_ble import (
+    IseoAuthError,
+    IseoClient,
+    IseoConnectionError,
+    LockState,
+    parse_iseo_advertisement,
+)
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
+    async_register_callback,
+    async_track_unavailable,
+)
+from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -19,7 +33,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import IseoConfigEntry
-from .const import DOMAIN
+from .const import CONF_ENABLE_POLLING, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +42,7 @@ PARALLEL_UPDATES = 1
 # Seconds the entity stays in "unlocked" state before reverting to "locked".
 _RELOCK_DELAY = 5
 
-# Seconds to wait after an unlock before re-polling the door state.
-_RELOCK_POLL_DELAY = 2
-
-# How often to poll the lock for door state (when door status is supported).
+# Only used when the polling fallback is enabled; see CONF_ENABLE_POLLING.
 _POLL_INTERVAL = timedelta(seconds=30)
 
 
@@ -52,6 +63,12 @@ class IseoLockEntity(LockEntity):
     `async_lock` always raises. `unlock` (rather than `LockEntityFeature.OPEN`)
     is used for the release because the lock stays engaged in the door frame
     and the physical door itself is never operated.
+
+    Door state comes from the lock's advertisements, which the lock already
+    broadcasts: following those reports changes as they happen instead of up to
+    30 seconds later, and spares the lock a connection and its battery a wake-up
+    every cycle. Connecting on a timer remains available for locks that cannot
+    report door status passively.
     """
 
     _attr_has_entity_name = True
@@ -88,18 +105,72 @@ class IseoLockEntity(LockEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Probe door-status support and start polling."""
-        await self._poll_state()
+        """Subscribe to advertisements and read the lock once for its firmware."""
+        address = self._entry.data[CONF_ADDRESS]
         self.async_on_remove(
-            async_track_time_interval(
-                self.hass, self._async_poll_interval, _POLL_INTERVAL
+            async_register_callback(
+                self.hass,
+                self._async_handle_advertisement,
+                BluetoothCallbackMatcher(address=address),
+                BluetoothScanningMode.PASSIVE,
+            )
+        )
+        self.async_on_remove(
+            async_track_unavailable(
+                self.hass, self._async_device_unavailable, address, connectable=False
             )
         )
         self.async_on_remove(self._cancel_relock_task)
 
+        # A single read on setup, for the firmware version and an initial state
+        # before the first advertisement lands. This is a one-off, not a timer.
+        await self._poll_state()
+
+        if self._entry.options.get(CONF_ENABLE_POLLING, False):
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_poll_interval, _POLL_INTERVAL
+                )
+            )
+
     async def _async_poll_interval(self, _now: datetime) -> None:
         """Poll the lock on the configured interval."""
         await self._poll_state()
+
+    @callback
+    def _async_handle_advertisement(
+        self, service_info: BluetoothServiceInfoBleak, _change: BluetoothChange
+    ) -> None:
+        """Apply the door state the lock encodes in its advertisement."""
+        self._set_available(True)
+
+        if self._door_status_supported is False:
+            # The lock reported it does not support door status. Advertisements
+            # carry no capability flags, so the door bit in them is meaningless
+            # here — hearing the lock is all this tells us.
+            return
+
+        state = parse_iseo_advertisement(list(service_info.service_uuids or []))
+        if state is None or state.door_closed is None:
+            return
+
+        self._door_status_supported = True
+        self._attr_assumed_state = False
+
+        if self._attr_is_unlocking:
+            return
+        if self._poll_suppress_until and dt_util.utcnow() < self._poll_suppress_until:
+            return
+
+        self._attr_is_locked = state.door_closed
+        self.async_write_ha_state()
+
+    @callback
+    def _async_device_unavailable(
+        self, _service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle the lock no longer being seen by the bluetooth stack."""
+        self._set_available(False, "no advertisement received")
 
     def _cancel_relock_task(self) -> None:
         """Cancel any pending relock task."""
@@ -140,15 +211,12 @@ class IseoLockEntity(LockEntity):
         dev_reg.async_update_device(device.id, sw_version=fw_version)
         self._fw_version_set = True
 
-    async def _poll_state(self, force: bool = False) -> bool:
-        """Read door state via TLV_INFO and update HA state.
-
-        Returns True when a fresh door reading was applied to the entity.
-        """
+    async def _poll_state(self) -> None:
+        """Read door state via TLV_INFO and update HA state."""
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
         if self._ble_lock.locked():
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
-            return False
+            return
 
         if not (
             ble_device := async_ble_device_from_address(
@@ -158,14 +226,14 @@ class IseoLockEntity(LockEntity):
             )
         ):
             self._set_available(False, "device not found")
-            return False
+            return
 
         if self._door_status_supported is False:
             # Nothing to read from this lock: seeing it advertise is all the
             # reachability information there is, and it spares the battery a
             # connection on every poll cycle.
             self._set_available(True)
-            return False
+            return
 
         try:
             async with self._ble_lock:
@@ -182,10 +250,10 @@ class IseoLockEntity(LockEntity):
                 )
                 self._attr_available = False
                 self.async_write_ha_state()
-            return False
+            return
         except (TimeoutError, IseoConnectionError, OSError) as exc:
             self._set_available(False, exc)
-            return False
+            return
 
         self._set_available(True)
         self._update_firmware_version(state)
@@ -198,22 +266,17 @@ class IseoLockEntity(LockEntity):
             self._attr_assumed_state = True
             self._attr_is_locked = True
             self.async_write_ha_state()
-            return False
+            return
 
         self._door_status_supported = True
 
         if self._attr_is_unlocking:
-            return False
-        if (
-            not force
-            and self._poll_suppress_until
-            and dt_util.utcnow() < self._poll_suppress_until
-        ):
-            return False
+            return
+        if self._poll_suppress_until and dt_util.utcnow() < self._poll_suppress_until:
+            return
 
         self._attr_is_locked = state.door_closed
         self.async_write_ha_state()
-        return True
 
     def _set_unlocking(self, available: bool = True) -> None:
         self._attr_is_locked = False
@@ -236,15 +299,12 @@ class IseoLockEntity(LockEntity):
         self.async_write_ha_state()
 
     async def _auto_relock(self) -> None:
-        """Revert to 'locked' after the motor has re-latched."""
-        if self._door_status_supported:
-            await asyncio.sleep(_RELOCK_POLL_DELAY)
-            if not await self._poll_state(force=True):
-                # The poll took no reading (BLE busy, device not found, error),
-                # so fall back to the lock's own re-latching behaviour.
-                self._set_locked(available=self._attr_available)
-            return
+        """Revert to 'locked' after the motor has re-latched.
 
+        No read is needed to confirm it: once the suppression window closes the
+        next advertisement carries the real door state and corrects this if the
+        door was actually left open.
+        """
         await asyncio.sleep(_RELOCK_DELAY)
         self._set_locked(available=self._attr_available)
 

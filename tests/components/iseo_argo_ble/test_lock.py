@@ -1,5 +1,7 @@
 """Test the ISEO Argo BLE lock entity."""
 
+from datetime import timedelta
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -7,7 +9,10 @@ from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.iseo_argo_ble.const import DOMAIN
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
+from homeassistant.components.iseo_argo_ble.const import CONF_ENABLE_POLLING, DOMAIN
 from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
@@ -21,10 +26,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from . import setup_integration
+from . import iseo_advertisement, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 ENTITY_ID = "lock.iseo_lock"
 
@@ -32,6 +43,12 @@ ENTITY_ID = "lock.iseo_lock"
 def _lock_state(door_closed: bool | None) -> MagicMock:
     """Return a lock state reporting the given door status."""
     return MagicMock(door_closed=door_closed, firmware_info="FW:  1.2.3")
+
+
+async def _advertise(hass: HomeAssistant, door_closed: bool) -> None:
+    """Feed the integration an advertisement with the given door status."""
+    inject_bluetooth_service_info_bleak(hass, iseo_advertisement(door_closed))
+    await hass.async_block_till_done()
 
 
 async def _unlock(hass: HomeAssistant) -> None:
@@ -84,17 +101,19 @@ async def test_state_follows_door_status(
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test the reported state follows the door status read from the lock."""
+    """Test the reported state follows the door status the lock advertises."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
-    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
-    freezer.tick(_POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
+    await _advertise(hass, door_closed=False)
     assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+    # Advertisements alone must never make the integration connect.
+    mock_iseo_client.read_state.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
@@ -107,14 +126,14 @@ async def test_unlock_keeps_unlocked_while_door_open(
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
-    # The door is opened right after the latch is released.
-    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
-
-    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_POLL_DELAY", 0):
+    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
         await _unlock(hass)
         await hass.async_block_till_done()
 
     mock_iseo_client.gw_open.assert_called_once()
+
+    # The door was opened right after the latch was released.
+    await _advertise(hass, door_closed=False)
     assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
 
 
@@ -127,67 +146,47 @@ async def test_unlock_reports_locked_once_door_is_closed(
     """Test the lock reports locked again once the door is closed."""
     await setup_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_POLL_DELAY", 0):
+    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
         await _unlock(hass)
         await hass.async_block_till_done()
 
+    await _advertise(hass, door_closed=True)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
-async def test_unlock_assumes_locked_without_a_reading(
+async def test_unlock_assumes_locked_without_door_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test the lock is assumed locked when the verification poll reads nothing."""
-    await setup_integration(hass, mock_config_entry)
-
-    # The lock stops reporting its door status while the latch is released.
+    """Test a lock that never reports door status is assumed locked again."""
     mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
-
-    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_POLL_DELAY", 0):
-        await _unlock(hass)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == LockState.LOCKED
     assert state.attributes[ATTR_ASSUMED_STATE] is True
-
-
-@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
-async def test_unlock_relocks_without_door_status(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_iseo_client: MagicMock,
-) -> None:
-    """Test a lock without door status reports locked again after unlocking."""
-    mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
-    await setup_integration(hass, mock_config_entry)
 
     with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
         await _unlock(hass)
         await hass.async_block_till_done()
 
-    mock_iseo_client.gw_open.assert_called_once()
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == LockState.LOCKED
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
 @pytest.mark.usefixtures("mock_derive_private_key")
-async def test_availability_recovers_without_door_status(
+async def test_availability_recovers_from_an_advertisement(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
     mock_ble_device: MagicMock,
 ) -> None:
-    """Test a lock without door status becomes available again after a dropout."""
-    mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
+    """Test the lock becomes available again on the next advertisement."""
     await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == LockState.LOCKED
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
     # The lock goes out of range and an unlock fails.
     with (
@@ -201,79 +200,141 @@ async def test_availability_recovers_without_door_status(
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # It comes back into range.
-    freezer.tick(_POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Hearing it again is enough; no connection is needed to recover.
+    mock_iseo_client.read_state.reset_mock()
+    await _advertise(hass, door_closed=True)
 
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
-
-
-@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
-async def test_availability_recovers_after_read_error(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_iseo_client: MagicMock,
-) -> None:
-    """Test the lock becomes unavailable on read errors and recovers."""
-    await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
-
-    mock_iseo_client.read_state.side_effect = IseoConnectionError("offline")
-    freezer.tick(_POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-
-    mock_iseo_client.read_state.side_effect = None
-    freezer.tick(_POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+    mock_iseo_client.read_state.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_unavailable_when_lock_rejects_identity(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
     """Test the lock becomes unavailable when it rejects the stored identity."""
-    await setup_integration(hass, mock_config_entry)
-
     mock_iseo_client.read_state.side_effect = IseoAuthError("rejected")
-    freezer.tick(_POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
-async def test_unavailable_when_device_is_not_seen(
+async def test_unavailable_when_it_stops_advertising(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the lock is unavailable once it stops being heard."""
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+    monotonic_now = time.monotonic() + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_advertisement_does_not_override_unsupported_door_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the door bit is ignored when the lock says it has no door status.
+
+    Advertisements carry no capability flags, so the bit is meaningless on a
+    lock whose capabilities say door status is unsupported.
+    """
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == LockState.LOCKED
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+    await _advertise(hass, door_closed=False)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == LockState.LOCKED
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_advertisement_without_door_status_is_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test an advertisement carrying no door state leaves the state alone."""
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=False)
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    # A marker-only advertisement: no state word, so nothing to apply.
+    info = iseo_advertisement(True)
+    info.service_uuids.remove("0000e800-0000-1000-8000-00805f9b34fb")
+    inject_bluetooth_service_info_bleak(hass, info)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_no_connection_is_made_on_a_timer_by_default(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test the lock is unavailable while it is not advertising."""
+    """Test the integration does not connect on a schedule by default.
+
+    Advertisements carry the door state, so the single read at setup is the only
+    connection the entity makes on its own.
+    """
     await setup_integration(hass, mock_config_entry)
+    mock_iseo_client.read_state.assert_awaited_once()
 
     mock_iseo_client.read_state.reset_mock()
-    with patch(
-        "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
-        return_value=None,
-    ):
-        freezer.tick(_POLL_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(_POLL_INTERVAL * 4)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     mock_iseo_client.read_state.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_polling_option_connects_on_a_timer(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the opt-in fallback polls locks that cannot advertise door status."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_POLLING: True}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_iseo_client.read_state.reset_mock()
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_iseo_client.read_state.assert_awaited()
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
 
 
 @pytest.mark.usefixtures(

@@ -18,9 +18,9 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -29,7 +29,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
+from . import IseoConfigEntry
+from .const import CONF_ENABLE_POLLING, CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +180,12 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Register the gateway and enable log notifications (requires Master Card)."""
+        """Register the gateway and turn on passive reporting (requires Master Card).
+
+        The same Master Card scan authorises setting the lock's Door Status
+        Advice capability, which is what makes it report door state in its
+        advertisements so Home Assistant never has to connect on a timer.
+        """
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -198,7 +204,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ble_device=ble_device,
                 )
                 try:
-                    await client.setup_gateway(name="Home Assistant")
+                    await client.setup_gateway(
+                        name="Home Assistant", enable_door_status=True
+                    )
                     return self._async_create_iseo_entry()
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
@@ -214,6 +222,13 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: IseoConfigEntry) -> IseoOptionsFlow:
+        """Get the options flow for this handler."""
+        return IseoOptionsFlow()
+
     def _async_create_iseo_entry(self) -> ConfigFlowResult:
         """Create the final config entry."""
         return self.async_create_entry(
@@ -223,4 +238,34 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_UUID: self._uuid_hex,
                 CONF_PRIV_SCALAR: self._priv_scalar,
             },
+        )
+
+
+class IseoOptionsFlow(OptionsFlow):
+    """Offer the polling fallback for locks that cannot report door status."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            # Reload explicitly rather than with an update listener: the
+            # bluetooth discovery flow refreshes this entry on every
+            # advertisement, so a listener would restart the integration
+            # continuously once it is following the lock passively.
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENABLE_POLLING,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_POLLING, False
+                        ),
+                    ): bool,
+                }
+            ),
         )
