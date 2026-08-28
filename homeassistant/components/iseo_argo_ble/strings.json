@@ -54,7 +54,7 @@
         "data_description": {
           "enable_polling": "Also connect to the lock every 30 seconds to read the door state."
         },
-        "description": "Home Assistant always follows the door state the lock broadcasts in its advertisements, which is immediate and costs the lock nothing.\n\nTurning this on adds a connection to the lock every 30 seconds to read the door state as well, for when the advertisements do not reach Home Assistant reliably — at the edge of Bluetooth range, or with no Bluetooth proxy nearby. It wakes the lock each time.\n\nNeither route helps if the lock reports no door status at all: that needs a door sensor and the lock's **Door Status Advice** setting, which Home Assistant enables during setup and you can also turn on for the lock in the ISEO Argo app.",
+        "description": "Home Assistant always follows the door state the lock broadcasts in its advertisements, which is immediate and costs the lock nothing.\n\nTurning this on adds a connection to the lock every 30 seconds to read the door state as well, for when the advertisements do not reach Home Assistant reliably — at the edge of Bluetooth range, or with no Bluetooth proxy nearby. It wakes the lock each time.\n\nEither route needs the lock's **Door Status Advice** setting, which Home Assistant enables during setup and you can also turn on for the lock in the ISEO Argo app.",
         "title": "Door status updates"
       }
     }
