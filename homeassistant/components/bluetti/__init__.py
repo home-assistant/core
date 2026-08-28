@@ -298,9 +298,29 @@ async def async_remove_config_entry_device(
     new_devices = [d for d in current_devices if d not in device_ids]
     current_modbus = entry.options.get("modbus", {})
     new_modbus = {sn: cfg for sn, cfg in current_modbus.items() if sn not in device_ids}
-    if new_devices != current_devices or new_modbus != current_modbus:
+
+    # Also drop the removed device(s)' cached product entries from
+    # entry.data["products"] - a later re-add of the same serial is
+    # treated as "already cached" by config_flow.py/options_flow.py's
+    # product merge (they only add products whose sn isn't already
+    # present) and would otherwise silently keep serving this now-stale
+    # name/model/state instead of the fresh data the re-add just fetched
+    # from the cloud.
+    current_products = entry.data.get("products", [])
+    new_products = [
+        p
+        for p in current_products
+        if (p.get("sn") if isinstance(p, dict) else p.sn) not in device_ids
+    ]
+
+    if (
+        new_devices != current_devices
+        or new_modbus != current_modbus
+        or new_products != current_products
+    ):
         hass.config_entries.async_update_entry(
             entry,
+            data={**entry.data, "products": new_products},
             options={**entry.options, "devices": new_devices, "modbus": new_modbus},
         )
 

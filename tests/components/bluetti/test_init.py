@@ -219,6 +219,44 @@ async def test_remove_config_entry_device_leaves_options_untouched_when_already_
     mock_update.assert_not_called()
 
 
+async def test_remove_config_entry_device_drops_stale_product_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Removing a device must also drop its cached product entry.
+
+    Regression test: async_remove_config_entry_device() only updated
+    entry.options["devices"]/["modbus"], never entry.data["products"] - a
+    later re-add of the same serial was treated as "already cached" by
+    config_flow.py/options_flow.py's product merge (they only add
+    products whose sn isn't already present), silently keeping the stale
+    name/model/state from before removal instead of fresh cloud data.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "products": [
+                {"sn": "SN1", "name": "Old Name", "stateList": [], "online": "1"},
+                {"sn": "SN2", "name": "Kept", "stateList": [], "online": "1"},
+            ]
+        },
+        options={"devices": ["SN1", "SN2"]},
+    )
+    entry.add_to_hass(hass)
+    entry.runtime_data = _runtime_data(MagicMock())
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "SN1")},
+        name="Old Name",
+    )
+
+    result = await async_remove_config_entry_device(hass, entry, device_entry)
+
+    assert result is True
+    updated = hass.config_entries.async_get_entry(entry.entry_id)
+    assert [p["sn"] for p in updated.data["products"]] == ["SN2"]
+
+
 async def test_update_listener_reloads_entry(hass: HomeAssistant) -> None:
     """Update listener reloads entry."""
     entry = MockConfigEntry(domain=DOMAIN)

@@ -3,10 +3,20 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pybluetti import UnifyResponse, UserProduct
+import pytest
+
 from homeassistant.components.bluetti import BluettiRuntimeData, _async_update_listener
-from homeassistant.components.bluetti.const import DOMAIN
+from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti.const import (
+    ACCOUNT_UNIQUE_ID,
+    DOMAIN,
+    INTEGRATION_NAME,
+)
 from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
+from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -181,6 +191,83 @@ async def test_handle_unbind_full_cleanup(
     assert mock_notify.call_args.kwargs["notification_id"] == "bluetti_unbind_SN1"
 
     mock_reload.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
+    hass: HomeAssistant,
+) -> None:
+    """A device re-bound after being unbound must use fresh cloud data.
+
+    Regression test: _handle_unbind() used to only remove the device from
+    entry.options["devices"]/["modbus"], never from
+    entry.data["products"] - a later re-bind of the same serial was
+    treated as "already cached" by config_flow.py's product merge (it
+    only adds products whose sn isn't already present in
+    entry.data["products"]), silently keeping the stale name/model/state
+    from before the unbind instead of the fresh data the re-bind just
+    fetched from the cloud.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "tok"},
+            "products": [
+                {"sn": "SN1", "name": "Old Name", "stateList": [], "online": "1"}
+            ],
+        },
+        options={"devices": ["SN1"]},
+    )
+    entry.add_to_hass(hass)
+
+    device = BluettiDevice(
+        device_id="SN1", on_line="1", name="Old Name", sn="SN1", model="AC200L"
+    )
+    entry.runtime_data = BluettiRuntimeData(
+        auth=MagicMock(),
+        bluetti_devices=MagicMock(devices=[device]),
+        stomp_client=MagicMock(),
+        coordinators={},
+        modbus_coordinators={},
+    )
+    device._hass = hass
+    device._entry = entry
+    device._entry_id = entry.entry_id
+
+    with patch(
+        "homeassistant.components.bluetti.models.persistent_notification.async_create"
+    ):
+        await device._handle_unbind()
+        await hass.async_block_till_done()
+
+    unbound = hass.config_entries.async_get_entry(entry.entry_id)
+    assert unbound.options["devices"] == []
+    assert unbound.data["products"] == []
+
+    # Re-bind the same serial: the cloud now reports a different name.
+    # A plain fresh flow finding an existing entry aborts as
+    # already_configured instead of merging (see config_flow.py) - use the
+    # reconfigure/reauth re-run path, the only one allowed to merge.
+    flow = BluettiConfigFlow()
+    flow.hass = hass
+    flow.handler = DOMAIN
+    flow.context = {"source": SOURCE_RECONFIGURE}
+    flow._oauth_data = {
+        "auth_implementation": "bluetti",
+        "token": {"access_token": "tok2", "expires_at": 9999999999},
+    }
+    flow._products = [UserProduct(sn="SN1", name="New Name", stateList=[], online="1")]
+    flow._product_client = AsyncMock()
+    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
+
+    with pytest.raises(AbortFlow) as exc_info:
+        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
+    assert exc_info.value.reason == "success"
+
+    rebound = hass.config_entries.async_get_entry(entry.entry_id)
+    assert [p["name"] for p in rebound.data["products"]] == ["New Name"]
 
 
 async def test_handle_unbind_when_device_registry_entry_missing(

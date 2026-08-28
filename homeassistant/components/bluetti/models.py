@@ -388,11 +388,32 @@ class BluettiDevice:
                     if sn != self.device_id
                 }
 
+                # Also drop this device's cached product entry from
+                # entry.data["products"], not just entry.options - a later
+                # re-bind of the same serial is treated as "already cached"
+                # by config_flow.py/options_flow.py's product merge (they
+                # only add products whose sn isn't already present) and
+                # would otherwise silently keep serving this now-stale
+                # name/model/state instead of the fresh data the re-bind
+                # just fetched from the cloud.
+                current_products = entry.data.get("products", [])
+                new_products = [
+                    p
+                    for p in current_products
+                    if (p.get("sn") if isinstance(p, dict) else p.sn) != self.device_id
+                ]
+
                 if self.device_id in current_devices:
                     new_devices = [d for d in current_devices if d != self.device_id]
 
+                    # A single async_update_entry() call for both data and
+                    # options - see the reload-count fix above for why a
+                    # separate call for each would be redundant (this entry
+                    # already has _async_update_listener registered from its
+                    # own setup, which reloads on any change either way).
                     hass.config_entries.async_update_entry(
                         entry,
+                        data={**entry.data, "products": new_products},
                         options={
                             **current_options,
                             "devices": new_devices,
@@ -407,6 +428,10 @@ class BluettiDevice:
                         "Device %s not in the device list of the configuration entry",
                         self.device_id,
                     )
+                    if new_products != current_products:
+                        hass.config_entries.async_update_entry(
+                            entry, data={**entry.data, "products": new_products}
+                        )
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
                 __LOGGER__.error(
                     "Error updating configuration entry: %s", e, exc_info=True
