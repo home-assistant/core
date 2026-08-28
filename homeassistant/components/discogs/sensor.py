@@ -103,8 +103,7 @@ async def async_setup_entry(
     """Set up Discogs sensor from a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        DiscogsSensor(coordinator, description, entry)
-        for description in SENSOR_TYPES
+        DiscogsSensor(coordinator, description, entry) for description in SENSOR_TYPES
     )
 
 

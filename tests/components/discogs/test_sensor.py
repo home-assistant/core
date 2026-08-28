@@ -92,12 +92,15 @@ async def test_yaml_import_creates_entry(hass: HomeAssistant) -> None:
     mock_identity.collection_folders = [folder]
     mock_client.identity.return_value = mock_identity
 
-    with patch(
-        "homeassistant.components.discogs.coordinator.discogs_client.Client",
-        return_value=mock_client,
-    ), patch(
-        "homeassistant.components.discogs.config_flow.discogs_client.Client",
-        return_value=mock_client,
+    with (
+        patch(
+            "homeassistant.components.discogs.coordinator.discogs_client.Client",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.discogs.config_flow.discogs_client.Client",
+            return_value=mock_client,
+        ),
     ):
         assert await async_setup_component(
             hass,
