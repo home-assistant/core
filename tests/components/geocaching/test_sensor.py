@@ -6,9 +6,9 @@ from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTr
 
 from homeassistant.components.geocaching.const import (
     DOMAIN,
-    SUBENTRY_TYPE_TRACKABLE,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
+from homeassistant.components.geocaching.coordinator import GeocachingCoordinatorData
 from homeassistant.components.geocaching.sensor import (
     CACHE_SENSORS,
     PROFILE_SENSORS,
@@ -36,11 +36,13 @@ def test_cache_sensor_uses_latest_coordinator_data() -> None:
         favorite_points=10,
     )
 
-    first_status = GeocachingStatus()
-    first_status.tracked_caches = [first_cache]
-
     coordinator = MagicMock()
-    coordinator.data = first_status
+    coordinator.data = GeocachingCoordinatorData(
+        user=MagicMock(),
+        trackables={},
+        nearby_caches=[],
+        tracked_caches={"GC12345": first_cache},
+    )
 
     description = next(
         description
@@ -51,9 +53,11 @@ def test_cache_sensor_uses_latest_coordinator_data() -> None:
     entity = GeoEntityCacheSensorEntity(
         coordinator,
         first_cache,
+        "GC12345",
         description,
     )
 
+    assert entity.available
     assert entity.native_value == 10
 
     updated_cache = GeocachingCache(
@@ -63,12 +67,24 @@ def test_cache_sensor_uses_latest_coordinator_data() -> None:
         favorite_points=20,
     )
 
-    updated_status = GeocachingStatus()
-    updated_status.tracked_caches = [updated_cache]
+    coordinator.data = GeocachingCoordinatorData(
+        user=MagicMock(),
+        trackables={},
+        nearby_caches=[],
+        tracked_caches={"GC12345": updated_cache},
+    )
 
-    coordinator.data = updated_status
-
+    assert entity.cache is updated_cache
     assert entity.native_value == 20
+
+    coordinator.data = GeocachingCoordinatorData(
+        user=MagicMock(), trackables={}, nearby_caches=[], tracked_caches={}
+    )
+    assert not entity.available
+
+    coordinator.last_update_success = True
+    coordinator.data = None
+    assert not entity.available
 
 
 def test_trackable_sensor_uses_latest_coordinator_data() -> None:
@@ -83,11 +99,13 @@ def test_trackable_sensor_uses_latest_coordinator_data() -> None:
         kilometers_traveled=10.5,
     )
 
-    first_status = GeocachingStatus()
-    first_status.trackables = {"TB12345": first_trackable}
-
     coordinator = MagicMock()
-    coordinator.data = first_status
+    coordinator.data = GeocachingCoordinatorData(
+        user=MagicMock(),
+        trackables={"TB12345": first_trackable},
+        nearby_caches=[],
+        tracked_caches={},
+    )
 
     description = next(
         description
@@ -110,10 +128,12 @@ def test_trackable_sensor_uses_latest_coordinator_data() -> None:
         kilometers_traveled=20.5,
     )
 
-    updated_status = GeocachingStatus()
-    updated_status.trackables = {"TB12345": updated_trackable}
-
-    coordinator.data = updated_status
+    coordinator.data = GeocachingCoordinatorData(
+        user=MagicMock(),
+        trackables={"TB12345": updated_trackable},
+        nearby_caches=[],
+        tracked_caches={},
+    )
 
     assert entity.native_value == 20.5
 
@@ -125,7 +145,7 @@ async def test_entities_are_linked_to_subentries(
     cache_code = "GC12345"
     trackable_code = "TB12345"
     cache_subentry_id = "cache-subentry"
-    trackable_subentry_id = "trackable-subentry"
+    missing_cache_code = "GC99999"
     config_entry = MockConfigEntry(
         title="1234AB 1",
         domain=DOMAIN,
@@ -140,11 +160,11 @@ async def test_entities_are_linked_to_subentries(
                 subentry_id=cache_subentry_id,
             ),
             ConfigSubentryDataWithId(
-                data={CONF_CODE: trackable_code},
-                subentry_type=SUBENTRY_TYPE_TRACKABLE,
-                title=trackable_code,
-                unique_id=trackable_code,
-                subentry_id=trackable_subentry_id,
+                data={CONF_CODE: missing_cache_code},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=missing_cache_code,
+                unique_id=missing_cache_code,
+                subentry_id="missing-cache-subentry",
             ),
         ],
     )
@@ -153,7 +173,7 @@ async def test_entities_are_linked_to_subentries(
     owner = MagicMock()
     owner.username = "CacheOwner"
     cache = GeocachingCache(
-        reference_code=cache_code,
+        reference_code="gc12345",
         name="Test cache",
         owner=owner,
         favorite_points=10,
@@ -207,19 +227,28 @@ async def test_entities_are_linked_to_subentries(
         assert (
             entity_registry.async_get(entity_id).config_subentry_id == cache_subentry_id
         )
+        if description.key == "favorite_points":
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == "10"
 
     for description in TRACKABLE_SENSORS:
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{trackable_code}_{description.key}"
         )
         assert entity_id is not None
-        assert (
-            entity_registry.async_get(entity_id).config_subentry_id
-            == trackable_subentry_id
-        )
+        assert entity_registry.async_get(entity_id).config_subentry_id is None
         assert (
             entity_registry.async_get_entity_id(
                 "sensor", DOMAIN, f"TB99999_{description.key}"
+            )
+            is not None
+        )
+
+    for description in CACHE_SENSORS:
+        assert (
+            entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{missing_cache_code}_{description.key}"
             )
             is None
         )

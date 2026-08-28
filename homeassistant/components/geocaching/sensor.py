@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import datetime
 from typing import cast, override
 
-from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
+from geocachingapi.models import GeocachingCache, GeocachingTrackable
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,8 +18,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SUBENTRY_TYPE_TRACKABLE, SUBENTRY_TYPE_TRACKED_CACHE
-from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
+from .const import DOMAIN, SUBENTRY_TYPE_TRACKED_CACHE
+from .coordinator import (
+    GeocachingConfigEntry,
+    GeocachingCoordinatorData,
+    GeocachingDataUpdateCoordinator,
+)
 from .entity import (
     GeocachingBaseEntity,
     GeocachingCacheEntity,
@@ -31,7 +35,7 @@ from .entity import (
 class GeocachingSensorEntityDescription(SensorEntityDescription):
     """Define Sensor entity description class."""
 
-    value_fn: Callable[[GeocachingStatus], str | int | None]
+    value_fn: Callable[[GeocachingCoordinatorData], str | int | None]
 
 
 PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
@@ -120,35 +124,25 @@ async def async_setup_entry(
         for description in PROFILE_SENSORS
     )
 
-    cache_subentries = {
-        subentry.data[CONF_CODE]: subentry
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE)
-    }
-    for cache in coordinator.data.tracked_caches:
-        if (subentry := cache_subentries.get(cache.reference_code)) is None:
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE):
+        reference_code = subentry.data[CONF_CODE].strip().upper()
+        if (cache := coordinator.data.tracked_caches.get(reference_code)) is None:
             continue
         async_add_entities(
             (
-                GeoEntityCacheSensorEntity(coordinator, cache, description)
+                GeoEntityCacheSensorEntity(
+                    coordinator, cache, reference_code, description
+                )
                 for description in CACHE_SENSORS
             ),
             config_subentry_id=subentry.subentry_id,
         )
 
-    trackable_subentries = {
-        subentry.data[CONF_CODE]: subentry
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKABLE)
-    }
-    for trackable in coordinator.data.trackables.values():
-        if (subentry := trackable_subentries.get(trackable.reference_code)) is None:
-            continue
-        async_add_entities(
-            (
-                GeoEntityTrackableSensorEntity(coordinator, trackable, description)
-                for description in TRACKABLE_SENSORS
-            ),
-            config_subentry_id=subentry.subentry_id,
-        )
+    async_add_entities(
+        GeoEntityTrackableSensorEntity(coordinator, trackable, description)
+        for trackable in coordinator.data.trackables.values()
+        for description in TRACKABLE_SENSORS
+    )
 
 
 # Base class for a cache entity.
@@ -162,12 +156,13 @@ class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
         self,
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
+        reference_code: str,
         key: str,
     ) -> None:
         """Initialize the Geocaching sensor."""
-        super().__init__(coordinator, cache)
+        super().__init__(coordinator, cache, reference_code)
 
-        self._attr_unique_id = f"{cache.reference_code}_{key}"
+        self._attr_unique_id = f"{reference_code}_{key}"
 
         # The translation key determines the name of the entity
         # as this is the lookup for the `strings.json` file.
@@ -183,10 +178,11 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         self,
         coordinator: GeocachingDataUpdateCoordinator,
         cache: GeocachingCache,
+        reference_code: str,
         description: GeocachingCacheSensorDescription,
     ) -> None:
         """Initialize the Geocaching sensor."""
-        super().__init__(coordinator, cache, description.key)
+        super().__init__(coordinator, cache, reference_code, description.key)
         self.entity_description = description
 
     @property
