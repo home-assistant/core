@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 def _device(values=None):
     device = MagicMock()
     device.async_update = AsyncMock()
-    device._values = values or {}
+    device.values = values or {}
     device.get_field.side_effect = lambda name: MagicMock(unit="W")
     return device
 

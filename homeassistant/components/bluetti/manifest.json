@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "silver",
-  "requirements": ["pybluetti==0.1.1", "bluetti-modbus==0.1.1"]
+  "requirements": ["pybluetti==0.1.1", "bluetti-modbus==0.1.2"]
 }

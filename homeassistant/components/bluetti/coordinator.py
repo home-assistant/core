@@ -144,26 +144,18 @@ class BluettiModbusCoordinator(DataUpdateCoordinator[dict[str, ClientReturnValue
             raise self._update_failed(err) from err
 
         results: dict[str, ClientReturnValue] = {}
-        # bluetti-modbus (pinned to an exact version above, in manifest.json
-        # - not a floor - specifically so this doesn't silently start
-        # reading a different private layout on an unreviewed upgrade) has
-        # no public accessor for the fields that came back on the last
-        # read: only the private Component._values dict, inherited from the
-        # third-party modbus_connection package. self.device.field_names()/
-        # declared_fields/resolved_fields are the STATIC schema (what the
-        # device type CAN report), not what it actually read this cycle, so
-        # none of them can replace this. Requested a public accessor
-        # upstream (mirroring modbus_connection's own sibling class
-        # ManualComponent.values property, which already does exactly
-        # `return dict(self._values)` for the same underlying attribute):
-        # https://github.com/bluetti-community/bluetti-modbus/issues/27
-        # (opened 2026-08-28, with a ready branch linked from it).
-        # TODO(2026-08-28): switch to that accessor and drop this noqa once
-        # a release ships it.
-        for name, value in self.device._values.items():  # noqa: SLF001
+        # self.device.values is the fields that came back on the last
+        # successful read (as opposed to field_names()/declared_fields/
+        # resolved_fields, which are the STATIC schema - what the device
+        # type CAN report, not what it actually read this cycle). Added
+        # upstream in bluetti-modbus 0.1.2 - see
+        # https://github.com/bluetti-community/bluetti-modbus/issues/27 and
+        # PR #28 - specifically so this integration doesn't need to reach
+        # into the private Component._values dict it's built from.
+        for name, value in self.device.values.items():
             field = self.device.get_field(name)
             assert field is not None, (
-                f"{name} is in _values, so it must be a registered field"
+                f"{name} is in values, so it must be a registered field"
             )
             results[name] = ClientReturnValue(name=name, unit=field.unit, value=value)
         return results

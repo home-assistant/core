@@ -408,7 +408,7 @@ async def test_async_setup_entry_wires_up_modbus_coordinator_for_capable_device(
         )
         modbus_device = MagicMock()
         modbus_device.async_update = AsyncMock()
-        modbus_device._values = {}
+        modbus_device.values = {}
         mock_get_device.return_value = modbus_device
 
         assert await hass.config_entries.async_setup(entry.entry_id)
