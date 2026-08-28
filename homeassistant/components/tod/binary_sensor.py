@@ -70,9 +70,13 @@ async def async_setup_entry(
         return
 
     after = TIME_OR_SUN_EVENT(config_entry.options[CONF_AFTER_TIME])
-    after_offset = timedelta(0)
+    after_offset = cv.time_period(
+        config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0))
+    )
     before = TIME_OR_SUN_EVENT(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = timedelta(0)
+    before_offset = cv.time_period(
+        config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0))
+    )
     name = config_entry.title
     unique_id = config_entry.entry_id
 

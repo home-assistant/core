@@ -10,11 +10,16 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
-    SchemaFlowError,
     SchemaFlowFormStep,
 )
 
-from .const import CONF_AFTER_TIME, CONF_BEFORE_TIME, DOMAIN
+from .const import (
+    CONF_AFTER_OFFSET,
+    CONF_AFTER_TIME,
+    CONF_BEFORE_OFFSET,
+    CONF_BEFORE_TIME,
+    DOMAIN,
+)
 
 CONF_AFTER_MODE = "after_mode"
 CONF_BEFORE_MODE = "before_mode"
@@ -30,12 +35,14 @@ MODE_SELECTOR = selector.SelectSelector(
     )
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OFFSET_SELECTOR = selector.DurationSelector(
+    selector.DurationSelectorConfig(allow_negative=True)
+)
+
+MODE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_AFTER_MODE, default=MODE_TIME): MODE_SELECTOR,
-        vol.Optional(CONF_AFTER_TIME): selector.TimeSelector(),
         vol.Required(CONF_BEFORE_MODE, default=MODE_TIME): MODE_SELECTOR,
-        vol.Optional(CONF_BEFORE_TIME): selector.TimeSelector(),
     }
 )
 
@@ -43,24 +50,46 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
     }
-).extend(OPTIONS_SCHEMA.schema)
+).extend(MODE_SCHEMA.schema)
+
+
+async def _time_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return the time and offset schema for the selected modes."""
+    schema: dict[vol.Marker, selector.Selector] = {}
+    if handler.flow_state[CONF_AFTER_MODE] == MODE_TIME:
+        schema[vol.Required(CONF_AFTER_TIME)] = selector.TimeSelector()
+    schema[vol.Optional(CONF_AFTER_OFFSET)] = OFFSET_SELECTOR
+    if handler.flow_state[CONF_BEFORE_MODE] == MODE_TIME:
+        schema[vol.Required(CONF_BEFORE_TIME)] = selector.TimeSelector()
+    schema[vol.Optional(CONF_BEFORE_OFFSET)] = OFFSET_SELECTOR
+    return vol.Schema(schema)
+
+
+async def _validate_modes(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Keep the selected modes in flow state instead of stored options."""
+    handler.flow_state[CONF_AFTER_MODE] = user_input[CONF_AFTER_MODE]
+    handler.flow_state[CONF_BEFORE_MODE] = user_input[CONF_BEFORE_MODE]
+    return {
+        key: value
+        for key, value in user_input.items()
+        if key not in (CONF_AFTER_MODE, CONF_BEFORE_MODE)
+    }
 
 
 async def _validate_after_before(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Resolve the after/before mode and time fields to a single stored value."""
+    """Resolve the after/before modes to the stored time values."""
     resolved_input = user_input.copy()
     for mode_key, time_key in (
         (CONF_AFTER_MODE, CONF_AFTER_TIME),
         (CONF_BEFORE_MODE, CONF_BEFORE_TIME),
     ):
-        mode = user_input[mode_key]
-        time_value = user_input.get(time_key)
-        if mode == MODE_TIME and time_value is None:
-            raise SchemaFlowError(f"{time_key}_required")
-        resolved_input.pop(mode_key)
-        resolved_input[time_key] = time_value if mode == MODE_TIME else mode
+        mode = handler.flow_state[mode_key]
+        if mode != MODE_TIME:
+            resolved_input[time_key] = mode
     return resolved_input
 
 
@@ -84,16 +113,26 @@ async def _suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         CONFIG_SCHEMA,
-        validate_user_input=_validate_after_before,
+        validate_user_input=_validate_modes,
         suggested_values=_suggested_values,
+        next_step="times",
+    ),
+    "times": SchemaFlowFormStep(
+        _time_schema,
+        validate_user_input=_validate_after_before,
     ),
 }
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        OPTIONS_SCHEMA,
-        validate_user_input=_validate_after_before,
+        MODE_SCHEMA,
+        validate_user_input=_validate_modes,
         suggested_values=_suggested_values,
+        next_step="times",
+    ),
+    "times": SchemaFlowFormStep(
+        _time_schema,
+        validate_user_input=_validate_after_before,
     ),
 }
 

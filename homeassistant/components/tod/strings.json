@@ -1,21 +1,20 @@
 {
   "config": {
-    "error": {
-      "after_time_required": "Enter a time, or choose sunrise or sunset for \"After\"",
-      "before_time_required": "Enter a time, or choose sunrise or sunset for \"Before\""
-    },
     "step": {
+      "times": {
+        "data": {
+          "after_offset": "After offset",
+          "after_time": "After time",
+          "before_offset": "Before offset",
+          "before_time": "Before time"
+        },
+        "title": "Set times and offsets"
+      },
       "user": {
         "data": {
-          "after_mode": "After",
-          "after_time": "On time",
-          "before_mode": "Before",
-          "before_time": "Off time",
+          "after_mode": "After (turn on)",
+          "before_mode": "Before (turn off)",
           "name": "[%key:common::config_flow::data::name%]"
-        },
-        "data_description": {
-          "after_time": "Only used when \"After\" is set to a specific time.",
-          "before_time": "Only used when \"Before\" is set to a specific time."
         },
         "description": "Create a binary sensor that turns on or off depending on the time.",
         "title": "Create Times of the Day Sensor"
@@ -23,21 +22,19 @@
     }
   },
   "options": {
-    "error": {
-      "after_time_required": "[%key:component::tod::config::error::after_time_required%]",
-      "before_time_required": "[%key:component::tod::config::error::before_time_required%]"
-    },
     "step": {
       "init": {
         "data": {
           "after_mode": "[%key:component::tod::config::step::user::data::after_mode%]",
-          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
-          "before_mode": "[%key:component::tod::config::step::user::data::before_mode%]",
-          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
-        },
-        "data_description": {
-          "after_time": "[%key:component::tod::config::step::user::data_description::after_time%]",
-          "before_time": "[%key:component::tod::config::step::user::data_description::before_time%]"
+          "before_mode": "[%key:component::tod::config::step::user::data::before_mode%]"
+        }
+      },
+      "times": {
+        "data": {
+          "after_offset": "[%key:component::tod::config::step::times::data::after_offset%]",
+          "after_time": "[%key:component::tod::config::step::times::data::after_time%]",
+          "before_offset": "[%key:component::tod::config::step::times::data::before_offset%]",
+          "before_time": "[%key:component::tod::config::step::times::data::before_time%]"
         }
       }
     }

@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-async def test_config_flow(hass: HomeAssistant, platform) -> None:
+async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,9 +28,20 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "after_time": "10:00",
-                "before_time": "18:00",
+                "after_mode": "time",
+                "before_mode": "time",
                 "name": "My tod",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "times"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "after_offset": {"minutes": -30},
+                "after_time": "10:00",
+                "before_offset": {"hours": 1},
+                "before_time": "18:00",
             },
         )
         await hass.async_block_till_done()
@@ -39,7 +50,9 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["title"] == "My tod"
     assert result["data"] == {}
     assert result["options"] == {
+        "after_offset": {"minutes": -30},
         "after_time": "10:00",
+        "before_offset": {"hours": 1},
         "before_time": "18:00",
         "name": "My tod",
     }
@@ -48,7 +61,9 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {
+        "after_offset": {"minutes": -30},
         "after_time": "10:00",
+        "before_offset": {"hours": 1},
         "before_time": "18:00",
         "name": "My tod",
     }
@@ -75,18 +90,35 @@ async def test_config_flow_sun_events(hass: HomeAssistant) -> None:
                 "name": "Daytime",
             },
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "times"
+        assert [key.schema for key in result["data_schema"].schema] == [
+            "after_offset",
+            "before_offset",
+        ]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "after_offset": {"minutes": -30},
+                "before_offset": {"minutes": 30},
+            },
+        )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"] == {
+        "after_offset": {"minutes": -30},
         "after_time": "sunrise",
+        "before_offset": {"minutes": 30},
         "before_time": "sunset",
         "name": "Daytime",
     }
 
 
-async def test_config_flow_time_mode_requires_time(hass: HomeAssistant) -> None:
-    """Test that a time value is required when the mode is set to a specific time."""
+async def test_config_flow_only_shows_selected_time_fields(
+    hass: HomeAssistant,
+) -> None:
+    """Test that time fields are only shown for specific-time modes."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -95,13 +127,18 @@ async def test_config_flow_time_mode_requires_time(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "after_mode": "time",
-            "before_mode": "sunset",
+            "after_mode": "sunrise",
+            "before_mode": "time",
             "name": "Daytime",
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "after_time_required"}
+    assert result["step_id"] == "times"
+    assert [key.schema for key in result["data_schema"].schema] == [
+        "after_offset",
+        "before_time",
+        "before_offset",
+    ]
 
 
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
@@ -126,25 +163,44 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, "after_mode") == "time"
+    assert get_schema_suggested_value(schema, "before_mode") == "time"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "after_mode": "time",
+            "before_mode": "time",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "times"
+    schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "after_time") == "10:00"
     assert get_schema_suggested_value(schema, "before_time") == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "after_offset": {"minutes": 30},
             "after_time": "10:00",
+            "before_offset": {"minutes": -5},
             "before_time": "17:05",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        "after_offset": {"minutes": 30},
         "after_time": "10:00",
+        "before_offset": {"minutes": -5},
         "before_time": "17:05",
         "name": "My tod",
     }
     assert config_entry.data == {}
     assert config_entry.options == {
+        "after_offset": {"minutes": 30},
         "after_time": "10:00",
+        "before_offset": {"minutes": -5},
         "before_time": "17:05",
         "name": "My tod",
     }
@@ -159,8 +215,8 @@ async def test_options(hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("binary_sensor.my_tod")
     assert state.state == "off"
-    assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
-    assert state.attributes["before"] == "2022-03-16T17:05:00-07:00"
+    assert state.attributes["after"] == "2022-03-16T10:30:00-07:00"
+    assert state.attributes["before"] == "2022-03-16T17:00:00-07:00"
 
 
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
@@ -183,9 +239,7 @@ async def test_options_sun_events(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "after_mode") == "time"
-    assert get_schema_suggested_value(schema, "after_time") == "10:00"
     assert get_schema_suggested_value(schema, "before_mode") == "time"
-    assert get_schema_suggested_value(schema, "before_time") == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -193,6 +247,15 @@ async def test_options_sun_events(hass: HomeAssistant) -> None:
             "after_mode": "sunrise",
             "before_mode": "sunset",
         },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "times"
+    assert [key.schema for key in result["data_schema"].schema] == [
+        "after_offset",
+        "before_offset",
+    ]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
@@ -204,6 +267,4 @@ async def test_options_sun_events(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "after_mode") == "sunrise"
-    assert get_schema_suggested_value(schema, "after_time") is None
     assert get_schema_suggested_value(schema, "before_mode") == "sunset"
-    assert get_schema_suggested_value(schema, "before_time") is None
