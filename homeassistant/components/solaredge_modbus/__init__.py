@@ -81,12 +81,6 @@ async def async_setup_entry(
             translation_key="identity_unavailable",
         )
 
-    if solaredge.common.serial_number != serial_number:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="wrong_inverter",
-        )
-
     # The platforms read the inverter's DID once, so without it the phase
     # entities would stay missing until a reload.
     if SUBSYSTEM_INVERTER in readings.data.failed:

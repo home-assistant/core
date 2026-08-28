@@ -126,6 +126,40 @@ async def test_dead_link_fails_the_refresh(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_another_inverter_on_the_address_fails_the_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An address that moves to another inverter stops feeding these entities.
+
+    Setting up checks the serial number, but the entry keeps polling an
+    address, and a lease handed out again can put a different inverter behind
+    it. Its production is not this entry's, whatever the entities are named
+    after.
+    """
+    await _setup(hass, mock_config_entry)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    await async_seed_unit(
+        hass, mock_modbus_unit, serial_registers=[20308, 18501, 21041, 12851]
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.readings.last_update_success is False
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_setup_retry_when_device_unresponsive(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

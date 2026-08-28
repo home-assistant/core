@@ -7,10 +7,11 @@ from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, SUBSYSTEM_COMMON
 
 type SolarEdgeModbusConfigEntry = ConfigEntry[SolarEdgeModbusRuntimeData]
 
@@ -72,6 +73,18 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         # sub-system that is really gone cannot double every poll from here on.
         if report.failed.keys() - self._silent:
             report = await self._async_retry(report)
+
+        # An address can move to another inverter, and its measurements are not
+        # this one's however the entities reading them are named. Checked on
+        # every poll that brought the identity along, not only at setup.
+        if (
+            SUBSYSTEM_COMMON in report.updated
+            and self.solaredge.common.serial_number != self.config_entry.unique_id
+        ):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="wrong_inverter",
+            )
 
         self._log_silence(report)
 
