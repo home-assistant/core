@@ -103,7 +103,7 @@ def _validate_token(token: str) -> tuple[str, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "cannot_connect"
-    except (requests.ConnectionError, requests.Timeout):
+    except requests.ConnectionError, requests.Timeout:
         errors["base"] = "cannot_connect"
     except Exception:  # noqa: BLE001
         LOGGER.exception("Unexpected error validating Discogs token")
