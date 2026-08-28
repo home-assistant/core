@@ -126,9 +126,13 @@ class AuthTokenRefresh:
             self.hass, notification_id=NOTIFY_ID_TOKEN_EXPIRED
         )
         ir.async_delete_issue(self.hass, DOMAIN, ISSUE_ID_OAUTH_EXPIRED)
-        if not self.is_token_valid():
-            __LOGGER__.info("token have expired send notify")
-            self.send_expired_notification()
+        # Deliberately does not notify here based on is_token_valid() - that
+        # is a local, no-network check, so a normally expired access token
+        # with a still-valid refresh token would falsely read as expired.
+        # async_check_token_expiry() below always tries a real refresh
+        # first and only notifies if that genuinely fails, which is why the
+        # decision is left entirely to it, even for the first check.
+        #
         # Entry-scoped so it's canceled on unload, rather than a bare
         # hass-level task outliving the entry.
         self.entry.async_create_background_task(

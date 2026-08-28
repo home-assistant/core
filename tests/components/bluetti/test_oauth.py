@@ -164,18 +164,28 @@ def test_is_token_valid_no_recognizable_fields(hass: HomeAssistant) -> None:
     assert refresher.is_token_valid() is False
 
 
-async def test_start_token_check_invalid_token_sends_notification(
+async def test_start_token_check_never_notifies_before_a_refresh_is_tried(
     hass: HomeAssistant,
 ) -> None:
-    """Start token check invalid token sends notification."""
-    refresher, _entry = _refresher(hass, {})
+    """An expired-but-refreshable token must not notify before a refresh is tried.
+
+    Regression test: start_token_check() used to call is_token_valid() - a
+    purely local, no-network expiry check - and notify immediately if it
+    returned False. A normally expired access token with a still-valid
+    refresh token hit this every time: a false expiry warning appeared,
+    moments before async_check_token_expiry()'s own refresh attempt would
+    have fixed it silently. The decision to notify must be left entirely to
+    async_check_token_expiry(), which only does so once a refresh has
+    genuinely failed - even for this first, immediate check.
+    """
+    refresher, _entry = _refresher(hass, {"expires_at": time.time() - 100})
     refresher.send_expired_notification = MagicMock()
     refresher.async_check_token_expiry = AsyncMock()
 
     refresher.start_token_check()
     await hass.async_block_till_done()
 
-    refresher.send_expired_notification.assert_called_once()
+    refresher.send_expired_notification.assert_not_called()
     refresher.async_check_token_expiry.assert_awaited_once()
 
 
