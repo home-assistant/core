@@ -194,26 +194,13 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             __LOGGER__.error("Failed to fetch BLUETTI products: %s", products)
             return self.async_abort(reason="cannot_connect")
 
-        # products.data is `T | None` on the wire - can be omitted entirely.
-        if not products.data:
-            return self.async_abort(reason="no_devices_available")
-
         self._product_client = product_client
-        self._products = products.data
+        # products.data is `T | None` on the wire - can be omitted entirely.
+        self._products = products.data or []
 
-        # Collect the devices already added to any existing entry
-        integrated_devices = set()
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            integrated_devices.update(entry.options.get("devices", []))
-
-        # Filter out devices that have already been added
-        available_devices = {
-            prod.sn: f"{prod.name} - {prod.sn}"
-            for prod in products.data
-            if prod.sn not in integrated_devices
-        }
-
-        # reconfigure token
+        # reconfigure token - checked before the no_devices_available abort
+        # below, since an entry can legitimately have zero devices left
+        # (e.g. all removed) and must still be able to complete reauth.
         if "entry_id" in self.context:
             cur_entry = self.hass.config_entries.async_get_entry(
                 self.context["entry_id"]
@@ -223,14 +210,20 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
 
             # No real account ID exists to compare - device-serial overlap
             # with cur_entry's already-enabled devices is the closest proxy.
-            reauthed_sns = {prod.sn for prod in products.data}
+            # Only rejected on zero overlap: a device unbound from the cloud
+            # while this entry's token was expired (so the normal unbind
+            # detection never ran) would otherwise permanently block
+            # reauthenticating the very account that could fix it - the
+            # next refresh's unbind detection reconciles it once reauth
+            # succeeds instead.
+            reauthed_sns = {prod.sn for prod in self._products}
             enabled_sns = set(cur_entry.options.get("devices", []))
-            if not enabled_sns <= reauthed_sns:
+            if enabled_sns and not (enabled_sns & reauthed_sns):
                 __LOGGER__.error(
-                    "Reconfigure token: authenticated account is missing "
+                    "Reconfigure token: authenticated account shares none of "
                     "%s already-enabled device(s) - refusing to update the "
                     "stored token, likely a different BLUETTI account",
-                    enabled_sns - reauthed_sns,
+                    enabled_sns,
                 )
                 return self.async_abort(reason="wrong_account")
 
@@ -246,6 +239,21 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             # update listener, which reloads it.
             self.hass.config_entries.async_update_entry(cur_entry, data=new_data)
             return self.async_abort(reason="success")
+
+        if not self._products:
+            return self.async_abort(reason="no_devices_available")
+
+        # Collect the devices already added to any existing entry
+        integrated_devices = set()
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            integrated_devices.update(entry.options.get("devices", []))
+
+        # Filter out devices that have already been added
+        available_devices = {
+            prod.sn: f"{prod.name} - {prod.sn}"
+            for prod in self._products
+            if prod.sn not in integrated_devices
+        }
 
         # All the account's devices are already added
         if not available_devices:

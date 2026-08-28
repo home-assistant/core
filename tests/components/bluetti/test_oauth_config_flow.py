@@ -645,6 +645,106 @@ async def test_reconfigure_token_rejects_a_different_account(
     assert updated.data["token"] == {"access_token": "original-token"}
 
 
+async def test_reconfigure_token_accepts_partial_device_overlap(
+    hass: HomeAssistant,
+) -> None:
+    """Reauthenticating the same account after an offline unbind must succeed.
+
+    Regression test: the wrong-account check used to require every
+    already-enabled device to still be present, so a device unbound from
+    the cloud while this entry's token was expired (meaning the normal
+    unbind detection never ran to drop it locally) permanently blocked
+    reauthenticating the very account that could fix it. Any overlap is
+    now enough - the still-missing device is cleaned up normally by the
+    next refresh's unbind detection once reauth succeeds.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "old"},
+            "products": [
+                {"sn": "SN0", "name": "Existing", "stateList": []},
+                {"sn": "SN1", "name": "Unbound while offline", "stateList": []},
+            ],
+        },
+        options={"devices": ["SN0", "SN1"]},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context = {"entry_id": existing_entry.entry_id}
+    # SN1 was unbound from the cloud - only SN0 comes back now.
+    same_account_product = UserProduct(
+        sn="SN0", name="Existing", stateList=[], online="1"
+    )
+
+    with (
+        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.config_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(
+                data=[same_account_product], is_ok=lambda: True
+            )
+        )
+        result = await flow.async_step_select_devices(user_input=None)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "success"
+
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["token"] == {"access_token": "tok", "expires_at": 9999999999}
+
+
+async def test_reconfigure_token_with_zero_devices_on_account_still_succeeds(
+    hass: HomeAssistant,
+) -> None:
+    """Reauth must not require a non-empty product list.
+
+    Regression test: no_devices_available used to be checked before the
+    reconfigure-token branch, so an entry with no devices currently
+    enabled (e.g. all removed) could never complete reauthentication - it
+    always hit no_devices_available first.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "old"},
+            "products": [],
+        },
+        options={"devices": []},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context = {"entry_id": existing_entry.entry_id}
+
+    with (
+        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.config_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(data=[], is_ok=lambda: True)
+        )
+        result = await flow.async_step_select_devices(user_input=None)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "success"
+
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["token"] == {"access_token": "tok", "expires_at": 9999999999}
+
+
 async def test_reconfigure_token_missing_entry_aborts(hass: HomeAssistant) -> None:
     """entry_id in context but the entry itself is gone (e.g. removed mid-flow)."""
     flow = _make_flow(hass)
