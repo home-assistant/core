@@ -162,6 +162,36 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert entry.data[CONF_TOKEN] == "new_token"
 
 
+async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauthentication flow with token belonging to a different account."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={CONF_TOKEN: "old_token"},
+        unique_id=MOCK_USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_client = MagicMock()
+    mock_client.identity.return_value.name = "different_user"
+
+    with patch(
+        "homeassistant.components.discogs.config_flow.discogs_client.Client",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TOKEN: "wrong_account_token"},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"]["base"] == "wrong_account"
+
+
 async def test_flow_already_configured(hass: HomeAssistant) -> None:
     """Test flow aborts when account is already configured."""
     entry = MockConfigEntry(

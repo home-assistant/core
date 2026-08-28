@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -51,7 +51,7 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
             _validate_token, import_data[CONF_TOKEN]
         )
         if errors:
-            return self.async_abort(reason="invalid_auth")
+            return self.async_abort(reason=errors["base"])
         await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
@@ -71,14 +71,17 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauthentication confirmation."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            _, errors = await self.hass.async_add_executor_job(
+            username, errors = await self.hass.async_add_executor_job(
                 _validate_token, user_input[CONF_TOKEN]
             )
             if not errors:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data={CONF_TOKEN: user_input[CONF_TOKEN]},
-                )
+                if username != self._get_reauth_entry().unique_id:
+                    errors["base"] = "wrong_account"
+                else:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data={CONF_TOKEN: user_input[CONF_TOKEN]},
+                    )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=CONFIG_SCHEMA,
@@ -100,5 +103,6 @@ def _validate_token(token: str) -> tuple[str, dict[str, str]]:
         else:
             errors["base"] = "cannot_connect"
     except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected error validating Discogs token")
         errors["base"] = "unknown"
     return username, errors
