@@ -8,12 +8,17 @@ import shutil
 
 from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.module import Module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,7 +63,9 @@ async def velbus_scan_task(
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     for module in controller.get_modules().values():
+        _migrate_property_unique_ids(ent_reg, module)
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
             identifiers={
@@ -71,6 +78,26 @@ async def velbus_scan_task(
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
         )
+
+
+def _migrate_property_unique_ids(ent_reg: er.EntityRegistry, module: Module) -> None:
+    """Move the properties of a module off the unique ID they all shared.
+
+    Every property reports channel number 0, so they were handed the same
+    unique ID and only the first of each platform ever got an entity. That
+    first one keeps its entity, now under the key of the property.
+    """
+    serial = module.get_serial() or str(module.get_addresses()[0])
+    migrated: set[str] = set()
+    for prop in module.get_properties().values():
+        for domain in prop.get_categories():
+            if domain in migrated:
+                continue
+            migrated.add(domain)
+            if entity_id := ent_reg.async_get_entity_id(domain, DOMAIN, f"{serial}-0"):
+                ent_reg.async_update_entity(
+                    entity_id, new_unique_id=f"{serial}-{prop.get_property_key()}"
+                )
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:

@@ -14,7 +14,7 @@ from velbusaio.channels import (
     Temperature,
 )
 from velbusaio.module import Module
-from velbusaio.properties import LightValue, SelectedProgram
+from velbusaio.properties import BusErrorRx, BusErrorTx, LightValue, SelectedProgram
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
@@ -35,6 +35,8 @@ def mock_controller(
     mock_buttoncounter: AsyncMock,
     mock_sensornumber: AsyncMock,
     mock_lightsensor: AsyncMock,
+    mock_bus_error_rx: AsyncMock,
+    mock_bus_error_tx: AsyncMock,
     mock_dimmer: AsyncMock,
     mock_module_no_subdevices: AsyncMock,
     mock_module_subdevices: AsyncMock,
@@ -60,6 +62,8 @@ def mock_controller(
             mock_temperature,
             mock_sensornumber,
             mock_lightsensor,
+            mock_bus_error_rx,
+            mock_bus_error_tx,
         ]
         cont.get_all_light.return_value = [mock_dimmer]
         cont.get_all_led.return_value = [mock_button]
@@ -78,6 +82,8 @@ def mock_controller(
 @pytest.fixture
 def mock_module_no_subdevices(
     mock_relay: AsyncMock,
+    mock_bus_error_rx: AsyncMock,
+    mock_bus_error_tx: AsyncMock,
 ) -> AsyncMock:
     """Mock a velbus module."""
     module = AsyncMock(spec=Module)
@@ -88,6 +94,10 @@ def mock_module_no_subdevices(
     module.get_sw_version.return_value = "1.0.0"
     module.is_loaded.return_value = True
     module.get_channels.return_value = {}
+    module.get_properties.return_value = {
+        "bus_error_rx": mock_bus_error_rx,
+        "bus_error_tx": mock_bus_error_tx,
+    }
     return module
 
 
@@ -103,6 +113,7 @@ def mock_module_subdevices() -> AsyncMock:
     module.get_sw_version.return_value = "2.0.0"
     module.is_loaded.return_value = True
     module.get_channels.return_value = {}
+    module.get_properties.return_value = {}
     return module
 
 
@@ -176,6 +187,7 @@ def mock_select() -> AsyncMock:
     """Mock a successful velbus channel."""
     channel = AsyncMock(spec=SelectedProgram)
     channel.get_categories.return_value = ["select"]
+    channel.get_property_key.return_value = "SelectedProgram"
     channel.get_name.return_value = "select"
     channel.get_module_address.return_value = 88
     channel.get_channel_number.return_value = 33
@@ -240,6 +252,7 @@ def mock_lightsensor() -> AsyncMock:
     """Mock a successful velbus channel."""
     channel = AsyncMock(spec=LightValue)
     channel.get_categories.return_value = ["sensor"]
+    channel.get_property_key.return_value = "LightValue"
     channel.get_name.return_value = "LightSensor"
     channel.get_module_address.return_value = 2
     channel.get_channel_number.return_value = 4
@@ -254,6 +267,40 @@ def mock_lightsensor() -> AsyncMock:
     channel.get_unit.return_value = "illuminance"
     channel.get_state.return_value = 250
     return channel
+
+
+def _mock_bus_error(spec: type, name: str, key: str) -> AsyncMock:
+    """Mock a bus error property of a module."""
+    prop = AsyncMock(spec=spec)
+    prop.get_categories.return_value = ["sensor"]
+    prop.get_name.return_value = name
+    prop.get_property_key.return_value = key
+    # Every property of a module reports channel number 0
+    prop.get_channel_number.return_value = 0
+    prop.get_module_address.return_value = 2
+    prop.get_module_type_name.return_value = "VMB7IN"
+    prop.get_module_type.return_value = 8
+    prop.get_full_name.return_value = "Input"
+    prop.get_module_sw_version.return_value = "1.0.0"
+    prop.get_module_serial.return_value = "a1b2c3d4e5f6"
+    prop.is_sub_device.return_value = False
+    prop.is_counter_channel.return_value = False
+    prop.is_temperature.return_value = False
+    prop.get_unit.return_value = None
+    prop.get_state.return_value = 0
+    return prop
+
+
+@pytest.fixture
+def mock_bus_error_rx() -> AsyncMock:
+    """Mock the bus error receive property of a module."""
+    return _mock_bus_error(BusErrorRx, "Bus Error Receive", "BusErrorRx")
+
+
+@pytest.fixture
+def mock_bus_error_tx() -> AsyncMock:
+    """Mock the bus error transmit property of a module."""
+    return _mock_bus_error(BusErrorTx, "Bus Error Transmit", "BusErrorTx")
 
 
 @pytest.fixture

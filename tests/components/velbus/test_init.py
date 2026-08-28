@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.velbus import (
     VelbusConfigEntry,
@@ -308,3 +309,51 @@ async def test_remove_config_entry_device_detaches_subdevices(
         config_entry.entry_id not in sub_device_after.config_entries
         and sub_device_after.via_device_id is None
     )
+
+
+async def test_migrate_property_unique_id(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the property that owned the shared unique ID keeps its entity."""
+    entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "a1b2c3d4e5f6-0",
+        config_entry=config_entry,
+        suggested_object_id="bus_error_receive",
+    )
+
+    await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get(entity.entity_id).unique_id == (
+        "a1b2c3d4e5f6-BusErrorRx"
+    )
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, "a1b2c3d4e5f6-0")
+        is None
+    )
+
+
+async def test_migrate_property_unique_id_without_properties(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_module_no_subdevices: AsyncMock,
+) -> None:
+    """Test a module without properties leaves the shared unique ID alone."""
+    mock_module_no_subdevices.get_properties.return_value = {}
+    entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "a1b2c3d4e5f6-0",
+        config_entry=config_entry,
+        suggested_object_id="bus_error_receive",
+    )
+
+    await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get(entity.entity_id).unique_id == "a1b2c3d4e5f6-0"
