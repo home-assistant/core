@@ -63,9 +63,7 @@ async def test_user_flow_search_timeout_then_retry(
         # Retry: this time a device is found straight away.
         mock_home_server.is_any_device_found.return_value = True
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
 

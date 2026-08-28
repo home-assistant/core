@@ -81,14 +81,40 @@ def _release_cancelled_home_server(
     """Release a HomeServer whose acquirer was cancelled before it finished.
 
     Called once the executor job backing a cancelled async_acquire_home_server()
-    call completes. If it produced a HomeServer, nothing else holds a
-    reference to it yet, so release it immediately to shut it back down
-    instead of leaking its sockets/threads.
+    call completes. Schedules a cleanup that shuts the HomeServer back down,
+    but only if it is still unreferenced - it must not simply decrement the
+    refcount via async_release_home_server(), since that was never
+    incremented for this cancelled acquisition and doing so could tear down
+    a singleton another flow or the active gateway still owns.
     """
     if home_server_job.cancelled():
         return
-    home_server = home_server_job.result()
-    hass.async_create_task(async_release_home_server(hass, home_server))
+    try:
+        home_server = home_server_job.result()
+    except Exception:
+        LOGGER.debug(
+            "HomeServer construction failed after its acquisition was cancelled",
+            exc_info=True,
+        )
+        return
+    hass.async_create_task(_async_shutdown_unreferenced_home_server(hass, home_server))
+
+
+async def _async_shutdown_unreferenced_home_server(
+    hass: HomeAssistant, home_server: HomeServer
+) -> None:
+    """Shut down a HomeServer, but only if nothing has since acquired it.
+
+    Unlike async_release_home_server(), this never decrements
+    _home_server_refs: the HomeServer this is called for was never
+    registered there in the first place (its acquisition was cancelled), so
+    treating this as a normal release would incorrectly tear down a
+    singleton another flow or the active gateway has since started using.
+    """
+    async with _home_server_lock:
+        if _home_server_refs.get(home_server, 0) > 0:
+            return
+        await hass.async_add_executor_job(home_server.shutdown)
 
 
 async def async_release_home_server(
@@ -179,9 +205,7 @@ class HausbusGateway(IBusDataListener):
                 self._register_channel, channel, device_info
             )
 
-    def _register_channel(
-        self, channel: ABusFeature, device_info: DeviceInfo
-    ) -> None:
+    def _register_channel(self, channel: ABusFeature, device_info: DeviceInfo) -> None:
         """Register a single discovered channel.
 
         Runs on the Home Assistant event loop, the same thread as
@@ -195,9 +219,7 @@ class HausbusGateway(IBusDataListener):
             return
         self.registered_channels.add(object_id)
         if self._platform_ready:
-            async_dispatcher_send(
-                self.hass, NEW_CHANNEL_ADDED, channel, device_info
-            )
+            async_dispatcher_send(self.hass, NEW_CHANNEL_ADDED, channel, device_info)
         else:
             self._pending_channels.append((channel, device_info))
 
