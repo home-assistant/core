@@ -216,6 +216,33 @@ async def test_create_subscription_error(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    "call",
+    [
+        "get_rooms",
+        "get_devices",
+        "get_device_status",
+        "get_device_health",
+        "get_scenes",
+    ],
+)
+async def test_initial_fetch_connection_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call: str,
+) -> None:
+    """Test retrying setup when the cloud is unreachable while fetching."""
+    getattr(devices, call).side_effect = SmartThingsConnectionError(
+        "Timeout occurred while connecting to SmartThings"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_update_subscription_identifier(
     hass: HomeAssistant,
     devices: AsyncMock,
