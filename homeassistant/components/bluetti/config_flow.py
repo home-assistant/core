@@ -69,19 +69,6 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Let user select devices after OAuth2 login."""
         if user_input is not None:
-            try:
-                result = await self._product_client.bind_devices(
-                    {"bindSnList": user_input["devices"]}
-                )
-            except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
-                __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
-                return self.async_abort(reason="cannot_connect")
-
-            # bind_devices() doesn't raise on a rejected bind - check msgCode.
-            if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
-                __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
-                return self.async_abort(reason="cannot_connect")
-
             # Prevent configuring the same BLUETTI account twice: look up any
             # existing entry by its unique_id instead of matching on title.
             await self.async_set_unique_id(ACCOUNT_UNIQUE_ID)
@@ -108,9 +95,23 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 SOURCE_RECONFIGURE,
             ):
                 # A plain "Add Integration" flow finding an existing entry
-                # means a second account - reject, don't merge and overwrite
-                # the first account's token.
+                # means a second account - reject before binding anything
+                # server-side, don't merge and overwrite the first
+                # account's token.
                 return self.async_abort(reason="already_configured")
+
+            try:
+                result = await self._product_client.bind_devices(
+                    {"bindSnList": user_input["devices"]}
+                )
+            except Exception as err:  # noqa: BLE001 - cloud SDK call at a system boundary; any failure aborts the flow
+                __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
+                return self.async_abort(reason="cannot_connect")
+
+            # bind_devices() doesn't raise on a rejected bind - check msgCode.
+            if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
+                __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
+                return self.async_abort(reason="cannot_connect")
 
             if existing_entry:
                 # Merge into the existing integration entry

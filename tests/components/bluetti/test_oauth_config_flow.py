@@ -33,6 +33,55 @@ def _make_flow(hass: HomeAssistant) -> BluettiConfigFlow:
     return flow
 
 
+async def test_async_step_reconfigure_delegates_to_oauth_handler(
+    hass: HomeAssistant,
+) -> None:
+    """Must actually delegate, not just exist as a stub for hassfest."""
+    flow = _make_flow(hass)
+    flow.context = {"entry_id": "does-not-exist"}
+
+    result = await flow.async_step_reconfigure()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reconfigure_failed"
+
+
+async def test_async_step_reauth_delegates_to_confirm(hass: HomeAssistant) -> None:
+    """Async step reauth delegates to the confirm step."""
+    flow = _make_flow(hass)
+    flow.async_step_reauth_confirm = AsyncMock(return_value={"type": "form"})
+
+    result = await flow.async_step_reauth({})
+
+    flow.async_step_reauth_confirm.assert_awaited_once_with()
+    assert result == {"type": "form"}
+
+
+async def test_async_step_reauth_confirm_shows_form_when_no_input(
+    hass: HomeAssistant,
+) -> None:
+    """Async step reauth confirm shows form when no input."""
+    flow = _make_flow(hass)
+
+    result = await flow.async_step_reauth_confirm()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+
+async def test_async_step_reauth_confirm_delegates_to_user_step_when_confirmed(
+    hass: HomeAssistant,
+) -> None:
+    """Async step reauth confirm delegates to user step when confirmed."""
+    flow = _make_flow(hass)
+    flow.async_step_user = AsyncMock(return_value={"type": "abort"})
+
+    result = await flow.async_step_reauth_confirm(user_input={})
+
+    flow.async_step_user.assert_awaited_once_with()
+    assert result == {"type": "abort"}
+
+
 async def test_new_entry_products_are_json_serializable(hass: HomeAssistant) -> None:
     """New entry products are json serializable."""
     flow = _make_flow(hass)
@@ -213,6 +262,10 @@ async def test_second_account_via_fresh_flow_aborts_already_configured(
     second account's - leaving the first account's retained devices
     inaccessible. It must instead abort cleanly and leave the existing
     entry untouched.
+
+    It must also reject before calling bind_devices() at all - otherwise a
+    rejected setup still performs a real, wasted cloud-side bind that Home
+    Assistant then discards locally.
     """
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -242,13 +295,10 @@ async def test_second_account_via_fresh_flow_aborts_already_configured(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    flow._product_client.bind_devices.assert_not_awaited()
 
     # The first account's entry must be untouched - same token, same
-    # devices, no second account's device merged in. (bind_devices() has
-    # already run against the cloud by this point - it's how the flow
-    # learns which account it's dealing with in the first place - so it's
-    # the local Home Assistant config entry, not the cloud-side bind, that
-    # must stay untouched here.)
+    # devices, no second account's device merged in.
     updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
     assert updated.data["token"] == {"access_token": "original-token"}
     assert updated.options["devices"] == ["SN0"]
