@@ -1,169 +1,105 @@
-"""Show the amount of records in a user's Discogs collection."""
+"""Sensor platform for Discogs."""
 
-from datetime import timedelta
-import logging
-import random
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, override
 
-import discogs_client
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorEntityDescription,
-)
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TOKEN
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import (
+    DiscogsConfigEntry,
+    DiscogsData,
+    DiscogsDataUpdateCoordinator,
+)
 
-ATTR_IDENTITY = "identity"
-
-DEFAULT_NAME = "Discogs"
-
-ICON_RECORD = "mdi:album"
-ICON_PLAYER = "mdi:record-player"
 UNIT_RECORDS = "records"
 
-SCAN_INTERVAL = timedelta(minutes=10)
 
-SENSOR_COLLECTION_TYPE = "collection"
-SENSOR_WANTLIST_TYPE = "wantlist"
-SENSOR_RANDOM_RECORD_TYPE = "random_record"
+@dataclass(frozen=True, kw_only=True)
+class DiscogsSensorEntityDescription(SensorEntityDescription):
+    """Describes a Discogs sensor entity."""
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=SENSOR_COLLECTION_TYPE,
-        name="Collection",
-        icon=ICON_RECORD,
+    value_fn: Callable[[DiscogsData], str | int | None]
+    attrs_fn: Callable[[DiscogsData], dict[str, Any] | None]
+
+
+SENSOR_TYPES: tuple[DiscogsSensorEntityDescription, ...] = (
+    DiscogsSensorEntityDescription(
+        key="collection",
+        translation_key="collection",
         native_unit_of_measurement=UNIT_RECORDS,
+        value_fn=lambda data: data.collection_count,
+        attrs_fn=lambda _: None,
     ),
-    SensorEntityDescription(
-        key=SENSOR_WANTLIST_TYPE,
-        name="Wantlist",
-        icon=ICON_RECORD,
+    DiscogsSensorEntityDescription(
+        key="wantlist",
+        translation_key="wantlist",
         native_unit_of_measurement=UNIT_RECORDS,
+        value_fn=lambda data: data.wantlist_count,
+        attrs_fn=lambda _: None,
     ),
-    SensorEntityDescription(
-        key=SENSOR_RANDOM_RECORD_TYPE,
-        name="Random Record",
-        icon=ICON_PLAYER,
+    DiscogsSensorEntityDescription(
+        key="random_record",
+        translation_key="random_record",
+        value_fn=lambda data: data.random_record,
+        attrs_fn=lambda data: data.random_record_attrs,
     ),
-)
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-    }
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: DiscogsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Discogs sensor."""
-    token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
-
-    try:
-        _discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
-
-        discogs_data = {
-            "user": _discogs_client.identity().name,
-            "folders": _discogs_client.identity().collection_folders,
-            "collection_count": _discogs_client.identity().num_collection,
-            "wantlist_count": _discogs_client.identity().num_wantlist,
-        }
-    except discogs_client.exceptions.HTTPError:
-        _LOGGER.error("API token is not valid")
-        return
-
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    entities = [
-        DiscogsSensor(discogs_data, name, description)
+    """Set up Discogs sensor from a config entry."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        DiscogsSensor(coordinator, description, entry.entry_id)
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
-    ]
-
-    add_entities(entities, True)
+    )
 
 
-class DiscogsSensor(SensorEntity):
-    """Create a new Discogs sensor for a specific type."""
+class DiscogsSensor(
+    CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntity
+):
+    """Representation of a Discogs sensor."""
 
+    entity_description: DiscogsSensorEntityDescription
     _attr_attribution = "Data provided by Discogs"
+    _attr_has_entity_name = True
 
     def __init__(
-        self, discogs_data, name, description: SensorEntityDescription
+        self,
+        coordinator: DiscogsDataUpdateCoordinator,
+        description: DiscogsSensorEntityDescription,
+        entry_id: str,
     ) -> None:
-        """Initialize the Discogs sensor."""
+        """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._discogs_data = discogs_data
-        self._attrs: dict = {}
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.discogs.com",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer=DEFAULT_NAME,
+            name=DEFAULT_NAME,
+        )
 
-        self._attr_name = f"{name} {description.name}"
+    @property
+    @override
+    def native_value(self) -> str | int | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the device state attributes of the sensor."""
-        if self._attr_native_value is None or self._attrs is None:
-            return None
-
-        if (
-            self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
-            and self._attr_native_value is not None
-        ):
-            return {
-                "cat_no": self._attrs["labels"][0]["catno"],
-                "cover_image": self._attrs["cover_image"],
-                "format": (
-                    f"{self._attrs['formats'][0]['name']}"
-                    f" ({self._attrs['formats'][0]['descriptions'][0]})"
-                ),
-                "label": self._attrs["labels"][0]["name"],
-                "released": self._attrs["year"],
-                ATTR_IDENTITY: self._discogs_data["user"],
-            }
-
-        return {
-            ATTR_IDENTITY: self._discogs_data["user"],
-        }
-
-    def get_random_record(self):
-        """Get a random record suggestion from the user's collection."""
-        # Index 0 in the folders is the 'All' folder
-        collection = self._discogs_data["folders"][0]
-        if collection.count > 0:
-            random_index = random.randrange(collection.count)
-            random_record = collection.releases[random_index].release
-
-            self._attrs = random_record.data
-            return (
-                f"{random_record.data['artists'][0]['name']} -"
-                f" {random_record.data['title']}"
-            )
-
-        return None
-
-    def update(self) -> None:
-        """Set state to the amount of records in user's collection."""
-        if self.entity_description.key == SENSOR_COLLECTION_TYPE:
-            self._attr_native_value = self._discogs_data["collection_count"]
-        elif self.entity_description.key == SENSOR_WANTLIST_TYPE:
-            self._attr_native_value = self._discogs_data["wantlist_count"]
-        else:
-            self._attr_native_value = self.get_random_record()
+        """Return the extra state attributes."""
+        return self.entity_description.attrs_fn(self.coordinator.data)
