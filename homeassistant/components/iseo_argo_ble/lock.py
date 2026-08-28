@@ -115,6 +115,7 @@ class IseoLockEntity(LockEntity):
         self._last_advertisement: datetime | None = None
         self._last_ble_device: BLEDevice | None = None
         self._initial_read: asyncio.Task[None] | None = None
+        self._probed = False
         self._advertised = asyncio.Event()
         self._identity_rejected = False
 
@@ -192,12 +193,29 @@ class IseoLockEntity(LockEntity):
         self._door_status_supported = True
         self._attr_assumed_state = False
 
+        self._apply_door_state(state.door_closed)
+
+    @callback
+    def _apply_door_state(self, door_closed: bool) -> None:
+        """Apply a door reading, respecting the window after an unlock."""
         if self._attr_is_unlocking:
             return
-        if self._poll_suppress_until and dt_util.utcnow() < self._poll_suppress_until:
+        if (
+            door_closed
+            and self._poll_suppress_until
+            and dt_util.utcnow() < self._poll_suppress_until
+        ):
+            # The lock keeps reporting "closed" for a moment after the latch is
+            # released, so ignore that. Never ignore the door actually opening:
+            # the next reading can be minutes away, and the relock timer would
+            # otherwise leave the entity locked with the door standing open.
             return
 
-        self._attr_is_locked = state.door_closed
+        if not door_closed:
+            self._cancel_relock_task()
+            self._poll_suppress_until = None
+
+        self._attr_is_locked = door_closed
         self.async_write_ha_state()
 
     @callback
@@ -209,6 +227,11 @@ class IseoLockEntity(LockEntity):
         tracks devices by, so recency is tracked here instead.
         """
         if self._last_advertisement is None:
+            return
+        if self._entry.options.get(CONF_ENABLE_POLLING, False):
+            # Polling is the point of the fallback: it reports availability
+            # itself, and would otherwise spend all day fighting this timer on
+            # exactly the locks whose advertisements do not reach us.
             return
         if dt_util.utcnow() - self._last_advertisement >= _UNAVAILABLE_AFTER:
             self._set_available(False, "no advertisement received")
@@ -288,16 +311,15 @@ class IseoLockEntity(LockEntity):
         and connecting before the lock has advertised cannot work. Runs off the
         first advertisement instead, and retries on a later one if it fails.
         """
-        if self._initial_read is not None or self._door_status_supported is not None:
+        # Checking done() rather than None: eagerly started tasks can finish
+        # before the assignment below, which would leave a completed task here
+        # forever and skip every retry.
+        if self._probed or (
+            self._initial_read is not None and not self._initial_read.done()
+        ):
             return
 
-        async def _read() -> None:
-            try:
-                await self._poll_state()
-            finally:
-                self._initial_read = None
-
-        self._initial_read = self.hass.async_create_task(_read())
+        self._initial_read = self.hass.async_create_task(self._poll_state())
         self.async_on_remove(self._cancel_initial_read)
 
     def _cancel_initial_read(self) -> None:
@@ -366,6 +388,7 @@ class IseoLockEntity(LockEntity):
             self._set_available(False, exc)
             return
 
+        self._probed = True
         self._identity_rejected = False
         self._set_available(True)
         self._update_firmware_version(state)
@@ -381,14 +404,9 @@ class IseoLockEntity(LockEntity):
             return
 
         self._door_status_supported = True
+        self._attr_assumed_state = False
 
-        if self._attr_is_unlocking:
-            return
-        if self._poll_suppress_until and dt_util.utcnow() < self._poll_suppress_until:
-            return
-
-        self._attr_is_locked = state.door_closed
-        self.async_write_ha_state()
+        self._apply_door_state(state.door_closed)
 
     def _set_unlocking(self, available: bool = True) -> None:
         self._attr_is_locked = False

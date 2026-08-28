@@ -485,3 +485,45 @@ async def test_polling_keeps_probing_a_lock_without_door_status(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_door_opening_during_the_relock_window_is_kept(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the door opening right after an unlock is not discarded.
+
+    Idle advertisements can be minutes apart, so dropping this one would leave
+    the entity reporting locked with the door standing open.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    await _unlock(hass)
+    await _advertise(hass, door_closed=False)
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    # The relock timer must not undo it either.
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_probe_retries_when_the_first_read_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a transient failure does not permanently skip the one-off read."""
+    mock_iseo_client.read_state.side_effect = IseoConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.side_effect = None
+    mock_iseo_client.read_state.reset_mock()
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.assert_awaited()
