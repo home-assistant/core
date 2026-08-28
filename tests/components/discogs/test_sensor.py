@@ -108,5 +108,5 @@ async def test_yaml_import_creates_entry(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].title == MOCK_USERNAME
+    assert entries[0].title == "Discogs"
     assert entries[0].data == {CONF_TOKEN: MOCK_TOKEN}
