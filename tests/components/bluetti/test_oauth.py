@@ -261,6 +261,36 @@ async def test_async_check_token_expiry_already_expired(hass: HomeAssistant) -> 
     refresher.send_expired_notification.assert_called_once()
 
 
+async def test_async_check_token_expiry_refreshes_an_already_expired_token(
+    hass: HomeAssistant,
+) -> None:
+    """An already-expired access token must still be refreshed, not just reported.
+
+    Regression test: the already-expired branch used to notify immediately
+    without ever attempting a refresh - an access token past its own
+    (often much shorter) expiry is exactly the normal case a refresh token
+    exists for, not necessarily a real problem. A daily periodic check
+    landing after that point used to show a false "expired" warning every
+    time even though a refresh would have quietly succeeded.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() - 10}
+    session.implementation.async_refresh_token = AsyncMock(
+        return_value={"access_token": "new"}
+    )
+    refresher = AuthTokenRefresh(hass, entry, session)
+    refresher.send_expired_notification = MagicMock()
+
+    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
+        await refresher.async_check_token_expiry()
+
+    session.implementation.async_refresh_token.assert_awaited_once()
+    mock_reload.assert_awaited_once_with(entry.entry_id)
+    refresher.send_expired_notification.assert_not_called()
+
+
 async def test_async_check_token_expiry_not_due_soon_does_nothing(
     hass: HomeAssistant,
 ) -> None:

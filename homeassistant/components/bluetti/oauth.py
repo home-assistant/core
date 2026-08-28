@@ -195,10 +195,14 @@ class AuthTokenRefresh:
             return
         current_timestamp = time.time()
         remain_timestamp = expire_timestamp - current_timestamp
-        if remain_timestamp < 0:
-            self.send_expired_notification()
-            return
 
+        # An already-expired access token is exactly the case a refresh
+        # token exists for - it's normal, short-lived-by-design behavior,
+        # not necessarily a real problem. Try to refresh here too (not just
+        # in the "expiring soon" case below), or a daily check that happens
+        # to land after the access token's own (often much shorter) TTL
+        # would show a false "expired" notification every single day even
+        # though a refresh would have quietly succeeded.
         if remain_timestamp < 3600 * 24 * 7:
             try:
                 __LOGGER__.info("start refresh token")
@@ -208,6 +212,8 @@ class AuthTokenRefresh:
                     __LOGGER__.info(
                         "last refresh token in 1 hour,this do not refresh return"
                     )
+                    if remain_timestamp < 0:
+                        self.send_expired_notification()
                     return
                 last_refresh = current_timestamp
 
@@ -226,3 +232,5 @@ class AuthTokenRefresh:
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
             except Exception as e:  # noqa: BLE001 - OAuth SDK call at a system boundary; logged, not fatal
                 __LOGGER__.error("refresh token failed: %s", e)
+                if remain_timestamp < 0:
+                    self.send_expired_notification()
