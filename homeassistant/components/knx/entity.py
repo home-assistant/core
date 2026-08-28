@@ -1,7 +1,7 @@
 """Base classes for KNX entities."""
 
-import logging
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice
