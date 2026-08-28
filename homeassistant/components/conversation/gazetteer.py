@@ -44,7 +44,7 @@ LANGUAGE = "en"
 
 _SENTENCE_END = (".", "!", "?")
 
-_ANAPHOR_TAG = "anaphor"
+_ANAPHORA_PREFIX = "anaphora"
 
 # Widest selector first: "turn them off" after "turn on the kitchen lights" means
 # the kitchen lights, not the one entity that happened to match.
@@ -57,8 +57,19 @@ _TARGET_SCOPES = (
 
 @callback
 def async_refers_back(interpretation: Interpretation) -> bool:
-    """Return whether the sentence pointed back at an earlier turn ("it"/"them")."""
-    return any(span.tag == _ANAPHOR_TAG for span in interpretation.spans)
+    """Return whether the matcher read the sentence as a follow-up ("it"/"them").
+
+    A pronoun is tagged wherever it appears, including where the matcher leaves it
+    alone: "it" is a grammatical subject in "how hot is it", and only some actions
+    take a follow-up at all. What it resolved is what says one was read.
+    """
+    if (interpretation.rejection_code or "").startswith(_ANAPHORA_PREFIX):
+        return True
+    return any(
+        candidate.anaphor_target is not None
+        for segment in interpretation.segments
+        for candidate in segment.frame_candidates
+    )
 
 
 @callback

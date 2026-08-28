@@ -174,11 +174,17 @@ async def test_refusal_names_the_target(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components", "home")
-@pytest.mark.parametrize("text", ["asdfgh", "do something"])
+@pytest.mark.parametrize(
+    "text", ["asdfgh", "do something", "asdfgh it", "do something with it"]
+)
 async def test_refusal_that_explains_nothing_keeps_the_default_error(
     hass: HomeAssistant, text: str
 ) -> None:
-    """Test noise still gets Home Assistant's own translated error."""
+    """Test noise still gets Home Assistant's own translated error.
+
+    A pronoun is tagged wherever it appears, so noise carrying one must not be
+    taken for a follow-up the matcher understood.
+    """
     result = await conversation.async_converse(hass, text, None, Context(), None)
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
@@ -247,6 +253,26 @@ async def test_follow_up_pronoun_reuses_the_previous_target(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(close_cover) == 1
     assert close_cover[0].data["entity_id"] == BEDROOM_BLINDS
+
+
+@pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize("text", ["set it to red", "how hot is it"])
+async def test_a_pronoun_the_matcher_leaves_alone_is_not_a_follow_up(
+    hass: HomeAssistant, text: str
+) -> None:
+    """Test "it" the matcher never resolved does not displace hassil's error.
+
+    Only some actions take a follow-up, and "it" is a grammatical subject besides,
+    so a tagged pronoun is not on its own a sentence the gazetteer understood.
+    """
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    _, interpretation = await agent._gazetteer.async_interpret(text, "test", None)
+
+    assert not interpretation.accepted
+    assert not gazetteer.async_refers_back(interpretation)
+    assert gazetteer.async_refusal(interpretation) is None
 
 
 @pytest.mark.usefixtures("init_components", "home")
