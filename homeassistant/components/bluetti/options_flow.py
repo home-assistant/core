@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsF
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import EVENT_TOKEN_EXPIRED
-from .profile.application_profile import APPLICATION_PROFILE
+from .const import EVENT_TOKEN_EXPIRED, GATEWAY_URL
 
 __LOGGER__ = logging.getLogger(__name__)
 
@@ -70,14 +69,6 @@ class BluettiOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(data=merged_options)
 
-        # ApplicationProfile is a module-level singleton populated by
-        # config_flow.py's async_step_user - relying on that having already
-        # run in this process is a real cross-test hazard under pytest-xdist
-        # (each test file can get its own fresh worker process), so this
-        # flow (entered without going through async_step_user again) must
-        # load it itself too. Idempotent: re-reads the same static file.
-        await APPLICATION_PROFILE.load_config(self.hass)
-
         http_session = async_get_clientsession(self.hass)
         try:
             # Refresh via OAuth2Session, not entry.data["token"] directly -
@@ -94,7 +85,7 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             access_token = oauth_session.token["access_token"]
             product_client = ProductClient(
                 http_session,
-                APPLICATION_PROFILE.config["server"]["gateway"],
+                GATEWAY_URL,
                 access_token,
                 on_auth_expired=lambda: self.hass.bus.fire(EVENT_TOKEN_EXPIRED),
             )

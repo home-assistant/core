@@ -18,11 +18,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, EVENT_TOKEN_EXPIRED
+from .const import DOMAIN, EVENT_TOKEN_EXPIRED, GATEWAY_URL, WSS_URL
 from .coordinator import BluettiDeviceCoordinator
 from .models import BluettiData
 from .oauth import AsyncConfigEntryAuth, AuthTokenRefresh
-from .profile.application_profile import APPLICATION_PROFILE
 
 __LOGGER__ = logging.getLogger(__name__)
 
@@ -47,8 +46,6 @@ type BluettiConfigEntry = ConfigEntry[BluettiRuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> bool:
     """Set up BLUETTI from a config entry."""
     try:
-        await APPLICATION_PROFILE.load_config(hass)
-
         enabled_devices = entry.options.get("devices", [])
         all_products_data: list[dict[str, Any]] = entry.data.get("products", [])
         all_products: list[UserProduct] = [
@@ -77,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         auth_token_refresh.start_token_check()
         product_client = ProductClient(
             http_session,
-            APPLICATION_PROFILE.config["server"]["gateway"],
+            GATEWAY_URL,
             access_token,
             on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
         )
@@ -95,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     # Register WebSocket
     stomp_client = StompClient(
         http_session,
-        APPLICATION_PROFILE.config["server"]["wss"],
+        WSS_URL,
         access_token,
         bluetti_devices.web_socket_message_handler,
         on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),

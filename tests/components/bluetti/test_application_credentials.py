@@ -5,10 +5,7 @@ from homeassistant.components.bluetti.application_credentials import (
     async_ensure_default_credential,
     async_get_authorization_server,
 )
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.profile.application_profile import (
-    APPLICATION_PROFILE,
-)
+from homeassistant.components.bluetti.const import DOMAIN, SSO_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -17,9 +14,8 @@ async def test_async_get_authorization_server(hass: HomeAssistant) -> None:
     """Async get authorization server."""
     server = await async_get_authorization_server(hass)
 
-    gateway_sso = APPLICATION_PROFILE.config["server"]["sso"]
-    assert server.authorize_url == f"{gateway_sso}/oauth2/grant"
-    assert server.token_url == f"{gateway_sso}/oauth2/token"
+    assert server.authorize_url == f"{SSO_URL}/oauth2/grant"
+    assert server.token_url == f"{SSO_URL}/oauth2/token"
 
 
 def _stored_credential(hass: HomeAssistant):

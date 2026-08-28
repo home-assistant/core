@@ -7,16 +7,14 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .profile.application_profile import APPLICATION_PROFILE
+from .const import DOMAIN, SSO_URL
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
     """Return authorization server."""
-    await APPLICATION_PROFILE.load_config(hass)
     return AuthorizationServer(
-        authorize_url=APPLICATION_PROFILE.config["server"]["sso"] + "/oauth2/grant",
-        token_url=APPLICATION_PROFILE.config["server"]["sso"] + "/oauth2/token",
+        authorize_url=f"{SSO_URL}/oauth2/grant",
+        token_url=f"{SSO_URL}/oauth2/token",
     )
 
 

@@ -18,10 +18,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import BluettiConfigEntry
 from .application_credentials import async_ensure_default_credential
-from .const import ACCOUNT_UNIQUE_ID, DOMAIN, EVENT_TOKEN_EXPIRED, INTEGRATION_NAME
+from .const import (
+    ACCOUNT_UNIQUE_ID,
+    DOMAIN,
+    EVENT_TOKEN_EXPIRED,
+    GATEWAY_URL,
+    INTEGRATION_NAME,
+)
 from .oauth import OAuth2FlowHandler
 from .options_flow import BluettiOptionsFlowHandler
-from .profile.application_profile import APPLICATION_PROFILE
 
 __LOGGER__ = logging.getLogger(__name__)
 
@@ -34,7 +39,6 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        await APPLICATION_PROFILE.load_config(self.hass)
         await async_ensure_default_credential(self.hass)
         return await super().async_step_user(user_input)
 
@@ -160,16 +164,11 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 options=user_input,
             )
 
-        # Normally already loaded by async_step_user above, but this step is
-        # also reachable directly (e.g. a fresh reauth/reconfigure context),
-        # so don't rely on that ordering - load_config is idempotent.
-        await APPLICATION_PROFILE.load_config(self.hass)
-
         http_session = async_get_clientsession(self.hass)
         access_token = self._oauth_data["token"]["access_token"]
         product_client = ProductClient(
             http_session,
-            APPLICATION_PROFILE.config["server"]["gateway"],
+            GATEWAY_URL,
             access_token,
             on_auth_expired=lambda: self.hass.bus.fire(EVENT_TOKEN_EXPIRED),
         )
