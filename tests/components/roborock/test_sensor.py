@@ -175,3 +175,30 @@ async def test_dyad_partial_push_does_not_postpone_poll(
     await hass.async_block_till_done()
 
     assert dyad.query_values.call_count == 1
+
+
+async def test_dyad_push_during_poll_is_not_overwritten(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push received while a poll is in flight survives the poll result."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+    polled = dyad.query_values.return_value
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    async def push_while_polling(
+        protocols: list[RoborockDyadDataProtocol],
+    ) -> dict[RoborockDyadDataProtocol, Any]:
+        push_listener({RoborockDyadDataProtocol.POWER: 50})
+        return polled
+
+    dyad.query_values.side_effect = push_while_polling
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
