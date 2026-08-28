@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
