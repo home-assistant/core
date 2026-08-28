@@ -55,7 +55,7 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=username,
+            title=import_data.get("name") or username,
             data={CONF_TOKEN: import_data[CONF_TOKEN]},
         )
 

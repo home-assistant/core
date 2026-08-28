@@ -84,7 +84,7 @@ async def async_setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},
-            data={CONF_TOKEN: config[CONF_TOKEN]},
+            data={CONF_TOKEN: config[CONF_TOKEN], "name": config.get("name")},
         )
     )
 
