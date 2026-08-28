@@ -2364,11 +2364,11 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         mock_vad.assert_not_called()
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     hass: HomeAssistant,
     mock_stt_provider_entity: MockSTTProviderEntity,
     mock_chat_session: chat_session.ChatSession,
-    init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
     """Test that STT_VAD_START/STT_VAD_END events are emitted when requires_external_vad=False."""
