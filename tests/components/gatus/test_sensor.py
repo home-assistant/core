@@ -50,6 +50,7 @@ def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus
                     status=r.get("status"),
                     duration=r.get("duration"),
                     certificate_expiration=r.get("certificateExpiration"),
+                    domain_expiration=r.get("domainExpiration"),
                 )
                 for r in ep.get("results", [])
             ],
@@ -195,4 +196,32 @@ async def test_sensor_missing_certificate_expiration(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.backend_service_certificate_expiration")
+    assert state is None
+
+
+async def test_sensor_missing_domain_expiration(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an endpoint missing domain_expiration does not create the domain expiration sensor."""
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group=None,
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=12500000,
+                    domain_expiration=None,
+                )
+            ],
+        )
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.backend_service_domain_expiration")
     assert state is None

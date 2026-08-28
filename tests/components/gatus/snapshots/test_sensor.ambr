@@ -50,6 +50,57 @@
     'state': '2026-04-01T00:00:00+00:00',
   })
 # ---
+# name: test_sensor_setup_and_states[sensor.core_backend_service_domain_expiration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.core_backend_service_domain_expiration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Domain expiration',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Domain expiration',
+    'platform': 'gatus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'domain_expiration',
+    'unique_id': '1234567890abcdef1234567890abcdef_backend_service_domain_expiration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup_and_states[sensor.core_backend_service_domain_expiration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Core Backend Service Domain expiration',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.core_backend_service_domain_expiration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-04-01T00:00:00+00:00',
+  })
+# ---
 # name: test_sensor_setup_and_states[sensor.core_backend_service_last_event-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -61,6 +61,9 @@
       "certificate_expiration": {
         "name": "Certificate expiration"
       },
+      "domain_expiration": {
+        "name": "Domain expiration"
+      },
       "last_event": {
         "name": "Last event",
         "state": {
