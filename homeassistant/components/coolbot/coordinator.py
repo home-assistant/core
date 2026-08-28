@@ -237,9 +237,12 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 if fresh:
                     self._reporting[device.unique_id] = (device.name, True)
                 continue
+            # Rewritten even when the state is unchanged, so a cooler renamed
+            # in the account cannot have a later outage logged under a name it
+            # no longer carries.
+            self._reporting[device.unique_id] = (device.name, fresh)
             if fresh is known[1]:
                 continue
-            self._reporting[device.unique_id] = (device.name, fresh)
             self._log_transition(device.name, reporting=fresh)
 
         # A device missing from a successful refresh has also stopped

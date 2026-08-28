@@ -5,7 +5,6 @@ Read-only. Nothing in this integration writes to a device.
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -19,9 +18,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> b
     coordinator = CoolbotCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed, ConfigEntryNotReady:
+    except BaseException:
         # runtime_data is never assigned, so no unload path can reach the socket
-        # the first refresh already opened.
+        # the first refresh already opened. BaseException, because the
+        # coordinator re-raises an active CancelledError: a reload or shutdown
+        # cancelling setup mid-refresh would bypass a narrower handler and leak
+        # the socket.
         await coordinator.async_shutdown()
         raise
     entry.runtime_data = coordinator

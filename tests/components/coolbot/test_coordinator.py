@@ -121,6 +121,26 @@ async def test_a_connect_that_never_succeeds_closes_the_client(
     mock_client.async_close.assert_awaited()
 
 
+async def test_a_cancelled_first_refresh_closes_the_client(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Cancellation mid-refresh must not leak the socket connecting opened.
+
+    The coordinator re-raises an active CancelledError, so a reload or
+    shutdown that cancels setup after the socket opened, but before
+    runtime_data is assigned, leaves no unload path to close it.
+    """
+    mock_client.async_ping.side_effect = asyncio.CancelledError()
+    mock_config_entry.add_to_hass(hass)
+
+    with suppress(Exception, asyncio.CancelledError):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    mock_client.async_close.assert_awaited()
+
+
 async def test_a_replaced_slot_does_not_resurrect_its_predecessor(
     hass: HomeAssistant,
     mock_client: AsyncMock,
@@ -222,6 +242,28 @@ async def test_staleness_is_logged_once_in_each_direction(
     mock_client.async_get_devices.return_value = [make_device()]
     await _tick(hass)
     assert "is reporting again" in caplog.text
+
+
+async def test_an_outage_is_logged_under_the_current_name(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A cooler renamed while healthy is logged by its current name later.
+
+    The remembered name exists so a device that dropped out of the profile can
+    still be named; it has to follow renames while the device is reporting, or
+    the eventual outage line points at a cooler that no longer exists.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [make_device(name="Flower cooler")]
+    await _tick(hass)
+
+    mock_client.async_get_devices.return_value = []
+    await _tick(hass)
+    assert "Flower cooler has stopped reporting" in caplog.text
 
 
 async def test_a_device_dropping_out_of_the_profile_is_logged(
