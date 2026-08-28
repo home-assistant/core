@@ -20,7 +20,7 @@ from homeassistant.components.portainer.services import (
     ATTR_TIMEOUT,
     SERVICE_PRUNE_IMAGES,
     SERVICE_RECREATE_CONTAINER,
-    _async_get_device,
+    _async_get_device_and_entry,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -240,7 +240,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PRUNE_IMAGES,
@@ -249,7 +249,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
@@ -264,7 +264,9 @@ async def test_service_validation_errors(
         config_entry_id=other_entry.entry_id,
         identifiers={("well_no_portainer_for_sure", "some_identifier")},
     )
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(
+        ServiceValidationError, match=f"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
@@ -297,14 +299,14 @@ async def test_service_prune_images_device_gone(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test _async_get_device raises when the device ID no longer exists in the registry."""
+    """Test resolution raises when the device ID no longer exists in the registry."""
     await setup_integration(hass, mock_config_entry)
 
     mock_call = MagicMock()
     mock_call.hass = hass
 
     with pytest.raises(ServiceValidationError):
-        _async_get_device(mock_call, "nonexistent_device_id")
+        _async_get_device_and_entry(mock_call, "nonexistent_device_id")
     mock_portainer_client.images_prune.assert_not_called()
 
 

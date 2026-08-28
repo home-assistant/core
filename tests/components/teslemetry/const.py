@@ -145,3 +145,27 @@ METADATA_NOSCOPE = {
         }
     },
 }
+
+# Energy-only account: no accessible vehicle, one accessible energy site.
+METADATA_ENERGY = {
+    "uid": UNIQUE_ID,
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {},
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
+}
+PRODUCTS_ENERGY = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_ENERGY["response"] = [
+    product for product in PRODUCTS_ENERGY["response"] if "energy_site_id" in product
+]
