@@ -22,12 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_bluetti_data_test_connection_returns_true() -> None:
-    """Bluetti data test connection returns true."""
-    data = BluettiData.__new__(BluettiData)
-    assert await data.test_connection() is True
-
-
 async def test_web_socket_message_handler_schedules_coordinator_refresh(
     hass: HomeAssistant,
 ) -> None:
@@ -392,7 +386,13 @@ async def test_handle_unbind_survives_runtime_data_error(hass: HomeAssistant) ->
 async def test_handle_unbind_survives_config_entry_update_error(
     hass: HomeAssistant,
 ) -> None:
-    """Handle unbind survives config entry update error."""
+    """Handle unbind survives config entry update error.
+
+    Regression test: _unbind_processed used to be set unconditionally
+    before persisting the removal - if that persistence step failed, the
+    device stayed "enabled" in options forever with no coordinator and no
+    retry path. It must stay False here so the next refresh retries.
+    """
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
@@ -406,7 +406,18 @@ async def test_handle_unbind_survives_config_entry_update_error(
         await device._handle_unbind()
         await hass.async_block_till_done()
 
-    assert device._unbind_processed is True
+    assert device._unbind_processed is False
+
+    # Prove the retry actually happens: the next refresh must call
+    # _handle_unbind() again, not skip it because of a stale True flag.
+    device._handle_unbind = AsyncMock()
+    device._api_client = AsyncMock()
+    device._api_client.get_device_status.return_value = MagicMock(
+        is_ok=lambda: True,
+        data=[MagicMock(sn="SN1", isBindByCurUser="0")],
+    )
+    await device.async_refresh_from_api()
+    device._handle_unbind.assert_awaited_once()
 
 
 async def test_handle_unbind_survives_notification_error(hass: HomeAssistant) -> None:
@@ -445,8 +456,18 @@ async def test_handle_unbind_survives_reload_error(hass: HomeAssistant) -> None:
 
 
 async def test_handle_unbind_when_device_not_in_options(hass: HomeAssistant) -> None:
-    """Handle unbind when device not in options."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN2"]})
+    """Handle unbind when device not in options.
+
+    Even when the device is already absent from options["devices"], its
+    stale product entry (if any) must still be dropped from data["products"].
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={"devices": ["SN2"]},
+        data={
+            "products": [{"sn": "SN1", "name": "Stale", "stateList": [], "online": "1"}]
+        },
+    )
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
 
@@ -456,12 +477,17 @@ async def test_handle_unbind_when_device_not_in_options(hass: HomeAssistant) -> 
 
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated.options["devices"] == ["SN2"]
+    assert updated.data["products"] == []
 
 
 async def test_handle_unbind_survives_unexpected_outer_error(
     hass: HomeAssistant,
 ) -> None:
-    """Handle unbind survives unexpected outer error."""
+    """Handle unbind survives unexpected outer error.
+
+    The removal was never confirmed persisted here (the error happens
+    before step 5 even runs), so this must retry on the next refresh too.
+    """
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
@@ -473,4 +499,4 @@ async def test_handle_unbind_survives_unexpected_outer_error(
         # unexpected so a single bad device doesn't break setup.
         await device._handle_unbind()
 
-    assert device._unbind_processed is True
+    assert device._unbind_processed is False

@@ -5,16 +5,10 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from pybluetti import (
-    ApplicationRuntimeException,
-    ProductClient,
-    UnifyResponse,
-    UserProduct,
-)
+from pybluetti import ApplicationRuntimeException, ProductClient, UserProduct
 
 from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -51,11 +45,6 @@ class BluettiData:
             for dev in devices or []
         ]
         self.loop = hass.loop
-
-    async def test_connection(self) -> bool:
-        """Test connectivity to devices."""
-        await asyncio.sleep(0.1)
-        return True
 
     def get_device_by_sn(self, sn: str) -> BluettiDevice | None:
         """Return the device with this serial number, if it's tracked here."""
@@ -195,45 +184,6 @@ class BluettiDevice:
                 return s
         return None
 
-    async def set_state_value(self, fn_code: str, value: str) -> None:
-        """Send a control command to the device and notify the coordinator."""
-        state = self.get_state(fn_code)
-        if not state:
-            raise ValueError(f"No state with code {fn_code}")
-
-        assert self._api_client is not None, (
-            "set_state_value called before the device was wired up"
-        )
-        try:
-            result = await self._api_client.control_device(
-                {"sn": self.device_id, "fnCode": fn_code, "fnValue": value}
-            )
-        except Exception as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={
-                    "device_id": self.device_id,
-                    "error": str(err),
-                },
-            ) from err
-
-        # control_device() doesn't raise on a rejected command - check
-        # msgCode. Tracked upstream: bluetti-community/pybluetti#1.
-        if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_rejected",
-                translation_placeholders={
-                    "device_id": self.device_id,
-                    "error": str(result),
-                },
-            )
-        state.set_value(value)
-
-        if self.coordinator:
-            self.coordinator.async_set_updated_data(self)
-
     # online/battery_level derive from stateList, which pybluetti.UserProduct
     # exposes untyped - candidates to move into the library eventually, but
     # entangled with this class's own state parsing. Tracked upstream:
@@ -302,13 +252,15 @@ class BluettiDevice:
             )
             return
 
-        # Set once cleanup is actually about to run - each step below is
-        # independently best-effort (see the docstring).
-        self._unbind_processed = True
-
         hass = self._hass
         entry = self._entry
         entry_id = self._entry_id or entry.entry_id
+
+        # Only step 5 (persisting the removal) decides this - steps 2-4 and
+        # 6 are all idempotent against an already-removed device, so it's
+        # safe (and necessary) to retry the whole method on the next
+        # refresh if persistence itself fails.
+        persistence_ok = False
 
         try:
             __LOGGER__.info("Start handling device unbinding: %s", self.device_id)
@@ -407,6 +359,9 @@ class BluettiDevice:
                         hass.config_entries.async_update_entry(
                             entry, data={**entry.data, "products": new_products}
                         )
+                # Reached without raising - either the removal was
+                # persisted, or there was nothing left to persist.
+                persistence_ok = True
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
                 __LOGGER__.error(
                     "Error updating configuration entry: %s", e, exc_info=True
@@ -440,3 +395,5 @@ class BluettiDevice:
 
         except Exception as e:  # noqa: BLE001 - outermost guard: never let unbind handling crash the caller
             __LOGGER__.error("Error handling device unbinding: %s", e, exc_info=True)
+
+        self._unbind_processed = persistence_ok

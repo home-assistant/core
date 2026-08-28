@@ -1,7 +1,7 @@
 """Tests for the BLUETTI data models."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from pybluetti import ApplicationRuntimeException, UnifyResponse
 import pytest
@@ -11,7 +11,6 @@ from homeassistant.components.bluetti.models import (
     BluettiDevice,
     BluettiState,
 )
-from homeassistant.exceptions import HomeAssistantError
 
 
 def test_state_is_switch_without_modes() -> None:
@@ -254,111 +253,3 @@ async def test_async_refresh_from_api_ignores_mismatched_sn() -> None:
     # Nothing should have changed since the response was for a different device.
     assert device.on_line == "0"
     assert device.get_state("SOC").fn_value == "10"
-
-
-async def test_set_state_value_applies_optimistic_update_and_notifies_coordinator() -> (
-    None
-):
-    """Set state value applies optimistic update and notifies coordinator."""
-    device = BluettiDevice(
-        device_id="SN1",
-        on_line="1",
-        name="Test",
-        sn="SN1",
-        model="AC200L",
-        state_list=[
-            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
-        ],
-    )
-    device._api_client = AsyncMock()
-    device._api_client.control_device.return_value = UnifyResponse(msgId="1", msgCode=0)
-    device.coordinator = MagicMock()
-
-    await device.set_state_value("SetCtrlAc", "1")
-
-    assert device.get_state("SetCtrlAc").fn_value == "1"
-    device.coordinator.async_set_updated_data.assert_called_once_with(device)
-
-
-async def test_set_state_value_raises_and_does_not_apply_on_server_error_code() -> None:
-    """Set state value raises and does not apply on server error code.
-
-    Regression test: a rejected command (nonzero msgCode) used to be
-    silently ignored - the caller (and any automation) saw the service call
-    as successful even though the device's state never actually changed.
-    """
-    device = BluettiDevice(
-        device_id="SN1",
-        on_line="1",
-        name="Test",
-        sn="SN1",
-        model="AC200L",
-        state_list=[
-            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
-        ],
-    )
-    device._api_client = AsyncMock()
-    device._api_client.control_device.return_value = UnifyResponse(msgId="1", msgCode=1)
-    device.coordinator = MagicMock()
-
-    with pytest.raises(HomeAssistantError):
-        await device.set_state_value("SetCtrlAc", "1")
-
-    assert device.get_state("SetCtrlAc").fn_value == "0"
-    device.coordinator.async_set_updated_data.assert_not_called()
-
-
-async def test_set_state_value_raises_and_does_not_apply_on_non_json_response() -> None:
-    """control_device() returns a plain str for a non-JSON server response.
-
-    Regression test: accessing .msgCode on that str used to crash with an
-    unhandled AttributeError; fixing that must not also silently swallow a
-    rejected command - it should raise the same way a bad msgCode does.
-    """
-    device = BluettiDevice(
-        device_id="SN1",
-        on_line="1",
-        name="Test",
-        sn="SN1",
-        model="AC200L",
-        state_list=[
-            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
-        ],
-    )
-    device._api_client = AsyncMock()
-    device._api_client.control_device.return_value = "not json"
-    device.coordinator = MagicMock()
-
-    with pytest.raises(HomeAssistantError):
-        await device.set_state_value("SetCtrlAc", "1")
-
-    assert device.get_state("SetCtrlAc").fn_value == "0"
-
-
-async def test_set_state_value_wraps_api_errors() -> None:
-    """Set state value wraps api errors."""
-    device = BluettiDevice(
-        device_id="SN1",
-        on_line="1",
-        name="Test",
-        sn="SN1",
-        model="AC200L",
-        state_list=[
-            {"fnCode": "SetCtrlAc", "fnName": "AC", "fnValue": "0", "fnType": "SWITCH"}
-        ],
-    )
-    device._api_client = AsyncMock()
-    device._api_client.control_device.side_effect = RuntimeError("boom")
-
-    with pytest.raises(HomeAssistantError):
-        await device.set_state_value("SetCtrlAc", "1")
-
-
-async def test_set_state_value_unknown_fn_code_raises_value_error() -> None:
-    """Set state value unknown fn code raises value error."""
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
-    )
-
-    with pytest.raises(ValueError):
-        await device.set_state_value("does-not-exist", "1")
