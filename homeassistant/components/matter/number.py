@@ -314,13 +314,12 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Temperature offset. Applies to all vendors, including Eve Systems: the
-    # legacy vendor-specific EveTemperatureOffset schema was dropped once the
-    # cluster_revision split (below) made its bounds identical to this one;
-    # existing Eve entities are migrated onto this key in __init__.py.
-    # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
-    # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
-    # schema wins by default, so the conservative bound is assumed.
+    # Applies to all vendors, including Eve Systems: the legacy vendor-specific
+    # EveTemperatureOffset schema was dropped once cluster_revision splitting
+    # made its bounds identical to this one; existing Eve entities are
+    # migrated onto this key in __init__.py.
+    # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
+    # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -342,7 +341,8 @@ DISCOVERY_SCHEMAS = [
         ),
         cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
     ),
-    # Temperature offset, extended range (Matter 1.4+)
+    # Temperature offset, extended range (Matter 1.4+): SignedTemperature's
+    # usable range, ±127 in 0.1°C units (-128 is reserved).
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -350,7 +350,6 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.1,
