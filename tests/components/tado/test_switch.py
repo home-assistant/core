@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.components.tado import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -30,13 +30,23 @@ def setup_platforms() -> Generator[None]:
 
 @pytest.mark.usefixtures("init_integration")
 async def test_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test creation of switch entities."""
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+    entity_entry = entity_registry.async_get(CHILD_LOCK_SWITCH_ENTITY)
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert (DOMAIN, "WR4") in device_entry.identifiers
 
 
 @pytest.mark.parametrize(
