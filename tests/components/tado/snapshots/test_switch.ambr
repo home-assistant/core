@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[switch.baseboard_heater_baseboard_heater_child_lock-entry]
+# name: test_entities[switch.wr4_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.baseboard_heater_baseboard_heater_child_lock',
+    'entity_id': 'switch.wr4_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,17 +32,17 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '1 1 child-lock',
+    'unique_id': 'WR4 1 child-lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.baseboard_heater_baseboard_heater_child_lock-state]
+# name: test_entities[switch.wr4_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WR4 Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.baseboard_heater_baseboard_heater_child_lock',
+    'entity_id': 'switch.wr4_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
