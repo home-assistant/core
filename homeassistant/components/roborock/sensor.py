@@ -679,7 +679,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self.entity_description.data_protocol]
+        return self.coordinator.data.get(self.entity_description.data_protocol)
 
 
 class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
