@@ -138,10 +138,12 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         ) is not None:
             # The attribute was published in the unit of the system, not the one
             # this entity reports in, so it converts back on the way in
-            temperature = TemperatureConverter.convert(
-                temperature,
-                self.hass.config.units.temperature_unit,
-                self.temperature_unit,
+            temperature = round(
+                TemperatureConverter.convert(
+                    temperature,
+                    self.hass.config.units.temperature_unit,
+                    self.temperature_unit,
+                )
             )
             # A state written before that conversion was made can hold anything
             if self.min_temp <= temperature <= self.max_temp:
