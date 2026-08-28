@@ -6,9 +6,6 @@
       },
       "active_warning_codes": {
         "default": "mdi:alert"
-      },
-      "lock_state": {
-        "default": "mdi:lock"
       }
     },
     "button": {
@@ -71,7 +68,11 @@
         "default": "mdi:power-cycle"
       },
       "socket_lock": {
-        "default": "mdi:lock"
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open-variant",
+          "on": "mdi:lock"
+        }
       }
     },
     "update": {

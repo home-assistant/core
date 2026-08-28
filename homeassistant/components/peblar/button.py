@@ -52,7 +52,6 @@ DESCRIPTIONS = [
     PeblarButtonEntityDescription(
         key="socket_unlock",
         translation_key="socket_unlock",
-        entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_socket,
         press_fn=lambda x: x.socket_unlock(),
     ),
