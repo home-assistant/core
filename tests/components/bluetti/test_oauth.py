@@ -339,6 +339,25 @@ async def test_async_check_token_expiry_recent_refresh_is_skipped(
     session.implementation.async_refresh_token.assert_not_called()
 
 
+async def test_async_check_token_expiry_notifies_when_rate_limited_and_expired(
+    hass: HomeAssistant,
+) -> None:
+    """A recently-refreshed but already-expired token still notifies."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"last_token_refresh": time.time() - 60}
+    )
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() - 100}
+    refresher = AuthTokenRefresh(hass, entry, session)
+    refresher.send_expired_notification = MagicMock()
+
+    await refresher.async_check_token_expiry()
+
+    session.implementation.async_refresh_token.assert_not_called()
+    refresher.send_expired_notification.assert_called_once()
+
+
 async def test_async_check_token_expiry_refreshes_and_reloads(
     hass: HomeAssistant,
 ) -> None:

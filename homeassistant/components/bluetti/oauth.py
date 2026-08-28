@@ -129,7 +129,13 @@ class AuthTokenRefresh:
             )
             self.entry.async_on_unload(unsub)
             __LOGGER__.info("token is valid after 24 hours to check again")
-        self.hass.async_create_task(self.async_check_token_expiry())
+        # Entry-scoped so it's canceled on unload, rather than a bare
+        # hass-level task outliving the entry.
+        self.entry.async_create_background_task(
+            self.hass,
+            self.async_check_token_expiry(),
+            name="bluetti_initial_token_expiry_check",
+        )
 
     # check oauth2 token is ok
     def is_token_valid(self) -> bool:
@@ -159,7 +165,7 @@ class AuthTokenRefresh:
         """Show a persistent notification prompting the user to reauthenticate."""
         reauth_url = f"/config/integrations/integration/{DOMAIN}"
         notification_message = (
-            f"Your OAuth Have Expired!\n"
+            "Your OAuth token has expired.\n"
             f"Please go to the **[integration settings]({reauth_url})** page and click [Reconfigure] to complete the login."
         )
         persistent_notification.async_create(
