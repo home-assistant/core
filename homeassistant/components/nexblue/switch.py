@@ -1,5 +1,6 @@
 """Switches for the NexBlue integration."""
 
+from collections.abc import Callable
 from datetime import datetime
 import time
 from typing import Any, override
@@ -52,6 +53,8 @@ class NexBlueChargingSwitch(
         self._serial_number = serial_number
         self._assumed_is_on: bool | None = None
         self._assumed_state_expires_at = 0.0
+        self._pending_refreshes: set[Callable[[], None]] = set()
+        self.async_on_remove(self._cancel_pending_refreshes)
         self._attr_unique_id = f"{serial_number}_charging"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
@@ -114,11 +117,24 @@ class NexBlueChargingSwitch(
     def _schedule_command_refreshes(self) -> None:
         """Refresh while cloud and charger state catch up after a command."""
 
-        @callback
-        def _request_refresh(_now: datetime) -> None:
-            """Request a refresh from the Home Assistant event loop."""
-            self.hass.async_create_task(self.coordinator.async_refresh())
+        def _schedule_refresh(delay: int) -> None:
+            cancel: Callable[[], None] | None = None
+
+            @callback
+            def _request_refresh(_now: datetime) -> None:
+                """Request a refresh from the Home Assistant event loop."""
+                if cancel is not None:
+                    self._pending_refreshes.discard(cancel)
+                self.hass.async_create_task(self.coordinator.async_refresh())
+
+            cancel = async_call_later(self.hass, delay, _request_refresh)
+            self._pending_refreshes.add(cancel)
 
         for delay in COMMAND_REFRESH_DELAYS:
-            cancel = async_call_later(self.hass, delay, _request_refresh)
-            self.async_on_remove(cancel)
+            _schedule_refresh(delay)
+
+    def _cancel_pending_refreshes(self) -> None:
+        """Cancel refreshes that have not fired when the entity is removed."""
+        for cancel in self._pending_refreshes:
+            cancel()
+        self._pending_refreshes.clear()
