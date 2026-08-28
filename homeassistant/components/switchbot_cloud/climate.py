@@ -193,6 +193,9 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+
         await self._do_send_command(hvac_mode=hvac_mode, temperature=temperature)
         self._attr_target_temperature = temperature
         if hvac_mode is not None:
