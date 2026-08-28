@@ -1683,7 +1683,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.5.3
+neopool-modbus==4.6.0
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
@@ -2950,7 +2950,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.12
+renault-api==0.5.13
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
