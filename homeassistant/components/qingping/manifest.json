@@ -17,9 +17,10 @@
   ],
   "codeowners": ["@bdraco", "@tengfeili-qingping"],
   "config_flow": true,
-  "dependencies": ["bluetooth_adapters"],
+  "dependencies": ["bluetooth_adapters", "mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/qingping",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["qingping-ble==1.1.5"]
+  "loggers": ["qingping_tlv"],
+  "requirements": ["qingping-ble==1.1.5", "qingping-tlv==0.2.0"]
 }
