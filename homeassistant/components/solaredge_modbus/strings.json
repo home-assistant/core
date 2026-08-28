@@ -78,6 +78,30 @@
       "dc_voltage": {
         "name": "DC voltage"
       },
+      "energy_exported": {
+        "name": "Energy exported"
+      },
+      "energy_exported_phase_a": {
+        "name": "Energy exported phase A"
+      },
+      "energy_exported_phase_b": {
+        "name": "Energy exported phase B"
+      },
+      "energy_exported_phase_c": {
+        "name": "Energy exported phase C"
+      },
+      "energy_imported": {
+        "name": "Energy imported"
+      },
+      "energy_imported_phase_a": {
+        "name": "Energy imported phase A"
+      },
+      "energy_imported_phase_b": {
+        "name": "Energy imported phase B"
+      },
+      "energy_imported_phase_c": {
+        "name": "Energy imported phase C"
+      },
       "inverter_status": {
         "name": "Status",
         "state": {
@@ -90,6 +114,15 @@
           "starting": "Starting",
           "throttled": "Throttled"
         }
+      },
+      "power_phase_a": {
+        "name": "Power phase A"
+      },
+      "power_phase_b": {
+        "name": "Power phase B"
+      },
+      "power_phase_c": {
+        "name": "Power phase C"
       },
       "vendor_status": {
         "name": "Vendor status"

@@ -49,7 +49,8 @@ async def async_seed_unit(
     The capture predates several of the points this integration reads, so those
     registers carry hand-picked values instead: distinct per point, and
     consistent with what the device did report (phase values sum to the
-    recorded totals, apparent power exceeds real power). Pass
+    recorded totals, apparent power exceeds real power). The meter's identity
+    block is hand-picked the same way, since the capture skips it. Pass
     ``serial_registers`` to override the inverter serial number ("7E123ABC" as
     captured).
     """

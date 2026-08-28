@@ -132,6 +132,72 @@ async def test_phase_currents_on_three_phase(
     assert hass.states.get("sensor.solaredge_se10000h_current_phase_c") is not None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_delta_meter_measures_nothing_against_a_neutral(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A delta meter has no neutral, so no voltage is measured against one."""
+    mock_modbus_unit.holding[40188] = 204  # SunSpec three-phase delta meter
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    # Line-to-line is all a delta meter has.
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_b") is not None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_c") is not None
+
+    assert hass.states.get("sensor.meter_1_voltage") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_c_n") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_split_phase_meter_has_two_phases(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A split-phase meter measures two phases, so the third is not offered."""
+    mock_modbus_unit.holding[40188] = 202  # SunSpec split-phase meter
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.meter_1_power_phase_a") is not None
+    assert hass.states.get("sensor.meter_1_power_phase_b") is not None
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_n") is not None
+
+    assert hass.states.get("sensor.meter_1_power_phase_c") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_c_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_c") is None
+
+
+async def test_meter_energy_ignores_transient_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter accumulator transiently reporting zero is held at the last maximum."""
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.meter_1_energy_exported")
+    assert state is not None
+    initial = float(state.state)
+    assert initial > 0
+
+    # The meter block transiently reports "not accumulated" (zero).
+    mock_modbus_unit.holding[40226] = 0
+    mock_modbus_unit.holding[40227] = 0
+
+    await _tick(hass, freezer)
+
+    state = hass.states.get("sensor.meter_1_energy_exported")
+    assert state is not None
+    assert float(state.state) == initial
+
+
 async def test_lifetime_energy_never_goes_backwards(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

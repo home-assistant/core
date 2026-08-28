@@ -144,6 +144,7 @@ class SolarEdgeModbusRuntimeData:
 
     readings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
+    inverter_device_id: str
 
     @property
     def solaredge(self) -> SolarEdge:

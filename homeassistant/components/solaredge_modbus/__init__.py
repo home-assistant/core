@@ -89,17 +89,40 @@ async def async_setup_entry(
             translation_key="measurements_unavailable",
         )
 
-    # Built once here: every entity hangs on the same device.
+    # Registered up front: a meter sub-device can only name the inverter it
+    # hangs off once that device has an ID.
+    device_info = inverter_device_info(solaredge, serial_number)
+    inverter = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **device_info
+    )
     entry.runtime_data = SolarEdgeModbusRuntimeData(
-        readings=readings, device_info=inverter_device_info(solaredge, serial_number)
+        readings=readings, device_info=device_info, inverter_device_id=inverter.id
     )
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **entry.runtime_data.device_info
-    )
+
+    _async_remove_stale_devices(hass, entry, solaredge, serial_number)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def _async_remove_stale_devices(
+    hass: HomeAssistant,
+    entry: SolarEdgeModbusConfigEntry,
+    solaredge: SolarEdge,
+    serial_number: str,
+) -> None:
+    """Remove devices for meters no longer attached to the inverter."""
+    current = {(DOMAIN, serial_number)}
+    current.update(
+        (DOMAIN, f"{serial_number}_meter_{index}")
+        for index in range(1, len(solaredge.meters) + 1)
+    )
+
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if not current.intersection(device.identifiers):
+            device_registry.async_remove_device(device.id)
 
 
 async def async_unload_entry(

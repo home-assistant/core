@@ -1,7 +1,9 @@
 """Base entities for the SolarEdge Modbus integration.
 
-Every identity derives from the inverter's serial number, which the config
-flow stores as the config entry unique ID.
+Each meter attached to the inverter is its own sub-device, linked to the
+inverter as its parent; everything else belongs to the inverter. All
+identities derive from the inverter's serial number, which the config flow
+stores as the config entry unique ID.
 """
 
 from typing import TYPE_CHECKING, override
@@ -40,7 +42,7 @@ def inverter_name(model: str | None) -> str:
 
 
 def inverter_device_info(solaredge: SolarEdge, serial_number: str) -> DeviceInfo:
-    """Return device information for the inverter."""
+    """Return device information for the inverter itself."""
     common = solaredge.common
     return DeviceInfo(
         identifiers={(DOMAIN, serial_number)},
@@ -53,12 +55,43 @@ def inverter_device_info(solaredge: SolarEdge, serial_number: str) -> DeviceInfo
     )
 
 
-class SolarEdgeModbusInverterEntity(
-    CoordinatorEntity[SolarEdgeModbusDataUpdateCoordinator]
-):
-    """Defines a SolarEdge Modbus entity on the inverter device."""
+class SolarEdgeModbusEntity(CoordinatorEntity[SolarEdgeModbusDataUpdateCoordinator]):
+    """Defines a SolarEdge Modbus entity."""
 
     _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        *,
+        entry: SolarEdgeModbusConfigEntry,
+        subsystem: str,
+        description: EntityDescription,
+        key_prefix: str = "",
+    ) -> None:
+        """Initialize a SolarEdge Modbus entity."""
+        super().__init__(coordinator=entry.runtime_data.readings)
+        self.entity_description = description
+        self._subsystem = subsystem
+
+        serial_number = entry.unique_id
+        if TYPE_CHECKING:
+            assert serial_number is not None
+        self._serial_number = serial_number
+        self._attr_unique_id = f"{serial_number}_{key_prefix}{description.key}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether this entity's sub-system answered the last poll.
+
+        A poll can come back partial, and an entity that reports a value from
+        an earlier read as if it were current is lying about the device.
+        """
+        return super().available and self._subsystem not in self.coordinator.data.failed
+
+
+class SolarEdgeModbusInverterEntity(SolarEdgeModbusEntity):
+    """Defines a SolarEdge Modbus entity on the inverter device."""
 
     def __init__(
         self,
@@ -67,23 +100,37 @@ class SolarEdgeModbusInverterEntity(
         description: EntityDescription,
     ) -> None:
         """Initialize a SolarEdge Modbus inverter entity."""
-        super().__init__(coordinator=entry.runtime_data.readings)
-        self.entity_description = description
-
-        serial_number = entry.unique_id
-        if TYPE_CHECKING:
-            assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{description.key}"
+        super().__init__(
+            entry=entry, subsystem=SUBSYSTEM_INVERTER, description=description
+        )
         self._attr_device_info = entry.runtime_data.device_info
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the inverter answered the most recent poll.
 
-        A poll can come back partial, and an entity that reports a value from
-        an earlier read as if it were current is lying about the device.
-        """
-        return (
-            super().available and SUBSYSTEM_INVERTER not in self.coordinator.data.failed
+class SolarEdgeModbusMeterEntity(SolarEdgeModbusEntity):
+    """Defines a SolarEdge Modbus entity on a meter sub-device."""
+
+    def __init__(
+        self,
+        *,
+        entry: SolarEdgeModbusConfigEntry,
+        description: EntityDescription,
+        index: int,
+    ) -> None:
+        """Initialize a SolarEdge Modbus meter entity."""
+        super().__init__(
+            entry=entry,
+            subsystem=f"meters[{index - 1}]",
+            description=description,
+            key_prefix=f"meter_{index}_",
+        )
+        self._index = index
+
+        meter = entry.runtime_data.solaredge.meters[index - 1]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._serial_number}_meter_{index}")},
+            manufacturer=meter.manufacturer or "SolarEdge",
+            model=meter.model or None,
+            name=f"Meter {index}",
+            serial_number=meter.serial_number or None,
+            via_device_id=entry.runtime_data.inverter_device_id,
         )

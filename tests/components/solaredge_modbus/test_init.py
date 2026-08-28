@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError, ServerDeviceFailureError
+from modbus_connection import (
+    IllegalDataAddressError,
+    ModbusTimeoutError,
+    ServerDeviceFailureError,
+)
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
@@ -65,6 +69,68 @@ async def test_inverter_that_does_not_name_itself(
     assert inverter.name == "SolarEdge inverter"
     assert inverter.model is None
     assert inverter.model_id is None
+
+
+async def test_meter_is_a_sub_device_of_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A meter is real hardware of its own, hanging off the inverter."""
+    await _setup(hass, mock_config_entry)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert inverter is not None
+
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_meter_1"), mock_config_entry.entry_id
+    )
+    assert meter is not None
+    assert meter.via_device_id == inverter.id
+    assert meter.name == "Meter 1"
+    assert meter.model == "SE-MTR-3Y-400V-A"
+
+
+async def test_meter_that_left_the_installation_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter taken off the inverter does not linger as a device.
+
+    Which meters are attached is read while the entry is set up, so a meter
+    that was removed is gone by the time the entry loads again.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter_identifier = (DOMAIN, f"{SERIAL_NUMBER}_meter_1")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(40188, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+        )
+        is not None
+    )
 
 
 async def test_single_late_answer_is_retried(
