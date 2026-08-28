@@ -1,10 +1,13 @@
 {
   "domain": "bitcoin",
   "name": "Bitcoin",
-  "codeowners": [],
+  "codeowners": ["@Nihvel"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bitcoin",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["blockchain"],
   "quality_scale": "legacy",
-  "requirements": ["blockchain==1.4.4"]
+  "requirements": ["blockchain==1.4.4"],
+  "single_config_entry": true
 }
