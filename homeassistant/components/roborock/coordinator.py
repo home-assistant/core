@@ -576,6 +576,9 @@ class RoborockWetDryVacUpdateCoordinator(
         self.api = api
         self._setup_completed = False
         self._unsub_push: Callable[[], None] | None = None
+        self._pushed_during_poll: dict[RoborockDyadDataProtocol, StateType] | None = (
+            None
+        )
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
             protocol
@@ -595,18 +598,24 @@ class RoborockWetDryVacUpdateCoordinator(
         if not self._setup_completed:
             await self._async_setup()
             self._setup_completed = True
+        self._pushed_during_poll = {}
         try:
-            return await self.api.query_values(self.request_protocols)
+            data = await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
+        finally:
+            pushed, self._pushed_during_poll = self._pushed_during_poll, None
+        return {**data, **pushed}
 
     @callback
     def _handle_push(self, values: dict[RoborockDyadDataProtocol, StateType]) -> None:
         """Apply an unsolicited state push from the device."""
+        if self._pushed_during_poll is not None:
+            self._pushed_during_poll.update(values)
         data = {**(self.data or {}), **values}
         if all(protocol in values for protocol in self.request_protocols):
             self.async_set_updated_data(data)
