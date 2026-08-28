@@ -10,7 +10,11 @@ from pybluetti import ProductClient, StompClient, UserProduct
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
@@ -18,6 +22,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .application_credentials import async_ensure_default_credential
 from .const import DOMAIN, EVENT_TOKEN_EXPIRED, GATEWAY_URL, WSS_URL
 from .coordinator import BluettiDeviceCoordinator
 from .models import BluettiData
@@ -53,6 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
             for p in all_products_data
         ]
 
+        # Recovers a restored entry whose Application Credentials storage is
+        # missing (e.g. a partial backup restore) - see the function's own
+        # docstring for why this must run on every setup, not just the flow.
+        await async_ensure_default_credential(hass)
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
                 hass, entry
@@ -77,6 +86,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
             access_token,
             on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
         )
+    except OAuth2TokenRequestReauthError as err:
+        # Non-recoverable: the refresh token itself is invalid/revoked, so
+        # retrying setup would fail identically every time. Needs the user's
+        # reauth flow, not ConfigEntryNotReady's endless retry loop.
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="auth_expired"
+        ) from err
     except Exception as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -123,12 +139,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     # Each device's first refresh is an independent network round-trip, so
     # run them concurrently instead of one-by-one - otherwise setup time
     # scales linearly with the number of devices on the account.
-    await asyncio.gather(
+    #
+    # return_exceptions=True so one device failing doesn't leave the other
+    # devices' refreshes running as orphaned, uncancelled tasks in the
+    # background - plain gather() propagates the first exception without
+    # waiting for (or cancelling) the rest.
+    results = await asyncio.gather(
         *(
             coordinator.async_config_entry_first_refresh()
             for coordinator in coordinators.values()
-        )
+        ),
+        return_exceptions=True,
     )
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

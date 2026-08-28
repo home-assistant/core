@@ -4,9 +4,12 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 
 from tests.common import MockConfigEntry
 
@@ -55,6 +58,94 @@ async def test_async_setup_entry_with_no_devices(hass: HomeAssistant) -> None:
     assert entry.runtime_data.bluetti_devices.devices == []
     assert entry.runtime_data.coordinators == {}
     mock_stomp_cls.return_value.connect.assert_awaited_once()
+
+
+async def test_async_setup_entry_recovers_missing_default_credential(
+    hass: HomeAssistant,
+) -> None:
+    """Setup recovers a restored entry whose Application Credentials storage is missing.
+
+    Regression test: async_ensure_default_credential() was only called from
+    the config flow, never from async_setup_entry, despite its own
+    docstring promising it runs "on every setup" - a restored entry with no
+    Application Credentials entry would otherwise fail
+    async_get_config_entry_implementation() and stay in ConfigEntryNotReady
+    retry forever.
+    """
+    entry = _entry(hass)
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.async_ensure_default_credential",
+            AsyncMock(),
+        ) as mock_ensure_credential,
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_stomp_cls.return_value.connect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_ensure_credential.assert_awaited_once_with(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.homeassistant.issues.config_entry_reauth.title",
+            "component.homeassistant.issues.config_entry_reauth.description",
+        ]
+    ],
+)
+async def test_async_setup_entry_classifies_reauth_error_as_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """An invalid/revoked refresh token must trigger reauth, not endless retries.
+
+    Regression test: a broad `except Exception` around
+    oauth_session.async_ensure_token_valid() used to wrap
+    OAuth2TokenRequestReauthError (raised when the refresh token itself is
+    invalid) into ConfigEntryNotReady, which schedules infinite setup
+    retries that would fail identically every time instead of surfacing
+    the standard reauth flow via ConfigEntryAuthFailed.
+    """
+    entry = _entry(hass)
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+    ):
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock(
+            side_effect=OAuth2TokenRequestReauthError(
+                domain=DOMAIN, request_info=MagicMock()
+            )
+        )
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_with_an_expired_but_refreshable_token_does_not_notify(
@@ -265,6 +356,68 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
     coordinators = entry.runtime_data.coordinators
     assert set(coordinators.keys()) == {"SN1", "SN2"}
     assert all(c.last_update_success for c in coordinators.values())
+
+
+async def test_one_device_failing_first_refresh_does_not_orphan_the_others(
+    hass: HomeAssistant,
+) -> None:
+    """A failing device's first refresh must not leave others as orphaned tasks.
+
+    Regression test: asyncio.gather() without return_exceptions=True
+    propagates the first exception as soon as it happens, without waiting
+    for (or cancelling) the other coordinators' still-in-flight first
+    refreshes - they kept running as untracked background tasks that could
+    still mutate state after setup had already moved on to SETUP_RETRY.
+    SN2 fails immediately; SN1 is deliberately slower, so if it were left
+    running unawaited, hass.config_entries.async_setup() would return
+    before SN1's own refresh actually completed.
+    """
+    entry = _entry(
+        hass,
+        products=[
+            {"sn": "SN1", "name": "Device 1", "stateList": [], "online": "1"},
+            {"sn": "SN2", "name": "Device 2", "stateList": [], "online": "1"},
+        ],
+        devices=["SN1", "SN2"],
+    )
+    sn1_refresh_completed = asyncio.Event()
+
+    async def fake_get_device_status(sn):
+        if sn == "SN2":
+            raise RuntimeError("boom")
+        await asyncio.sleep(0.05)
+        sn1_refresh_completed.set()
+        return MagicMock(
+            data=[MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])]
+        )
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch("homeassistant.components.bluetti.ProductClient") as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            side_effect=fake_get_device_status
+        )
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    # By the time async_setup() has returned, SN1's slower refresh must
+    # have already completed too - not left running unawaited.
+    assert sn1_refresh_completed.is_set()
 
 
 async def test_device_unbound_during_first_refresh_is_not_set_up(
