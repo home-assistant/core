@@ -23,6 +23,7 @@ from homeassistant.components.denonavr.services import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -63,19 +64,21 @@ def client_fixture():
         yield mock_client_class.return_value
 
 
-async def setup_denonavr(hass: HomeAssistant) -> None:
+async def setup_denonavr(
+    hass: HomeAssistant, serial_number: str | None = TEST_SERIALNUMBER
+) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
-        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        CONF_SERIAL_NUMBER: serial_number,
     }
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_UNIQUE_ID,
+        unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
     )
 
@@ -88,6 +91,20 @@ async def setup_denonavr(hass: HomeAssistant) -> None:
 
     assert state
     assert state.name == TEST_NAME
+
+    return mock_entry
+
+
+@pytest.mark.usefixtures("client")
+async def test_setup_without_serial_number(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a receiver reporting no serial number still gets its media player."""
+    entry = await setup_denonavr(hass, serial_number=None)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
 
 async def test_get_command(hass: HomeAssistant, client) -> None:
