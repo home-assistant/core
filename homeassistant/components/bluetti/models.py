@@ -304,25 +304,10 @@ class BluettiDevice:
             else:
                 __LOGGER__.warning("Device registry not found: %s", self.device_id)
 
-            # 4. Remove the device (and its coordinators) from the runtime data
-            try:
-                runtime_data = getattr(entry, "runtime_data", None)
-                if runtime_data:
-                    runtime_data.bluetti_devices.devices = [
-                        d
-                        for d in runtime_data.bluetti_devices.devices
-                        if d.device_id != self.device_id
-                    ]
-                    coordinator = runtime_data.coordinators.pop(self.device_id, None)
-                    if coordinator:
-                        await coordinator.async_shutdown()
-                    __LOGGER__.debug(
-                        "Removed device from runtime data: %s", self.device_id
-                    )
-            except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
-                __LOGGER__.warning("Error removing device from runtime data: %s", e)
-
-            # 5. Remove the device from the configuration entry
+            # 4. Remove the device from the configuration entry - persist
+            # this before touching the coordinator below, so a failure here
+            # leaves the coordinator alive to naturally retry via its own
+            # next poll (persistence_ok stays False either way).
             try:
                 current_options = dict(entry.options)
                 current_devices = current_options.get("devices", [])
@@ -367,6 +352,29 @@ class BluettiDevice:
                     "Error updating configuration entry: %s", e, exc_info=True
                 )
                 # Even if the update fails, continue to display the notification
+
+            # 5. Remove the device (and its coordinator) from the runtime
+            # data - only once persistence above actually succeeded, so a
+            # failed attempt leaves the coordinator running to retry.
+            if persistence_ok:
+                try:
+                    runtime_data = getattr(entry, "runtime_data", None)
+                    if runtime_data:
+                        runtime_data.bluetti_devices.devices = [
+                            d
+                            for d in runtime_data.bluetti_devices.devices
+                            if d.device_id != self.device_id
+                        ]
+                        coordinator = runtime_data.coordinators.pop(
+                            self.device_id, None
+                        )
+                        if coordinator:
+                            await coordinator.async_shutdown()
+                        __LOGGER__.debug(
+                            "Removed device from runtime data: %s", self.device_id
+                        )
+                except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
+                    __LOGGER__.warning("Error removing device from runtime data: %s", e)
 
             # 6. Display persistent notification
             try:

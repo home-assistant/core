@@ -323,7 +323,7 @@ def _bound_device_with_registry_entries(
         auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device]),
         stomp_client=MagicMock(),
-        coordinators={"SN1": MagicMock()},
+        coordinators={"SN1": AsyncMock()},
     )
     device._hass = hass
     device._entry = entry
@@ -392,10 +392,19 @@ async def test_handle_unbind_survives_config_entry_update_error(
     before persisting the removal - if that persistence step failed, the
     device stayed "enabled" in options forever with no coordinator and no
     retry path. It must stay False here so the next refresh retries.
+
+    Also a regression test for a second bug in that same fix: the
+    coordinator used to be torn down (step "5" in the old numbering)
+    *before* persistence was attempted (step "4") - so even with the flag
+    correctly left False, the coordinator that would naturally trigger the
+    next refresh was already dead, and the "retry" never actually happened
+    in a real system. Persistence must now run first, and the coordinator
+    must stay alive (not shut down, not removed) when it fails.
     """
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
+    coordinator = entry.runtime_data.coordinators["SN1"]
 
     with (
         patch.object(hass.config_entries, "async_reload", AsyncMock()),
@@ -407,6 +416,12 @@ async def test_handle_unbind_survives_config_entry_update_error(
         await hass.async_block_till_done()
 
     assert device._unbind_processed is False
+
+    # The coordinator must still be alive and untouched - it's what
+    # actually drives the retry via its own next scheduled poll.
+    assert entry.runtime_data.coordinators["SN1"] is coordinator
+    coordinator.async_shutdown.assert_not_awaited()
+    assert device in entry.runtime_data.bluetti_devices.devices
 
     # Prove the retry actually happens: the next refresh must call
     # _handle_unbind() again, not skip it because of a stale True flag.
