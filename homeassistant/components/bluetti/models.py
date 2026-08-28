@@ -213,7 +213,8 @@ class BluettiDevice:
                 },
             ) from err
 
-        # control_device() doesn't raise on a rejected command - check msgCode.
+        # control_device() doesn't raise on a rejected command - check
+        # msgCode. Tracked upstream: bluetti-community/pybluetti#1.
         if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -228,6 +229,10 @@ class BluettiDevice:
         if self.coordinator:
             self.coordinator.async_set_updated_data(self)
 
+    # online/battery_level derive from stateList, which pybluetti.UserProduct
+    # exposes untyped - candidates to move into the library eventually, but
+    # entangled with this class's own state parsing. Tracked upstream:
+    # bluetti-community/pybluetti#1.
     @property
     def online(self) -> bool:
         """Return whether the cloud reports this device as online."""
