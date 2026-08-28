@@ -17,10 +17,10 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from . import mock_asyncio_subprocess_run
+from . import mock_asyncio_subprocess_exec, mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -114,7 +114,7 @@ async def test_template_render(
 
 
 async def test_template_render_with_quote(hass: HomeAssistant) -> None:
-    """Ensure command with templates and quotes get rendered properly."""
+    """Ensure command with templates and quotes uses exec for security."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
     await setup.async_setup_component(
         hass,
@@ -134,7 +134,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with mock_asyncio_subprocess_run(b"Works\n") as mock_subprocess_run:
+    with mock_asyncio_subprocess_exec(b"Works\n") as mock_subprocess_exec:
         # Give time for template to load
         async_fire_time_changed(
             hass,
@@ -142,9 +142,12 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert len(mock_subprocess_run.mock_calls) == 1
-        mock_subprocess_run.assert_called_with(
-            'echo "sensor_value" "3 4"',
+        assert len(mock_subprocess_exec.mock_calls) == 1
+        # shlex splits the quoted args: "sensor_value" → sensor_value, "3 4" → 3 4
+        mock_subprocess_exec.assert_called_with(
+            "echo",
+            "sensor_value",
+            "3 4",
             stdin=None,
             stdout=-1,
             close_fds=False,
@@ -1029,3 +1032,218 @@ async def test_availability_blocks_value_template(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert error in caplog.text
+
+
+async def test_template_without_shell_features_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Templated commands with no shell metacharacters run via exec, no repair issue."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"sensor_value\n") as mock_exec:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "echo",
+        "sensor_value",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_with_shell_features_uses_shell_and_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Templated commands with shell metacharacters keep shell path and create a repair issue."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }} | cat",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        "echo safe_value | cat",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    issues = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.translation_key == "shell_command_template_deprecation"
+    ]
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.4.0"
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].translation_placeholders == {
+        "program": "echo",
+        "platform": "sensor",
+        "name": "Test",
+    }
+
+
+async def test_template_shell_feature_issue_cleared_when_metachar_gone(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Repair issue is deleted when the rendered args no longer contain shell features."""
+    hass.states.async_set("sensor.input_sensor", "bad | value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # First update: rendered args contain "|" → shell path + repair issue
+    with mock_asyncio_subprocess_run(b"bad | value\n"):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+    # Second update: rendered args are clean → exec path, issue deleted
+    hass.states.async_set("sensor.input_sensor", "clean_value")
+    with mock_asyncio_subprocess_exec(b"clean_value\n"):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_render_unbalanced_quote_logs_and_skips(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A rendered value with an unbalanced quote is handled without crashing."""
+    hass.states.async_set("sensor.input_sensor", "O'Brien")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error parsing command arguments" in caplog.text
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [
+        # "!" is not special to /bin/sh in argument position, so a value
+        # containing it is safe to run via exec without a deprecation warning.
+        pytest.param("hello!", id="exclamation_mark"),
+    ],
+)
+async def test_template_non_shell_metachar_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    state_value: str,
+) -> None:
+    """Values with characters that are not special to /bin/sh run via exec."""
+    hass.states.async_set("sensor.input_sensor", state_value)
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(f"{state_value}\n".encode()) as mock_exec:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "echo",
+        state_value,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )

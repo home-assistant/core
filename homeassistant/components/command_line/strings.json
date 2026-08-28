@@ -7,6 +7,12 @@
       "message": "Timeout trying to execute command: {command}"
     }
   },
+  "issues": {
+    "shell_command_template_deprecation": {
+      "description": "The `command_line` `{platform}` `{name}` runs a command (`{program}`) that uses a template together with shell features (pipes, redirects, globbing, etc.). For security, templated commands will stop being run through a shell in Home Assistant 2027.4 and these shell features will no longer work.\n\nUpdate the command to avoid shell features in the templated part, or move the logic into a script the command calls.",
+      "title": "Command with a template uses shell features"
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads command line configuration from the YAML-configuration.",
