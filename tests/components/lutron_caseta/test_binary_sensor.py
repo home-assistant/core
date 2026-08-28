@@ -88,6 +88,9 @@ async def test_battery_sensor_updates_on_schedule(
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
+    # Setup asks once to find out whether the shade has a battery at all
+    instance.get_battery_status.reset_mock()
+
     binary_sensor_entity_id = (
         "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
     )
@@ -107,7 +110,7 @@ async def test_battery_sensor_updates_on_schedule(
     updated_state = hass.states.get(binary_sensor_entity_id)
     assert updated_state is not None
     assert updated_state.state == STATE_ON
-    assert instance.get_battery_status.await_count == 2
+    assert instance.get_battery_status.await_count == 1
     instance.get_battery_status.assert_awaited_with("802")
 
     instance.battery_statuses["802"] = "Unknown"
@@ -118,7 +121,29 @@ async def test_battery_sensor_updates_on_schedule(
     unknown_state = hass.states.get(binary_sensor_entity_id)
     assert unknown_state is not None
     assert unknown_state.state == STATE_UNKNOWN
-    assert instance.get_battery_status.await_count == 3
+    assert instance.get_battery_status.await_count == 2
+
+
+async def test_no_battery_sensor_for_a_shade_wired_for_power(
+    hass: HomeAssistant,
+) -> None:
+    """Test a shade the bridge reports no battery for gets no battery sensor."""
+    instance = MockBridge()
+    instance.battery_statuses = {}
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(
+            "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+        )
+        is None
+    )
 
 
 async def test_battery_sensor_handles_bridge_response_error(

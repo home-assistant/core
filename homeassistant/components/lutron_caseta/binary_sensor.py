@@ -1,9 +1,11 @@
 """Support for Lutron Caseta Occupancy/Vacancy/Battery Sensors."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any, override
 
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, BridgeResponseError
+from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -44,13 +46,31 @@ async def async_setup_entry(
         LutronOccupancySensor(hass, occupancy_group, data)
         for occupancy_group in occupancy_groups.values()
     )
+    covers = bridge.get_devices_by_domain(COVER_DOMAIN)
+    reports_battery = await asyncio.gather(
+        *(_async_reports_battery(bridge, cover["device_id"]) for cover in covers)
+    )
     async_add_entities(
         (
-            LutronCasetaBatterySensor(hass, device, data)
-            for device in bridge.get_devices_by_domain(COVER_DOMAIN)
+            LutronCasetaBatterySensor(hass, cover, data)
+            for cover, has_battery in zip(covers, reports_battery, strict=True)
+            if has_battery
         ),
         update_before_add=True,
     )
+
+
+async def _async_reports_battery(bridge: Smartbridge, device_id: str) -> bool:
+    """Return whether the bridge reports a battery for the device.
+
+    A shade wired for power answers without a battery status, and nothing in
+    the device data the bridge caches tells the two apart.
+    """
+    try:
+        return await bridge.get_battery_status(device_id) is not None
+    except BridgeResponseError:
+        # Keep the sensor rather than drop it over a hiccup during setup
+        return True
 
 
 class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
