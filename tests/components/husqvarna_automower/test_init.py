@@ -293,7 +293,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "100"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -309,7 +309,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -322,7 +322,7 @@ async def test_constant_polling(
     state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_front_lawn_progress")
     assert state is not None
     assert state.state == "50"
 
@@ -481,7 +481,7 @@ async def test_add_and_remove_work_area(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.called
 
-    state = hass.states.get("sensor.garden_test_mower_1_new_work_area_progress")
+    state = hass.states.get("sensor.garden_new_work_area_progress")
     assert state is not None
     assert state.state == "12"
     current_entites_after_addition = len(

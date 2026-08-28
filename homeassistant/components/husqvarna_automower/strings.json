@@ -206,11 +206,8 @@
       "cutting_height": {
         "name": "Cutting height"
       },
-      "my_lawn_cutting_height_work_area": {
-        "name": "My lawn cutting height"
-      },
-      "work_area_cutting_height_work_area": {
-        "name": "{work_area} cutting height"
+      "cutting_height_work_area": {
+        "name": "cutting height"
       }
     },
     "select": {
@@ -384,12 +381,6 @@
           "secondary_area": "Secondary area"
         }
       },
-      "my_lawn_last_time_completed": {
-        "name": "My lawn last time completed"
-      },
-      "my_lawn_progress": {
-        "name": "My lawn progress"
-      },
       "next_start_timestamp": {
         "name": "Next start"
       },
@@ -460,10 +451,10 @@
         }
       },
       "work_area_last_time_completed": {
-        "name": "{work_area} last time completed"
+        "name": "last time completed"
       },
       "work_area_progress": {
-        "name": "{work_area} progress"
+        "name": "progress"
       }
     },
     "switch": {

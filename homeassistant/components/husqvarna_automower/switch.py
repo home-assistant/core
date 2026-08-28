@@ -14,7 +14,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
-    _work_area_translation_key,
     handle_sending_exception,
 )
 
@@ -205,16 +204,7 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         """Set up Automower switch."""
         super().__init__(mower_id, coordinator, work_area_id)
         key = "work_area"
-        self._attr_translation_key = _work_area_translation_key(work_area_id, key)
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
-        if TYPE_CHECKING:
-            assert self.work_area_attributes is not None
-        if self.work_area_attributes.name == "my_lawn":
-            self._attr_translation_placeholders = {
-                "work_area": self.work_area_attributes.name
-            }
-        else:
-            self._attr_name = self.work_area_attributes.name
 
     @property
     @override

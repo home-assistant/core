@@ -86,7 +86,7 @@ async def test_work_area_and_stay_out_zone_entities_unavailable_without_data(
     await hass.async_block_till_done()
 
     for entity_id in (
-        "switch.garden_test_mower_1_my_lawn",
+        "switch.garden_my_lawn",
         "switch.garden_test_mower_1_avoid_danger_zone",
     ):
         state = hass.states.get(entity_id)
@@ -219,7 +219,7 @@ async def test_work_area_switch_commands(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.garden_test_mower_1_my_lawn"
+    entity_id = "switch.garden_my_lawn"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),

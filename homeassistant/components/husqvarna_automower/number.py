@@ -18,7 +18,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
-    _work_area_translation_key,
     handle_sending_exception,
 )
 
@@ -86,7 +85,6 @@ class WorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
     value_fn: Callable[[WorkArea], int]
-    translation_key_fn: Callable[[int, str], str]
     set_value_fn: Callable[
         [AutomowerDataUpdateCoordinator, str, float, int], Awaitable[Any]
     ]
@@ -95,7 +93,7 @@ class WorkAreaNumberEntityDescription(NumberEntityDescription):
 WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
     WorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="cutting_height_work_area",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.cutting_height,
@@ -201,20 +199,6 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
-        if TYPE_CHECKING:
-            # Work area does not get created if it is None
-            assert self.work_area_attributes is not None
-        self._attr_translation_placeholders = {
-            "work_area": self.work_area_attributes.name
-        }
-
-    @property
-    @override
-    def translation_key(self) -> str:
-        """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(
-            self.work_area_id, self.entity_description.key
-        )
 
     @property
     @override

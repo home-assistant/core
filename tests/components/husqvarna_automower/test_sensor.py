@@ -135,13 +135,15 @@ async def test_work_area_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    for entity_id in (
-        "sensor.garden_test_mower_1_work_area",
-        "sensor.garden_test_mower_1_front_lawn_progress",
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    entity_id = "sensor.garden_test_mower_1_work_area"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    entity_id = "sensor.garden_front_lawn_progress"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_restricted_reason_sensor(

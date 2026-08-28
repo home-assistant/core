@@ -11,7 +11,8 @@ from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, Wo
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AutomowerDataUpdateCoordinator
@@ -168,6 +169,22 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
+        assert self.work_area_attributes is not None
+        device_info = self._attr_device_info
+        assert device_info is not None
+
+        parent_device = dr.async_get(coordinator.hass).async_get_or_create(
+            config_entry_id=coordinator.config_entry.entry_id,
+            **device_info,
+        )
+        work_area_name = self.work_area_attributes.name
+        if self.work_area_attributes.name == "my_lawn":
+            work_area_name = "My lawn"
+        self._attr_device_info = ChildDeviceInfo(
+            identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
+            name=work_area_name,
+            parent_device_id=parent_device.id,
+        )
 
     @property
     def work_areas(self) -> dict[int, WorkArea] | None:
