@@ -1142,6 +1142,7 @@ async def test_hassio_discovery_flow(
     [
         pytest.param({}, id="missing_url"),
         pytest.param({CONF_URL: "not a url"}, id="invalid_url"),
+        pytest.param({CONF_URL: "http://[::1/mcp"}, id="unparsable_url"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")

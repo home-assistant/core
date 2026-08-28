@@ -198,8 +198,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle discovery of an MCP server provided by an app."""
         url = discovery_info.config.get(CONF_URL)
         try:
-            cv.url(url)
-        except vol.Invalid:
+            # An unparsable URL, such as an unmatched IPv6 bracket, raises ValueError
+            url = cv.url(url)
+        except vol.Invalid, ValueError:
             _LOGGER.debug(
                 "Ignoring discovery from app %s with invalid URL: %s",
                 discovery_info.slug,
