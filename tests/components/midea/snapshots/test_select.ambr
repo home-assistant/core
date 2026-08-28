@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_state_snapshot[a1][select.bedroom_ac_fan_speed-entry]
+# name: test_select_state_snapshot[a1][select.dehumidifier_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -22,7 +22,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.dehumidifier_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45,10 +45,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[a1][select.bedroom_ac_fan_speed-state]
+# name: test_select_state_snapshot[a1][select.dehumidifier_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'lowest',
         'low',
@@ -59,14 +59,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.dehumidifier_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'medium',
   })
 # ---
-# name: test_select_state_snapshot[a1][select.bedroom_ac_water_level_setting-entry]
+# name: test_select_state_snapshot[a1][select.dehumidifier_water_level_setting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_water_level_setting',
+    'entity_id': 'select.dehumidifier_water_level_setting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -110,10 +110,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[a1][select.bedroom_ac_water_level_setting-state]
+# name: test_select_state_snapshot[a1][select.dehumidifier_water_level_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Water level setting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Water level setting',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '25',
         '50',
@@ -122,14 +122,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_water_level_setting',
+    'entity_id': 'select.dehumidifier_water_level_setting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_airflow_horizontal-entry]
+# name: test_select_state_snapshot[ac][select.air_conditioner_airflow_horizontal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -152,7 +152,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_airflow_horizontal',
+    'entity_id': 'select.air_conditioner_airflow_horizontal',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -175,10 +175,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_airflow_horizontal-state]
+# name: test_select_state_snapshot[ac][select.air_conditioner_airflow_horizontal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Airflow horizontal',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Airflow horizontal',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'left',
@@ -189,14 +189,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_airflow_horizontal',
+    'entity_id': 'select.air_conditioner_airflow_horizontal',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_airflow_vertical-entry]
+# name: test_select_state_snapshot[ac][select.air_conditioner_airflow_vertical-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -219,7 +219,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_airflow_vertical',
+    'entity_id': 'select.air_conditioner_airflow_vertical',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -242,10 +242,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_airflow_vertical-state]
+# name: test_select_state_snapshot[ac][select.air_conditioner_airflow_vertical-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Airflow vertical',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Airflow vertical',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'up',
@@ -256,14 +256,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_airflow_vertical',
+    'entity_id': 'select.air_conditioner_airflow_vertical',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_power_rate_limit-entry]
+# name: test_select_state_snapshot[ac][select.air_conditioner_power_rate_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -286,7 +286,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_power_rate_limit',
+    'entity_id': 'select.air_conditioner_power_rate_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -309,10 +309,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[ac][select.bedroom_ac_power_rate_limit-state]
+# name: test_select_state_snapshot[ac][select.air_conditioner_power_rate_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Power rate limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Power rate limit',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '20',
@@ -323,14 +323,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_power_rate_limit',
+    'entity_id': 'select.air_conditioner_power_rate_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_select_state_snapshot[c3][select.bedroom_ac_silent_level-entry]
+# name: test_select_state_snapshot[c3][select.heat_pump_wi_fi_controller_silent_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -350,7 +350,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_silent_level',
+    'entity_id': 'select.heat_pump_wi_fi_controller_silent_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -373,10 +373,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[c3][select.bedroom_ac_silent_level-state]
+# name: test_select_state_snapshot[c3][select.heat_pump_wi_fi_controller_silent_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Silent level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Wi-Fi Controller Silent level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'silent',
@@ -384,14 +384,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_silent_level',
+    'entity_id': 'select.heat_pump_wi_fi_controller_silent_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_oscillation_angle-entry]
+# name: test_select_state_snapshot[fa][select.fan_oscillation_angle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -415,7 +415,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_oscillation_angle',
+    'entity_id': 'select.fan_oscillation_angle',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -438,10 +438,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_oscillation_angle-state]
+# name: test_select_state_snapshot[fa][select.fan_oscillation_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Oscillation angle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fan Oscillation angle',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         '30',
@@ -453,14 +453,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_oscillation_angle',
+    'entity_id': 'select.fan_oscillation_angle',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_oscillation_mode-entry]
+# name: test_select_state_snapshot[fa][select.fan_oscillation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -484,7 +484,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_oscillation_mode',
+    'entity_id': 'select.fan_oscillation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -507,10 +507,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_oscillation_mode-state]
+# name: test_select_state_snapshot[fa][select.fan_oscillation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Oscillation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fan Oscillation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'oscillation',
@@ -522,14 +522,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_oscillation_mode',
+    'entity_id': 'select.fan_oscillation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_tilting_angle-entry]
+# name: test_select_state_snapshot[fa][select.fan_tilting_angle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -556,7 +556,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_tilting_angle',
+    'entity_id': 'select.fan_tilting_angle',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -579,10 +579,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fa][select.bedroom_ac_tilting_angle-state]
+# name: test_select_state_snapshot[fa][select.fan_tilting_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Tilting angle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fan Tilting angle',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         '30',
@@ -597,14 +597,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_tilting_angle',
+    'entity_id': 'select.fan_tilting_angle',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_detect_mode-entry]
+# name: test_select_state_snapshot[fc][select.air_purifier_detect_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -624,7 +624,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_detect_mode',
+    'entity_id': 'select.air_purifier_detect_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -647,10 +647,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_detect_mode-state]
+# name: test_select_state_snapshot[fc][select.air_purifier_detect_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Detect mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Detect mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'pm_25',
@@ -658,14 +658,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_detect_mode',
+    'entity_id': 'select.air_purifier_detect_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_fan_speed-entry]
+# name: test_select_state_snapshot[fc][select.air_purifier_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -687,7 +687,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.air_purifier_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -710,10 +710,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_fan_speed-state]
+# name: test_select_state_snapshot[fc][select.air_purifier_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'standby',
@@ -723,14 +723,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.air_purifier_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_mode-entry]
+# name: test_select_state_snapshot[fc][select.air_purifier_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -753,7 +753,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_mode',
+    'entity_id': 'select.air_purifier_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -776,10 +776,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_mode-state]
+# name: test_select_state_snapshot[fc][select.air_purifier_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standby',
         'auto',
@@ -790,14 +790,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_mode',
+    'entity_id': 'select.air_purifier_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_screen_display-entry]
+# name: test_select_state_snapshot[fc][select.air_purifier_screen_display-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -817,7 +817,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_screen_display',
+    'entity_id': 'select.air_purifier_screen_display',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -840,10 +840,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fc][select.bedroom_ac_screen_display-state]
+# name: test_select_state_snapshot[fc][select.air_purifier_screen_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Screen display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Screen display',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
@@ -851,14 +851,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_screen_display',
+    'entity_id': 'select.air_purifier_screen_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'bright',
   })
 # ---
-# name: test_select_state_snapshot[fd][select.bedroom_ac_fan_speed-entry]
+# name: test_select_state_snapshot[fd][select.humidifier_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -881,7 +881,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.humidifier_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -904,10 +904,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fd][select.bedroom_ac_fan_speed-state]
+# name: test_select_state_snapshot[fd][select.humidifier_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'lowest',
         'low',
@@ -918,14 +918,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_fan_speed',
+    'entity_id': 'select.humidifier_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_select_state_snapshot[fd][select.bedroom_ac_screen_display-entry]
+# name: test_select_state_snapshot[fd][select.humidifier_screen_display-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -945,7 +945,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_screen_display',
+    'entity_id': 'select.humidifier_screen_display',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -968,10 +968,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[fd][select.bedroom_ac_screen_display-state]
+# name: test_select_state_snapshot[fd][select.humidifier_screen_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Screen display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Screen display',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
@@ -979,14 +979,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_screen_display',
+    'entity_id': 'select.humidifier_screen_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'bright',
   })
 # ---
-# name: test_select_state_snapshot[x40][select.bedroom_ac_direction-entry]
+# name: test_select_state_snapshot[x40][select.integrated_ceiling_fan_direction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1009,7 +1009,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.bedroom_ac_direction',
+    'entity_id': 'select.integrated_ceiling_fan_direction',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1032,10 +1032,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_state_snapshot[x40][select.bedroom_ac_direction-state]
+# name: test_select_state_snapshot[x40][select.integrated_ceiling_fan_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Integrated Ceiling Fan Direction',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '60',
         '70',
@@ -1046,7 +1046,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.bedroom_ac_direction',
+    'entity_id': 'select.integrated_ceiling_fan_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

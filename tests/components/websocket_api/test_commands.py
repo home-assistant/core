@@ -2788,7 +2788,7 @@ async def test_subscribe_trigger(
             {"platform": "numeric_state"},
             {
                 "code": "invalid_format",
-                "message": "required key not provided @ data['entity_id']",
+                "message": "required key not provided at 'entity_id'",
             },
         ),
         # Unknown device, raised as a HomeAssistantError by the platform validator
@@ -2989,10 +2989,7 @@ async def test_test_condition_template_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "must contain at least one of before, after. for dictionary value "
-                    "@ data['options']"
-                ),
+                "message": ("must contain at least one of before, after. at 'options'"),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3204,8 +3201,8 @@ async def test_subscribe_condition_template_error(
                 "code": "invalid_format",
                 "message": (
                     "Unexpected value for condition: 'None'. Expected a condition, "
-                    "a list of conditions or a valid template for dictionary value "
-                    "@ data['condition']. Got {'blaba': 'invalid'}"
+                    "a list of conditions or a valid template at 'condition'. Got "
+                    "{'blaba': 'invalid'}"
                 ),
             },
         ),
@@ -3213,9 +3210,7 @@ async def test_subscribe_condition_template_error(
             {"condition": "state", "entity_id": "hello.world"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "required key not provided @ data['condition']['state']. Got None"
-                ),
+                "message": ("required key not provided at 'condition.state'. Got None"),
             },
         ),
     ],
@@ -3247,10 +3242,7 @@ async def test_subscribe_condition_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "must contain at least one of before, after. for dictionary value "
-                    "@ data['options']"
-                ),
+                "message": ("must contain at least one of before, after. at 'options'"),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3614,7 +3606,7 @@ async def test_validate_config_works(
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
-            "Unable to determine action @ data[0]",
+            "Unable to determine action at '[0]'",
         ),
     ],
 )

@@ -64,7 +64,7 @@ _VM_101 = {
 }
 
 _CT_200 = {
-    "vmid": 200,
+    "vmid": "200",
     "name": "ct-nginx",
     "status": "running",
     "maxmem": 1073741824,
@@ -77,7 +77,7 @@ _CT_200 = {
 }
 
 _CT_201 = {
-    "vmid": 201,
+    "vmid": "201",
     "name": "ct-backup",
     "status": "stopped",
     "maxmem": 1073741824,

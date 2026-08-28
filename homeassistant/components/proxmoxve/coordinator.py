@@ -217,6 +217,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             )
 
         self._build_id_node_maps(data)
+        # New-resource callbacks create entities that immediately read coordinator data.
+        self.data = data
         self._async_add_remove_nodes(data)
         return data
 

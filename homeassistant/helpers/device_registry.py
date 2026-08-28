@@ -130,13 +130,11 @@ class DeviceInfo(TypedDict, total=False):
 
     configuration_url: str | URL | None
     connections: set[tuple[str, str]]
-    created_at: str
     entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
     model_id: str | None
-    modified_at: str
     name: str | None
     serial_number: str | None
     suggested_area: str | None
@@ -155,9 +153,7 @@ class ChildDeviceInfo(TypedDict, total=False):
     entry, and must belong to the same config subentry.
     """
 
-    created_at: str
     identifiers: Required[set[tuple[str, str]]]
-    modified_at: str
     name: str | None
     parent_device_id: Required[str]
     suggested_area: str | None
@@ -263,11 +259,14 @@ def _validate_device_info(
 
 
 # Deprecated `async_get_or_create` parameters, mapped to the HA Core version they are
-# removed in.
-_DEPRECATED_DEVICE_INFO_PARAMETERS = {
+# removed in and the replacement parameter, or `None` if the parameter is ignored and
+# has no replacement.
+_DEPRECATED_DEVICE_INFO_PARAMETERS: dict[str, tuple[str, str | None]] = {
+    "created_at": ("2027.9.0", None),
     "default_manufacturer": ("2027.9.0", "manufacturer"),
     "default_model": ("2027.9.0", "model"),
     "default_name": ("2027.9.0", "name"),
+    "modified_at": ("2027.9.0", None),
     "via_device": ("2027.8.0", "via_device_id"),
 }
 
@@ -2214,7 +2213,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         configuration_url: str | URL | UndefinedType | None = UNDEFINED,
         connections: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
-        created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
@@ -2223,7 +2221,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         manufacturer: str | UndefinedType | None = UNDEFINED,
         model: str | UndefinedType | None = UNDEFINED,
         model_id: str | UndefinedType | None = UNDEFINED,
-        modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
         suggested_area: str | UndefinedType | None = UNDEFINED,
@@ -2241,9 +2238,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         # Extract deprecated parameters, and reject any other unexpected keyword
         # argument.
+        created_at = kwargs.pop("created_at", UNDEFINED)
         default_manufacturer = kwargs.pop("default_manufacturer", UNDEFINED)
         default_model = kwargs.pop("default_model", UNDEFINED)
         default_name = kwargs.pop("default_name", UNDEFINED)
+        modified_at = kwargs.pop("modified_at", UNDEFINED)
         via_device = kwargs.pop("via_device", UNDEFINED)
         if kwargs:
             raise TypeError(
@@ -2286,18 +2285,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
         # Report the deprecated parameters here, before any registry mutation.
         deprecated_values = {
+            "created_at": created_at,
             "default_manufacturer": default_manufacturer,
             "default_model": default_model,
             "default_name": default_name,
+            "modified_at": modified_at,
             "via_device": via_device,
         }
         for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
             if deprecated_values[parameter] is UNDEFINED:
                 continue
             version, replacement = deprecation
+            if replacement is None:
+                advice = ", which is ignored"
+            else:
+                advice = f"; use `{replacement}` instead"
             report_usage(
                 "calls `device_registry.async_get_or_create` with a deprecated "
-                f"`{parameter}` parameter; use `{replacement}` instead",
+                f"`{parameter}` parameter{advice}",
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version=version,
@@ -2598,10 +2603,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
-        modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | UndefinedType | None = UNDEFINED,
         parent_device_id: str,
         suggested_area: str | UndefinedType | None = UNDEFINED,
@@ -3684,6 +3687,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
             async_remove_device to remove.
         """
+        if device_id not in self._devices and device_id in self._child_devices:
+            raise HomeAssistantError(
+                f"Device {device_id} is a child device; use async_update_child_device"
+            )
         if disabled_by is DeviceEntryDisabler.DEVICE:
             raise HomeAssistantError(
                 "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
@@ -3811,6 +3818,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             inconsistent disabled_by is deprecated and ignored; this will raise in HA
             Core 2027.8.
         """
+        if device_id not in self._child_devices and device_id in self._devices:
+            raise HomeAssistantError(
+                f"Device {device_id} is a main device; use async_update_device"
+            )
         updated = self._async_update_child_device(
             device_id,
             area_id=area_id,

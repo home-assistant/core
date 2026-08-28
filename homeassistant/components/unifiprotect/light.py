@@ -13,12 +13,13 @@ from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_BRAND
+from .const import DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import async_ufp_instance_command
@@ -118,13 +119,16 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         if self._private is not None:
             super()._async_set_device_info()
             return
-        # market_name/firmware/URL and the NVR link are private-only.
+        # market_name/firmware/URL are private-only; the NVR link uses the
+        # device id registered at setup.
         public = cast(PublicLight, self.device)
         self._attr_device_info = DeviceInfo(
             name=public.display_name,
             model=public.type,
+            model_id=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
+            via_device_id=self.data.nvr_device_id,
         )
 
     @callback
@@ -139,6 +143,16 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         self._attr_brightness = (
             None if led_level is None else unifi_brightness_to_hass(led_level)
         )
+
+    def _public_or_raise(self) -> PublicLight:
+        """Return the public object, or raise if it vanished mid-command."""
+        if (public := self._ufp_public_obj) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="light_not_available",
+                translation_placeholders={"light_name": self.device.display_name},
+            )
+        return cast(PublicLight, public)
 
     @async_ufp_instance_command
     @override
@@ -156,13 +170,12 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         else:
             _LOGGER.debug("Turning on light")
 
-        # Reachable only while available (public object present); the setter
-        # validates the level and writes through the light's own settings.
-        await cast(PublicLight, self._ufp_public_obj).set_light(True, led_level)
+        # led_level is range-checked by the setter, not by HA.
+        await self._public_or_raise().set_light(True, led_level)
 
     @async_ufp_instance_command
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")
-        await cast(PublicLight, self._ufp_public_obj).set_light(False)
+        await self._public_or_raise().set_light(False)

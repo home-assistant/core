@@ -5,8 +5,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
   "integration_type": "service",
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_polling",
   "loggers": ["aiortm"],
   "quality_scale": "legacy",
-  "requirements": ["aiortm==0.19.0"]
+  "requirements": ["aiortm==0.20.0"]
 }
