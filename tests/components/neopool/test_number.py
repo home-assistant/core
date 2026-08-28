@@ -459,6 +459,64 @@ async def test_masked_number_write_preserves_other_byte(
     assert cover_obj.native_value == 50
 
 
+async def test_masked_writes_are_serialized(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Concurrent masked writes serialize through the coordinator lock.
+
+    Cover reduction and shutdown temperature share one packed register, so
+    their read-modify-write must not overlap; otherwise the later write would
+    restore the sibling byte to a stale value.
+    """
+    overlap = False
+    active = 0
+
+    async def _slow_masked(flag: MaskedFlag, value: int) -> dict[str, Any]:
+        nonlocal overlap, active
+        active += 1
+        if active > 1:
+            overlap = True
+        await asyncio.sleep(0)
+        active -= 1
+        return {"MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19}
+
+    mock_neopool_client.async_set_masked_register = AsyncMock(side_effect=_slow_masked)
+
+    await setup_integration(hass, mock_config_entry_number)
+    _disable_debounce(hass)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    cover, shutdown = None, None
+    for platforms in ep.async_get_platforms(hass, "neopool"):
+        for ent in platforms.entities.values():
+            key = getattr(ent.entity_description, "key", None)
+            if not ent.entity_id.startswith("number."):
+                continue
+            if key == "MBF_PAR_HIDRO_COVER_REDUCTION":
+                cover = ent
+            elif key == "MBF_PAR_HIDRO_SHUTDOWN_TEMPERATURE":
+                shutdown = ent
+    if cover is None or shutdown is None:
+        pytest.skip("masked numbers not registered on this fixture")
+
+    # Kick off both writes so their debounce tasks race the shared register.
+    await _set_value(hass, cover.entity_id, 50)
+    await _set_value(hass, shutdown.entity_id, 20)
+    await asyncio.gather(cover._pending_write_task, shutdown._pending_write_task)
+
+    assert not overlap
+    assert mock_neopool_client.async_set_masked_register.await_count == 2
+
+
 @pytest.mark.parametrize(
     "write_error",
     [

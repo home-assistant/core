@@ -347,9 +347,11 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 # Merge the decoded value; native_value reads it back verbatim.
                 overrides = {self._data_key: pending}
             elif desc.masked_flag is not None:
-                overrides = await client.async_set_masked_register(
-                    desc.masked_flag, raw
-                )
+                # Serialize the read-modify-write against sibling writes.
+                async with self.coordinator.masked_write_lock:
+                    overrides = await client.async_set_masked_register(
+                        desc.masked_flag, raw
+                    )
             else:  # pragma: no cover - description validated upstream
                 return
             self.coordinator.async_set_updated_data(
