@@ -215,6 +215,8 @@ class AuthTokenRefresh:
                 new_token = await self.oAuth2Session.implementation.async_refresh_token(
                     self.oAuth2Session.token
                 )
+                # async_update_entry() already fires the registered update
+                # listener, which reloads - no separate reload needed here.
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -223,8 +225,7 @@ class AuthTokenRefresh:
                         "last_token_refresh": last_refresh,
                     },
                 )
-                __LOGGER__.info("refresh token ok,then reload")
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                __LOGGER__.info("refresh token ok")
             except Exception as e:  # noqa: BLE001 - OAuth SDK call at a system boundary; logged, not fatal
                 __LOGGER__.error("refresh token failed: %s", e)
                 if remain_timestamp < 0:

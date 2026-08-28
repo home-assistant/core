@@ -70,6 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         await oauth_session.async_ensure_token_valid()
         access_token = oauth_session.token["access_token"]
 
+        # Registered before start_token_check() below - its background
+        # refresh task relies on this listener to reload the entry.
+        entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
         auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
         auth_token_refresh.start_token_check()
         product_client = ProductClient(
@@ -128,9 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    # Reload the entry when the options flow adds more devices.
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     __LOGGER__.info("bluetti init ok")
 

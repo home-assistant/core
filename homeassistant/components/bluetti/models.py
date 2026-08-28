@@ -261,9 +261,8 @@ class BluettiDevice:
         )
         device_status = await self._api_client.get_device_status(self.device_id)
         if not device_status.is_ok():
-            # Surfaces the same exception type _request() raises for an
-            # HTTP-level failure, so the coordinator's existing msgCode
-            # classification (auth vs. generic) also covers this envelope.
+            # Same exception _request() raises on HTTP failure - reuses the
+            # coordinator's existing msgCode classification.
             raise ApplicationRuntimeException(msgCode=device_status.msgCode)
         if not device_status.data:
             raise RuntimeError(f"Empty status response for device {self.device_id}")
