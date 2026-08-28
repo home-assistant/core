@@ -43,7 +43,7 @@ PRESET_SLEEP_WIND = "sleep_wind"
 # while FanMode is Auto. This is not part of the Matter spec (which says the
 # device should keep reporting its real current speed, see spec 4.4.6.1.2 and
 # 4.4.6.4), but we need to work around it regardless.
-PERCENT_CURRENT_AUTO_QUIRK_VALUE = 255
+PERCENT_CURRENT_AUTO_QUIRK = 255
 
 
 async def async_setup_entry(
@@ -214,9 +214,7 @@ class MatterFan(MatterEntity, FanEntity):
             clusters.FanControl.Attributes.PercentCurrent
         )
         self._attr_percentage = (
-            None
-            if current_percent == PERCENT_CURRENT_AUTO_QUIRK_VALUE
-            else current_percent
+            None if current_percent == PERCENT_CURRENT_AUTO_QUIRK else current_percent
         )
 
         # get preset mode from fan mode (and wind feature if available)
@@ -250,7 +248,7 @@ class MatterFan(MatterEntity, FanEntity):
         # keep track of the last known mode for turn_on commands without preset
         if self._attr_preset_mode is not None:
             self._last_known_preset_mode = self._attr_preset_mode
-        if current_percent and current_percent != PERCENT_CURRENT_AUTO_QUIRK_VALUE:
+        if current_percent and current_percent != PERCENT_CURRENT_AUTO_QUIRK:
             self._last_known_percentage = current_percent
 
     @callback
