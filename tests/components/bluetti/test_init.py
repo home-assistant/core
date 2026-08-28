@@ -8,7 +8,7 @@ from homeassistant.components.bluetti import (
     async_remove_config_entry_device,
     async_remove_entry,
 )
-from homeassistant.components.bluetti.const import DOMAIN
+from homeassistant.components.bluetti.const import DOMAIN, WSS_URL
 from homeassistant.components.bluetti.models import BluettiDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -247,6 +247,16 @@ async def test_remove_config_entry_device_drops_stale_product_entry(
     assert result is True
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert [p["sn"] for p in updated.data["products"]] == ["SN2"]
+
+
+def test_wss_url_has_no_trailing_slash() -> None:
+    """The websocket client appends "/websocket" to this URL itself.
+
+    A trailing slash here would produce a double slash
+    (".../ws-coordination//websocket"), which could prevent the
+    push-update websocket from connecting.
+    """
+    assert not WSS_URL.endswith("/")
 
 
 async def test_update_listener_reloads_entry(hass: HomeAssistant) -> None:
