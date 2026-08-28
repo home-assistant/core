@@ -100,20 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         bluetti_devices.web_socket_message_handler,
         on_auth_expired=lambda: hass.bus.fire(EVENT_TOKEN_EXPIRED),
     )
-    # Registered before connect() even starts, not after setup fully
-    # succeeds: if a later step below (e.g. a device's first refresh) raises
-    # ConfigEntryNotReady, Home Assistant still runs already-registered
-    # async_on_unload callbacks before retrying setup - without this, each
-    # retry would connect a new client without ever disconnecting the
-    # previous attempt's.
+    # Registered before connect() starts, so a setup retry still disconnects it.
     entry.async_on_unload(stomp_client.disconnect)
-    # connect() retries internally with its own exponential backoff on
-    # failure (see pybluetti's StompClient.reconnect) rather than raising -
-    # awaiting it directly here would block this entire setup (and the REST
-    # polling fallback it's meant to be independent of) until it eventually
-    # succeeds, possibly indefinitely. A background task tied to the entry's
-    # lifecycle means a slow or unavailable WSS endpoint never delays or
-    # blocks the cloud coordinators below from being set up.
+    # connect() retries forever internally instead of raising (see
+    # StompClient.reconnect) - run as a background task so it can't block setup.
     entry.async_create_background_task(
         hass, stomp_client.connect(), f"{DOMAIN}_websocket_connect_{entry.entry_id}"
     )
@@ -201,13 +191,8 @@ async def async_remove_config_entry_device(
     current_devices = entry.options.get("devices", [])
     new_devices = [d for d in current_devices if d not in device_ids]
 
-    # Also drop the removed device(s)' cached product entries from
-    # entry.data["products"] - a later re-add of the same serial is
-    # treated as "already cached" by config_flow.py/options_flow.py's
-    # product merge (they only add products whose sn isn't already
-    # present) and would otherwise silently keep serving this now-stale
-    # name/model/state instead of the fresh data the re-add just fetched
-    # from the cloud.
+    # Also drop the cached product entry - a re-add would otherwise reuse
+    # this stale name/model instead of fetching fresh data.
     current_products = entry.data.get("products", [])
     new_products = [
         p
@@ -234,14 +219,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> 
         except Exception as e:  # noqa: BLE001 - best-effort disconnect; must not block unload/removal
             __LOGGER__.warning("Error while disconnecting websocket: %s", e)
 
-    # No explicit device/entity registry cleanup here: ConfigEntries.async_remove
-    # already calls device_registry.async_clear_config_entry() and
-    # entity_registry.async_clear_config_entry() right after this hook returns.
-    # Doing it here too was not just redundant but unsafe - async_remove_device()
-    # deletes the device outright, which is wrong for a device merged with
-    # another integration's device (a composite device ID), unlike the
-    # registries' own clear_config_entry(), which only clears this entry's
-    # association.
+    # No registry cleanup here - ConfigEntries.async_remove already calls
+    # device_registry/entity_registry's async_clear_config_entry() safely.
     store: storage.Store[Any] = storage.Store(
         hass, 1, f"{DOMAIN}_data_{entry.entry_id}.json"
     )

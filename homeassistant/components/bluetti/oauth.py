@@ -196,13 +196,8 @@ class AuthTokenRefresh:
         current_timestamp = time.time()
         remain_timestamp = expire_timestamp - current_timestamp
 
-        # An already-expired access token is exactly the case a refresh
-        # token exists for - it's normal, short-lived-by-design behavior,
-        # not necessarily a real problem. Try to refresh here too (not just
-        # in the "expiring soon" case below), or a daily check that happens
-        # to land after the access token's own (often much shorter) TTL
-        # would show a false "expired" notification every single day even
-        # though a refresh would have quietly succeeded.
+        # Also tries an already-expired token, not just an expiring one - a
+        # refresh token normally covers this fine.
         if remain_timestamp < 3600 * 24 * 7:
             try:
                 __LOGGER__.info("start refresh token")

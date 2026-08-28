@@ -43,10 +43,7 @@ class BluettiOptionsFlowHandler(OptionsFlow):
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
                 return self.async_abort(reason="cannot_connect")
 
-            # bind_devices() returns a plain str for a non-JSON server
-            # response, and a nonzero msgCode without raising - either way
-            # the devices were not actually bound, so this must not fall
-            # through and persist them as though it succeeded.
+            # bind_devices() doesn't raise on a rejected bind - check msgCode.
             if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
                 return self.async_abort(reason="cannot_connect")
@@ -63,10 +60,8 @@ class BluettiOptionsFlowHandler(OptionsFlow):
 
             merged_options = {"devices": merged_devices}
 
-            # Applying the same options here first means OptionsFlowManager's
-            # own async_update_entry(entry, options=...) after this step
-            # returns finds nothing changed and skips reloading a second
-            # time (see ConfigEntries._async_update_entry).
+            # Applying options here first means OptionsFlowManager's own
+            # update below is a no-op, so the entry only reloads once.
             self.hass.config_entries.async_update_entry(
                 entry,
                 data={**entry.data, "products": merged_products},
@@ -108,10 +103,7 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             __LOGGER__.error("Failed to fetch BLUETTI products: %s", err)
             return self.async_abort(reason="cannot_connect")
 
-        # Checked before iterating products.data below: it's `T | None` on
-        # the wire, and a cloud response that omits "data" entirely would
-        # otherwise crash the dict comprehension with an unhandled
-        # TypeError instead of aborting gracefully.
+        # products.data is `T | None` on the wire - can be omitted entirely.
         if not products.data:
             return self.async_abort(reason="no_devices_available")
 

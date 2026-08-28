@@ -101,21 +101,16 @@ async def async_setup_entry(
                     continue
                 meta: NamedSensorMetaInfo = {
                     "name": state.fn_name,
-                    # sensor_info has no "unit" key at all for some types
-                    # (e.g. ENUM) - a plain ["unit"] KeyError here would
-                    # abort the whole loop, silently dropping every not-yet-
-                    # processed sensor on every device (#101, #102).
+                    # "unit" is missing entirely for some sensorInfo types
+                    # (e.g. ENUM), not just empty.
                     "unit": state.sensor_info.get("unit") or sensor_class["unit"],
                     "device_class": sensor_class["device_class"],
                     "state_class": sensor_class["state_class"],
                 }
                 entities.append(BluettiSensor(device, state, meta))
                 if meta["device_class"] == SensorDeviceClass.POWER:
-                    # Bluetti only ever reports power (W), never cumulated
-                    # energy. Integrate it over time (trapezoidal method,
-                    # kilo prefix, hours) the same way a manually added
-                    # Home Assistant "Integral - Riemann sum" helper would,
-                    # so this works out of the box for every power sensor.
+                    # Bluetti reports power (W), never energy - integrate it
+                    # over time like a Riemann-sum helper would.
                     entities.append(
                         BluettiEnergySensor(device, state, _power_value_getter(state))
                     )

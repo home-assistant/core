@@ -146,10 +146,8 @@ class BluettiDevice:
         self.states = [
             BluettiState(
                 fn_code=s.get("fnCode") or "",
-                # Some fn_codes are not localized by the API and come back
-                # with an empty fnName; fall back to fn_code so entities
-                # never end up with a blank has_entity_name name (which
-                # Home Assistant displays using the raw entity_id instead).
+                # fnName is sometimes empty on the wire - fall back to
+                # fn_code so entities never get a blank display name.
                 fn_name=s.get("fnName") or s.get("fnCode") or "",
                 fn_value=s.get("fnValue") or "",
                 fn_type=s.get("fnType") or "",
@@ -215,13 +213,7 @@ class BluettiDevice:
                 },
             ) from err
 
-        # control_device() returns a plain str for a non-JSON server
-        # response - not expected in practice, but unlike UnifyResponse it
-        # has no .msgCode, so it must be ruled out before checking success.
-        # A rejected command (nonzero msgCode, or a non-JSON response) must
-        # not look like success to the caller - the request reached the
-        # cloud fine, but the device's actual state never changed, and an
-        # automation or the UI would otherwise report the action as done.
+        # control_device() doesn't raise on a rejected command - check msgCode.
         if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -285,11 +277,8 @@ class BluettiDevice:
         """
         __LOGGER__.info("Detected device unbinding: %s (%s)", self.name, self.device_id)
 
-        # Check if the necessary references exist. Deliberately not marking
-        # _unbind_processed here: this is a transient setup-ordering issue
-        # (unbind detected before bind_runtime() wired these up), not a
-        # terminal failure, so the next poll must retry rather than silently
-        # never handling the unbind at all.
+        # Not marking _unbind_processed here - a retriable setup-ordering
+        # issue (unbind detected before bind_runtime() ran), not terminal.
         if not self._hass or not self._entry:
             __LOGGER__.error(
                 "Cannot handle device unbinding: missing necessary references "
@@ -299,10 +288,8 @@ class BluettiDevice:
             )
             return
 
-        # Set only once the durable cleanup below is actually about to run -
-        # each of its steps is independently best-effort (see the docstring),
-        # so reaching this point is "handled enough" even if some individual
-        # step later fails and only logs a warning.
+        # Set once cleanup is actually about to run - each step below is
+        # independently best-effort (see the docstring).
         self._unbind_processed = True
 
         hass = self._hass
@@ -374,14 +361,9 @@ class BluettiDevice:
                 current_options = dict(entry.options)
                 current_devices = current_options.get("devices", [])
 
-                # Also drop this device's cached product entry from
-                # entry.data["products"], not just entry.options - a later
-                # re-bind of the same serial is treated as "already cached"
-                # by config_flow.py/options_flow.py's product merge (they
-                # only add products whose sn isn't already present) and
-                # would otherwise silently keep serving this now-stale
-                # name/model/state instead of the fresh data the re-bind
-                # just fetched from the cloud.
+                # Also drop the cached product entry - a re-bind would
+                # otherwise reuse this stale name/model instead of fetching
+                # fresh data.
                 current_products = entry.data.get("products", [])
                 new_products = [
                     p
@@ -437,21 +419,9 @@ class BluettiDevice:
             except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
                 __LOGGER__.warning("Error displaying notification: %s", e)
 
-            # No explicit reload here: step 5 above already calls
-            # async_update_entry(entry, options=...) whenever the device was
-            # actually removed from the options, which fires this entry's
-            # own _async_update_listener (registered in __init__.py) and
-            # reloads it - a second, explicitly-scheduled reload here used to
-            # run right after that one (both funnel through the same
-            # entry.setup_lock, so they'd serialize rather than corrupt
-            # anything, but the entry would still reload twice for one
-            # unbind). Worse, this used to fire unconditionally after a fixed
-            # 1-second delay even when the device was NOT in the options list
-            # (the else branch above) - a reload that accomplished nothing -
-            # and, being delayed, could run after the entry itself had since
-            # been unloaded or removed (async_reload() raises UnknownEntry in
-            # that case, previously swallowed silently by the except below).
-
+            # No explicit reload here - step 5's options update already
+            # fires the entry's update listener; an extra explicit reload
+            # used to double it.
             __LOGGER__.info("Device unbinding processing completed: %s", self.device_id)
 
         except Exception as e:  # noqa: BLE001 - outermost guard: never let unbind handling crash the caller

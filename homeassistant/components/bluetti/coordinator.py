@@ -14,11 +14,8 @@ from .const import DOMAIN
 from .models import BluettiDevice
 
 if TYPE_CHECKING:
-    # Deliberately not a runtime import: __init__.py imports this module to
-    # define BluettiConfigEntry in the first place, so importing it back
-    # here would be circular. TYPE_CHECKING avoids that while still giving
-    # mypy the precise type (matches the same pattern models.py already
-    # uses for BluettiDeviceCoordinator).
+    # Not a runtime import - __init__.py imports this module, so this
+    # would be circular.
     from . import BluettiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

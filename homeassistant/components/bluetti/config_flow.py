@@ -73,10 +73,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", err)
                 return self.async_abort(reason="cannot_connect")
 
-            # bind_devices() returns a plain str for a non-JSON server
-            # response, and a nonzero msgCode without raising - either way
-            # the devices were not actually bound, so this must not fall
-            # through and create/update the entry as though it succeeded.
+            # bind_devices() doesn't raise on a rejected bind - check msgCode.
             if not (isinstance(result, UnifyResponse) and result.msgCode == 0):
                 __LOGGER__.error("Failed to bind BLUETTI devices: %s", result)
                 return self.async_abort(reason="cannot_connect")
@@ -106,14 +103,9 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                 SOURCE_REAUTH,
                 SOURCE_RECONFIGURE,
             ):
-                # A plain "Add Integration" flow (not a reauth/reconfigure
-                # re-run of an existing entry) landing here means the user
-                # authenticated a second, different BLUETTI account while
-                # one is already configured. Reject it outright instead of
-                # falling into the merge-and-overwrite branch below: that
-                # branch replaces the stored token, which would leave the
-                # first account's retained devices using the second
-                # account's credentials and inaccessible.
+                # A plain "Add Integration" flow finding an existing entry
+                # means a second account - reject, don't merge and overwrite
+                # the first account's token.
                 return self.async_abort(reason="already_configured")
 
             if existing_entry:
@@ -187,10 +179,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             __LOGGER__.error("Failed to fetch BLUETTI products: %s", err)
             return self.async_abort(reason="cannot_connect")
 
-        # Checked before iterating products.data below: it's `T | None` on
-        # the wire, and a cloud response that omits "data" entirely would
-        # otherwise crash the dict comprehension with an unhandled
-        # TypeError instead of aborting gracefully.
+        # products.data is `T | None` on the wire - can be omitted entirely.
         if not products.data:
             return self.async_abort(reason="no_devices_available")
 
@@ -217,14 +206,8 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             if cur_entry is None:
                 return self.async_abort(reason="reconfigure_failed")
 
-            # ACCOUNT_UNIQUE_ID is a fixed constant, not derived per-account,
-            # so there's no real account identifier to compare directly.
-            # Device serials are real BLUETTI hardware serials, though - if
-            # this OAuth session's account doesn't have every device already
-            # enabled on cur_entry, it's a different account and updating
-            # the stored token would leave those devices permanently
-            # inaccessible (their serials belong to an account this token
-            # can no longer query).
+            # No real account ID exists to compare - device-serial overlap
+            # with cur_entry's already-enabled devices is the closest proxy.
             reauthed_sns = {prod.sn for prod in products.data}
             enabled_sns = set(cur_entry.options.get("devices", []))
             if not enabled_sns <= reauthed_sns:
