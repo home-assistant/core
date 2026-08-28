@@ -11,17 +11,14 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
-@pytest.mark.parametrize(
-    "init_integration_with_socket", [Platform.BINARY_SENSOR], indirect=True
-)
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_with_socket"
-)
+@pytest.mark.parametrize("mock_peblar", [{"HwHasSocket": True}], indirect=True)
+@pytest.mark.parametrize("init_integration", [Platform.BINARY_SENSOR], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_lock_state_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -34,8 +31,8 @@ async def test_lock_state_binary_sensor(
     assert entity_entry is not None
     assert entity_entry.domain == BINARY_SENSOR_DOMAIN
 
-    # LockState=false in fixture → unlocked → STATE_OFF
-    assert hass.states.get(entity_id).state == STATE_OFF
+    # LockState=false in fixture → unlocked → the lock device class reports on
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize("init_integration", [Platform.BINARY_SENSOR], indirect=True)
@@ -47,21 +44,18 @@ async def test_lock_state_absent_without_socket(
     assert hass.states.get("binary_sensor.peblar_ev_charger_socket_lock") is None
 
 
-@pytest.mark.parametrize(
-    "init_integration_with_socket", [Platform.BUTTON], indirect=True
-)
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_with_socket"
-)
+@pytest.mark.parametrize("mock_peblar", [{"HwHasSocket": True}], indirect=True)
+@pytest.mark.parametrize("init_integration", [Platform.BUTTON], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_socket_unlock_button(
     hass: HomeAssistant,
-    mock_peblar_with_socket: MagicMock,
+    mock_peblar: MagicMock,
 ) -> None:
     """Test socket unlock button is created and works when socket hardware present."""
     entity_id = "button.peblar_ev_charger_unlock_socket"
     assert hass.states.get(entity_id) is not None
 
-    mocked_method = mock_peblar_with_socket.socket_unlock
+    mocked_method = mock_peblar.socket_unlock
     mocked_method.reset_mock()
 
     await hass.services.async_call(
@@ -74,15 +68,12 @@ async def test_socket_unlock_button(
     mocked_method.assert_called_once_with()
 
 
-@pytest.mark.parametrize(
-    "init_integration_with_socket", [Platform.SWITCH], indirect=True
-)
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_with_socket"
-)
+@pytest.mark.parametrize("mock_peblar", [{"HwHasSocket": True}], indirect=True)
+@pytest.mark.parametrize("init_integration", [Platform.SWITCH], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_socket_lock_switch(
     hass: HomeAssistant,
-    mock_peblar_with_socket: MagicMock,
+    mock_peblar: MagicMock,
 ) -> None:
     """Test socket lock switch is created and works when socket hardware present."""
     entity_id = "switch.peblar_ev_charger_keep_socket_locked"
@@ -91,7 +82,7 @@ async def test_socket_lock_switch(
     # UserKeepSocketLocked=false in fixture
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    mocked_method = mock_peblar_with_socket.socket_lock
+    mocked_method = mock_peblar.socket_lock
     mocked_method.reset_mock()
 
     await hass.services.async_call(
