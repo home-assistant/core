@@ -85,12 +85,8 @@ class BluettiOptionsFlowHandler(OptionsFlow):
 
         http_session = async_get_clientsession(self.hass)
         try:
-            # Reading entry.data["token"] directly would skip Home
-            # Assistant's refresh path - an options flow opened after the
-            # stored access token has expired (but the refresh token is
-            # still valid) would otherwise fail as cannot_connect for no
-            # real reason. Same OAuth2Session-backed refresh path setup
-            # uses in __init__.py.
+            # Refresh via OAuth2Session, not entry.data["token"] directly -
+            # same reason as __init__.py's async_setup_entry.
             implementation = (
                 await config_entry_oauth2_flow.async_get_config_entry_implementation(
                     self.hass, entry

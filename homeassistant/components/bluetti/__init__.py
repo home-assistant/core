@@ -68,12 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         )
         auth = AsyncConfigEntryAuth(http_session, oauth_session)
 
-        # Must run before AuthTokenRefresh.start_token_check() below: that
-        # call's is_token_valid() check reads oauth_session.token
-        # synchronously, as-is - a normally-expired access token with a
-        # still-valid refresh token would otherwise show the user a false
-        # "OAuth expired" notification/issue on every setup, moments before
-        # this call transparently refreshes it.
+        # pybluetti's clients take a fixed access token at construction, not
+        # a live session, so it must be fresh before extracting it below.
         await oauth_session.async_ensure_token_valid()
         access_token = oauth_session.token["access_token"]
 
