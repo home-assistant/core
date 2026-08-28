@@ -193,47 +193,76 @@ async def test_reauthentication(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_geocaching_config_flow: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Geocaching reauthentication."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    session = MagicMock()
+    session.token = {"access_token": "mock-token"}
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert "flow_id" in flows[0]
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=session,
+        ),
+        patch(
+            "homeassistant.components.geocaching.coordinator.GeocachingApi"
+        ) as geocaching_api_mock,
+    ):
+        geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as async_reload:
+        result = await mock_config_entry.start_reauth_flow(hass)
 
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert "flow_id" in flows[0]
 
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+        result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    aioclient_mock.post(
-        CURRENT_ENVIRONMENT_URLS["token_url"],
-        json={
-            "access_token": "mock-access-token",
-            "token_type": "bearer",
-            "expires_in": 3599,
-            "refresh_token": "mock-refresh_token",
-        },
-    )
+        state = config_entry_oauth2_flow._encode_jwt(
+            hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": "https://example.com/auth/external/callback",
+            },
+        )
 
-    await hass.config_entries.flow.async_configure(result["flow_id"])
+        client = await hass_client_no_auth()
+        resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+        assert resp.status == HTTPStatus.OK
+        assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+        aioclient_mock.post(
+            CURRENT_ENVIRONMENT_URLS["token_url"],
+            json={
+                "access_token": "mock-access-token",
+                "token_type": "bearer",
+                "expires_in": 3599,
+                "refresh_token": "mock-refresh_token",
+            },
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
 async def test_subentry_flow(
