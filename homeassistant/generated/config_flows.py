@@ -736,6 +736,7 @@ FLOWS = {
         "snooz",
         "sofar",
         "solaredge",
+        "solaredge_modbus",
         "solarlog",
         "solarman",
         "solax",

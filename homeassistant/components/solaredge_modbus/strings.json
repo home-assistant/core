@@ -1,0 +1,232 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The device at that address and device ID is a different inverter than the one this entry is set up for."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ev_charger": "That device is a SolarEdge EV charger. It answers as an inverter, but serves no measurements over Modbus.",
+      "no_serial_number": "The inverter did not report a serial number, which is needed to identify it.",
+      "no_solaredge_device": "The device at that address and device ID does not answer as a SolarEdge inverter."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::solaredge_modbus::config::step::user::data_description::host%]",
+          "port": "[%key:component::solaredge_modbus::config::step::user::data_description::port%]"
+        },
+        "description": "Update how this inverter is reached, for example after it moved to another address or its device ID changed.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data_description::unit_id%]"
+            },
+            "name": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::name%]"
+          }
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your SolarEdge inverter. Modbus TCP has to be enabled on the inverter first, in the installer settings.",
+          "port": "The TCP port the inverter listens on for Modbus requests. The SolarEdge default is 1502."
+        },
+        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "Device ID"
+            },
+            "data_description": {
+              "unit_id": "The Modbus device ID of the inverter, as configured on the inverter itself. The SolarEdge default is 1."
+            },
+            "name": "More options"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "name": "On grid",
+        "state": {
+          "off": "[%key:common::state::no%]",
+          "on": "[%key:common::state::yes%]"
+        }
+      }
+    },
+    "number": {
+      "active_power_limit": {
+        "name": "Active power limit"
+      },
+      "backup_reserve": {
+        "name": "Backup reserve"
+      },
+      "charge_limit": {
+        "name": "Storage charge limit"
+      },
+      "cos_phi": {
+        "name": "Power factor setpoint"
+      },
+      "discharge_limit": {
+        "name": "Storage discharge limit"
+      },
+      "external_production_max": {
+        "name": "External production maximum"
+      },
+      "site_limit": {
+        "name": "Site export limit"
+      }
+    },
+    "select": {
+      "export_control_limit_type": {
+        "name": "Export limit type",
+        "state": {
+          "per_phase": "Per phase",
+          "total": "Total"
+        }
+      },
+      "export_control_mode": {
+        "name": "Export limitation",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "export_control_consumption_meter": "Consumption meter",
+          "export_control_export_import_meter": "Export and import meter",
+          "production_control": "Production control"
+        }
+      },
+      "storage_ac_charge_policy": {
+        "name": "Storage AC charge policy",
+        "state": {
+          "always": "Always",
+          "disabled": "[%key:common::state::disabled%]",
+          "fixed_energy_limit": "Fixed energy limit",
+          "percent_of_production": "Percentage of production"
+        }
+      },
+      "storage_command_mode": {
+        "name": "Storage command mode",
+        "state": {
+          "charge_from_clipped_solar": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_clipped_solar%]",
+          "charge_from_solar": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_solar%]",
+          "charge_from_solar_and_grid": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::charge_from_solar_and_grid%]",
+          "discharge_to_maximize_export": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::discharge_to_maximize_export%]",
+          "discharge_to_minimize_import": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::discharge_to_minimize_import%]",
+          "maximize_self_consumption": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::maximize_self_consumption%]",
+          "solar_only": "[%key:component::solaredge_modbus::entity::select::storage_default_mode::state::solar_only%]"
+        }
+      },
+      "storage_control_mode": {
+        "name": "Storage control mode",
+        "state": {
+          "backup_only": "Backup only",
+          "disabled": "[%key:common::state::disabled%]",
+          "maximize_self_consumption": "Maximize self-consumption",
+          "remote_control": "Remote control",
+          "time_of_use": "Time of use"
+        }
+      },
+      "storage_default_mode": {
+        "name": "Storage default mode",
+        "state": {
+          "charge_from_clipped_solar": "Charge from clipped solar",
+          "charge_from_solar": "Charge from solar",
+          "charge_from_solar_and_grid": "Charge from solar and grid",
+          "discharge_to_maximize_export": "Discharge to maximize export",
+          "discharge_to_minimize_import": "Discharge to minimize import",
+          "maximize_self_consumption": "Maximize self-consumption",
+          "solar_only": "Solar only"
+        }
+      }
+    },
+    "sensor": {
+      "current_phase_a": {
+        "name": "Current phase A"
+      },
+      "current_phase_b": {
+        "name": "Current phase B"
+      },
+      "current_phase_c": {
+        "name": "Current phase C"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "dc_power": {
+        "name": "DC power"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "inverter_status": {
+        "name": "Status",
+        "state": {
+          "fault": "Fault",
+          "off": "[%key:common::state::off%]",
+          "producing": "Producing",
+          "shutting_down": "Shutting down",
+          "sleeping": "Sleeping",
+          "standby": "[%key:common::state::standby%]",
+          "starting": "Starting",
+          "throttled": "Throttled"
+        }
+      },
+      "vendor_status": {
+        "name": "Vendor status"
+      },
+      "voltage_phase_ab": {
+        "name": "Voltage phase A-B"
+      },
+      "voltage_phase_an": {
+        "name": "Voltage phase A-N"
+      },
+      "voltage_phase_bc": {
+        "name": "Voltage phase B-C"
+      },
+      "voltage_phase_bn": {
+        "name": "Voltage phase B-N"
+      },
+      "voltage_phase_ca": {
+        "name": "Voltage phase C-A"
+      },
+      "voltage_phase_cn": {
+        "name": "Voltage phase C-N"
+      }
+    },
+    "switch": {
+      "external_production": {
+        "name": "External production"
+      },
+      "negative_site_limit": {
+        "name": "Negative site limit"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the SolarEdge inverter: {error}"
+    },
+    "link_settings_in_use": {
+      "message": "The inverter cannot be set up with these link settings: {error}"
+    },
+    "no_solaredge_device": {
+      "message": "The configured Modbus device does not answer as a SolarEdge inverter."
+    },
+    "wrong_inverter": {
+      "message": "The device at this address is a different inverter than the one this entry was set up for. Reconfigure the entry to point at the right device."
+    }
+  }
+}
