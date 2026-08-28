@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-CHILD_LOCK_SWITCH_ENTITY = "switch.baseboard_heater_baseboard_heater_child_lock"
+CHILD_LOCK_SWITCH_ENTITY = "switch.wr4_child_lock"
 
 
 @pytest.fixture(autouse=True)
@@ -56,5 +56,4 @@ async def test_set_child_lock(hass: HomeAssistant, method, expected) -> None:
             blocking=True,
         )
 
-    mock_set_state.assert_called_once()
-    assert mock_set_state.call_args[0][1] is expected
+    mock_set_state.assert_called_once_with("WR4", expected)
