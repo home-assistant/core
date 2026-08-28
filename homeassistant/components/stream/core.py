@@ -484,7 +484,7 @@ class KeyFrameConverter:
     @staticmethod
     def transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
         """Transform image to a given orientation."""
-        return TRANSFORM_IMAGE_FUNCTION[orientation](image)
+        return TRANSFORM_IMAGE_FUNCTION[orientation](image)  # type: ignore[no-any-return]
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
         """Generate the keyframe image.

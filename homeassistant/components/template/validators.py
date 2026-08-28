@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from enum import StrEnum
+from itertools import chain
 import logging
 from typing import Any
 
@@ -9,7 +10,11 @@ import voluptuous as vol
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.trace import trace_get
+from homeassistant.helpers.typing import TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +22,86 @@ _LOGGER = logging.getLogger(__name__)
 # from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
+
+
+class BlockedTemplateAttributes:
+    """Blocked template attributes."""
+
+    def __init__(
+        self,
+        *,
+        attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None,
+        device_class: bool = False,
+        allowed_attributes: tuple[StrEnum | str, ...] | None = None,
+    ) -> None:
+        """Initialize."""
+        blocked_attributes: set[str]
+        if (attributes := attributes) is None:
+            blocked_attributes = set()
+        elif isinstance(attributes, tuple):
+            blocked_attributes = set(chain(*attributes))
+        else:
+            blocked_attributes = set(attributes)
+
+        if allowed_attributes:
+            blocked_attributes -= set(allowed_attributes)
+
+        if device_class:
+            blocked_attributes.add("device_class")
+
+        self._blocked = blocked_attributes
+
+    def blocked(self, other: dict) -> set[str]:
+        """Return a set of attributes that are blocked."""
+        return self._blocked.intersection(set(other.keys()))
+
+
+def validate_attributes(
+    breadcrumb: str,
+    blocked_attributes: BlockedTemplateAttributes | None,
+) -> Callable[[dict], dict]:
+    """Validate entity attributes."""
+
+    def validate(obj: dict):
+        obj = {cv.string(key): value for key, value in obj.items()}
+        if blocked_attributes is None:
+            return obj
+
+        if blocked := blocked_attributes.blocked(obj):
+            raise vol.Invalid(
+                f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
+            )
+
+        return obj
+
+    return validate
+
+
+def log_validation_error(
+    result: Any,
+    template: Template,
+    attribute: str,
+    entity_id: str | None,
+    exception: vol.Invalid,
+):
+    """Log template entity validation error."""
+    logging.getLogger(
+        f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+        if entity_id
+        else __package__
+    ).error(
+        (
+            "Error validating template result '%s' "
+            "from template '%s' "
+            "for attribute '%s' in entity %s "
+            "validation message '%s'"
+        ),
+        result,
+        template,
+        attribute,
+        entity_id,
+        exception.msg,
+    )
 
 
 def log_validation_result_error(
@@ -361,3 +446,20 @@ def string(
             return None
 
     return convert
+
+
+def check_conditions(
+    condition_func: ConditionsChecker | None, run_variables: TemplateVarsType
+) -> bool:
+    """Check if conditions have been met using run variables."""
+    if not condition_func:
+        return True
+
+    condition_result = condition_func.async_check(variables=run_variables)
+    if condition_result is False:
+        _LOGGER.debug(
+            "Conditions not met, aborting template trigger update. Condition summary: %s",
+            trace_get(clear=False),
+        )
+
+    return condition_result

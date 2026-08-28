@@ -65,7 +65,6 @@ BATTERY_CIRCULATOR_FAN_2_PRO_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
-
 METER_INFO = Device(
     version="V1.0",
     deviceId="meter-id-1",

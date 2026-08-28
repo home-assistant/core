@@ -29,6 +29,7 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
     UnauthorizedError,
 )
+from aiohomeconnect.model.image import Image
 from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,6 +66,7 @@ class HomeConnectApplianceData:
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
+    images: dict[str, Image]
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
@@ -78,6 +80,7 @@ class HomeConnectApplianceData:
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
         self.status.update(other.status)
+        self.images.update(other.images)
 
     @classmethod
     def empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
@@ -90,6 +93,7 @@ class HomeConnectApplianceData:
             programs=[],
             settings={},
             status={},
+            images={},
         )
 
 
@@ -268,6 +272,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
+        self.should_fetch_images = "Images" in self._config_entry.data["token"].get(
+            "scope", ""
+        )
+        self._image_listeners: dict[str, list[CALLBACK_TYPE]] = {}
 
     def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
         return [
@@ -567,6 +575,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except HomeConnectError:
             commands = set()
 
+        try:
+            images = await self.get_latest_images() if self.should_fetch_images else {}
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching images for %s: %s",
+                appliance.ha_id,
+                error,
+            )
+            images = {}
+
         self.data.update(
             HomeConnectApplianceData(
                 commands=commands,
@@ -576,6 +596,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 programs=programs,
                 settings=settings,
                 status=status,
+                images=images,
             )
         )
 
@@ -645,6 +666,59 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for option_key in options_to_notify:
             for listener in self._get_listeners_for_event_key(EventKey(option_key)):
                 listener()
+
+    async def get_latest_images(self) -> dict[str, Image]:
+        """Get the latest images for the appliance."""
+        try:
+            new_images = await self.client.get_images(self.data.info.ha_id)
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching images for %s: %s",
+                self.data.info.ha_id,
+                error,
+            )
+            return {}
+
+        latest_images: dict[str, Image] = {}
+        for image in new_images.images:
+            if (
+                existing_image := latest_images.get(image.key)
+            ) is None or image.timestamp > existing_image.timestamp:
+                latest_images[image.key] = image
+
+        return latest_images
+
+    async def update_images(self) -> None:
+        """Update images for appliance."""
+        old_images = self.data.images.copy()
+        self.data.images.update(await self.get_latest_images())
+        for image_key, image in self.data.images.items():
+            if image.image_key != old_images[image_key].image_key:
+                for listener in self._image_listeners.get(image_key, []):
+                    listener()
+
+    def add_image_listener(
+        self, image_key: str, update_callback: CALLBACK_TYPE
+    ) -> Callable[[], None]:
+        """Listen for image updates.
+
+        These listeners will not be called on refresh.
+        """
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._image_listeners[image_key].remove(update_callback)
+            if not self._image_listeners[image_key]:
+                del self._image_listeners[image_key]
+
+        if image_key not in self._image_listeners:
+            self._image_listeners[image_key] = []
+        self._image_listeners[image_key].append(update_callback)
+
+        return remove_listener
 
     def refreshed_too_often_recently(self) -> bool:
         """Check if the appliance data hasn't been refreshed too often recently."""

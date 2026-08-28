@@ -491,6 +491,8 @@ class DeviceCategory(StrEnum):
     """
     FSKG = "fskg"
     """Fan wall switch (undocumented)"""
+    HCDD = "hcdd"
+    """Chasing tape light (undocumented)"""
     HJJCY = "hjjcy"
     """Air Quality Monitor
 

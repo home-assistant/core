@@ -5,6 +5,8 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_determine_id": "[%key:component::lyngdorf::config::error::cannot_determine_id%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device at this address is a different Lyngdorf device from the one this entry was set up with.",
       "unsupported_model": "This Lyngdorf model is not supported"
     },
     "error": {
@@ -18,6 +20,16 @@
     "step": {
       "confirm": {
         "description": "Do you want to set up **{name}**?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::lyngdorf::config::step::user::data_description::host%]"
+        },
+        "description": "Update the address Home Assistant uses to reach this device. It must be the same device; a different one will be rejected.",
+        "title": "[%key:component::lyngdorf::config::step::user::title%]"
       },
       "user": {
         "data": {
@@ -39,6 +51,37 @@
     "media_player": {
       "main_zone": {
         "name": "Main zone"
+      }
+    },
+    "number": {
+      "lipsync": {
+        "name": "Lip sync"
+      },
+      "trim_bass": {
+        "name": "Trim bass"
+      },
+      "trim_centre": {
+        "name": "Trim centre"
+      },
+      "trim_height": {
+        "name": "Trim height"
+      },
+      "trim_lfe": {
+        "name": "Trim LFE"
+      },
+      "trim_surround": {
+        "name": "Trim surround"
+      },
+      "trim_treble": {
+        "name": "Trim treble"
+      }
+    },
+    "select": {
+      "room_perfect_position": {
+        "name": "RoomPerfect position"
+      },
+      "voicing": {
+        "name": "Voicing"
       }
     },
     "sensor": {
@@ -71,6 +114,9 @@
     },
     "setup_timeout": {
       "message": "Timeout connecting to {host}"
+    },
+    "unsupported_remote_key": {
+      "message": "This device does not have that remote key. It supports: {keys}"
     }
   }
 }
