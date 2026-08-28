@@ -44,11 +44,14 @@ class RepairsFlow(
     """Handle a flow for fixing an issue."""
 
     data: dict[str, str | int | float | None] | None
+    _deprecated_issue_id: str
 
     @property
     def issue_id(self) -> str:
         """Return the flow's issue_id."""
-        return self.context["issue_id"]
+        if "issue_id" in self.context:
+            return self.context["issue_id"]
+        return self._deprecated_issue_id
 
     @issue_id.setter
     def issue_id(self, issue_id: str) -> None:
@@ -56,8 +59,8 @@ class RepairsFlow(
         report_usage(
             "attempts to set issue_id directly in a RepairsFlow which is unnecessary since issue_id is set by the repairs flow manager",
             breaks_in_ha_version="2027.8.0",
-            integration_domain=self.handler,
         )
+        self._deprecated_issue_id = issue_id
 
     @override
     @callback
