@@ -73,18 +73,24 @@ class DiscogsDataUpdateCoordinator(DataUpdateCoordinator[DiscogsData]):
             collection = folders[0]
             random_index = random.randrange(collection.count)
             release = collection.releases[random_index].release
-            random_record = (
-                f"{release.data['artists'][0]['name']} - {release.data['title']}"
-            )
+            data = release.data
+            artists = data.get("artists", [])
+            artist_name = artists[0]["name"] if artists else "Unknown"
+            random_record = f"{artist_name} - {data.get('title', 'Unknown')}"
+            labels = data.get("labels", [])
+            formats = data.get("formats", [])
+            fmt_entry = formats[0] if formats else {}
+            fmt_descriptions = fmt_entry.get("descriptions", [])
             random_record_attrs = {
-                "cat_no": release.data["labels"][0]["catno"],
-                "cover_image": release.data["cover_image"],
+                "cat_no": labels[0]["catno"] if labels else None,
+                "cover_image": data.get("cover_image"),
                 "format": (
-                    f"{release.data['formats'][0]['name']}"
-                    f" ({release.data['formats'][0]['descriptions'][0]})"
+                    f"{fmt_entry.get('name', '')} ({fmt_descriptions[0]})"
+                    if fmt_descriptions
+                    else fmt_entry.get("name")
                 ),
-                "label": release.data["labels"][0]["name"],
-                "released": release.data["year"],
+                "label": labels[0]["name"] if labels else None,
+                "released": data.get("year"),
             }
 
         return DiscogsData(
