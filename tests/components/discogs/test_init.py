@@ -31,8 +31,8 @@ async def test_setup_entry(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_entry_failure(hass: HomeAssistant) -> None:
-    """Test setup entry fails on API error."""
+async def test_setup_entry_auth_failure(hass: HomeAssistant) -> None:
+    """Test setup entry triggers reauth on 401."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_USERNAME,
@@ -44,6 +44,32 @@ async def test_setup_entry_failure(hass: HomeAssistant) -> None:
     mock_client = MagicMock()
     mock_client.identity.side_effect = discogs_client.exceptions.HTTPError(
         "Unauthorized", 401
+    )
+
+    with patch(
+        "homeassistant.components.discogs.coordinator.discogs_client.Client",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(entry.async_get_active_flows(hass, {"reauth"}))
+
+
+async def test_setup_entry_transient_failure(hass: HomeAssistant) -> None:
+    """Test setup entry retries on transient HTTP error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={CONF_TOKEN: MOCK_TOKEN},
+        unique_id=MOCK_USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.identity.side_effect = discogs_client.exceptions.HTTPError(
+        "Service Unavailable", 503
     )
 
     with patch(

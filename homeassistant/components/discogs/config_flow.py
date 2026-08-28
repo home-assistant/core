@@ -1,5 +1,6 @@
 """Config flow for Discogs."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import discogs_client
@@ -44,6 +45,46 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        username, errors = await self.hass.async_add_executor_job(
+            _validate_token, import_data[CONF_TOKEN]
+        )
+        if errors:
+            return self.async_abort(reason="invalid_auth")
+        await self.async_set_unique_id(username)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=username,
+            data={CONF_TOKEN: import_data[CONF_TOKEN]},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            _, errors = await self.hass.async_add_executor_job(
+                _validate_token, user_input[CONF_TOKEN]
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data={CONF_TOKEN: user_input[CONF_TOKEN]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=CONFIG_SCHEMA,
+            errors=errors,
+        )
+
 
 def _validate_token(token: str) -> tuple[str, dict[str, str]]:
     """Validate the token and return the username."""
@@ -53,8 +94,11 @@ def _validate_token(token: str) -> tuple[str, dict[str, str]]:
         client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
         identity = client.identity()
         username = identity.name
-    except discogs_client.exceptions.HTTPError:
-        errors["base"] = "invalid_auth"
+    except discogs_client.exceptions.HTTPError as err:
+        if err.status_code == 401:
+            errors["base"] = "invalid_auth"
+        else:
+            errors["base"] = "cannot_connect"
     except Exception:  # noqa: BLE001
         errors["base"] = "unknown"
     return username, errors

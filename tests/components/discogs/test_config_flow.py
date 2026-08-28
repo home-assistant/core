@@ -6,7 +6,7 @@ import discogs_client
 import pytest
 
 from homeassistant.components.discogs.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -88,6 +88,7 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
     ("error", "message"),
     [
         (discogs_client.exceptions.HTTPError("Unauthorized", 401), "invalid_auth"),
+        (discogs_client.exceptions.HTTPError("Rate Limited", 429), "cannot_connect"),
         (RuntimeError("Something went wrong"), "unknown"),
     ],
 )
@@ -127,6 +128,40 @@ async def test_flow_errors_then_success(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={CONF_TOKEN: "old_token"},
+        unique_id=MOCK_USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_client = MagicMock()
+    mock_client.identity.return_value.name = MOCK_USERNAME
+
+    with (
+        patch(
+            "homeassistant.components.discogs.config_flow.discogs_client.Client",
+            return_value=mock_client,
+        ),
+        patch("homeassistant.components.discogs.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TOKEN: "new_token"},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+    assert entry.data[CONF_TOKEN] == "new_token"
+
+
 async def test_flow_already_configured(hass: HomeAssistant) -> None:
     """Test flow aborts when account is already configured."""
     entry = MockConfigEntry(
@@ -147,6 +182,54 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
+            data={CONF_TOKEN: MOCK_TOKEN},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_import_flow(hass: HomeAssistant) -> None:
+    """Test YAML import creates a config entry."""
+    mock_client = MagicMock()
+    mock_client.identity.return_value.name = MOCK_USERNAME
+
+    with (
+        patch(
+            "homeassistant.components.discogs.config_flow.discogs_client.Client",
+            return_value=mock_client,
+        ),
+        patch("homeassistant.components.discogs.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_TOKEN: MOCK_TOKEN},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == MOCK_USERNAME
+        assert result["data"] == {CONF_TOKEN: MOCK_TOKEN}
+
+
+async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test YAML import aborts when already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={CONF_TOKEN: MOCK_TOKEN},
+        unique_id=MOCK_USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.identity.return_value.name = MOCK_USERNAME
+
+    with patch(
+        "homeassistant.components.discogs.config_flow.discogs_client.Client",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
             data={CONF_TOKEN: MOCK_TOKEN},
         )
         assert result["type"] is FlowResultType.ABORT

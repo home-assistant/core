@@ -16,14 +16,17 @@ async def test_sensors(
     state = hass.states.get("sensor.discogs_collection")
     assert state is not None
     assert state.state == "42"
+    assert state.attributes["identity"] == "testuser"
 
     state = hass.states.get("sensor.discogs_wantlist")
     assert state is not None
     assert state.state == "10"
+    assert state.attributes["identity"] == "testuser"
 
     state = hass.states.get("sensor.discogs_random_record")
     assert state is not None
     assert state.state == "Artist Name - Album Title"
+    assert state.attributes["identity"] == "testuser"
     assert state.attributes["cat_no"] == "CAT001"
     assert state.attributes["cover_image"] == "https://example.com/cover.jpg"
     assert state.attributes["format"] == "Vinyl (LP)"
