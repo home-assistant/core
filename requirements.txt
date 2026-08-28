@@ -23,7 +23,7 @@ ciso8601==2.3.3
 cronsim==2.7
 cryptography==48.0.1
 fnv-hash-fast==2.0.3
-gazetteer-matcher==1.0.0
+gazetteer-matcher==1.1.0
 ha-ffmpeg==3.2.2
 hass-nabucasa==2.7.0
 hassil==3.12.0
