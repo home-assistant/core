@@ -54,9 +54,5 @@ async def test_entities(
 def test_all_library_states_are_mapped(
     mapping: dict[StrEnum, str | None], states: type[StrEnum]
 ) -> None:
-    """Test every state the Peblar library knows about has a mapping.
-
-    An unmapped state raises a KeyError while updating the sensor, so catch
-    a newly introduced one here instead of on someone's charger.
-    """
+    """Test every Peblar library state has a mapping."""
     assert set(mapping) == set(states)
