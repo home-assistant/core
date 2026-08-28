@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -182,3 +183,38 @@ async def test_select_option_authentication_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    ("mock_peblar", "expected_options"),
+    [
+        (
+            {"SolarChargingAllowed": False},
+            ["default", "scheduled"],
+        ),
+        (
+            {"ScheduledChargingAllowed": False},
+            ["default", "fast_solar", "pure_solar", "smart_solar"],
+        ),
+        (
+            {"SolarChargingAllowed": False, "ScheduledChargingAllowed": False},
+            ["default"],
+        ),
+    ],
+    ids=["no solar", "no scheduled", "neither"],
+    indirect=["mock_peblar"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_smart_charging_options_follow_the_charger(
+    hass: HomeAssistant,
+    expected_options: list[str],
+) -> None:
+    """Only offer the smart charging modes the charger accepts.
+
+    A charger without a power meter rejects solar charging, and the web
+    interface hides those modes. Offering them anyway lets the user pick
+    something the charger quietly ignores.
+    """
+    state = hass.states.get("select.peblar_ev_charger_smart_charging")
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == expected_options
