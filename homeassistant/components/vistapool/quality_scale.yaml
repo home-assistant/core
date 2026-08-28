@@ -39,7 +39,7 @@ rules:
   docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

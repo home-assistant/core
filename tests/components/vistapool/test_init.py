@@ -8,6 +8,7 @@ from aioaquarite import AquariteError, AuthenticationError
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -18,6 +19,7 @@ from tests.common import MockConfigEntry
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
 _THIRD_POOL_ID = "QQQQQQ1111111111"
+_TEMPERATURE_ENTITY = "sensor.my_pool_temperature"
 
 
 async def test_setup_entry(
@@ -310,6 +312,39 @@ async def test_apply_optimistic_creates_missing_intermediate_dicts(
 
     assert coordinator.data["filtration"]["intel"]["temp"] == 27
     assert coordinator.data["existing"] == {"nested": {"key": 1}}
+
+
+async def test_entities_unavailable_while_push_connection_is_down(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test entities go unavailable when the Firestore subscription drops.
+
+    The integration has no polling interval, so without this the last
+    snapshot would stay on display as if it were still current.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state != STATE_UNAVAILABLE
+
+    call = mock_vistapool_client.subscribe_pool_resilient.call_args
+    on_data = call.args[1]
+    on_health = call.kwargs["on_health"]
+
+    on_health(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
+
+    # Resubscribing delivers a fresh snapshot, which restores availability.
+    on_health(True)
+    on_data({"main": {"temperature": 25}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state == "25.0"
 
 
 async def test_unload_entry(

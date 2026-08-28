@@ -10,7 +10,7 @@ from aioaquarite import (
     ResilientPoolSubscription,
 )
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -69,7 +69,25 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, data)
 
         self.subscription = await self.api.subscribe_pool_resilient(
-            self.pool_id, _on_data
+            self.pool_id, _on_data, on_health=self._async_on_subscription_health
+        )
+
+    @callback
+    def _async_on_subscription_health(self, healthy: bool) -> None:
+        """Mark entities unavailable while the push connection is down.
+
+        Without a polling interval the last snapshot would otherwise stay
+        on display as if it were current. Recovery needs no action here:
+        resubscribing delivers a fresh snapshot, which restores
+        availability through async_set_updated_data.
+        """
+        if healthy:
+            return
+        self.async_set_update_error(
+            UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
         )
 
     @override
