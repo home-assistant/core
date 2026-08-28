@@ -1,8 +1,9 @@
 """Test the Geocaching config flow."""
 
 from http import HTTPStatus
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from geocachingapi.models import GeocachingStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -11,10 +12,10 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.geocaching.const import (
+    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
-    SUBENTRY_TYPE_TRACKABLE,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryDataWithId
@@ -235,35 +236,15 @@ async def test_reauthentication(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("subentry_type", "input_code", "expected_code"),
-    [
-        pytest.param(
-            SUBENTRY_TYPE_TRACKED_CACHE,
-            "  gc12345  ",
-            "GC12345",
-            id="tracked-cache",
-        ),
-        pytest.param(
-            SUBENTRY_TYPE_TRACKABLE,
-            "  tb12345  ",
-            "TB12345",
-            id="trackable",
-        ),
-    ],
-)
 async def test_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    subentry_type: str,
-    input_code: str,
-    expected_code: str,
 ) -> None:
-    """Test adding and normalizing a Geocaching subentry."""
+    """Test adding and normalizing a tracked cache subentry."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, subentry_type),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
         context={"source": SOURCE_USER},
     )
 
@@ -271,69 +252,40 @@ async def test_subentry_flow(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CODE: input_code}
+        result["flow_id"], {CONF_CODE: "  gc12345  "}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_config_entry.subentries) == 1
     subentry = next(iter(mock_config_entry.subentries.values()))
-    assert subentry.subentry_type == subentry_type
-    assert subentry.title == expected_code
-    assert subentry.unique_id == expected_code
-    assert subentry.data == {CONF_CODE: expected_code}
+    assert subentry.subentry_type == SUBENTRY_TYPE_TRACKED_CACHE
+    assert subentry.title == "GC12345"
+    assert subentry.unique_id == "GC12345"
+    assert subentry.data == {CONF_CODE: "GC12345"}
 
 
-@pytest.mark.parametrize(
-    ("subentry_type", "code", "error"),
-    [
-        pytest.param(
-            SUBENTRY_TYPE_TRACKED_CACHE,
-            "INVALID",
-            "invalid_cache_code",
-            id="tracked-cache",
-        ),
-        pytest.param(
-            SUBENTRY_TYPE_TRACKABLE,
-            "INVALID",
-            "invalid_trackable_code",
-            id="trackable",
-        ),
-    ],
-)
 async def test_subentry_flow_invalid_code(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    subentry_type: str,
-    code: str,
-    error: str,
 ) -> None:
     """Test adding a subentry with an invalid code."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, subentry_type),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CODE: code}
+        result["flow_id"], {CONF_CODE: "INVALID"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_CODE: error}
+    assert result["errors"] == {CONF_CODE: "invalid_cache_code"}
 
 
-@pytest.mark.parametrize(
-    ("subentry_type", "code"),
-    [
-        pytest.param(SUBENTRY_TYPE_TRACKED_CACHE, "GC12345", id="tracked-cache"),
-        pytest.param(SUBENTRY_TYPE_TRACKABLE, "TB12345", id="trackable"),
-    ],
-)
 async def test_subentry_flow_already_configured(
     hass: HomeAssistant,
-    subentry_type: str,
-    code: str,
 ) -> None:
     """Test adding an already configured subentry code."""
     config_entry = MockConfigEntry(
@@ -343,10 +295,10 @@ async def test_subentry_flow_already_configured(
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
-                data={CONF_CODE: code},
-                subentry_type=subentry_type,
-                title=code,
-                unique_id=code,
+                data={CONF_CODE: "GC12345"},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title="GC12345",
+                unique_id="GC12345",
                 subentry_id="existing-subentry",
             )
         ],
@@ -354,11 +306,11 @@ async def test_subentry_flow_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, subentry_type),
+        (config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CODE: code.lower()}
+        result["flow_id"], {CONF_CODE: "gc12345"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -366,28 +318,8 @@ async def test_subentry_flow_already_configured(
     assert result["errors"] == {CONF_CODE: "already_configured"}
 
 
-@pytest.mark.parametrize(
-    ("subentry_type", "code_prefix", "reason"),
-    [
-        pytest.param(
-            SUBENTRY_TYPE_TRACKED_CACHE,
-            "GC",
-            "too_many_caches",
-            id="tracked-cache",
-        ),
-        pytest.param(
-            SUBENTRY_TYPE_TRACKABLE,
-            "TB",
-            "too_many_trackables",
-            id="trackable",
-        ),
-    ],
-)
 async def test_subentry_flow_maximum(
     hass: HomeAssistant,
-    subentry_type: str,
-    code_prefix: str,
-    reason: str,
 ) -> None:
     """Test aborting when the maximum number of subentries is configured."""
     config_entry = MockConfigEntry(
@@ -397,10 +329,10 @@ async def test_subentry_flow_maximum(
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
-                data={CONF_CODE: f"{code_prefix}{number}"},
-                subentry_type=subentry_type,
-                title=f"{code_prefix}{number}",
-                unique_id=f"{code_prefix}{number}",
+                data={CONF_CODE: f"GC{number}"},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=f"GC{number}",
+                unique_id=f"GC{number}",
                 subentry_id=f"subentry-{number}",
             )
             for number in range(50)
@@ -409,9 +341,90 @@ async def test_subentry_flow_maximum(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, subentry_type),
+        (config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
         context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
+    assert result["reason"] == "too_many_caches"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test configuring tracked trackables reloads a loaded entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    session = MagicMock()
+    session.token = {"access_token": "mock-token"}
+
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=session,
+        ),
+        patch(
+            "homeassistant.components.geocaching.coordinator.GeocachingApi"
+        ) as geocaching_api_mock,
+    ):
+        geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as async_reload:
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_TRACKABLE_CODES: "TB12345, tb67890\nTB12345"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
+    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("trackable_codes", "error"),
+    [
+        pytest.param("INVALID", "invalid_trackable_code", id="invalid"),
+        pytest.param(
+            "\n".join(f"TB{number}" for number in range(51)),
+            "too_many_trackables",
+            id="too-many",
+        ),
+    ],
+)
+async def test_options_flow_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    trackable_codes: str,
+    error: str,
+) -> None:
+    """Test invalid tracked trackable options."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKABLE_CODES: trackable_codes},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": error}

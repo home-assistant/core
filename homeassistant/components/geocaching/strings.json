@@ -33,31 +33,6 @@
     }
   },
   "config_subentries": {
-    "trackable": {
-      "abort": {
-        "too_many_trackables": "A maximum of 50 trackables can be tracked."
-      },
-      "entry_type": "Trackable",
-      "error": {
-        "already_configured": "This trackable is already configured.",
-        "invalid_trackable_code": "Enter a valid TB code."
-      },
-      "initiate_flow": {
-        "user": "Add trackable"
-      },
-      "step": {
-        "user": {
-          "data": {
-            "code": "TB code"
-          },
-          "data_description": {
-            "code": "Enter one TB code, for example TB12345."
-          },
-          "description": "Add one trackable to track by entering its TB code.",
-          "title": "Add trackable"
-        }
-      }
-    },
     "tracked_cache": {
       "abort": {
         "too_many_caches": "A maximum of 50 caches can be tracked."
@@ -65,7 +40,7 @@
       "entry_type": "Tracked cache",
       "error": {
         "already_configured": "This cache is already configured.",
-        "invalid_cache_code": "Enter a valid GC code."
+        "invalid_cache_code": "Enter a valid geocache code."
       },
       "initiate_flow": {
         "user": "Add tracked cache"
@@ -73,12 +48,12 @@
       "step": {
         "user": {
           "data": {
-            "code": "GC code"
+            "code": "Geocache code"
           },
           "data_description": {
-            "code": "Enter one GC code, for example GC12345."
+            "code": "Enter one geocache code, for example GC12345."
           },
-          "description": "Add one geocache to track by entering its GC code.",
+          "description": "Add one geocache to track by entering its geocache code.",
           "title": "Add tracked cache"
         }
       }
@@ -124,6 +99,24 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_trackable_code": "Enter valid trackable codes starting with TB.",
+      "too_many_trackables": "A maximum of 50 trackables can be tracked."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "trackable_codes": "Trackable codes"
+        },
+        "data_description": {
+          "trackable_codes": "Enter the TB codes of the trackables to track, separated by commas or new lines. A maximum of 50 trackables can be tracked."
+        },
+        "description": "Select which trackables you want to track.",
+        "title": "Tracked trackables"
+      }
     }
   }
 }

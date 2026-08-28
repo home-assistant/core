@@ -9,8 +9,8 @@ from geocachingapi.models import GeocachingApiEnvironment
 from .models import GeocachingOAuthApiUrls
 
 DOMAIN: Final = "geocaching"
+CONF_TRACKABLE_CODES: Final = "trackable_codes"
 SUBENTRY_TYPE_TRACKED_CACHE: Final = "tracked_cache"
-SUBENTRY_TYPE_TRACKABLE: Final = "trackable"
 
 MAX_TRACKED_CACHES: Final = 50
 MAX_TRACKED_TRACKABLES: Final = 50
