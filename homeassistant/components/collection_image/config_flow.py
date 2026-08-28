@@ -13,9 +13,7 @@ from .const import CONF_MEDIA, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_MEDIA): MediaSelector(
-            {"accept": ["directory"], "remove_metadata": False}
-        ),
+        vol.Required(CONF_MEDIA): MediaSelector({"accept": ["directory"]}),
     }
 )
 

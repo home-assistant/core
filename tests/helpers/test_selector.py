@@ -1844,43 +1844,11 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
             ),
         ),
-        (
-            {
-                "accept": ["image/*"],
-                "remove_metadata": False,
-            },
-            (
-                {
-                    "media_content_id": "abc",
-                    "media_content_type": "def",
-                },
-                {
-                    "media_content_id": "abc",
-                    "media_content_type": "def",
-                    "metadata": {},
-                },
-            ),
-            (),
-        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
-
-    def drop_metadata(data):
-        """Drop metadata key from the input."""
-        if isinstance(data, list):
-            return [drop_metadata(item) for item in data]
-        data.pop("metadata", None)
-        return data
-
-    _test_selector(
-        "media",
-        schema,
-        valid_selections,
-        invalid_selections,
-        drop_metadata if schema.get("remove_metadata", True) else None,
-    )
+    _test_selector("media", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -1950,23 +1918,6 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                 ],
             ),
         ),
-        (
-            {"multiple": True, "accept": ["image/*"], "remove_metadata": False},
-            (
-                [
-                    {
-                        "media_content_id": "abc",
-                        "media_content_type": "def",
-                        "metadata": {"foo": 42},
-                    },
-                    {
-                        "media_content_id": "ghi",
-                        "media_content_type": "jkl",
-                    },
-                ],
-            ),
-            (),
-        ),
     ],
 )
 def test_media_selector_schema_multiple(
@@ -1974,10 +1925,9 @@ def test_media_selector_schema_multiple(
 ) -> None:
     """Test media selector with multiple selections."""
 
-    def drop_metadata(data, root=True):
+    def ensure_list(data, root=True):
         if isinstance(data, list):
-            return [drop_metadata(item, False) for item in data]
-        data.pop("metadata", None)
+            return data
         # Multiple=true wraps single values in list.
         return [data] if root and schema.get("multiple") else data
 
@@ -1986,7 +1936,7 @@ def test_media_selector_schema_multiple(
         schema,
         valid_selections,
         invalid_selections,
-        drop_metadata if schema.get("remove_metadata", True) else None,
+        ensure_list,
     )
 
 
