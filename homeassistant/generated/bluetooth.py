@@ -69,6 +69,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
     },
     {
+        "connectable": True,
+        "domain": "besen",
+        "local_name": "ACP#*",
+    },
+    {
         "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,
@@ -250,6 +255,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "govee_ble",
         "manufacturer_id": 6966,
         "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "service_uuid": "00005550-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
@@ -453,6 +463,262 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "iron_os",
         "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f000-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f001-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f002-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f003-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f004-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f005-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f006-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f007-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f008-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f009-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00a-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00c-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00d-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00e-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f00f-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f010-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f011-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f012-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f013-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f014-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f015-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f016-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f017-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f018-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f019-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01a-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01c-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01d-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01e-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f01f-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f020-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f021-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f022-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f023-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f024-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f025-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f026-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f027-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f028-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f029-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02a-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02c-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02d-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02e-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f02f-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f030-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f031-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f032-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f033-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f034-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f035-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f036-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f037-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f038-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f039-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03a-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03c-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03d-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03e-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "iseo_argo_ble",
+        "service_uuid": "0000f03f-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
@@ -755,6 +1021,72 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "snooz",
         "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_data_start": [
+            84,
+            85,
+            82,
+            66,
+            79,
+            72,
+            77,
+            73,
+        ],
+        "manufacturer_id": 89,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_data_start": [
+            2,
+            21,
+            84,
+            85,
+            82,
+            66,
+            79,
+            72,
+            77,
+            73,
+        ],
+        "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "SPECIALIZED",
+        "manufacturer_id": 525,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000001-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000002-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000003-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "WSBC*",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "SPECIALIZED*",
     },
     {
         "connectable": False,

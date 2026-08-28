@@ -1,5 +1,6 @@
 """Test the ESPHome bluetooth integration."""
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -10,6 +11,7 @@ from aioesphomeapi import (
     BluetoothScannerState,
     BluetoothScannerStateResponse,
 )
+import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothScanningMode
@@ -79,17 +81,16 @@ async def test_bluetooth_device_linked_via_device(
         "bluetooth", "AA:BB:CC:DD:EE:FC"
     )
     assert entry is not None
-    esp_device = device_registry.async_get_device(
-        connections={
-            (
-                dr.CONNECTION_NETWORK_MAC,
-                mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
-            )
-        }
+    esp_device = device_registry.async_get_device_by_connection(
+        (
+            dr.CONNECTION_NETWORK_MAC,
+            mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
+        ),
+        mock_bluetooth_entry_with_raw_adv.entry.entry_id,
     )
     assert esp_device is not None
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, "AA:BB:CC:DD:EE:FC")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, "AA:BB:CC:DD:EE:FC"), entry.entry_id
     )
     assert device is not None
     assert device.via_device_id == esp_device.id
@@ -344,3 +345,22 @@ async def test_scanning_mode_default_pinned_before_register(
     # habluetooth auto-mode worker is spawned at registration time.
     set_mode_mock.assert_called_once_with(BluetoothScannerMode.PASSIVE)
     assert requested_at_register == [BluetoothScanningMode.AUTO]
+
+
+async def test_bluetooth_disconnect_fails_parked_slot_waiter(
+    hass: HomeAssistant, mock_bluetooth_entry_with_raw_adv: MockESPHomeDevice
+) -> None:
+    """Test a parked BLE slot waiter fails fast when the entry disconnects."""
+    entry_data = mock_bluetooth_entry_with_raw_adv.entry.runtime_data
+    bluetooth_device = entry_data.bluetooth_device
+    assert bluetooth_device is not None
+    task = hass.async_create_task(bluetooth_device.wait_for_ble_connections_free(60.0))
+    await asyncio.sleep(0)
+    assert not task.done()
+
+    await mock_bluetooth_entry_with_raw_adv.mock_disconnect(True)
+    await hass.async_block_till_done()
+
+    with pytest.raises(TimeoutError, match="Proxy became unavailable"):
+        await task
+    assert bluetooth_device.available is False

@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "addon_already_configured": "A configuration entry using the Z-Wave JS app already exists. Reconfigure or migrate that entry instead.",
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS app discovery info.",
       "addon_info_failed": "Failed to get Z-Wave JS app info.",
       "addon_install_failed": "Failed to install the Z-Wave JS app.",
@@ -15,6 +16,7 @@
       "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
       "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
       "discovery_requires_supervisor": "Discovery requires the Home Assistant Supervisor.",
+      "invalid_discovery_info": "The discovery information is invalid.",
       "migration_low_sdk_version": "The SDK version of the old adapter is lower than {ok_sdk_version}. This means it's not possible to migrate the non-volatile memory (NVM) of the old adapter to another adapter.\n\nCheck the documentation on the manufacturer support pages of the old adapter, if it's possible to upgrade the firmware of the old adapter to a version that is built with SDK version {ok_sdk_version} or higher.",
       "migration_successful": "Migration successful.",
       "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave JS app.",
@@ -28,9 +30,11 @@
       "addon_start_failed": "Failed to start the Z-Wave JS app. Check the configuration.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ws_url": "Invalid websocket URL",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "missing_usb_or_socket_path": "Select a USB device or provide a socket path.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "usb_and_socket_path": "Select either a USB device or a socket path, not both."
     },
-    "flow_title": "Network {home_id} at {host}:{port}",
+    "flow_title": "{name}",
     "progress": {
       "backup_nvm": "Please wait while the network backup completes",
       "install_addon": "Installation can take several minutes",
@@ -321,6 +325,9 @@
     },
     "credential_rejected_wrong_uuid": {
       "message": "The device rejected the credential because the user unique identifier does not match."
+    },
+    "credential_required": {
+      "message": "This device requires a credential when adding a user."
     },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
@@ -800,15 +807,27 @@
       "name": "Set lock user code"
     },
     "set_user": {
-      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_id for each targeted lock entity.",
+      "description": "Creates or updates an access-control user on a lock entity. When no user_id is given, a new user is created. A credential (PIN code or password) can be written in the same call. Returns the allocated user_id, plus the credential_slot when a credential was written, for each targeted lock entity.",
       "fields": {
         "active": {
           "description": "Whether the user is active.",
           "name": "Active"
         },
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
         "credential_rule": {
           "description": "Credential rule for the user (single, dual, or triple).",
           "name": "Credential rule"
+        },
+        "credential_slot": {
+          "description": "Credential slot index. If not specified, the first available slot is used.",
+          "name": "Credential slot"
+        },
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
         },
         "user_id": {
           "description": "User slot index. If not specified, the first available slot is used.",

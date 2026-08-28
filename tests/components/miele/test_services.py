@@ -37,7 +37,9 @@ async def test_services(
     """Tests that the custom services are correct."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PROGRAM,
@@ -84,7 +86,9 @@ async def test_services_oven(
     """Tests that the custom services are correct for ovens."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PROGRAM_OVEN,
@@ -106,7 +110,9 @@ async def test_services_with_response(
     """Tests that the custom services that returns a response are correct."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
     assert snapshot == await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_PROGRAMS,
@@ -135,7 +141,9 @@ async def test_service_api_errors(
 ) -> None:
     """Test service api errors."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
 
     # Test http error
     mock_miele_client.set_program.side_effect = ClientResponseError(Mock(), Mock())
@@ -159,7 +167,9 @@ async def test_get_service_api_errors(
 ) -> None:
     """Test service api errors."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
 
     # Test http error
     mock_miele_client.get_programs.side_effect = ClientResponseError(Mock(), Mock())
@@ -183,7 +193,9 @@ async def test_service_validation_errors(
     """Tests that the custom services handle bad data."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
+    )
 
     # Test missing program_id
     with pytest.raises(MultipleInvalid, match="required key not provided"):
@@ -196,7 +208,7 @@ async def test_service_validation_errors(
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid program_id
-    with pytest.raises(MultipleInvalid, match="expected int for dictionary value"):
+    with pytest.raises(MultipleInvalid, match="expected int at"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PROGRAM,

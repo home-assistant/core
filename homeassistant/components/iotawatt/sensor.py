@@ -164,9 +164,15 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
 
         self._key = key
         data = self._sensor_data
+        # An entity without a unique ID cannot be attached to a device.
         if data.getType() == "Input":
             self._attr_unique_id = (
                 f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
+            )
+            self._attr_device_info = dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, data.hub_mac_address)},
+                manufacturer="IoTaWatt",
+                model="IoTaWatt",
             )
         self.entity_description = entity_description
 
@@ -180,18 +186,6 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
     def name(self) -> str | None:
         """Return name of the entity."""
         return self._sensor_data.getName()
-
-    @property
-    @override
-    def device_info(self) -> dr.DeviceInfo:
-        """Return device info."""
-        return dr.DeviceInfo(
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
-            },
-            manufacturer="IoTaWatt",
-            model="IoTaWatt",
-        )
 
     @callback
     @override

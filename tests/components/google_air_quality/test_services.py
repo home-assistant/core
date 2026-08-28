@@ -29,8 +29,9 @@ async def test_get_forecast_service(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching a forecast for a subentry."""
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_home-subentry-id")}
+    device = dr.async_get(hass).async_get_device_by_identifier(  # pylint: disable=home-assistant-tests-registry-fixtures
+        (DOMAIN, f"{mock_config_entry.entry_id}_home-subentry-id"),
+        mock_config_entry.entry_id,
     )
     assert device is not None
 
@@ -73,4 +74,4 @@ async def test_get_forecast_service_unknown_subentry(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "device_not_found"
+    assert exc_info.value.translation_key == "service_device_not_found"

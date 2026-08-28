@@ -18,9 +18,11 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_buttons(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple button entities associated with different targets."""
-    return await target_entities(hass, "button")
+async def target_entities_indirect(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> dict[str, list[str]]:
+    """Create multiple entities associated with different targets."""
+    return await target_entities(hass, request.param)
 
 
 @pytest.mark.parametrize(
@@ -47,8 +49,25 @@ async def test_button_trigger_options_validation(
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("button"),
+    (
+        "target_entities_indirect",
+        "trigger_target_config",
+        "entity_id",
+        "entities_in_target",
+    ),
+    [
+        *[
+            ("button", config, entity_id, entities)
+            for (config, entity_id, entities) in parametrize_target_entities("button")
+        ],
+        *[
+            ("input_button", config, entity_id, entities)
+            for (config, entity_id, entities) in parametrize_target_entities(
+                "input_button"
+            )
+        ],
+    ],
+    indirect=["target_entities_indirect"],
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
@@ -163,7 +182,7 @@ async def test_button_trigger_options_validation(
 )
 async def test_button_state_trigger(
     hass: HomeAssistant,
-    target_buttons: dict[str, list[str]],
+    target_entities_indirect: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -172,10 +191,10 @@ async def test_button_state_trigger(
 ) -> None:
     """Test that the button state trigger fires when targeted button state changes."""
     calls: list[str] = []
-    other_entity_ids = set(target_buttons["included_entities"]) - {entity_id}
+    other_entity_ids = set(target_entities_indirect["included_entities"]) - {entity_id}
 
     # Set all buttons, including the tested button, to the initial state
-    for eid in target_buttons["included_entities"]:
+    for eid in target_entities_indirect["included_entities"]:
         set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 

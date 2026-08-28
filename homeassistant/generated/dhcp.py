@@ -12,6 +12,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "FC0FE7*",
     },
     {
+        "domain": "aidot",
+        "hostname": "aidot",
+    },
+    {
         "domain": "airobot",
         "hostname": "airobot-thermostat-*",
     },
@@ -324,6 +328,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]",
     },
     {
+        "domain": "earn_e_p1",
+        "hostname": "energiemonitor-*",
+    },
+    {
+        "domain": "earn_e_p1",
+        "registered_devices": True,
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -455,6 +467,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "guntamatic",
         "hostname": "kessel*",
         "macaddress": "0024BD*",
+    },
+    {
+        "domain": "harbor",
+        "hostname": "harborc-*",
     },
     {
         "domain": "home_connect",
@@ -911,6 +927,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "204EF6*",
     },
     {
+        "domain": "roomba",
+        "registered_devices": True,
+    },
+    {
         "domain": "ruuvi_gateway",
         "hostname": "ruuvigateway*",
     },
@@ -1053,6 +1073,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "steamist",
         "hostname": "my[45]50*",
         "macaddress": "001E0C*",
+    },
+    {
+        "domain": "stiebel_eltron",
+        "hostname": "servicewelt*",
     },
     {
         "domain": "sunricher_dali",

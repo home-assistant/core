@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23f9239m92m3ffkkdkdd_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_carbon_dioxide-state]
@@ -44,7 +44,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_carbon_dioxide',
@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23f9239m92m3ffkkdkdd_co',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_carbon_monoxide-state]
@@ -99,7 +99,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_carbon_monoxide',
@@ -145,7 +145,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23f9239m92m3ffkkdkdd_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_humidity-state]
@@ -154,7 +154,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_humidity',
@@ -306,7 +306,7 @@
     'supported_features': 0,
     'translation_key': 'nitrogen_dioxide',
     'unique_id': '23f9239m92m3ffkkdkdd_no2',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_nitrogen_dioxide-state]
@@ -314,7 +314,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Nitrogen dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_nitrogen_dioxide',
@@ -360,7 +360,7 @@
     'supported_features': 0,
     'translation_key': 'ozone',
     'unique_id': '23f9239m92m3ffkkdkdd_ozone',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_ozone-state]
@@ -368,7 +368,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Ozone',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_ozone',
@@ -414,7 +414,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23f9239m92m3ffkkdkdd_pm25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_pm2_5-state]
@@ -423,7 +423,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_pm2_5',
@@ -638,7 +638,7 @@
     'supported_features': 0,
     'translation_key': 'volatile_organic_compounds',
     'unique_id': '23f9239m92m3ffkkdkdd_tvoc',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_device_volatile_organic_compounds-state]
@@ -647,7 +647,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Volatile organic compounds',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_device_volatile_organic_compounds',

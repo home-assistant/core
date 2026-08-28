@@ -254,6 +254,31 @@ class DateTimeExtension(BaseTemplateExtension):
 
         return datetime.combine(today, time_today, today.tzinfo)
 
+    def _datetime_as_string(self, value: Any, precision: int, future: bool) -> Any:
+        """Shared implementation for relative datetime formatting.
+
+        If future is False, formats time since value (past datetime).
+        If future is True, formats time until value (future datetime).
+        Returns non-datetime values unmodified. Datetime values that point the
+        wrong direction are returned as-is, except naive datetimes are first
+        converted to local time.
+        """
+        if (render_info := render_info_cv.get()) is not None:
+            render_info.has_time = True
+
+        if not isinstance(value, datetime):
+            return value
+        if not value.tzinfo:
+            value = dt_util.as_local(value)
+        now = dt_util.now()
+        if future:
+            if now > value:
+                return value
+            return dt_util.get_time_remaining(value, precision)
+        if now < value:
+            return value
+        return dt_util.get_age(value, precision)
+
     def relative_time(self, value: Any) -> Any:
         """Take a datetime and return its "age" as a string.
 
@@ -269,16 +294,7 @@ class DateTimeExtension(BaseTemplateExtension):
         of `time_until`, but is still supported so as not to
         break old templates.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
-
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() < value:
-            return value
-        return dt_util.get_age(value)
+        return self._datetime_as_string(value, precision=1, future=False)
 
     def time_since(self, value: Any | datetime, precision: int = 1) -> Any:
         """Take a datetime and return its "age" as a string.
@@ -286,20 +302,11 @@ class DateTimeExtension(BaseTemplateExtension):
         The age can be in seconds, minutes, hours, days, months and year.
 
         precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
 
         If the value not a datetime object the input will be returned unmodified.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
-
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() < value:
-            return value
-
-        return dt_util.get_age(value, precision)
+        return self._datetime_as_string(value, precision=precision, future=False)
 
     def time_until(self, value: Any | datetime, precision: int = 1) -> Any:
         """Take a datetime and return the amount of time until that time as a string.
@@ -307,17 +314,8 @@ class DateTimeExtension(BaseTemplateExtension):
         The time until can be in seconds, minutes, hours, days, months and years.
 
         precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
 
         If the value not a datetime object the input will be returned unmodified.
         """
-        if (render_info := render_info_cv.get()) is not None:
-            render_info.has_time = True
-
-        if not isinstance(value, datetime):
-            return value
-        if not value.tzinfo:
-            value = dt_util.as_local(value)
-        if dt_util.now() > value:
-            return value
-
-        return dt_util.get_time_remaining(value, precision)
+        return self._datetime_as_string(value, precision=precision, future=True)
