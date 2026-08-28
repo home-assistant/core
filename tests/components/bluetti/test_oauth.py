@@ -88,12 +88,28 @@ async def test_async_step_reconfigure_delegates_to_async_step_user(
 async def test_token_refresh_init_subscribes_and_unsubs_on_unload(
     hass: HomeAssistant,
 ) -> None:
-    """Token refresh init subscribes and unsubs on unload."""
+    """The onTokenExpired listener must actually fire, then stop after unload.
+
+    Regression test: this test used to only fire the event and call
+    async_block_till_done() with no assertion at all - it would still
+    pass even if entry.async_on_unload(unsub) were never called, since
+    nothing here ever checked the listener was subscribed, let alone
+    unsubscribed.
+    """
     refresher, entry = _refresher(hass, {})
     assert refresher.entry is entry
+    refresher.send_expired_notification = MagicMock()
 
     hass.bus.async_fire("onTokenExpired")
     await hass.async_block_till_done()
+    refresher.send_expired_notification.assert_called_once()
+
+    await entry._async_process_on_unload(hass)
+
+    refresher.send_expired_notification.reset_mock()
+    hass.bus.async_fire("onTokenExpired")
+    await hass.async_block_till_done()
+    refresher.send_expired_notification.assert_not_called()
 
 
 async def test_on_token_expired_event_sends_notification(hass: HomeAssistant) -> None:
