@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import nullcontext
+import json
 from unittest.mock import MagicMock, patch
 
 from peblar import (
@@ -44,8 +45,16 @@ def mock_setup_entry() -> Generator[None]:
 
 @pytest.fixture
 def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
-    """Return a mocked Peblar client."""
-    system_info_fixture = getattr(request, "param", "system_information.json")
+    """Return a mocked Peblar client.
+
+    Parametrize indirectly with a dict to override single system
+    information fields, so a test that cares about one hardware flag does
+    not need a full copy of the fixture.
+    """
+    system_information = {
+        **json.loads(load_fixture("system_information.json", DOMAIN)),
+        **getattr(request, "param", {}),
+    }
     with (
         patch("homeassistant.components.peblar.Peblar", autospec=True) as peblar_mock,
         patch("homeassistant.components.peblar.config_flow.Peblar", new=peblar_mock),
@@ -60,8 +69,8 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         peblar.user_configuration.return_value = PeblarUserConfiguration.from_json(
             load_fixture("user_configuration.json", DOMAIN)
         )
-        peblar.system_information.return_value = PeblarSystemInformation.from_json(
-            load_fixture(system_info_fixture, DOMAIN)
+        peblar.system_information.return_value = PeblarSystemInformation.from_dict(
+            system_information
         )
 
         api = peblar.rest_api.return_value

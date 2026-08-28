@@ -215,7 +215,6 @@ async def test_select_hardware_entity(
 ) -> None:
     """Test the Peblar EV charger hardware select entities."""
     mocked_method = getattr(mock_peblar, method_name)
-    mocked_method.reset_mock()
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -230,8 +229,8 @@ async def test_select_hardware_entity(
 @pytest.mark.parametrize(
     ("mock_peblar", "entity_key"),
     [
-        ("system_information_no_buzzer.json", "buzzer_volume"),
-        ("system_information_no_led.json", "led_brightness"),
+        ({"HwHasBuzzer": False}, "buzzer_volume"),
+        ({"HwHasLed": False}, "led_brightness"),
     ],
     indirect=["mock_peblar"],
 )

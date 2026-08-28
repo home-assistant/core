@@ -15,10 +15,24 @@
     },
     "select": {
       "buzzer_volume": {
-        "default": "mdi:volume-high"
+        "default": "mdi:volume-high",
+        "state": {
+          "high": "mdi:volume-high",
+          "low": "mdi:volume-low",
+          "low_medium": "mdi:volume-medium",
+          "medium": "mdi:volume-medium",
+          "off": "mdi:volume-off"
+        }
       },
       "led_brightness": {
-        "default": "mdi:brightness-6"
+        "default": "mdi:brightness-6",
+        "state": {
+          "automatic": "mdi:brightness-auto",
+          "bright": "mdi:brightness-7",
+          "dim": "mdi:brightness-4",
+          "medium": "mdi:brightness-6",
+          "off": "mdi:led-off"
+        }
       },
       "smart_charging": {
         "default": "mdi:lightning-bolt",

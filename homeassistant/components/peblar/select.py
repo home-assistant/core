@@ -57,10 +57,14 @@ DESCRIPTIONS = [
         translation_key="buzzer_volume",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_buzzer,
-        options=[v.name.lower() for v in SoundVolume],
-        current_fn=lambda x: (
-            x.buzzer_volume.name.lower() if x.buzzer_volume is not None else None
-        ),
+        options=[
+            "off",
+            "low",
+            "low_medium",
+            "medium",
+            "high",
+        ],
+        current_fn=lambda x: x.buzzer_volume.name.lower(),
         select_fn=lambda x, option: x.set_buzzer_volume(
             volume=SoundVolume[option.upper()]
         ),
@@ -70,7 +74,15 @@ DESCRIPTIONS = [
         translation_key="led_brightness",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.system_information.hardware_has_led,
-        options=[v.name.lower() for v in LedBrightness],
+        options=[
+            "automatic",
+            "off",
+            "dim",
+            "medium",
+            "bright",
+        ],
+        # None when the charger reports a manual intensity that the UI has
+        # no name for, which someone can set straight through the API.
         current_fn=lambda x: (
             x.led_brightness.name.lower() if x.led_brightness is not None else None
         ),
