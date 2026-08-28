@@ -242,7 +242,7 @@ class MatterFan(MatterEntity, FanEntity):
         # keep track of the last known mode for turn_on commands without preset
         if self._attr_preset_mode is not None:
             self._last_known_preset_mode = self._attr_preset_mode
-        if current_percent:
+        if current_percent and current_percent != 255:
             self._last_known_percentage = current_percent
 
     @callback

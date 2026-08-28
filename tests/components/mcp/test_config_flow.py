@@ -1036,6 +1036,76 @@ async def test_reauth_flow_upgrade_to_oauth_no_auth_header(
     assert result["step_id"] == "credentials_choice"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_missing_implementation(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth recovers when the stored implementation was removed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "removed",
+            CONF_URL: MCP_SERVER_URL,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        },
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Instead of erroring out, the user can pick or create credentials again
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=SCOPES,
+    )
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # The entry now points at an implementation that exists again
+    assert config_entry.data["auth_implementation"] == AUTH_DOMAIN
+    assert config_entry.data[CONF_TOKEN]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_hassio_discovery_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
 ) -> None:
