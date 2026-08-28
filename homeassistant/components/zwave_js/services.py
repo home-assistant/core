@@ -644,6 +644,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_CONFIGURATION,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(const.ATTR_OPERATION_TYPE): vol.All(

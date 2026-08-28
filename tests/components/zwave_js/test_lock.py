@@ -542,9 +542,15 @@ async def test_get_all_lock_usercodes(
             False,
             id="clear_lock_usercode",
         ),
+        pytest.param(
+            SERVICE_SET_LOCK_CONFIGURATION,
+            {ATTR_OPERATION_TYPE: "CONSTANT"},
+            False,
+            id="set_lock_configuration",
+        ),
     ],
 )
-async def test_lock_usercode_services_require_admin(
+async def test_lock_management_services_require_admin(
     hass: HomeAssistant,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
@@ -553,7 +559,7 @@ async def test_lock_usercode_services_require_admin(
     service_data: dict[str, int | str],
     returns_response: bool,
 ) -> None:
-    """Every lock usercode service rejects non-admin users."""
+    """Sensitive lock services reject non-admin users."""
     hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
 
     with pytest.raises(Unauthorized):
