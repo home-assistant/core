@@ -18,7 +18,7 @@ import pytest
 from homeassistant.components.matter import _derive_ble_proxy_url
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -131,6 +131,40 @@ async def test_entry_setup_unload(
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_unique_id(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy EveTemperatureOffset entities are migrated to TemperatureOffset."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    old_unique_id = "00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16"
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        old_unique_id,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(stale_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == (
+        "00000000000004D2-0000000000000021-MatterNodeDevice-1-TemperatureOffset-513-16"
+    )
+    state = hass.states.get(stale_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_home_assistant_stop(

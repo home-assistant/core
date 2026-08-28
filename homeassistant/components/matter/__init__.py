@@ -5,6 +5,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
+from chip.clusters import Objects as clusters
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -27,7 +28,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.issue_registry import (
@@ -215,6 +220,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
+    await er.async_migrate_entries(
+        hass, entry.entry_id, _migrate_eve_temperature_offset_unique_id
+    )
+
     setup_error: BaseException | None = None
     try:
         await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
@@ -242,6 +251,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         await matter_client.disconnect()
     finally:
         raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+@callback
+def _migrate_eve_temperature_offset_unique_id(
+    entry: er.RegistryEntry,
+) -> dict[str, str] | None:
+    """Merge legacy EveTemperatureOffset entities into the generic TemperatureOffset entity.
+
+    The vendor-specific Eve schema was dropped once the cluster_revision split
+    made its bounds identical to the generic schema, so entities discovered
+    under the old key are renamed instead of orphaned.
+    """
+    attr = clusters.Thermostat.Attributes.LocalTemperatureCalibration
+    old_suffix = f"-EveTemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    if not entry.unique_id.endswith(old_suffix):
+        return None
+    new_suffix = f"-TemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    return {"new_unique_id": entry.unique_id[: -len(old_suffix)] + new_suffix}
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
