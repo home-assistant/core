@@ -121,12 +121,10 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_UNIT_ID: _discovered_unit_id(discovery_info),
         }
 
-        # A device that is already set up announces itself on every restart;
-        # there is no point probing it again to find that out.
-        self._async_abort_entries_match(data)
-
         # The announcement carries no serial number, and every identity here
-        # derives from one, so the inverter has to be asked.
+        # derives from one, so the inverter has to be asked. An address is not
+        # an identity: the one an entry is configured with can end up hosting
+        # another inverter, and that one deserves to be offered.
         errors, solaredge = await self._async_validate(data)
         if solaredge is None:
             return self.async_abort(reason=errors["base"])

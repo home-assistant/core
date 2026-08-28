@@ -371,14 +371,19 @@ async def test_zeroconf_falls_back_to_the_default_device_id(
 
 
 async def test_zeroconf_known_inverter_that_moved_is_followed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
 ) -> None:
     """An inverter announcing itself from a new address updates the entry.
 
     The device ID is left alone: the entry may be reaching the inverter on one
-    the announcement does not mention.
+    that the announcement does not mention, which is why the entry here is set
+    up on a different device ID than the inverter announces.
     """
-    mock_config_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TITLE, unique_id=SERIAL_NUMBER, data=tcp_data(unit_id=2)
+    )
+    entry.add_to_hass(hass)
+    await async_seed_unit(hass, mock_modbus_connection.for_unit(2))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
@@ -386,22 +391,19 @@ async def test_zeroconf_known_inverter_that_moved_is_followed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == DISCOVERY_HOST
-    assert mock_config_entry.data[CONF_UNIT_ID] == UNIT_ID
+    assert entry.data[CONF_HOST] == DISCOVERY_HOST
+    assert entry.data[CONF_UNIT_ID] == 2
 
 
-async def test_zeroconf_known_inverter_is_not_probed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_modbus_unit: MockModbusUnit,
+async def test_zeroconf_known_inverter_is_dropped(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """An announcement matching an entry is dropped without asking the device.
+    """An inverter that is already set up is dropped when it announces itself.
 
-    Every inverter announces itself on every restart, and a device that is
-    already set up has nothing to tell the flow.
+    Every inverter announces itself on every restart, and one that is already
+    configured has nothing to add.
     """
     mock_config_entry.add_to_hass(hass)
-    mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(host=HOST)
@@ -409,6 +411,40 @@ async def test_zeroconf_known_inverter_is_not_probed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_another_inverter_on_a_configured_address(
+    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
+) -> None:
+    """An address an entry uses can end up hosting a different inverter.
+
+    That inverter is a device of its own, and dropping its announcement because
+    something else already uses the address would leave it undiscoverable.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TITLE, unique_id=SERIAL_NUMBER, data=tcp_data(unit_id=2)
+    )
+    entry.add_to_hass(hass)
+    await async_seed_unit(
+        hass,
+        mock_modbus_connection.for_unit(2),
+        serial_registers=OTHER_SERIAL_REGISTERS,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery(host=HOST, properties={"MODBUS_ID": "2"}),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "OTHER123"
 
 
 async def test_zeroconf_unresponsive_device(
