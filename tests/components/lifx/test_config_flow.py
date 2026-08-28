@@ -288,6 +288,40 @@ async def test_dhcp_repairs_entry_for_each_serial_mac_candidate(
     config_entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
 
+async def test_dhcp_reloads_a_retrying_entry_found_at_the_same_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test DHCP wakes a retrying entry whose device kept its address."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
+        unique_id=SERIAL,
+        version=2,
+        state=config_entries.ConfigEntryState.SETUP_RETRY,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch(
+            "homeassistant.components.lifx.config_flow.find_by_ip",
+            side_effect=AssertionError("DHCP matching must happen before probing"),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info(),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The address is unchanged, so only the retry state schedules the reload
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+
+
 async def test_dhcp_repairs_entry_that_has_not_been_migrated(
     hass: HomeAssistant,
 ) -> None:
