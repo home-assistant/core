@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusTimeoutError, ServerDeviceFailureError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.solaredge_modbus.config_flow import SECTION_MORE_OPTIONS
@@ -78,6 +78,38 @@ async def test_user_flow_cannot_connect(
 
     # The device answers again.
     mock_modbus_unit.fail_read(40000, None)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+
+
+async def test_user_flow_partial_answer(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """An inverter that answers in part is not accepted, then the flow recovers.
+
+    Setting up needs the inverter block as much as the identity block: what
+    entities the entry gets is decided from it. Accepting the form here would
+    hand the user an entry that setup can only retry.
+    """
+    mock_modbus_unit.fail_read(40069, ServerDeviceFailureError())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # The inverter answers for its measurements again.
+    mock_modbus_unit.fail_read(40069, None)
 
     result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
     await hass.async_block_till_done()

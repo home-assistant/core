@@ -18,7 +18,15 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, TYPE_TCP
+from .const import (
+    CONF_UNIT_ID,
+    DEFAULT_PORT,
+    DEFAULT_UNIT_ID,
+    DOMAIN,
+    SUBSYSTEM_COMMON,
+    SUBSYSTEM_INVERTER,
+    TYPE_TCP,
+)
 from .entity import inverter_name
 from .helpers import create_modbus_params
 
@@ -140,7 +148,7 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             ) as unit:
                 solaredge = await SolarEdge.async_probe(unit)
                 # Identity (serial number, model name) is read on the first refresh.
-                await solaredge.async_update()
+                report = await solaredge.async_update()
         except HomeAssistantError, SolarEdgeConnectionError:
             # HomeAssistantError: the device is already in use over different
             # link settings, which one connection cannot honour.
@@ -150,6 +158,11 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if solaredge.is_ev_charger:
             return {"base": "ev_charger"}, None
+
+        # Setup needs both blocks, so a partial answer here would only create
+        # an entry that cannot start.
+        if {SUBSYSTEM_COMMON, SUBSYSTEM_INVERTER} & report.failed.keys():
+            return {"base": "cannot_connect"}, None
 
         if not solaredge.common.serial_number:
             return {"base": "no_serial_number"}, None
