@@ -7,7 +7,7 @@ from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -124,3 +124,25 @@ async def test_dyad_push_unsubscribed_on_unload(
     await hass.async_block_till_done()
 
     unsub.assert_called_once()
+
+
+async def test_dyad_push_before_first_successful_poll(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test a partial push with no prior poll leaves protocols it does not carry unknown."""
+    setup_coordinator_side_effect(fake_devices, RoborockException("Simulated failure"))
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    assert hass.states.get("sensor.dyad_pro_battery").state == STATE_UNAVAILABLE
+
+    push_listener = dyad.add_listener.call_args[0][0]
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+    assert hass.states.get("sensor.dyad_pro_status").state == STATE_UNKNOWN
