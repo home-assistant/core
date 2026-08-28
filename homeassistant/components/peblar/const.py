@@ -19,6 +19,7 @@ PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {
     ChargeLimiter.HIGH_TEMPERATURE: "high_temperature",
     ChargeLimiter.HOUSEHOLD_POWER_LIMIT: "household_power_limit",
     ChargeLimiter.INSTALLATION_LIMIT: "installation_limit",
+    ChargeLimiter.INTERNAL_POWER_LIMIT: "internal_power_limit",
     ChargeLimiter.LOCAL_MODBUS_API: "local_modbus_api",
     ChargeLimiter.LOCAL_REST_API: "local_rest_api",
     ChargeLimiter.LOCAL_SCHEDULED_CHARGING: "local_scheduled_charging",
@@ -26,6 +27,7 @@ PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {
     ChargeLimiter.OVERCURRENT_PROTECTION: "overcurrent_protection",
     ChargeLimiter.PHASE_IMBALANCE: "phase_imbalance",
     ChargeLimiter.POWER_FACTOR: "power_factor",
+    ChargeLimiter.RESERVED: "reserved",
     ChargeLimiter.SOLAR_CHARGING: "solar_charging",
 }
 
@@ -37,4 +39,7 @@ PEBLAR_CP_STATE_TO_HOME_ASSISTANT = {
     CPState.FAULT: "fault",
     CPState.INVALID: "invalid",
     CPState.NO_EV_CONNECTED: "no_ev_connected",
+    # The charger cannot measure the CP signal, which is Home Assistant's
+    # own unknown state rather than a state of its own.
+    CPState.UNKNOWN: None,
 }

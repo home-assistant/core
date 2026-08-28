@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -133,8 +134,10 @@ async def test_fan_turn_on_with_percentage(
         attribute_path="1/514/2",
         value=50,
     )
-    # test again where preset_mode is omitted in the service call
-    # which should select the last active percentage
+    # test again where percentage is omitted in the service call
+    # PercentCurrent is 255 (auto) on this fixture, which is not a valid
+    # value to write back, so it should fall back to the last known preset
+    # mode instead of blindly replaying the sentinel value.
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -145,8 +148,8 @@ async def test_fan_turn_on_with_percentage(
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=matter_node.node_id,
-        attribute_path="1/514/2",
-        value=255,
+        attribute_path="1/514/0",
+        value=clusters.FanControl.Enums.FanModeEnum.kAuto,
     )
 
 
