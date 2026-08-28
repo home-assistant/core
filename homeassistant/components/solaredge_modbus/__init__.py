@@ -20,13 +20,20 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DOMAIN, SUBSYSTEM_COMMON, SUBSYSTEM_INVERTER
+from .const import (
+    CONF_UNIT_ID,
+    DOMAIN,
+    LOGGER,
+    SUBSYSTEM_COMMON,
+    SUBSYSTEM_INVERTER,
+    SUBSYSTEM_METERS,
+)
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
     SolarEdgeModbusDataUpdateCoordinator,
     SolarEdgeModbusRuntimeData,
 )
-from .entity import inverter_device_info
+from .entity import inverter_device_info, meter_identity
 from .helpers import create_modbus_params
 
 PLATFORMS = [Platform.SENSOR]
@@ -81,9 +88,11 @@ async def async_setup_entry(
             translation_key="identity_unavailable",
         )
 
-    # The platforms read the inverter's DID once, so without it the phase
+    # The platforms read a component's DID once, so without it the phase
     # entities would stay missing until a reload.
-    if SUBSYSTEM_INVERTER in readings.data.failed:
+    measuring = {SUBSYSTEM_INVERTER}
+    measuring.update(f"meters[{index}]" for index in range(len(solaredge.meters)))
+    if measuring & readings.data.failed.keys():
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="measurements_unavailable",
@@ -99,7 +108,17 @@ async def async_setup_entry(
         readings=readings, device_info=device_info, inverter_device_id=inverter.id
     )
 
-    _async_remove_stale_devices(hass, entry, solaredge, serial_number)
+    # A block that stayed silent while probing is taken for absent, so a meter
+    # that timed out cannot be told from one that was unwired. Its device stays
+    # where it is until the device says for itself that it is gone.
+    if SUBSYSTEM_METERS in solaredge.unresponsive_blocks:
+        LOGGER.warning(
+            "%s did not answer for its meters while probing, so their entities"
+            " are missing until it does; reloading probes again",
+            entry.title,
+        )
+    else:
+        _async_remove_stale_devices(hass, entry, solaredge, serial_number)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -115,8 +134,8 @@ def _async_remove_stale_devices(
     """Remove devices for meters no longer attached to the inverter."""
     current = {(DOMAIN, serial_number)}
     current.update(
-        (DOMAIN, f"{serial_number}_meter_{index}")
-        for index in range(1, len(solaredge.meters) + 1)
+        (DOMAIN, f"{serial_number}_meter_{meter_identity(meter, index)}")
+        for index, meter in enumerate(solaredge.meters, 1)
     )
 
     device_registry = dr.async_get(hass)

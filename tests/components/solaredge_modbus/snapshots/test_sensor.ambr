@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_apparent_power',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_apparent_power',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_current',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_a',
-    'unique_id': '7E123ABC_meter_1_ac_current_phase_a',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_current_phase_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_b',
-    'unique_id': '7E123ABC_meter_1_ac_current_phase_b',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_current_phase_b',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -269,7 +269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_c',
-    'unique_id': '7E123ABC_meter_1_ac_current_phase_c',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_current_phase_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -330,7 +330,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
-    'unique_id': '7E123ABC_meter_1_energy_exported',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_exported',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -391,7 +391,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported_phase_a',
-    'unique_id': '7E123ABC_meter_1_energy_exported_phase_a',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_exported_phase_a',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -452,7 +452,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported_phase_b',
-    'unique_id': '7E123ABC_meter_1_energy_exported_phase_b',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_exported_phase_b',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -513,7 +513,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported_phase_c',
-    'unique_id': '7E123ABC_meter_1_energy_exported_phase_c',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_exported_phase_c',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -574,7 +574,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported',
-    'unique_id': '7E123ABC_meter_1_energy_imported',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_imported',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -635,7 +635,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported_phase_a',
-    'unique_id': '7E123ABC_meter_1_energy_imported_phase_a',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_imported_phase_a',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -696,7 +696,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported_phase_b',
-    'unique_id': '7E123ABC_meter_1_energy_imported_phase_b',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_imported_phase_b',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -757,7 +757,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported_phase_c',
-    'unique_id': '7E123ABC_meter_1_energy_imported_phase_c',
+    'unique_id': '7E123ABC_meter_7E4A11C2_energy_imported_phase_c',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -815,7 +815,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_frequency',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -873,7 +873,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_power',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -931,7 +931,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_power_factor',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -989,7 +989,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_a',
-    'unique_id': '7E123ABC_meter_1_ac_power_phase_a',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_power_phase_a',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1047,7 +1047,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_b',
-    'unique_id': '7E123ABC_meter_1_ac_power_phase_b',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_power_phase_b',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1105,7 +1105,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_c',
-    'unique_id': '7E123ABC_meter_1_ac_power_phase_c',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_power_phase_c',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1163,7 +1163,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_reactive_power',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_reactive_power',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -1221,7 +1221,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7E123ABC_meter_1_ac_voltage',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1279,7 +1279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_ab',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_ab',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_ab',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1337,7 +1337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_an',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_an',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_an',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1395,7 +1395,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_bc',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_bc',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_bc',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1453,7 +1453,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_bn',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_bn',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_bn',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1511,7 +1511,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_ca',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_ca',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_ca',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1569,7 +1569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_cn',
-    'unique_id': '7E123ABC_meter_1_ac_voltage_phase_cn',
+    'unique_id': '7E123ABC_meter_7E4A11C2_ac_voltage_phase_cn',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

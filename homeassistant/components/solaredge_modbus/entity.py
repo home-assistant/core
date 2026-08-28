@@ -8,7 +8,7 @@ stores as the config entry unique ID.
 
 from typing import TYPE_CHECKING, override
 
-from solaredged import SolarEdge
+from solaredged import Meter, SolarEdge
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -39,6 +39,16 @@ def inverter_name(model: str | None) -> str:
     if (commercial := inverter_model(model)) is None:
         return "SolarEdge inverter"
     return f"SolarEdge {commercial}"
+
+
+def meter_identity(meter: Meter, index: int) -> str:
+    """Return what tells a meter apart from the next one in its place.
+
+    A meter that reports a serial number is known by it, so replacing one is a
+    different device rather than the same slot with other numbers in it. Not
+    every meter reports one, and then the slot it is wired to is all there is.
+    """
+    return meter.serial_number or str(index)
 
 
 def inverter_device_info(solaredge: SolarEdge, serial_number: str) -> DeviceInfo:
@@ -117,17 +127,18 @@ class SolarEdgeModbusMeterEntity(SolarEdgeModbusEntity):
         index: int,
     ) -> None:
         """Initialize a SolarEdge Modbus meter entity."""
+        meter = entry.runtime_data.solaredge.meters[index - 1]
+        identity = meter_identity(meter, index)
         super().__init__(
             entry=entry,
             subsystem=f"meters[{index - 1}]",
             description=description,
-            key_prefix=f"meter_{index}_",
+            key_prefix=f"meter_{identity}_",
         )
         self._index = index
 
-        meter = entry.runtime_data.solaredge.meters[index - 1]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._serial_number}_meter_{index}")},
+            identifiers={(DOMAIN, f"{self._serial_number}_meter_{identity}")},
             manufacturer=meter.manufacturer or "SolarEdge",
             model=meter.model or None,
             name=f"Meter {index}",

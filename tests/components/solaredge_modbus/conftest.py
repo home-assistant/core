@@ -29,6 +29,7 @@ HOST = "1.2.3.4"
 PORT = 1502
 UNIT_ID = 1
 SERIAL_NUMBER = "7E123ABC"
+METER_SERIAL_NUMBER = "7E4A11C2"
 
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
