@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from aiomarstek import MarstekUDPClient
-from voluptuous.schema_builder import Required as VolRequired, Schema as VolSchema
+from probatio import Required as VolRequired, Schema as VolSchema
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
