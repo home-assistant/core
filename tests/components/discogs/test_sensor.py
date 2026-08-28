@@ -3,7 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.discogs.const import DOMAIN
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from . import MOCK_TOKEN, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -13,17 +17,17 @@ async def test_sensors(
     setup_integration: MockConfigEntry,
 ) -> None:
     """Test sensor states."""
-    state = hass.states.get("sensor.discogs_collection")
+    state = hass.states.get("sensor.testuser_collection")
     assert state is not None
     assert state.state == "42"
     assert state.attributes["identity"] == "testuser"
 
-    state = hass.states.get("sensor.discogs_wantlist")
+    state = hass.states.get("sensor.testuser_wantlist")
     assert state is not None
     assert state.state == "10"
     assert state.attributes["identity"] == "testuser"
 
-    state = hass.states.get("sensor.discogs_random_record")
+    state = hass.states.get("sensor.testuser_random_record")
     assert state is not None
     assert state.state == "Artist Name - Album Title"
     assert state.attributes["identity"] == "testuser"
@@ -63,14 +67,46 @@ async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.discogs_collection")
+    state = hass.states.get("sensor.testuser_collection")
     assert state is not None
     assert state.state == "0"
 
-    state = hass.states.get("sensor.discogs_wantlist")
+    state = hass.states.get("sensor.testuser_wantlist")
     assert state is not None
     assert state.state == "0"
 
-    state = hass.states.get("sensor.discogs_random_record")
+    state = hass.states.get("sensor.testuser_random_record")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_yaml_import_creates_entry(hass: HomeAssistant) -> None:
+    """Test that async_setup_platform triggers a config flow import."""
+    mock_client = MagicMock()
+    mock_identity = MagicMock()
+    mock_identity.name = MOCK_USERNAME
+    mock_identity.num_collection = 5
+    mock_identity.num_wantlist = 2
+    folder = MagicMock()
+    folder.count = 5
+    mock_identity.collection_folders = [folder]
+    mock_client.identity.return_value = mock_identity
+
+    with patch(
+        "homeassistant.components.discogs.coordinator.discogs_client.Client",
+        return_value=mock_client,
+    ), patch(
+        "homeassistant.components.discogs.config_flow.discogs_client.Client",
+        return_value=mock_client,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {"sensor": {"platform": DOMAIN, CONF_TOKEN: MOCK_TOKEN}},
+        )
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].title == MOCK_USERNAME
+    assert entries[0].data == {CONF_TOKEN: MOCK_TOKEN}

@@ -100,7 +100,7 @@ async def async_setup_entry(
     """Set up Discogs sensor from a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        DiscogsSensor(coordinator, description, entry.entry_id)
+        DiscogsSensor(coordinator, description, entry)
         for description in SENSOR_TYPES
     )
 
@@ -116,18 +116,18 @@ class DiscogsSensor(CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntit
         self,
         coordinator: DiscogsDataUpdateCoordinator,
         description: DiscogsSensorEntityDescription,
-        entry_id: str,
+        entry: DiscogsConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.discogs.com",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=entry.title,
         )
 
     @property
