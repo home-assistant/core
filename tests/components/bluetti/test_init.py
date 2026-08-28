@@ -113,10 +113,7 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(
     """Remove config entry device stops polling and updates options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            "devices": ["SN1", "SN2"],
-            "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}},
-        },
+        options={"devices": ["SN1", "SN2"]},
     )
     entry.add_to_hass(hass)
 
@@ -127,13 +124,11 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(
         device_id="SN2", on_line="1", name="Second", sn="SN2", model="EL400"
     )
     coordinator1 = AsyncMock()
-    modbus_coordinator1 = AsyncMock()
     entry.runtime_data = BluettiRuntimeData(
         auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device1, device2]),
         stomp_client=MagicMock(),
         coordinators={"SN1": coordinator1, "SN2": MagicMock()},
-        modbus_coordinators={"SN1": modbus_coordinator1},
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -148,13 +143,10 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(
 
     assert result is True
     coordinator1.async_shutdown.assert_awaited_once()
-    modbus_coordinator1.async_shutdown.assert_awaited_once()
     assert [d.device_id for d in entry.runtime_data.bluetti_devices.devices] == ["SN2"]
     assert "SN1" not in entry.runtime_data.coordinators
     assert "SN2" in entry.runtime_data.coordinators
-    assert "SN1" not in entry.runtime_data.modbus_coordinators
     assert entry.options["devices"] == ["SN2"]
-    assert entry.options["modbus"] == {}
 
 
 async def test_remove_config_entry_device_rejects_non_bluetti_device(
@@ -225,8 +217,8 @@ async def test_remove_config_entry_device_drops_stale_product_entry(
     """Removing a device must also drop its cached product entry.
 
     Regression test: async_remove_config_entry_device() only updated
-    entry.options["devices"]/["modbus"], never entry.data["products"] - a
-    later re-add of the same serial was treated as "already cached" by
+    entry.options["devices"], never entry.data["products"] - a later
+    re-add of the same serial was treated as "already cached" by
     config_flow.py/options_flow.py's product merge (they only add
     products whose sn isn't already present), silently keeping the stale
     name/model/state from before removal instead of fresh cloud data.

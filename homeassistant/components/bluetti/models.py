@@ -362,15 +362,7 @@ class BluettiDevice:
                     ]
                     coordinator = runtime_data.coordinators.pop(self.device_id, None)
                     if coordinator:
-                        # Without this, a failed delayed reload (e.g. this
-                        # unbind fires mid-retry) would leave the removed
-                        # coordinator's periodic polling active indefinitely.
                         await coordinator.async_shutdown()
-                    modbus_coordinator = runtime_data.modbus_coordinators.pop(
-                        self.device_id, None
-                    )
-                    if modbus_coordinator:
-                        await modbus_coordinator.async_shutdown()
                     __LOGGER__.debug(
                         "Removed device from runtime data: %s", self.device_id
                     )
@@ -381,12 +373,6 @@ class BluettiDevice:
             try:
                 current_options = dict(entry.options)
                 current_devices = current_options.get("devices", [])
-                current_modbus = current_options.get("modbus", {})
-                new_modbus = {
-                    sn: cfg
-                    for sn, cfg in current_modbus.items()
-                    if sn != self.device_id
-                }
 
                 # Also drop this device's cached product entry from
                 # entry.data["products"], not just entry.options - a later
@@ -406,19 +392,12 @@ class BluettiDevice:
                 if self.device_id in current_devices:
                     new_devices = [d for d in current_devices if d != self.device_id]
 
-                    # A single async_update_entry() call for both data and
-                    # options - see the reload-count fix above for why a
-                    # separate call for each would be redundant (this entry
-                    # already has _async_update_listener registered from its
-                    # own setup, which reloads on any change either way).
+                    # One call for both data and options - two separate
+                    # calls would fire the entry's update listener twice.
                     hass.config_entries.async_update_entry(
                         entry,
                         data={**entry.data, "products": new_products},
-                        options={
-                            **current_options,
-                            "devices": new_devices,
-                            "modbus": new_modbus,
-                        },
+                        options={**current_options, "devices": new_devices},
                     )
                     __LOGGER__.debug(
                         "Removed device from configuration entry: %s", self.device_id

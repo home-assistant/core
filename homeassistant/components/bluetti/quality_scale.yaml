@@ -12,8 +12,8 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  # ^ pybluetti and bluetti-modbus (bluetti-community/bluetti-modbus) are
-  #   both properly published, versioned PyPI packages - no vendored code.
+  # ^ pybluetti is a properly published, versioned PyPI package - no
+  #   vendored code.
   docs-actions:
     status: exempt
     comment: No custom service actions are provided by this integration.
@@ -48,20 +48,19 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: >-
+      Deferred to a follow-up PR per reviewer feedback (keep the first PR
+      focused on OAuth2 + websocket data).
   discovery-update-info:
     status: exempt
-    comment: >-
-      Devices are added via the BLUETTI cloud account; the optional local
-      Modbus connection (host/port) must still be entered manually - there is
-      no discovery protocol for BLUETTI's Modbus TCP interface either.
+    comment: Devices are added via the BLUETTI cloud account, not discovered.
   discovery:
     status: exempt
     comment: >-
-      Devices are added via the BLUETTI cloud account (OAuth2); the optional
-      local Modbus connection (host/port) must still be entered manually,
-      since there is no discovery protocol (mDNS/SSDP/etc.) for BLUETTI's
-      Modbus TCP interface.
+      Devices are added via the BLUETTI cloud account (OAuth2); there is no
+      discovery protocol (mDNS/SSDP/etc.) for it.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -79,22 +78,15 @@ rules:
       rule's own documentation.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
-  # ^ Modbus-sourced diagnostic-category sensors set
-  #   _attr_entity_registry_enabled_default = False (see sensor.py's
-  #   BluettiModbusSensor.__init__) - the rule has no exceptions, so a
-  #   previous "exempt" claim here (on the theory that no entity qualified)
-  #   didn't hold up once actually checked against the rule's own text.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entity here is a "less popular or noisy" candidate to disable.
   entity-translations:
     status: todo
     comment: >-
       Cloud-sourced entities remain untranslated: their names are provided
       dynamically by the BLUETTI cloud API per device/firmware (fnName), not
-      static strings known at development time (see entity.py). The rule
-      has no exceptions for this - a previous "done" claim treated the
-      Modbus-sourced entities' real translations (which do satisfy the rule
-      for their own portion) as sufficient for the whole integration, which
-      the rule's own text doesn't support.
+      static strings known at development time (see entity.py).
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

@@ -3,11 +3,8 @@
 from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
 import logging
 from typing import TypedDict, override
-
-from bluetti_modbus_lib.modbus.client import ClientReturnValue
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -15,15 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfEnergy
+from homeassistant.const import PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BluettiConfigEntry
-from .coordinator import BluettiModbusCoordinator
-from .entity import BluettiEntity, BluettiModbusEntity
-from .modbus_field_metadata import modbus_metadata_for
+from .entity import BluettiEntity
 from .models import BluettiData, BluettiDevice, BluettiState
 
 __LOGGER__ = logging.getLogger(__name__)
@@ -70,21 +65,6 @@ SENSOR_MAP: dict[str, BaseSensorMetaInfo] = {
     },
 }
 
-# Modbus fields with a direct cloud-sourced equivalent already surfaced
-# above (ac_o_p_total ~ ACLoadAllTotalPower, pv_i_p_total ~ PVAllTotalPower,
-# g_i_p_total ~ GridAllTotalPower, b_soc_total/b_soc ~ SOC) - skipped to
-# avoid two near-identical sensors on the same device. Everything else the
-# device object reports is exposed, so new fields added in a future
-# bluetti-modbus release show up automatically instead of needing to be
-# added to an include-list.
-MODBUS_FIELDS_DUPLICATING_CLOUD = {
-    "ac_o_p_total",
-    "pv_i_p_total",
-    "g_i_p_total",
-    "b_soc_total",
-    "b_soc",
-}
-
 
 def _power_value_getter(state: BluettiState) -> Callable[[], str | float | None]:
     """Bind `state` by value, not by the loop variable's final reference."""
@@ -105,7 +85,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bluetti sensors from config entry."""
     bluetti_devices: BluettiData = config_entry.runtime_data.bluetti_devices
-    entities: list[BluettiEntity | BluettiModbusEntity] = []
+    entities: list[BluettiEntity] = []
 
     for device in bluetti_devices.devices:
         for state in device.states:
@@ -176,26 +156,6 @@ async def async_setup_entry(
                         _estimated_power_value_getter(battery_sensor),
                     )
                 )
-
-    for (
-        device_id,
-        modbus_coordinator,
-    ) in config_entry.runtime_data.modbus_coordinators.items():
-        modbus_device = bluetti_devices.get_device_by_sn(device_id)
-        if modbus_device is None:
-            continue
-        # Entities are created from the device's declared fields, not from
-        # modbus_coordinator.data - the optional startup refresh is allowed
-        # to fail (see the async_refresh()-not-first_refresh() comment in
-        # __init__.py), and setup only runs once, so entities keyed off
-        # data that isn't there yet would never get created once the
-        # coordinator's next poll actually succeeds.
-        for field_name in modbus_coordinator.device.field_names():
-            if field_name in MODBUS_FIELDS_DUPLICATING_CLOUD:
-                continue
-            entities.append(
-                BluettiModbusSensor(modbus_device, modbus_coordinator, field_name)
-            )
 
     if entities:
         async_add_entities(entities)
@@ -377,55 +337,3 @@ class BluettiEstimatedBatteryPowerSensor(BluettiEntity, SensorEntity):
         if net is None:
             return None
         return max(net, 0.0) if self._charging else max(-net, 0.0)
-
-
-class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
-    """Sensor sourced from a device's optional local Modbus connection."""
-
-    def __init__(
-        self,
-        device: BluettiDevice,
-        coordinator: BluettiModbusCoordinator,
-        field_name: str,
-    ) -> None:
-        """Initialize the sensor from its owning device and Modbus field name."""
-        super().__init__(device, coordinator, field_name)
-
-        metadata = modbus_metadata_for(field_name)
-        if metadata.device_class:
-            self._attr_device_class = metadata.device_class
-        if metadata.state_class:
-            self._attr_state_class = metadata.state_class
-        if metadata.category:
-            # SensorEntity refuses entity_category CONFIG (it's reserved for
-            # entities that can be adjusted; this integration only exposes
-            # read-only Modbus sensors today) - surface it as diagnostic
-            # instead of crashing entity registration.
-            self._attr_entity_category = (
-                EntityCategory.DIAGNOSTIC
-                if metadata.category == EntityCategory.CONFIG
-                else metadata.category
-            )
-            # Diagnostic entities are exactly the "less popular, noisy"
-            # candidates this rule targets - most users never need to see
-            # them, but can still opt in from the entity's settings.
-            self._attr_entity_registry_enabled_default = False
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the field's unit, once the coordinator has actually read it."""
-        field: ClientReturnValue | None = (self.coordinator.data or {}).get(
-            self._field_name
-        )
-        return field.unit if field else None
-
-    @property
-    @override
-    def native_value(self) -> str | float | None:
-        """Return the field's current value from the coordinator's last poll."""
-        field = (self.coordinator.data or {}).get(self._field_name)
-        if field is None:
-            return None
-        value = field.value
-        return value.name if isinstance(value, Enum) else value

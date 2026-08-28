@@ -143,36 +143,15 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
                     "products": merged_products,
                 }
 
-                # A single async_update_entry() call for both the new
-                # token/products (data) and the new device list (options) -
-                # existing_entry already has _async_update_listener
-                # registered (from its own setup), which reloads it on any
-                # change. _abort_if_unique_id_configured() below applies
-                # this same `token_updates` to entry.data itself (that's how
-                # it detects "already configured" vs. "needs an update") -
-                # without applying it here first too, that would be a
-                # second, separate async_update_entry() call, firing the
-                # listener (and reloading the entry) again, and, since this
-                # entry is normally LOADED, reload_on_update=True would
-                # schedule a third explicit reload on top of that. Applying
-                # the exact same data here upfront means the helper's own
-                # internal update finds nothing changed and is a genuine
-                # no-op (ConfigEntries._async_update_entry only fires
-                # listeners/reloads when something actually differs) -
-                # options= REPLACES entry.options wholesale, so this also
-                # keeps a per-device Modbus connection configured through
-                # the options flow from being silently wiped out by adding
-                # more devices here.
+                # Apply both data and options in one call so
+                # _abort_if_unique_id_configured()'s own data= update below
+                # is a no-op and doesn't reload the entry a second time.
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
                     data={**existing_entry.data, **token_updates},
                     options={**existing_entry.options, "devices": merged_devices},
                 )
 
-                # Aborts the flow, using the same unique_id lookup as
-                # async_set_unique_id() above; the data= update inside is a
-                # no-op per the comment above, so reload_on_update has
-                # nothing left to trigger here.
                 self._abort_if_unique_id_configured(
                     updates=token_updates,
                     reload_on_update=True,

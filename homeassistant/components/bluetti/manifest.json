@@ -3,10 +3,10 @@
   "name": "BLUETTI",
   "codeowners": ["@chpego"],
   "config_flow": true,
-  "dependencies": ["application_credentials", "modbus"],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/bluetti",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "silver",
-  "requirements": ["pybluetti==0.1.1", "bluetti-modbus==0.1.2"]
+  "requirements": ["pybluetti==0.1.1"]
 }

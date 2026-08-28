@@ -99,20 +99,17 @@ async def test_handle_unbind_full_cleanup(
 
     mock_reload's assert_awaited_once_with below is also a regression check
     for a fixed duplicate-reload bug: the options update a few lines below
-    (options={..., "devices": new_devices, "modbus": new_modbus}) fires this
-    listener once. _handle_unbind() used to ALSO schedule its own explicit
-    reload after a fixed 1-second delay on top of that - two reloads
-    (serialized by entry.setup_lock, not concurrent, but still one full
-    unload+setup too many) for a single unbind, and unconditionally even
-    when the device wasn't in the options list to begin with, so it could
-    also fire after the entry itself was gone.
+    (options={..., "devices": new_devices}) fires this listener once.
+    _handle_unbind() used to ALSO schedule its own explicit reload after a
+    fixed 1-second delay on top of that - two reloads (serialized by
+    entry.setup_lock, not concurrent, but still one full unload+setup too
+    many) for a single unbind, and unconditionally even when the device
+    wasn't in the options list to begin with, so it could also fire after
+    the entry itself was gone.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            "devices": ["SN1", "SN2"],
-            "modbus": {"SN1": {"host": "10.2.1.60", "port": 502}},
-        },
+        options={"devices": ["SN1", "SN2"]},
     )
     entry.add_to_hass(hass)
 
@@ -139,13 +136,11 @@ async def test_handle_unbind_full_cleanup(
     )
 
     coordinator = AsyncMock()
-    modbus_coordinator = AsyncMock()
     entry.runtime_data = BluettiRuntimeData(
         auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device, other_device]),
         stomp_client=MagicMock(),
         coordinators={"SN1": coordinator, "SN2": MagicMock()},
-        modbus_coordinators={"SN1": modbus_coordinator},
     )
 
     device._hass = hass
@@ -177,14 +172,11 @@ async def test_handle_unbind_full_cleanup(
     # Removed from runtime data.
     assert entry.runtime_data.bluetti_devices.devices == [other_device]
     assert "SN1" not in entry.runtime_data.coordinators
-    assert "SN1" not in entry.runtime_data.modbus_coordinators
     coordinator.async_shutdown.assert_awaited_once()
-    modbus_coordinator.async_shutdown.assert_awaited_once()
 
     # Removed from the config entry's enabled devices.
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated.options["devices"] == ["SN2"]
-    assert updated.options["modbus"] == {}
 
     # A persistent notification was shown.
     mock_notify.assert_called_once()
@@ -199,8 +191,8 @@ async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
     """A device re-bound after being unbound must use fresh cloud data.
 
     Regression test: _handle_unbind() used to only remove the device from
-    entry.options["devices"]/["modbus"], never from
-    entry.data["products"] - a later re-bind of the same serial was
+    entry.options["devices"], never from entry.data["products"] - a later
+    re-bind of the same serial was
     treated as "already cached" by config_flow.py's product merge (it
     only adds products whose sn isn't already present in
     entry.data["products"]), silently keeping the stale name/model/state
@@ -230,7 +222,6 @@ async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
         bluetti_devices=MagicMock(devices=[device]),
         stomp_client=MagicMock(),
         coordinators={},
-        modbus_coordinators={},
     )
     device._hass = hass
     device._entry = entry

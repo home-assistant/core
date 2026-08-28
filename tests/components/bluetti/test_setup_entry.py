@@ -1,9 +1,6 @@
 """Tests for the sensor platform's async_setup_entry()."""
 
-from enum import Enum
 from unittest.mock import MagicMock
-
-from bluetti_modbus_lib.modbus.client import ClientReturnValue
 
 from homeassistant.components.bluetti import BluettiRuntimeData
 from homeassistant.components.bluetti.const import DOMAIN
@@ -11,19 +8,16 @@ from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
 from homeassistant.components.bluetti.sensor import (
     BluettiEnergySensor,
     BluettiEstimatedBatteryPowerSensor,
-    BluettiModbusSensor,
     BluettiSensor,
     async_setup_entry as sensor_setup_entry,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 def _entry_with_devices(
-    hass: HomeAssistant, devices: list[BluettiDevice], modbus_coordinators=None
+    hass: HomeAssistant, devices: list[BluettiDevice]
 ) -> MockConfigEntry:
     for device in devices:
         device.coordinator = MagicMock()
@@ -36,7 +30,6 @@ def _entry_with_devices(
         bluetti_devices=bluetti_data,
         stomp_client=MagicMock(),
         coordinators={},
-        modbus_coordinators=modbus_coordinators or {},
     )
     return entry
 
@@ -297,135 +290,3 @@ async def test_sensor_setup_entry_with_no_matching_states_adds_nothing(
     await sensor_setup_entry(hass, entry, async_add_entities)
 
     async_add_entities.assert_not_called()
-
-
-async def test_sensor_setup_entry_creates_modbus_sensors_grouped_with_cloud_device(
-    hass: HomeAssistant,
-) -> None:
-    """Sensor setup entry creates modbus sensors grouped with cloud device."""
-
-    class _FakeInverterStatus(Enum):
-        STANDBY = 0
-
-    device = BluettiDevice(
-        device_id="SN1",
-        on_line="1",
-        name="Test",
-        sn="SN1",
-        model="Balco260",
-        state_list=[
-            {
-                "fnCode": "SOC",
-                "fnName": "Battery",
-                "fnValue": "50",
-                "fnType": "SENSOR",
-                "sensorInfo": {"sensorType": "SensorDeviceClass.BATTERY", "unit": None},
-            },
-        ],
-    )
-    # device_class/state_class/entity_category are no longer carried on
-    # ClientReturnValue (bluetti_modbus_lib doesn't know about HA entity
-    # concepts) - BluettiModbusSensor looks them up in
-    # modbus_field_metadata.MODBUS_FIELD_METADATA by field name instead, so
-    # these real field names exercise that lookup, not a mocked value.
-    fields = {
-        # Excluded - duplicates the cloud SOC sensor already added above.
-        "b_soc": ClientReturnValue(name="b_soc", unit="%", value=42),
-        "b_cycle_count": ClientReturnValue(name="b_cycle_count", unit=None, value=12),
-        # CONFIG must be remapped to DIAGNOSTIC - SensorEntity forbids CONFIG.
-        "b_soc_high": ClientReturnValue(name="b_soc_high", unit="%", value=100),
-        "d_inverter_status": ClientReturnValue(
-            name="d_inverter_status", unit=None, value=_FakeInverterStatus.STANDBY
-        ),
-        "g_i_f": ClientReturnValue(name="g_i_f", unit="Hz", value=50.0),
-    }
-    modbus_coordinator = MagicMock(data=fields)
-    # Entities are created from the device's declared fields (see sensor.py),
-    # not from modbus_coordinator.data directly - independent of whether the
-    # coordinator has completed a poll yet.
-    modbus_coordinator.device.field_names.return_value = list(fields.keys())
-
-    entry = _entry_with_devices(
-        hass, [device], modbus_coordinators={"SN1": modbus_coordinator}
-    )
-    added = []
-
-    await sensor_setup_entry(hass, entry, added.extend)
-
-    modbus_sensors = {
-        s._field_name: s for s in added if isinstance(s, BluettiModbusSensor)
-    }
-    assert set(modbus_sensors) == {
-        "b_cycle_count",
-        "b_soc_high",
-        "d_inverter_status",
-        "g_i_f",
-    }
-
-    cloud_sensor = next(e for e in added if isinstance(e, BluettiSensor))
-    assert (
-        modbus_sensors["b_cycle_count"].device_info["identifiers"]
-        == cloud_sensor.device_info["identifiers"]
-    )
-
-    assert modbus_sensors["g_i_f"].device_class == SensorDeviceClass.FREQUENCY
-    assert modbus_sensors["g_i_f"].state_class == SensorStateClass.MEASUREMENT
-
-    assert modbus_sensors["b_soc_high"].entity_category == EntityCategory.DIAGNOSTIC
-    assert modbus_sensors["b_cycle_count"].native_value == 12
-    assert modbus_sensors["d_inverter_status"].native_value == "STANDBY"
-
-    modbus_coordinator.data = {}
-    assert modbus_sensors["b_cycle_count"].native_value is None
-
-
-async def test_modbus_sensors_are_created_even_when_the_first_poll_hasnt_completed(
-    hass: HomeAssistant,
-) -> None:
-    """Modbus sensors are created even when the first poll hasn't completed.
-
-    Regression test: local Modbus is optional/supplementary, so a failed or
-    still-pending first refresh must not prevent entities from ever being
-    created - entities must come from the device's declared fields, not
-    from whatever the coordinator happened to have read by the time setup
-    runs once.
-    """
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Test", sn="SN1", model="Balco260"
-    )
-    modbus_coordinator = MagicMock(data=None)
-    modbus_coordinator.device.field_names.return_value = ["b_soc_high"]
-
-    entry = _entry_with_devices(
-        hass, [device], modbus_coordinators={"SN1": modbus_coordinator}
-    )
-    added = []
-
-    await sensor_setup_entry(hass, entry, added.extend)
-
-    modbus_sensors = [s for s in added if isinstance(s, BluettiModbusSensor)]
-    assert len(modbus_sensors) == 1
-    assert modbus_sensors[0].native_value is None
-    assert modbus_sensors[0].native_unit_of_measurement is None
-
-    # Once the coordinator's next poll actually succeeds, the same
-    # already-created entity picks up the real value and unit.
-    modbus_coordinator.data = {
-        "b_soc_high": ClientReturnValue(name="b_soc_high", unit="%", value=100)
-    }
-    assert modbus_sensors[0].native_value == 100
-    assert modbus_sensors[0].native_unit_of_measurement == "%"
-
-
-async def test_sensor_setup_entry_skips_modbus_coordinator_for_unknown_device(
-    hass: HomeAssistant,
-) -> None:
-    """Sensor setup entry skips modbus coordinator for unknown device."""
-    entry = _entry_with_devices(
-        hass, [], modbus_coordinators={"UNKNOWN_SN": MagicMock(data={})}
-    )
-    added = []
-
-    await sensor_setup_entry(hass, entry, added.extend)
-
-    assert added == []
