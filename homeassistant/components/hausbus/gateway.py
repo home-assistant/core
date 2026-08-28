@@ -57,9 +57,38 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     back the exact object this returned.
     """
     async with _home_server_lock:
-        home_server = await hass.async_add_executor_job(HomeServer)
+        home_server_job = hass.async_add_executor_job(HomeServer)
+        try:
+            home_server = await asyncio.shield(home_server_job)
+        except asyncio.CancelledError:
+            # This coroutine is being cancelled (e.g. config-flow removal),
+            # but the executor job keeps running in its own thread and may
+            # still finish constructing a HomeServer - with live sockets and
+            # worker threads - after we are gone. Attach a callback so that
+            # object is released (and, since nothing else references it,
+            # shut down) instead of leaking, once construction completes.
+            home_server_job.add_done_callback(
+                lambda job: _release_cancelled_home_server(hass, job)
+            )
+            raise
         _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
         return home_server
+
+
+def _release_cancelled_home_server(
+    hass: HomeAssistant, home_server_job: asyncio.Future[HomeServer]
+) -> None:
+    """Release a HomeServer whose acquirer was cancelled before it finished.
+
+    Called once the executor job backing a cancelled async_acquire_home_server()
+    call completes. If it produced a HomeServer, nothing else holds a
+    reference to it yet, so release it immediately to shut it back down
+    instead of leaking its sockets/threads.
+    """
+    if home_server_job.cancelled():
+        return
+    home_server = home_server_job.result()
+    hass.async_create_task(async_release_home_server(hass, home_server))
 
 
 async def async_release_home_server(
@@ -136,7 +165,7 @@ class HausbusGateway(IBusDataListener):
             identifiers={(DOMAIN, str(device_id))},
             manufacturer="HausBus",
             model=model_type,
-            name=f"{model_type} {device_id}",
+            name=f"{model_type or 'Haus-Bus device'} {device_id}",
             sw_version=module_id.getFirmwareId().getTemplateId()
             + " "
             + str(module_id.getMajorRelease())
@@ -146,19 +175,31 @@ class HausbusGateway(IBusDataListener):
         )
 
         for channel in channels:
-            object_id = channel.getObjectId()
-            if object_id not in self.registered_channels:
-                self.registered_channels.add(object_id)
-                if self._platform_ready:
-                    self.hass.loop.call_soon_threadsafe(
-                        async_dispatcher_send,
-                        self.hass,
-                        NEW_CHANNEL_ADDED,
-                        channel,
-                        device_info,
-                    )
-                else:
-                    self._pending_channels.append((channel, device_info))
+            self.hass.loop.call_soon_threadsafe(
+                self._register_channel, channel, device_info
+            )
+
+    def _register_channel(
+        self, channel: ABusFeature, device_info: DeviceInfo
+    ) -> None:
+        """Register a single discovered channel.
+
+        Runs on the Home Assistant event loop, the same thread as
+        async_flush_pending_channels(), so checking/updating
+        registered_channels, _platform_ready and _pending_channels here
+        cannot race with it: newDeviceDetected() is called from pyhausbus's
+        DeviceWorker thread and must not touch this state directly.
+        """
+        object_id = channel.getObjectId()
+        if object_id in self.registered_channels:
+            return
+        self.registered_channels.add(object_id)
+        if self._platform_ready:
+            async_dispatcher_send(
+                self.hass, NEW_CHANNEL_ADDED, channel, device_info
+            )
+        else:
+            self._pending_channels.append((channel, device_info))
 
     async def async_flush_pending_channels(self) -> None:
         """Mark platform as ready and dispatch channels buffered before setup.

@@ -10,9 +10,11 @@ rules:
       This is a local_push integration; entities are updated from Haus-Bus
       events, there is no polling.
   brands:
-    status: done
+    status: todo
     comment: |
-      https://github.com/home-assistant/brands/pull/7758
+      https://github.com/home-assistant/brands/pull/7758 only added
+      custom_integrations/hausbus assets. core_integrations/hausbus assets
+      are still missing.
   common-modules: done
   config-flow-test-coverage:
     status: done
@@ -29,9 +31,11 @@ rules:
     status: exempt
     comment: |
       This integration does not provide any conditions.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  # home-assistant/home-assistant.io#47601 is closed without merging and
+  # describes Zeroconf discovery, which this integration does not have.
   docs-triggers:
     status: exempt
     comment: |
