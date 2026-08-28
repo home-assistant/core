@@ -13,6 +13,7 @@ from hass_nabucasa import (
 )
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cloud import (
     CloudConnectionState,
     CloudNotAvailable,
@@ -34,10 +35,13 @@ from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
+
+REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
 
 async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
@@ -330,7 +334,7 @@ async def test_async_get_or_create_cloudhook(
         await async_get_or_create_cloudhook(hass, webhook_id)
 
 
-async def test_cloud_logout(
+async def test_setup_removes_stale_config_entry(
     hass: HomeAssistant,
     cloud: MagicMock,
 ) -> None:
@@ -343,6 +347,43 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_logout_removes_config_entry(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the config entry is removed on logout and recreated on login."""
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
+
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
 
 
 @pytest.fixture(name="pending_auto_login")
