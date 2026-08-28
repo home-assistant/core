@@ -218,6 +218,26 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             )
             if cur_entry is None:
                 return self.async_abort(reason="reconfigure_failed")
+
+            # ACCOUNT_UNIQUE_ID is a fixed constant, not derived per-account,
+            # so there's no real account identifier to compare directly.
+            # Device serials are real BLUETTI hardware serials, though - if
+            # this OAuth session's account doesn't have every device already
+            # enabled on cur_entry, it's a different account and updating
+            # the stored token would leave those devices permanently
+            # inaccessible (their serials belong to an account this token
+            # can no longer query).
+            reauthed_sns = {prod.sn for prod in products.data}
+            enabled_sns = set(cur_entry.options.get("devices", []))
+            if not enabled_sns <= reauthed_sns:
+                __LOGGER__.error(
+                    "Reconfigure token: authenticated account is missing "
+                    "%s already-enabled device(s) - refusing to update the "
+                    "stored token, likely a different BLUETTI account",
+                    enabled_sns - reauthed_sns,
+                )
+                return self.async_abort(reason="wrong_account")
+
             __LOGGER__.info("reconfigure token")
             new_data = {**cur_entry.data, "token": self._oauth_data["token"]}
             self.hass.config_entries.async_update_entry(cur_entry, data=new_data)

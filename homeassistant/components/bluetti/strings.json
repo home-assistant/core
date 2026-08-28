@@ -15,7 +15,8 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reconfigure_failed": "The config entry being reconfigured could not be found.",
       "success": "Successfully added your BLUETTI devices.",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "The BLUETTI account you signed in with does not match this entry's existing devices. Sign in with the same account you originally used, or remove and re-add the integration to switch accounts."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

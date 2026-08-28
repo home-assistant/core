@@ -332,6 +332,58 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
     assert updated.data["token"] == {"access_token": "tok", "expires_at": 9999999999}
 
 
+async def test_reconfigure_token_rejects_a_different_account(
+    hass: HomeAssistant,
+) -> None:
+    """Reauthenticating with a different BLUETTI account must not replace the token.
+
+    Regression test: ACCOUNT_UNIQUE_ID is a fixed constant, not derived
+    per-account, so there was nothing stopping a reconfigure flow from
+    silently overwriting an entry's token with a different account's -
+    leaving the entry's already-enabled devices permanently inaccessible
+    (their serials belong to an account the new token can no longer query).
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti",
+            "token": {"access_token": "original-token"},
+            "products": [{"sn": "SN0", "name": "Existing", "stateList": []}],
+        },
+        options={"devices": ["SN0"]},
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context = {"entry_id": existing_entry.entry_id}
+    # The reauthenticated account doesn't have SN0 - a different account.
+    other_account_product = UserProduct(
+        sn="SN1", name="Unrelated Device", stateList=[], online="1"
+    )
+
+    with (
+        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.config_flow.ProductClient"
+        ) as mock_client_cls,
+        patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=SimpleNamespace(data=[other_account_product])
+        )
+        result = await flow.async_step_select_devices(user_input=None)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "wrong_account"
+    mock_reload.assert_not_awaited()
+
+    # The entry must be untouched - same token as before.
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["token"] == {"access_token": "original-token"}
+
+
 async def test_reconfigure_token_missing_entry_aborts(hass: HomeAssistant) -> None:
     """entry_id in context but the entry itself is gone (e.g. removed mid-flow)."""
     flow = _make_flow(hass)

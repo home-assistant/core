@@ -100,11 +100,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         )
         auth = AsyncConfigEntryAuth(http_session, oauth_session)
 
-        auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
-        auth_token_refresh.start_token_check()
-
+        # Must run before AuthTokenRefresh.start_token_check() below: that
+        # call's is_token_valid() check reads oauth_session.token
+        # synchronously, as-is - a normally-expired access token with a
+        # still-valid refresh token would otherwise show the user a false
+        # "OAuth expired" notification/issue on every setup, moments before
+        # this call transparently refreshes it.
         await oauth_session.async_ensure_token_valid()
         access_token = oauth_session.token["access_token"]
+
+        auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
+        auth_token_refresh.start_token_check()
         product_client = ProductClient(
             http_session,
             APPLICATION_PROFILE.config["server"]["gateway"],

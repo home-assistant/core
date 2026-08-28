@@ -63,6 +63,61 @@ async def test_async_setup_entry_with_no_devices(hass: HomeAssistant) -> None:
     mock_stomp_cls.return_value.connect.assert_awaited_once()
 
 
+async def test_setup_with_an_expired_but_refreshable_token_does_not_notify(
+    hass: HomeAssistant,
+) -> None:
+    """An expired-but-refreshable token must not show a false expiry warning.
+
+    Regression test: AuthTokenRefresh.start_token_check() used to run before
+    oauth_session.async_ensure_token_valid() - its is_token_valid() check
+    read the stale, not-yet-refreshed token, so a normally expired access
+    token (common - they're short-lived) with a still-valid refresh token
+    triggered a persistent notification/issue immediately, moments before
+    async_ensure_token_valid() transparently fixed the token.
+    """
+    entry = _entry(hass)
+
+    async def fake_ensure_token_valid():
+        # Simulates a successful refresh: the session's token is updated in
+        # place, same as the real OAuth2Session.async_ensure_token_valid().
+        mock_session_cls.return_value.token = {
+            "access_token": "refreshed",
+            "expires_at": time.time() + 10000,
+        }
+
+    with (
+        patch("homeassistant.components.bluetti.async_get_clientsession", MagicMock()),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti.StompClient") as mock_stomp_cls,
+        patch(
+            "homeassistant.components.bluetti.oauth.persistent_notification.async_create"
+        ) as mock_notify,
+    ):
+        # Starts expired (in the past) - is_token_valid() must see the
+        # already-refreshed token above, not this one, by the time
+        # AuthTokenRefresh.start_token_check() runs.
+        mock_session_cls.return_value.token = {
+            "access_token": "stale",
+            "expires_at": time.time() - 100,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock(
+            side_effect=fake_ensure_token_valid
+        )
+        mock_stomp_cls.return_value.connect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_notify.assert_not_called()
+
+
 async def test_async_setup_entry_with_a_device(hass: HomeAssistant) -> None:
     """Async setup entry with a device."""
     entry = _entry(

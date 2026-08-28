@@ -61,7 +61,15 @@ async def test_web_socket_message_handler_ignores_unknown_device(
 async def test_handle_unbind_without_hass_or_entry_returns_early(
     hass: HomeAssistant,
 ) -> None:
-    """Handle unbind without hass or entry returns early."""
+    """Handle unbind without hass or entry returns early, and stays retriable.
+
+    Regression test: _unbind_processed used to be set unconditionally at the
+    top of _handle_unbind(), before this early-return check - a transient
+    setup-ordering issue (unbind detected before bind_runtime() wired _hass/
+    _entry up) would then permanently suppress every later unbind attempt,
+    even once those references become available, leaving the device
+    configured forever despite the cloud continuing to report it unbound.
+    """
     device = BluettiDevice(
         device_id="SN1", on_line="1", name="Test", sn="SN1", model="AC200L"
     )
@@ -69,7 +77,7 @@ async def test_handle_unbind_without_hass_or_entry_returns_early(
 
     await device._handle_unbind()
 
-    assert device._unbind_processed is True
+    assert device._unbind_processed is False
 
 
 async def test_handle_unbind_full_cleanup(

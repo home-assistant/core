@@ -283,11 +283,13 @@ class BluettiDevice:
         in one (e.g. deleting one stale entity) must not prevent the later
         steps (updating the config entry, notifying the user) from running.
         """
-        self._unbind_processed = True
-
         __LOGGER__.info("Detected device unbinding: %s (%s)", self.name, self.device_id)
 
-        # Check if the necessary references exist
+        # Check if the necessary references exist. Deliberately not marking
+        # _unbind_processed here: this is a transient setup-ordering issue
+        # (unbind detected before bind_runtime() wired these up), not a
+        # terminal failure, so the next poll must retry rather than silently
+        # never handling the unbind at all.
         if not self._hass or not self._entry:
             __LOGGER__.error(
                 "Cannot handle device unbinding: missing necessary references "
@@ -296,6 +298,12 @@ class BluettiDevice:
                 self._entry is not None,
             )
             return
+
+        # Set only once the durable cleanup below is actually about to run -
+        # each of its steps is independently best-effort (see the docstring),
+        # so reaching this point is "handled enough" even if some individual
+        # step later fails and only logs a warning.
+        self._unbind_processed = True
 
         hass = self._hass
         entry = self._entry
