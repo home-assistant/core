@@ -50,6 +50,7 @@ SENSOR_TYPES: tuple[DiscogsSensorEntityDescription, ...] = (
     DiscogsSensorEntityDescription(
         key="collection",
         translation_key="collection",
+        icon="mdi:album",
         native_unit_of_measurement=UNIT_RECORDS,
         value_fn=lambda data: data.collection_count,
         attrs_fn=lambda data: {ATTR_IDENTITY: data.username},
@@ -57,6 +58,7 @@ SENSOR_TYPES: tuple[DiscogsSensorEntityDescription, ...] = (
     DiscogsSensorEntityDescription(
         key="wantlist",
         translation_key="wantlist",
+        icon="mdi:album",
         native_unit_of_measurement=UNIT_RECORDS,
         value_fn=lambda data: data.wantlist_count,
         attrs_fn=lambda data: {ATTR_IDENTITY: data.username},
@@ -64,6 +66,7 @@ SENSOR_TYPES: tuple[DiscogsSensorEntityDescription, ...] = (
     DiscogsSensorEntityDescription(
         key="random_record",
         translation_key="random_record",
+        icon="mdi:record-player",
         value_fn=lambda data: data.random_record,
         attrs_fn=lambda data: {
             ATTR_IDENTITY: data.username,
