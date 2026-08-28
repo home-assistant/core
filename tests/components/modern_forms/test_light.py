@@ -1,9 +1,12 @@
 """Tests for the Modern Forms light platform."""
 
+import json
+from typing import Any
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from yarl import URL
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.modern_forms.const import (
@@ -25,9 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, init_integration_gen4
+from . import init_integration, init_integration_gen4, modern_forms_gen4_call_mock
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import async_load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 async def test_light_state(
@@ -200,17 +204,34 @@ async def test_light_unavailable_when_fixture_disappears_gen4(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test a Gen4 light entity goes unavailable if its fixture disappears."""
-    entry = await init_integration_gen4(hass, aioclient_mock)
-    coordinator = entry.runtime_data
+    removed_addresses: set[int] = set()
+
+    async def fixture_removal_mock(
+        hass: HomeAssistant, method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Serve the normal Gen4 fixtures, minus any addresses removed."""
+        if not url.path.endswith("/fixture") or not removed_addresses:
+            return await modern_forms_gen4_call_mock(hass, method, url, data)
+        payload = json.loads(
+            await async_load_fixture(hass, "fixture_gen4.json", DOMAIN)
+        )
+        payload["fixture"] = [
+            fixture
+            for fixture in payload["fixture"]
+            if fixture["addr"] not in removed_addresses
+        ]
+        return AiohttpClientMockResponse(method=method, url=url, json=payload)
+
+    entry = await init_integration_gen4(
+        hass, aioclient_mock, mock_type=fixture_removal_mock
+    )
 
     state = hass.states.get("light.modernformsfan_uplight")
     assert state
     assert state.state == STATE_ON
 
-    coordinator.data.state.light_fixtures = [
-        light for light in coordinator.data.state.light_fixtures if light.address != 2
-    ]
-    coordinator.async_update_listeners()
+    removed_addresses.add(2)
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("light.modernformsfan_uplight")
@@ -237,3 +258,30 @@ async def test_light_change_state_gen4(
         await hass.async_block_till_done()
         light_fixture_mock.assert_called_once_with(2, on=False)
         light_mock.assert_not_called()
+
+
+async def test_sleep_timer_services_gen4(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test Gen4 sleep timer services pass sleep through light_fixture()."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_SLEEP_TIMER,
+            {ATTR_ENTITY_ID: "light.modernformsfan_uplight", ATTR_SLEEP_TIME: 1},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_fixture_mock.assert_called_once_with(2, sleep=60)
+
+    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
+            {ATTR_ENTITY_ID: "light.modernformsfan_uplight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_fixture_mock.assert_called_once_with(2, sleep=0)

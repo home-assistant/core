@@ -12,16 +12,10 @@ _NAME_SEPARATORS = " -_"
 
 
 def strip_device_name_prefix(device_name: str, name: str) -> str | None:
-    """Strip a leading device-name prefix from a vendor-set fixture name.
+    """Strip a leading device-name prefix so has_entity_name doesn't duplicate it.
 
-    Fixtures are commonly named "<device name> <role>" in the Modern Forms
-    app (e.g. "Master Bedroom Uplight"), which would otherwise duplicate
-    once HA's has_entity_name prepends the device name to build the
-    friendly name. The prefix must be followed by a separator (or nothing)
-    so a device named "Fan" doesn't mangle a fixture named "Fancy Light".
-    Returns None when the fixture name adds nothing beyond the device
-    name, so has_entity_name falls back to the device name alone instead
-    of repeating it.
+    Returns None (rather than a name identical to the device name) when
+    the fixture name adds nothing beyond the device name.
     """
     if not device_name or not name.lower().startswith(device_name.lower()):
         return name

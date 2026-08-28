@@ -141,16 +141,19 @@ async def init_integration_gen4(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
+    mock_type: Callable[
+        [str, str, dict[str, Any]], Coroutine[Any, Any, AiohttpClientMockResponse]
+    ] = modern_forms_gen4_call_mock,
 ) -> MockConfigEntry:
     """Set up the Modern Forms integration against a mock Gen4 device."""
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=404)
     aioclient_mock.post(
         "http://192.168.1.123:80/device",
-        side_effect=partial(modern_forms_gen4_call_mock, hass),
+        side_effect=partial(mock_type, hass),
     )
     aioclient_mock.post(
         "http://192.168.1.123:80/fixture",
-        side_effect=partial(modern_forms_gen4_call_mock, hass),
+        side_effect=partial(mock_type, hass),
     )
 
     entry = MockConfigEntry(
