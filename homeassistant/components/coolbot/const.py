@@ -14,3 +14,9 @@ UPDATE_INTERVAL: Final = timedelta(seconds=10)
 #: A device that has not pushed within this window is treated as unavailable,
 #: regardless of what the account profile's status field claims.
 STALE_AFTER_SECONDS: Final = 120
+
+#: How often the account profile is re-read, to notice coolers added to or
+#: removed from the account. The profile is otherwise only read on connect, and
+#: it is a whole-account document, so this is far longer than the update
+#: interval.
+PROFILE_REFRESH_INTERVAL: Final = timedelta(minutes=5)

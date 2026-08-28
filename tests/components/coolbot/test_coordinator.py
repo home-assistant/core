@@ -7,10 +7,15 @@ from contextlib import suppress
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pycoolbot import CoolbotAuthError, CoolbotError
 import pytest
 
-from homeassistant.components.coolbot.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.coolbot.const import (
+    DOMAIN,
+    PROFILE_REFRESH_INTERVAL,
+    UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -234,6 +239,32 @@ async def test_a_device_dropping_out_of_the_profile_is_logged(
     mock_client.async_get_devices.return_value = [make_device()]
     await _tick(hass)
     assert "Walk-in cooler is reporting again" in caplog.text
+
+
+async def test_the_account_profile_is_reread_periodically(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Account changes have to reach a connection that never drops.
+
+    The client reads the profile while connecting and serves the device list
+    from it, so a cooler added to or removed from the account would otherwise
+    go unnoticed for as long as the socket happened to last.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+    mock_client.async_refresh_profile.reset_mock()
+
+    # Well inside the interval: the profile is a whole-account document, so it
+    # is not re-read on every ten-second refresh.
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    await _tick(hass)
+    mock_client.async_refresh_profile.assert_not_awaited()
+
+    freezer.tick(PROFILE_REFRESH_INTERVAL)
+    await _tick(hass)
+    mock_client.async_refresh_profile.assert_awaited()
 
 
 async def test_an_emptied_account_is_a_valid_update(

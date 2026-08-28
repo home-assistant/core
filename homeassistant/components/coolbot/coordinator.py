@@ -1,5 +1,6 @@
 """Keeps a live connection to the CoolBot cloud and publishes state to entities."""
 
+from datetime import datetime
 import logging
 from typing import override
 
@@ -12,8 +13,14 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STALE_AFTER_SECONDS, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    PROFILE_REFRESH_INTERVAL,
+    STALE_AFTER_SECONDS,
+    UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,8 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: Hardware details last written to the device registry, per unique id,
         #: so an unchanged refresh does not touch the registry at all.
         self._device_details: dict[str, tuple[str, str | None, str | None]] = {}
+        #: When the account profile was last read, connecting included.
+        self._profile_read_at: datetime | None = None
 
     @override
     async def _async_setup(self) -> None:
@@ -93,6 +102,8 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 # it here or it is leaked for the lifetime of the entry.
                 await _async_close_client(client)
 
+        # Connecting reads the profile, so the clock starts here.
+        self._profile_read_at = dt_util.utcnow()
         self._client = client
 
     @override
@@ -104,6 +115,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
         assert self._client is not None
         try:
+            await self._async_reread_profile_if_due()
             # Never block a refresh waiting for a push; freshness is conveyed by
             # each device's data_age_seconds instead.
             devices = await self._client.async_get_devices(wait_for_live=False)
@@ -157,6 +169,23 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         self._log_staleness_transitions(data)
         self._apply_late_device_details(data)
         return data
+
+    async def _async_reread_profile_if_due(self) -> None:
+        """Re-read the account profile from time to time.
+
+        The client reads it while connecting and then serves the device list
+        from it, so without this a cooler added to or removed from the account
+        would go unnoticed until the socket happened to reconnect.
+        """
+        assert self._client is not None
+        now = dt_util.utcnow()
+        if (
+            self._profile_read_at is not None
+            and now - self._profile_read_at < PROFILE_REFRESH_INTERVAL
+        ):
+            return
+        await self._client.async_refresh_profile()
+        self._profile_read_at = now
 
     def _apply_late_device_details(self, data: dict[str, CoolbotDevice]) -> None:
         """Record hardware details that replay after a cooler is created.
