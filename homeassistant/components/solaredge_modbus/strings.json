@@ -1,0 +1,137 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The device at that address and device ID is a different inverter than the one this entry is set up for."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ev_charger": "That device is a SolarEdge EV charger. It answers as an inverter, but serves no measurements over Modbus.",
+      "no_serial_number": "The inverter did not report a serial number, which is needed to identify it.",
+      "no_solaredge_device": "The device at that address and device ID does not answer as a SolarEdge inverter."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::solaredge_modbus::config::step::user::data_description::host%]",
+          "port": "[%key:component::solaredge_modbus::config::step::user::data_description::port%]"
+        },
+        "description": "Update how this inverter is reached, for example after it moved to another address or its device ID changed.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data_description::unit_id%]"
+            },
+            "name": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::name%]"
+          }
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your SolarEdge inverter. Modbus TCP has to be enabled on the inverter first, in the installer settings.",
+          "port": "The TCP port the inverter listens on for Modbus requests. The SolarEdge default is 1502."
+        },
+        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "Device ID"
+            },
+            "data_description": {
+              "unit_id": "The Modbus device ID of the inverter, as configured on the inverter itself. The SolarEdge default is 1."
+            },
+            "name": "More options"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_phase_a": {
+        "name": "Current phase A"
+      },
+      "current_phase_b": {
+        "name": "Current phase B"
+      },
+      "current_phase_c": {
+        "name": "Current phase C"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "dc_power": {
+        "name": "DC power"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "inverter_status": {
+        "name": "Status",
+        "state": {
+          "fault": "Fault",
+          "off": "[%key:common::state::off%]",
+          "producing": "Producing",
+          "shutting_down": "Shutting down",
+          "sleeping": "Sleeping",
+          "standby": "[%key:common::state::standby%]",
+          "starting": "Starting",
+          "throttled": "Throttled"
+        }
+      },
+      "vendor_status": {
+        "name": "Vendor status"
+      },
+      "voltage_phase_ab": {
+        "name": "Voltage phase A-B"
+      },
+      "voltage_phase_an": {
+        "name": "Voltage phase A-N"
+      },
+      "voltage_phase_bc": {
+        "name": "Voltage phase B-C"
+      },
+      "voltage_phase_bn": {
+        "name": "Voltage phase B-N"
+      },
+      "voltage_phase_ca": {
+        "name": "Voltage phase C-A"
+      },
+      "voltage_phase_cn": {
+        "name": "Voltage phase C-N"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the SolarEdge inverter: {error}"
+    },
+    "identity_unavailable": {
+      "message": "The inverter did not report its identity, so it cannot be confirmed as the one this entry was set up for."
+    },
+    "link_settings_in_use": {
+      "message": "The inverter cannot be set up with these link settings: {error}"
+    },
+    "measurements_unavailable": {
+      "message": "The inverter did not report its measurements, so it is not yet known which sensors it offers."
+    },
+    "no_solaredge_device": {
+      "message": "The configured Modbus device does not answer as a SolarEdge inverter."
+    },
+    "wrong_inverter": {
+      "message": "The device at this address is a different inverter than the one this entry was set up for. Reconfigure the entry to point at the right device."
+    }
+  }
+}
