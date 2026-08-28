@@ -116,6 +116,7 @@ class IseoLockEntity(LockEntity):
         self._last_ble_device: BLEDevice | None = None
         self._initial_read: asyncio.Task[None] | None = None
         self._advertised = asyncio.Event()
+        self._identity_rejected = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -219,6 +220,11 @@ class IseoLockEntity(LockEntity):
 
     def _set_available(self, available: bool, reason: object = None) -> None:
         """Update availability, logging only when it actually changes."""
+        if available and self._identity_rejected:
+            # Hearing the lock says nothing about whether it still accepts our
+            # identity, and that does not recover on its own. Staying available
+            # would look healthy while every operation fails.
+            return
         if self._attr_available == available:
             return
         if available:
@@ -327,10 +333,14 @@ class IseoLockEntity(LockEntity):
             self._set_available(False, "device not found")
             return
 
-        if self._door_status_supported is False:
+        if self._door_status_supported is False and not self._entry.options.get(
+            CONF_ENABLE_POLLING, False
+        ):
             # Nothing to read from this lock: seeing it advertise is all the
             # reachability information there is, and it spares the battery a
-            # connection on every poll cycle.
+            # connection on every poll cycle. With polling explicitly turned on,
+            # keep reading — Door Status Advice can be enabled on the lock from
+            # the Argo app at any time, and that only shows up in a read.
             self._set_available(True)
             return
 
@@ -340,7 +350,7 @@ class IseoLockEntity(LockEntity):
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except IseoAuthError as exc:
-            if self._attr_available:
+            if not self._identity_rejected:
                 # Rejected credentials do not recover on their own: the gateway
                 # identity has to be enrolled on the lock again.
                 _LOGGER.warning(
@@ -348,6 +358,7 @@ class IseoLockEntity(LockEntity):
                     "integration and set it up again to enroll it anew",
                     exc,
                 )
+                self._identity_rejected = True
                 self._attr_available = False
                 self.async_write_ha_state()
             return
@@ -355,6 +366,7 @@ class IseoLockEntity(LockEntity):
             self._set_available(False, exc)
             return
 
+        self._identity_rejected = False
         self._set_available(True)
         self._update_firmware_version(state)
 
@@ -448,5 +460,6 @@ class IseoLockEntity(LockEntity):
                 translation_key="cannot_connect",
             ) from exc
 
+        self._identity_rejected = False
         self._set_unlocked()
         self._relock_task = self.hass.async_create_task(self._auto_relock())

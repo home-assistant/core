@@ -220,6 +220,11 @@ async def test_unavailable_when_lock_rejects_identity(
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
+    # Hearing the lock says nothing about whether it accepts our identity, so a
+    # further advertisement must not make it look healthy again.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_unavailable_when_it_stops_advertising(
@@ -448,3 +453,35 @@ async def test_unlock_without_device_in_range(
     assert excinfo.value.translation_key == "cannot_connect"
     mock_iseo_client.gw_open.assert_not_called()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_polling_keeps_probing_a_lock_without_door_status(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the fallback keeps reading a lock that reports no door status.
+
+    Door Status Advice can be turned on from the Argo app at any time, and that
+    only becomes visible in a read.
+    """
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_POLLING: True}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _advertise(hass, door_closed=True)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_ASSUMED_STATE] is True
+
+    # The lock starts reporting door status; a later poll must pick it up.
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
