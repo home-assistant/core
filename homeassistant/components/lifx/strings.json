@@ -41,7 +41,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your LIFX device.",
-          "serial": "The twelve character serial number printed on your LIFX device. On its own, it is resolved by broadcasting to your network."
+          "serial": "The twelve-character serial number printed on your LIFX device. On its own, it is resolved by broadcasting to your network."
         },
         "description": "Fill in the host, the serial number, or both. If you leave both empty, discovery will be used to find devices."
       }
