@@ -751,7 +751,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -812,7 +812,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-EveTemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

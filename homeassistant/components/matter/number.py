@@ -314,56 +314,10 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Eve temperature offset
-    # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
-    # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
-    # schema wins by default, so the conservative bound is assumed.
-    MatterDiscoverySchema(
-        platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
-            key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
-            entity_category=EntityCategory.CONFIG,
-            translation_key="temperature_offset",
-            native_max_value=2.5,
-            native_min_value=-2.5,
-            native_step=0.1,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_device=lambda x: round(x * 10),
-            mode=NumberMode.BOX,
-        ),
-        entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
-        ),
-        vendor_id=(4874,),  # Eve Systems
-        cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
-    ),
-    # Eve temperature offset, extended range (Matter 1.4+)
-    MatterDiscoverySchema(
-        platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
-            key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE,
-            entity_category=EntityCategory.CONFIG,
-            translation_key="temperature_offset",
-            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
-            native_max_value=12.7,
-            native_min_value=-12.7,
-            native_step=0.1,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_device=lambda x: round(x * 10),
-            mode=NumberMode.BOX,
-        ),
-        entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
-        ),
-        vendor_id=(4874,),  # Eve Systems
-        cluster_revision_min=THERMOSTAT_EXTENDED_CALIBRATION_REVISION,
-    ),
+    # Temperature offset. Applies to all vendors, including Eve Systems: the
+    # legacy vendor-specific EveTemperatureOffset schema was dropped once the
+    # cluster_revision split (below) made its bounds identical to this one;
+    # existing Eve entities are migrated onto this key in __init__.py.
     # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
     # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
     # schema wins by default, so the conservative bound is assumed.
