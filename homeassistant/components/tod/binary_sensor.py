@@ -184,8 +184,6 @@ class TodSensor(BinarySensorEntity):
             # with hass configured TZ not system wide
             after_event_date = self._naive_time_to_utc_datetime(self._after)
 
-        self._time_after = after_event_date
-
         # If before value is a sun event instead of absolute time
         if _is_sun_event(self._before):
             # Calculate the today's event utc time or  if not available take
@@ -193,21 +191,27 @@ class TodSensor(BinarySensorEntity):
             before_event_date = get_astral_event_date(
                 self.hass, self._before, nowutc
             ) or get_astral_event_next(self.hass, self._before, nowutc)
-            # Before is earlier than after
-            if before_event_date < after_event_date:
-                # Take next day for before
-                before_event_date = get_astral_event_next(
-                    self.hass, self._before, after_event_date
-                )
         else:
             # Convert local time provided to UTC today, see above
             before_event_date = self._naive_time_to_utc_datetime(self._before)
 
-            # It is safe to add timedelta days=1 to UTC as there is no DST
-            if before_event_date < after_event_date + self._after_offset:
+        # Before is earlier than after once the configured offsets are applied.
+        if (
+            before_event_date + self._before_offset
+            < after_event_date + self._after_offset
+        ):
+            if _is_sun_event(self._before):
+                before_event_date = get_astral_event_next(
+                    self.hass,
+                    self._before,
+                    after_event_date + self._after_offset - self._before_offset,
+                )
+            else:
+                # It is safe to add timedelta days=1 to UTC as there is no DST
                 before_event_date += timedelta(days=1)
 
-        self._time_before = before_event_date
+        self._time_after = after_event_date + self._after_offset
+        self._time_before = before_event_date + self._before_offset
 
         # We are calculating the _time_after value assuming that it will happen today
         # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
@@ -224,10 +228,6 @@ class TodSensor(BinarySensorEntity):
             # remove one day from _time_before and _time_after
             self._time_after -= timedelta(days=1)
             self._time_before -= timedelta(days=1)
-
-        # Add offset to utc boundaries according to the configuration
-        self._time_after += self._after_offset
-        self._time_before += self._before_offset
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
         """Add 24 hours (1 day) but account for DST."""

@@ -615,6 +615,52 @@ async def test_sun_offset(
     assert state.state == STATE_ON
 
 
+async def test_sun_offsets_cross_boundary(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+) -> None:
+    """Test sun offsets that move the effective before boundary to the next day."""
+    test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
+    after_offset = timedelta(hours=13)
+    before_offset = timedelta(minutes=30)
+    after = (
+        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time)) + after_offset
+    )
+    before = (
+        get_astral_event_next(hass, "sunset", after - before_offset) + before_offset
+    )
+    freezer.move_to(after)
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Overnight sun",
+                    "after": "sunrise",
+                    "after_offset": "13:00",
+                    "before": "sunset",
+                    "before_offset": "0:30",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.overnight_sun")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.astimezone(hass_tz_info).isoformat()
+    assert state.attributes["before"] == before.astimezone(hass_tz_info).isoformat()
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.overnight_sun")
+    assert state.state == STATE_OFF
+
+
 async def test_dst1(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
