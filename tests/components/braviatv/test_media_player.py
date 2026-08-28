@@ -40,7 +40,7 @@ INPUTS = [
         "uri": "extInput:hdmi?port=1",
         "title": "HDMI 1",
         "connection": False,
-        "label": "",
+        "label": "HDMI 2",
         "icon": "meta:hdmi",
     },
     {
@@ -54,12 +54,19 @@ INPUTS = [
         "uri": "extInput:hdmi?port=3",
         "title": "HDMI 3",
         "connection": True,
-        "label": "Game console",
+        "label": "game console",
         "icon": "meta:hdmi",
     },
     {
         "uri": "extInput:hdmi?port=4",
         "title": "HDMI 4",
+        "connection": True,
+        "label": "",
+        "icon": "meta:hdmi",
+    },
+    {
+        "uri": "extInput:hdmi?port=5",
+        "title": "HDMI 5",
         "connection": True,
         "icon": "meta:hdmi",
     },
@@ -122,11 +129,12 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # HDMI 3 repeats HDMI 2's label, so it does not appear twice.
+    # HDMI 3 repeats HDMI 2's label apart from case, so it does not appear twice.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
-        "HDMI 1",
+        "HDMI 2",
         "Game console",
         "HDMI 4",
+        "HDMI 5",
         "Streaming box",
         "Straße",
     ]
@@ -138,10 +146,13 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     ("source", "expected_uri"),
     [
         ("Game console", "extInput:hdmi?port=2"),
+        ("game console", "extInput:hdmi?port=2"),
+        # HDMI 1 is labelled "HDMI 2": the input that owns that name still wins.
         ("HDMI 2", "extInput:hdmi?port=2"),
-        ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 1", "extInput:hdmi?port=1"),
+        ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 4", "extInput:hdmi?port=4"),
+        ("HDMI 5", "extInput:hdmi?port=5"),
         ("Streaming box", "extInput:cec?type=player&port=1"),
         ("straße", "extInput:scart?port=1"),
     ],
