@@ -348,7 +348,7 @@ aiolyric==2.1.2
 aiomealie==2.0.0
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.2.1
+aiomelcloudhome==0.2.3
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.2.0
