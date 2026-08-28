@@ -1326,6 +1326,128 @@
     'state': 'unknown',
   })
 # ---
+# name: test_all_entities[select.test_reolink_cam_work_mode_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'custom',
+        'smart',
+        'power_saving',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_work_mode_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Work mode battery',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode battery',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode_battery',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_work_mode_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_work_mode_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Work mode battery',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'custom',
+        'smart',
+        'power_saving',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_work_mode_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'custom',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_work_mode_powered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm_based',
+        'continuous',
+        'custom',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_work_mode_powered',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Work mode powered',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode powered',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode_powered',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_work_mode_powered',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_work_mode_powered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Work mode powered',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm_based',
+        'continuous',
+        'custom',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_work_mode_powered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'continuous',
+  })
+# ---
 # name: test_all_entities[select.test_reolink_name_recording_packing_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

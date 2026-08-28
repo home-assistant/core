@@ -41,9 +41,13 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             device_id = user_input.get(CONF_DEVICE_ID)
-            if device_id is None or (
-                device_registry.async_get(device_id) is not None
-                and not device_registry.async_is_composite_device_id(device_id)
+            if (
+                device_id is None
+                or device_registry.async_get(
+                    device_id,
+                    include_composite_devices=False,
+                )
+                is not None
             ):
                 options = {**entry.options}
                 if device_id:

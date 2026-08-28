@@ -4235,15 +4235,15 @@ async def test_composite_device_id_ignored(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
     # The composite id resolves to a synthesized device, but is not a real registry entry
     assert device_registry.async_get(old_id) is not None
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
 
     warning = f"Ignoring request to link entity from integration hue to device {old_id}"
 
@@ -6179,7 +6179,7 @@ async def test_async_entries_for_device_legacy_composite_id(
     entity_registry = er.async_get(hass)
 
     # The composite id is no longer a live device; its entities were repointed to splits
-    assert COMPOSITE_ID not in device_registry.devices
+    assert COMPOSITE_ID not in device_registry._devices
 
     # get_entries_for_device_id resolves the composite id to the split entities
     assert {
@@ -6254,14 +6254,14 @@ async def test_async_entries_for_device_composite_id(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
     assert {
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, old_id)

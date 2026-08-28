@@ -1,17 +1,30 @@
 """Tests for the Hot Spring config flow."""
 
+import dataclasses
+from ipaddress import ip_address
 from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
+
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address("192.168.1.100"),
+    ip_addresses=[ip_address("192.168.1.100")],
+    hostname="Watkins_SpaAABBCCDDEEFF.local.",
+    name="Watkins_SpaAABBCCDDEEFF._ws._tcp.local.",
+    port=80,
+    properties={},
+    type="_ws._tcp.local.",
+)
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring")
@@ -119,6 +132,71 @@ async def test_form_no_mac_address(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring")
+async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
+    """Test the full zeroconf flow from start to finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"] == {"name": "ConnectedSpa_DDEEFF"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["title"] == "ConnectedSpa_DDEEFF"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [HotSpringConnectionError, HotSpringError],
+)
+async def test_zeroconf_connection_error(
+    hass: HomeAssistant, mock_hotspring: MagicMock, exception: type[Exception]
+) -> None:
+    """Test we abort zeroconf flow on Hot Spring connection error."""
+    mock_hotspring.update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_hotspring")
+async def test_zeroconf_device_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort zeroconf flow and update host if already configured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=dataclasses.replace(
+            MOCK_ZEROCONF_DATA,
+            ip_address=ip_address("192.168.1.200"),
+            ip_addresses=[ip_address("192.168.1.200")],
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

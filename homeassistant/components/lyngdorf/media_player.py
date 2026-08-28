@@ -1,17 +1,22 @@
 """Media player platform for Lyngdorf integration."""
 
+from datetime import datetime
 from typing import TYPE_CHECKING, override
 
 from lyngdorf.device import Receiver
 from lyngdorf.models.base import NumericRange
+from lyngdorf.states import Control, PlaybackState, Repeat
+from lyngdorf.streaming import NowPlaying
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -38,6 +43,31 @@ FEATURES_MAIN = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.SELECT_SOURCE
 )
+
+# The streaming module advertises transport per source and it changes at
+# runtime, so these are added to FEATURES_MAIN only while the device offers
+# them: AirPlay has no seek, a stopped device offers nothing at all.
+CONTROL_FEATURES: tuple[tuple[Control, MediaPlayerEntityFeature], ...] = (
+    (Control.PAUSE, MediaPlayerEntityFeature.PAUSE),
+    (Control.NEXT_TRACK, MediaPlayerEntityFeature.NEXT_TRACK),
+    (Control.PREVIOUS_TRACK, MediaPlayerEntityFeature.PREVIOUS_TRACK),
+    (Control.SEEK, MediaPlayerEntityFeature.SEEK),
+)
+
+REPEAT_MODES: dict[Repeat, RepeatMode] = {
+    Repeat.OFF: RepeatMode.OFF,
+    Repeat.ONE: RepeatMode.ONE,
+    Repeat.ALL: RepeatMode.ALL,
+}
+
+LYNGDORF_REPEATS: dict[RepeatMode, Repeat] = {v: k for k, v in REPEAT_MODES.items()}
+
+PLAYBACK_STATES: dict[PlaybackState, MediaPlayerState] = {
+    PlaybackState.PLAYING: MediaPlayerState.PLAYING,
+    PlaybackState.PAUSED: MediaPlayerState.PAUSED,
+    PlaybackState.STOPPED: MediaPlayerState.IDLE,
+    PlaybackState.TRANSITIONING: MediaPlayerState.BUFFERING,
+}
 
 
 async def async_setup_entry(
@@ -88,18 +118,19 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
         device_info: DeviceInfo,
         translation_key: str | None,
         entity_id_suffix: str,
-        features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0),
     ) -> None:
         """Initialize the device."""
         super().__init__(receiver, device_info)
-        assert config_entry.unique_id
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
         self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
         self._attr_translation_key = translation_key
-        self._attr_supported_features = features
 
 
 class LyngdorfZoneBDevice(LyngdorfDevice):
     """Lyngdorf Zone B device."""
+
+    _attr_supported_features = FEATURES_ZONE_B
 
     def __init__(
         self,
@@ -114,7 +145,6 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             device_info,
             None,
             "zone_b",
-            FEATURES_ZONE_B,
         )
 
     @override
@@ -214,16 +244,169 @@ class LyngdorfMainDevice(LyngdorfDevice):
             device_info,
             "main_zone",
             "main_zone",
-            FEATURES_MAIN,
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to position discontinuities."""
+        # The jump callback fires on a seek, track change, play/pause or
+        # drift, rather than once a second, which is all Home Assistant
+        # needs: it stores a position and a timestamp and extrapolates.
+        await super().async_added_to_hass()
+        if self._has_streamer:
+            self.async_on_remove(
+                self._receiver.register_position_jump_callback(self._handle_position)
+            )
+
+    @callback
+    def _handle_position(self, _position_ms: int | None) -> None:
+        """Handle a position discontinuity."""
+        self.async_write_ha_state()
+
+    @property
+    def _has_streamer(self) -> bool:
+        """Return whether this model has a streaming module at all."""
+        return self._receiver.model.has_streaming_feature()
+
+    @property
+    def _now_playing(self) -> NowPlaying | None:
+        """Return the current track, or None if this model has no streamer."""
+        if not self._has_streamer:
+            return None
+        return self._receiver.now_playing
+
+    @override
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the features the device currently offers."""
+        features = FEATURES_MAIN
+        if (now_playing := self._now_playing) is None:
+            return features
+
+        for control, feature in CONTROL_FEATURES:
+            if control in now_playing.controls:
+                features |= feature
+        if self._receiver.can_shuffle:
+            features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self._receiver.available_repeat_modes:
+            features |= MediaPlayerEntityFeature.REPEAT_SET
+        return features
 
     @override
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if self._receiver.power_on:
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+        if not self._receiver.power_on:
+            return MediaPlayerState.OFF
+        if (now_playing := self._now_playing) is not None:
+            if (state := PLAYBACK_STATES.get(now_playing.state)) is not None:
+                return state
+        return MediaPlayerState.ON
+
+    @override
+    @property
+    def media_content_type(self) -> MediaType | None:
+        """Return the type of media currently playing."""
+        if self._now_playing is None:
+            return None
+        return MediaType.MUSIC
+
+    @override
+    @property
+    def media_title(self) -> str | None:
+        """Return the title of the current track."""
+        return now_playing.title if (now_playing := self._now_playing) else None
+
+    @override
+    @property
+    def media_artist(self) -> str | None:
+        """Return the artist of the current track."""
+        return now_playing.artist if (now_playing := self._now_playing) else None
+
+    @override
+    @property
+    def media_album_name(self) -> str | None:
+        """Return the album of the current track."""
+        return now_playing.album if (now_playing := self._now_playing) else None
+
+    @override
+    @property
+    def media_image_url(self) -> str | None:
+        """Return the album art of the current track."""
+        return now_playing.art_url if (now_playing := self._now_playing) else None
+
+    @override
+    @property
+    def media_duration(self) -> int | None:
+        """Return the duration of the current track, in seconds."""
+        if (
+            now_playing := self._now_playing
+        ) is None or now_playing.duration_ms is None:
+            return None
+        return round(now_playing.duration_ms / 1000)
+
+    @override
+    @property
+    def media_position(self) -> int | None:
+        """Return the position of the current track, in seconds."""
+        if not self._has_streamer or not self._receiver.has_position:
+            return None
+        return round(self._receiver.position_ms / 1000)
+
+    @override
+    @property
+    def media_position_updated_at(self) -> datetime | None:
+        """Return when the position was last valid."""
+        if not self._has_streamer or not self._receiver.has_position:
+            return None
+        return self._receiver.position_updated_at
+
+    @override
+    @property
+    def shuffle(self) -> bool | None:
+        """Return whether shuffle is enabled."""
+        return self._receiver.shuffle if self._has_streamer else None
+
+    @override
+    @property
+    def repeat(self) -> RepeatMode | None:
+        """Return the current repeat mode."""
+        if not self._has_streamer or (repeat := self._receiver.repeat) is None:
+            return None
+        return REPEAT_MODES.get(repeat)
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Pause playback."""
+        # On a controller-driven source such as AirPlay the device ends the
+        # session rather than pausing, and only the controlling app can
+        # start it again.
+        await self._receiver.async_pause()
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Skip to the next track."""
+        await self._receiver.async_next()
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Skip to the previous track."""
+        await self._receiver.async_previous()
+
+    @override
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position, given in seconds."""
+        await self._receiver.async_seek(round(position * 1000))
+
+    @override
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Enable or disable shuffle, leaving the repeat mode alone."""
+        await self._receiver.async_set_shuffle(shuffle)
+
+    @override
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set the repeat mode, leaving shuffle alone."""
+        await self._receiver.async_set_repeat(LYNGDORF_REPEATS[repeat])
 
     @override
     @property

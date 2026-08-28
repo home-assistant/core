@@ -181,7 +181,9 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
             )
         ):
             self._attr_native_value = last_sensor_data.native_value
-            self._attr_extra_state_attributes.update(last_state.attributes)
+            # only restore KNX specific attributes - others may have changed
+            if (source := last_state.attributes.get(ATTR_SOURCE)) is not None:
+                self._attr_extra_state_attributes[ATTR_SOURCE] = source
         await super().async_added_to_hass()
 
     @override

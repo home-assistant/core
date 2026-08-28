@@ -77,6 +77,7 @@ INITIAL_FETCH_CLIENT_METHODS = [
     "get_all_programs",
     "get_available_commands",
     "get_available_program",
+    "get_images",
 ]
 
 
@@ -1099,3 +1100,27 @@ async def test_option_values_kept_after_changing_program(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, "on")
+
+
+async def test_images_not_fetched_if_no_images_scope(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_no_images_scope: MockConfigEntry,
+    platforms: list[str],
+) -> None:
+    """Test that images are not fetched if the images scope is not granted."""
+    config_entry_no_images_scope.add_to_hass(hass)
+    assert config_entry_no_images_scope.state is ConfigEntryState.NOT_LOADED
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
+    ):
+        client_mock.return_value = client
+        assert await hass.config_entries.async_setup(
+            config_entry_no_images_scope.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry_no_images_scope.state is ConfigEntryState.LOADED
+
+    client.get_images.assert_not_awaited()
