@@ -307,6 +307,33 @@ async def test_get_user_products_failure_aborts_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_get_user_products_failed_envelope_aborts_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """A failed application-level response must not look like "no devices".
+
+    Regression test: get_user_products() doesn't raise for a nonzero
+    msgCode (e.g. an expired token) - it returns a UnifyResponse with
+    data=None. Previously this fell through to no_devices_available,
+    misleading the user, instead of cannot_connect.
+    """
+    flow = _make_flow(hass)
+
+    with (
+        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.bluetti.config_flow.ProductClient"
+        ) as mock_client_cls,
+    ):
+        mock_client_cls.return_value.get_user_products = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=805, data=None)
+        )
+        result = await flow.async_step_select_devices(user_input=None)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
     """No devices available aborts."""
     flow = _make_flow(hass)
@@ -318,7 +345,7 @@ async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=SimpleNamespace(data=[])
+            return_value=SimpleNamespace(data=[], is_ok=lambda: True)
         )
         result = await flow.async_step_select_devices(user_input=None)
 
@@ -347,7 +374,7 @@ async def test_all_devices_exists_aborts(hass: HomeAssistant) -> None:
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=SimpleNamespace(data=[product])
+            return_value=SimpleNamespace(data=[product], is_ok=lambda: True)
         )
         result = await flow.async_step_select_devices(user_input=None)
 
@@ -382,7 +409,7 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=SimpleNamespace(data=[product])
+            return_value=SimpleNamespace(data=[product], is_ok=lambda: True)
         )
         result = await flow.async_step_select_devices(user_input=None)
 
@@ -433,7 +460,9 @@ async def test_reconfigure_token_rejects_a_different_account(
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=SimpleNamespace(data=[other_account_product])
+            return_value=SimpleNamespace(
+                data=[other_account_product], is_ok=lambda: True
+            )
         )
         result = await flow.async_step_select_devices(user_input=None)
 
@@ -459,7 +488,7 @@ async def test_reconfigure_token_missing_entry_aborts(hass: HomeAssistant) -> No
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=SimpleNamespace(data=[product])
+            return_value=SimpleNamespace(data=[product], is_ok=lambda: True)
         )
         result = await flow.async_step_select_devices(user_input=None)
 

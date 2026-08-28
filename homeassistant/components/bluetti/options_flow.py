@@ -94,6 +94,12 @@ class BluettiOptionsFlowHandler(OptionsFlow):
             __LOGGER__.error("Failed to fetch BLUETTI products: %s", err)
             return self.async_abort(reason="cannot_connect")
 
+        # A failed application-level response (nonzero msgCode) doesn't
+        # raise - it would otherwise look like a real "no devices" account.
+        if not products.is_ok():
+            __LOGGER__.error("Failed to fetch BLUETTI products: %s", products)
+            return self.async_abort(reason="cannot_connect")
+
         # products.data is `T | None` on the wire - can be omitted entirely.
         if not products.data:
             return self.async_abort(reason="no_devices_available")
