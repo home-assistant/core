@@ -70,6 +70,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: ZeroconfServiceInfo | None = None
+        self._validated_host: str | None = None
 
     def _get_friendly_name(self, name: str | None) -> str:
         """Return a user-friendly name derived from the zeroconf name."""
@@ -78,15 +79,17 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         instance = name.split(".", 1)[0]
         return instance or DEFAULT_NAME
 
+    async def _async_validate_host(self, host: str) -> str:
+        """Verify port availability and discover the device MAC address."""
+        await _async_test_port(self.hass, DEFAULT_PORT)
+        return await _async_discover_mac_address(self.hass, host, DEFAULT_PORT)
+
     async def _async_create_entry_from_host(
         self, host: str, title: str
     ) -> ConfigFlowResult:
         """Validate connectivity, discover MAC address, and create the entry."""
         try:
-            await _async_test_port(self.hass, DEFAULT_PORT)
-            mac_address = await _async_discover_mac_address(
-                self.hass, host, DEFAULT_PORT
-            )
+            mac_address = await self._async_validate_host(host)
         except TimeoutError:
             return self.async_show_form(
                 step_id="user",
@@ -143,9 +146,19 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: host})
 
-        self._discovery_info = discovery_info
+        try:
+            mac_address = await self._async_validate_host(host)
+        except TimeoutError:
+            return self.async_abort(reason="timeout_connect")
+        except OSError:
+            return self.async_abort(reason="cannot_connect")
 
-        # Show confirmation to user
+        await self.async_set_unique_id(format_mac(mac_address))
+        self._abort_if_unique_id_configured()
+
+        self._discovery_info = discovery_info
+        self._validated_host = host
+
         self.context["title_placeholders"] = {
             "name": self._get_friendly_name(discovery_info.name),
             "host": host,
@@ -159,25 +172,12 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             assert self._discovery_info is not None
-            host = self._discovery_info.host
-
-            try:
-                await _async_test_port(self.hass, DEFAULT_PORT)
-                mac_address = await _async_discover_mac_address(
-                    self.hass, host, DEFAULT_PORT
-                )
-            except TimeoutError:
-                return self.async_abort(reason="timeout_connect")
-            except OSError:
-                return self.async_abort(reason="cannot_connect")
-
-            await self.async_set_unique_id(format_mac(mac_address))
-            self._abort_if_unique_id_configured()
+            assert self._validated_host is not None
 
             return self.async_create_entry(
                 title=self._get_friendly_name(self._discovery_info.name),
                 data={
-                    CONF_HOST: host,
+                    CONF_HOST: self._validated_host,
                     CONF_PORT: DEFAULT_PORT,
                 },
             )

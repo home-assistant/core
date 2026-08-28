@@ -149,18 +149,18 @@ async def test_user_form_duplicate(
 
 async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
     """Test that zeroconf discovery shows confirmation form and creates entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
+    with patch_config_flow_connectivity(ZEROCONF_HOST):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -171,33 +171,32 @@ async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
-    """Test zeroconf confirm abort on port bind failure and recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
+    """Test zeroconf discovery abort on port bind failure and recovery."""
     with patch_config_flow_connectivity(
         ZEROCONF_HOST, port_bind_side_effect=OSError("UDP port is unavailable")
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
         )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
     with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
         )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -208,18 +207,14 @@ async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
-    """Test zeroconf confirm abort when no UDP message is received in time."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
+    """Test zeroconf discovery abort when no UDP message is received in time."""
     with patch_config_flow_connectivity(
         ZEROCONF_HOST, deliver_mac=False, discovery_timeout=True
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
         )
 
     assert result["type"] == FlowResultType.ABORT
@@ -254,16 +249,16 @@ async def test_zeroconf_none_port_uses_default(hass: HomeAssistant) -> None:
         type="_powerhub._udp.local.",
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery,
-    )
-
     with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery,
         )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PORT] == DEFAULT_PORT
@@ -369,16 +364,16 @@ async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:
         type="_powerhub._udp.local.",
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery,
-    )
-
     with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery,
         )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Custom Hub"
@@ -396,16 +391,16 @@ async def test_zeroconf_empty_name_uses_default(hass: HomeAssistant) -> None:
         type="_powerhub._udp.local.",
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery,
-    )
-
     with patch_config_flow_connectivity("192.168.1.201"):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery,
         )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
