@@ -4,8 +4,6 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.bluetti.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -103,15 +101,6 @@ async def test_async_setup_entry_recovers_missing_default_credential(
     assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_async_setup_entry_classifies_reauth_error_as_auth_failed(
     hass: HomeAssistant,
 ) -> None:
