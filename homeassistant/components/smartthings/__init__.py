@@ -238,16 +238,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             device_status[device.device_id] = FullDevice(
                 device=device, status=status, online=online.state == HealthStatus.ONLINE
             )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
-
-    scenes = {
-        scene.scene_id: scene
-        for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
-    }
 
     def handle_deleted_device(device_id: str) -> None:
         """Handle a deleted device."""
