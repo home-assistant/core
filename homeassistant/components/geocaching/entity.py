@@ -1,6 +1,6 @@
 """Sensor entities for Geocaching."""
 
-from typing import cast
+from typing import cast, override
 
 from geocachingapi.models import GeocachingCache, GeocachingTrackable
 
@@ -23,12 +23,15 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
     """Base class for Geocaching cache entities."""
 
     def __init__(
-        self, coordinator: GeocachingDataUpdateCoordinator, cache: GeocachingCache
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        cache: GeocachingCache,
+        reference_code: str,
     ) -> None:
         """Initialize the Geocaching cache entity."""
         super().__init__(coordinator)
 
-        self._reference_code = cache.reference_code
+        self._reference_code = reference_code.strip().upper()
 
         # A device can have multiple entities, and for a cache
         # which requires multiple entities we want to group them
@@ -36,7 +39,7 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         # which holds all related entities.
         self._attr_device_info = DeviceInfo(
             name=f"Geocache {cache.name}",
-            identifiers={(DOMAIN, cast(str, cache.reference_code))},
+            identifiers={(DOMAIN, self._reference_code)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=cache.owner.username,
         )
@@ -44,12 +47,16 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
     @property
     def cache(self) -> GeocachingCache:
         """Return the latest cache data."""
-        for cache in self.coordinator.data.tracked_caches:
-            if cache.reference_code == self._reference_code:
-                return cache
+        return self.coordinator.data.tracked_caches[self._reference_code]
 
-        raise RuntimeError(
-            f"Cache {self._reference_code} is no longer available in coordinator data"
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the cache is available."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self._reference_code in self.coordinator.data.tracked_caches
         )
 
 

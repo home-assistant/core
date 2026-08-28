@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_CODE
@@ -20,11 +21,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import (
+    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     MAX_TRACKED_CACHES,
     MAX_TRACKED_TRACKABLES,
-    SUBENTRY_TYPE_TRACKABLE,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 
@@ -44,8 +45,14 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             SUBENTRY_TYPE_TRACKED_CACHE: TrackedCacheSubentryFlow,
-            SUBENTRY_TYPE_TRACKABLE: TrackableSubentryFlow,
         }
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return GeocachingOptionsFlow()
 
     @property
     @override
@@ -141,10 +148,45 @@ class TrackedCacheSubentryFlow(GeocachingCodeSubentryFlow):
     max_subentries_abort = "too_many_caches"
 
 
-class TrackableSubentryFlow(GeocachingCodeSubentryFlow):
-    """Handle a trackable subentry flow."""
+class GeocachingOptionsFlow(OptionsFlow):
+    """Handle Geocaching options."""
 
-    code_pattern = r"TB[A-Z0-9]+"
-    invalid_code_error = "invalid_trackable_code"
-    max_subentries = MAX_TRACKED_TRACKABLES
-    max_subentries_abort = "too_many_trackables"
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage tracked trackables."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            raw_codes = user_input.get(CONF_TRACKABLE_CODES, "")
+            trackable_codes = [
+                code.strip().upper()
+                for code in raw_codes.replace(",", "\n").splitlines()
+                if code.strip()
+            ]
+            trackable_codes = list(dict.fromkeys(trackable_codes))
+
+            if len(trackable_codes) > MAX_TRACKED_TRACKABLES:
+                errors["base"] = "too_many_trackables"
+            elif any(
+                re.fullmatch(r"TB[A-Z0-9]+", code) is None for code in trackable_codes
+            ):
+                errors["base"] = "invalid_trackable_code"
+            else:
+                return self.async_create_entry(
+                    data={CONF_TRACKABLE_CODES: trackable_codes}
+                )
+
+        current_codes = self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_TRACKABLE_CODES,
+                        default=", ".join(current_codes),
+                    ): str
+                }
+            ),
+            errors=errors,
+        )

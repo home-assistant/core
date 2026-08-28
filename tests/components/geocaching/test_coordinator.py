@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from geocachingapi.models import GeocachingSettings, GeocachingStatus
+from geocachingapi.models import GeocachingCache, GeocachingSettings, GeocachingStatus
 import pytest
 
 from homeassistant.components.geocaching.const import (
+    CONF_TRACKABLE_CODES,
     DOMAIN,
-    SUBENTRY_TYPE_TRACKABLE,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("subentries", "expected_cache_codes", "expected_trackable_codes"),
+    ("subentries", "options", "expected_cache_codes", "expected_trackable_codes"),
     [
         pytest.param(
             [
@@ -30,27 +30,19 @@ from tests.common import MockConfigEntry
                     subentry_id=f"cache-{code}",
                 )
                 for code in ("GC12345", "GC67890")
-            ]
-            + [
-                ConfigSubentryDataWithId(
-                    data={CONF_CODE: code},
-                    subentry_type=SUBENTRY_TYPE_TRACKABLE,
-                    title=code,
-                    unique_id=code,
-                    subentry_id=f"trackable-{code}",
-                )
-                for code in ("TB12345", "TB67890")
             ],
+            {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]},
             {"GC12345", "GC67890"},
             {"TB12345", "TB67890"},
             id="configured",
         ),
-        pytest.param([], set(), set(), id="no-subentries"),
+        pytest.param([], {}, set(), set(), id="not-configured"),
     ],
 )
 async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     hass: HomeAssistant,
     subentries: list[ConfigSubentryDataWithId],
+    options: dict[str, list[str]],
     expected_cache_codes: set[str],
     expected_trackable_codes: set[str],
 ) -> None:
@@ -60,6 +52,7 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
         unique_id="mock_user",
+        options=options,
         subentries_data=subentries,
     )
     config_entry.add_to_hass(hass)
@@ -80,9 +73,10 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
             "homeassistant.components.geocaching.coordinator.GeocachingApi"
         ) as geocaching_api_mock,
     ):
-        geocaching_api_mock.return_value.update = AsyncMock(
-            return_value=GeocachingStatus()
-        )
+        status = GeocachingStatus()
+        cache = GeocachingCache(reference_code="gc12345")
+        status.tracked_caches = [cache]
+        geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -93,3 +87,5 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     assert isinstance(settings, GeocachingSettings)
     assert settings.tracked_cache_codes == expected_cache_codes
     assert settings.tracked_trackable_codes == expected_trackable_codes
+    assert config_entry.runtime_data.data.tracked_caches == {"GC12345": cache}
+    assert status.tracked_caches == [cache]
