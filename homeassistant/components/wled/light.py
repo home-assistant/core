@@ -297,9 +297,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
                 main_data[ATTR_BRIGHTNESS] = data[ATTR_BRIGHTNESS]
                 data[ATTR_BRIGHTNESS] = 255
 
+            # WLED reads tt per request, so the segment needs its own copy.
+            # Without it the color change in this call snaps to the device's
+            # own default transition while only the brightness fades.
             if ATTR_TRANSITION in data:
                 main_data[ATTR_TRANSITION] = data[ATTR_TRANSITION]
-                del data[ATTR_TRANSITION]
 
             await self.coordinator.wled.segment(**data)
             await self.coordinator.wled.master(**main_data)
