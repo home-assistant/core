@@ -245,3 +245,30 @@ async def test_failed_unload_keeps_device_open(hass: HomeAssistant) -> None:
         assert not await hass.config_entries.async_unload(entry.entry_id)
 
     device.close.assert_not_awaited()
+
+
+async def test_discovery_keeps_devices_found_on_working_interfaces(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test one failing broadcast interface does not discard the other results."""
+
+    async def mock_discover_devices(broadcast_address: str, **kwargs: Any):
+        """Fail on the first interface and answer on the second."""
+        if broadcast_address == "10.0.0.255":
+            raise OSError("Network is unreachable")
+        yield DiscoveredDevice(serial=SERIAL, ip=IP_ADDRESS)
+
+    with (
+        patch(
+            "homeassistant.components.lifx.discovery.network.async_get_ipv4_broadcast_addresses",
+            return_value=["10.0.0.255", "192.168.1.255"],
+        ),
+        patch(
+            "homeassistant.components.lifx.discovery.discover_devices",
+            mock_discover_devices,
+        ),
+    ):
+        found = await lifx.discovery.async_discover_devices(hass)
+
+    assert [device.serial for device in found] == [SERIAL]
+    assert "Scanning 10.0.0.255 failed with error" in caplog.text

@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Collection, Iterable
 from datetime import datetime, timedelta
+import logging
 from typing import Any
 
 from lifx import DiscoveredDevice, discover_devices
@@ -17,6 +18,8 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from .const import CONF_SERIAL, DOMAIN
 from .util import normalize_serial
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_TIMEOUT = 8.5
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 DISCOVERY_COOLDOWN = 5
@@ -29,11 +32,18 @@ async def async_discover_devices(
     found: dict[str, DiscoveredDevice] = {}
 
     async def _async_discover_on(broadcast_address: str) -> None:
-        """Collect every device answering on one broadcast address."""
-        async for discovered in discover_devices(
-            timeout=DEFAULT_TIMEOUT, broadcast_address=broadcast_address
-        ):
-            found[normalize_serial(discovered.serial)] = discovered
+        """Collect every device answering on one broadcast address.
+
+        One unusable interface must not discard the devices found on the rest,
+        so a failed sweep is logged and its partial results are kept.
+        """
+        try:
+            async for discovered in discover_devices(
+                timeout=DEFAULT_TIMEOUT, broadcast_address=broadcast_address
+            ):
+                found[normalize_serial(discovered.serial)] = discovered
+        except OSError as err:
+            _LOGGER.debug("Scanning %s failed with error: %s", broadcast_address, err)
 
     broadcasts = await network.async_get_ipv4_broadcast_addresses(hass)
     # Each sweep holds its socket open for the full timeout, so run them together
