@@ -199,6 +199,7 @@ def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         color_temperature_type=color_temperature_type,
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
+        sync_state=config[CONF_SYNC_STATE],
     )
 
 

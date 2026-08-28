@@ -12,8 +12,6 @@ from habluetooth import BluetoothScanningMode, HaScanner
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
-
-# pylint: disable-next=no-name-in-module
 from habluetooth.const import STALE_ROAM_FACTOR
 import pytest
 

@@ -1,7 +1,12 @@
 """The Midea integration."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from midealocal.const import ProtocolVersion
+from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
+from midealocal.discover import discover
 
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -17,24 +22,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_KEY, CONF_SUBTYPE
+from .const import CONF_KEY, CONF_SUBTYPE, LOGGER
 from .entity import MideaConfigEntry
 
-_PLATFORMS: list[Platform] = [Platform.CLIMATE]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
-    """Set up Midea from a config entry."""
-
-    data = entry.data
-    device_id: int = data[CONF_DEVICE_ID]
-
-    device = await hass.async_add_executor_job(
-        device_selector,
+def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | None:
+    """Create the device object for the given entry data and IP address."""
+    return device_selector(
         data[CONF_NAME],
-        device_id,
+        data[CONF_DEVICE_ID],
         data[CONF_TYPE],
-        data[CONF_IP_ADDRESS],
+        ip_address,
         data[CONF_PORT],
         data[CONF_TOKEN],
         data[CONF_KEY],
@@ -43,16 +55,66 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
         data[CONF_SUBTYPE],
         "",
     )
+
+
+def _connect(device: MideaDevice) -> bool:
+    """Connect to the device, always closing the socket on failure.
+
+    connect() swallows AuthException/SocketException internally and can
+    leave the socket open even though it reports failure, so it must be
+    closed explicitly here to avoid a ResourceWarning.
+    """
+    connected = device.connect(True)
+    if not connected:
+        device.close_socket()
+    return connected
+
+
+def _discover_current_ip(device_id: int) -> str | None:
+    """Look up the device's current IP address via local discovery.
+
+    Devices reply to the discovery broadcast with a persistent device_id
+    regardless of their current IP, so this can find a device that has
+    moved to a new DHCP-assigned address.
+    """
+    found = discover()
+    device = found.get(device_id)
+    return device[CONF_IP_ADDRESS] if device else None
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+    """Set up Midea from a config entry."""
+
+    data: Mapping[str, Any] = entry.data
+    device_id: int = data[CONF_DEVICE_ID]
+    ip_address: str = data[CONF_IP_ADDRESS]
+
+    device = await hass.async_add_executor_job(_create_device, data, ip_address)
     if device is None:
         raise ConfigEntryError("Unable to initialize device")
 
-    connected = await hass.async_add_executor_job(device.connect, True)
+    connected = await hass.async_add_executor_job(_connect, device)
     if not connected:
-        # connect() swallows AuthException/SocketException internally and can
-        # leave the socket open even though it reports failure, so it must be
-        # closed explicitly here to avoid a ResourceWarning.
-        await hass.async_add_executor_job(device.close_socket)
-        raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
+        new_ip_address = await hass.async_add_executor_job(
+            _discover_current_ip, device_id
+        )
+        if new_ip_address and new_ip_address != ip_address:
+            LOGGER.debug(
+                "Device %s moved from %s to %s, updating config entry",
+                device_id,
+                ip_address,
+                new_ip_address,
+            )
+            data = {**data, CONF_IP_ADDRESS: new_ip_address}
+            hass.config_entries.async_update_entry(entry, data=data)
+            new_device = await hass.async_add_executor_job(
+                _create_device, data, new_ip_address
+            )
+            if new_device is not None:
+                device = new_device
+                connected = await hass.async_add_executor_job(_connect, device)
+        if not connected:
+            raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
 
     # The library's reconnect loop keeps retrying with a growing backoff
     # (up to 600s) without checking for a stop request while sleeping, so

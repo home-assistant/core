@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
@@ -14,6 +14,7 @@ from gardena_bluetooth.exceptions import (
 )
 from gardena_bluetooth.parse import (
     Characteristic,
+    CharacteristicSegmented,
     CharacteristicTime,
     CharacteristicType,
 )
@@ -29,6 +30,8 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
+SEGMENTED_SCAN_INTERVAL = timedelta(minutes=30)
+SEGMENTED_SCAN_COUNT = int(SEGMENTED_SCAN_INTERVAL / SCAN_INTERVAL)
 LOGGER = logging.getLogger(__name__)
 
 type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
@@ -38,7 +41,7 @@ class DeviceUnavailable(HomeAssistantError):
     """Raised if device can't be found."""
 
 
-class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data."""
 
     config_entry: GardenaBluetoothConfigEntry
@@ -62,7 +65,8 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self.address = address
         self.data = {}
         self.client = client
-        self.characteristics: set[str] = set()
+        self.characteristics: dict[str, Characteristic] = {}
+        self._update_count = 0
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, address)},
             connections={(dr.CONNECTION_BLUETOOTH, address)},
@@ -98,7 +102,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             await self._update_timestamp(DeviceConfiguration.unix_timestamp)
             await self._update_timestamp(AquaContour.unix_timestamp)
 
-            self.characteristics = set(chars.keys())
+            self.characteristics = chars
             self.device_info = DeviceInfo(
                 {
                     **self.device_info,
@@ -122,23 +126,43 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             LOGGER.debug("No access to update internal time")
 
     @override
-    async def _async_update_data(self) -> dict[str, bytes]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device."""
-        uuids: set[str] = {
-            uuid for context in self.async_contexts() for uuid in context
+        # A context may name a characteristic this device lacks, so filter up front.
+        unique_ids: set[str] = {
+            unique_id
+            for context in self.async_contexts()
+            for unique_id in context
+            if unique_id in self.characteristics
         }
-        if not uuids:
+        if not unique_ids:
             return {}
 
-        data: dict[str, bytes] = {}
-        for uuid in uuids:
+        # Segmented characteristics carry data that only changes when it is
+        # taught to the device again, so they are read every nth poll only.
+        skip_segmented = bool(self._update_count % SEGMENTED_SCAN_COUNT)
+        self._update_count += 1
+
+        data: dict[str, Any] = {}
+        for unique_id in unique_ids:
+            char = self.characteristics[unique_id]
+            if (
+                isinstance(char, CharacteristicSegmented)
+                and skip_segmented
+                and unique_id in self.data
+            ):
+                data[unique_id] = self.data[unique_id]
+                continue
+
             try:
-                data[uuid] = await self.client.read_char_raw(uuid)
+                data[unique_id] = await self.client.read_char(char)
             except CharacteristicNoAccess as exception:
-                LOGGER.debug("Unable to get data for %s due to %s", uuid, exception)
+                LOGGER.debug(
+                    "Unable to get data for %s due to %s", unique_id, exception
+                )
             except (GardenaBluetoothException, DeviceUnavailable) as exception:
                 raise UpdateFailed(
-                    f"Unable to update data for {uuid} due to {exception}"
+                    f"Unable to update data for {unique_id} due to {exception}"
                 ) from exception
         return data
 
@@ -146,9 +170,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self, char: Characteristic[CharacteristicType]
     ) -> CharacteristicType | None:
         """Read cached characteristic."""
-        if data := self.data.get(char.uuid):
-            return char.decode(data)
-        return None
+        return self.data.get(char.unique_id)
 
     async def write(
         self, char: Characteristic[CharacteristicType], value: CharacteristicType
@@ -161,5 +183,5 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                 f"Unable to write characteristic {char} dur to {exception}"
             ) from exception
 
-        self.data[char.uuid] = char.encode(value)
+        self.data[char.unique_id] = value
         await self.async_refresh()

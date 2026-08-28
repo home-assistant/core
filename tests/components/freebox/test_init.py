@@ -197,10 +197,12 @@ async def test_home_device_label_sync(
     router: Mock,
 ) -> None:
     """Test home device label changes propagate to the device registry."""
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+    entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN)
 
     pir_node_id = 26  # Détecteur from fixture
-    device = device_registry.async_get_device(identifiers={(DOMAIN, pir_node_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, pir_node_id), entry.entry_id
+    )
     assert device is not None
     assert device.name == "Détecteur"
 
@@ -216,6 +218,8 @@ async def test_home_device_label_sync(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, pir_node_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, pir_node_id), entry.entry_id
+    )
     assert device is not None
     assert device.name == "Détecteur cuisine"

@@ -46,7 +46,7 @@ IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
-    {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
+    {vol.Optional(ATTR_BANNED_AT, default=None): vol.Any(None, cv.datetime)}
 )
 
 

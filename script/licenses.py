@@ -182,7 +182,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
-    "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
@@ -193,6 +192,8 @@ EXCEPTIONS = {
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
+    # numpy: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+    "numpy",  # CC0-1.0 is not OSI approved
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT

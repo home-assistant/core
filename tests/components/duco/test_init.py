@@ -37,9 +37,13 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _get_duco_node_device(device_registry: dr.DeviceRegistry) -> dr.DeviceEntry:
+def _get_duco_node_device(
+    device_registry: dr.DeviceRegistry, config_entry_id: str
+) -> dr.DeviceEntry:
     """Return the primary Duco node device used in setup tests."""
-    device = device_registry.async_get_device(identifiers={("duco", f"{TEST_MAC}_1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("duco", f"{TEST_MAC}_1"), config_entry_id
+    )
     assert device is not None
     return device
 
@@ -70,7 +74,7 @@ def _node_configs_with_primary_name(
             "async_get_board_info",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (
@@ -91,7 +95,7 @@ def _node_configs_with_primary_name(
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (
@@ -243,7 +247,7 @@ async def test_setup_entry_ignores_node_name_config_failures(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == mock_nodes[0].general.name
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -384,7 +388,7 @@ async def test_setup_entry_uses_configured_node_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -407,7 +411,7 @@ async def test_node_name_refresh_updates_device_registry_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -415,13 +419,13 @@ async def test_node_name_refresh_updates_device_registry_name(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Living Room"
     assert mock_duco_client.async_get_node_configs.call_count == 2

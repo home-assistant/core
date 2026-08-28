@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 import datetime
 from http import HTTPStatus
+import time
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -173,11 +174,7 @@ async def test_full_flow_application_creds(
     data = result["data"]
     assert "token" in data
     assert 0 < data["token"]["expires_in"] < 8 * 86400
-    assert (
-        datetime.datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
-        <= data["token"]["expires_at"]
-        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    assert time.time() <= data["token"]["expires_at"] < time.time() + 8 * 86400
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {

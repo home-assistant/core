@@ -1,12 +1,21 @@
 """Base classes for KNX entities."""
 
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ID,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,6 +32,8 @@ from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _stable_group_address_repr(part: DeviceGroupAddress | int | str | None) -> str:
@@ -115,6 +126,10 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
+    # `assumed_state` toggles when a restored state is confirmed by the bus,
+    # which would otherwise write a new attributes row for every entity on startup
+    _unrecorded_attributes = frozenset({ATTR_ASSUMED_STATE})
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     _attr_unique_id: str
@@ -181,19 +196,60 @@ class KnxYamlEntity(_KnxEntityBase):
         """Initialize the YAML entity.
 
         `unique_id` is the `(new_stable_id, legacy_id)` tuple from
-        `build_yaml_unique_id`; the legacy id is migrated to the stable one.
+        `build_yaml_unique_id`; the legacy id is migrated to the stable one. A
+        user-defined `unique_id` in the config takes precedence, and an existing
+        auto-generated entity is migrated to it so history is preserved. Removing
+        a user-defined `unique_id` again cannot be migrated back. If the id is
+        already used by another entity, the generated id is kept instead.
         """
         new_unique_id, legacy_unique_id = unique_id
+        platform = async_get_current_platform().domain
         async_migrate_yaml_unique_id(
-            knx_module.hass,
-            async_get_current_platform().domain,
-            legacy_unique_id,
-            new_unique_id,
+            knx_module.hass, platform, legacy_unique_id, new_unique_id
         )
+        if (user_unique_id := entity_config.get(CONF_UNIQUE_ID)) and (
+            user_unique_id != new_unique_id
+        ):
+            ent_reg = er.async_get(knx_module.hass)
+            generated_entity_id = ent_reg.async_get_entity_id(
+                platform, DOMAIN, new_unique_id
+            )
+            if generated_entity_id is None:
+                # new entity, or already migrated on an earlier run
+                new_unique_id = user_unique_id
+            else:
+                try:
+                    # rename the existing entry, preserving history and settings
+                    ent_reg.async_update_entity(
+                        generated_entity_id, new_unique_id=user_unique_id
+                    )
+                except ValueError:
+                    # id already belongs to another entity - keep the generated one
+                    _LOGGER.warning(
+                        "Configured `unique_id: %s` for %s entity '%s' is already"
+                        " in use; keeping the generated unique id instead",
+                        user_unique_id,
+                        platform,
+                        entity_config[CONF_NAME],
+                    )
+                else:
+                    new_unique_id = user_unique_id
         self._knx_module = knx_module
         self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = new_unique_id
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
+
+        if device := entity_config.get(CONF_DEVICE):
+            # Entities sharing the same `device` `id` are grouped into one
+            # device. `id` is normalized in the schema (`_device_id`), which
+            # also lets YAML entities join a UI-created device by referencing
+            # its identifier verbatim.
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device[CONF_ID])},
+                manufacturer="KNX",
+            )
+            if device_name := device.get(CONF_NAME):
+                self._attr_device_info["name"] = device_name
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
@@ -202,8 +258,6 @@ class KnxYamlEntity(_KnxEntityBase):
 
 class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]

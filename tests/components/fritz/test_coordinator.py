@@ -205,8 +205,8 @@ async def test_no_software_version(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     assert device.sw_version == "string_version_not_number"
@@ -616,8 +616,8 @@ async def test_async_trigger_cleanup(
     assert entry.state is ConfigEntryState.LOADED
 
     # Verify the printer is registered as tracked device
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert entity_registry.async_get("device_tracker.printer")
     assert entity_registry.async_get("switch.printer_internet_access")
@@ -631,8 +631,8 @@ async def test_async_trigger_cleanup(
 
     # Verify the printer was removed from tracked devices
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
         )
         is None
     )
@@ -650,8 +650,8 @@ async def test_async_trigger_cleanup(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the printer is registered again as tracked device
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert entity_registry.async_get("device_tracker.printer")
     assert entity_registry.async_get("switch.printer_internet_access")
@@ -674,8 +674,8 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     wrapper: AvmWrapper = entry.runtime_data
 
     # Verify the fritz box device was registered
-    fritz_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    fritz_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert fritz_device is not None
 
@@ -691,8 +691,8 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
         await wrapper.async_trigger_cleanup()
 
     # The fritz box device must still be present in the registry
-    fritz_device_after = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    fritz_device_after = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert fritz_device_after is not None
     assert fritz_device_after.id == fritz_device.id
@@ -724,8 +724,8 @@ async def test_old_discovery_does_not_self_reference_box(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    router = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    router = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert router is not None
     assert router.via_device_id is None

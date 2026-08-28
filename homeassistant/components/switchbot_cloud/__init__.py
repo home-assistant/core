@@ -43,6 +43,7 @@ PLATFORMS: list[Platform] = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -64,6 +65,7 @@ class SwitchbotDevices:
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
+    selects: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
@@ -210,50 +212,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Water Detector":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Curtain",
-        "Curtain3",
-        "Roller Shade",
-        "Blind Tilt",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.covers.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Garage Door Opener":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.covers.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Strip Light",
-        "Strip Light 3",
-        "Floor Lamp",
-        "Color Bulb",
-        "RGBICWW Floor Lamp",
-        "RGBICWW Strip Light",
-        "Ceiling Light",
-        "Ceiling Light Pro",
-        "RGBIC Neon Rope Light",
-        "RGBIC Neon Wire Rope Light",
-        "Candle Warmer Lamp",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.lights.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type == "Humidifier2":
         coordinator = await coordinator_for_device(
@@ -305,6 +263,7 @@ async def make_new_device_data(
         Platform.IMAGE: devices_data.images,
         Platform.LIGHT: devices_data.lights,
         Platform.LOCK: devices_data.locks,
+        Platform.SELECT: devices_data.selects,
         Platform.SENSOR: devices_data.sensors,
         Platform.SWITCH: devices_data.switches,
         Platform.VACUUM: devices_data.vacuums,

@@ -41,7 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -119,7 +119,7 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
-    device: DeviceEntry | None = None,
+    device: AnyDeviceEntry | None = None,
 ) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
@@ -190,7 +190,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         away_fixed: bool | None,
         sensor_stale_duration: timedelta | None,
         unique_id: str | None,
-        device: DeviceEntry | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the hygrostat."""
         self._name = name
