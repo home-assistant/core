@@ -171,7 +171,11 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             # deterministic conflict, not a transient connection failure, so
             # tell the user to fix it rather than to retry.
             return {"base": "link_settings_in_use"}, None
-        except ModbusError:
+        except ModbusError, TimeoutError:
+            # TimeoutError: async_update_with_retry()'s own internal budget
+            # (see its docstring) can expire without ever raising a
+            # ModbusError - a slow device, not a protocol-level failure, but
+            # the same "can't connect right now" outcome from here.
             return {"base": "cannot_connect"}, None
 
         serial = device.values.get("d_serial")
