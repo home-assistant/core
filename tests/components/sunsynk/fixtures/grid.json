@@ -25,10 +25,6 @@
   "etodayTo": "0.0",
   "etotalFrom": "998.5",
   "etotalTo": "48.2",
-  "limiterPowerArr": [
-    200,
-    390,
-    20
-  ],
+  "limiterPowerArr": [200, 390, 20],
   "limiterTotalPower": 610
 }
