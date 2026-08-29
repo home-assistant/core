@@ -4,9 +4,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 from sunsynk.exceptions import SunsynkAuthenticationError, SunsynkConnectionError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -70,3 +72,19 @@ async def test_setup_realtime_auth_error(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("mock_sunsynk_client")
+async def test_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a device is created for each inverter."""
+    await setup_integration(hass, mock_config_entry)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 3
+    assert devices == snapshot

@@ -1,6 +1,5 @@
 """Test the Sunsynk sensors."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -46,13 +45,13 @@ async def test_sensors_unavailable_on_error(
 
     grid = mock_sunsynk_client.get_inverter_realtime_grid.side_effect
     mock_sunsynk_client.get_inverter_realtime_grid.side_effect = SunsynkConnectionError
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == STATE_UNAVAILABLE
 
     mock_sunsynk_client.get_inverter_realtime_grid.side_effect = grid
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
@@ -77,14 +76,14 @@ async def test_one_inverter_unavailable(
         return grid(sn)
 
     mock_sunsynk_client.get_inverter_realtime_grid.side_effect = failing_grid
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
     assert hass.states.get(ENTITY_ID_GRID_POWER_2).state == STATE_UNAVAILABLE
 
     mock_sunsynk_client.get_inverter_realtime_grid.side_effect = grid
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER_2).state == "610.0"
@@ -98,22 +97,6 @@ async def test_power_sensors_use_total_of_all_phases(
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
     assert hass.states.get("sensor.garage_inverter_load_power").state == "3427.0"
-
-
-@pytest.mark.usefixtures("mock_sunsynk_client")
-async def test_devices(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test a device is created for each inverter."""
-    await setup_integration(hass, mock_config_entry)
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    assert len(devices) == 3
-    assert devices == snapshot
 
 
 @pytest.mark.usefixtures("mock_sunsynk_client")
