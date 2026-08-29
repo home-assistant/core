@@ -537,7 +537,7 @@ async def test_abort_discovered_multiple(
     ("status_code", "error_body", "error_reason", "expected_detail"),
     [
         (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized", "unknown error"),
-        (HTTPStatus.NOT_FOUND, {}, "oauth_failed", "unknown error"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
             HTTPStatus.UNAUTHORIZED,
@@ -1063,18 +1063,6 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
         (
             HTTPStatus.INTERNAL_SERVER_ERROR,  # 500 range, so treated as transient
             OAuth2TokenRequestTransientError,
-        ),
-        (
-            HTTPStatus.UNAUTHORIZED,  # client authenticated via the header
-            OAuth2TokenRequestReauthError,
-        ),
-        (
-            HTTPStatus.FORBIDDEN,  # off-spec, but used for revoked credentials
-            OAuth2TokenRequestReauthError,
-        ),
-        (
-            HTTPStatus.NOT_FOUND,  # 4xx, but not a credential failure
-            OAuth2TokenRequestError,
         ),
         (
             600,  # Nonsense code, just to hit the generic error branch

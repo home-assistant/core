@@ -122,13 +122,7 @@ def _raise_mapped_token_error(err: ClientError, domain: str) -> NoReturn:
     }
     if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
         raise OAuth2TokenRequestTransientError(**kwargs) from err
-    # RFC 6749 section 5.2 only defines 400 and 401, but providers also use 403 for
-    # revoked credentials. Any other 4xx is about the request, not the credentials.
-    if err.status in (
-        HTTPStatus.BAD_REQUEST,
-        HTTPStatus.UNAUTHORIZED,
-        HTTPStatus.FORBIDDEN,
-    ):
+    if 400 <= err.status <= 499:
         raise OAuth2TokenRequestReauthError(**kwargs) from err
     raise OAuth2TokenRequestError(**kwargs) from err
 
