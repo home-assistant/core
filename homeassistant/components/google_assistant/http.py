@@ -13,6 +13,7 @@ import jwt
 from homeassistant.components import webhook
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -195,12 +196,19 @@ class GoogleConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
+        try:
+            settings = async_get_entity_settings(self.hass, entity_id)
+        except HomeAssistantError:
+            settings = {}
+        if DOMAIN not in settings and self._should_expose_legacy(entity_id):
+            async_expose_entity(self.hass, DOMAIN, entity_id, True)
         return async_should_expose(self.hass, DOMAIN, entity_id)
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
         """Return if entity should be exposed, based on YAML configuration.
 
-        Only used to seed the shared expose settings store on first migration.
+        Only used to seed the shared expose settings store for entities that
+        don't have a google_assistant setting there yet.
         """
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)

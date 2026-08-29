@@ -396,11 +396,58 @@ async def test_should_expose_uses_exposed_entities_store(
     )
     hass.states.async_set(entry.entity_id, "on")
 
+    async_expose_entity(hass, DOMAIN, entry.entity_id, False)
     assert config.should_expose(entry.entity_id) is False
 
     async_expose_entity(hass, DOMAIN, entry.entity_id, True)
-
     assert config.should_expose(entry.entity_id) is True
+
+
+async def test_should_expose_seeds_legacy_default_for_state_only_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test should_expose seeds a legacy default for an entity with no registry entry."""
+    hass.states.async_set("light.no_unique_id", "on")
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose("light.no_unique_id") is True
+
+
+async def test_should_expose_seeds_legacy_default_for_new_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entities created after the one-time migration still get a legacy default."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    light_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    switch_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(light_entry.entity_id, "on")
+    hass.states.async_set(switch_entry.entity_id, "on")
+
+    assert google_config.should_expose(light_entry.entity_id) is True
+    assert google_config.should_expose(switch_entry.entity_id) is False
+
+    async_expose_entity(hass, DOMAIN, light_entry.entity_id, False)
+    assert google_config.should_expose(light_entry.entity_id) is False
 
 
 async def test_migrate_expose_settings(
@@ -413,8 +460,6 @@ async def test_migrate_expose_settings(
     switch_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", suggested_object_id="ac"
     )
-    # No states are set, since migration must not depend on the entities'
-    # integrations being loaded.
 
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
