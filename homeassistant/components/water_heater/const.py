@@ -1,10 +1,11 @@
 """Support for water heater devices."""
 
 from enum import StrEnum
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 
-DOMAIN = "water_heater"
+DOMAIN: Final = "water_heater"
 
 
 class WaterHeaterCapabilityAttribute(StrEnum):

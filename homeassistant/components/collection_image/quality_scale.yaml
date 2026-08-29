@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: Integration does not poll.
@@ -15,9 +13,7 @@ rules:
   dependency-transparency:
     status: exempt
     comment: No dependencies.
-  docs-actions:
-    status: exempt
-    comment: No actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -48,9 +44,7 @@ rules:
     comment: Integration does not connect to any physical object or service.
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No current actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

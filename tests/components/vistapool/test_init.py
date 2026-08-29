@@ -38,6 +38,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
 _THIRD_POOL_ID = "QQQQQQ1111111111"
+_TEMPERATURE_ENTITY = "sensor.my_pool_temperature"
 _LIGHT_ENTITY = "light.my_pool_light"
 _INTEL_ENTITY = "number.my_pool_intel_temperature"
 
@@ -783,6 +784,82 @@ async def test_refresh_preserves_other_pending_optimistic_values(
 
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
     assert hass.states.get(_INTEL_ENTITY).state == "27.0"
+
+
+async def test_entities_unavailable_while_push_connection_is_down(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test entities go unavailable when the Firestore subscription drops.
+
+    The integration has no polling interval, so without this the last
+    snapshot would stay on display as if it were still current.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state != STATE_UNAVAILABLE
+
+    call = mock_vistapool_client.subscribe_pool_resilient.call_args
+    on_data = call.args[1]
+    on_health = call.kwargs["on_health"]
+
+    on_health(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
+
+    # Only an incoming snapshot proves the connection is back.
+    on_data({"main": {"temperature": 25}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state == "25.0"
+
+
+async def test_entities_stay_unavailable_on_local_updates_during_outage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test updates that are not push snapshots do not fake availability.
+
+    Both an optimistic write and a manual refresh set the coordinator's
+    success flag, so availability cannot ride on that flag alone.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    on_health = mock_vistapool_client.subscribe_pool_resilient.call_args.kwargs[
+        "on_health"
+    ]
+    on_health(False)
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
+
+    # An optimistic write updates coordinator data while the push is down.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
+
+    # So does a successful manual refresh.
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
 
 
 async def test_unload_entry(

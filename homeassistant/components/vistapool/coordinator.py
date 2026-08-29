@@ -12,7 +12,7 @@ from aioaquarite import (
     ResilientPoolSubscription,
 )
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -52,6 +52,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
         self._self_heal_handle: asyncio.TimerHandle | None = None
         self._self_heal_task: asyncio.Task[None] | None = None
+        self._push_connected = True
 
         super().__init__(
             hass,
@@ -79,16 +80,53 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # paths that are still inside their own TTL window.
         return self._merge_optimistic(data)
 
+    @property
+    def push_connected(self) -> bool:
+        """Whether pool data is still flowing in from the subscription."""
+        return self._push_connected
+
     async def subscribe(self) -> None:
         """Subscribe to Firestore real-time updates via the library."""
 
         def _on_data(data: dict[str, Any]) -> None:
             """Callback from the Firestore thread; push data to the HA loop."""
-            self.hass.loop.call_soon_threadsafe(self._apply_remote_data, data)
+            self.hass.loop.call_soon_threadsafe(self._async_handle_push, data)
 
         self.subscription = await self.api.subscribe_pool_resilient(
-            self.pool_id, _on_data
+            self.pool_id, _on_data, on_health=self._async_on_subscription_health
         )
+
+    @callback
+    def _async_handle_push(self, data: dict[str, Any]) -> None:
+        """Apply a snapshot, preserving unconfirmed optimistic writes.
+
+        A snapshot is authoritative: its arrival proves the connection is
+        up and supersedes any pending self-heal fetch.
+        """
+        if not self._push_connected:
+            self._push_connected = True
+            _LOGGER.info("Reconnected to %s, entities are available again", self.name)
+        self._cancel_self_heal()
+        self.async_set_updated_data(self._merge_optimistic(data))
+
+    @callback
+    def _async_on_subscription_health(self, healthy: bool) -> None:
+        """Mark entities unavailable while the push connection is down.
+
+        Tracked separately from last_update_success: an optimistic update
+        or a manual refresh sets that flag back to True while the
+        subscription is still down, and the health callback only fires on
+        transitions, so it would not correct it. Only an incoming snapshot
+        clears this.
+        """
+        if healthy or not self._push_connected:
+            return
+        self._push_connected = False
+        _LOGGER.warning(
+            "Lost the connection to %s, entities are unavailable until it recovers",
+            self.name,
+        )
+        self.async_update_listeners()
 
     @override
     async def async_shutdown(self) -> None:
@@ -182,11 +220,6 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     continue
             _set_path(data, path, writes[-1][0])
         return data
-
-    def _apply_remote_data(self, data: dict[str, Any]) -> None:
-        """Apply a Firestore push, preserving unconfirmed optimistic writes."""
-        self._cancel_self_heal()
-        self.async_set_updated_data(self._merge_optimistic(data))
 
     def _clear_optimistic(self, value_path: str) -> None:
         """Drop a pending optimistic entry and its scheduled expiry."""

@@ -28,6 +28,7 @@ from homeassistant.components.smtp.const import (
     ATTR_FILENAME,
     ATTR_HTML,
     ATTR_MEDIA_SOURCE,
+    ATTR_PRIORITY,
     CONF_ENTRY,
     DOMAIN,
 )
@@ -400,7 +401,8 @@ async def test_smtp_send_message(
         {
             ATTR_ENTITY_ID: "notify.home_assistant_recipient",
             ATTR_MESSAGE: "Hello World",
-            ATTR_HTML: """<html><body><img src="cid:avatar.png"></body></html>""",
+            ATTR_HTML: """<html><body><img src="https://example.com/avatar.png"></body></html>""",
+            ATTR_PRIORITY: "highest",
         },
         blocking=True,
     )
@@ -537,12 +539,19 @@ async def test_smtp_send_message_image_source(
                         },
                         ATTR_FILENAME: "test.png",
                         ATTR_CONTENT_ID: "1312",
-                    }
+                    },
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://image/image.test",
+                            "media_content_type": "image/png",
+                        },
+                        ATTR_FILENAME: "attachment.png",
+                    },
                 ],
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_with(hass, "image.test")
     assert smtp.sendmail.call_args[0][0] == "email@example.com"
     assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
     assert smtp.sendmail.call_args[0][2] == snapshot
@@ -573,7 +582,7 @@ async def test_smtp_send_message_tts_source(
             {
                 ATTR_ENTITY_ID: "notify.home_assistant_recipient",
                 ATTR_MESSAGE: "Hello World",
-                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
+                ATTR_HTML: """<html><body>Hello World</body></html>""",
                 ATTR_ATTACHMENTS: [
                     {
                         ATTR_MEDIA_SOURCE: {

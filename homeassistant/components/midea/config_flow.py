@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
@@ -32,7 +33,15 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN, LOGGER
+from .const import (
+    CONF_ACCOUNT,
+    CONF_KEY,
+    CONF_SERVER,
+    CONF_SN,
+    CONF_SUBTYPE,
+    DOMAIN,
+    LOGGER,
+)
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
@@ -91,7 +100,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     """
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """MideaConfigFlow class."""
@@ -456,6 +465,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
+                CONF_MAC: device.get(CONF_MAC),
+                CONF_SN: device.get(CONF_SN),
             }
 
             # MUST get a auth passed token/key for v3 device, disable add before pass
@@ -541,6 +552,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SUBTYPE: self.found_device.get(CONF_SUBTYPE) or 0,
             CONF_TOKEN: self.found_device.get(CONF_TOKEN) or "",
             CONF_KEY: self.found_device.get(CONF_KEY) or "",
+            CONF_MAC: self.found_device.get(CONF_MAC),
+            CONF_SN: self.found_device.get(CONF_SN),
         }
 
     async def _async_create_midea_entry(
@@ -589,6 +602,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_TOKEN: user_input[CONF_TOKEN],
                 CONF_KEY: user_input[CONF_KEY],
             }
+            if mac := user_input.get(CONF_MAC):
+                data[CONF_MAC] = mac
+            if serial_number := user_input.get(CONF_SN):
+                data[CONF_SN] = serial_number
 
             return self.async_create_entry(
                 title=name,
@@ -679,6 +696,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_KEY] = keys["key"]
                 user_input[CONF_TOKEN] = keys["token"]
 
+            user_input[CONF_MAC] = device.get(CONF_MAC)
+            user_input[CONF_SN] = device.get(CONF_SN)
+
             self.found_device = {
                 CONF_DEVICE_ID: user_input[CONF_DEVICE_ID],
                 CONF_NAME: self.found_device.get(CONF_NAME),
@@ -689,6 +709,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: user_input[CONF_MODEL],
                 CONF_TOKEN: user_input[CONF_TOKEN],
                 CONF_KEY: user_input[CONF_KEY],
+                CONF_MAC: user_input[CONF_MAC],
+                CONF_SN: user_input[CONF_SN],
             }
 
             return await self._async_create_midea_entry(user_input)

@@ -2229,7 +2229,7 @@ async def test_invalid_entity_id(
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
-    entity2 = MockEntity(entity_id="valid.entity_id")
+    entity2 = MockEntity(entity_id="test_domain.valid_entity_id")
     await platform.async_add_entities(
         [entity, entity2], update_before_add=update_before_add
     )
@@ -2267,6 +2267,86 @@ async def test_invalid_entity_id_report_usage(
     # Ensure the entity was still added
     assert entity.hass is not None
     assert entity.platform is not None
+
+
+@pytest.mark.parametrize("update_before_add", [False, True])
+async def test_add_entity_unexpected_error_is_cleaned_up(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    update_before_add: bool,
+) -> None:
+    """Test an entity is aborted if an unexpected error occurs while adding it.
+
+    An unexpected exception must not leave the entity stuck mid-add; the
+    platform aborts it so its references to hass and the platform are released.
+    """
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="unique", entity_id="test_domain.mock")
+
+    with patch.object(
+        er.EntityRegistry, "async_get_or_create", side_effect=RuntimeError("boom")
+    ):
+        await platform.async_add_entities([entity], update_before_add=update_before_add)
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert (
+        "Error adding entity test_domain.mock for domain test_domain "
+        "with platform test_platform" in caplog.text
+    )
+
+
+async def test_add_entity_device_info_bad_key_is_cleaned_up(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity is aborted if its device info has an unexpected key.
+
+    The unexpected key raises a TypeError when the device info is passed as
+    keyword arguments to the device registry.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(hass, platform_name=config_entry.domain)
+    platform.config_entry = config_entry
+    entity = MockEntity(
+        unique_id="unique",
+        device_info={"identifiers": {("test", "dev1")}, "bogus_key": "boom"},
+    )
+
+    await platform.async_add_entities([entity])
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert not device_registry.devices
+    assert "Not adding entity, error adding device" in caplog.text
+    assert "bogus_key" in caplog.text
+
+
+async def test_add_entity_registry_error_is_cleaned_up(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity is aborted if registering it in the entity registry raises."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="unique", entity_id="test_domain.mock")
+
+    with patch.object(
+        er.EntityRegistry,
+        "async_get_or_create",
+        side_effect=HomeAssistantError("boom"),
+    ):
+        await platform.async_add_entities([entity])
+
+    assert entity.hass is None
+    assert entity.platform is None
+    assert hass.states.async_entity_ids() == []
+    assert (
+        "Not adding entity test_domain.mock, entity registry error: boom" in caplog.text
+    )
 
 
 async def test_wrong_domain_entity_id_report_usage(
@@ -3047,7 +3127,7 @@ async def test_device_info_child_device_invalid(
 
     assert not hass.states.async_entity_ids()
     assert not device_registry.child_devices
-    assert "Not adding entity with invalid device info" in caplog.text
+    assert "Not adding entity, error adding device" in caplog.text
 
 
 async def test_device_info_parent_device_id_routing(
