@@ -102,8 +102,8 @@ DISCOVERY_INFO_WRONG_NAME = ZeroconfServiceInfo(
     type="mock_type",
 )
 DISCOVERY_INFO_HTTPS = ZeroconfServiceInfo(
-    ip_address=ip_address("192.168.1.1"),
-    ip_addresses=[ip_address("192.168.1.1")],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=DEFAULT_HTTPS_PORT,
