@@ -1,9 +1,8 @@
 """Update platform for Proxmox VE."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -78,6 +77,7 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
     entity_description: ProxmoxNodeUpdateEntityDescription
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return installed version."""
         return self.entity_description.installed_version(
@@ -85,12 +85,14 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
         )
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return latest version."""
         update_info = self._update_info()
         return update_info.latest_version_id if update_info else None
 
     @property
+    @override
     def release_summary(self) -> str | None:
         """Return the release summary for the update."""
         url = self.device_info.get("configuration_url") if self.device_info else None
@@ -100,10 +102,12 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the update platform is available."""
         return self._update_info() is not None
 
+    @override
     def release_notes(self) -> str | None:
         """Return the release notes for the update."""
         return self.release_summary
