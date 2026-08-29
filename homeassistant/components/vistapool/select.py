@@ -29,7 +29,6 @@ class VistapoolSelectEntityDescription(SelectEntityDescription):
 
     value_path: str
     exists_path: str | tuple[str, ...] | None = None
-    translation_placeholders: dict[str, str] | None = None
 
 
 SELECT_DESCRIPTIONS: tuple[VistapoolSelectEntityDescription, ...] = (
@@ -125,8 +124,6 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
-        if description.translation_placeholders is not None:
-            self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     @override

@@ -140,7 +140,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     type=SuggestionType.EXECUTE_REBOOT,
                     context=ContextType.SYSTEM,
                     reference="test",
-                    uuid=uuid4(),
+                    uuid=(sugg_uuid := uuid4()),
                     auto=False,
                     reference_extra=None,
                 ),
@@ -148,7 +148,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     type="test_type",
                     context=ContextType.SYSTEM,
                     reference="test",
-                    uuid=(sugg_uuid := uuid4()),
+                    uuid=uuid4(),
                     auto=False,
                     reference_extra=None,
                 ),
@@ -174,29 +174,12 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "type": "menu",
-        "flow_id": flow_id,
-        "handler": "hassio",
-        "step_id": "fix_menu",
-        "data_schema": [
-            {
-                "type": "select",
-                "options": [
-                    ["system_execute_reboot", "system_execute_reboot"],
-                    ["system_test_type", "system_test_type"],
-                ],
-                "required": False,
-                "name": "next_step_id",
-            }
-        ],
-        "menu_options": ["system_execute_reboot", "system_test_type"],
-        "description_placeholders": {"reference": "test"},
-    }
+    # The unknown test_type suggestion has no translation and is filtered;
+    # the remaining reboot suggestion is shown as a form directly
+    assert data["type"] == "form"
+    assert data["step_id"] == "system_execute_reboot"
 
-    resp = await client.post(
-        f"/api/repairs/issues/fix/{flow_id}", json={"next_step_id": "system_test_type"}
-    )
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}", json={})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -276,35 +259,8 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "type": "menu",
-        "flow_id": flow_id,
-        "handler": "hassio",
-        "step_id": "fix_menu",
-        "data_schema": [
-            {
-                "type": "select",
-                "options": [
-                    ["system_execute_reboot", "system_execute_reboot"],
-                    ["system_test_type", "system_test_type"],
-                ],
-                "required": False,
-                "name": "next_step_id",
-            }
-        ],
-        "menu_options": ["system_execute_reboot", "system_test_type"],
-        "description_placeholders": None,
-    }
-
-    resp = await client.post(
-        f"/api/repairs/issues/fix/{flow_id}",
-        json={"next_step_id": "system_execute_reboot"},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
+    # The unknown test_type suggestion has no translation and is filtered;
+    # the remaining reboot suggestion is shown as its confirmation form
     assert data == {
         "type": "form",
         "flow_id": flow_id,
@@ -747,6 +703,379 @@ async def test_mount_failed_repair_flow(
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
     supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_mount_failed_remove_repair_flow(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the mount from the mount_failed repair requires confirmation."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="backup_share",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type=SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REMOVE,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=(sugg_uuid := uuid4()),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "menu"
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "mount_execute_remove"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "form"
+    assert data["step_id"] == "mount_execute_remove"
+    supervisor_client.resolution.apply_suggestion.assert_not_called()
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}", json={})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "create_entry"
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_mount_failed_move_local_data_repair_flow(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test moving blocking local data from the mount_failed repair."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="media_share",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    # Not in aiohasupervisor's SuggestionType enum yet, arrives
+                    # as a plain string like any newer supervisor suggestion
+                    type="move_local_data",
+                    context=ContextType.MOUNT,
+                    reference="media_share",
+                    uuid=(sugg_uuid := uuid4()),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="media_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REMOVE,
+                    context=ContextType.MOUNT,
+                    reference="media_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "menu"
+    assert data["menu_options"] == [
+        "mount_move_local_data",
+        "mount_execute_reload",
+        "mount_execute_remove",
+    ]
+
+    # Moving data aside requires a confirmation step
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "mount_move_local_data"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "form"
+    assert data["step_id"] == "mount_move_local_data"
+    supervisor_client.resolution.apply_suggestion.assert_not_called()
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}", json={})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "create_entry"
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_mount_failed_repair_flow_hides_untranslated_suggestion(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a suggestion without fix flow translation is left out of the menu."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="backup_share",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    # A suggestion from a newer Supervisor unknown to this Core
+                    type="suggestion_from_the_future",
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REMOVE,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert repair_issue.is_fixable is True
+    assert data["type"] == "menu"
+    assert data["menu_options"] == ["mount_execute_reload", "mount_execute_remove"]
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_unfixable_issue_with_new_suggestion_stays_unfixable(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a suggestion on an issue without fix flow strings is dropped.
+
+    This Core version shipped the issue as a never-fixable repair; a newer
+    Supervisor adding suggestions must not turn it into a fixable repair
+    that has no fix flow translations.
+    """
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.DISK_LIFETIME,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="suggestion_from_the_future",
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+    assert repair_issue.is_fixable is False
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_mount_failed_repair_all_untranslated_suggestions_kept(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the menu keeps all suggestions if none has a translation.
+
+    A repair is either always fixable or never fixable per issue key, so
+    an unfixable state cannot be expressed for a key with a fix flow —
+    the raw option keys are shown instead of a dead end.
+    """
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="backup_share",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="suggestion_from_the_future",
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type="other_future_suggestion",
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+    assert repair_issue.is_fixable is True
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "menu"
+    assert data["menu_options"] == [
+        "mount_suggestion_from_the_future",
+        "mount_other_future_suggestion",
+    ]
 
 
 @pytest.mark.parametrize(

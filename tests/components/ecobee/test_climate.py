@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from unittest import mock
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,6 +16,7 @@ from homeassistant.components.ecobee.climate import (
     Thermostat,
 )
 from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.components.ecobee.services import _async_get_thermostats
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -464,7 +466,7 @@ async def test_remote_sensor_devices(
     async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    for device in device_registry.devices.values():
+    for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
         if device.name == "ecobee":
@@ -582,7 +584,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
     # Get device_id of remote sensor from the device registry.
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    for device in device_registry.devices.values():
+    for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
         if device.name == "ecobee":
@@ -700,3 +702,33 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         )
     assert execinfo.value.translation_domain == "ecobee"
     assert execinfo.value.translation_key == "sensor_lookup_failed"
+
+
+async def test_thermostats_removed_from_services_on_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test unloading drops the entities the ecobee actions iterate over."""
+    entry = await setup_platform(hass, [const.Platform.CLIMATE])
+
+    assert _async_get_thermostats(hass)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The actions call methods on whatever is in this list, so entities that
+    # are gone must not be left behind for them to find.
+    assert not _async_get_thermostats(hass)
+
+
+async def test_thermostats_not_duplicated_on_reload(hass: HomeAssistant) -> None:
+    """Test reloading does not leave a second copy of every entity behind."""
+    entry = await setup_platform(hass, [const.Platform.CLIMATE])
+
+    before = len(_async_get_thermostats(hass))
+    assert before
+
+    with patch("homeassistant.components.ecobee.PLATFORMS", [const.Platform.CLIMATE]):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(_async_get_thermostats(hass)) == before
