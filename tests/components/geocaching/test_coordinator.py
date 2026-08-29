@@ -64,6 +64,12 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
 
     session = MagicMock()
     session.token = {"access_token": "mock-token"}
+    status = GeocachingStatus()
+    cache = GeocachingCache(reference_code="gc12345")
+    trackable = GeocachingTrackable(reference_code=" tb12345 ")
+    status.tracked_caches = [cache]
+    status.trackables = {"original-key": trackable}
+    original_trackables = status.trackables
 
     with (
         patch(
@@ -75,22 +81,14 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
             return_value=session,
         ),
         patch(
-            "homeassistant.components.geocaching.coordinator.GeocachingApi"
-        ) as geocaching_api_mock,
+            "homeassistant.components.geocaching.coordinator.GeocachingApi.update",
+            new=AsyncMock(return_value=status),
+        ),
     ):
-        status = GeocachingStatus()
-        cache = GeocachingCache(reference_code="gc12345")
-        trackable = GeocachingTrackable(reference_code=" tb12345 ")
-        status.tracked_caches = [cache]
-        status.trackables = {"original-key": trackable}
-        original_trackables = status.trackables
-        geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    geocaching_api_mock.assert_called_once()
-
-    settings = geocaching_api_mock.call_args.kwargs["settings"]
+    settings = config_entry.runtime_data.geocaching._settings
 
     assert isinstance(settings, GeocachingSettings)
     assert settings.tracked_cache_codes == expected_cache_codes
