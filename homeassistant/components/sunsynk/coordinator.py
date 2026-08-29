@@ -19,24 +19,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-type SunsynkConfigEntry = ConfigEntry[SunsynkDataUpdateCoordinator]
+type SunsynkConfigEntry = ConfigEntry[list[SunsynkDataUpdateCoordinator]]
 
 
 @dataclass
 class SunsynkInverterData:
     """Realtime data for one inverter."""
 
-    inverter: Inverter
     battery: Battery
     grid: Grid
     load: Load
     solar: Input
 
 
-class SunsynkDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, SunsynkInverterData]]
-):
-    """Fetch data for all inverters of a Sunsynk account."""
+class SunsynkDataUpdateCoordinator(DataUpdateCoordinator[SunsynkInverterData]):
+    """Fetch the realtime data of one Sunsynk inverter."""
 
     config_entry: SunsynkConfigEntry
 
@@ -45,43 +42,32 @@ class SunsynkDataUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: SunsynkConfigEntry,
         client: SunsynkClient,
+        inverter: Inverter,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{inverter.sn}",
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-
-    async def _async_fetch_inverter(self, inverter: Inverter) -> SunsynkInverterData:
-        """Fetch the realtime data for one inverter."""
-        battery, grid, load, solar = await asyncio.gather(
-            self.client.get_inverter_realtime_battery(inverter.sn),
-            self.client.get_inverter_realtime_grid(inverter.sn),
-            self.client.get_inverter_realtime_load(inverter.sn),
-            self.client.get_inverter_realtime_input(inverter.sn),
-        )
-        return SunsynkInverterData(
-            inverter=inverter,
-            battery=battery,
-            grid=grid,
-            load=load,
-            solar=solar,
-        )
+        self.inverter = inverter
 
     @override
-    async def _async_update_data(self) -> dict[str, SunsynkInverterData]:
+    async def _async_update_data(self) -> SunsynkInverterData:
         """Fetch data from the Sunsynk API."""
+        serial_number = self.inverter.sn
         try:
-            inverters = await self.client.get_inverters()
-            data = await asyncio.gather(
-                *(self._async_fetch_inverter(inverter) for inverter in inverters)
+            battery, grid, load, solar = await asyncio.gather(
+                self.client.get_inverter_realtime_battery(serial_number),
+                self.client.get_inverter_realtime_grid(serial_number),
+                self.client.get_inverter_realtime_load(serial_number),
+                self.client.get_inverter_realtime_input(serial_number),
             )
         except SunsynkAuthenticationError as err:
             raise ConfigEntryAuthFailed(err) from err
         except SunsynkConnectionError as err:
             raise UpdateFailed(err) from err
-        return {inverter_data.inverter.sn: inverter_data for inverter_data in data}
+        return SunsynkInverterData(battery=battery, grid=grid, load=load, solar=solar)

@@ -227,10 +227,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sunsynk sensors from a config entry."""
-    coordinator = entry.runtime_data
     async_add_entities(
-        SunsynkSensorEntity(coordinator, description, serial_number)
-        for serial_number in coordinator.data
+        SunsynkSensorEntity(coordinator, description)
+        for coordinator in entry.runtime_data
         for description in SENSORS
     )
 
@@ -247,33 +246,23 @@ class SunsynkSensorEntity(
         self,
         coordinator: SunsynkDataUpdateCoordinator,
         description: SunsynkSensorEntityDescription,
-        serial_number: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._serial_number = serial_number
-        self._attr_unique_id = f"{serial_number}_{description.key}"
-        inverter = coordinator.data[serial_number].inverter
+        inverter = coordinator.inverter
+        self._attr_unique_id = f"{inverter.sn}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            name=inverter.alias or serial_number,
+            identifiers={(DOMAIN, inverter.sn)},
+            name=inverter.alias or inverter.sn,
             manufacturer="Sunsynk",
             model=inverter.model or None,
-            serial_number=serial_number,
+            serial_number=inverter.sn,
             sw_version=inverter.version.soft_ver if inverter.version else None,
         )
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if the inverter is in the last update."""
-        return super().available and self._serial_number in self.coordinator.data
-
-    @property
-    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self._serial_number]
-        )
+        return self.entity_description.value_fn(self.coordinator.data)

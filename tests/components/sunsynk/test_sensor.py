@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sunsynk.exceptions import SunsynkConnectionError
+from sunsynk.grid import Grid
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sunsynk.const import SCAN_INTERVAL
@@ -18,6 +19,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_GRID_POWER = "sensor.garage_inverter_grid_power"
+ENTITY_ID_GRID_POWER_2 = "sensor.2938475610_grid_power"
 
 
 @pytest.mark.usefixtures("mock_sunsynk_client", "entity_registry_enabled_by_default")
@@ -42,34 +44,50 @@ async def test_sensors_unavailable_on_error(
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
 
+    grid = mock_sunsynk_client.get_inverter_realtime_grid.side_effect
     mock_sunsynk_client.get_inverter_realtime_grid.side_effect = SunsynkConnectionError
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == STATE_UNAVAILABLE
 
-    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = None
+    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = grid
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
 
 
-async def test_sensors_unavailable_when_inverter_is_removed(
+async def test_one_inverter_unavailable(
     hass: HomeAssistant,
     mock_sunsynk_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the sensors become unavailable when the inverter is no longer listed."""
+    """Test a failing inverter does not affect the other inverters."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
+    assert hass.states.get(ENTITY_ID_GRID_POWER_2).state == "610.0"
 
-    mock_sunsynk_client.get_inverters.return_value = []
+    grid = mock_sunsynk_client.get_inverter_realtime_grid.side_effect
+
+    def failing_grid(sn: str) -> Grid:
+        if sn == "2938475610":
+            raise SunsynkConnectionError
+        return grid(sn)
+
+    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = failing_grid
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(ENTITY_ID_GRID_POWER).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
+    assert hass.states.get(ENTITY_ID_GRID_POWER_2).state == STATE_UNAVAILABLE
+
+    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = grid
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID_GRID_POWER_2).state == "610.0"
 
 
 @pytest.mark.usefixtures("mock_sunsynk_client")

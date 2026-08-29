@@ -46,3 +46,27 @@ async def test_setup_auth_error(
     mock_sunsynk_client.get_inverters.side_effect = SunsynkAuthenticationError
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_realtime_connection_error(
+    hass: HomeAssistant,
+    mock_sunsynk_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the config entry retries when inverter data cannot be fetched."""
+    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = SunsynkConnectionError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_realtime_auth_error(
+    hass: HomeAssistant,
+    mock_sunsynk_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the config entry fails when inverter data cannot be authenticated."""
+    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = (
+        SunsynkAuthenticationError
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
