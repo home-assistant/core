@@ -177,7 +177,7 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
             config_entry_id=coordinator.config_entry.entry_id,
             **device_info,
         )
-        if self.work_area_attributes.name == "my_lawn":
+        if work_area_id == 0:
             self._attr_device_info = ChildDeviceInfo(
                 identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
                 translation_key="my_lawn",
