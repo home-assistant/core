@@ -139,8 +139,11 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.video_input = "hdmi"
     receiver.streaming_source = "AirPlay"
     receiver.available_audio_inputs = ["optical", "aux"]
+    receiver.audio_inputs = ["optical", "aux"]
     receiver.available_video_inputs = ["hdmi"]
+    receiver.video_inputs = ["hdmi"]
     receiver.available_stream_types = ["AirPlay", "DLNA"]
+    receiver.stream_types = ["AirPlay", "DLNA"]
 
     receiver.now_playing = None
     receiver.has_position = False
@@ -178,6 +181,10 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_source = None
     receiver.zone_b_available_sources = []
     receiver.zone_b_audio_input = "aux"
+    zone_b = MagicMock(spec=ZoneB)
+    zone_b.audio_input = "aux"
+    zone_b.streaming_source = "DLNA"
+    receiver.zone_b = zone_b
     receiver.zone_b_streaming_source = "DLNA"
 
     receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))

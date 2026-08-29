@@ -52,7 +52,7 @@ async def test_enum_sensor_ignores_unknown_device_value(
     mock_receiver: MagicMock,
 ) -> None:
     """Test an input the library could not name is reported as unknown."""
-    mock_receiver.available_audio_inputs = ["optical"]
+    mock_receiver.audio_inputs = ["optical"]
     mock_receiver.audio_input = "audio-37"
 
     notify_receiver_update(mock_receiver)
@@ -67,7 +67,7 @@ async def test_enum_options_follow_the_device(
     mock_receiver: MagicMock,
 ) -> None:
     """Test enum options track the lists the device reports."""
-    mock_receiver.available_audio_inputs = ["HDMI", "optical"]
+    mock_receiver.audio_inputs = ["HDMI", "optical"]
     mock_receiver.audio_input = "HDMI"
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
@@ -75,7 +75,7 @@ async def test_enum_options_follow_the_device(
     state = hass.states.get("sensor.mock_lyngdorf_audio_input")
     assert state.attributes["options"] == ["HDMI", "optical"]
 
-    mock_receiver.available_audio_inputs = ["HDMI", "optical", "ARC"]
+    mock_receiver.audio_inputs = ["HDMI", "optical", "ARC"]
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
