@@ -93,7 +93,7 @@ class WorkAreaNumberEntityDescription(NumberEntityDescription):
 WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
     WorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key="cutting_height_work_area",
+        translation_key="cutting_height",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.cutting_height,

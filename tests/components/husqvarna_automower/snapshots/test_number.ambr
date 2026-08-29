@@ -26,17 +26,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'cutting height',
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'cutting height',
+    'original_name': 'Cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_work_area',
+    'translation_key': 'cutting_height',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_cutting_height_work_area',
     'unit_of_measurement': '%',
   })
@@ -44,7 +44,7 @@
 # name: test_number_snapshot[number.garden_back_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back lawn cutting height',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back lawn Cutting height',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -86,17 +86,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'cutting height',
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'cutting height',
+    'original_name': 'Cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_work_area',
+    'translation_key': 'cutting_height',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_cutting_height_work_area',
     'unit_of_measurement': '%',
   })
@@ -104,7 +104,7 @@
 # name: test_number_snapshot[number.garden_front_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn cutting height',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn Cutting height',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -146,17 +146,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'cutting height',
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'cutting height',
+    'original_name': 'Cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_work_area',
+    'translation_key': 'cutting_height',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_cutting_height_work_area',
     'unit_of_measurement': '%',
   })
@@ -164,7 +164,7 @@
 # name: test_number_snapshot[number.garden_my_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn cutting height',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn Cutting height',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

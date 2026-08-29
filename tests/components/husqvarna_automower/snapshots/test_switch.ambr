@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_work_area',
     'unit_of_measurement': None,
   })
@@ -81,7 +81,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_work_area',
     'unit_of_measurement': None,
   })
@@ -131,7 +131,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_work_area',
     'unit_of_measurement': None,
   })

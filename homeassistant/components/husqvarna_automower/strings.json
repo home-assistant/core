@@ -205,9 +205,6 @@
     "number": {
       "cutting_height": {
         "name": "Cutting height"
-      },
-      "cutting_height_work_area": {
-        "name": "cutting height"
       }
     },
     "select": {
