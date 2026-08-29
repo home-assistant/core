@@ -1,6 +1,7 @@
 """Tests for the Vistapool time platform."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -208,7 +209,7 @@ async def test_light_schedule_times_decode_seconds(
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the light schedule bounds decode from seconds since midnight."""
-    mock_vistapool_client.fetch_pool_data.return_value = _LIGHT_SCHEDULE_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -225,7 +226,7 @@ async def test_light_schedule_time_set_value(
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test setting a light schedule bound writes seconds since midnight."""
-    mock_vistapool_client.fetch_pool_data.return_value = _LIGHT_SCHEDULE_DATA
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
