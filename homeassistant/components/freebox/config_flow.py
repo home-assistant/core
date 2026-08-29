@@ -85,9 +85,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         except AuthorizationError as error:
             _LOGGER.error(error)
             errors["base"] = "register_failed"
-            # The stored application token (if any) was rejected by the
-            # Freebox. Clear it so resubmitting this form performs a fresh
-            # pairing instead of retrying with the same rejected token.
+            # Delete a rejected token so the next submission starts fresh pairing.
             await async_forget_registration(self.hass, self._data[CONF_HOST])
 
         except HttpRequestError:
