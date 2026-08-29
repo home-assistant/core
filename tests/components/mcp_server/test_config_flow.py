@@ -11,6 +11,8 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     "params",
@@ -66,3 +68,41 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
+
+
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test changing the LLM APIs in the options flow."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert not result["errors"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: ["assist"]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data == {CONF_LLM_HASS_API: ["assist"]}
+    assert config_entry.title == "Assist"
+
+
+async def test_options_flow_errors(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the options flow requires at least one LLM API."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: []},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_LLM_HASS_API: "llm_api_required"}
