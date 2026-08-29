@@ -3,20 +3,10 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybluetti import UnifyResponse, UserProduct
-import pytest
-
-from homeassistant.components.bluetti_cloud import BluettiRuntimeData, _async_update_listener
-from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti_cloud.const import (
-    ACCOUNT_UNIQUE_ID,
-    DOMAIN,
-    INTEGRATION_NAME,
-)
+from homeassistant.components.bluetti_cloud import BluettiRuntimeData
+from homeassistant.components.bluetti_cloud.const import DOMAIN
 from homeassistant.components.bluetti_cloud.models import BluettiData, BluettiDevice
-from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -89,22 +79,14 @@ async def test_handle_unbind_full_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Handle unbind full cleanup.
+    """Handle unbind removes the device, its entities, and notifies - no persistence.
 
-    mock_reload's assert_awaited_once_with below is also a regression check
-    for a fixed duplicate-reload bug: the options update a few lines below
-    (options={..., "devices": new_devices}) fires this listener once.
-    _handle_unbind() used to ALSO schedule its own explicit reload after a
-    fixed 1-second delay on top of that - two reloads (serialized by
-    entry.setup_lock, not concurrent, but still one full unload+setup too
-    many) for a single unbind, and unconditionally even when the device
-    wasn't in the options list to begin with, so it could also fire after
-    the entry itself was gone.
+    Batteries-included means there is no per-entry device list to update
+    here (see __init__.py's async_remove_config_entry_device) - this is
+    pure live registry and runtime_data cleanup, so unlike the old
+    persistence-gated version there is nothing to reload either.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={"devices": ["SN1", "SN2"]},
-    )
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
     device = BluettiDevice(
@@ -131,7 +113,6 @@ async def test_handle_unbind_full_cleanup(
 
     coordinator = AsyncMock()
     entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device, other_device]),
         stomp_client=MagicMock(),
         coordinators={"SN1": coordinator, "SN2": MagicMock()},
@@ -141,18 +122,9 @@ async def test_handle_unbind_full_cleanup(
     device._entry = entry
     device._entry_id = entry.entry_id
 
-    # Mirrors what async_setup_entry() registers on a real, fully-loaded
-    # entry - _handle_unbind() itself no longer reloads explicitly (see the
-    # regression test below), it relies entirely on this listener firing
-    # from its own options update.
-    entry.add_update_listener(_async_update_listener)
-
-    with (
-        patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
-        patch(
-            "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create"
-        ) as mock_notify,
-    ):
+    with patch(
+        "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create"
+    ) as mock_notify:
         await device._handle_unbind()
         await hass.async_block_till_done()
 
@@ -168,105 +140,24 @@ async def test_handle_unbind_full_cleanup(
     assert "SN1" not in entry.runtime_data.coordinators
     coordinator.async_shutdown.assert_awaited_once()
 
-    # Removed from the config entry's enabled devices.
-    updated = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated.options["devices"] == ["SN2"]
-
     # A persistent notification was shown.
     mock_notify.assert_called_once()
     assert mock_notify.call_args.kwargs["notification_id"] == "bluetti_unbind_SN1"
 
-    mock_reload.assert_awaited_once_with(entry.entry_id)
-
-
-async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
-    hass: HomeAssistant,
-) -> None:
-    """A device re-bound after being unbound must use fresh cloud data.
-
-    Regression test: _handle_unbind() used to only remove the device from
-    entry.options["devices"], never from entry.data["products"] - a later
-    re-bind of the same serial was
-    treated as "already cached" by config_flow.py's product merge (it
-    only adds products whose sn isn't already present in
-    entry.data["products"]), silently keeping the stale name/model/state
-    from before the unbind instead of the fresh data the re-bind just
-    fetched from the cloud.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=ACCOUNT_UNIQUE_ID,
-        title=f"{INTEGRATION_NAME} Power Integration",
-        data={
-            "auth_implementation": "bluetti_cloud",
-            "token": {"access_token": "tok"},
-            "products": [
-                {"sn": "SN1", "name": "Old Name", "stateList": [], "online": "1"}
-            ],
-        },
-        options={"devices": ["SN1"]},
-    )
-    entry.add_to_hass(hass)
-
-    device = BluettiDevice(
-        device_id="SN1", on_line="1", name="Old Name", sn="SN1", model="AC200L"
-    )
-    entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
-        bluetti_devices=MagicMock(devices=[device]),
-        stomp_client=MagicMock(),
-        coordinators={},
-    )
-    device._hass = hass
-    device._entry = entry
-    device._entry_id = entry.entry_id
-
-    with patch(
-        "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create"
-    ):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
-
-    unbound = hass.config_entries.async_get_entry(entry.entry_id)
-    assert unbound.options["devices"] == []
-    assert unbound.data["products"] == []
-
-    # Re-bind the same serial: the cloud now reports a different name.
-    # A plain fresh flow finding an existing entry aborts as
-    # already_configured instead of merging (see config_flow.py) - use the
-    # reconfigure/reauth re-run path, the only one allowed to merge.
-    flow = BluettiConfigFlow()
-    flow.hass = hass
-    flow.handler = DOMAIN
-    flow.context = {"source": SOURCE_RECONFIGURE}
-    flow._oauth_data = {
-        "auth_implementation": "bluetti_cloud",
-        "token": {"access_token": "tok2", "expires_at": 9999999999},
-    }
-    flow._products = [UserProduct(sn="SN1", name="New Name", stateList=[], online="1")]
-    flow._product_client = AsyncMock()
-    flow._product_client.bind_devices.return_value = UnifyResponse(msgId="1", msgCode=0)
-
-    with pytest.raises(AbortFlow) as exc_info:
-        await flow.async_step_select_devices(user_input={"devices": ["SN1"]})
-    assert exc_info.value.reason == "success"
-
-    rebound = hass.config_entries.async_get_entry(entry.entry_id)
-    assert [p["name"] for p in rebound.data["products"]] == ["New Name"]
+    assert device._unbind_processed is True
 
 
 async def test_handle_unbind_when_device_registry_entry_missing(
     hass: HomeAssistant,
 ) -> None:
     """Handle unbind when device registry entry missing."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
     device = BluettiDevice(
         device_id="SN1", on_line="1", name="Test Device", sn="SN1", model="AC200L"
     )
     entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device]),
         stomp_client=MagicMock(),
         coordinators={},
@@ -275,12 +166,10 @@ async def test_handle_unbind_when_device_registry_entry_missing(
     device._entry = entry
     device._entry_id = entry.entry_id
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
+    # Must not raise even though there is no matching device registry entry.
+    await device._handle_unbind()
 
-    updated = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated.options["devices"] == []
+    assert device._unbind_processed is True
 
 
 async def test_async_refresh_from_api_triggers_unbind() -> None:
@@ -320,7 +209,6 @@ def _bound_device_with_registry_entries(
         device_id=device_entry.id,
     )
     entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
         bluetti_devices=MagicMock(devices=[device]),
         stomp_client=MagicMock(),
         coordinators={"SN1": AsyncMock()},
@@ -333,18 +221,14 @@ def _bound_device_with_registry_entries(
 
 async def test_handle_unbind_survives_entity_removal_error(hass: HomeAssistant) -> None:
     """Handle unbind survives entity removal error."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
 
-    with (
-        patch.object(hass.config_entries, "async_reload", AsyncMock()),
-        patch.object(
-            er.EntityRegistry, "async_remove", side_effect=RuntimeError("boom")
-        ),
+    with patch.object(
+        er.EntityRegistry, "async_remove", side_effect=RuntimeError("boom")
     ):
         await device._handle_unbind()
-        await hass.async_block_till_done()
 
     # Must complete without raising even though entity removal failed.
     assert device._unbind_processed is True
@@ -352,180 +236,44 @@ async def test_handle_unbind_survives_entity_removal_error(hass: HomeAssistant) 
 
 async def test_handle_unbind_survives_device_removal_error(hass: HomeAssistant) -> None:
     """Handle unbind survives device removal error."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
 
-    with (
-        patch.object(hass.config_entries, "async_reload", AsyncMock()),
-        patch.object(
-            dr.DeviceRegistry, "async_remove_device", side_effect=RuntimeError("boom")
-        ),
+    with patch.object(
+        dr.DeviceRegistry, "async_remove_device", side_effect=RuntimeError("boom")
     ):
         await device._handle_unbind()
-        await hass.async_block_till_done()
 
     assert device._unbind_processed is True
 
 
 async def test_handle_unbind_survives_runtime_data_error(hass: HomeAssistant) -> None:
     """Handle unbind survives runtime data error."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
     # Force an AttributeError when the cleanup code touches runtime_data.
     entry.runtime_data.bluetti_devices = None
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
+    await device._handle_unbind()
 
     assert device._unbind_processed is True
-
-
-async def test_handle_unbind_survives_config_entry_update_error(
-    hass: HomeAssistant,
-) -> None:
-    """Handle unbind survives config entry update error.
-
-    Regression test: _unbind_processed used to be set unconditionally
-    before persisting the removal - if that persistence step failed, the
-    device stayed "enabled" in options forever with no coordinator and no
-    retry path. It must stay False here so the next refresh retries.
-
-    Also a regression test for a second bug in that same fix: the
-    coordinator used to be torn down (step "5" in the old numbering)
-    *before* persistence was attempted (step "4") - so even with the flag
-    correctly left False, the coordinator that would naturally trigger the
-    next refresh was already dead, and the "retry" never actually happened
-    in a real system. Persistence must now run first, and the coordinator
-    must stay alive (not shut down, not removed) when it fails.
-    """
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
-    entry.add_to_hass(hass)
-    device, _device_entry = _bound_device_with_registry_entries(hass, entry)
-    coordinator = entry.runtime_data.coordinators["SN1"]
-
-    with (
-        patch.object(hass.config_entries, "async_reload", AsyncMock()),
-        patch.object(
-            hass.config_entries, "async_update_entry", side_effect=RuntimeError("boom")
-        ),
-    ):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
-
-    assert device._unbind_processed is False
-
-    # The coordinator must still be alive and untouched - it's what
-    # actually drives the retry via its own next scheduled poll.
-    assert entry.runtime_data.coordinators["SN1"] is coordinator
-    coordinator.async_shutdown.assert_not_awaited()
-    assert device in entry.runtime_data.bluetti_devices.devices
-
-    # Prove the retry actually happens: the next refresh must call
-    # _handle_unbind() again, not skip it because of a stale True flag.
-    device._handle_unbind = AsyncMock()
-    device._api_client = AsyncMock()
-    device._api_client.get_device_status.return_value = MagicMock(
-        is_ok=lambda: True,
-        data=[MagicMock(sn="SN1", isBindByCurUser="0")],
-    )
-    await device.async_refresh_from_api()
-    device._handle_unbind.assert_awaited_once()
-
-
-async def test_handle_unbind_leaves_registries_untouched_when_persistence_fails(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Handle unbind leaves the device/entity registries untouched when persistence fails.
-
-    Regression test: the device and entity registry entries used to be
-    deleted *before* persisting the removal to the config entry, not
-    after. Removing an entity from the entity registry tears down its
-    live CoordinatorEntity; once nothing is listening, the coordinator
-    stops scheduling itself - so even with the coordinator object itself
-    never explicitly shut down (see
-    test_handle_unbind_survives_config_entry_update_error above), a failed
-    persistence used to leave no live entity behind to actually drive that
-    "retry on the next poll" in a real system. Registry cleanup must not
-    happen at all until persistence has actually succeeded.
-    """
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
-    entry.add_to_hass(hass)
-    device, device_entry = _bound_device_with_registry_entries(hass, entry)
-
-    with patch.object(
-        hass.config_entries, "async_update_entry", side_effect=RuntimeError("boom")
-    ):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
-
-    assert device._unbind_processed is False
-    assert device_registry.async_get(device_entry.id) is not None
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "SN1_SOC") is not None
 
 
 async def test_handle_unbind_survives_notification_error(hass: HomeAssistant) -> None:
     """Handle unbind survives notification error."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
 
-    with (
-        patch.object(hass.config_entries, "async_reload", AsyncMock()),
-        patch(
-            "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create",
-            side_effect=RuntimeError("boom"),
-        ),
+    with patch(
+        "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create",
+        side_effect=RuntimeError("boom"),
     ):
         await device._handle_unbind()
-        await hass.async_block_till_done()
 
     assert device._unbind_processed is True
-
-
-async def test_handle_unbind_survives_reload_error(hass: HomeAssistant) -> None:
-    """Handle unbind survives reload error."""
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
-    entry.add_to_hass(hass)
-    device, _device_entry = _bound_device_with_registry_entries(hass, entry)
-
-    with patch.object(
-        hass.config_entries, "async_reload", AsyncMock(side_effect=RuntimeError("boom"))
-    ):
-        await device._handle_unbind()
-        # The reload runs in a background task; let it fail and log.
-        await hass.async_block_till_done()
-
-    assert device._unbind_processed is True
-
-
-async def test_handle_unbind_when_device_not_in_options(hass: HomeAssistant) -> None:
-    """Handle unbind when device not in options.
-
-    Even when the device is already absent from options["devices"], its
-    stale product entry (if any) must still be dropped from data["products"].
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={"devices": ["SN2"]},
-        data={
-            "products": [{"sn": "SN1", "name": "Stale", "stateList": [], "online": "1"}]
-        },
-    )
-    entry.add_to_hass(hass)
-    device, _device_entry = _bound_device_with_registry_entries(hass, entry)
-
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()):
-        await device._handle_unbind()
-        await hass.async_block_till_done()
-
-    updated = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated.options["devices"] == ["SN2"]
-    assert updated.data["products"] == []
 
 
 async def test_handle_unbind_survives_unexpected_outer_error(
@@ -533,15 +281,10 @@ async def test_handle_unbind_survives_unexpected_outer_error(
 ) -> None:
     """Handle unbind survives unexpected outer error.
 
-    Persistence (step 2) already succeeded before the registry search
-    below raises, so this is correctly marked processed - the device is
-    already removed from the config entry's options, which is what
-    actually matters; retrying wouldn't change that. The outermost
-    try/except exists so a single bad device (an unexpected error past
-    every step's own except) never breaks setup, not to protect this
-    specific step.
+    The outermost try/except exists so a single bad device (an unexpected
+    error past every step's own except) never breaks setup.
     """
-    entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     device, _device_entry = _bound_device_with_registry_entries(hass, entry)
 
@@ -553,5 +296,3 @@ async def test_handle_unbind_survives_unexpected_outer_error(
         await device._handle_unbind()
 
     assert device._unbind_processed is True
-    updated = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated.options["devices"] == []

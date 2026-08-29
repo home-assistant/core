@@ -4,20 +4,14 @@ from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybluetti import UserProduct
-
-from homeassistant.components.bluetti_cloud import _async_update_listener
-from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.const import DOMAIN, token_expired_signal
 from homeassistant.components.bluetti_cloud.oauth import (
-    ISSUE_ID_OAUTH_EXPIRED,
-    AsyncConfigEntryAuth,
     AuthTokenRefresh,
     OAuth2FlowHandler,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -90,7 +84,7 @@ async def test_async_step_reconfigure_delegates_to_async_step_user(
 async def test_token_refresh_init_subscribes_and_unsubs_on_unload(
     hass: HomeAssistant,
 ) -> None:
-    """The onTokenExpired listener must actually fire, then stop after unload.
+    """The token-expired signal must actually fire, then stop after unload.
 
     Regression test: this test used to only fire the event and call
     async_block_till_done() with no assertion at all - it would still
@@ -100,167 +94,39 @@ async def test_token_refresh_init_subscribes_and_unsubs_on_unload(
     """
     refresher, entry = _refresher(hass, {})
     assert refresher.entry is entry
-    refresher.send_expired_notification = MagicMock()
 
-    hass.bus.async_fire("onTokenExpired")
-    await hass.async_block_till_done()
-    refresher.send_expired_notification.assert_called_once()
+    with patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth:
+        async_dispatcher_send(hass, token_expired_signal(entry.entry_id))
+        await hass.async_block_till_done()
+        mock_start_reauth.assert_called_once_with(hass)
 
-    await entry._async_process_on_unload(hass)
+        await entry._async_process_on_unload(hass)
 
-    refresher.send_expired_notification.reset_mock()
-    hass.bus.async_fire("onTokenExpired")
-    await hass.async_block_till_done()
-    refresher.send_expired_notification.assert_not_called()
-
-
-async def test_on_token_expired_event_sends_notification(hass: HomeAssistant) -> None:
-    """On token expired event sends notification."""
-    refresher, _entry = _refresher(hass, {})
-    refresher.send_expired_notification = MagicMock()
-
-    await refresher.on_token_expired_event(None)
-
-    refresher.send_expired_notification.assert_called_once()
+        mock_start_reauth.reset_mock()
+        async_dispatcher_send(hass, token_expired_signal(entry.entry_id))
+        await hass.async_block_till_done()
+        mock_start_reauth.assert_not_called()
 
 
-def test_is_token_valid_no_token(hass: HomeAssistant) -> None:
-    """Is token valid no token."""
-    refresher, _entry = _refresher(hass, {})
-    assert refresher.is_token_valid() is False
+async def test_on_token_expired_event_starts_reauth(hass: HomeAssistant) -> None:
+    """On token expired event starts the standard reauth flow."""
+    refresher, entry = _refresher(hass, {})
+
+    with patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth:
+        refresher.on_token_expired_event()
+
+    mock_start_reauth.assert_called_once_with(hass)
 
 
-def test_is_token_valid_expires_at_in_future(hass: HomeAssistant) -> None:
-    """Is token valid expires at in future."""
-    refresher, _entry = _refresher(hass, {"expires_at": time.time() + 1000})
-    assert refresher.is_token_valid() is True
-
-
-def test_is_token_valid_expires_at_in_past(hass: HomeAssistant) -> None:
-    """Is token valid expires at in past."""
-    refresher, _entry = _refresher(hass, {"expires_at": time.time() - 1000})
-    assert refresher.is_token_valid() is False
-
-
-def test_is_token_valid_expires_in_created_at_future(hass: HomeAssistant) -> None:
-    """Is token valid expires in created at future."""
-    refresher, _entry = _refresher(
-        hass, {"created_at": time.time(), "expires_in": 1000}
-    )
-    assert refresher.is_token_valid() is True
-
-
-def test_is_token_valid_expires_in_created_at_past(hass: HomeAssistant) -> None:
-    """Is token valid expires in created at past."""
-    refresher, _entry = _refresher(
-        hass, {"created_at": time.time() - 5000, "expires_in": 100}
-    )
-    assert refresher.is_token_valid() is False
-
-
-def test_is_token_valid_no_recognizable_fields(hass: HomeAssistant) -> None:
-    """Is token valid no recognizable fields."""
-    refresher, _entry = _refresher(hass, {"some_other_field": True})
-    assert refresher.is_token_valid() is False
-
-
-async def test_start_token_check_never_notifies_before_a_refresh_is_tried(
-    hass: HomeAssistant,
-) -> None:
-    """An expired-but-refreshable token must not notify before a refresh is tried.
-
-    Regression test: start_token_check() used to call is_token_valid() - a
-    purely local, no-network expiry check - and notify immediately if it
-    returned False. A normally expired access token with a still-valid
-    refresh token hit this every time: a false expiry warning appeared,
-    moments before async_check_token_expiry()'s own refresh attempt would
-    have fixed it silently. The decision to notify must be left entirely to
-    async_check_token_expiry(), which only does so once a refresh has
-    genuinely failed - even for this first, immediate check.
-    """
+async def test_start_token_check_runs_the_check_once(hass: HomeAssistant) -> None:
+    """Start token check runs the check once, regardless of current validity."""
     refresher, _entry = _refresher(hass, {"expires_at": time.time() - 100})
-    refresher.send_expired_notification = MagicMock()
     refresher.async_check_token_expiry = AsyncMock()
 
     refresher.start_token_check()
     await hass.async_block_till_done()
 
-    refresher.send_expired_notification.assert_not_called()
     refresher.async_check_token_expiry.assert_awaited_once()
-
-
-async def test_start_token_check_valid_token_runs_the_check_once(
-    hass: HomeAssistant,
-) -> None:
-    """Start token check valid token runs the check once."""
-    refresher, _entry = _refresher(hass, {"expires_at": time.time() + 1000})
-    refresher.send_expired_notification = MagicMock()
-    refresher.async_check_token_expiry = AsyncMock()
-
-    refresher.start_token_check()
-    await hass.async_block_till_done()
-
-    refresher.send_expired_notification.assert_not_called()
-    refresher.async_check_token_expiry.assert_awaited_once()
-
-
-def test_send_expired_notification_creates_notification(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Send expired notification creates notification."""
-    refresher, _entry = _refresher(hass, {})
-
-    with patch(
-        "homeassistant.components.bluetti_cloud.oauth.persistent_notification.async_create"
-    ) as mock_create:
-        refresher.send_expired_notification()
-
-    mock_create.assert_called_once()
-    assert mock_create.call_args.kwargs["notification_id"] == "notifyTokenExpire"
-
-    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_ID_OAUTH_EXPIRED)
-    assert issue is not None
-    assert issue.translation_key == "oauth_expired"
-    assert issue.is_fixable is False
-
-
-async def test_start_token_check_clears_issue_when_token_becomes_valid(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Start token check clears issue when token becomes valid."""
-    refresher, _entry = _refresher(hass, {"expires_at": time.time() + 1000})
-    refresher.async_check_token_expiry = AsyncMock()
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        ISSUE_ID_OAUTH_EXPIRED,
-        is_fixable=False,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="oauth_expired",
-    )
-
-    refresher.start_token_check()
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID_OAUTH_EXPIRED) is None
-
-
-async def test_async_check_token_expiry_accepts_the_timer_callback_signature(
-    hass: HomeAssistant,
-) -> None:
-    """async_track_time_interval always invokes its callback with a datetime.
-
-    Regression test: this method is registered directly as that callback in
-    start_token_check - if it didn't accept a positional `now`, every timer
-    fire would raise TypeError and silently break the daily proactive check.
-    """
-    refresher, _entry = _refresher(hass, {})
-    refresher.send_expired_notification = MagicMock()
-
-    await refresher.async_check_token_expiry(dt_util.naive_now())
-
-    refresher.send_expired_notification.assert_not_called()
 
 
 async def test_async_check_token_expiry_no_expires_at_logs_and_returns(
@@ -268,53 +134,41 @@ async def test_async_check_token_expiry_no_expires_at_logs_and_returns(
 ) -> None:
     """Async check token expiry no expires at logs and returns."""
     refresher, _entry = _refresher(hass, {})
-    refresher.send_expired_notification = MagicMock()
 
+    # Must not raise even with nothing to check against.
     await refresher.async_check_token_expiry()
-
-    refresher.send_expired_notification.assert_not_called()
-
-
-async def test_async_check_token_expiry_already_expired(hass: HomeAssistant) -> None:
-    """Async check token expiry already expired."""
-    refresher, _entry = _refresher(hass, {"expires_at": time.time() - 10})
-    refresher.send_expired_notification = MagicMock()
-
-    await refresher.async_check_token_expiry()
-
-    refresher.send_expired_notification.assert_called_once()
 
 
 async def test_async_check_token_expiry_refreshes_an_already_expired_token(
     hass: HomeAssistant,
 ) -> None:
-    """An already-expired access token must still be refreshed, not just reported.
+    """An already-expired access token must still be refreshed, not just skipped.
 
     Regression test: the already-expired branch used to notify immediately
     without ever attempting a refresh - an access token past its own
     (often much shorter) expiry is exactly the normal case a refresh token
-    exists for, not necessarily a real problem. A daily periodic check
-    landing after that point used to show a false "expired" warning every
-    time even though a refresh would have quietly succeeded.
+    exists for, not necessarily a real problem.
+
+    Also confirms the refresh does not reload the entry - a proactive
+    background refresh persisting a new token must not tear down every
+    device's coordinator and the websocket just to swap it in (see
+    __init__.py: this integration registers no update listener).
     """
     entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
     entry.add_to_hass(hass)
-    entry.add_update_listener(_async_update_listener)
     session = MagicMock()
     session.token = {"expires_at": time.time() - 10}
     session.implementation.async_refresh_token = AsyncMock(
         return_value={"access_token": "new"}
     )
     refresher = AuthTokenRefresh(hass, entry, session)
-    refresher.send_expired_notification = MagicMock()
 
     with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
         await refresher.async_check_token_expiry()
         await hass.async_block_till_done()
 
     session.implementation.async_refresh_token.assert_awaited_once()
-    mock_reload.assert_awaited_once_with(entry.entry_id)
-    refresher.send_expired_notification.assert_not_called()
+    mock_reload.assert_not_awaited()
 
 
 async def test_async_check_token_expiry_not_due_soon_does_nothing(
@@ -322,11 +176,8 @@ async def test_async_check_token_expiry_not_due_soon_does_nothing(
 ) -> None:
     """Async check token expiry not due soon does nothing."""
     refresher, _entry = _refresher(hass, {"expires_at": time.time() + 3600 * 24 * 30})
-    refresher.send_expired_notification = MagicMock()
 
     await refresher.async_check_token_expiry()
-
-    refresher.send_expired_notification.assert_not_called()
 
 
 async def test_async_check_token_expiry_recent_refresh_is_skipped(
@@ -346,10 +197,16 @@ async def test_async_check_token_expiry_recent_refresh_is_skipped(
     session.implementation.async_refresh_token.assert_not_called()
 
 
-async def test_async_check_token_expiry_notifies_when_rate_limited_and_expired(
+async def test_async_check_token_expiry_rate_limited_and_expired_does_nothing(
     hass: HomeAssistant,
 ) -> None:
-    """A recently-refreshed but already-expired token still notifies."""
+    """A recently-refreshed but already-expired token just waits out the cooldown.
+
+    Neither refreshes again (the 1-hour rate limit) nor treats this as a
+    confirmed problem worth a repair signal - a real failure surfaces
+    through the coordinator's own next poll if the token turns out to
+    genuinely be bad.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN, data={"last_token_refresh": time.time() - 60}
     )
@@ -357,29 +214,26 @@ async def test_async_check_token_expiry_notifies_when_rate_limited_and_expired(
     session = MagicMock()
     session.token = {"expires_at": time.time() - 100}
     refresher = AuthTokenRefresh(hass, entry, session)
-    refresher.send_expired_notification = MagicMock()
 
+    # Must not raise even though the token is already expired.
     await refresher.async_check_token_expiry()
 
     session.implementation.async_refresh_token.assert_not_called()
-    refresher.send_expired_notification.assert_called_once()
 
 
-async def test_async_check_token_expiry_refreshes_and_reloads(
+async def test_async_check_token_expiry_refreshes_without_reloading(
     hass: HomeAssistant,
 ) -> None:
-    """Async check token expiry refreshes and reloads exactly once.
+    """Async check token expiry refreshes and persists the token without reloading.
 
     Regression test: async_check_token_expiry() used to call
     hass.config_entries.async_reload() explicitly right after
-    async_update_entry() - on a loaded entry (mock_reload here, matching a
-    real one via the update listener registered below), that update
-    already fires the entry's registered update listener, which reloads
-    it - the explicit call fired a second, redundant reload.
+    async_update_entry(), and relied separately on a registered update
+    listener to reload too - either one tearing down every device's
+    coordinator and the websocket on a routine background token refresh.
     """
     entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
     entry.add_to_hass(hass)
-    entry.add_update_listener(_async_update_listener)
     session = MagicMock()
     session.token = {"expires_at": time.time() + 100}
     session.implementation.async_refresh_token = AsyncMock(
@@ -394,7 +248,7 @@ async def test_async_check_token_expiry_refreshes_and_reloads(
     session.implementation.async_refresh_token.assert_awaited_once()
     updated = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated.data["token"] == {"access_token": "new"}
-    mock_reload.assert_awaited_once_with(entry.entry_id)
+    mock_reload.assert_not_awaited()
 
 
 async def test_async_check_token_expiry_starts_reauth_on_invalid_refresh_token(
@@ -425,10 +279,10 @@ async def test_async_check_token_expiry_starts_reauth_on_invalid_refresh_token(
     mock_start_reauth.assert_called_once_with(hass)
 
 
-async def test_async_check_token_expiry_notifies_and_starts_reauth_when_already_expired(
+async def test_async_check_token_expiry_starts_reauth_when_already_expired(
     hass: HomeAssistant,
 ) -> None:
-    """An already-expired token with an invalid refresh token does both."""
+    """An already-expired token with an invalid refresh token starts reauth too."""
     entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
     entry.add_to_hass(hass)
     session = MagicMock()
@@ -439,13 +293,11 @@ async def test_async_check_token_expiry_notifies_and_starts_reauth_when_already_
         )
     )
     refresher = AuthTokenRefresh(hass, entry, session)
-    refresher.send_expired_notification = MagicMock()
 
     with patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth:
         await refresher.async_check_token_expiry()
 
     mock_start_reauth.assert_called_once_with(hass)
-    refresher.send_expired_notification.assert_called_once()
 
 
 async def test_schedule_next_check_halves_remaining_time(hass: HomeAssistant) -> None:
@@ -537,7 +389,9 @@ async def test_schedule_next_check_cancels_the_previous_one(
     previous_unsub = MagicMock()
     refresher._unsub_next_check = previous_unsub
 
-    with patch("homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"):
+    with patch(
+        "homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"
+    ):
         refresher._schedule_next_check()
 
     previous_unsub.assert_called_once()
@@ -558,44 +412,3 @@ async def test_async_check_token_expiry_refresh_failure_is_logged(
 
     # Must not raise even though the refresh call failed.
     await refresher.async_check_token_expiry()
-
-
-async def test_async_get_access_token_ensures_validity_first() -> None:
-    """Async get access token ensures validity first."""
-    session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()
-    session.token = {"access_token": "fresh-token"}
-    auth = AsyncConfigEntryAuth(MagicMock(), session)
-
-    token = await auth.async_get_access_token()
-
-    session.async_ensure_token_valid.assert_awaited_once()
-    assert token == "fresh-token"
-
-
-async def test_select_devices_shows_form_with_available_devices(
-    hass: HomeAssistant,
-) -> None:
-    """Select devices shows form with available devices."""
-    flow = BluettiConfigFlow()
-    flow.hass = hass
-    flow.context = {}
-    flow._oauth_data = {
-        "auth_implementation": "bluetti_cloud",
-        "token": {"access_token": "tok", "expires_at": 9999999999},
-    }
-    product = UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")
-
-    with (
-        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
-        ) as mock_client_cls,
-    ):
-        mock_client_cls.return_value.get_user_products = AsyncMock(
-            return_value=MagicMock(data=[product])
-        )
-        result = await flow.async_step_select_devices(user_input=None)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "select_devices"

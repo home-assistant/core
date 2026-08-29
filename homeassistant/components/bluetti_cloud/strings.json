@@ -88,12 +88,6 @@
       "message": "Error communicating with BLUETTI API: {error}"
     }
   },
-  "issues": {
-    "oauth_expired": {
-      "description": "Your BLUETTI account authorization has expired. Go to the integration's settings and select **Reconfigure** to sign in again.",
-      "title": "BLUETTI authentication expired"
-    }
-  },
   "options": {
     "abort": {
       "all_devices_exists": "[%key:component::bluetti_cloud::config::abort::all_devices_exists%]",

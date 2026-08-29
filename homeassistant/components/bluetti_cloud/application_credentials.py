@@ -30,6 +30,9 @@ async def async_ensure_default_credential(hass: HomeAssistant) -> None:
     credential already exists, so this is safe to call on every config flow
     run and every integration setup.
     """
+    # A real client_id/secret pair BLUETTI issued for Home Assistant
+    # specifically (a shared "public client" registration, not a per-user
+    # secret) - not a placeholder, despite the secret's plain-looking value.
     await async_import_client_credential(
         hass,
         DOMAIN,

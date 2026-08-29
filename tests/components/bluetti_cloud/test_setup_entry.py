@@ -26,7 +26,6 @@ def _entry_with_devices(
     bluetti_data = BluettiData.__new__(BluettiData)
     bluetti_data.devices = devices
     entry.runtime_data = BluettiRuntimeData(
-        auth=MagicMock(),
         bluetti_devices=bluetti_data,
         stomp_client=MagicMock(),
         coordinators={},

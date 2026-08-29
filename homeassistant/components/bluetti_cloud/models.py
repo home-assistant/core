@@ -54,7 +54,16 @@ class BluettiData:
         return None
 
     def web_socket_message_handler(self, message: str) -> None:
-        """Handle an incoming STOMP websocket message by refreshing its device."""
+        """Handle an incoming STOMP websocket message by refreshing its device.
+
+        Parsing the raw JSON here (rather than pybluetti handing back a
+        structured push-update object) and re-polling over REST instead of
+        applying the message's own field values directly are both open
+        library-boundary questions - tracked in
+        bluetti-community/pybluetti#1 alongside this class's own two
+        existing entries, not rushed into a fix here. See that issue for
+        the full reasoning.
+        """
         __LOGGER__.debug("Received BLUETTI websocket message: %s", message)
 
         res = json.loads(message)
@@ -62,8 +71,11 @@ class BluettiData:
 
         device = self.get_device_by_sn(sn)
         if device and device.coordinator:
-            # This runs on the websocket thread, not the event loop, so a
-            # thread-safe scheduling call is required here.
+            # pybluetti's StompClient invokes this handler from its own
+            # asyncio receive loop, not a separate thread, but
+            # run_coroutine_threadsafe is still correct (if a redundant hop)
+            # from the right loop - kept in case a future pybluetti version
+            # calls this from elsewhere, per the tracked issue above.
             asyncio.run_coroutine_threadsafe(
                 device.coordinator.async_request_refresh(), self.loop
             )
@@ -118,7 +130,16 @@ class BluettiState:
 
 
 class BluettiDevice:
-    """Represents a single Bluetti device."""
+    """Represents a single Bluetti device.
+
+    Holds its own state list and refresh/unbind logic separately from
+    BluettiDeviceCoordinator, which is the more usual place for a single
+    device's central state in Home Assistant - merging the two was raised in
+    review. Not done here: BluettiData builds every device from the cloud's
+    product list before hass/entry/api_client exist (see bind_runtime's own
+    docstring), so the split follows a real construction-order constraint,
+    not just an established pattern this file happens to still be using.
+    """
 
     def __init__(
         self,
@@ -233,11 +254,15 @@ class BluettiDevice:
                 state_obj.fn_value = s["fnValue"]
 
     async def _handle_unbind(self) -> None:
-        """Handle device unbinding: clean up the device, entity, and configuration, and display the notification.
+        """Handle device unbinding: remove the device, its entities, and notify.
 
-        Each cleanup step below is wrapped in its own broad except: a failure
-        in one (e.g. deleting one stale entity) must not prevent the later
-        steps (updating the config entry, notifying the user) from running.
+        Batteries-included means there is no per-entry device list to persist
+        this removal to (see __init__.py's async_remove_config_entry_device) -
+        just live registry and runtime_data cleanup, so unlike the removal
+        this mirrors there is no failure mode that needs a retry-next-poll
+        gate: each step below is independently best-effort (a failure in one,
+        e.g. deleting one stale entity, must not block the rest), and the
+        method is marked processed once it has run regardless of outcome.
         """
         __LOGGER__.info("Detected device unbinding: %s (%s)", self.name, self.device_id)
 
@@ -256,90 +281,21 @@ class BluettiDevice:
         entry = self._entry
         entry_id = self._entry_id or entry.entry_id
 
-        # Only step 2 (persisting the removal) decides this - steps 3-5 are
-        # all idempotent against an already-removed device, so it's safe
-        # (and necessary) to retry the whole method on the next refresh if
-        # persistence itself fails.
-        persistence_ok = False
-
         try:
             __LOGGER__.info("Start handling device unbinding: %s", self.device_id)
 
-            # 1. Get the device registry and entity registry
             device_registry = dr.async_get(hass)
             entity_registry = er.async_get(hass)
 
-            # 2. Remove the device from the configuration entry - persist
-            # this FIRST, before touching either registry below. Removing
-            # an entity from the entity registry tears down its live
-            # CoordinatorEntity; once nothing is listening, the
-            # coordinator stops scheduling itself, so if this step ran
-            # after the registry deletions and then failed, there would be
-            # no live coordinator left to retry on its own next poll -
-            # only a config entry stuck claiming the device is still
-            # enabled. Persisting first means a failure here leaves
-            # everything (registries, coordinator) untouched and the
-            # device still enabled, so this whole method simply runs again
-            # next refresh.
-            try:
-                current_options = dict(entry.options)
-                current_devices = current_options.get("devices", [])
-
-                # Also drop the cached product entry - a re-bind would
-                # otherwise reuse this stale name/model instead of fetching
-                # fresh data.
-                current_products = entry.data.get("products", [])
-                new_products = [
-                    p
-                    for p in current_products
-                    if (p.get("sn") if isinstance(p, dict) else p.sn) != self.device_id
-                ]
-
-                if self.device_id in current_devices:
-                    new_devices = [d for d in current_devices if d != self.device_id]
-
-                    # One call for both data and options - two separate
-                    # calls would fire the entry's update listener twice.
-                    hass.config_entries.async_update_entry(
-                        entry,
-                        data={**entry.data, "products": new_products},
-                        options={**current_options, "devices": new_devices},
-                    )
-                    __LOGGER__.debug(
-                        "Removed device from configuration entry: %s", self.device_id
-                    )
-                else:
-                    __LOGGER__.warning(
-                        "Device %s not in the device list of the configuration entry",
-                        self.device_id,
-                    )
-                    if new_products != current_products:
-                        hass.config_entries.async_update_entry(
-                            entry, data={**entry.data, "products": new_products}
-                        )
-                # Reached without raising - either the removal was
-                # persisted, or there was nothing left to persist.
-                persistence_ok = True
-            except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
-                __LOGGER__.error(
-                    "Error updating configuration entry: %s", e, exc_info=True
-                )
-                # Even if the update fails, continue to display the notification
-
-            # 3. Find and delete all entities of the device - only once
-            # persistence above actually succeeded (see the comment on
-            # step 2).
             device_entry = None
-            if persistence_ok:
-                for dev_entry in dr.async_entries_for_config_entry(
-                    device_registry, entry_id
-                ):
-                    if (DOMAIN, self.device_id) in dev_entry.identifiers:
-                        device_entry = dev_entry
-                        break
+            for dev_entry in dr.async_entries_for_config_entry(
+                device_registry, entry_id
+            ):
+                if (DOMAIN, self.device_id) in dev_entry.identifiers:
+                    device_entry = dev_entry
+                    break
 
             if device_entry:
-                # Delete all entities of the device
                 entities_to_remove = [
                     entity_entry.entity_id
                     for entity_entry in er.async_entries_for_config_entry(
@@ -355,68 +311,51 @@ class BluettiDevice:
                     except Exception as e:  # noqa: BLE001 - one entity's removal must not block the rest
                         __LOGGER__.warning("Error deleting entity %s: %s", entity_id, e)
 
-                # 4. Delete the device registry
                 try:
                     device_registry.async_remove_device(device_entry.id)
                     __LOGGER__.debug("Deleted device registry: %s", device_entry.id)
-                except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
+                except Exception as e:  # noqa: BLE001 - one cleanup step must not block the rest
                     __LOGGER__.warning("Error deleting device registry: %s", e)
-            elif persistence_ok:
+            else:
                 __LOGGER__.warning("Device registry not found: %s", self.device_id)
 
-            # 5. Remove the device (and its coordinator) from the runtime
-            # data - only once persistence above actually succeeded, so a
-            # failed attempt leaves the coordinator running to retry.
-            if persistence_ok:
-                try:
-                    runtime_data = getattr(entry, "runtime_data", None)
-                    if runtime_data:
-                        runtime_data.bluetti_devices.devices = [
-                            d
-                            for d in runtime_data.bluetti_devices.devices
-                            if d.device_id != self.device_id
-                        ]
-                        coordinator = runtime_data.coordinators.pop(
-                            self.device_id, None
-                        )
-                        if coordinator:
-                            await coordinator.async_shutdown()
-                        __LOGGER__.debug(
-                            "Removed device from runtime data: %s", self.device_id
-                        )
-                except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
-                    __LOGGER__.warning("Error removing device from runtime data: %s", e)
+            try:
+                runtime_data = getattr(entry, "runtime_data", None)
+                if runtime_data:
+                    runtime_data.bluetti_devices.devices = [
+                        d
+                        for d in runtime_data.bluetti_devices.devices
+                        if d.device_id != self.device_id
+                    ]
+                    coordinator = runtime_data.coordinators.pop(self.device_id, None)
+                    if coordinator:
+                        await coordinator.async_shutdown()
+                    __LOGGER__.debug(
+                        "Removed device from runtime data: %s", self.device_id
+                    )
+            except Exception as e:  # noqa: BLE001 - one cleanup step must not block the rest
+                __LOGGER__.warning("Error removing device from runtime data: %s", e)
 
-            # 6. Display persistent notification
             try:
                 notification_id = f"bluetti_unbind_{self.device_id}"
-                notification_title = "BLUETTI device has been unbound"
-                notification_message = (
-                    f"Device **{self.name}** ({self.device_id}) has been unbound in the cloud, "
-                    + (
-                        "and has been automatically removed from the Home Assistant integration.\n\n"
-                        "If this is a mistake, please re-add the device."
-                        if persistence_ok
-                        else "but Home Assistant could not remove it yet and will retry automatically."
-                    )
-                )
-
                 persistent_notification.async_create(
                     hass,
-                    title=notification_title,
-                    message=notification_message,
+                    title="BLUETTI device has been unbound",
+                    message=(
+                        f"Device **{self.name}** ({self.device_id}) has been unbound "
+                        "in the cloud, and has been automatically removed from the "
+                        "Home Assistant integration.\n\n"
+                        "If this is a mistake, please re-add the device."
+                    ),
                     notification_id=notification_id,
                 )
                 __LOGGER__.debug("Displayed unbinding notification: %s", self.device_id)
-            except Exception as e:  # noqa: BLE001 - best-effort cleanup step, see the method docstring
+            except Exception as e:  # noqa: BLE001 - one cleanup step must not block the rest
                 __LOGGER__.warning("Error displaying notification: %s", e)
 
-            # No explicit reload here - step 5's options update already
-            # fires the entry's update listener; an extra explicit reload
-            # used to double it.
             __LOGGER__.info("Device unbinding processing completed: %s", self.device_id)
 
         except Exception as e:  # noqa: BLE001 - outermost guard: never let unbind handling crash the caller
             __LOGGER__.error("Error handling device unbinding: %s", e, exc_info=True)
 
-        self._unbind_processed = persistence_ok
+        self._unbind_processed = True

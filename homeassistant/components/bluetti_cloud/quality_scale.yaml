@@ -71,11 +71,12 @@ rules:
   dynamic-devices:
     status: todo
     comment: >-
-      A newly bound BLUETTI account device does not show up automatically -
-      the user must open the options flow and select it. The rule requires
-      fully automatic detection and entity creation with no user
-      interaction; a previous "done" claim here didn't hold up against the
-      rule's own documentation.
+      Batteries-included: every setup fetches the account's current device
+      list fresh and adds anything new, with no options flow or user
+      interaction (the previous "select it yourself" step is gone). Still
+      todo because that only happens on the next setup/reload, not live
+      while the entry is running - the rule requires fully automatic
+      detection with no action needed at all, including no reload.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -84,15 +85,22 @@ rules:
   entity-translations:
     status: todo
     comment: >-
-      Cloud-sourced entities remain untranslated: their names are provided
-      dynamically by the BLUETTI cloud API per device/firmware (fnName), not
-      static strings known at development time (see entity.py).
+      Real translations exist now for the fn_codes seen in
+      doc/diagnostics/{balco260,ebox-ep2000}.json (see
+      _TRANSLATED_FN_CODES in sensor.py) - still todo because an
+      unrecognized fn_code from a model or firmware we haven't seen a
+      dump for still falls back to the cloud's own fnName rather than a
+      translated string.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: >-
+      No repairable issues are raised - an invalid/expired token starts the
+      standard reauth flow directly (async_start_reauth_if_available)
+      instead.
   stale-devices: done
-
   # Platinum
   async-dependency: done
   inject-websession: done
