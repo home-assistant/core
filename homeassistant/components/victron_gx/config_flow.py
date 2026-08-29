@@ -15,7 +15,12 @@ from victron_mqtt import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -28,7 +33,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_MQTT_TOKEN_PAIRING, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -57,7 +62,7 @@ STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL, default=True): selector.BooleanSelector(),
+        vol.Optional(CONF_SSL): selector.BooleanSelector(),
     }
 )
 
@@ -118,6 +123,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
         self.mqtt_token_pairing = False
+        self.ssdp_use_ssl = True
 
     @override
     async def async_step_user(
@@ -243,6 +249,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnectError:
                 data[CONF_PORT] = DEFAULT_PORT
                 data[CONF_SSL] = False
+                self.ssdp_use_ssl = False
                 try:
                     await validate_input(data)
                 except AuthenticationError:
@@ -304,6 +311,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_SERIAL: self.serial,
                     CONF_INSTALLATION_ID: self.installation_id,
                     CONF_MODEL: self.model_name,
+                    CONF_MQTT_TOKEN_PAIRING: True,
                     CONF_USERNAME: credentials.token_name,
                     CONF_PASSWORD: credentials.password,
                     CONF_SSL: True,
@@ -318,6 +326,10 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected error validating paired credentials")
                     errors["base"] = "unknown"
                 else:
+                    if self.source == SOURCE_REAUTH:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(), data_updates=data
+                        )
                     return self.async_create_entry(
                         title=ENTRY_TITLE_FORMAT.format(
                             installation_id=self.installation_id,
@@ -348,7 +360,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 "SSDP auth user input received: %s",
                 async_redact_data(user_input, TO_REDACT),
             )
-            use_ssl = user_input.get(CONF_SSL, True)
+            use_ssl = user_input.get(CONF_SSL, self.ssdp_use_ssl)
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
                 CONF_PORT: DEFAULT_SSL_PORT if use_ssl else DEFAULT_PORT,
@@ -385,7 +397,8 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="ssdp_auth",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_SSDP_AUTH_DATA_SCHEMA, user_input
+                STEP_SSDP_AUTH_DATA_SCHEMA,
+                user_input or {CONF_SSL: self.ssdp_use_ssl},
             ),
             errors=errors,
             description_placeholders={CONF_HOST: self.hostname},
@@ -447,6 +460,13 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication."""
+        reauth_entry = self._get_reauth_entry()
+        if reauth_entry.data.get(CONF_MQTT_TOKEN_PAIRING):
+            self.hostname = reauth_entry.data[CONF_HOST]
+            self.serial = reauth_entry.data.get(CONF_SERIAL)
+            self.installation_id = reauth_entry.data[CONF_INSTALLATION_ID]
+            self.model_name = reauth_entry.data.get(CONF_MODEL)
+            return await self.async_step_ssdp_token_pairing()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
