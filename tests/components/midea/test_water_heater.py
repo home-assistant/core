@@ -259,7 +259,7 @@ async def _assert_service_calls(
     expected_calls: list[tuple],
     device: DummyDevice,
 ) -> None:
-    """Call a climate service and assert the fake device recorded the right call."""
+    """Call a water heater service and assert the fake device recorded the right call."""
     device.calls.clear()
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
