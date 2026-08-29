@@ -255,8 +255,16 @@ def _setup_vicare_api(
     device_config_list = get_supported_devices(client.devices)
 
     # In viaGateway mode each gateway is one bulk fetch per cycle, so the rate
-    # limit scales with the number of gateways, not devices.
-    gateway_count = len({config.getConfig().serial for config in device_config_list})
+    # limit scales with the number of gateways, not devices. Offline gateways
+    # are never fetched, and are skipped below, so they must not count here
+    # either; this has to match the grouping in async_setup_entry.
+    gateway_count = len(
+        {
+            config.getConfig().serial
+            for config in device_config_list
+            if config.isOnline()
+        }
+    )
     if gateway_count > 1:
         cache_duration = DEFAULT_CACHE_DURATION * gateway_count
         _LOGGER.debug(

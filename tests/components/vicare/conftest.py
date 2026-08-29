@@ -33,6 +33,7 @@ class Fixture:
     data_file: str
     # Opt-in shared gateway serial; defaults to a per-fixture gateway when unset.
     gateway_id: str | None = None
+    online: bool = True
 
 
 class MockPyViCare:
@@ -56,7 +57,7 @@ class MockPyViCare:
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
                     else f"model{idx}",
-                    "Online",
+                    "Online" if fixture.online else "Offline",
                     roles=list(fixture.roles),
                 )
             )

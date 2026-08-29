@@ -802,6 +802,47 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     assert hass.states.get("sensor.model1_temperature").state == "16.9"
 
 
+async def test_offline_gateway_does_not_stretch_the_cache(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An offline gateway is never fetched, so it must not size the cache."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway_id="gwB"),
+        Fixture(
+            {"type:climateSensor"},
+            "vicare/RoomSensor1.json",
+            gateway_id="gwC",
+            online=False,
+        ),
+    ]
+    client = MockPyViCare(fixtures)
+    client.loadViaGateway = Mock()
+    client.setCacheDuration = Mock()
+    client.initWithExternalOAuth = Mock()
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Two online gateways out of three, so the cache matches the coordinator
+    # interval instead of being stretched to 3 x 60s.
+    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
+    assert (
+        call(DEFAULT_CACHE_DURATION * 3) not in client.setCacheDuration.call_args_list
+    )
+    assert client.services["gwC"].fetch_all_features.call_count == 0
+
+
 async def test_setup_loads_with_unpaid_package_gateway(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
