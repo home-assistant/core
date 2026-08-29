@@ -1972,7 +1972,7 @@ class StateClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a sensor state class selector config."""
 
     multiple: bool
-    state_classes_filter: list[str | SensorStateClass]
+    state_classes_filter: Sequence[str | SensorStateClass]
 
 
 @SELECTORS.register("state_class")
