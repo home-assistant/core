@@ -151,6 +151,27 @@ async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "link_settings_in_use"}
 
 
+async def test_user_flow_probe_timeout_surfaces_cannot_connect(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A probe that exceeds async_update_with_retry()'s own budget is not a crash.
+
+    That budget expiring raises a bare TimeoutError, not a ModbusError - it
+    must still surface as a form error here, not propagate uncaught.
+    """
+    mock_modbus_unit.fail_requests(TimeoutError("timed out"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input()
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_user_flow_unsupported_device_type(hass: HomeAssistant) -> None:
     """A device type the installed library no longer supports is rejected."""
     with patch(
