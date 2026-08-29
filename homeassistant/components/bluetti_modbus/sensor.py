@@ -24,13 +24,6 @@ from .entity import BluettiModbusEntity
 
 PARALLEL_UPDATES = 0
 
-# These belong on other platforms once they exist (switch, number/select), not
-# on sensor - creating them here now would mean a breaking entity-domain
-# change or a leftover duplicate once those follow-up PRs land.
-_EXCLUDED_FIELDS = frozenset(
-    {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_high", "b_soc_low"}
-)
-
 # No physical unit, and no entity of their own yet: the fault/warning/status
 # enums read here belong on a binary_sensor/sensor split, a follow-up PR to
 # keep this one reviewable. Exposed here as diagnostics in the meantime.
@@ -163,8 +156,6 @@ def _describe_fields(device: BluettiDevice) -> list[SensorEntityDescription]:
     """Build entity descriptions for every field this device exposes as a sensor."""
     descriptions = []
     for name in device.field_names():
-        if name in _EXCLUDED_FIELDS:
-            continue
         field = device.get_field(name)
         assert field is not None  # every name from field_names() has one
         descriptions.append(_describe(name, field))

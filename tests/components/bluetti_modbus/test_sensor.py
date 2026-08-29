@@ -1,11 +1,15 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
+from modbus_connection.mock import MockModbusConnection
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetti_modbus.const import DEVICE_TYPE_EP2000, DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import bluetti_data, seed_unit
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -31,6 +35,25 @@ async def test_sensors(
     await _setup(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_ep2000_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_modbus_connection: MockModbusConnection,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """An EP2000's own field map produces its own, separately verified entities."""
+    seed_unit(mock_modbus_connection.for_unit(2), device_type=DEVICE_TYPE_EP2000)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01K3ZZZZZZZZZZZZZZZZZZZZEP",
+        title="EP2000",
+        data=bluetti_data(unit_id=2, device_type=DEVICE_TYPE_EP2000),
+    )
+    await _setup(hass, entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_energy_sensor_is_a_total_increasing_counter(

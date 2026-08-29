@@ -5,6 +5,9 @@ rules:
     comment: This integration does not register any service actions.
   appropriate-polling: done
   brands: done
+  # ^ home-assistant/brands#11062 adds the bluetti_modbus assets, matching
+  #   this integration's PR (brand PRs for a new integration cannot merge
+  #   before the integration they brand does).
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -18,6 +21,8 @@ rules:
     status: exempt
     comment: This integration provides no conditions.
   docs-high-level-description: done
+  # ^ home-assistant/home-assistant.io#47711, linked in the PR description
+  #   (same reasoning as brands: cannot merge first).
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:

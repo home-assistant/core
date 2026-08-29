@@ -158,6 +158,12 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = get_device(data[CONF_DEVICE_TYPE], unit)
                 if device is None:
                     return {"base": "unsupported_device_type"}, None
+                # Confirms the picked model's registers answer, not that the
+                # device is one - EP2000's map is a near-subset of Balco260's
+                # at identical addresses, so a Balco260 answers as an EP2000
+                # too. Telling them apart needs a real distinguishing register
+                # confirmed against actual EP2000 hardware, which isn't
+                # available yet.
                 await device.async_update()
         except HomeAssistantError, ModbusError:
             # HomeAssistantError: the device is already in use over different

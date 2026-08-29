@@ -213,6 +213,9 @@
     },
     "unsupported_device_type": {
       "message": "This entry's device type is not supported by the installed version of bluetti-modbus."
+    },
+    "wrong_device": {
+      "message": "The device at this address is a different device than the one this entry was set up for. Reconfigure the entry to point at the right device."
     }
   },
   "selector": {
