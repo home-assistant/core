@@ -329,12 +329,12 @@ async def test_classic_api_coordinator_login_failed_retries(
     )
     assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
-    # Verify recovery on the next normal scan interval
-    freezer.tick(timedelta(minutes=5))
     mock_growatt_classic_api.login.return_value = {
         "success": True,
         "user": {"id": "user123"},
     }
+    # Verify recovery on the next normal scan interval
+    freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
