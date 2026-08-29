@@ -1,6 +1,7 @@
 """Tests for the Vistapool select platform."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -179,3 +180,149 @@ async def test_select_option_raises_on_api_error(
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"
+
+
+_LIGHT_SCHEDULE_DATA = {
+    "main": {"version": 1},
+    "light": {"mode": 1, "status": 0, "freq": 86400, "from": 79200, "to": 3600},
+}
+
+
+async def test_light_selects_not_created_without_scheduling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
+) -> None:
+    """Test controllers without light scheduling do not get the light selects."""
+    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.my_pool_light_mode") is None
+    assert hass.states.get("select.my_pool_light_schedule_frequency") is None
+
+
+@pytest.mark.parametrize(
+    ("mode", "status", "expected"),
+    [
+        pytest.param(1, 0, "auto", id="schedule_armed"),
+        pytest.param(1, 1, "auto", id="schedule_armed_while_on"),
+        pytest.param(0, 1, "on", id="manual_on"),
+        pytest.param(0, 0, "off", id="manual_off"),
+    ],
+)
+async def test_light_mode_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    mode: int,
+    status: int,
+    expected: str,
+) -> None:
+    """Test the armed schedule wins over the on/off state."""
+    data = deepcopy(_LIGHT_SCHEDULE_DATA)
+    data["light"]["mode"] = mode
+    data["light"]["status"] = status
+    mock_vistapool_client.fetch_pool_data.return_value = data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.my_pool_light_mode").state == expected
+
+
+@pytest.mark.parametrize(
+    ("option", "expected_updates"),
+    [
+        pytest.param("off", {"light.mode": 0, "light.status": 0}, id="off"),
+        pytest.param("on", {"light.mode": 0, "light.status": 1}, id="on"),
+        pytest.param("auto", {"light.mode": 1}, id="auto"),
+    ],
+)
+async def test_light_mode_select_writes_one_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    option: str,
+    expected_updates: dict[str, int],
+) -> None:
+    """Test each option lands as a single multi-field command.
+
+    Writing the fields separately would leave the controller half-applied
+    between the two commands.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: option},
+        blocking=True,
+    )
+
+    mock_vistapool_client.set_values.assert_awaited_once_with(
+        "ABCDEF1234567890", expected_updates
+    )
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param(86400, "daily", id="daily"),
+        pytest.param(604800, "weekly", id="weekly"),
+        pytest.param(12345, None, id="unknown_value"),
+    ],
+)
+async def test_light_schedule_frequency_maps_raw_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    raw: int,
+    expected: str | None,
+) -> None:
+    """Test the frequency maps by raw seconds, not by option index."""
+    data = deepcopy(_LIGHT_SCHEDULE_DATA)
+    data["light"]["freq"] = raw
+    mock_vistapool_client.fetch_pool_data.return_value = data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_pool_light_schedule_frequency").state
+    assert state == (expected or STATE_UNKNOWN)
+
+
+async def test_light_schedule_frequency_writes_raw_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test selecting a frequency writes its raw seconds value."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
+            ATTR_OPTION: "weekly",
+        },
+        blocking=True,
+    )
+
+    mock_vistapool_client.set_value.assert_awaited_once_with(
+        "ABCDEF1234567890", "light.freq", 604800
+    )

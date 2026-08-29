@@ -177,3 +177,67 @@ async def test_time_set_value_raises_on_api_error(
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"
+
+
+_LIGHT_SCHEDULE_DATA = {
+    "main": {"version": 1},
+    "light": {"mode": 1, "status": 0, "from": 79200, "to": 3600},
+}
+
+
+async def test_light_schedule_times_not_created_without_scheduling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
+) -> None:
+    """Test controllers without light scheduling do not get the light times."""
+    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("time.my_pool_light_schedule_start") is None
+    assert hass.states.get("time.my_pool_light_schedule_end") is None
+
+
+async def test_light_schedule_times_decode_seconds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the light schedule bounds decode from seconds since midnight."""
+    mock_vistapool_client.fetch_pool_data.return_value = _LIGHT_SCHEDULE_DATA
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 79200 is 22:00, 3600 is 01:00 the next morning.
+    assert hass.states.get("time.my_pool_light_schedule_start").state == "22:00:00"
+    assert hass.states.get("time.my_pool_light_schedule_end").state == "01:00:00"
+
+
+async def test_light_schedule_time_set_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test setting a light schedule bound writes seconds since midnight."""
+    mock_vistapool_client.fetch_pool_data.return_value = _LIGHT_SCHEDULE_DATA
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "time.my_pool_light_schedule_start", ATTR_TIME: "21:30:00"},
+        blocking=True,
+    )
+
+    mock_vistapool_client.set_value.assert_awaited_once_with(
+        "ABCDEF1234567890", "light.from", 77400
+    )
