@@ -63,9 +63,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: One fixed device per config entry; nothing is discovered dynamically at runtime.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -74,9 +72,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices:
-    status: exempt
-    comment: One fixed device per config entry; nothing to detect as stale.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done

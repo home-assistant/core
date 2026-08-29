@@ -115,3 +115,29 @@ async def test_binary_sensor_state_update(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "on"
+
+
+async def test_binary_sensor_unknown_for_non_bool_value(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test binary_sensor is unknown when the device reports a non-bool value."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.full_dust: None,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_full_dust"]
+
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"

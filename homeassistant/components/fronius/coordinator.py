@@ -28,7 +28,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import FroniusEntity, FroniusEntityDescription
+from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
@@ -39,6 +39,7 @@ from .sensor import (
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
 )
+from .switch import MODBUS_SWITCH_ENTITY_DESCRIPTIONS
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry, FroniusSolarNet
@@ -280,7 +281,10 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     """
 
     default_interval = timedelta(minutes=5)
-    valid_descriptions = {Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS}
+    valid_descriptions = {
+        Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
+        Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
+    }
 
     @override
     async def _refresh_components(self) -> None:
@@ -294,7 +298,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
 
     async def async_write(
         self,
-        component_name: str,
+        component_fn: ModbusComponentFn,
         field: str,
         value: float | bool,
         *,
@@ -306,12 +310,14 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         register map before anything is written - the register addresses
         move when the data type setting is changed on the device.
 
-        A setpoint on its own has no effect: the device applies it only while
-        the mode it belongs to is enabled, and per the Fronius documentation a
-        change to an already active mode is picked up by enabling it again.
-        ``enable_field`` is written after the setpoint for both reasons.
+        ``enable_field`` names the register that puts a setpoint into effect.
+        It is written again after a change, because the device only picks up a
+        change to an active mode when the mode is enabled again - but only
+        when the mode is already on. Turning it on is the switch's job:
+        turning a limit off hands control to the next priority source, and a
+        setpoint change should not quietly take it back.
         """
-        component = getattr(self.modbus_inverter, component_name)
+        component = component_fn(self.modbus_inverter)
         if component is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -320,7 +326,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         try:
             await component.async_update()
             await component.write(field, value)
-            if enable_field is not None:
+            if enable_field is not None and getattr(component, enable_field):
                 await component.write(enable_field, True)
         except (ModbusError, SunSpecError) as err:
             raise HomeAssistantError(
@@ -340,11 +346,17 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         values: dict[str, float | bool | None] = {}
 
         if (controls := inverter.controls) is not None:
-            values["power_limit"] = controls.power_limit
+            values["ac_power_limit"] = controls.power_limit
+            values["ac_power_limit_enabled"] = controls.enabled
         if (storage := inverter.storage) is not None:
             values["battery_charge_power_limit"] = storage.charge_limit
+            values["battery_charge_power_limit_enabled"] = storage.charge_limit_enabled
             values["battery_discharge_power_limit"] = storage.discharge_limit
+            values["battery_discharge_power_limit_enabled"] = (
+                storage.discharge_limit_enabled
+            )
             values["battery_minimum_reserve"] = storage.minimum_reserve
+            values["battery_grid_charging"] = storage.grid_charging
 
         return self._as_device_data(values)
 

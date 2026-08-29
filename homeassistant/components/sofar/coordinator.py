@@ -13,7 +13,7 @@ from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -48,15 +48,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._consecutive_failures: dict[str, int] = {}
 
     @cached_property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
         serial = self.device.serial_number
         assert serial is not None
-        return DeviceInfo(
+        identity = self.device.identity
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
+            hw_version=identity.hardware_version or None,
+            sw_version=identity.software_version or None,
         )
 
     @override
@@ -127,6 +130,7 @@ class SofarRuntimeData:
 
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator
+    inverter_device_id: str
 
     @property
     def served_components(self) -> frozenset[str]:
