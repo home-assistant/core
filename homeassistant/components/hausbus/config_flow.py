@@ -1,6 +1,7 @@
 """Config flow for Haus-Bus integration."""
 
 import asyncio
+import contextlib
 import logging
 from typing import Any, override
 
@@ -24,23 +25,31 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._search_task: asyncio.Task | None = None
+        self._search_task: asyncio.Task[None] | None = None
         self.home_server: HomeServer | None = None
 
     @override
     def async_remove(self) -> None:
-        """Release this flow's HomeServer reference, if it acquired one.
+        """Release this flow's HomeServer reference, if it acquired one."""
 
-        HomeServer is a process-wide singleton shared with any other
-        in-progress flow and with the config entry created by this flow
-        (see gateway.async_acquire_home_server), so it must not be shut
-        down unconditionally here - only once nothing else still holds a
-        reference to it.
-        """
-        if self.home_server is not None:
-            self.hass.async_create_task(
-                async_release_home_server(self.hass, self.home_server)
-            )
+        async def _cleanup() -> None:
+            search_task = self._search_task
+            self._search_task = None
+
+            if search_task is not None:
+                search_task.cancel()
+
+                with contextlib.suppress(asyncio.CancelledError):
+                    await search_task
+
+            if self.home_server is not None:
+                await async_release_home_server(
+                    self.hass,
+                    self.home_server,
+                )
+                self.home_server = None
+
+        self.hass.async_create_task(_cleanup())
 
     @override
     async def async_step_user(
@@ -48,19 +57,20 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            # start searching for devices
             return await self.async_step_wait_for_device()
 
-        errors: dict[str, str] = {}
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_SCHEMA,
+            errors={},
         )
 
     async def async_step_wait_for_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Wait for a hausbus device to be found."""
-        if not self._search_task:
+
+        if self._search_task is None:
             self._search_task = self.hass.async_create_task(
                 self._async_wait_for_device()
             )
@@ -74,22 +84,24 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._search_task
-        except TimeoutError, OSError:
-            # OSError covers HomeServer construction and searchDevices()
-            # failing to send on the network socket - treat it the same as
-            # a timeout: a recoverable error the user can retry from.
-            if self._search_task:
-                self._search_task.cancel()
-            return self.async_show_progress_done(next_step_id="search_timeout")
+
+        except (TimeoutError, OSError):
+            return self.async_show_progress_done(
+                next_step_id="search_timeout"
+            )
+
         finally:
             self._search_task = None
 
-        return self.async_show_progress_done(next_step_id="search_complete")
+        return self.async_show_progress_done(
+            next_step_id="search_complete"
+        )
 
     async def async_step_search_timeout(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Inform the user that no device has been found."""
+
         if user_input is not None:
             return await self.async_step_wait_for_device()
 
@@ -99,21 +111,37 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
-        return self.async_create_entry(title="Haus-Bus", data={})
+
+        return self.async_create_entry(
+            title="Haus-Bus",
+            data={},
+        )
 
     async def _async_wait_for_device(self) -> None:
-        """Start searching for devices and wait until at least one device was found or timeout is reached."""
+        """Search for devices and wait until at least one is found."""
+
         if self.home_server is None:
-            self.home_server = await async_acquire_home_server(self.hass)
+            self.home_server = await async_acquire_home_server(
+                self.hass
+            )
 
         assert self.home_server is not None
-        await self.hass.async_add_executor_job(self.home_server.searchDevices)
-        # wait for up to 5 seconds to find devices
-        await asyncio.wait_for(self._check_device_found(), _DEVICE_SEARCH_TIMEOUT)
+
+        await self.hass.async_add_executor_job(
+            self.home_server.searchDevices
+        )
+
+        await asyncio.wait_for(
+            self._check_device_found(),
+            _DEVICE_SEARCH_TIMEOUT,
+        )
 
     async def _check_device_found(self) -> bool:
-        """Check if a device was found periodically."""
+        """Check periodically whether a device has been found."""
+
         assert self.home_server is not None
+
         while not self.home_server.is_any_device_found():
-            await asyncio.sleep(0.1)  # Poll every 0.1 seconds
+            await asyncio.sleep(0.1)
+
         return True

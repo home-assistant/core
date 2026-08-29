@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+
+from tests.common import MockConfigEntry
 
 from homeassistant.components.hausbus.const import NEW_CHANNEL_ADDED
 from homeassistant.components.hausbus.gateway import (
@@ -15,10 +18,10 @@ from homeassistant.components.hausbus.gateway import (
 
 @patch("homeassistant.components.hausbus.gateway.async_dispatcher_send")
 def test_register_channel_ignores_duplicates(
-    mock_dispatcher,
-    hass,
-    mock_config_entry,
-    mock_home_server,
+    mock_dispatcher: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_home_server: MagicMock,
 ) -> None:
     """Test duplicate channel discovery is ignored."""
 
@@ -52,10 +55,10 @@ def test_register_channel_ignores_duplicates(
 
 @patch("homeassistant.components.hausbus.gateway.async_dispatcher_send")
 async def test_buffered_channels_flushed_after_platform_ready(
-    mock_dispatcher,
-    hass,
-    mock_config_entry,
-    mock_home_server,
+    mock_dispatcher: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_home_server: MagicMock,
 ) -> None:
     """Test channels discovered before platform setup are buffered."""
 
@@ -93,8 +96,8 @@ async def test_buffered_channels_flushed_after_platform_ready(
 
 
 async def test_home_server_reference_counting(
-    hass,
-    mock_home_server,
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
 ) -> None:
     """Test HomeServer reference counting and shutdown."""
 

@@ -58,16 +58,17 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
         try:
             home_server = await asyncio.shield(home_server_job)
         except asyncio.CancelledError:
-            # This coroutine is being cancelled (e.g. config-flow removal),
-            # but the executor job keeps running in its own thread and may
-            # still finish constructing a HomeServer - with live sockets and
-            # worker threads - after we are gone. Attach a callback so that
-            # object is released (and, since nothing else references it,
-            # shut down) instead of leaking, once construction completes.
-            home_server_job.add_done_callback(
-                lambda job: _release_cancelled_home_server(hass, job)
-            )
-            raise
+          try:
+            await home_server_job
+          except Exception:
+            pass
+
+          _release_cancelled_home_server(
+            hass,
+            home_server_job,
+          )
+          raise
+       
         _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
         return home_server
 
