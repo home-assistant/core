@@ -2,11 +2,8 @@
 
 import asyncio
 from contextlib import suppress
-from email.mime.application import MIMEApplication
-from email.mime.audio import MIMEAudio
-from email.mime.image import MIMEImage
+from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
-from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 import email.utils
 import logging
@@ -68,6 +65,7 @@ from .const import (
     ATTR_IMAGES,
     ATTR_MEDIA_SOURCE,
     CONF_ENCRYPTION,
+    CONF_ENTRY,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
@@ -136,12 +134,15 @@ async def async_get_service(
 
     ssl_context = (
         await hass.async_add_executor_job(create_client_context)
-        if discovery_info[CONF_VERIFY_SSL]
+        if discovery_info[CONF_ENTRY].data[CONF_VERIFY_SSL]
         else None
     )
     mail_service = MailNotificationService(discovery_info, ssl_context)
 
+    entry: SmtpConfigEntry = discovery_info[CONF_ENTRY]
+
     if await hass.async_add_executor_job(mail_service.connection_is_valid):
+        entry.async_on_unload(mail_service.async_unregister_services)
         return mail_service
 
     return None
@@ -207,7 +208,8 @@ class MailNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
-        msg = MIMEText(message)
+        msg = EmailMessage()
+        msg.set_content(message)
         msg["Subject"] = title or ATTR_TITLE_DEFAULT
 
         self._send_email(msg=msg)
@@ -219,18 +221,12 @@ class MailNotifyEntity(NotifyEntity):
         **kwargs: Any,
     ) -> None:
         """Send an email message via smtp.send_message action."""
-        msg = MIMEMultipart("related")
-        msg["Subject"] = title or ATTR_TITLE_DEFAULT
-
-        alternative_parts = MIMEMultipart("alternative")
-        alternative_parts.attach(MIMEText(message, _charset="utf-8"))
+        msg = EmailMessage()
+        msg.set_content(message)
+        msg.add_header("Subject", title or ATTR_TITLE_DEFAULT)
 
         if ATTR_HTML in kwargs:
-            alternative_parts.attach(
-                MIMEText(kwargs[ATTR_HTML], "html", _charset="utf-8")
-            )
-
-        msg.attach(alternative_parts)
+            msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
 
         attachments = kwargs.get(ATTR_ATTACHMENTS, [])
 
@@ -244,20 +240,10 @@ class MailNotifyEntity(NotifyEntity):
         for file, (content, mime_type, filename) in zip(
             attachments, resolved, strict=True
         ):
-            main_type, _, subtype = (
-                mime_type.partition("/")
-                if mime_type is not None
-                else (None, None, None)
-            )
-
-            attachment: MIMENonMultipart
-
-            attachment = (
-                MIMEImage(content, _subtype=subtype)
-                if main_type == "image"
-                else MIMEAudio(content, _subtype=subtype)
-                if main_type == "audio"
-                else MIMEApplication(content)
+            main_type, subtype = (
+                mime_type.split("/", 1)
+                if mime_type is not None and "/" in mime_type
+                else ("application", "octet-stream")
             )
 
             if not (target_filename := file.get(ATTR_FILENAME, filename)):
@@ -268,35 +254,46 @@ class MailNotifyEntity(NotifyEntity):
                         "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
                     },
                 )
-            if cid := file.get(ATTR_CONTENT_ID):
-                attachment.add_header("Content-ID", f"<{cid}>")
-                attachment.add_header(
-                    "Content-Disposition", "inline", filename=target_filename
+            if (html_part := msg.get_body(("related", "html"))) and (
+                cid := file.get(ATTR_CONTENT_ID)
+            ):
+                html_part.add_related(
+                    content,
+                    maintype=main_type,
+                    subtype=subtype,
+                    filename=target_filename,
+                    cid=f"<{cid}>",
+                    disposition="inline",
                 )
             else:
-                attachment.add_header(
-                    "Content-Disposition", "attachment", filename=target_filename
+                msg.add_attachment(
+                    content,
+                    maintype=main_type,
+                    subtype=subtype,
+                    filename=target_filename,
                 )
-
-            msg.attach(attachment)
 
         await self.hass.async_add_executor_job(self._send_email, msg)
         self._async_record_notification()
 
-    def _send_email(self, msg: MIMEMultipart | MIMEText) -> None:
+    def _send_email(self, msg: EmailMessage) -> None:
         """Send the message."""
         if TYPE_CHECKING:
             assert self._subentry.unique_id
 
-        msg["From"] = email.utils.formataddr(
-            (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+        msg.add_header(
+            "From",
+            email.utils.formataddr(
+                (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+            ),
         )
-        msg["To"] = email.utils.formataddr(
-            (self._subentry.title, self._subentry.unique_id)
+        msg.add_header(
+            "To",
+            email.utils.formataddr((self._subentry.title, self._subentry.unique_id)),
         )
-        msg["X-Mailer"] = "Home Assistant"
-        msg["Date"] = email.utils.format_datetime(dt_util.now())
-        msg["Message-Id"] = email.utils.make_msgid()
+        msg.add_header("X-Mailer", "Home Assistant")
+        msg.add_header("Date", email.utils.format_datetime(dt_util.now()))
+        msg.add_header("Message-Id", email.utils.make_msgid())
 
         client: SMTP_SSL | SMTP | None = None
         for attempt in range(self._client.tries):
@@ -345,16 +342,18 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
     ) -> None:
         """Initialize the SMTP service."""
         self.recipients = config[CONF_RECIPIENT]
+        entry: SmtpConfigEntry = config[CONF_ENTRY]
+
         super().__init__(
-            server=config[CONF_SERVER],
-            port=config[CONF_PORT],
-            timeout=config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            sender=config[CONF_SENDER],
-            encryption=config[CONF_ENCRYPTION],
-            username=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD),
-            sender_name=config.get(CONF_SENDER_NAME),
-            verify_ssl=config[CONF_VERIFY_SSL],
+            server=entry.data[CONF_SERVER],
+            port=entry.data[CONF_PORT],
+            timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            sender=entry.data[CONF_SENDER],
+            encryption=entry.data[CONF_ENCRYPTION],
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            sender_name=entry.data.get(CONF_SENDER_NAME),
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
             ssl_context=ssl_context,
         )
 

@@ -225,7 +225,12 @@ aiomqtt>=2.5.0
 
 # aiofile 3.10.0 crashes on import due to KeyError on package metadata
 # https://github.com/mosquito/aiofile/pull/106
-aiofile==3.9.0
+aiofile>=3.10.1
+# caio 0.12.2 includes 'tests' package in wheel
+# Fixed upstream in https://github.com/mosquito/caio/pull/75
+# but not released yet. Pin here to prevent hassfest failure.
+# Update manually once next release is available.
+caio<0.12.3
 
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0

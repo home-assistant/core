@@ -45,8 +45,8 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
 }
 
 type NumberType = Literal[
-    "maximum_boiler_temperature",
-    "max_dhw_temperature",
+    "boiler_temperature",
+    "dhw_temperature",
     "temperature_offset",
 ]
 

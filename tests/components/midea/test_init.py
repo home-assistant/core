@@ -103,7 +103,64 @@ async def test_setup_entry_not_ready_on_connect_failure(
             return_value=device,
         ),
         patch.object(device, "connect", return_value=False),
+        patch("homeassistant.components.midea.discover", return_value={}),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert ("close_socket",) in device.calls
+    assert entry.data[CONF_IP_ADDRESS] == _ENTRY_DATA[CONF_IP_ADDRESS]
+
+
+async def test_setup_entry_recovers_ip_on_connect_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_setup_entry loads successfully after discovering a moved device.
+
+    When the stored IP no longer answers, a device with the same device_id
+    found at a different address by the discovery broadcast should update
+    the config entry and connect there, finishing setup normally.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+    stale_device = DummyDevice(DeviceType.AC)
+    recovered_device = DummyDevice(DeviceType.AC)
+
+    with (
+        patch(
+            "homeassistant.components.midea.device_selector",
+            side_effect=[stale_device, recovered_device],
+        ),
+        patch.object(stale_device, "connect", return_value=False),
+        patch(
+            "homeassistant.components.midea.discover",
+            return_value={TEST_DEVICE_ID: {CONF_IP_ADDRESS: "2.2.2.2"}},
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_IP_ADDRESS] == "2.2.2.2"
+    assert recovered_device.daemon is True
+    assert ("open",) in recovered_device.calls
+
+
+async def test_setup_entry_no_recovery_when_device_not_discovered(
+    hass: HomeAssistant,
+) -> None:
+    """Test the stored IP is left untouched when discovery finds no match."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
+    with (
+        patch(
+            "homeassistant.components.midea.device_selector",
+            return_value=device,
+        ),
+        patch.object(device, "connect", return_value=False),
+        patch(
+            "homeassistant.components.midea.discover",
+            return_value={TEST_DEVICE_ID + 1: {CONF_IP_ADDRESS: "2.2.2.2"}},
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.data[CONF_IP_ADDRESS] == _ENTRY_DATA[CONF_IP_ADDRESS]

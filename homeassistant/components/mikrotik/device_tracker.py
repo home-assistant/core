@@ -8,11 +8,14 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .entity import MikrotikBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -65,18 +68,14 @@ def update_items(
     async_add_entities(new_tracked)
 
 
-class MikrotikDataUpdateCoordinatorTracker(
-    CoordinatorEntity[MikrotikDataUpdateCoordinator], ScannerEntity
-):
+class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
     """Representation of network device."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, device: Device, coordinator: MikrotikDataUpdateCoordinator
     ) -> None:
         """Initialize the tracked device."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
         self._attr_name = device.name
         self._attr_unique_id = device.mac

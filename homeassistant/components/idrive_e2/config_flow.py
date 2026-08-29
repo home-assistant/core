@@ -3,6 +3,7 @@
 import logging
 from typing import Any, cast, override
 
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError
 from idrive_e2 import CannotConnect, IDriveE2Client, InvalidAuth
@@ -51,6 +52,7 @@ async def _list_buckets(
         endpoint_url=endpoint_url,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
+        config=AioConfig(warm_up_loader_caches=True),
     ) as client:
         result = await cast(Any, client).list_buckets()
 

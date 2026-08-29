@@ -188,6 +188,14 @@ HOST_BUTTON_ENTITIES = (
         supported=lambda api: api.supported(None, "reboot"),
         method=lambda api: api.reboot(),
     ),
+    ReolinkHostButtonEntityDescription(
+        key="sync_time",
+        translation_key="sync_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api: api.supported(None, "sync_time"),
+        method=lambda api: api.baichuan.synchronize_time(),
+    ),
 )
 
 

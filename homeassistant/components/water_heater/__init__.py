@@ -230,7 +230,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.temperature_unit,
                 self.precision,
             ),
-            WaterHeaterStateAttribute.TEMPERATURE: show_temp(
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: show_temp(
                 self.hass,
                 self.target_temperature,
                 self.temperature_unit,

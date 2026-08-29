@@ -31,18 +31,22 @@ class HiveEntity(Entity):
         self.device = hive_device
         self._attr_name = self.device["haName"]
         self._attr_unique_id = f"{self.device['hiveID']}-{self.device['hiveType']}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
+        device_id = self.device["device_id"]
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
             model=self.device["deviceData"]["model"],
             manufacturer=self.device["deviceData"]["manufacturer"],
             name=self.device["device_name"],
             sw_version=self.device["deviceData"]["version"],
-            via_device_id=dr.async_get_device_id_by_identifier(
+        )
+        # Hive reports the hub itself as its parent.
+        if self.device["parentDevice"] != device_id:
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
                 hass,
                 (DOMAIN, self.device["parentDevice"]),
                 config_entry_id=entry.entry_id,
-            ),
-        )
+            )
+        self._attr_device_info = device_info
         self.attributes: dict[str, Any] = {}
 
     @override
