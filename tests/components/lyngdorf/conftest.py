@@ -11,6 +11,7 @@ from lyngdorf import (
     LyngdorfReceiver,
     NumericControl,
     NumericRange,
+    Remote,
     RemoteKey,
     Trim,
     ZoneB,
@@ -104,6 +105,9 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
             RemoteKey.DIGIT_0,
         }
     )
+    remote = MagicMock(spec=Remote)
+    remote.keys = receiver.available_remote_keys
+    receiver.remote = remote
 
     # Diagnostics reports the whole receiver, so every property it reads
     # needs a value here; an unset one is a mock the response cannot encode.
