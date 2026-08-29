@@ -5,46 +5,102 @@
       'aircons': dict({
         'Aircon said1': dict({
           'category': 'aircon',
-          'data_model': 'aircon_model',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'said1',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
         'Aircon said2': dict({
           'category': 'aircon',
-          'data_model': 'aircon_model',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'said2',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
       }),
       'dryers': dict({
         'Dryer': dict({
           'category': 'washer_dryer',
-          'data_model': 'dryer',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'WBR123456789',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
       }),
       'ovens': dict({
         'Dual Cavity Oven': dict({
           'category': 'oven',
-          'data_model': 'oven',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'WBR123456789',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
         'Single Cavity Oven': dict({
           'category': 'oven',
-          'data_model': 'oven',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'WBR123456789',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
       }),
       'refrigerators': dict({
         'Beer fridge': dict({
           'category': 'refrigerator',
-          'data_model': 'refrigerator',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'WBR123456789',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
       }),
       'washers': dict({
         'Washer': dict({
           'category': 'washer_dryer',
-          'data_model': 'washer',
           'model_number': '12345',
+          'raw': dict({
+            '_id': 'WBR123456789',
+            'attributes': dict({
+              'Cavity_OpSetHorzLouverSwing': dict({
+                'updateTime': 1626517992782,
+                'value': '1',
+              }),
+            }),
+          }),
         }),
       }),
     }),
