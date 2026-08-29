@@ -1321,14 +1321,6 @@
         "off": "[%key:common::state::off%]"
       }
     },
-    "state_class": {
-      "options": {
-        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
-        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
-        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
-        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
-      }
-    },
     "supported_color_modes": {
       "options": {
         "brightness": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::brightness%]",

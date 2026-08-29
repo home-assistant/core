@@ -26,6 +26,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
+    StateClassSelectorConfig,
     StateSelector,
     StateSelectorConfig,
     TemplateSelector,
@@ -142,12 +144,8 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            vol.Optional(CONF_STATE_CLASS): SelectSelector(
-                SelectSelectorConfig(
-                    options=state_class_options,
-                    translation_key=CONF_STATE_CLASS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                ),
+            vol.Optional(CONF_STATE_CLASS): StateClassSelector(
+                StateClassSelectorConfig(state_classes_filter=state_class_options),
             ),
             vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
                 vol.Schema(

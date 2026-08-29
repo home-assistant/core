@@ -5,7 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -19,6 +19,9 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorStateClass
 
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
@@ -1963,6 +1966,42 @@ class SerialPortSelector(Selector[SerialPortSelectorConfig]):
         """Validate the passed selection."""
         serial: str = vol.Schema(str)(data)
         return serial
+
+
+class StateClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a sensor state class selector config."""
+
+    multiple: bool
+    state_classes_filter: list[SensorStateClass]
+
+
+@SELECTORS.register("state_class")
+class StateClassSelector(Selector[StateClassSelectorConfig]):
+    """Selector for sensor state class."""
+
+    selector_type = "state_class"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("state_classes_filter"): vol.All(cv.ensure_list, [str]),
+        }
+    )
+
+    def __init__(self, config: StateClassSelectorConfig | None = None) -> None:
+        """Instantiate a device class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        valid_options = _enum_options(Platform.SENSOR, "SensorStateClass")
+        options_schema = vol.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [options_schema(vol.Schema(str)(val)) for val in data]
 
 
 class StateSelectorConfig(BaseSelectorConfig, total=False):

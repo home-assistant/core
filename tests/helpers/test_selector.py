@@ -1703,6 +1703,41 @@ def test_device_class_selector_schema(
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
+            {},
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            None,
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            {"multiple": True},
+            (["measurement"], ["total", "total_increasing", "measurement_angle"]),
+            ("measurement", 0, None, ["cat"]),
+        ),
+        (
+            {
+                "state_classes_filter": ["measurement", "total", "total_increasing"],
+                "multiple": True,
+            },
+            (["measurement"], ["total", "total_increasing"]),
+            ("measurement", 0, None, ["cat"]),
+        ),
+    ],
+)
+def test_state_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test state class selector."""
+    _test_selector("state_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
             (None,),
