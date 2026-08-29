@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+import re
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -109,7 +110,15 @@ class MockViCareService:
 
     def add_device(self, device_id: str, fixture: Fixture) -> None:
         """Add a device's features to the gateway payload."""
-        self._features[device_id] = load_json_object_fixture(fixture.data_file)["data"]
+        features = load_json_object_fixture(fixture.data_file)["data"]
+        # In the real bulk payload every feature carries its own device in the
+        # uri, which is what consumers filter on. The fixtures all say device 0.
+        for feature in features:
+            if "uri" in feature:
+                feature["uri"] = re.sub(
+                    r"/devices/[^/]+/", f"/devices/{device_id}/", feature["uri"]
+                )
+        self._features[device_id] = features
 
     def _fetch_all_features(self, accessor: ViCareDeviceAccessor):
         """Return the features of every device on the gateway."""
