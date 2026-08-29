@@ -1137,6 +1137,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             key="guid",
             vals=_POOL_VALS,
             ensure_vals=_POOL_ENSURE_VALS,
+            prune=False,
         )
         self._apply_pool_errors([raw_boot])
 

@@ -334,6 +334,56 @@ def test_parse_api_multiple_entries_by_key() -> None:
     assert result == {"1": {"name": "pool0"}, "2": {"name": "pool1"}}
 
 
+def test_parse_api_prunes_uid_missing_from_nonempty_source() -> None:
+    """A previously-seen object absent from a non-empty response is dropped.
+
+    E.g. a physically removed disk -- otherwise it would be left behind
+    forever alongside the objects that are still present.
+    """
+    data = {"1": {"name": "pool0"}, "2": {"name": "pool1"}}
+    source = [{"id": "2", "name": "pool1"}]
+    result = ap.parse_api(data=data, source=source, key="id", vals=[{"name": "name"}])
+    assert result == {"2": {"name": "pool1"}}
+
+
+def test_parse_api_prunes_uid_missing_from_key_search_source() -> None:
+    """Pruning also applies to key_search'd data, not just plain key."""
+    data = {"uid-1": {"guid": "guid-1", "name": "old"}, "uid-2": {"guid": "guid-2"}}
+    source = [{"guid": "guid-1", "name": "new"}]
+    result = ap.parse_api(
+        data=data, source=source, key_search="guid", vals=[{"name": "name"}]
+    )
+    assert result == {"uid-1": {"guid": "guid-1", "name": "new"}}
+
+
+def test_parse_api_keyless_source_does_not_prune() -> None:
+    """Keyless (single-object) data has no per-uid identity to prune by."""
+    result = ap.parse_api(
+        data={"total": 42, "stale": "kept"},
+        source=[{"total": 43}],
+        vals=[{"name": "total"}],
+    )
+    assert result == {"total": 43, "stale": "kept"}
+
+
+def test_parse_api_prune_false_keeps_uids_outside_partial_source() -> None:
+    """``prune=False`` lets a caller merge a single extra record without pruning.
+
+    E.g. adding the boot-pool to the regular pools, without the pruning step
+    misreading every other uid as removed.
+    """
+    data = {"1": {"name": "pool0"}, "2": {"name": "pool1"}}
+    source = [{"id": "boot-pool", "name": "boot-pool"}]
+    result = ap.parse_api(
+        data=data, source=source, key="id", vals=[{"name": "name"}], prune=False
+    )
+    assert result == {
+        "1": {"name": "pool0"},
+        "2": {"name": "pool1"},
+        "boot-pool": {"name": "boot-pool"},
+    }
+
+
 def test_parse_api_only_filter_skips_non_matching() -> None:
     """The only filter excludes entries that don't match."""
     source = [{"id": "1", "type": "DISK"}, {"id": "2", "type": "SSD"}]

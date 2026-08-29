@@ -167,8 +167,22 @@ def parse_api(
     ensure_vals: list[ApiValueSpec] | None = None,
     only: list[dict[str, Any]] | None = None,
     skip: list[dict[str, Any]] | None = None,
+    prune: bool = True,
 ) -> dict[str, Any]:
-    """Get data from API."""
+    """Get data from API.
+
+    For keyed/key_search'd data, a uid present in ``data`` from a previous
+    call but absent from this (non-empty) ``source`` is dropped: it means
+    the underlying object (disk, pool, task, app, interface, ...) no longer
+    exists, so keeping it would leave a stale entity behind indefinitely.
+    See ``_empty_source_result`` for the None-source (query failed) and
+    empty-list-source (nothing left at all) cases.
+
+    ``prune=False`` opts out of that dropping for callers that intentionally
+    pass a partial ``source`` covering only a subset of ``data`` (e.g. adding
+    a single extra record to an already-populated map) -- otherwise every
+    uid outside that subset would be misread as removed and deleted.
+    """
     if data is None:
         data = {}
     if isinstance(source, dict):
@@ -181,6 +195,7 @@ def parse_api(
         return _empty_source_result(data, key, key_search, vals, source is None)
 
     keymap = generate_keymap(data, key_search)
+    seen_uids: set[str] = set()
     for entry in source:
         if not isinstance(entry, dict):
             # Skip non-dict entries so lookups below don't raise.
@@ -193,10 +208,28 @@ def parse_api(
         )
         if not matched:
             continue
+        if uid is not None:
+            seen_uids.add(uid)
 
         data = _apply_entry(data, entry, uid, vals, ensure_vals, val_proc)
 
+    if prune:
+        _prune_stale_uids(data, key, key_search, seen_uids)
+
     return data
+
+
+# ---------------------------
+#   _prune_stale_uids
+# ---------------------------
+def _prune_stale_uids(
+    data: dict[str, Any], key: str | None, key_search: str | None, seen_uids: set[str]
+) -> None:
+    """Drop keyed/key_search'd entries no longer present in the current source."""
+    if not (key or key_search):
+        return
+    for stale_uid in set(data) - seen_uids:
+        del data[stale_uid]
 
 
 # ---------------------------
