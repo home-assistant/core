@@ -453,7 +453,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.truenas_ce
-aiotruenas==1.2.0
+aiotruenas==1.4.0
 
 # homeassistant.components.unifi
 aiounifi==92
