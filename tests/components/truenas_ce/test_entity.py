@@ -50,10 +50,10 @@ def test_format_unique_id_without_reference() -> None:
     assert format_unique_id("TrueNAS", "system_uptime") == "truenas-system_uptime"
 
 
-def test_format_unique_id_with_reference_lowercases_only() -> None:
-    """A reference value is lowercased, not slugified, and appended to the unique id."""
+def test_format_unique_id_preserves_reference_case() -> None:
+    """Only ``identity`` is lowercased -- the reference keeps its own case."""
     result = format_unique_id("TrueNAS", "disk_temp", "Disk One!")
-    assert result == "truenas-disk_temp-disk one!"
+    assert result == "truenas-disk_temp-Disk One!"
 
 
 def test_format_unique_id_distinguishes_slash_and_dash_variants() -> None:
@@ -63,9 +63,16 @@ def test_format_unique_id_distinguishes_slash_and_dash_variants() -> None:
     )
 
 
+def test_format_unique_id_distinguishes_case_variants() -> None:
+    """Case-sensitive dataset references must not collapse to the same unique id."""
+    assert format_unique_id("TrueNAS", "dataset", "tank/Data") != format_unique_id(
+        "TrueNAS", "dataset", "tank/data"
+    )
+
+
 def test_format_device_identifier() -> None:
-    """A device identifier combines the domain name and host."""
-    assert format_device_identifier("TrueNAS", "nas.local") == "TrueNAS_nas.local"
+    """A device identifier is the stable per-entry identity, unmodified."""
+    assert format_device_identifier("TrueNAS") == "TrueNAS"
 
 
 # ---------------------------
@@ -488,7 +495,7 @@ def test_device_info_non_system_group_falls_back_to_via_device() -> None:
     ):
         info = entity.device_info
     assert info["name"] == "TrueNAS Disks"
-    assert info["via_device"] == ("truenas_ce", "TrueNAS_truenas.local")
+    assert info["via_device"] == ("truenas_ce", "TrueNAS")
     assert "via_device_id" not in info
 
 

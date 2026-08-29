@@ -59,25 +59,31 @@ def format_unique_id(identity: str, key: str, reference: object = None) -> str:
     ``identity`` must be a stable per-entry identity (see
     ``resolve_entry_identity``), not the user-editable display name.
 
-    ``reference`` is lowercased but not slugified: unique_id has no character
-    restrictions in HA, and slugify's lossy '/'/'-'/'_' collapsing would let
-    distinct references (e.g. ZFS datasets "tank/a-b" and "tank/a_b") collide
-    and silently drop one entity as a duplicate.
+    ``reference`` keeps its original case and is not slugified: unique_id has
+    no character restrictions in HA, and both slugify() and lower() are lossy
+    -- slugify's '/'/'-'/'_' collapsing and lower()'s case-folding would each
+    let distinct references (e.g. ZFS datasets "tank/a-b" vs "tank/a_b", or
+    "tank/Data" vs "tank/data") collide and silently drop one entity as a
+    duplicate.
     """
     base = f"{identity.lower()}-{key}"
     if reference is None:
         return base
-    return f"{base}-{str(reference).lower()}"
+    return f"{base}-{reference!s}"
 
 
-def format_device_identifier(identity: str, hostname: str) -> str:
+def format_device_identifier(identity: str) -> str:
     """Build the main TrueNAS ("System") device identifier value.
 
     ``identity`` must be a stable per-entry identity (see
-    ``resolve_entry_identity``), not the user-editable display name.
-    Shared so other platforms (e.g. the statistics-cleanup button) reuse it.
+    ``resolve_entry_identity``), not the user-editable display name. Uses
+    ``identity`` alone -- an earlier format also appended the TrueNAS
+    hostname, but hostname is user-editable (System Settings > General)
+    while identity is already stable, so renaming the TrueNAS host would
+    have silently orphaned this device and created a duplicate. Shared so
+    other platforms (e.g. the statistics-cleanup button) reuse it.
     """
-    return f"{identity}_{hostname}"
+    return identity
 
 
 @lru_cache(maxsize=1)
@@ -103,8 +109,8 @@ def register_system_device(
     """
     inst = coordinator.config_entry.data[CONF_NAME]
     identity = resolve_entry_identity(coordinator.config_entry)
+    identifier = format_device_identifier(identity)
     system_info = coordinator.data["system_info"]
-    identifier = format_device_identifier(identity, system_info["hostname"])
     http_scheme = "https" if coordinator.api.scheme == "wss" else "http"
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -487,9 +493,7 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         dev_connection_value = f"{self._identity}_{ha_group}"
         dev_group = ha_group
         if ha_group == "System":
-            dev_connection_value = format_device_identifier(
-                self._identity, self.coordinator.data["system_info"]["hostname"]
-            )
+            dev_connection_value = format_device_identifier(self._identity)
 
         if ha_group.startswith("data__"):
             dev_group = ha_group[6:]
@@ -536,9 +540,7 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         else:
             device_info["via_device"] = (
                 DOMAIN,
-                format_device_identifier(
-                    self._identity, self.coordinator.data["system_info"]["hostname"]
-                ),
+                format_device_identifier(self._identity),
             )
         return cast(DeviceInfo, device_info)
 
