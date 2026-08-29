@@ -35,6 +35,9 @@ POWER_ENTITY = "sensor.solaredge_se10000h_power"
 # An address inside the inverter's read, to make that read fail.
 INVERTER_REGISTER = 40069
 
+# The register the probe counts meters by.
+METER_MODEL_REGISTER = 40188
+
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     entry.add_to_hass(hass)
@@ -347,6 +350,43 @@ async def test_battery_that_did_not_answer_the_probe_is_kept(
     assert (
         device_registry.async_get_device_by_identifier(
             identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_silence_about_one_kind_does_not_shield_the_other(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter that is really gone goes, even when the batteries kept quiet.
+
+    Silence about one kind of attached hardware says nothing about the other,
+    and holding on to everything would leave a removed meter behind for as long
+    as a battery is slow to answer.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    battery = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
         )
         is not None
     )

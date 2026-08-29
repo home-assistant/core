@@ -6,6 +6,7 @@ connection per device between everything talking to it, and hands that unit to
 the ``solaredged`` library.
 """
 
+from collections.abc import Set as AbstractSet
 from typing import TYPE_CHECKING
 
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
@@ -110,9 +111,6 @@ async def async_setup_entry(
         readings=readings, device_info=device_info, inverter_device_id=inverter.id
     )
 
-    # A block that stayed silent while probing is taken for absent, so what
-    # timed out cannot be told from what was unwired. Those devices stay where
-    # they are until the inverter says for itself that they are gone.
     if silent := solaredge.unresponsive_blocks & {
         SUBSYSTEM_BATTERIES,
         SUBSYSTEM_METERS,
@@ -123,8 +121,8 @@ async def async_setup_entry(
             entry.title,
             " and ".join(sorted(silent)),
         )
-    else:
-        _async_remove_stale_devices(hass, entry, solaredge, serial_number)
+
+    _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -136,8 +134,15 @@ def _async_remove_stale_devices(
     entry: SolarEdgeModbusConfigEntry,
     solaredge: SolarEdge,
     serial_number: str,
+    *,
+    silent: AbstractSet[str],
 ) -> None:
-    """Remove devices for meters and batteries no longer attached."""
+    """Remove devices for meters and batteries no longer attached.
+
+    A block that stayed silent while probing is taken for absent, and silence
+    is not the inverter saying its hardware is gone. Devices of that kind stay
+    where they are; the kind that did answer is still cleaned up.
+    """
     current = {(DOMAIN, serial_number)}
     current.update(
         (DOMAIN, f"{serial_number}_meter_{attachment_identity(meter, index)}")
@@ -148,10 +153,22 @@ def _async_remove_stale_devices(
         for index, battery in enumerate(solaredge.batteries, 1)
     )
 
+    unproven = tuple(
+        f"{serial_number}_{kind}_"
+        for block, kind in (
+            (SUBSYSTEM_BATTERIES, "battery"),
+            (SUBSYSTEM_METERS, "meter"),
+        )
+        if block in silent
+    )
+
     device_registry = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        if not current.intersection(device.identifiers):
-            device_registry.async_remove_device(device.id)
+        if current.intersection(device.identifiers):
+            continue
+        if any(identifier.startswith(unproven) for _, identifier in device.identifiers):
+            continue
+        device_registry.async_remove_device(device.id)
 
 
 async def async_unload_entry(

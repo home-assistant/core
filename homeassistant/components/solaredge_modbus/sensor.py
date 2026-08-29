@@ -303,7 +303,7 @@ INVERTER_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Inverter], ...] =
         device_class=SensorDeviceClass.ENUM,
         options=[status.name.lower() for status in InverterStatus],
         value_fn=lambda inverter: (
-            inverter.status.name.lower() if inverter.status else None
+            inverter.status.name.lower() if inverter.status is not None else None
         ),
     ),
 )
@@ -768,7 +768,7 @@ BATTERY_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Battery], ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[status.name.lower() for status in BatteryStatus],
         value_fn=lambda battery: (
-            battery.status.name.lower() if battery.status else None
+            battery.status.name.lower() if battery.status is not None else None
         ),
     ),
 )
