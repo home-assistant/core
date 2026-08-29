@@ -75,10 +75,10 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.12.5",
-  "probatio==0.11.2",
+  "probatio==0.11.3",
   "yarl==1.24.5",
   "webrtc-models==0.3.0",
-  "zeroconf==0.150.0",
+  "zeroconf==0.151.1",
 ]
 
 [project.urls]
@@ -638,7 +638,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.3"
+required-version = ">=0.16.4"
 
 [tool.ruff.lint]
 select = [

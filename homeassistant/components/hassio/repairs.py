@@ -41,6 +41,7 @@ from .issues import Issue, Suggestion
 
 SUGGESTION_CONFIRMATION_REQUIRED = {
     "addon_execute_remove",
+    "mount_execute_remove",
     "mount_move_local_data",
     "system_adopt_data_disk",
     "system_execute_reboot",

@@ -486,6 +486,20 @@ async def test_no_streaming_features_on_model_without_streamer(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_no_position_before_the_streamer_reports_one(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test an attached player that has not yet reported a position."""
+    playing_receiver.position_ms = None
+    notify_receiver_update(playing_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_position_jump_updates_state(
     hass: HomeAssistant,
     playing_receiver: MagicMock,
