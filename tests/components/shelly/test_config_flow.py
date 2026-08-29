@@ -101,6 +101,15 @@ DISCOVERY_INFO_WRONG_NAME = ZeroconfServiceInfo(
     properties={ATTR_PROPERTIES_ID: "shelly2pm-AABBCCDDEEFF"},
     type="mock_type",
 )
+DISCOVERY_INFO_HTTPS = ZeroconfServiceInfo(
+    ip_address=ip_address("192.168.1.1"),
+    ip_addresses=[ip_address("192.168.1.1")],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=DEFAULT_HTTPS_PORT,
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 
 # BLE manufacturer data with RPC-over-BLE enabled (flag bit 2 set)
 BLE_MANUFACTURER_DATA_RPC = {
@@ -640,16 +649,8 @@ async def test_form_enhanced_security_older_firmware(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("gen", "model"),
-    [
-        (2, MODEL_PLUS_2PM),
-    ],
-)
 async def test_form_enhanced_security_with_https_port(
     hass: HomeAssistant,
-    gen: int,
-    model: str,
     mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
@@ -664,9 +665,9 @@ async def test_form_enhanced_security_with_https_port(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={
             "mac": "test-mac",
-            "model": model,
+            "model": MODEL_PLUS_2PM,
             "auth": False,
-            "gen": gen,
+            "gen": 2,
             "enhanced_security": True,
         },
     ):
@@ -679,9 +680,9 @@ async def test_form_enhanced_security_with_https_port(
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTPS_PORT,
-        CONF_MODEL: model,
+        CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
-        CONF_GEN: gen,
+        CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup.mock_calls) == 1
@@ -2458,45 +2459,22 @@ async def test_zeroconf_enhanced_security(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-DISCOVERY_INFO_HTTPS = ZeroconfServiceInfo(
-    ip_address=ip_address("1.1.1.1"),
-    ip_addresses=[ip_address("1.1.1.1")],
-    hostname="mock_hostname",
-    name="shelly1pm-12345",
-    port=DEFAULT_HTTPS_PORT,
-    properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
-    type="mock_type",
-)
-
-
-@pytest.mark.parametrize(
-    ("gen", "model", "get_info"),
-    [
-        (
-            2,
-            MODEL_PLUS_2PM,
-            {
-                "mac": "test-mac",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-                "enhanced_security": True,
-            },
-        ),
-    ],
-)
 async def test_zeroconf_enhanced_security_with_https_port(
     hass: HomeAssistant,
-    gen: int,
-    model: str,
-    get_info: dict[str, Any],
     mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test zeroconf discovery with enhanced_security and HTTPS port keeps port as 443."""
     with patch(
-        "homeassistant.components.shelly.config_flow.get_info", return_value=get_info
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+            "enhanced_security": True,
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -2526,9 +2504,9 @@ async def test_zeroconf_enhanced_security_with_https_port(
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTPS_PORT,
         CONF_VERIFY_SSL: False,
-        CONF_MODEL: model,
+        CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
-        CONF_GEN: gen,
+        CONF_GEN: 2,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
