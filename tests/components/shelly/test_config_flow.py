@@ -3564,15 +3564,39 @@ async def test_reconfigure_with_exception(
     assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: 2}
 
 
+@pytest.mark.parametrize(
+    ("port", "entry_data"),
+    [
+        (
+            DEFAULT_HTTP_PORT,
+            {
+                CONF_HOST: "10.10.10.10",
+                CONF_PORT: 80,
+                CONF_GEN: 2,
+            },
+        ),
+        (
+            DEFAULT_HTTPS_PORT,
+            {
+                CONF_HOST: "10.10.10.10",
+                CONF_PORT: 443,
+                CONF_GEN: 2,
+                CONF_VERIFY_SSL: False,
+            },
+        ),
+    ],
+)
 async def test_reconfigure_enhanced_security(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
+    port: int,
+    entry_data: dict[str, int | str],
 ) -> None:
-    """Test reconfigure flow with enhanced_security does not upgrade port from 80."""
+    """Test reconfigure flow with enhanced_security does not upgrade port from 80 or 443."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
-        data={CONF_HOST: "0.0.0.0", CONF_GEN: 2},
+        data={CONF_HOST: "0.0.0.0", CONF_PORT: port, CONF_GEN: 2},
     )
     entry.add_to_hass(hass)
 
@@ -3593,16 +3617,12 @@ async def test_reconfigure_enhanced_security(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: DEFAULT_HTTP_PORT},
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: port},
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {
-        CONF_HOST: "10.10.10.10",
-        CONF_PORT: DEFAULT_HTTP_PORT,
-        CONF_GEN: 2,
-    }
+    assert entry.data == entry_data
 
 
 async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
