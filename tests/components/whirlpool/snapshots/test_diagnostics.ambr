@@ -7,7 +7,7 @@
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'said1',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -20,7 +20,7 @@
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'said2',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -35,7 +35,7 @@
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'WBR123456789',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -50,7 +50,7 @@
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'WBR123456789',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -63,7 +63,7 @@
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'WBR123456789',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -78,7 +78,7 @@
           'category': 'refrigerator',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'WBR123456789',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,
@@ -93,7 +93,7 @@
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
-            '_id': 'WBR123456789',
+            '_id': '**REDACTED**',
             'attributes': dict({
               'Cavity_OpSetHorzLouverSwing': dict({
                 'updateTime': 1626517992782,

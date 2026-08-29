@@ -10,13 +10,25 @@ from homeassistant.core import HomeAssistant
 from . import WhirlpoolConfigEntry
 
 TO_REDACT = {
+    "SAID",
     "SERIAL_NUMBER",
+    "Serial",
+    "UserId",
+    "WifiMacAddress",
+    "_id",
     "macaddress",
-    "username",
     "password",
+    "said",
+    "serial",
+    "serialNumber",
+    "serial_number",
+    "thingName",
     "token",
     "unique_id",
-    "SAID",
+    "userId",
+    "username",
+    "wifiMacAddress",
+    "wifi_mac",
 }
 
 
