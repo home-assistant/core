@@ -140,7 +140,9 @@ class SolarEdgeModbusMeterEntity(SolarEdgeModbusEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._serial_number}_meter_{identity}")},
             manufacturer=meter.manufacturer or "SolarEdge",
-            model=meter.model or None,
+            # What a meter reports is a part number, like "SE-MTR-3Y-400V-A",
+            # and there is no shorter name it is sold under to put beside it.
+            model_id=meter.model or None,
             name=f"Meter {index}",
             serial_number=meter.serial_number or None,
             via_device_id=entry.runtime_data.inverter_device_id,

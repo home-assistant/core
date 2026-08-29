@@ -91,7 +91,7 @@ async def test_meter_is_a_sub_device_of_the_inverter(
     assert meter is not None
     assert meter.via_device_id == inverter.id
     assert meter.name == "Meter 1"
-    assert meter.model == "SE-MTR-3Y-400V-A"
+    assert meter.model_id == "SE-MTR-3Y-400V-A"
     assert meter.serial_number == METER_SERIAL_NUMBER
 
 
