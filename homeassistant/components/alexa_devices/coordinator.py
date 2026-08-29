@@ -1,6 +1,6 @@
 """Support for Alexa Devices."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from datetime import timedelta
 from pathlib import Path
@@ -181,6 +181,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self._media_states: dict[str, AmazonMediaState] = {}
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
+
+        self._dnd_states: dict[str, bool] = {}
+        self.api.on_dnd_event.append(self.dnd_event_handler)
+        self.api.on_dnd_event.freeze()
 
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
@@ -378,3 +382,22 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def volume_states(self) -> dict[str, AmazonVolumeState]:
         """Volumes of devices."""
         return self._volume_states
+
+    async def sync_dnd_state(self) -> None:
+        """Sync dnd state."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_dnd_state()
+
+    async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
+        """Handle pushed dnd events."""
+        self._dnd_states.update(dnd_states)
+        self.async_update_listeners()
+
+    def set_dnd_state(self, serial_num: str, state: bool) -> None:
+        """Set the local DND state; caller writes its own state, so listeners aren't notified."""
+        self._dnd_states[serial_num] = state
+
+    @property
+    def dnd_states(self) -> Mapping[str, bool]:
+        """DND states of devices."""
+        return self._dnd_states
