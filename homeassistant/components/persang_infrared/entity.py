@@ -12,10 +12,24 @@ class PersangIrEntity(InfraredEmitterConsumerEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
-        """Initialize Persang IR entity."""
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        infrared_entity_id: str,
+        unique_id_suffix: str | None = None,
+    ) -> None:
+        """Initialize Persang IR entity.
+
+        Platforms with a single entity leave ``unique_id_suffix`` unset; the
+        buttons pass their description key, since unique IDs only have to be
+        unique per platform.
+        """
         self._infrared_emitter_entity_id = infrared_entity_id
-        self._attr_unique_id = entry.entry_id
+        self._attr_unique_id = (
+            entry.entry_id
+            if unique_id_suffix is None
+            else f"{entry.entry_id}_{unique_id_suffix}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Persang speaker",
