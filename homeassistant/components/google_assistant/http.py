@@ -114,10 +114,6 @@ class GoogleConfig(AbstractConfig):
 
         await super().async_initialize()
 
-        if self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION:
-            self._migrate_legacy_settings()
-            await self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
-
         self._on_deinitialize.append(
             async_listen_entity_updates(
                 self.hass, DOMAIN, self.async_schedule_google_sync_all
@@ -130,6 +126,10 @@ class GoogleConfig(AbstractConfig):
                 event_filter=self._async_state_added_filter,
             )
         )
+
+        if self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION:
+            self._migrate_legacy_settings()
+            await self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
 
         self.async_enable_local_sdk()
 
