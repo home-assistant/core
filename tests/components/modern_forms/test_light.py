@@ -411,8 +411,8 @@ async def test_light_color_temp_missing_bounds_gen4(
         """Serve the normal Gen4 fixtures, minus the downlight's color-temp bounds."""
         if not url.path.endswith("/fixture"):
             return await modern_forms_gen4_call_mock(hass, method, url, data)
-        payload = json.loads(
-            await async_load_fixture(hass, "fixture_gen4.json", DOMAIN)
+        payload = await async_load_json_object_fixture(
+            hass, "fixture_gen4.json", DOMAIN
         )
         for fixture in payload["fixture"]:
             if fixture["addr"] == 3:
