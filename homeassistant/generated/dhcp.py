@@ -505,6 +505,50 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "iaqualink-*",
     },
     {
+        "domain": "imou",
+        "macaddress": "1C4D89*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "302450*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "38AF29*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "3CE36B*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "3CEF8C*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "906A94*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "A0BD1D*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "A83162*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "AC3DFA*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "B44C3B*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "FCB69D*",
+    },
+    {
         "domain": "incomfort",
         "hostname": "rfgateway",
         "macaddress": "0004A3*",

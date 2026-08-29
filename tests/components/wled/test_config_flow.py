@@ -229,7 +229,13 @@ async def test_form_submission_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=CONFIG,
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -299,7 +305,13 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("type") is FlowResultType.ABORT
