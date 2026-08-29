@@ -408,19 +408,21 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
             probatio.Optional(CONF_GA_COLOR_TEMP): GASelector(
                 write_required=True, dpt=ColorTempModes
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MIN, default=2700
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MIN, default=2700): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MAX, default=6000
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MAX, default=6000): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
             probatio.Optional(CONF_COLOR): GroupSelect(
                 GroupSelectOption(

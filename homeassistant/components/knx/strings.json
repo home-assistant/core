@@ -1321,6 +1321,10 @@
       },
       "title": "KNX Data Secure telegrams can't be decrypted"
     },
+    "entity_validation_error": {
+      "description": "The stored configuration of the following KNX {platform} entities is invalid, so they were not set up:\n\n{entities}\n\nCorrect or delete them. Check the logs for details.",
+      "title": "Invalid KNX entity configuration"
+    },
     "telegram_storage_error": {
       "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
       "title": "KNX telegram storage error"
