@@ -3,7 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from geocachingapi.models import GeocachingStatus
+from geocachingapi.models import GeocachingStatus, GeocachingTrackable
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -19,11 +19,16 @@ from homeassistant.components.geocaching.const import (
     MAX_TRACKED_TRACKABLES,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
+from homeassistant.components.geocaching.sensor import PROFILE_SENSORS
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryDataWithId
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
@@ -33,6 +38,20 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
+
+
+def _create_status(
+    account_reference_code: str, *trackable_codes: str
+) -> GeocachingStatus:
+    """Create API status data for an account and its trackables."""
+    status = GeocachingStatus()
+    status.user.username = account_reference_code
+    status.user.reference_code = account_reference_code
+    status.trackables = {
+        code: GeocachingTrackable(reference_code=code, name=code)
+        for code in trackable_codes
+    }
+    return status
 
 
 @pytest.fixture(autouse=True)
@@ -427,6 +446,216 @@ async def test_options_flow(
     assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
     assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
     async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+async def test_options_flow_removes_trackable_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a trackable cleans its entities and device before reload."""
+    removed_code = "TB12345"
+    retained_code = "TB67890"
+    account_reference_code = "PR12345"
+    config_entry = MockConfigEntry(
+        title="Account",
+        domain=DOMAIN,
+        data={"id": "mock_user", "auth_implementation": DOMAIN},
+        options={CONF_TRACKABLE_CODES: [" tb12345 ", retained_code]},
+        unique_id="mock_user",
+    )
+    config_entry.add_to_hass(hass)
+
+    initial_status = _create_status(account_reference_code, removed_code, retained_code)
+    reloaded_status = _create_status(account_reference_code, retained_code)
+    session = MagicMock()
+    session.token = {"access_token": "mock-token"}
+
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=session,
+        ),
+        patch(
+            "homeassistant.components.geocaching.coordinator.GeocachingApi"
+        ) as geocaching_api_mock,
+    ):
+        geocaching_api_mock.return_value.update = AsyncMock(
+            side_effect=[initial_status, reloaded_status]
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        removed_unique_id = (
+            f"{account_reference_code}_{removed_code}_kilometers_traveled"
+        )
+        removed_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, removed_unique_id
+        )
+        assert removed_entity_id is not None
+        removed_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{account_reference_code}_{removed_code}"),
+            config_entry.entry_id,
+        )
+        assert removed_device is not None
+        disabled_entity = entity_registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            f"{removed_unique_id}_disabled",
+            config_entry=config_entry,
+            device_id=removed_device.id,
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+
+        retained_unique_id = (
+            f"{account_reference_code}_{retained_code}_kilometers_traveled"
+        )
+        retained_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, retained_unique_id
+        )
+        assert retained_entity_id is not None
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_TRACKABLE_CODES: retained_code},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_TRACKABLE_CODES: [retained_code]}
+    assert hass.states.get(removed_entity_id) is None
+    assert entity_registry.async_get(removed_entity_id) is None
+    assert entity_registry.async_get(disabled_entity.entity_id) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{account_reference_code}_{removed_code}"),
+            config_entry.entry_id,
+        )
+        is None
+    )
+
+    assert hass.states.get(retained_entity_id) is not None
+    retained_entity = entity_registry.async_get(retained_entity_id)
+    assert retained_entity is not None
+    assert retained_entity.config_entry_id == config_entry.entry_id
+    assert retained_entity.config_subentry_id is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{account_reference_code}_{retained_code}"),
+            config_entry.entry_id,
+        )
+        is not None
+    )
+
+    for description in PROFILE_SENSORS:
+        profile_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{account_reference_code}_{description.key}"
+        )
+        assert profile_entity_id is not None
+        assert hass.states.get(profile_entity_id) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, account_reference_code), config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_options_flow_removes_trackable_from_unloaded_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test registry cleanup for an unloaded entry is scoped to that entry."""
+    trackable_code = "TB12345"
+    entries: list[tuple[MockConfigEntry, str]] = []
+
+    for account_reference_code, entry_id in (
+        ("PR11111", "entry-one"),
+        ("PR22222", "entry-two"),
+    ):
+        config_entry = MockConfigEntry(
+            title=account_reference_code,
+            domain=DOMAIN,
+            data={"id": entry_id, "auth_implementation": DOMAIN},
+            options={CONF_TRACKABLE_CODES: [trackable_code]},
+            entry_id=entry_id,
+            unique_id=entry_id,
+        )
+        config_entry.add_to_hass(hass)
+        status = _create_status(account_reference_code, trackable_code)
+        session = MagicMock()
+        session.token = {"access_token": "mock-token"}
+        with (
+            patch(
+                "homeassistant.components.geocaching.async_get_config_entry_implementation",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "homeassistant.components.geocaching.OAuth2Session",
+                return_value=session,
+            ),
+            patch(
+                "homeassistant.components.geocaching.coordinator.GeocachingApi"
+            ) as geocaching_api_mock,
+        ):
+            geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+        entries.append((config_entry, account_reference_code))
+
+    removed_entry, removed_account = entries[0]
+    retained_entry, retained_account = entries[1]
+    removed_unique_id = f"{removed_account}_{trackable_code}_kilometers_traveled"
+    removed_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, removed_unique_id
+    )
+    assert removed_entity_id is not None
+    removed_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{removed_account}_{trackable_code}"), removed_entry.entry_id
+    )
+    assert removed_device is not None
+
+    assert await hass.config_entries.async_unload(removed_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(removed_entity_id) is not None
+    assert device_registry.async_get(removed_device.id) is not None
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as async_reload:
+        result = await hass.config_entries.options.async_init(removed_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_TRACKABLE_CODES: ""}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert removed_entry.options == {CONF_TRACKABLE_CODES: []}
+    assert entity_registry.async_get(removed_entity_id) is None
+    assert device_registry.async_get(removed_device.id) is None
+    async_reload.assert_not_awaited()
+
+    retained_unique_id = f"{retained_account}_{trackable_code}_kilometers_traveled"
+    retained_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, retained_unique_id
+    )
+    assert retained_entity_id is not None
+    retained_entity = entity_registry.async_get(retained_entity_id)
+    assert retained_entity is not None
+    assert retained_entity.config_entry_id == retained_entry.entry_id
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{retained_account}_{trackable_code}"),
+            retained_entry.entry_id,
+        )
+        is not None
+    )
 
 
 async def test_options_flow_maximum_trackables(
