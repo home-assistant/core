@@ -136,7 +136,8 @@ class GridSourceType(TypedDict):
     stat_rate: NotRequired[str]
     power_config: NotRequired[PowerConfig]
 
-    # Whether this grid connection can charge a configured battery
+    # Whether this grid connection can charge a configured battery.
+    # Omitted for backward compatibility and treated by the frontend as true.
     can_charge_battery: NotRequired[bool]
 
     cost_adjustment_day: float
