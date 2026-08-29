@@ -16,6 +16,7 @@ from homeassistant.components.geocaching.const import (
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
+    MAX_TRACKED_TRACKABLES,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryDataWithId
@@ -428,12 +429,29 @@ async def test_options_flow(
     async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
+async def test_options_flow_maximum_trackables(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test configuring the maximum number of tracked trackables."""
+    mock_config_entry.add_to_hass(hass)
+    trackable_codes = [f"TB{number}" for number in range(MAX_TRACKED_TRACKABLES)]
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKABLE_CODES: "\n".join(trackable_codes)},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TRACKABLE_CODES: trackable_codes}
+
+
 @pytest.mark.parametrize(
     ("trackable_codes", "error"),
     [
         pytest.param("INVALID", "invalid_trackable_code", id="invalid"),
         pytest.param(
-            "\n".join(f"TB{number}" for number in range(51)),
+            "\n".join(f"TB{number}" for number in range(MAX_TRACKED_TRACKABLES + 1)),
             "too_many_trackables",
             id="too-many",
         ),
