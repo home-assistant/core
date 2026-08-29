@@ -5,7 +5,14 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
-from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
+from victron_mqtt import (
+    AuthenticationError,
+    CannotConnectError,
+    Hub as VictronVenusHub,
+    PairingError,
+    PairingToken,
+    request_pairing_token,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
@@ -25,6 +32,7 @@ from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
+DEFAULT_SSL_PORT = 8883
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +54,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
         vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SSL, default=True): selector.BooleanSelector(),
     }
 )
 
@@ -110,6 +117,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.installation_id: str | None = None
         self.friendly_name: str | None = None
         self.model_name: str | None = None
+        self.mqtt_token_pairing = False
 
     @override
     async def async_step_user(
@@ -177,6 +185,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
         self.model_name = discovery_info.upnp["modelName"]
         self.friendly_name = discovery_info.upnp["friendlyName"]
+        self.mqtt_token_pairing = discovery_info.upnp.get("X_MqttTokenPairing") == "1"
 
         await self.async_set_unique_id(self.installation_id)
 
@@ -207,25 +216,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": self.friendly_name or self.hostname
         }
 
-        # Verify connectivity before showing the confirmation dialog
-        try:
-            ssdp_conf = {
-                CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SERIAL: self.serial,
-                CONF_INSTALLATION_ID: self.installation_id,
-            }
-            await validate_input(ssdp_conf)
-        except AuthenticationError:
-            return await self.async_step_ssdp_auth()
-        except CannotConnectError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error validating SSDP discovery for Victron GX"
-            )
-            return self.async_abort(reason="unknown")
-
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
@@ -236,25 +226,112 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.installation_id is not None
 
         if user_input is not None:
+            data: dict[str, Any] = {
+                CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_SSL_PORT,
+                CONF_SERIAL: self.serial,
+                CONF_INSTALLATION_ID: self.installation_id,
+                CONF_MODEL: self.model_name,
+                CONF_SSL: True,
+            }
+            try:
+                await validate_input(data)
+            except AuthenticationError:
+                if self.mqtt_token_pairing:
+                    return await self.async_step_ssdp_token_pairing()
+                return await self.async_step_ssdp_auth()
+            except CannotConnectError:
+                data[CONF_PORT] = DEFAULT_PORT
+                data[CONF_SSL] = False
+                try:
+                    await validate_input(data)
+                except AuthenticationError:
+                    if self.mqtt_token_pairing:
+                        return await self.async_step_ssdp_token_pairing()
+                    return await self.async_step_ssdp_auth()
+                except CannotConnectError:
+                    if self.mqtt_token_pairing:
+                        return await self.async_step_ssdp_token_pairing()
+                    return self.async_abort(reason="cannot_connect")
+                except Exception:
+                    _LOGGER.exception(
+                        "Unexpected error validating SSDP discovery for Victron GX"
+                    )
+                    return self.async_abort(reason="unknown")
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error validating SSDP discovery for Victron GX"
+                )
+                return self.async_abort(reason="unknown")
+
             return self.async_create_entry(
                 title=ENTRY_TITLE_FORMAT.format(
                     installation_id=self.installation_id,
                     host=self.hostname,
-                    port=DEFAULT_PORT,
+                    port=data[CONF_PORT],
                 ),
-                data={
-                    CONF_HOST: self.hostname,
-                    CONF_PORT: DEFAULT_PORT,
-                    CONF_SERIAL: self.serial,
-                    CONF_INSTALLATION_ID: self.installation_id,
-                    CONF_MODEL: self.model_name,
-                },
+                data=data,
             )
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_confirm",
             description_placeholders={"name": self.friendly_name or self.hostname},
+        )
+
+    async def async_step_ssdp_token_pairing(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle automatic token pairing with the GX device."""
+        assert self.hostname is not None
+        assert self.installation_id is not None
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                credentials: PairingToken = await request_pairing_token(
+                    self.hostname, self.installation_id
+                )
+            except PairingError:
+                errors["base"] = "pairing_failed"
+            except Exception:
+                _LOGGER.exception("Failed to connect to GX device for token pairing")
+                errors["base"] = "cannot_connect"
+            else:
+                data: dict[str, Any] = {
+                    CONF_HOST: self.hostname,
+                    CONF_PORT: DEFAULT_SSL_PORT,
+                    CONF_SERIAL: self.serial,
+                    CONF_INSTALLATION_ID: self.installation_id,
+                    CONF_MODEL: self.model_name,
+                    CONF_USERNAME: credentials.token_name,
+                    CONF_PASSWORD: credentials.password,
+                    CONF_SSL: True,
+                }
+                try:
+                    await validate_input(data)
+                except AuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except CannotConnectError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error validating paired credentials")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title=ENTRY_TITLE_FORMAT.format(
+                            installation_id=self.installation_id,
+                            host=self.hostname,
+                            port=DEFAULT_SSL_PORT,
+                        ),
+                        data=data,
+                    )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="ssdp_token_pairing",
+            errors=errors,
+            description_placeholders={CONF_HOST: self.hostname},
         )
 
     async def async_step_ssdp_auth(
@@ -271,14 +348,16 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 "SSDP auth user input received: %s",
                 async_redact_data(user_input, TO_REDACT),
             )
+            use_ssl = user_input.get(CONF_SSL, True)
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
+                CONF_PORT: DEFAULT_SSL_PORT if use_ssl else DEFAULT_PORT,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                CONF_SSL: user_input.get(CONF_SSL),
+                CONF_MODEL: self.model_name,
+                CONF_USERNAME: "remoteconsole",
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
+                CONF_SSL: use_ssl,
             }
 
             try:
@@ -298,7 +377,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=ENTRY_TITLE_FORMAT.format(
                         installation_id=self.installation_id,
                         host=self.hostname,
-                        port=DEFAULT_PORT,
+                        port=data[CONF_PORT],
                     ),
                     data=data,
                 )
