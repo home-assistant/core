@@ -185,6 +185,15 @@ class AbstractOAuth2Implementation(ABC):
         config entry data.
         """
 
+    @property
+    def service_domain(self) -> str:
+        """Domain of the service the tokens are for.
+
+        Defaults to the implementation itself, but an implementation that obtains
+        tokens on behalf of other integrations has to name the one it serves.
+        """
+        return self.domain
+
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
         try:
@@ -194,7 +203,7 @@ class AbstractOAuth2Implementation(ABC):
         except ClientError as err:
             # Implementations that issue their own token request may not map their
             # failures, so callers would see a raw aiohttp error instead.
-            _raise_mapped_token_error(err, self.domain)
+            _raise_mapped_token_error(err, self.service_domain)
         # Force int for non-compliant oauth2 providers
         new_token["expires_in"] = int(new_token["expires_in"])
         new_token["expires_at"] = time.time() + new_token["expires_in"]
@@ -337,11 +346,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             resp.raise_for_status()
             return cast(dict, await resp.json())
         except ClientResponseError as err:
-            _raise_mapped_token_error(err, self._domain)
+            _raise_mapped_token_error(err, self.service_domain)
         except ClientError as err:
             # Bare TimeoutError is left alone so an enclosing asyncio.timeout still
             # aborts with oauth_timeout; aiohttp's own timeouts are ClientErrors.
-            _raise_mapped_token_error(err, self._domain)
+            _raise_mapped_token_error(err, self.service_domain)
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):

@@ -6,7 +6,7 @@ import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientResponseError, RequestInfo
+from aiohttp import ClientError, ClientResponseError, RequestInfo
 import pytest
 from yarl import URL
 
@@ -304,3 +304,24 @@ async def test_refresh_token_error(
 
     assert exc_info.value.status == status
     assert exc_info.value.domain == "test"
+
+
+async def test_refresh_token_connection_error(hass: HomeAssistant) -> None:
+    """Test a failure without a response reports the service, not the cloud domain."""
+    hass.data[DATA_CLOUD] = None
+    impl = account_link.CloudOAuth2Implementation(hass, "test")
+
+    with (
+        patch(
+            "hass_nabucasa.account_link.async_fetch_access_token",
+            side_effect=ClientError("Cannot connect"),
+        ),
+        pytest.raises(OAuth2TokenRequestTransientError) as exc_info,
+    ):
+        await impl.async_refresh_token(
+            {"refresh_token": "mock-refresh", "access_token": "mock-access"}
+        )
+
+    assert impl.domain == "cloud"
+    assert exc_info.value.domain == "test"
+    assert exc_info.value.translation_placeholders == {"domain": "test"}
