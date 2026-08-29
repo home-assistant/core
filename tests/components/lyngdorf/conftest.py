@@ -13,6 +13,7 @@ from lyngdorf import (
     NumericRange,
     RemoteKey,
     Trim,
+    ZoneB,
 )
 import pytest
 
@@ -150,7 +151,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.can_shuffle = False
     receiver.available_repeat_modes = frozenset()
 
-    receiver.lipsync = _FloatControl(50, NumericRange(0, 500, 1))
+    receiver.lipsync = _FloatControl(50.0, NumericRange(0, 500, 1))
     receiver.lipsync_range = NumericRange(0, 500, 1)
     receiver.trims = {
         Trim.BASS: _control(3.0, NumericRange(-12.0, 12.0, 0.1)),
@@ -178,6 +179,25 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_available_sources = []
     receiver.zone_b_audio_input = "aux"
     receiver.zone_b_streaming_source = "DLNA"
+
+    receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.muted = False
+    receiver.sources = []
+    receiver.sound_modes = []
+    receiver.audio_inputs = ["optical", "aux"]
+    receiver.video_inputs = ["hdmi"]
+    receiver.stream_types = ["AirPlay", "DLNA"]
+    receiver.room_perfect_positions = ["Global", "Focus 1"]
+    receiver.voicings = ["Neutral", "Music", "Movie"]
+
+    zone_b = MagicMock(spec=ZoneB)
+    zone_b.power_on = False
+    zone_b.muted = False
+    zone_b.source = None
+    zone_b.audio_input = "aux"
+    zone_b.streaming_source = "DLNA"
+    zone_b.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.zone_b = zone_b
 
     mock_create_receiver.return_value = receiver
     return receiver
