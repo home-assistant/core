@@ -42,137 +42,38 @@
   },
   "entity": {
     "sensor": {
-      "ac_o_e_total": {
-        "name": "Total AC Output Energy"
+      "acloadalltotalpower": {
+        "name": "AC Output Power"
       },
-      "ac_o_switch": {
-        "name": "AC Output Switch"
+      "chgfulltime": {
+        "name": "Time to Full"
       },
-      "b_c": {
-        "name": "Battery Current"
+      "dsgfulltime": {
+        "name": "Time to Empty"
       },
-      "b_c_total": {
-        "name": "Total Battery Current"
+      "gridalltotalpower": {
+        "name": "Grid Power"
       },
-      "b_cell_count": {
-        "name": "Cell Count"
-      },
-      "b_cycle_count": {
-        "name": "Battery Cycle Count"
-      },
-      "b_i_e": {
-        "name": "Total Battery Charged Energy"
-      },
-      "b_ntc_count": {
-        "name": "Temperature Sensor Count"
-      },
-      "b_o_e": {
-        "name": "Total Battery Discharged Energy"
-      },
-      "b_soc_high": {
-        "name": "Max Charge Limit (SoC High)"
-      },
-      "b_soc_low": {
-        "name": "Min Discharge Limit (SoC Low)"
-      },
-      "b_soh": {
-        "name": "Battery SoH"
-      },
-      "b_soh_total": {
-        "name": "Total Battery SoH"
-      },
-      "b_t_avg": {
-        "name": "Average Battery Temperature"
-      },
-      "b_type": {
-        "name": "Battery Type"
-      },
-      "b_v": {
-        "name": "Battery Voltage"
-      },
-      "b_v_total": {
-        "name": "Total Battery Voltage"
-      },
-      "d_inverter_fault": {
-        "name": "Inverter Fault"
-      },
-      "d_inverter_status": {
+      "invworkstate": {
         "name": "Inverter Status"
       },
-      "d_inverter_total": {
-        "name": "Total Inverter Power"
+      "pvalltotalpower": {
+        "name": "Solar Input Power"
       },
-      "d_inverter_type": {
-        "name": "Inverter Type"
+      "setctrlac": {
+        "name": "AC Output"
       },
-      "d_inverter_warning": {
-        "name": "Inverter Warning"
+      "setctrlpoweron": {
+        "name": "Power"
       },
-      "d_num_battery_packs": {
-        "name": "Number of Battery Packs"
+      "setctrlworkmode": {
+        "name": "Work Mode"
       },
-      "d_num_inverters": {
-        "name": "Inverter Count"
+      "setctrlworkmodebalco": {
+        "name": "Work Mode"
       },
-      "g_i_e_total": {
-        "name": "Total Grid Import Energy"
-      },
-      "g_i_f": {
-        "name": "Grid Frequency"
-      },
-      "g_i_switch": {
-        "name": "Grid Charging Switch"
-      },
-      "g_o_e_total": {
-        "name": "Total Grid Export Energy"
-      },
-      "g_o_switch": {
-        "name": "Grid Feed-in Switch"
-      },
-      "pv_1_i_c": {
-        "name": "PV 1 Input Current"
-      },
-      "pv_1_i_p": {
-        "name": "PV 1 Input Power"
-      },
-      "pv_1_i_v": {
-        "name": "PV 1 Input Voltage"
-      },
-      "pv_2_i_c": {
-        "name": "PV 2 Input Current"
-      },
-      "pv_2_i_p": {
-        "name": "PV 2 Input Power"
-      },
-      "pv_2_i_v": {
-        "name": "PV 2 Input Voltage"
-      },
-      "pv_3_i_c": {
-        "name": "PV 3 Input Current"
-      },
-      "pv_3_i_p": {
-        "name": "PV 3 Input Power"
-      },
-      "pv_3_i_v": {
-        "name": "PV 3 Input Voltage"
-      },
-      "pv_4_i_c": {
-        "name": "PV 4 Input Current"
-      },
-      "pv_4_i_p": {
-        "name": "PV 4 Input Power"
-      },
-      "pv_4_i_v": {
-        "name": "PV 4 Input Voltage"
-      },
-      "pv_ac_e": {
-        "name": "PV AC Energy"
-      },
-      "pv_ac_p": {
-        "name": "PV AC Power"
-      },
-      "pv_i_e_total": {
-        "name": "Total PV Input Energy"
+      "soc": {
+        "name": "Battery Level"
       }
     }
   },

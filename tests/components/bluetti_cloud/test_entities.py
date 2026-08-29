@@ -80,12 +80,55 @@ async def test_sensor_uses_has_entity_name_and_device_info(hass: HomeAssistant) 
     entity = BluettiSensor(coordinator.device, state, meta)
 
     assert entity.has_entity_name is True
-    assert entity.name == "Battery Level"
+    # "soc" has a real strings.json translation (see _TRANSLATED_FN_CODES in
+    # sensor.py), so _attr_name is deliberately left unset in favor of
+    # BluettiEntity's translation_key - resolving that into a display name
+    # needs a real platform/hass wiring this bare entity doesn't have; see
+    # test_sensor_setup_entry_resolves_translated_names in test_setup_entry.py
+    # for that end-to-end check.
+    assert entity.translation_key == "soc"
+    assert not hasattr(entity, "_attr_name")
     assert entity.unique_id == "SN1_SOC"
     assert entity.device_info["identifiers"] == {(DOMAIN, "SN1")}
     assert entity.device_info["serial_number"] == "SN1"
     assert entity.native_value == "80"
     assert entity.available is True
+
+
+async def test_sensor_falls_back_to_fn_name_for_an_untranslated_fn_code(
+    hass: HomeAssistant,
+) -> None:
+    """An fn_code with no strings.json entry still gets a usable name."""
+    device = BluettiDevice(
+        device_id="SN1",
+        on_line="1",
+        name="Test Device",
+        sn="SN1",
+        model="AC200L",
+        state_list=[
+            {
+                "fnCode": "SomeFutureField",
+                "fnName": "Some Future Field",
+                "fnValue": "1",
+                "fnType": "SENSOR",
+            }
+        ],
+    )
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    coordinator = BluettiDeviceCoordinator(hass, entry, device)
+    state = coordinator.device.get_state("SomeFutureField")
+    meta = {
+        "name": state.fn_name,
+        "unit": None,
+        "device_class": None,
+        "state_class": None,
+    }
+
+    entity = BluettiSensor(coordinator.device, state, meta)
+
+    assert entity.translation_key == "somefuturefield"
+    assert entity._attr_name == "Some Future Field"
 
 
 async def test_sensor_unavailable_when_device_offline(hass: HomeAssistant) -> None:

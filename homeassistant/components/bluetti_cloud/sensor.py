@@ -32,6 +32,27 @@ PARALLEL_UPDATES = 0
 # BluettiEstimatedBatteryPowerSensor._net_power_w's docstring.
 _ESTIMATED_BATTERY_POWER_MODELS = {"Balco260"}
 
+# fn_codes (lowercased) with a real translation in strings.json, verified
+# against doc/diagnostics/{balco260,ebox-ep2000}.json - every other fn_code
+# falls back to the cloud's own fn_name, so an unlisted one from a model we
+# haven't seen a dump for still gets a usable (if untranslated) name instead
+# of no entity at all.
+_TRANSLATED_FN_CODES = frozenset(
+    {
+        "acloadalltotalpower",
+        "chgfulltime",
+        "dsgfulltime",
+        "gridalltotalpower",
+        "invworkstate",
+        "pvalltotalpower",
+        "setctrlac",
+        "setctrlpoweron",
+        "setctrlworkmode",
+        "setctrlworkmodebalco",
+        "soc",
+    }
+)
+
 
 class BaseSensorMetaInfo(TypedDict):
     """Static per-sensor-type metadata looked up from SENSOR_MAP."""
@@ -178,7 +199,11 @@ class BluettiSensor(BluettiEntity, SensorEntity):
         super().__init__(device, state)
         self._meta = meta
 
-        self._attr_name = meta["name"]
+        # A known fn_code keeps BluettiEntity's translation_key-based name
+        # (see entity.py); an unrecognized one falls back to the cloud's own
+        # fn_name, which _attr_name overrides translation_key with.
+        if state.fn_code.lower() not in _TRANSLATED_FN_CODES:
+            self._attr_name = meta["name"]
         self._attr_device_class = meta["device_class"]
         self._attr_state_class = meta["state_class"]
         self._attr_native_unit_of_measurement = meta["unit"]
