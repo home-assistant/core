@@ -48,6 +48,20 @@
         "name": "Battery standby"
       }
     },
+    "number": {
+      "ac_power_limit": {
+        "name": "AC power limit"
+      },
+      "battery_charge_power_limit": {
+        "name": "Battery charge power limit"
+      },
+      "battery_discharge_power_limit": {
+        "name": "Battery discharge power limit"
+      },
+      "battery_minimum_reserve": {
+        "name": "Battery minimum reserve"
+      }
+    },
     "sensor": {
       "capacity_designed": {
         "name": "Designed capacity"
@@ -59,7 +73,7 @@
         "name": "Grid export tariff"
       },
       "co2_factor": {
-        "name": "CO₂ factor"
+        "name": "CO\u2082 factor"
       },
       "current_ac": {
         "name": "AC current"
@@ -162,8 +176,8 @@
           "hardware_id_problem": "Hardware ID problem",
           "hid_range_error": "HID range error",
           "initialisation_error_file_system_error_on_usb": "Initialization error in file system on USB flash drive",
-          "initialisation_error_usb_flash_drive_not_supported": "Initialization error – USB flash drive is not supported",
-          "initialisation_error_usb_stick_over_current": "Initialization error – Overcurrent on USB stick",
+          "initialisation_error_usb_flash_drive_not_supported": "Initialization error \u2013 USB flash drive is not supported",
+          "initialisation_error_usb_stick_over_current": "Initialization error \u2013 Overcurrent on USB stick",
           "insulation_error_on_solar_panels": "Insulation error on the solar panels",
           "insulation_fault": "Insulation fault",
           "insulation_measurement_triggered": "Insulation measurement triggered",
@@ -415,11 +429,31 @@
       "voltage_dc_mppt_no": {
         "name": "DC voltage {mppt_no}"
       }
+    },
+    "switch": {
+      "ac_power_limit_enabled": {
+        "name": "AC power limiting"
+      },
+      "battery_charge_power_limit_enabled": {
+        "name": "Battery charge power limiting"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "name": "Battery discharge power limiting"
+      },
+      "battery_grid_charging": {
+        "name": "Battery grid charging"
+      }
     }
   },
   "exceptions": {
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+    },
+    "modbus_model_unavailable": {
+      "message": "The inverter no longer exposes the model this setting lives in"
+    },
+    "modbus_write_failed": {
+      "message": "Could not write the setting to the inverter: {error}"
     },
     "update_failed": {
       "message": "An error occurred while attempting to fetch data: {fronius_error}"

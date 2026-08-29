@@ -1,17 +1,37 @@
-"""Owns the coordinator; modbus hands out the unit, sofar-modbus reads."""
+"""Integrate Sofar devices into Home Assistant."""
 
-from modbus_connection import ModbusTcpParams
+from datetime import timedelta
+import logging
+
+from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DOMAIN
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
+from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
+
+_IDENTITY_ATTEMPTS = 3
+
+
+async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
+    """Read identity once, retrying a few times against a transient blip."""
+    for attempt in range(_IDENTITY_ATTEMPTS):
+        try:
+            await device.identity.async_update()
+        except ModbusError as err:
+            if attempt == _IDENTITY_ATTEMPTS - 1:
+                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
+        else:
+            return
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
@@ -40,10 +60,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         inverter_type=inverter_type,
     )
 
-    coordinator = SofarDataUpdateCoordinator(hass, entry, device)
-    await coordinator.async_config_entry_first_refresh()
+    readings = SofarDataUpdateCoordinator(
+        hass,
+        entry,
+        device,
+        device.async_update_readings,
+        timedelta(seconds=SCAN_INTERVAL),
+    )
+    settings = SofarDataUpdateCoordinator(
+        hass,
+        entry,
+        device,
+        device.async_update_settings,
+        timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+    )
+    await readings.async_config_entry_first_refresh()
+    await settings.async_refresh()
 
-    entry.runtime_data = coordinator
+    # Not tied to a coordinator: identity never changes once read.
+    await _async_read_identity(entry, device)
+
+    # Up front: a part's device must name an inverter that has an id.
+    inverter = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **readings.device_info
+    )
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

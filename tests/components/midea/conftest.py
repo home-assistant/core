@@ -46,6 +46,7 @@ class DummyDevice:
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
+        self.capabilities: dict[str, Any] = {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
@@ -83,6 +84,8 @@ class DummyDevice:
 
     def set_attribute(self, attr: str, value: Any) -> None:
         """Record set attribute call."""
+        self.attributes[attr] = value
+        self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
     def set_target_temperature(self, **kwargs: Any) -> None:

@@ -20,6 +20,7 @@ from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -33,7 +34,9 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
     CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
     DEVICES_FOR_SUBSCRIBE,
     DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
@@ -106,13 +109,59 @@ def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
 
 
 @callback
+def async_entry_is_public_only(entry: UFPConfigEntry) -> bool:
+    """Return whether an entry uses the public-API-only (API-key) mode.
+
+    The mode is an explicit field: local-user credentials may still be stored
+    (kept on a mode switch so switching back is lossless), so their presence
+    says nothing about the mode.
+    """
+    return entry.data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY
+
+
+@callback
 def async_create_api_client(
     hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
-    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    if async_entry_is_public_only(entry):
+        return ProtectApiClient.public_only(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            api_key=entry.data[CONF_API_KEY],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            public_api_session=async_create_clientsession(hass),
+            devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
+            ignore_unadopted=False,
+        )
+
+    return _async_create_full_client(hass, entry)
+
+
+@callback
+def async_create_session_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient | None:
+    """Create a client that can clear the entry's stored private session.
+
+    A public-only client carries no username, so its ``clear_session`` returns
+    early. An entry switched to API-key-only keeps its local-user credentials,
+    so a session stored before the switch has to be cleared through a
+    full-access client. ``None`` when no credentials are stored.
+    """
+    if not entry.data.get(CONF_USERNAME) or not entry.data.get(CONF_PASSWORD):
+        return None
+    return _async_create_full_client(hass, entry)
+
+
+@callback
+def _async_create_full_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient:
+    """Create a full-access (local user) ProtectApiClient from a config entry."""
     public_api_session = async_create_clientsession(hass)
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     return ProtectApiClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],

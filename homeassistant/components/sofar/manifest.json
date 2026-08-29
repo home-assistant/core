@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["sofar-modbus==0.3.0"]
+  "requirements": ["sofar-modbus==0.6.0"]
 }

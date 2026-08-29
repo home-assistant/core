@@ -45,6 +45,7 @@ from .const import (
     VICARE_TOKEN_FILENAME,
     VIESSMANN_DEVELOPER_PORTAL,
 )
+from .coordinator import ViCareCoordinator
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial
 
@@ -166,9 +167,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
+    device_count = len(entry.runtime_data.devices)
+    coordinators: list[ViCareCoordinator] = []
+    for device in entry.runtime_data.devices:
+        coordinator = ViCareCoordinator(hass, entry, device.api, device_count)
+        device.coordinator = coordinator
+        coordinators.append(coordinator)
+
     for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)
+
+    for coordinator in coordinators:
+        await coordinator.async_config_entry_first_refresh()
 
     await _async_register_zigbee_gateway_devices(hass, entry)
 

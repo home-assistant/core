@@ -1,6 +1,8 @@
 """The tests for the Template vacuum platform."""
 
 from dataclasses import asdict
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -12,7 +14,9 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     Segment,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
 )
 from homeassistant.const import (
     CONF_UNIQUE_ID,
@@ -32,6 +36,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
@@ -1540,3 +1545,54 @@ async def test_invalid_config_entry_actions_do_not_create_entities(
     await assert_invalid_config_entry_actions_do_not_create_entities(
         hass, TEST_VACUUM, config, action, caplog
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_VACUUM,
+        style,
+        {
+            "start": [],
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        1,
+        {
+            "start": [],
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_VACUUM.entity_id}: {attribute}"
+    assert error in caplog.text

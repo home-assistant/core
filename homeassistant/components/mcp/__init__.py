@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
-from .const import CONF_AUTHORIZATION_URL, CONF_TOKEN_URL, DOMAIN
+from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
@@ -65,11 +65,12 @@ async def async_setup_entry(
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
     await coordinator.async_config_entry_first_refresh()
 
+    api_id = f"{DOMAIN}-{entry.data.get(CONF_SLUG, entry.entry_id)}"
     unsub = llm.async_register_api(
         hass,
         ModelContextProtocolAPI(
             hass=hass,
-            id=f"{DOMAIN}-{entry.entry_id}",
+            id=api_id,
             name=entry.title,
             coordinator=coordinator,
         ),
