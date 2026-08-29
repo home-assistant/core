@@ -549,8 +549,6 @@ async def test_per_gateway_failure_isolation(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A transient failure on one gateway must not affect another gateway's sensors."""
-    # Each fixture sits behind its own gateway (gateway0, gateway1), so the two
-    # devices get separate coordinators and fail independently.
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
