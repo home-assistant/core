@@ -167,6 +167,35 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "unknown"}
 
 
+async def test_on_link_failed_forgets_registration(hass: HomeAssistant) -> None:
+    """A rejected authorization must clear the stored app token.
+
+    Without this, Home Assistant keeps retrying with the same rejected
+    token forever, which is reported as "Failed to register, please try
+    again" no matter how many times the user resubmits the form (for
+    example after the router was replaced or its authorization revoked).
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.freebox.router.Freepybox.open",
+            side_effect=AuthorizationError(),
+        ),
+        patch(
+            "homeassistant.components.freebox.config_flow.async_forget_registration"
+        ) as mock_forget_registration,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "register_failed"}
+        mock_forget_registration.assert_awaited_once_with(hass, MOCK_HOST)
+
+
 async def test_zeroconf_missing_api_domain(
     hass: HomeAssistant,
 ) -> None:

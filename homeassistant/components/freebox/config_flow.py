@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .router import get_api, get_hosts_list_if_supported
+from .router import async_forget_registration, get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +85,10 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         except AuthorizationError as error:
             _LOGGER.error(error)
             errors["base"] = "register_failed"
+            # The stored application token (if any) was rejected by the
+            # Freebox. Clear it so resubmitting this form performs a fresh
+            # pairing instead of retrying with the same rejected token.
+            await async_forget_registration(self.hass, self._data[CONF_HOST])
 
         except HttpRequestError:
             _LOGGER.error(
