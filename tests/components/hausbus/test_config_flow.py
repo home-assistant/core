@@ -1,6 +1,6 @@
 """Test the Haus-Bus config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -22,15 +22,17 @@ async def test_user_flow_creates_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {}
+    )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "wait_for_device"
 
-    # mock_home_server already reports a device as found, so the background
-    # search task completes as soon as it gets to run.
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"]
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Haus-Bus"
     assert result["data"] == {}
@@ -45,31 +47,47 @@ async def test_user_flow_search_timeout_then_retry(
     mock_home_server.is_any_device_found.return_value = False
 
     with patch(
-        "homeassistant.components.hausbus.config_flow._DEVICE_SEARCH_TIMEOUT", 0.01
+        "homeassistant.components.hausbus.config_flow._DEVICE_SEARCH_TIMEOUT",
+        0.01,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN,
+            context={"source": SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"]
+        )
+
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "search_timeout"
 
-        # Retry: this time a device is found straight away.
         mock_home_server.is_any_device_found.return_value = True
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"]
+        )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -82,27 +100,76 @@ async def test_user_flow_os_error_shows_search_timeout(
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN,
+            context={"source": SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"]
+        )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"
 
 
 async def test_single_instance_allowed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that only one config entry is allowed."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_flow_removal_cancels_active_search_task(
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
+) -> None:
+    """Test removing a flow cancels an active search task."""
+
+    mock_home_server.is_any_device_found.return_value = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "wait_for_device"
+
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+
+    search_task = flow._search_task
+
+    assert search_task is not None
+    assert not search_task.done()
+
+    flow.async_remove()
+
+    await hass.async_block_till_done()
+
+    assert flow._search_task is None
+    assert search_task.cancelled()
+    assert flow.home_server is None
