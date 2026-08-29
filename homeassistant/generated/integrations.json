@@ -5497,6 +5497,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "persang_infrared": {
+      "name": "Persang Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",
@@ -6833,6 +6839,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "SolarEdge Local"
+        },
+        "solaredge_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "SolarEdge Modbus"
         }
       }
     },
@@ -8491,7 +8503,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {

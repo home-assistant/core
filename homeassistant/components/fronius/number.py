@@ -33,7 +33,7 @@ class FroniusNumberEntityDescription(FroniusEntityDescription, NumberEntityDescr
 
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
-        key="power_limit",
+        key="ac_power_limit",
         component_fn=lambda inverter: inverter.controls,
         field="power_limit",
         enable_field="enabled",

@@ -79,6 +79,7 @@ class MideaClimateEntityDescription(ClimateEntityDescription):
 CLIMATE_ENTITIES: list[MideaClimateEntityDescription] = [
     MideaClimateEntityDescription(
         key="climate",
+        translation_key="climate",
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF, DeviceType.FB],
     ),
     MideaClimateEntityDescription(
