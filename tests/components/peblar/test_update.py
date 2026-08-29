@@ -1,7 +1,9 @@
 """Tests for the Peblar update platform."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from peblar import PackageType, PeblarConnectionError, PeblarVersions
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def _async_offer_both_updates(
@@ -174,3 +176,83 @@ async def test_versions_are_not_reread_without_an_install(
     await hass.async_block_till_done()
 
     mock_peblar.current_versions.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_a_slow_update_is_still_picked_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a charger that takes its time downloading is still followed.
+
+    The charger downloads the package before it reboots, so it can stay
+    reachable for a long while after the install call returns. Peblar's own
+    web interface allows three hours for that, far longer than the ten
+    minutes it allows for the reboot itself.
+    """
+    runtime_data = mock_config_entry.runtime_data
+    data_coordinator = runtime_data.data_coordinator
+
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        runtime_data.version_coordinator.async_refresh_after_restart()
+
+        # Half an hour of downloading, still reachable.
+        freezer.tick(timedelta(minutes=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Only now does it reboot, and come back.
+        data_coordinator.async_set_update_error(PeblarConnectionError("Gone"))
+        await hass.async_block_till_done()
+        data_coordinator.async_set_updated_data(data_coordinator.data)
+        await hass.async_block_till_done()
+
+        mock_refresh.assert_called_once()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_waiting_stops_for_a_charger_that_never_returns(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the wait ends once the charger is overdue coming back.
+
+    A charger that has gone down should be back within minutes. Waiting
+    beyond that means the update did not go the way it should have, and
+    whatever comes back later is not this update landing.
+    """
+    runtime_data = mock_config_entry.runtime_data
+    data_coordinator = runtime_data.data_coordinator
+
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        runtime_data.version_coordinator.async_refresh_after_restart()
+
+        # The charger goes away, and stays away.
+        mock_peblar.rest_api.return_value.meter.side_effect = PeblarConnectionError(
+            "Gone"
+        )
+        freezer.tick(timedelta(seconds=15))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert not data_coordinator.last_update_success
+
+        # Well past the ten minutes a reboot is allowed to take.
+        freezer.tick(timedelta(minutes=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Whatever comes back now is not this update landing.
+        mock_peblar.rest_api.return_value.meter.side_effect = None
+        data_coordinator.async_set_updated_data(data_coordinator.data)
+        await hass.async_block_till_done()
+
+        mock_refresh.assert_not_called()
