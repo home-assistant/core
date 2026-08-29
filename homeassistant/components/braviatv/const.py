@@ -3,7 +3,6 @@
 from enum import StrEnum
 from typing import Final
 
-ATTR_CID: Final = "cid"
 ATTR_MAC: Final = "macAddr"
 ATTR_MANUFACTURER: Final = "Sony"
 
