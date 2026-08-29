@@ -136,6 +136,9 @@ class GridSourceType(TypedDict):
     stat_rate: NotRequired[str]
     power_config: NotRequired[PowerConfig]
 
+    # Whether this grid connection can charge a configured battery
+    can_charge_battery: NotRequired[bool]
+
     cost_adjustment_day: float
 
     # An optional custom name for display in energy graphs
@@ -475,6 +478,7 @@ GRID_SOURCE_SCHEMA = vol.All(
             # Power measurement (optional)
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+            vol.Optional("can_charge_battery"): bool,
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
             vol.Optional("name"): str,
         }

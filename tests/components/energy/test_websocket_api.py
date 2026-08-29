@@ -119,6 +119,7 @@ async def test_save_preferences(
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
                 "stat_rate": "sensor.grid_power",
+                "can_charge_battery": False,
                 "cost_adjustment_day": 1.2,
                 "name": "Main Grid",
             },
