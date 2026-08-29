@@ -97,12 +97,6 @@
       "b_v_total": {
         "name": "Total Battery Voltage"
       },
-      "d_inverter_fault": {
-        "name": "Inverter Fault",
-        "state": {
-          "no_fault": "No fault"
-        }
-      },
       "d_inverter_status": {
         "name": "Inverter Status",
         "state": {
@@ -121,12 +115,6 @@
       },
       "d_inverter_type": {
         "name": "Inverter Type"
-      },
-      "d_inverter_warning": {
-        "name": "Inverter Warning",
-        "state": {
-          "no_warning": "No warning"
-        }
       },
       "d_num_battery_packs": {
         "name": "Number of Battery Packs"
