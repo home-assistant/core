@@ -131,12 +131,6 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Midea Water Heater extra state attributes."""
-        return dict(self._device.attributes)
-
-    @property
-    @override
     def target_temperature_step(self) -> float | None:
         """Return the supported target temperature step."""
         return cast("float | None", getattr(self._device, "temperature_step", None))
