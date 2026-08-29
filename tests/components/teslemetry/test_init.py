@@ -297,7 +297,7 @@ async def test_insufficient_credits_resolved_by_stream(
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="insufficient_credits",
-        translation_placeholders={"credits_url": CREDITS_URL},
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
     )
 
     mock_add_listener.send(
@@ -325,7 +325,7 @@ async def test_insufficient_credits_cleared_on_unload(
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="insufficient_credits",
-        translation_placeholders={"credits_url": CREDITS_URL},
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
     )
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
@@ -351,7 +351,7 @@ async def test_insufficient_credits_kept_on_failed_unload(
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="insufficient_credits",
-        translation_placeholders={"credits_url": CREDITS_URL},
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
     )
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
