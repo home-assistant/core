@@ -102,7 +102,11 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinato
 
         return GeocachingCoordinatorData(
             user=status.user,
-            trackables=status.trackables,
+            trackables={
+                trackable.reference_code.strip().upper(): trackable
+                for trackable in status.trackables.values()
+                if isinstance(trackable.reference_code, str)
+            },
             nearby_caches=status.nearby_caches,
             tracked_caches={
                 cache.reference_code.strip().upper(): cache

@@ -162,8 +162,7 @@ class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator, cache, reference_code)
 
-        account_reference_code = cast(str, coordinator.data.user.reference_code)
-        self._attr_unique_id = f"{account_reference_code}_{self._reference_code}_{key}"
+        self._attr_unique_id = f"{self._reference_code}_{key}"
 
         # The translation key determines the name of the entity
         # as this is the lookup for the `strings.json` file.
