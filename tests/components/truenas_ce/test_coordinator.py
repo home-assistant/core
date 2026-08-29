@@ -21,9 +21,7 @@ import pytest
 from homeassistant.components.truenas_ce import coordinator as coordinator_module
 from homeassistant.components.truenas_ce.const import (
     CONF_MONITORED_GROUPS,
-    CONF_POLL_INTERVAL,
     DEFAULT_POLL_INTERVAL,
-    DOMAIN,
     MONITOR_GROUP_CLOUDSYNC,
     MONITOR_GROUP_CONTAINERS,
     MONITOR_GROUP_CRONJOBS,
@@ -41,7 +39,6 @@ from homeassistant.components.truenas_ce.coordinator import (
     _stat_name_similar,
     _unwrap_app_stats_message,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 
@@ -109,80 +106,6 @@ def test_is_group_monitored_false_when_absent() -> None:
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
     assert coord._is_group_monitored(MONITOR_GROUP_VMS) is False
-
-
-# ---------------------------
-#   set_optimistic_running
-# ---------------------------
-def test_set_optimistic_running_sets_state_and_notifies() -> None:
-    """Setting optimistic running state flips it to RUNNING and notifies listeners."""
-    coord = _bare_coordinator()
-    coord.ds = {"vm": {"1": {"state": "STOPPED"}}}
-    coord.async_update_listeners = MagicMock()
-    coord.set_optimistic_running("vm", "1")
-    assert coord.ds["vm"]["1"]["state"] == "RUNNING"
-    coord.async_update_listeners.assert_called_once()
-
-
-def test_set_optimistic_running_noop_for_unknown_object_id() -> None:
-    """An unknown object id leaves state untouched and does not notify."""
-    coord = _bare_coordinator()
-    coord.ds = {"vm": {"1": {"state": "STOPPED"}}}
-    coord.async_update_listeners = MagicMock()
-    coord.set_optimistic_running("vm", "does-not-exist")
-    assert coord.ds["vm"]["1"]["state"] == "STOPPED"
-    coord.async_update_listeners.assert_not_called()
-
-
-def test_set_optimistic_running_normalizes_int_object_id() -> None:
-    """A raw int object_id (e.g. rsynctask/replication/scrub ids) is looked up as str.
-
-    Migrated endpoints are str-keyed end to end (see ``_as_str_keyed``), but
-    callers pass the object's raw ``id`` field, which is still int-typed at
-    the API level for several of them.
-    """
-    coord = _bare_coordinator()
-    coord.ds = {"scrub": {"1": {"state": "PENDING"}}}
-    coord.async_update_listeners = MagicMock()
-    coord.set_optimistic_running("scrub", 1)
-    assert coord.ds["scrub"]["1"]["state"] == "RUNNING"
-    coord.async_update_listeners.assert_called_once()
-
-
-# ---------------------------
-#   async_run_task
-# ---------------------------
-async def test_async_run_task_marks_running_on_success() -> None:
-    """A successful task query optimistically marks the object as RUNNING."""
-    coord = _bare_coordinator()
-    coord.ds = {"rsynctask": {"1": {"state": "STOPPED"}}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=42)
-    coord.api.error = ""
-    coord.async_update_listeners = MagicMock()
-    await coord.async_run_task("rsynctask.run", "1", "rsynctask")
-    assert coord.ds["rsynctask"]["1"]["state"] == "RUNNING"
-
-
-async def test_async_run_task_raises_and_skips_optimistic_state_on_failure() -> None:
-    """A failed task query raises HomeAssistantError and leaves state unchanged."""
-    coord = _bare_coordinator()
-    coord.ds = {"rsynctask": {"1": {"state": "STOPPED"}}}
-    coord.host = "truenas.local"
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    coord.api.error = "ERR_LOST_QUERY"
-    coord.async_update_listeners = MagicMock()
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await coord.async_run_task("rsynctask.run", "1", "rsynctask")
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "run_task_failed"
-    assert exc_info.value.translation_placeholders == {
-        "host": "truenas.local",
-        "error": "ERR_LOST_QUERY",
-    }
-    assert coord.ds["rsynctask"]["1"]["state"] == "STOPPED"
-    coord.async_update_listeners.assert_not_called()
 
 
 # ---------------------------
@@ -1141,15 +1064,15 @@ def test_unwrap_app_stats_message_rejects_non_dict_params() -> None:
     )
 
 
-async def test_start_app_stats_falls_back_on_invalid_poll_interval() -> None:
-    """A non-numeric poll interval option falls back to the default interval."""
+async def test_start_app_stats_uses_fixed_poll_interval() -> None:
+    """The app.stats subscription always uses the fixed default poll interval."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.subscribe_events = AsyncMock(return_value=("sub-new", MagicMock()))
     coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_POLL_INTERVAL: "not-a-number"}
+    coord.config_entry.options = {}
     coord._app_stats_sub_id = "sub-old"
     coord._app_stats_event_name = 'app.stats:{"interval": 5}'
 
@@ -2284,19 +2207,9 @@ def test_get_app_identifier_returns_none_when_missing() -> None:
     assert coord._get_app_identifier({}) is None
 
 
-def test_resolve_app_stats_event_name_uses_poll_interval() -> None:
-    """The event name embeds the configured poll interval."""
+def test_resolve_app_stats_event_name_uses_fixed_poll_interval() -> None:
+    """The event name embeds the fixed default poll interval."""
     coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_POLL_INTERVAL: 30}
-    assert coord._resolve_app_stats_event_name() == 'app.stats:{"interval": 30}'
-
-
-def test_resolve_app_stats_event_name_falls_back_on_invalid_value() -> None:
-    """A non-numeric poll interval falls back to the default interval."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_POLL_INTERVAL: "bad"}
     assert (
         coord._resolve_app_stats_event_name()
         == f'app.stats:{{"interval": {DEFAULT_POLL_INTERVAL}}}'

@@ -12,7 +12,6 @@ from aiotruenas import TrueNASState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -20,7 +19,6 @@ from .api import TrueNASAPI, _summarize_payload
 from .apiparser import ApiValueSpec, parse_api
 from .const import (
     CONF_MONITORED_GROUPS,
-    CONF_POLL_INTERVAL,
     DEFAULT_MONITORED_GROUPS,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
@@ -120,13 +118,12 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
 
-        poll = int(config_entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL))
         super().__init__(
             self.hass,
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=poll),
+            update_interval=timedelta(seconds=DEFAULT_POLL_INTERVAL),
         )
 
         self.name = config_entry.data[CONF_NAME]
@@ -200,48 +197,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             CONF_MONITORED_GROUPS, DEFAULT_MONITORED_GROUPS
         )
         return group in monitored
-
-    def set_optimistic_running(self, data_path: str, object_id: Any) -> None:
-        """Optimistically mark a task RUNNING in-memory; next poll re-syncs to TrueNAS.
-
-        ``object_id`` is looked up as a str: callers pass the object's raw
-        ``id`` field, which for migrated endpoints (e.g. rsynctask,
-        replication, snapshottask, scrub) is still int-typed at the API
-        level, while ``self.ds`` is str-keyed end to end (see
-        ``_as_str_keyed``) -- the original ``object_id`` is left untouched
-        for the middleware call in ``async_run_task``.
-        """
-        group = self.ds.get(data_path)
-        uid = str(object_id)
-        if isinstance(group, dict) and isinstance(group.get(uid), dict):
-            group[uid]["state"] = "RUNNING"
-            self.async_update_listeners()
-        else:
-            _LOGGER.debug(
-                "set_optimistic_running: no '%s' object with id %r to mark RUNNING",
-                data_path,
-                object_id,
-            )
-
-    async def async_run_task(self, method: str, object_id: Any, data_path: str) -> None:
-        """Trigger a task's run method, then optimistically mark it RUNNING.
-
-        Raises:
-            HomeAssistantError: if ``api.error`` is set. ``query()`` swallows
-                errors and returns None, so the return value alone can't
-                distinguish a failure from a normal null response.
-        """
-        await self.api.query(method, [object_id])
-        if self.api.error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="run_task_failed",
-                translation_placeholders={
-                    "host": self.host,
-                    "error": str(self.api.error),
-                },
-            )
-        self.set_optimistic_running(data_path, object_id)
 
     async def _async_ensure_connected(self) -> None:
         """Connect if needed, raising the appropriate coordinator error on failure."""
@@ -559,11 +514,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not graph_names:
             return
 
-        # Window matches the poll interval (min 5s) so RX/TX reflect current traffic.
-        poll = int(
-            self.config_entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
-        )
-        window = max(poll, 5)
+        # Window matches the fixed poll interval (min 5s) so RX/TX reflect current traffic.
+        window = max(DEFAULT_POLL_INTERVAL, 5)
         graph_query = {
             "start": report_epoch - window - 2,
             "end": report_epoch - 2,
@@ -1033,16 +985,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.stop_app_stats(force=True)
 
     def _resolve_app_stats_event_name(self) -> str:
-        """Compute the app.stats event name from the current poll interval."""
-        try:
-            poll = int(
-                getattr(self.config_entry, "options", {}).get(
-                    CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-                )
-            )
-        except (ValueError, TypeError):  # fmt: skip
-            poll = DEFAULT_POLL_INTERVAL
-        interval = max(poll, 2)
+        """Compute the app.stats event name from the fixed poll interval."""
+        interval = max(DEFAULT_POLL_INTERVAL, 2)
         return f'app.stats:{{"interval": {interval}}}'
 
     async def _maybe_teardown_changed_app_stats_subscription(

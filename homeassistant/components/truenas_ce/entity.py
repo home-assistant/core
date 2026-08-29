@@ -11,7 +11,6 @@ from typing import Any, cast, override
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_platform as ep
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,7 +29,6 @@ from .const import (
     SIGNAL_UPDATE_SENSORS,
 )
 from .coordinator import TrueNASCoordinator, get_truenas_coordinator
-from .helper import format_attribute
 
 _LOGGER = getLogger(__name__)
 
@@ -547,84 +545,20 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes."""
+        """Return the state attributes.
+
+        Keys are the raw API ``variable`` names, not humanized display
+        labels: state attributes are meant to be machine-readable for
+        templates/automations. Most are snake_case, though a few (e.g.
+        "memory-free_value") keep a literal hyphen from the source field.
+        HA's frontend already humanizes any key without an explicit
+        ``state_attributes`` strings.json entry (e.g. "link_state" ->
+        "Link State"); an explicit entry is only needed to override that
+        generic fallback, as done for "uuids".
+        """
         attributes = dict(super().extra_state_attributes or {})
         for variable in self.entity_description.data_attributes_list:
             if variable in self._data:
-                attributes[format_attribute(variable)] = self._data[variable]
+                attributes[variable] = self._data[variable]
 
         return attributes
-
-    def _raise_unsupported(self, action: str) -> None:
-        """Raise a clean, user-facing error for an unsupported action.
-
-        Entity services are platform-wide, so an unimplemented action (e.g.
-        restart on an app) needs a clear error instead of NotImplementedError.
-        """
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_action",
-            translation_placeholders={
-                "action": action,
-                "entity_id": self.entity_id,
-            },
-        )
-
-    def _raise_if_api_error(self, action: str) -> None:
-        """Raise HomeAssistantError if the most recent api.query() call failed.
-
-        query() swallows errors and returns None (also a valid success value
-        for some endpoints), so only a non-empty api.error (reset each call)
-        signals an actual failure.
-        """
-        if self.coordinator.api.error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "action": action,
-                    "host": self.coordinator.host,
-                    "error": str(self.coordinator.api.error),
-                },
-            )
-
-    async def start(self) -> None:
-        """Run function."""
-        self._raise_unsupported("start")
-
-    async def stop(self) -> None:
-        """Stop function."""
-        self._raise_unsupported("stop")
-
-    async def restart(self) -> None:
-        """Restart function."""
-        self._raise_unsupported("restart")
-
-    async def reload(self) -> None:
-        """Reload function."""
-        self._raise_unsupported("reload")
-
-    async def snapshot(self) -> None:
-        """Snapshot function."""
-        self._raise_unsupported("snapshot")
-
-    async def lock(self, force_umount: bool = False) -> None:
-        """Lock function."""
-        self._raise_unsupported("lock")
-
-    async def unlock(
-        self,
-        passphrase: str | None = None,
-        recursive: bool = False,
-        force: bool = False,
-    ) -> None:
-        """Unlock function."""
-        self._raise_unsupported("unlock")
-
-    async def passphrase_set(self, passphrase: str) -> None:
-        """Store passphrase function."""
-        self._raise_unsupported("passphrase_set")
-
-    async def refresh(self) -> None:
-        """Refresh function."""
-        self._raise_unsupported("refresh")

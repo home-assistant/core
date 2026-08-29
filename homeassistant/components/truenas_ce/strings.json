@@ -175,12 +175,6 @@
     }
   },
   "exceptions": {
-    "action_failed": {
-      "message": "TrueNAS action {action} failed on {host}: {error}"
-    },
-    "app_update_failed": {
-      "message": "Failed to start TrueNAS app update for {app} on {host}: {error}"
-    },
     "connection_error": {
       "message": "Error connecting to TrueNAS ({host}): {error}"
     },
@@ -190,20 +184,8 @@
     "invalid_api_key": {
       "message": "Invalid TrueNAS API key for {host}"
     },
-    "run_task_failed": {
-      "message": "TrueNAS action failed on {host}: {error}"
-    },
-    "scrub_failed": {
-      "message": "TrueNAS scrub failed for pool {pool} on {host}: {error}"
-    },
     "system_info_unavailable": {
       "message": "Essential system information was not received from TrueNAS ({host})"
-    },
-    "system_update_failed": {
-      "message": "Failed to start TrueNAS system update on {host}: {error}"
-    },
-    "unsupported_action": {
-      "message": "The {action} action is not supported by this TrueNAS entity ({entity_id})"
     }
   }
 }

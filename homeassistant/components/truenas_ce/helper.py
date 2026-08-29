@@ -10,10 +10,6 @@ _SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
 # Everything from the first path/query/fragment delimiter is not part of host.
 _HOST_TAIL_RE = re.compile(r"[/?#]")
 
-# Attribute keys that must stay exactly as declared in strings.json's
-# state_attributes for translation lookup to match (see format_attribute).
-_UNFORMATTED_ATTRIBUTES = {"uuids"}
-
 
 def sanitize_host(host: str) -> str:
     """Normalize user input to the bare hostname/IP[:port] the API expects.
@@ -65,27 +61,3 @@ def scaled_data_unit(value: object, binary: bool) -> tuple[str, int | None]:
             return unit, precision
 
     return tiers[_BASE_TIER_INDEX][1], None
-
-
-def format_attribute(attr: str) -> str:
-    """Format attribute.
-
-    Left as-is when a translation is declared for it in strings.json's
-    ``state_attributes`` (currently only "uuids"): HA looks up that
-    translation by the literal attribute key, so humanizing it here would
-    make the lookup miss and silently fall back to the untranslated key.
-    """
-    if attr in _UNFORMATTED_ATTRIBUTES:
-        return attr
-    attr = attr.replace("_", " ")
-    attr = attr.replace("-", " ")
-    attr = attr.capitalize()
-    # capitalize() lowercases a leading "zfs" to "Zfs"; replace both cases to get "ZFS".
-    attr = attr.replace("Zfs", "ZFS")
-    attr = attr.replace("zfs", "ZFS")
-    attr = attr.replace(" gib", " GiB")
-    attr = attr.replace("Cpu ", "CPU ")
-    attr = attr.replace("Vcpu ", "vCPU ")
-    attr = attr.replace("Vmware ", "VMware ")
-    attr = attr.replace("Ip4 ", "IP4 ")
-    return attr.replace("Ip6 ", "IP6 ")

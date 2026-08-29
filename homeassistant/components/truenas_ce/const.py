@@ -84,9 +84,7 @@ CONF_DATA_UNIT = "data_unit"
 # system.global.id UUID; lets zeroconf rediscovery under a new IP match this device without a pre-auth probe.
 CONF_SYSTEM_ID = "system_id"
 
-CONF_POLL_INTERVAL = "poll_interval"
 DEFAULT_POLL_INTERVAL = 60
-ALLOWED_POLL_INTERVALS = ["5", "10", "30", "60", "120", "300"]
 
 CONF_BEHAVIORS = "behaviors"
 BEHAVIOR_REMOVE_INACTIVE_NIC = "remove_inactive_nic"

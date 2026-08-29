@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.truenas_ce.const import CONF_SYSTEM_ID, DOMAIN
+from homeassistant.components.truenas_ce.const import CONF_SYSTEM_ID
 from homeassistant.components.truenas_ce.entity import (
     TrueNASEntity,
     TrueNASEntityDescription,
@@ -25,7 +25,6 @@ from homeassistant.components.truenas_ce.entity import (
 from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from ._fakes import make_config_entry, make_coordinator
@@ -726,74 +725,8 @@ def test_extra_state_attributes_includes_attribution_and_listed_fields() -> None
         uid="d1", data={"guid": "g1", "model": "WD Red"}, description=desc
     )
     attrs = entity.extra_state_attributes
-    assert attrs["Model"] == "WD Red"
+    assert attrs["model"] == "WD Red"
     assert "attribution" in attrs
-
-
-def test_raise_unsupported_raises_service_validation_error() -> None:
-    """_raise_unsupported raises a ServiceValidationError with the action details."""
-    entity = _make_entity()
-    with pytest.raises(ServiceValidationError) as exc_info:
-        entity._raise_unsupported("start")
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "unsupported_action"
-    assert exc_info.value.translation_placeholders == {
-        "action": "start",
-        "entity_id": entity.entity_id,
-    }
-
-
-def test_raise_if_api_error_no_error_is_noop() -> None:
-    """_raise_if_api_error does nothing when the coordinator has no api_error."""
-    entity = _make_entity()
-    entity._raise_if_api_error("start")
-
-
-def test_raise_if_api_error_raises_when_error_set() -> None:
-    """_raise_if_api_error raises a HomeAssistantError when api_error is set."""
-    coordinator = make_coordinator(api_error="boom")
-    entity = _make_entity(coordinator=coordinator)
-    with pytest.raises(HomeAssistantError) as exc_info:
-        entity._raise_if_api_error("start")
-    assert exc_info.value.translation_key == "action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "start",
-        "host": coordinator.host,
-        "error": "boom",
-    }
-
-
-@pytest.mark.parametrize(
-    "method_name",
-    ["start", "stop", "restart", "reload", "snapshot", "refresh"],
-)
-async def test_default_action_stubs_raise_unsupported(method_name: str) -> None:
-    """The default start/stop/restart/reload/snapshot/refresh stubs are unsupported."""
-    entity = _make_entity()
-    method = getattr(entity, method_name)
-    with pytest.raises(ServiceValidationError):
-        await method()
-
-
-async def test_default_unlock_stub_raises_unsupported() -> None:
-    """The default unlock stub raises ServiceValidationError."""
-    entity = _make_entity()
-    with pytest.raises(ServiceValidationError):
-        await entity.unlock()
-
-
-async def test_default_lock_stub_raises_unsupported() -> None:
-    """The default lock stub raises ServiceValidationError."""
-    entity = _make_entity()
-    with pytest.raises(ServiceValidationError):
-        await entity.lock()
-
-
-async def test_default_passphrase_set_stub_raises_unsupported() -> None:
-    """The default passphrase_set stub raises ServiceValidationError."""
-    entity = _make_entity()
-    with pytest.raises(ServiceValidationError):
-        await entity.passphrase_set("secret")
 
 
 def test_handle_coordinator_update_refreshes_data_and_calls_super() -> None:

@@ -85,7 +85,5 @@ def make_coordinator(
         system_device_id="test-system-device-id",
         async_refresh=AsyncMock(),
         async_request_refresh=AsyncMock(),
-        async_run_task=AsyncMock(),
-        set_optimistic_running=MagicMock(),
         supports_update_run=MagicMock(return_value=True),
     )
