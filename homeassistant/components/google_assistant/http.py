@@ -107,7 +107,7 @@ class GoogleConfig(AbstractConfig):
 
         if self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION:
             self._migrate_expose_settings()
-            self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
+            await self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
 
         self._on_deinitialize.append(
             async_listen_entity_updates(
@@ -403,11 +403,14 @@ class GoogleConfigStore:
         """Return the expose settings migration version."""
         return self._data[STORE_EXPOSE_SETTINGS_VERSION]
 
-    @callback
-    def async_set_expose_settings_version(self, version: int) -> None:
-        """Set the expose settings migration version."""
+    async def async_set_expose_settings_version(self, version: int) -> None:
+        """Set the expose settings migration version.
+
+        Saved immediately (rather than delayed, like the other setters below) so
+        the migration is not marked complete before its result is persisted.
+        """
         self._data[STORE_EXPOSE_SETTINGS_VERSION] = version
-        self._store.async_delay_save(lambda: self._data, 1.0)
+        await self._store.async_save(self._data)
 
     @callback
     def add_agent_user_id(self, agent_user_id: str) -> None:

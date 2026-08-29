@@ -429,11 +429,6 @@ async def test_migrate_expose_settings(
     assert google_config.should_expose(light_entry.entity_id) is True
     assert google_config.should_expose(switch_entry.entity_id) is True
 
-    # Let the delayed save of the migration version flush before creating a
-    # new store instance below, so it actually observes it as migrated.
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-    await hass.async_block_till_done()
-
     # A user-made change after migration must not be reverted by a later
     # initialization of the same (already migrated) config.
     async_expose_entity(hass, DOMAIN, light_entry.entity_id, False)
