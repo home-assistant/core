@@ -110,8 +110,12 @@ def _needs_relink(entry: ConfigEntry, data: Mapping[str, Any]) -> bool:
     serve two different sets of line settings at once. Changing the baud rate
     of the port an entry is polling is the case that needs that entry out of
     the way before the new settings can be probed.
+
+    An entry waiting to retry counts as being on the bus: the retry would set
+    it up on its old settings while the probe runs on the new ones. Unloading
+    it cancels that.
     """
-    if entry.state is not ConfigEntryState.LOADED:
+    if entry.state not in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
         return False
 
     current = create_modbus_params(entry.data)

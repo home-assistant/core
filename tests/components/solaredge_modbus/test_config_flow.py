@@ -2,10 +2,12 @@
 
 from ipaddress import ip_address
 from typing import Any
+from unittest.mock import patch
 
-from modbus_connection import ModbusTimeoutError, ServerDeviceFailureError
+from modbus_connection import ModbusTimeoutError, ModbusUnit, ServerDeviceFailureError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from solaredged import SolarEdge
 
 from homeassistant.components.solaredge_modbus.config_flow import SECTION_MORE_OPTIONS
 from homeassistant.components.solaredge_modbus.const import (
@@ -418,6 +420,50 @@ async def test_reconfigure_flow_new_line_settings_wrong_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
     assert entry.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_flow_new_line_settings_while_retrying(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """An entry waiting to retry must not connect behind the probe's back.
+
+    A retry sets the entry up on the settings it still has, and one connection
+    cannot serve two sets of line settings at once, so a retry landing halfway
+    through the probe would fail one of the two. Unloading the entry first
+    cancels the retry, and the probe has the bus to itself.
+    """
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    # The inverter answers again, on a bus that now runs at another rate.
+    mock_modbus_unit.fail_read(40000, None)
+
+    states: list[ConfigEntryState] = []
+    probe = SolarEdge.async_probe
+
+    async def probe_watching_the_entry(unit: ModbusUnit) -> SolarEdge:
+        """Record whether the entry could still be reaching for the bus."""
+        states.append(entry.state)
+        return await probe(unit)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch.object(SolarEdge, "async_probe", probe_watching_the_entry):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _serial_input(baudrate=9600)
+        )
+    await hass.async_block_till_done()
+
+    # The reload at the end probes again, so only the first one is the flow's.
+    assert states[0] is ConfigEntryState.NOT_LOADED
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BAUDRATE] == 9600
     assert entry.state is ConfigEntryState.LOADED
 
 
