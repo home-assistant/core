@@ -109,6 +109,29 @@
         }
       }
     },
+    "number": {
+      "active_power_limit": {
+        "name": "Active power limit"
+      },
+      "backup_reserve": {
+        "name": "Backup reserve"
+      },
+      "charge_limit": {
+        "name": "Storage charge limit"
+      },
+      "cos_phi": {
+        "name": "Power factor setpoint"
+      },
+      "discharge_limit": {
+        "name": "Storage discharge limit"
+      },
+      "external_production_max": {
+        "name": "External production maximum"
+      },
+      "site_limit": {
+        "name": "Site export limit"
+      }
+    },
     "sensor": {
       "battery_status": {
         "name": "Status",
@@ -253,6 +276,9 @@
     },
     "no_solaredge_device": {
       "message": "The configured Modbus device does not answer as a SolarEdge inverter."
+    },
+    "rejected_value": {
+      "message": "The value was rejected for the SolarEdge inverter: {error}"
     },
     "wrong_inverter": {
       "message": "A different inverter is answering than the one this entry was set up for. Reconfigure the entry to point at the right device."

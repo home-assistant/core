@@ -25,6 +25,8 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     LOGGER,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
     SUBSYSTEM_COMMON,
     SUBSYSTEM_INVERTER,
@@ -38,7 +40,7 @@ from .coordinator import (
 from .entity import attachment_identity, inverter_device_info
 from .helpers import create_modbus_params
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -76,7 +78,23 @@ async def async_setup_entry(
             translation_key="no_solaredge_device",
         ) from err
 
-    readings = SolarEdgeModbusDataUpdateCoordinator(hass, entry, solaredge)
+    readings = SolarEdgeModbusDataUpdateCoordinator(
+        hass,
+        entry,
+        solaredge,
+        poll=solaredge.async_update_readings,
+        interval=SCAN_INTERVAL,
+        label="readings",
+    )
+    settings = SolarEdgeModbusDataUpdateCoordinator(
+        hass,
+        entry,
+        solaredge,
+        poll=solaredge.async_update_settings,
+        interval=SETTINGS_SCAN_INTERVAL,
+        label="settings",
+    )
+
     await readings.async_config_entry_first_refresh()
 
     # Identity arrives with that first read, and a poll can come back without
@@ -107,8 +125,15 @@ async def async_setup_entry(
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **device_info
     )
+    # The readings poll already proved the link; a control block that refuses
+    # one read leaves its own entities unavailable instead of failing setup.
+    await settings.async_refresh()
+
     entry.runtime_data = SolarEdgeModbusRuntimeData(
-        readings=readings, device_info=device_info, inverter_device_id=inverter.id
+        readings=readings,
+        settings=settings,
+        device_info=device_info,
+        inverter_device_id=inverter.id,
     )
 
     if silent := solaredge.unresponsive_blocks & {
