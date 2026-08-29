@@ -452,6 +452,23 @@ async def test_update_todo_item(
         "todo_list_id", "item_2", "Both Changed", 2
     )
 
+    # Neither status nor name changed -> no API calls
+    mock_amazon_devices_client.set_todo_list_item_checked_status.reset_mock()
+    mock_amazon_devices_client.rename_todo_list_item.reset_mock()
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "item": "item_2",
+            "rename": "Task 1",
+            "status": TodoItemStatus.NEEDS_ACTION,
+        },
+        blocking=True,
+    )
+    mock_amazon_devices_client.set_todo_list_item_checked_status.assert_not_called()
+    mock_amazon_devices_client.rename_todo_list_item.assert_not_called()
+
 
 async def test_update_todo_item_refreshes_state(
     hass: HomeAssistant,
