@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CODE
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -151,6 +152,30 @@ class TrackedCacheSubentryFlow(GeocachingCodeSubentryFlow):
 class GeocachingOptionsFlow(OptionsFlow):
     """Handle Geocaching options."""
 
+    @callback
+    def _async_remove_trackables(self, removed_codes: set[str]) -> None:
+        """Remove registry entries for trackables removed from the options."""
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier_domain == DOMAIN
+                and identifier.rpartition("_")[1]
+                and identifier.rpartition("_")[2] in removed_codes
+                for identifier_domain, identifier in device.identifiers
+            ):
+                continue
+
+            for entity in er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            ):
+                if entity.config_entry_id == self.config_entry.entry_id:
+                    entity_registry.async_remove(entity.entity_id)
+            device_registry.async_remove_device(device.id)
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -173,6 +198,11 @@ class GeocachingOptionsFlow(OptionsFlow):
             ):
                 errors["base"] = "invalid_trackable_code"
             else:
+                current_codes = {
+                    code.strip().upper()
+                    for code in self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
+                }
+                self._async_remove_trackables(current_codes - set(trackable_codes))
                 return self.async_create_entry(
                     data={CONF_TRACKABLE_CODES: trackable_codes}
                 )
