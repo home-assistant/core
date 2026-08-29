@@ -13,7 +13,7 @@ from . import AUDIT_PERMISSIONS, MERGED_PERMISSIONS, setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import WebSocketGenerator
 
-ENTITY_ID = "update.pve1"
+ENTITY_ID = "update.pve1_software_update"
 
 
 async def test_all_entities(
@@ -53,7 +53,7 @@ async def test_update_entities_ignored(
     assert hass.states.get(ENTITY_ID) is None
 
 
-async def test_update_unavailabe_on_permission_change(
+async def test_update_unavailable_on_permission_change(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
