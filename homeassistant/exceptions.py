@@ -260,10 +260,13 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
     map it. Catch it explicitly to handle it differently.
     """
 
+    # A request that never got a response has none, unlike in aiohttp.
+    request_info: RequestInfo | None  # type: ignore[assignment]
+
     def __init__(
         self,
         *,
-        request_info: RequestInfo,
+        request_info: RequestInfo | None = None,
         history: tuple[ClientResponse, ...] = (),
         status: int = 0,
         message: str = "OAuth 2.0 token refresh failed",
@@ -273,7 +276,7 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
         """Initialize OAuth2RefreshTokenFailed."""
         ClientResponseError.__init__(
             self,
-            request_info=request_info,
+            request_info=request_info,  # type: ignore[arg-type]
             history=history,
             status=status,
             message=message,
@@ -285,6 +288,13 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
         self.translation_key = "oauth2_helper_refresh_failed"
         self.translation_placeholders = {"domain": domain}
         self.generate_message = True
+
+    @override
+    def __str__(self) -> str:
+        """Return a readable error, also when the request got no response."""
+        if self.request_info is None:
+            return self.message
+        return super().__str__()
 
 
 class OAuth2TokenRequestTransientError(OAuth2TokenRequestError, ConfigEntryNotReady):

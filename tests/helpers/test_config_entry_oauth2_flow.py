@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import (
     ClientError,
     ClientPayloadError,
+    ClientResponseError,
     ContentTypeError,
     RequestInfo,
     ServerTimeoutError,
@@ -536,7 +537,7 @@ async def test_abort_discovered_multiple(
     ("status_code", "error_body", "error_reason", "expected_detail"),
     [
         (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized", "unknown error"),
-        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_failed", "unknown error"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
             HTTPStatus.UNAUTHORIZED,
@@ -1064,6 +1065,14 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
             OAuth2TokenRequestTransientError,
         ),
         (
+            HTTPStatus.UNAUTHORIZED,  # client authenticated via the header
+            OAuth2TokenRequestReauthError,
+        ),
+        (
+            HTTPStatus.NOT_FOUND,  # 4xx, but not a credential failure
+            OAuth2TokenRequestError,
+        ),
+        (
             600,  # Nonsense code, just to hit the generic error branch
             OAuth2TokenRequestError,
         ),
@@ -1159,9 +1168,10 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     assert isinstance(err.value, ConfigEntryNotReady)
     assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert err.value.translation_key == "oauth2_helper_refresh_transient"
-    assert str(err.value.request_info.url) == TOKEN_URL
-    # The rebuilt request info drops the underlying failure, so the log has to name it.
-    assert f"Token request for {TEST_DOMAIN} could not reach" in caplog.text
+    # No response means no request info, so str() has to stay usable for logging.
+    assert err.value.request_info is None
+    assert str(err.value) == "OAuth 2.0 token refresh failed"
+    assert f"Token request for {TEST_DOMAIN} got no response" in caplog.text
     assert str(raised) in caplog.text
 
 
@@ -1224,6 +1234,71 @@ async def test_oauth_session_refresh_body_error_is_mapped(
 
     assert type(err.value) is expected_exception
     assert isinstance(err.value, ConfigEntryNotReady)
+
+
+@pytest.mark.parametrize(
+    ("raised", "expected_exception", "expected_base"),
+    [
+        pytest.param(
+            ClientResponseError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+                status=HTTPStatus.UNAUTHORIZED,
+            ),
+            OAuth2TokenRequestReauthError,
+            ConfigEntryAuthFailed,
+            id="reauth",
+        ),
+        pytest.param(
+            ClientResponseError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            ),
+            OAuth2TokenRequestTransientError,
+            ConfigEntryNotReady,
+            id="transient",
+        ),
+        pytest.param(
+            ClientError("Cannot connect"),
+            OAuth2TokenRequestTransientError,
+            ConfigEntryNotReady,
+            id="connection_error",
+        ),
+    ],
+)
+async def test_refresh_maps_errors_from_custom_implementation(
+    hass: HomeAssistant,
+    raised: Exception,
+    expected_exception: type[Exception],
+    expected_base: type[Exception],
+) -> None:
+    """Test an implementation issuing its own token request still raises mapped errors."""
+
+    class UnmappedImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+        """Implementation that lets raw aiohttp errors escape, like a custom one."""
+
+        async def _async_refresh_token(self, token: dict) -> dict:
+            raise raised
+
+    implementation = UnmappedImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+
+    with pytest.raises(expected_exception) as err:
+        await implementation.async_refresh_token({"refresh_token": REFRESH_TOKEN})
+
+    assert type(err.value) is expected_exception
+    assert isinstance(err.value, expected_base)
+    assert err.value.__cause__ is raised
 
 
 @pytest.mark.parametrize(

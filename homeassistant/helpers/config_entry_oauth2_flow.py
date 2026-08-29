@@ -17,12 +17,12 @@ import json
 import logging
 import secrets
 import time
-from typing import Any, cast, override
+from typing import Any, NoReturn, cast, override
 
-from aiohttp import ClientError, ClientResponseError, RequestInfo, client, hdrs, web
+from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
-from multidict import CIMultiDict, CIMultiDictProxy
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
@@ -105,6 +105,30 @@ _SHARED_ABORT_REASONS = frozenset(
 )
 
 
+def _raise_mapped_token_error(err: ClientError, domain: str) -> NoReturn:
+    """Re-raise a failed token request as the matching OAuth2 token error."""
+    if not isinstance(err, ClientResponseError):
+        # Nothing was received, so there is no status to tell the causes apart.
+        _LOGGER.debug("Token request for %s got no response: %s", domain, err)
+        raise OAuth2TokenRequestTransientError(domain=domain) from err
+
+    kwargs: dict[str, Any] = {
+        "request_info": err.request_info,
+        "history": err.history,
+        "status": err.status,
+        "message": err.message,
+        "headers": err.headers,
+        "domain": domain,
+    }
+    if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+        raise OAuth2TokenRequestTransientError(**kwargs) from err
+    # RFC 6749 section 5.2 only uses these two for credential failures, so any other
+    # 4xx is a problem with the request itself and may recover on its own.
+    if err.status in (HTTPStatus.BAD_REQUEST, HTTPStatus.UNAUTHORIZED):
+        raise OAuth2TokenRequestReauthError(**kwargs) from err
+    raise OAuth2TokenRequestError(**kwargs) from err
+
+
 @callback
 def async_get_redirect_uri(hass: HomeAssistant) -> str:
     """Return the redirect uri."""
@@ -165,7 +189,14 @@ class AbstractOAuth2Implementation(ABC):
 
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
-        new_token = await self._async_refresh_token(token)
+        try:
+            new_token = await self._async_refresh_token(token)
+        except OAuth2TokenRequestError:
+            raise
+        except ClientError as err:
+            # Implementations that issue their own token request may not map their
+            # failures, so callers would see a raw aiohttp error instead.
+            _raise_mapped_token_error(err, self.domain)
         # Force int for non-compliant oauth2 providers
         new_token["expires_in"] = int(new_token["expires_in"])
         new_token["expires_at"] = time.time() + new_token["expires_in"]
@@ -308,52 +339,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             resp.raise_for_status()
             return cast(dict, await resp.json())
         except ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                # Recoverable error
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-            if 400 <= err.status <= 499:
-                # Non-recoverable error
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self._domain,
-            ) from err
+            _raise_mapped_token_error(err, self._domain)
         except ClientError as err:
             # Bare TimeoutError is left alone so an enclosing asyncio.timeout still
             # aborts with oauth_timeout; aiohttp's own timeouts are ClientErrors.
-            _LOGGER.debug(
-                "Token request for %s could not reach %s: %s",
-                self.domain,
-                self.token_url,
-                err,
-            )
-            raise OAuth2TokenRequestTransientError(
-                request_info=RequestInfo(
-                    url=URL(self.token_url),
-                    method=hdrs.METH_POST,
-                    headers=CIMultiDictProxy(CIMultiDict()),
-                ),
-                domain=self._domain,
-            ) from err
+            _raise_mapped_token_error(err, self._domain)
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
