@@ -436,3 +436,30 @@ async def test_light_mode_never_publishes_partial_state(
         if event.data["entity_id"] == "select.my_pool_light_mode"
     ]
     assert states == ["on"]
+
+
+async def test_light_mode_raises_on_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a failed multi-field write raises and leaves the state alone."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_vistapool_client.set_values.side_effect = AquariteError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("select.my_pool_light_mode").state == "auto"
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
+            blocking=True,
+        )
+    assert excinfo.value.translation_key == "set_failed"
+
+    # The write never reached the controller, so nothing may be applied.
+    assert hass.states.get("select.my_pool_light_mode").state == "auto"
