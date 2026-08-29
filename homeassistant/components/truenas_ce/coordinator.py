@@ -19,8 +19,6 @@ from homeassistant.util import dt as dt_util
 from .api import TrueNASAPI, _summarize_payload
 from .apiparser import ApiValueSpec, parse_api
 from .const import (
-    BEHAVIOR_SKIP_DISABLED_CRONJOBS,
-    CONF_BEHAVIORS,
     CONF_MONITORED_GROUPS,
     CONF_POLL_INTERVAL,
     DEFAULT_MONITORED_GROUPS,
@@ -607,16 +605,18 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _fetch_stat_graphs(
         self, graph_names: list[str], graph_query: dict[str, Any]
     ) -> list[Any]:
-        """Query each stat graph, returning combined data and tracking failures."""
+        """Query each stat graph concurrently, returning combined data and tracking failures."""
         reporting_path = _NETDATA_GRAPH
+        results = await asyncio.gather(
+            *(
+                self.api.query(reporting_path, params=[graph_name, graph_query])
+                for graph_name in graph_names
+            )
+        )
+
         tmp_graph: list[Any] = []
         failed_graphs: list[str] = []
-
-        for graph_name in graph_names:
-            graph_data = await self.api.query(
-                reporting_path,
-                params=[graph_name, graph_query],
-            )
+        for graph_name, graph_data in zip(graph_names, results, strict=True):
             if isinstance(graph_data, list):
                 tmp_graph.extend(graph_data)
             else:
@@ -793,12 +793,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _store_stat_defaults(self, t: str, arr: tuple[str, ...]) -> None:
         """Store zeroed defaults when a statistic graph has no aggregations."""
-        info = self.ds["system_info"]
-        for tmp_load in arr:
-            if t == "cpu":
-                info[f"cpu_{tmp_load}"] = 0.0
-            else:
-                info[tmp_load] = 0.0
+        for tmp_var in arr:
+            self._store_stat_value(t, tmp_var, 0.0)
 
     async def get_service(self) -> None:
         """Query services via the aiotruenas domain layer."""
@@ -1224,28 +1220,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._app_stats_event_name = None
 
     async def get_cronjob(self) -> None:
-        """Get cronjobs via the aiotruenas domain layer.
-
-        ``TrueNASState.get_cronjob()`` already derives ``display_name``; the
-        "skip disabled" filter stays here since it is an HA options-flow
-        behavior, not TrueNAS normalization.
-        """
+        """Get cronjobs via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_CRONJOBS):
             self.ds["cronjob"] = {}
             return
-        cronjobs = _as_str_keyed(await self.state.get_cronjob())
-
-        behaviors = self.config_entry.options.get(CONF_BEHAVIORS)
-        if behaviors is not None:
-            skip_disabled = BEHAVIOR_SKIP_DISABLED_CRONJOBS in behaviors
-        else:
-            skip_disabled = self.config_entry.options.get(
-                "cronjob_skip_disabled",
-                self.config_entry.data.get("cronjob_skip_disabled", True),
-            )
-
-        self.ds["cronjob"] = {
-            uid: vals
-            for uid, vals in cronjobs.items()
-            if not skip_disabled or vals.get("enabled", True)
-        }
+        self.ds["cronjob"] = _as_str_keyed(await self.state.get_cronjob())

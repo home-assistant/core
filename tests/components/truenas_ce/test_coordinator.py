@@ -20,8 +20,6 @@ import pytest
 
 from homeassistant.components.truenas_ce import coordinator as coordinator_module
 from homeassistant.components.truenas_ce.const import (
-    BEHAVIOR_SKIP_DISABLED_CRONJOBS,
-    CONF_BEHAVIORS,
     CONF_MONITORED_GROUPS,
     CONF_POLL_INTERVAL,
     DEFAULT_POLL_INTERVAL,
@@ -308,6 +306,21 @@ def test_systemstats_process_falls_back_to_defaults_without_aggregations() -> No
     coord.ds = {"system_info": {}}
     coord._systemstats_process("cpu", {}, "cpu")
     assert coord.ds["system_info"]["cpu_cpu"] == pytest.approx(0.0)
+
+
+def test_systemstats_process_defaults_use_dedicated_keys() -> None:
+    """Defaults for a malformed graph land under the same key as a real value.
+
+    A regression test for a bug where defaults bypassed the type-specific
+    key mapping in _store_stat_value and were written under the bare var
+    name instead, leaving the actually-exposed sensor keys stale.
+    """
+    coord = _bare_coordinator()
+    coord.ds = {"system_info": {}}
+    coord._systemstats_process("size", {}, "arcsize")
+    assert coord.ds["system_info"]["cache_size-arc_value"] == 0.0
+    coord._systemstats_process("available", {}, "memory")
+    assert coord.ds["system_info"]["memory-free_value"] == 0
 
 
 def test_systemstats_process_skips_legend_var_not_in_arr() -> None:
@@ -1540,14 +1553,14 @@ def test_record_failed_graphs_noop_for_empty_list() -> None:
 
 
 def test_process_system_stat_dispatches_by_name() -> None:
-    """A "load" stat item with no aggregations falls back to storing the bare name."""
+    """A "load" stat item with no aggregations falls back to zeroed defaults."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     # Missing "aggregations"/"legend" fails the isinstance guard in
     # _systemstats_process, so it falls back to _store_stat_defaults, which
-    # (for t != "cpu") stores the bare arr name, not a "load_"-prefixed one.
+    # routes through _store_stat_value the same as a successful value would.
     coord._process_system_stat({"name": "load"})
-    assert coord.ds["system_info"]["shortterm"] == 0.0
+    assert coord.ds["system_info"]["load_shortterm"] == 0.0
 
 
 def test_process_system_stat_ignores_missing_name() -> None:
@@ -1753,7 +1766,7 @@ async def test_get_systemstats_processes_returned_graphs() -> None:
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=[{"name": "load"}])
     await coord.get_systemstats()
-    assert coord.ds["system_info"]["shortterm"] == 0.0
+    assert coord.ds["system_info"]["load_shortterm"] == 0.0
 
 
 # ---------------------------
@@ -2411,62 +2424,15 @@ async def test_get_cronjob_empty_when_not_monitored() -> None:
     coord.state.get_cronjob.assert_not_awaited()
 
 
-# display_name derivation now lives in and is tested by aiotruenas's own
-# TrueNASState.get_cronjob(); the "skip disabled" filter below stays local
-# (an HA options-flow behavior), so these tests mock the delegated result
-# and lock in only the filtering plumbing.
-async def test_get_cronjob_skips_disabled_by_default_behavior() -> None:
-    """With the skip-disabled behavior enabled, disabled cronjobs are excluded."""
+async def test_get_cronjob_delegates_to_state() -> None:
+    """get_cronjob assigns TrueNASState.get_cronjob()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {}}
     coord.config_entry = MagicMock()
-    coord.config_entry.options = {
-        CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS],
-        CONF_BEHAVIORS: [BEHAVIOR_SKIP_DISABLED_CRONJOBS],
-    }
+    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS]}
     coord.state = MagicMock()
     coord.state.get_cronjob = AsyncMock(
-        return_value={
-            1: {"enabled": True, "display_name": "Job A"},
-            2: {"enabled": False, "display_name": "Job B"},
-        }
+        return_value={1: {"enabled": True, "display_name": "Job A"}}
     )
     await coord.get_cronjob()
-    assert "1" in coord.ds["cronjob"]
-    assert "2" not in coord.ds["cronjob"]
     assert coord.ds["cronjob"]["1"]["display_name"] == "Job A"
-
-
-async def test_get_cronjob_keeps_disabled_when_behavior_off() -> None:
-    """With the skip-disabled behavior off, disabled cronjobs are still kept."""
-    coord = _bare_coordinator()
-    coord.ds = {"cronjob": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {
-        CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS],
-        CONF_BEHAVIORS: [],
-    }
-    coord.state = MagicMock()
-    coord.state.get_cronjob = AsyncMock(
-        return_value={2: {"enabled": False, "display_name": "ls"}}
-    )
-    await coord.get_cronjob()
-    assert coord.ds["cronjob"]["2"]["display_name"] == "ls"
-
-
-async def test_get_cronjob_falls_back_to_legacy_option_when_behaviors_absent() -> None:
-    """Without CONF_BEHAVIORS set, the legacy cronjob_skip_disabled option is used."""
-    coord = _bare_coordinator()
-    coord.ds = {"cronjob": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {
-        CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS],
-        "cronjob_skip_disabled": False,
-    }
-    coord.config_entry.data = {}
-    coord.state = MagicMock()
-    coord.state.get_cronjob = AsyncMock(
-        return_value={3: {"enabled": False, "display_name": "Cronjob 3"}}
-    )
-    await coord.get_cronjob()
-    assert coord.ds["cronjob"]["3"]["display_name"] == "Cronjob 3"
