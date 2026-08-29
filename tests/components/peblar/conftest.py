@@ -47,14 +47,22 @@ def mock_setup_entry() -> Generator[None]:
 def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Peblar client.
 
-    Parametrize indirectly with a dict to override single system
-    information fields, so a test that cares about one hardware flag does
-    not need a full copy of the fixture.
+    Parametrize indirectly with a dict to override single fixture fields,
+    so a test that cares about one flag or one limit does not need a full
+    copy of the fixture. Keys are looked up in both the system information
+    and the user configuration.
     """
-    system_information = {
-        **json.loads(load_fixture("system_information.json", DOMAIN)),
-        **getattr(request, "param", {}),
-    }
+    overrides = getattr(request, "param", {})
+    system_information = json.loads(load_fixture("system_information.json", DOMAIN))
+    user_configuration = json.loads(load_fixture("user_configuration.json", DOMAIN))
+    for key, value in overrides.items():
+        if key in system_information:
+            system_information[key] = value
+        elif key in user_configuration:
+            user_configuration[key] = value
+        else:
+            msg = f"Unknown fixture field: {key}"
+            raise ValueError(msg)
     with (
         patch("homeassistant.components.peblar.Peblar", autospec=True) as peblar_mock,
         patch("homeassistant.components.peblar.config_flow.Peblar", new=peblar_mock),
@@ -66,8 +74,8 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         peblar.current_versions.return_value = PeblarVersions.from_json(
             load_fixture("current_versions.json", DOMAIN)
         )
-        peblar.user_configuration.return_value = PeblarUserConfiguration.from_json(
-            load_fixture("user_configuration.json", DOMAIN)
+        peblar.user_configuration.return_value = PeblarUserConfiguration.from_dict(
+            user_configuration
         )
         peblar.system_information.return_value = PeblarSystemInformation.from_dict(
             system_information
