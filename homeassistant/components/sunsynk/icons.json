@@ -1,20 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "battery_charge_today": {
+      "charge_today": {
         "default": "mdi:battery-arrow-up"
       },
-      "battery_charge_total": {
+      "charge_total": {
         "default": "mdi:battery-arrow-up"
       },
-      "battery_discharge_today": {
+      "discharge_today": {
         "default": "mdi:battery-arrow-down"
       },
-      "battery_discharge_total": {
+      "discharge_total": {
         "default": "mdi:battery-arrow-down"
-      },
-      "battery_power": {
-        "default": "mdi:home-battery"
       },
       "grid_export_today": {
         "default": "mdi:transmission-tower-export"
@@ -39,6 +36,9 @@
       },
       "load_power": {
         "default": "mdi:home-lightning-bolt"
+      },
+      "power": {
+        "default": "mdi:home-battery"
       },
       "solar_energy_today": {
         "default": "mdi:solar-power-variant"

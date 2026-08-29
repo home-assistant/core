@@ -55,7 +55,10 @@ def mock_sunsynk_client() -> Generator[AsyncMock]:
             for inverter in load_json_array_fixture("inverters.json", DOMAIN)
         ]
         client.get_inverter_realtime_battery.side_effect = lambda sn: Battery(
-            load_json_object_fixture("battery.json", DOMAIN)
+            load_json_object_fixture(
+                "battery.json" if sn == "1029384756" else "battery_absent.json",
+                DOMAIN,
+            )
         )
         client.get_inverter_realtime_grid.side_effect = lambda sn: Grid(
             load_json_object_fixture("grid.json", DOMAIN)

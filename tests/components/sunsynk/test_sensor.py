@@ -9,7 +9,7 @@ from sunsynk.exceptions import SunsynkConnectionError
 from sunsynk.grid import Grid
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sunsynk.const import SCAN_INTERVAL
+from homeassistant.components.sunsynk.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -112,5 +112,34 @@ async def test_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 2
+    assert len(devices) == 3
     assert devices == snapshot
+
+
+@pytest.mark.usefixtures("mock_sunsynk_client")
+async def test_no_battery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an inverter without a battery gets no battery device or entities."""
+    await setup_integration(hass, mock_config_entry)
+    entry_id = mock_config_entry.entry_id
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1029384756"), entry_id
+    )
+    battery = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1029384756_battery"), entry_id
+    )
+    assert inverter is not None
+    assert battery is not None
+    assert battery.via_device_id == inverter.id
+    assert hass.states.get("sensor.battery_state_of_charge").state == "20.0"
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2938475610_battery"), entry_id
+        )
+        is None
+    )
+    assert hass.states.get("sensor.battery_state_of_charge_2") is None

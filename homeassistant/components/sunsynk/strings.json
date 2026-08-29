@@ -23,32 +23,20 @@
   },
   "entity": {
     "sensor": {
-      "battery_charge_today": {
-        "name": "Battery charge today"
+      "charge_today": {
+        "name": "Charge today"
       },
-      "battery_charge_total": {
-        "name": "Battery charge total"
+      "charge_total": {
+        "name": "Charge total"
       },
-      "battery_current": {
-        "name": "Battery current"
+      "current": {
+        "name": "Current"
       },
-      "battery_discharge_today": {
-        "name": "Battery discharge today"
+      "discharge_today": {
+        "name": "Discharge today"
       },
-      "battery_discharge_total": {
-        "name": "Battery discharge total"
-      },
-      "battery_power": {
-        "name": "Battery power"
-      },
-      "battery_state_of_charge": {
-        "name": "Battery state of charge"
-      },
-      "battery_temperature": {
-        "name": "Battery temperature"
-      },
-      "battery_voltage": {
-        "name": "Battery voltage"
+      "discharge_total": {
+        "name": "Discharge total"
       },
       "grid_export_today": {
         "name": "Grid export today"
@@ -77,6 +65,9 @@
       "load_power": {
         "name": "Load power"
       },
+      "power": {
+        "name": "Power"
+      },
       "solar_energy_today": {
         "name": "Solar energy today"
       },
@@ -85,6 +76,15 @@
       },
       "solar_power": {
         "name": "Solar power"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voltage": {
+        "name": "Voltage"
       }
     }
   }
