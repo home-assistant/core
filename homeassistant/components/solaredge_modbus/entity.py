@@ -1,14 +1,14 @@
 """Base entities for the SolarEdge Modbus integration.
 
-Each meter attached to the inverter is its own sub-device, linked to the
-inverter as its parent; everything else belongs to the inverter. All
+Each meter and battery attached to the inverter is its own sub-device, linked
+to the inverter as its parent; everything else belongs to the inverter. All
 identities derive from the inverter's serial number, which the config flow
 stores as the config entry unique ID.
 """
 
 from typing import TYPE_CHECKING, override
 
-from solaredged import Meter, SolarEdge
+from solaredged import Battery, Meter, SolarEdge
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -41,15 +41,16 @@ def inverter_name(model: str | None) -> str:
     return f"SolarEdge {commercial}"
 
 
-def meter_identity(meter: Meter, index: int) -> str:
-    """Return what tells a meter apart from the next one in its place.
+def attachment_identity(component: Battery | Meter, index: int) -> str:
+    """Return what tells an attached device apart from the next in its place.
 
-    A meter that reports a serial number is known by it, so replacing one is a
+    One that reports a serial number is known by it, so replacing it is a
     different device rather than the same slot with other numbers in it. Not
-    every meter reports one, and then the slot it is wired to is all there is.
-    That fallback says so, since a bare number could be a serial itself.
+    every meter or battery reports one, and then the slot it is wired to is all
+    there is. That fallback says so, since a bare number could be a serial
+    itself.
     """
-    return meter.serial_number or f"slot_{index}"
+    return component.serial_number or f"slot_{index}"
 
 
 def inverter_device_info(solaredge: SolarEdge, serial_number: str) -> DeviceInfo:
@@ -129,7 +130,7 @@ class SolarEdgeModbusMeterEntity(SolarEdgeModbusEntity):
     ) -> None:
         """Initialize a SolarEdge Modbus meter entity."""
         meter = entry.runtime_data.solaredge.meters[index - 1]
-        identity = meter_identity(meter, index)
+        identity = attachment_identity(meter, index)
         super().__init__(
             entry=entry,
             subsystem=f"meters[{index - 1}]",
@@ -146,5 +147,39 @@ class SolarEdgeModbusMeterEntity(SolarEdgeModbusEntity):
             model_id=meter.model or None,
             name=f"Meter {index}",
             serial_number=meter.serial_number or None,
+            via_device_id=entry.runtime_data.inverter_device_id,
+        )
+
+
+class SolarEdgeModbusBatteryEntity(SolarEdgeModbusEntity):
+    """Defines a SolarEdge Modbus entity on a battery sub-device."""
+
+    def __init__(
+        self,
+        *,
+        entry: SolarEdgeModbusConfigEntry,
+        description: EntityDescription,
+        index: int,
+    ) -> None:
+        """Initialize a SolarEdge Modbus battery entity."""
+        battery = entry.runtime_data.solaredge.batteries[index - 1]
+        identity = attachment_identity(battery, index)
+        super().__init__(
+            entry=entry,
+            subsystem=f"batteries[{index - 1}]",
+            description=description,
+            key_prefix=f"battery_{identity}_",
+        )
+        self._index = index
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._serial_number}_battery_{identity}")},
+            manufacturer=battery.manufacturer or "SolarEdge",
+            # A battery names itself the same way a meter does, with a part
+            # number rather than something it is sold under.
+            model_id=battery.model or None,
+            name=f"Battery {index}",
+            sw_version=battery.version or None,
+            serial_number=battery.serial_number or None,
             via_device_id=entry.runtime_data.inverter_device_id,
         )

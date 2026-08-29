@@ -24,6 +24,7 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     LOGGER,
+    SUBSYSTEM_BATTERIES,
     SUBSYSTEM_COMMON,
     SUBSYSTEM_INVERTER,
     SUBSYSTEM_METERS,
@@ -33,7 +34,7 @@ from .coordinator import (
     SolarEdgeModbusDataUpdateCoordinator,
     SolarEdgeModbusRuntimeData,
 )
-from .entity import inverter_device_info, meter_identity
+from .entity import attachment_identity, inverter_device_info
 from .helpers import create_modbus_params
 
 PLATFORMS = [Platform.SENSOR]
@@ -92,6 +93,7 @@ async def async_setup_entry(
     # entities would stay missing until a reload.
     measuring = {SUBSYSTEM_INVERTER}
     measuring.update(f"meters[{index}]" for index in range(len(solaredge.meters)))
+    measuring.update(f"batteries[{index}]" for index in range(len(solaredge.batteries)))
     if measuring & readings.data.failed.keys():
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -108,14 +110,18 @@ async def async_setup_entry(
         readings=readings, device_info=device_info, inverter_device_id=inverter.id
     )
 
-    # A block that stayed silent while probing is taken for absent, so a meter
-    # that timed out cannot be told from one that was unwired. Its device stays
-    # where it is until the device says for itself that it is gone.
-    if SUBSYSTEM_METERS in solaredge.unresponsive_blocks:
+    # A block that stayed silent while probing is taken for absent, so what
+    # timed out cannot be told from what was unwired. Those devices stay where
+    # they are until the inverter says for itself that they are gone.
+    if silent := solaredge.unresponsive_blocks & {
+        SUBSYSTEM_BATTERIES,
+        SUBSYSTEM_METERS,
+    }:
         LOGGER.warning(
-            "%s did not answer for its meters while probing, so their entities"
-            " are missing until it does; reloading probes again",
+            "%s did not answer for its %s while probing, so their entities are"
+            " missing until it does; reloading probes again",
             entry.title,
+            " and ".join(sorted(silent)),
         )
     else:
         _async_remove_stale_devices(hass, entry, solaredge, serial_number)
@@ -131,11 +137,15 @@ def _async_remove_stale_devices(
     solaredge: SolarEdge,
     serial_number: str,
 ) -> None:
-    """Remove devices for meters no longer attached to the inverter."""
+    """Remove devices for meters and batteries no longer attached."""
     current = {(DOMAIN, serial_number)}
     current.update(
-        (DOMAIN, f"{serial_number}_meter_{meter_identity(meter, index)}")
+        (DOMAIN, f"{serial_number}_meter_{attachment_identity(meter, index)}")
         for index, meter in enumerate(solaredge.meters, 1)
+    )
+    current.update(
+        (DOMAIN, f"{serial_number}_battery_{attachment_identity(battery, index)}")
+        for index, battery in enumerate(solaredge.batteries, 1)
     )
 
     device_registry = dr.async_get(hass)

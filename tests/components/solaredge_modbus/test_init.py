@@ -18,7 +18,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import METER_SERIAL_NUMBER, SERIAL_NUMBER, async_seed_unit, tcp_data
+from .conftest import (
+    BATTERY_RATED_ENERGY,
+    BATTERY_SERIAL_BASE,
+    BATTERY_SERIAL_NUMBERS,
+    METER_SERIAL_NUMBER,
+    SERIAL_NUMBER,
+    async_seed_unit,
+    tcp_data,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -248,6 +256,120 @@ async def test_replaced_meter_is_a_new_device(
         )
         is not None
     )
+
+
+async def test_batteries_are_sub_devices_of_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Each battery is hardware of its own, hanging off the inverter."""
+    await _setup(hass, mock_config_entry)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert inverter is not None
+
+    for index, serial_number in enumerate(BATTERY_SERIAL_NUMBERS, 1):
+        battery = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_battery_{serial_number}"),
+            mock_config_entry.entry_id,
+        )
+        assert battery is not None
+        assert battery.via_device_id == inverter.id
+        assert battery.name == f"Battery {index}"
+        assert battery.model_id == "SE-BAT-48V-10KWH"
+        assert battery.serial_number == serial_number
+
+
+async def test_battery_that_left_the_installation_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery taken out does not linger as a device.
+
+    The inverter refusing its block is the device saying it is gone, where
+    silence would only mean it did not answer this time.
+    """
+    await _setup(hass, mock_config_entry)
+
+    identifiers = [
+        (DOMAIN, f"{SERIAL_NUMBER}_battery_{serial_number}")
+        for serial_number in BATTERY_SERIAL_NUMBERS
+    ]
+    assert all(
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+        for identifier in identifiers
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert all(
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is None
+        for identifier in identifiers
+    )
+
+
+async def test_battery_that_did_not_answer_the_probe_is_kept(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Silence while probing is not proof that a battery is gone."""
+    await _setup(hass, mock_config_entry)
+
+    identifier = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_battery_without_a_serial_number_is_known_by_its_slot(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Not every battery names itself, and then its place on the inverter does."""
+    mock_modbus_unit.holding.update(
+        dict.fromkeys(range(BATTERY_SERIAL_BASE, BATTERY_SERIAL_BASE + 16), 0)
+    )
+
+    await _setup(hass, mock_config_entry)
+
+    battery = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_battery_slot_1"), mock_config_entry.entry_id
+    )
+    assert battery is not None
+    assert battery.serial_number is None
 
 
 async def test_single_late_answer_is_retried(
