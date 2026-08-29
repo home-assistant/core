@@ -7,7 +7,7 @@ from midealocal.device import DeviceType
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes, MideaC3Device
 from midealocal.devices.cd import DeviceAttributes as CDAttributes, MideaCDDevice
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes, MideaE2Device
-from midealocal.devices.e3 import MideaE3Device
+from midealocal.devices.e3 import DeviceAttributes as E3Attributes, MideaE3Device
 from midealocal.devices.e6 import DeviceAttributes as E6Attributes, MideaE6Device
 
 from homeassistant.components.water_heater import (
@@ -78,13 +78,15 @@ async def async_setup_entry(
 
     entities: list[MideaWaterHeater] = []
     for description in WATER_HEATERS:
+        if device.device_type not in description.models:
+            continue
         if device.device_type == DeviceType.E2:
             entities.append(
                 MideaE2WaterHeater(cast("MideaE2Device", device), description)
             )
         elif device.device_type == DeviceType.E3:
             entities.append(
-                MideaE3WaterHeater(cast("MideaE2Device", device), description)
+                MideaE3WaterHeater(cast("MideaE3Device", device), description)
             )
         elif device.device_type == DeviceType.E6:
             entities.append(
@@ -209,15 +211,13 @@ class MideaE2WaterHeater(MideaWaterHeater):
     @override
     def min_temp(self) -> float:
         """Midea E2 Water Heater min temperature."""
-        # return cast("float", self._device.get_attribute(E2Attributes.min_temperature))
-        return cast("float", self._device.get_attribute("min_temperature"))
+        return cast("float", self._device.get_attribute(E2Attributes.temperature_min))
 
     @property
     @override
     def max_temp(self) -> float:
         """Midea E2 Water Heater max temperature."""
-        # return cast("float", self._device.get_attribute(E2Attributes.max_temperature))
-        return cast("float", self._device.get_attribute("max_temperature"))
+        return cast("float", self._device.get_attribute(E2Attributes.temperature_max))
 
 
 class MideaE3WaterHeater(MideaWaterHeater):
@@ -229,15 +229,13 @@ class MideaE3WaterHeater(MideaWaterHeater):
     @override
     def min_temp(self) -> float:
         """Midea E3 Water Heater min temperature."""
-        # return cast("float", self._device.get_attribute(E3Attributes.min_temperature))
-        return cast("float", self._device.get_attribute("min_temperature"))
+        return cast("float", self._device.get_attribute(E3Attributes.temperature_min))
 
     @property
     @override
     def max_temp(self) -> float:
         """Midea E3 Water Heater max temperature."""
-        # return cast("float", self._device.get_attribute(E3Attributes.max_temperature))
-        return cast("float", self._device.get_attribute("max_temperature"))
+        return cast("float", self._device.get_attribute(E3Attributes.temperature_max))
 
     @property
     @override
@@ -350,18 +348,31 @@ class MideaE6WaterHeater(MideaWaterHeater):
         self._target_temperature_attr = MideaE6WaterHeater._target_temperatures[
             description.zone
         ]
+        self._attr_supported_features = (
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE
+            | WaterHeaterEntityFeature.ON_OFF
+        )
+        if description.zone == 0:
+            self._attr_supported_features |= (
+                WaterHeaterEntityFeature.OPERATION_MODE
+                | WaterHeaterEntityFeature.AWAY_MODE
+            )
 
     @property
     @override
     def current_operation(self) -> str:
         """Midea E6 Water Heater current operation."""
+        if self.entity_description.zone == 0:
+            return (
+                str(self._device.get_attribute(E6Attributes.heating_modes))
+                if self._device.get_attribute(E6Attributes.main_power)
+                and self._device.get_attribute(E6Attributes.heating_power)
+                and self._device.get_attribute(E6Attributes.heating_modes) is not None
+                else STATE_OFF
+            )
         return (
             STATE_ON
             if self._device.get_attribute(E6Attributes.main_power)
-            and (
-                self._device.get_attribute(E6Attributes.heating_power)
-                or self.entity_description.zone == 1
-            )
             else STATE_OFF
         )
 
@@ -421,6 +432,18 @@ class MideaE6WaterHeater(MideaWaterHeater):
     def turn_off(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater turn off."""
         self._device.set_attribute(attr=self._power_attr, value=False)
+
+    @override
+    def turn_away_mode_on(self) -> None:
+        """Midea Water Heater turn away mode on."""
+        self._device.set_attribute(attr=E6Attributes.heating_modes, value="out")
+
+    @override
+    def turn_away_mode_off(self) -> None:
+        """Midea Water Heater turn away mode off."""
+        self._device.set_attribute(
+            attr=E6Attributes.heating_modes, value=self._device.preset_modes[0]
+        )
 
 
 class MideaCDWaterHeater(MideaWaterHeater):
