@@ -60,7 +60,9 @@ async def async_setup_entry(
             try:
                 _ = await description.is_on_fn(afsapi)()
             except FSNotImplementedError:
-                continue
+                # we connected OK, but the switch is not supported, so stop trying
+                connection_attempt_succeeded = True
+                break
             except FSConnectionError:
                 # retry in case the connection error is transient
                 continue
