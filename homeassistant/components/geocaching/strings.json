@@ -104,7 +104,7 @@
   "options": {
     "error": {
       "invalid_trackable_code": "Enter valid trackable codes starting with TB.",
-      "too_many_trackables": "A maximum of 50 trackables can be tracked."
+      "too_many_trackables": "A maximum of 10 trackables can be tracked."
     },
     "step": {
       "init": {
@@ -112,7 +112,7 @@
           "trackable_codes": "Trackable codes"
         },
         "data_description": {
-          "trackable_codes": "Enter the TB codes of the trackables to track, separated by commas or new lines. A maximum of 50 trackables can be tracked."
+          "trackable_codes": "Enter the TB codes of the trackables to track, separated by commas or new lines. A maximum of 10 trackables can be tracked."
         },
         "description": "Select which trackables you want to track.",
         "title": "Tracked trackables"
