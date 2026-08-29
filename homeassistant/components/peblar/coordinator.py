@@ -24,10 +24,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
     LOGGER,
+    UPDATE_REBOOT_MINIMUM_DOWNTIME,
     UPDATE_REBOOT_RETURN_TIMEOUT,
     UPDATE_REBOOT_START_TIMEOUT,
 )
@@ -170,7 +172,7 @@ class _RebootWatcher:
         self._coordinator = coordinator
         self._entry = coordinator.config_entry
         self._data_coordinator = self._entry.runtime_data.data_coordinator
-        self._went_down = False
+        self._went_down_at: datetime | None = None
         self._unsubscribe_listener: CALLBACK_TYPE | None = None
         self._unsubscribe_timer: CALLBACK_TYPE | None = None
 
@@ -212,15 +214,22 @@ class _RebootWatcher:
     def _handle_data_coordinator_update(self) -> None:
         """Follow the charger through its reboot."""
         if not self._data_coordinator.last_update_success:
-            if not self._went_down:
-                # It has started rebooting, so the shorter allowance applies
-                # from here on.
-                self._went_down = True
+            if self._went_down_at is None:
+                # It may have started rebooting, so the shorter allowance
+                # applies from here on.
+                self._went_down_at = dt_util.utcnow()
                 self._async_set_deadline(UPDATE_REBOOT_RETURN_TIMEOUT)
             return
 
         # Still reachable, so the charger has not started rebooting yet.
-        if not self._went_down:
+        if self._went_down_at is None:
+            return
+
+        if dt_util.utcnow() - self._went_down_at < UPDATE_REBOOT_MINIMUM_DOWNTIME:
+            # Gone for a moment is the network, not a charger rebooting.
+            # Go back to waiting for the reboot to start.
+            self._went_down_at = None
+            self._async_set_deadline(UPDATE_REBOOT_START_TIMEOUT)
             return
 
         self._async_stop()

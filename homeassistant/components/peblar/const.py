@@ -25,6 +25,11 @@ UPDATE_REBOOT_START_TIMEOUT: Final = timedelta(hours=3)
 # allows ten minutes for that.
 UPDATE_REBOOT_RETURN_TIMEOUT: Final = timedelta(minutes=10)
 
+# How long the charger has to stay away before it counts as having
+# rebooted. Peblar allows ten minutes for a reboot, so it is nowhere near
+# a matter of seconds; anything shorter is the network dropping a poll.
+UPDATE_REBOOT_MINIMUM_DOWNTIME: Final = timedelta(seconds=30)
+
 LOGGER = logging.getLogger(__package__)
 
 PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {

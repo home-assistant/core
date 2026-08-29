@@ -124,12 +124,24 @@ async def test_install_firmware_refuses_while_customization_is_pending(
     mock_peblar.update.assert_not_called()
 
 
+async def _async_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    after: timedelta = timedelta(seconds=15),
+) -> None:
+    """Let the data coordinator run one poll, the given time from now."""
+    freezer.tick(after)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_versions_are_reread_once_the_charger_is_back(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a charger that just updated stops offering the update it took.
 
@@ -138,25 +150,27 @@ async def test_versions_are_reread_once_the_charger_is_back(
     the charger does in between, and the data poll sees both moments.
     """
     runtime_data = mock_config_entry.runtime_data
-    data_coordinator = runtime_data.data_coordinator
+    meter = mock_peblar.rest_api.return_value.meter
 
-    runtime_data.version_coordinator.async_refresh_after_restart()
-    mock_peblar.current_versions.reset_mock()
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        runtime_data.version_coordinator.async_refresh_after_restart()
 
-    # Still reachable, so the charger has not started rebooting yet.
-    data_coordinator.async_set_updated_data(data_coordinator.data)
-    await hass.async_block_till_done()
-    mock_peblar.current_versions.assert_not_called()
+        # Still reachable, so the charger has not started rebooting yet.
+        await _async_poll(hass, freezer)
+        mock_refresh.assert_not_called()
 
-    # It goes away to install and reboot.
-    data_coordinator.async_set_update_error(PeblarConnectionError("Gone"))
-    await hass.async_block_till_done()
-    mock_peblar.current_versions.assert_not_called()
+        # It goes away to install and reboot.
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
+        mock_refresh.assert_not_called()
 
-    # And comes back.
-    data_coordinator.async_set_updated_data(data_coordinator.data)
-    await hass.async_block_till_done()
-    mock_peblar.current_versions.assert_called_once()
+        # And comes back.
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
+        mock_refresh.assert_called_once()
 
 
 @pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
@@ -165,23 +179,68 @@ async def test_versions_are_not_reread_without_an_install(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a charger rebooting on its own does not trigger a version read."""
-    data_coordinator = mock_config_entry.runtime_data.data_coordinator
-    mock_peblar.current_versions.reset_mock()
+    runtime_data = mock_config_entry.runtime_data
+    meter = mock_peblar.rest_api.return_value.meter
 
-    data_coordinator.async_set_update_error(PeblarConnectionError("Gone"))
-    await hass.async_block_till_done()
-    data_coordinator.async_set_updated_data(data_coordinator.data)
-    await hass.async_block_till_done()
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
 
-    mock_peblar.current_versions.assert_not_called()
+        mock_refresh.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_a_single_missed_poll_is_not_a_reboot(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a blip on the network does not end the wait.
+
+    The charger is polled every ten seconds and may be downloading for
+    hours, so it gets asked a great many times. Treating a single missed
+    answer as a reboot would end the wait early, and the real reboot that
+    follows would go unnoticed.
+    """
+    runtime_data = mock_config_entry.runtime_data
+    meter = mock_peblar.rest_api.return_value.meter
+
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        runtime_data.version_coordinator.async_refresh_after_restart()
+
+        # One missed answer, then the charger is there again.
+        meter.side_effect = PeblarConnectionError("Blip")
+        await _async_poll(hass, freezer)
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
+        mock_refresh.assert_not_called()
+
+        # The actual reboot still gets noticed.
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
+        mock_refresh.assert_called_once()
 
 
 @pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_a_slow_update_is_still_picked_up(
     hass: HomeAssistant,
+    mock_peblar: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -193,7 +252,7 @@ async def test_a_slow_update_is_still_picked_up(
     minutes it allows for the reboot itself.
     """
     runtime_data = mock_config_entry.runtime_data
-    data_coordinator = runtime_data.data_coordinator
+    meter = mock_peblar.rest_api.return_value.meter
 
     with patch.object(
         runtime_data.version_coordinator, "async_request_refresh"
@@ -206,10 +265,11 @@ async def test_a_slow_update_is_still_picked_up(
         await hass.async_block_till_done()
 
         # Only now does it reboot, and come back.
-        data_coordinator.async_set_update_error(PeblarConnectionError("Gone"))
-        await hass.async_block_till_done()
-        data_coordinator.async_set_updated_data(data_coordinator.data)
-        await hass.async_block_till_done()
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
 
         mock_refresh.assert_called_once()
 
@@ -230,6 +290,7 @@ async def test_waiting_stops_for_a_charger_that_never_returns(
     """
     runtime_data = mock_config_entry.runtime_data
     data_coordinator = runtime_data.data_coordinator
+    meter = mock_peblar.rest_api.return_value.meter
 
     with patch.object(
         runtime_data.version_coordinator, "async_request_refresh"
@@ -237,13 +298,9 @@ async def test_waiting_stops_for_a_charger_that_never_returns(
         runtime_data.version_coordinator.async_refresh_after_restart()
 
         # The charger goes away, and stays away.
-        mock_peblar.rest_api.return_value.meter.side_effect = PeblarConnectionError(
-            "Gone"
-        )
-        freezer.tick(timedelta(seconds=15))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert not data_coordinator.last_update_success
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
 
         # Well past the ten minutes a reboot is allowed to take.
         freezer.tick(timedelta(minutes=20))
@@ -251,7 +308,7 @@ async def test_waiting_stops_for_a_charger_that_never_returns(
         await hass.async_block_till_done()
 
         # Whatever comes back now is not this update landing.
-        mock_peblar.rest_api.return_value.meter.side_effect = None
+        meter.side_effect = None
         data_coordinator.async_set_updated_data(data_coordinator.data)
         await hass.async_block_till_done()
 
