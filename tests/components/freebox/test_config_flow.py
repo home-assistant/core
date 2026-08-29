@@ -170,13 +170,7 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
 async def test_on_link_failed_forgets_registration_on_invalid_token(
     hass: HomeAssistant,
 ) -> None:
-    """A rejected app token must clear the stored registration.
-
-    Without this, Home Assistant keeps retrying with the same rejected
-    token forever, which is reported as "Failed to register, please try
-    again" no matter how many times the user resubmits the form (for
-    example after the router was replaced or its authorization revoked).
-    """
+    """Test that an invalid app token clears the stored registration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

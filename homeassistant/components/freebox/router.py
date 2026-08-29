@@ -78,15 +78,7 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 
 
 def is_invalid_token_error(error: Exception) -> bool:
-    """Return True if error is an AuthorizationError caused by a rejected app token.
-
-    freebox-api raises the same AuthorizationError for several unrelated
-    situations (a rejected app token, but also a denied or timed out
-    pairing request, or a transient failure of the challenge/session
-    calls). Only a rejected token should make us forget the stored
-    registration, so the underlying APIResponse's error_code is inspected
-    instead of reacting to every AuthorizationError.
-    """
+    """Return whether an authorization error reports a rejected app token."""
     return bool(
         (matcher := re.search(r"\(APIResponse: (.+)\)$", str(error)))
         and is_json(json_str := matcher.group(1))
