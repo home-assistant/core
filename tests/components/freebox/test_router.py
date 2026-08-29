@@ -4,12 +4,13 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from freebox_api.exceptions import HttpRequestError
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import pytest
 
 from homeassistant.components.freebox.router import (
     async_forget_registration,
     get_hosts_list_if_supported,
+    is_invalid_token_error,
     is_json,
 )
 from homeassistant.core import HomeAssistant
@@ -81,6 +82,42 @@ async def test_get_hosts_list_if_supported_bridge_error(
     """Other exceptions must be propagated."""
     with pytest.raises(HttpRequestError):
         await get_hosts_list_if_supported(mock_router_bridge_mode_error())
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(
+            AuthorizationError(
+                'Starting session failed (APIResponse: {"success": false, '
+                '"error_code": "invalid_token"})'
+            ),
+            True,
+            id="invalid_token",
+        ),
+        pytest.param(
+            AuthorizationError(
+                'Starting session failed (APIResponse: {"success": false, '
+                '"error_code": "internal_error"})'
+            ),
+            False,
+            id="other_error_code",
+        ),
+        pytest.param(
+            AuthorizationError("Authorization timed out"),
+            False,
+            id="no_api_response",
+        ),
+        pytest.param(
+            AuthorizationError("The app token is invalid or has been revoked"),
+            False,
+            id="denied_pairing_mentions_invalid_but_has_no_error_code",
+        ),
+    ],
+)
+def test_is_invalid_token_error(error: AuthorizationError, expected: bool) -> None:
+    """Only a genuine invalid_token APIResponse must be treated as such."""
+    assert is_invalid_token_error(error) is expected
 
 
 async def test_async_forget_registration(hass: HomeAssistant, tmp_path: Path) -> None:
