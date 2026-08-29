@@ -94,6 +94,9 @@
       }
     },
     "button": {
+      "clean_cleaning_tray": {
+        "name": "Clean cleaning tray"
+      },
       "empty_dustbin": {
         "name": "Empty dustbin"
       },

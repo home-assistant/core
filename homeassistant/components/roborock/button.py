@@ -5,9 +5,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from roborock.data import RoborockDockTypeCode
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -35,6 +37,40 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+SELF_CLEANING_TRAY_DOCKS = {
+    RoborockDockTypeCode.shell_3_dock,
+}
+"""Dock types known to support the cleaning tray self-clean routine."""
+
+
+def supports_tray_self_clean(coordinator: RoborockDataUpdateCoordinator) -> bool:
+    """Return True for docks with a self-cleaning cleaning tray."""
+    return coordinator.properties_api.status.dock_type in SELF_CLEANING_TRAY_DOCKS
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockDockActionButtonDescription(ButtonEntityDescription):
+    """Describes a Roborock dock action button entity."""
+
+    command: RoborockCommand
+    param: dict[str, Any] | list[Any] | int | None = None
+    is_dock_entity: bool = True
+    is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
+
+
+DOCK_ACTION_BUTTON_DESCRIPTIONS = [
+    RoborockDockActionButtonDescription(
+        key="clean_cleaning_tray",
+        translation_key="clean_cleaning_tray",
+        # "Amethyst" is Roborock's internal name for the dock's cleaning tray
+        # self-clean routine. The entity is named after the user facing
+        # feature in the Roborock app instead.
+        command=RoborockCommand.APP_AMETHYST_SELF_CHECK,
+        is_supported=supports_tray_self_clean,
+    ),
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -154,6 +190,11 @@ async def async_setup_entry(
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
                 if description.is_supported(coordinator)
             )
+            entities.extend(
+                RoborockDockActionButtonEntity(coordinator, description)
+                for description in DOCK_ACTION_BUTTON_DESCRIPTIONS
+                if description.is_supported(coordinator)
+            )
 
             async def async_add_routine_buttons() -> None:
                 try:
@@ -246,6 +287,38 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
                     "command": "RESET_CONSUMABLE",
                 },
             ) from err
+
+
+class RoborockDockActionButtonEntity(RoborockEntityV1, ButtonEntity):
+    """A class to define Roborock dock action button entities."""
+
+    entity_description: RoborockDockActionButtonDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockDockActionButtonDescription,
+    ) -> None:
+        """Create a dock action button entity."""
+        device_info = (
+            coordinator.dock_device_info
+            if entity_description.is_dock_entity
+            else coordinator.device_info
+        )
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            device_info,
+            api=coordinator.properties_api.command,
+        )
+        self.entity_description = entity_description
+
+    @override
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self.send(
+            self.entity_description.command,
+            self.entity_description.param,
+        )
 
 
 class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
