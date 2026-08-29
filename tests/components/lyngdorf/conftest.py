@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import Receiver
+from lyngdorf import LyngdorfModel, LyngdorfReceiver
 from lyngdorf.models.base import NumericRange
 from lyngdorf.remote import RemoteKey
 import pytest
@@ -56,111 +55,121 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_receiver() -> Generator[MagicMock]:
+def mock_create_receiver() -> Generator[MagicMock]:
+    """Return a mocked create_receiver factory."""
+    with patch("homeassistant.components.lyngdorf.create_receiver") as create_mock:
+        yield create_mock
+
+
+@pytest.fixture
+def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     """Return a mocked Lyngdorf receiver."""
-    with patch(
-        "homeassistant.components.lyngdorf.async_create_receiver"
-    ) as create_mock:
-        receiver = MagicMock(spec=Receiver)
-        receiver.name = "Mock Lyngdorf"
-        receiver.connected = True
-        receiver.has_remote_keys = True
-        receiver.available_remote_keys = frozenset(
-            {
-                RemoteKey.UP,
-                RemoteKey.DOWN,
-                RemoteKey.ENTER,
-                RemoteKey.MENU,
-                RemoteKey.DIGIT_0,
-            }
-        )
+    receiver = MagicMock(spec=LyngdorfReceiver)
+    receiver.name = "Mock Lyngdorf"
+    receiver.connected = True
+    receiver.has_remote_keys = True
+    receiver.available_remote_keys = frozenset(
+        {
+            RemoteKey.UP,
+            RemoteKey.DOWN,
+            RemoteKey.ENTER,
+            RemoteKey.MENU,
+            RemoteKey.DIGIT_0,
+        }
+    )
 
-        # Diagnostics reports the whole receiver, so every property it reads
-        # needs a value here; an unset one is a mock the response cannot encode.
-        receiver.model = LyngdorfModel.MP_60
-        receiver.max_volume = 0.0
-        receiver.room_perfect_position = "Focus 1"
-        receiver.available_room_perfect_positions = ["Global", "Focus 1"]
-        receiver.voicing = "Neutral"
-        receiver.available_voicings = ["Neutral", "Music", "Movie"]
-        receiver.lipsync = None
-        receiver.lipsync_range = NumericRange(0, 500, 1)
-        for _t in ("bass", "treble"):
-            setattr(receiver, f"trim_{_t}", None)
-            setattr(receiver, f"trim_{_t}_range", NumericRange(-12.0, 12.0, 0.1))
-        for _t in ("centre", "height", "lfe", "surround"):
-            setattr(receiver, f"trim_{_t}", None)
-            setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
+    # Diagnostics reports the whole receiver, so every property it reads
+    # needs a value here; an unset one is a mock the response cannot encode.
+    receiver.model = LyngdorfModel.MP_60
+    receiver.max_volume = 0.0
+    receiver.room_perfect_position = "Focus 1"
+    receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+    receiver.voicing = "Neutral"
+    receiver.available_voicings = ["Neutral", "Music", "Movie"]
+    receiver.lipsync = None
+    receiver.lipsync_range = NumericRange(0, 500, 1)
+    for _t in ("bass", "treble"):
+        setattr(receiver, f"trim_{_t}", None)
+        setattr(receiver, f"trim_{_t}_range", NumericRange(-12.0, 12.0, 0.1))
+    for _t in ("centre", "height", "lfe", "surround"):
+        setattr(receiver, f"trim_{_t}", None)
+        setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
 
-        receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
-        receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
+    receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
+    receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
 
-        receiver.power_on = False
-        receiver.volume = -40.0
-        receiver.mute_enabled = False
-        receiver.source = None
-        receiver.available_sources = []
-        receiver.sound_mode = None
-        receiver.available_sound_modes = []
+    receiver.power_on = False
+    receiver.volume = -40.0
+    receiver.mute_enabled = False
+    receiver.source = None
+    receiver.available_sources = []
+    receiver.sound_mode = None
+    receiver.available_sound_modes = []
 
-        receiver.audio_information = "Stereo"
-        receiver.video_information = "4K HDR"
-        receiver.audio_input = "optical"
-        receiver.video_input = "hdmi"
-        receiver.streaming_source = "AirPlay"
-        receiver.available_audio_inputs = ["optical", "aux"]
-        receiver.available_video_inputs = ["hdmi"]
-        receiver.available_stream_types = ["AirPlay", "DLNA"]
+    receiver.audio_information = "Stereo"
+    receiver.video_information = "4K HDR"
+    receiver.audio_input = "optical"
+    receiver.video_input = "hdmi"
+    receiver.streaming_source = "AirPlay"
+    receiver.available_audio_inputs = ["optical", "aux"]
+    receiver.available_video_inputs = ["hdmi"]
+    receiver.available_stream_types = ["AirPlay", "DLNA"]
 
-        receiver.now_playing = None
-        receiver.has_position = False
-        receiver.position_ms = None
-        receiver.position_updated_at = None
-        receiver.shuffle = None
-        receiver.repeat = None
-        receiver.can_shuffle = False
-        receiver.available_repeat_modes = frozenset()
+    receiver.now_playing = None
+    receiver.has_position = False
+    receiver.position_ms = None
+    receiver.position_updated_at = None
+    receiver.shuffle = None
+    receiver.repeat = None
+    receiver.can_shuffle = False
+    receiver.available_repeat_modes = frozenset()
 
-        receiver.lipsync = 50
-        receiver.lipsync_range = NumericRange(0, 500, 1)
-        receiver.trim_bass = 3.0
-        receiver.trim_treble = 0.0
-        receiver.trim_centre = 0.0
-        receiver.trim_height = 4.0
-        receiver.trim_lfe = 3.0
-        receiver.trim_surround = 0.0
-        receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
-        receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
-        for _trim in ("centre", "height", "lfe", "surround"):
-            setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
+    receiver.lipsync = 50
+    receiver.lipsync_range = NumericRange(0, 500, 1)
+    receiver.trim_bass = 3.0
+    receiver.trim_treble = 0.0
+    receiver.trim_centre = 0.0
+    receiver.trim_height = 4.0
+    receiver.trim_lfe = 3.0
+    receiver.trim_surround = 0.0
+    receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
+    receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
+    for _trim in ("centre", "height", "lfe", "surround"):
+        setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
 
-        receiver.zone_b_power_on = False
-        receiver.zone_b_volume = -40.0
-        receiver.zone_b_mute_enabled = False
-        receiver.zone_b_source = None
-        receiver.zone_b_available_sources = []
-        receiver.zone_b_audio_input = "aux"
-        receiver.zone_b_streaming_source = "DLNA"
+    receiver.zone_b_power_on = False
+    receiver.zone_b_volume = -40.0
+    receiver.zone_b_mute_enabled = False
+    receiver.zone_b_source = None
+    receiver.zone_b_available_sources = []
+    receiver.zone_b_audio_input = "aux"
+    receiver.zone_b_streaming_source = "DLNA"
 
-        create_mock.return_value = receiver
-        yield receiver
+    mock_create_receiver.return_value = receiver
+    return receiver
 
 
 @pytest.fixture
 def mock_get_device_serial() -> Generator[AsyncMock]:
-    """Return a mocked async_get_device_serial function."""
-    with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_get_device_serial",
-        new=AsyncMock(return_value="0050c27c76b2"),
-    ) as serial_mock:
+    """Return a mocked fetch_device_serial function."""
+    with (
+        patch(
+            "homeassistant.components.lyngdorf.config_flow.discover_ssdp_location",
+            new=AsyncMock(return_value="http://127.0.0.1:8080/desc.xml"),
+        ),
+        patch(
+            "homeassistant.components.lyngdorf.config_flow.fetch_device_serial",
+            new=AsyncMock(return_value="0050c27c76b2"),
+        ) as serial_mock,
+    ):
         yield serial_mock
 
 
 @pytest.fixture
 def mock_find_receiver_model() -> Generator[AsyncMock]:
-    """Return a mocked async_find_receiver_model function."""
+    """Return a mocked discover_model function."""
     with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        "homeassistant.components.lyngdorf.config_flow.discover_model",
         new=AsyncMock(return_value=LyngdorfModel.MP_60),
     ) as find_mock:
         yield find_mock
@@ -168,7 +177,7 @@ def mock_find_receiver_model() -> Generator[AsyncMock]:
 
 def notify_receiver_update(receiver: MagicMock) -> None:
     """Fire every notification callback the entities registered."""
-    for call in receiver.register_notification_callback.call_args_list:
+    for call in receiver.on_change.call_args_list:
         call.args[0]()
 
 
@@ -195,7 +204,7 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup,
+        patch("homeassistant.components.lyngdorf.lookup_model") as lookup,
         patch("homeassistant.components.lyngdorf.PLATFORMS", platforms),
     ):
         lookup.return_value = LyngdorfModel.MP_60

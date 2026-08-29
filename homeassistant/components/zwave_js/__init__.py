@@ -235,9 +235,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
 
     entry.async_on_unload(client.disconnect)
 
+    # Local because runtime_data is not set yet if HA shuts down during setup
+    network_neighbors_lock = asyncio.Lock()
+
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
-        await client.disconnect()
+        # Wait for a running network neighbors refresh, so the client is not
+        # disconnected before it has turned the radio back on
+        async with network_neighbors_lock:
+            await client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
@@ -270,6 +276,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
     entry_runtime_data = ZwaveJSData(
         client=client,
         driver_events=driver_events,
+        network_neighbors_lock=network_neighbors_lock,
     )
     entry.runtime_data = entry_runtime_data
 
@@ -1167,6 +1174,11 @@ async def client_listen(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Unload a config entry."""
+    # Wait for a running network neighbors refresh, so the client is not
+    # disconnected before it has turned the radio back on
+    async with entry.runtime_data.network_neighbors_lock:
+        pass
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     entry_runtime_data = entry.runtime_data

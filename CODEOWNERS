@@ -920,8 +920,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/iometer/ @jukrebs
 /homeassistant/components/ios/ @robbiet480
 /tests/components/ios/ @robbiet480
-/homeassistant/components/iotawatt/ @gtdiehl @jyavenard
-/tests/components/iotawatt/ @gtdiehl @jyavenard
+/homeassistant/components/iotawatt/ @gtdiehl @jyavenard @agners
+/tests/components/iotawatt/ @gtdiehl @jyavenard @agners
 /homeassistant/components/iotty/ @shapournemati-iotty
 /tests/components/iotty/ @shapournemati-iotty
 /homeassistant/components/iperf3/ @rohankapoorcom
@@ -938,6 +938,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
 /tests/components/isal/ @bdraco
+/homeassistant/components/iseo_argo_ble/ @FezVrasta
+/tests/components/iseo_argo_ble/ @FezVrasta
 /homeassistant/components/iskra/ @iskramis
 /tests/components/iskra/ @iskramis
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
@@ -1408,6 +1410,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
 /tests/components/pegel_online/ @mib1185
+/homeassistant/components/persang_infrared/ @Dr-Blank
+/tests/components/persang_infrared/ @Dr-Blank
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
@@ -1490,8 +1494,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
 /homeassistant/components/qbus/ @Qbus-iot @thomasddn
 /tests/components/qbus/ @Qbus-iot @thomasddn
-/homeassistant/components/qingping/ @bdraco
-/tests/components/qingping/ @bdraco
+/homeassistant/components/qingping/ @bdraco @tengfeili-qingping
+/tests/components/qingping/ @bdraco @tengfeili-qingping
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
@@ -1544,6 +1548,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
 /tests/components/rehlko/ @bdraco @peterager
+/homeassistant/components/remember_the_milk/ @MartinHjelmare
+/tests/components/remember_the_milk/ @MartinHjelmare
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555 @allenporter
@@ -1738,6 +1744,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/solaredge/ @frenck @bdraco @tronikos
 /tests/components/solaredge/ @frenck @bdraco @tronikos
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
+/homeassistant/components/solaredge_modbus/ @frenck
+/tests/components/solaredge_modbus/ @frenck
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
 /tests/components/solarlog/ @Ernst79 @dontinelli
 /homeassistant/components/solarman/ @solarmanpv
@@ -2163,6 +2171,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zhong_hong/ @crhan
+/tests/components/zhong_hong/ @crhan
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
 /homeassistant/components/zinvolt/ @joostlek
