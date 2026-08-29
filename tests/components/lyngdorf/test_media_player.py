@@ -481,6 +481,38 @@ async def test_set_play_mode(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_volume_before_the_device_reports_one(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test the volume control being absent until the device reports a level."""
+    mock_receiver.power_on = True
+    mock_receiver.volume = None
+    # Changed alongside so the assertions below fail if building the state
+    # raised rather than merely omitting the volume.
+    mock_receiver.muted = True
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: MAIN_ZONE},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        blocking=True,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_transport_features_follow_the_source(
     hass: HomeAssistant,
     playing_receiver: MagicMock,
