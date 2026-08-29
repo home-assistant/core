@@ -164,6 +164,34 @@ async def test_user_flow_auth_error(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
+async def test_user_flow_connect_error(
+    hass: HomeAssistant,
+    region: tuple[str, Region],
+    brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
+) -> None:
+    """Test a failed connection in the flow initialized by the user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_appliances_manager_api.return_value.connect.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test that it succeeds if the connection is successful
+    mock_appliances_manager_api.return_value.connect.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
 async def test_already_configured(
     hass: HomeAssistant, region: tuple[str, Region], brand: tuple[str, Brand]
 ) -> None:
