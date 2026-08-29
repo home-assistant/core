@@ -1,4 +1,4 @@
-"""Tests for midea climate.py."""
+"""Tests for the Midea water heater platform."""
 
 from collections.abc import Callable
 from unittest.mock import patch
@@ -17,6 +17,7 @@ from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -310,7 +311,7 @@ async def test_midea_water_heater_default_state(
 
 
 @pytest.mark.parametrize(
-    ("device", "services", "services_data", "expected_calls", "entity_sufix"),
+    ("device", "services", "services_data", "expected_calls", "entity_suffix"),
     [
         pytest.param(
             _c3_device(),
@@ -399,6 +400,8 @@ async def test_midea_water_heater_default_state(
                 SERVICE_TURN_ON,
                 SERVICE_SET_TEMPERATURE,
                 SERVICE_SET_OPERATION_MODE,
+                SERVICE_SET_AWAY_MODE,
+                SERVICE_SET_AWAY_MODE,
             ],
             [
                 {},
@@ -466,7 +469,7 @@ async def test_midea_water_heater_services(
     services: list[str],
     services_data: list[dict],
     expected_calls: list[list[tuple]],
-    entity_sufix: str,
+    entity_suffix: str,
 ) -> None:
     """Test water heater service calls reach the device."""
     config_entry = mock_config_entry(device)
@@ -474,7 +477,7 @@ async def test_midea_water_heater_services(
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[
-        f"{TEST_DEVICE_ID}_{entity_sufix}"
+        f"{TEST_DEVICE_ID}_{entity_suffix}"
     ]
     for i, service in enumerate(services):
         await _assert_service_calls(

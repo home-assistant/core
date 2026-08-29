@@ -133,10 +133,13 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Midea Water Heater extra state attributes."""
-        attrs: dict[str, Any] = self._device.attributes
-        if hasattr(self._device, "temperature_step"):
-            attrs["target_temperature_step"] = self._device.temperature_step
-        return attrs
+        return dict(self._device.attributes)
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the supported target temperature step."""
+        return cast("float | None", getattr(self._device, "temperature_step", None))
 
     @property
     @override
@@ -432,6 +435,12 @@ class MideaE6WaterHeater(MideaWaterHeater):
     def turn_off(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater turn off."""
         self._device.set_attribute(attr=self._power_attr, value=False)
+
+    @property
+    @override
+    def is_away_mode_on(self) -> bool:
+        """Return whether E6 away mode is active."""
+        return self._device.get_attribute(E6Attributes.heating_modes) == "out"
 
     @override
     def turn_away_mode_on(self) -> None:
