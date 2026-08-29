@@ -91,7 +91,7 @@ Compare the returned count against the reported total and keep fetching until th
    blocker whether or not anyone is arguing about it.
 
 6. **Peer-Review Checklist Verification (Priority Boost)** — inspect the PR body text for
-   the template checkbox: `[x] I have reviewed two other open pull requests in this repository.`
+   the template checkbox: `- [x] I have reviewed two other [open pull requests][prs] in this repository.`
    - **Checked (`[x]`):** Give this PR higher priority in ranking to reward contributors helping
      clear the review backlog.
    - **Unchecked (`[ ]` or missing):** Keep in queue with standard priority (do not disqualify).
