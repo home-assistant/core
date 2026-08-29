@@ -26,7 +26,11 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
-from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.homeassistant.const import DATA_EXPOSED_ENTITIES
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_get_entity_settings,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -404,9 +408,7 @@ async def test_should_expose_uses_exposed_entities_store(
 async def test_should_expose_seeds_legacy_default_for_state_only_entity(
     hass: HomeAssistant,
 ) -> None:
-    """Test should_expose seeds a legacy default for an entity with no registry entry."""
-    hass.states.async_set("light.no_unique_id", "on")
-
+    """Test a first state seeds a legacy default for an entity with no registry entry."""
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -415,6 +417,9 @@ async def test_should_expose_seeds_legacy_default_for_state_only_entity(
     )
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
+
+    hass.states.async_set("light.no_unique_id", "on")
+    await hass.async_block_till_done()
 
     assert google_config.should_expose("light.no_unique_id") is True
 
@@ -489,6 +494,23 @@ async def test_migrate_expose_settings(
     assert google_config.should_expose(light_entry.entity_id) is False
 
 
+async def test_migrate_legacy_entity_skips_non_exposed_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test migration writes nothing for entities that were never legacy-exposed."""
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="not_exposed"
+    )
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert async_get_entity_settings(hass, entry.entity_id) == {}
+
+
 async def test_migrate_entity_aliases(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -509,13 +531,13 @@ async def test_migrate_entity_aliases(
     await google_config.async_initialize()
 
     entry = entity_registry.async_get(entry.entity_id)
-    assert entry.aliases == ["Custom Name", "Foo", "Bar"]
+    assert entry.aliases == [er.COMPUTED_NAME, "Custom Name", "Foo", "Bar"]
 
 
 async def test_migrate_entity_aliases_keeps_existing(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test migration does not override aliases already set on the entity."""
+    """Test migration appends to, rather than overrides, existing aliases."""
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
@@ -531,13 +553,13 @@ async def test_migrate_entity_aliases_keeps_existing(
     await google_config.async_initialize()
 
     entry = entity_registry.async_get(entry.entity_id)
-    assert entry.aliases == ["Existing"]
+    assert entry.aliases == ["Existing", "Foo", "Bar"]
 
 
-async def test_migrate_entity_aliases_on_registration(
+async def test_migrate_entity_aliases_on_first_state(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test aliases are migrated when a new entity is registered."""
+    """Test aliases are migrated when a new entity gets its first state."""
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -551,10 +573,71 @@ async def test_migrate_entity_aliases_on_registration(
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entry.entity_id)
     assert entry.aliases[1:] == ["Foo"]
+
+
+async def test_migrate_legacy_entity_does_not_restore_cleared_aliases(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a repeat migration attempt does not restore cleared aliases."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "entity_config": {entry.entity_id: {"aliases": ["Foo", "Bar"]}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.aliases == [er.COMPUTED_NAME, "Foo", "Bar"]
+
+    # The user clears all aliases via the UI.
+    entity_registry.async_update_entity(entry.entity_id, aliases=[])
+
+    # A repeat migration attempt (for example, after the entity's state
+    # disappears and reappears across a restart) must not restore them: this
+    # entity already has a recorded google_assistant setting.
+    google_config._migrate_legacy_entity(entry.entity_id)
+
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.aliases == []
+
+
+async def test_new_entity_exposed_via_expose_new_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a newly appeared entity exposed via expose_new schedules a sync."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "expose_by_default": False, "exposed_domains": []}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+    await google_config.async_connect_agent_user("mock-user-id")
+
+    hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(DOMAIN, True)
+
+    with (
+        patch.object(google_config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
+        )
+        hass.states.async_set(entry.entity_id, "on")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
 
 
 async def test_expose_update_triggers_sync(

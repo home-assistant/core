@@ -18,8 +18,14 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_NAME
-from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
+from homeassistant.const import CONF_NAME, EVENT_STATE_CHANGED
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -114,12 +120,14 @@ class GoogleConfig(AbstractConfig):
 
         self._on_deinitialize.append(
             async_listen_entity_updates(
-                self.hass, DOMAIN, self._async_exposed_entities_updated
+                self.hass, DOMAIN, self.async_schedule_google_sync_all
             )
         )
         self._on_deinitialize.append(
             self.hass.bus.async_listen(
-                er.EVENT_ENTITY_REGISTRY_UPDATED, self._async_entity_registry_updated
+                EVENT_STATE_CHANGED,
+                self._async_state_added,
+                event_filter=self._async_state_added_filter,
             )
         )
 
@@ -128,16 +136,26 @@ class GoogleConfig(AbstractConfig):
     def _migrate_legacy_settings(self) -> None:
         """Migrate should_expose/name/aliases computed from YAML to the shared store."""
         entity_registry = er.async_get(self.hass)
-        for entity_id in {*entity_registry.entities, *self.entity_config}:
+        entity_ids = {
+            *entity_registry.entities,
+            *self.hass.states.async_entity_ids(),
+            *self.entity_config,
+        }
+        for entity_id in entity_ids:
             self._migrate_legacy_entity(entity_id)
 
     @callback
-    def _async_entity_registry_updated(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Migrate legacy YAML settings for a newly registered entity."""
-        if event.data["action"] == "create":
-            self._migrate_legacy_entity(event.data["entity_id"])
+    def _async_state_added_filter(self, data: EventStateChangedData) -> bool:
+        """Filter state changes to entities that just appeared."""
+        return data["old_state"] is None
+
+    @callback
+    def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
+        """Migrate legacy settings and sync a newly appeared state."""
+        entity_id = event.data["entity_id"]
+        self._migrate_legacy_entity(entity_id)
+        if self.should_expose(entity_id):
+            self.async_schedule_google_sync_all()
 
     @property
     @override
@@ -209,7 +227,6 @@ class GoogleConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
-        self._migrate_legacy_entity(entity_id)
         return async_should_expose(self.hass, DOMAIN, entity_id)
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
@@ -249,34 +266,33 @@ class GoogleConfig(AbstractConfig):
         return bool(is_default_exposed or explicit_expose)
 
     def _migrate_legacy_entity(self, entity_id: str) -> None:
-        """Migrate should_expose/name/aliases computed from YAML, once."""
+        """Migrate should_expose/name/aliases computed from YAML."""
         try:
             settings = async_get_entity_settings(self.hass, entity_id)
         except HomeAssistantError:
             settings = {}
-        if DOMAIN not in settings and self._should_expose_legacy(entity_id):
-            async_expose_entity(self.hass, DOMAIN, entity_id, True)
+        if DOMAIN in settings:
+            return
+
+        if not self._should_expose_legacy(entity_id):
+            return
+
+        async_expose_entity(self.hass, DOMAIN, entity_id, True)
 
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(entity_id)
-        if registry_entry is None or registry_entry.aliases not in (
-            [],
-            [er.COMPUTED_NAME],
-        ):
+        if registry_entry is None:
             return
 
         entity_config = self.entity_config.get(entity_id, {})
-        name = entity_config.get(CONF_NAME, er.COMPUTED_NAME)
-        aliases = entity_config.get(CONF_ALIASES, [])
-        if name is er.COMPUTED_NAME and not aliases:
-            return
+        registry_aliases = list(registry_entry.aliases)
+        if name := entity_config.get(CONF_NAME):
+            registry_aliases.append(name)
+        if aliases := entity_config.get(CONF_ALIASES):
+            registry_aliases.extend(aliases)
+        registry_aliases = list(dict.fromkeys(registry_aliases))
 
-        entity_registry.async_update_entity(entity_id, aliases=[name, *aliases])
-
-    @callback
-    def _async_exposed_entities_updated(self) -> None:
-        """Handle updated expose settings."""
-        self.async_schedule_google_sync_all()
+        entity_registry.async_update_entity(entity_id, aliases=registry_aliases)
 
     @override
     def should_2fa(self, state):
