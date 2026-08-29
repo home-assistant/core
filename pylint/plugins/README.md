@@ -138,6 +138,7 @@ Every check has a code following the
 | `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
 | `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
+| `W7434` | [`home-assistant-executor-job-in-loop`](#w7434-home-assistant-executor-job-in-loop) | `async_add_executor_job` call inside a loop should be grouped |
 
 
 ## `home_assistant_logger` checker
@@ -840,8 +841,9 @@ Integration's `__init__.py` should implement `async_unload_entry`.
 
 ## `home_assistant_sequential_executor_jobs` checker
 
-Detects consecutive `async_add_executor_job` calls in integration modules
-that could be grouped into a single executor job.
+Detects `async_add_executor_job` calls in integration modules that could
+be grouped into a single executor job, either because they are consecutive
+or because they run inside a loop.
 
 ### `W7415`: `home-assistant-sequential-executor-jobs`
 
@@ -850,6 +852,19 @@ statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
 should be combined into a single executor job that performs all the work,
 avoiding unnecessary context switches back to the event loop between
 blocking calls. The rule applies to integration modules only.
+
+### `W7434`: `home-assistant-executor-job-in-loop`
+
+An `async_add_executor_job` call inside a loop body (`for`/`async for`/
+`while`) causes a context switch back to the event loop on every
+iteration. Move the loop into a single function and call
+`async_add_executor_job` once with that function. The rule applies to
+integration modules only.
+
+The rule only fires when the loop body contains no other awaited async
+work besides executor jobs. If the loop awaits async coroutines (for
+example fetching data), the blocking calls cannot be hoisted into a
+single executor job, since executor functions cannot run async code.
 
 
 ## `home_assistant_has_entity_name` checker

@@ -230,6 +230,144 @@ async def async_setup(hass, config):
     assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
 
 
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="for_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    while running:
+        await hass.async_add_executor_job(call_a)
+""",
+            id="while_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    async for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="async_for_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        result = await hass.async_add_executor_job(call_a, item)
+""",
+            id="assigned_in_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if item:
+            await hass.async_add_executor_job(call_a, item)
+""",
+            id="nested_in_loop",
+        ),
+    ],
+)
+def test_executor_job_in_loop_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test that an executor job inside a loop is flagged."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+    walk_checker(linter, executor_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-executor-job-in-loop"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        do_something(item)
+    await hass.async_add_executor_job(call_a)
+""",
+            id="after_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        data = await fetch_async(item)
+""",
+            id="loop_with_trailing_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        data = await fetch_async(item)
+        await hass.async_add_executor_job(call_a, data)
+""",
+            id="loop_with_leading_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if item:
+            data = await fetch_async(item)
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="loop_with_nested_await",
+        ),
+    ],
+)
+def test_executor_job_loop_not_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loop cases that should not be flagged."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+
+    with assert_no_messages(linter):
+        walk_checker(linter, executor_checker, root_node)
+
+
+def test_sequential_in_loop_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+) -> None:
+    """Test that sequential and loop violations are both flagged in a loop."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        await hass.async_add_executor_job(call_b, item)
+""",
+        "homeassistant.components.test_integration",
+    )
+    walk_checker(linter, executor_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 2
+    assert {m.msg_id for m in messages} == {
+        "home-assistant-executor-job-in-loop",
+        "home-assistant-sequential-executor-jobs",
+    }
+
+
 def test_not_integration_module_ignored(
     linter: UnittestLinter,
     executor_checker: SequentialExecutorJobsChecker,
