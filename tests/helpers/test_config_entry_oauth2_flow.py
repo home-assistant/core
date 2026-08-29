@@ -1069,6 +1069,10 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
             OAuth2TokenRequestReauthError,
         ),
         (
+            HTTPStatus.FORBIDDEN,  # off-spec, but used for revoked credentials
+            OAuth2TokenRequestReauthError,
+        ),
+        (
             HTTPStatus.NOT_FOUND,  # 4xx, but not a credential failure
             OAuth2TokenRequestError,
         ),

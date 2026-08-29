@@ -1437,7 +1437,7 @@ async def test_dhcp_discovery_with_creds(
     ("status_code", "error_reason"),
     [
         (HTTPStatus.UNAUTHORIZED, "oauth_unauthorized"),
-        (HTTPStatus.NOT_FOUND, "oauth_unauthorized"),
+        (HTTPStatus.NOT_FOUND, "oauth_failed"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, "oauth_failed"),
     ],
 )
