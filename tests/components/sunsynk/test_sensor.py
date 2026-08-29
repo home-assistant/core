@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sunsynk.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -70,3 +70,29 @@ async def test_sensors_unavailable_when_inverter_is_removed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID_GRID_POWER).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_sunsynk_client")
+async def test_power_sensors_use_total_of_all_phases(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the grid and load power sensors report the total across all phases."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID_GRID_POWER).state == "610.0"
+    assert hass.states.get("sensor.garage_inverter_load_power").state == "3427.0"
+
+
+@pytest.mark.usefixtures("mock_sunsynk_client")
+async def test_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a device is created for each inverter."""
+    await setup_integration(hass, mock_config_entry)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 2
+    assert devices == snapshot
