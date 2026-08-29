@@ -1,0 +1,134 @@
+"""Config flow to configure the BLUETTI Modbus integration."""
+
+from typing import Any, override
+
+from bluetti_modbus_lib.devices.getter import get_device
+from modbus_connection import ModbusError, ModbusTcpParams
+import voluptuous as vol
+
+from homeassistant.components.modbus import async_get_temporary_unit
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+)
+
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_UNIT_ID,
+    DEFAULT_PORT,
+    DEFAULT_UNIT_ID,
+    DEVICE_TYPES,
+    DOMAIN,
+)
+from .entity import device_name
+
+STEP_USER = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1, max=65535, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1, max=247, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_DEVICE_TYPE): SelectSelector(
+            SelectSelectorConfig(
+                options=list(DEVICE_TYPES), translation_key=CONF_DEVICE_TYPE
+            )
+        ),
+    }
+)
+
+
+def _normalized(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return config entry data with the host spelling normalized.
+
+    One connection is shared per host and port (see homeassistant.components
+    .modbus.connection), so spelling matters.
+    """
+    return {**user_input, CONF_HOST: user_input[CONF_HOST].lower()}
+
+
+class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a BLUETTI Modbus config flow."""
+
+    VERSION = 1
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask where the device is, then probe it."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data = _normalized(user_input)
+            errors = await self._async_validate(data)
+            if not errors:
+                await self.async_set_unique_id(
+                    f"{data[CONF_HOST]}_{data[CONF_PORT]}_{data[CONF_UNIT_ID]}"
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=device_name(data[CONF_DEVICE_TYPE]), data=data
+                )
+
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of how the device is reached."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            data = _normalized(user_input)
+            errors = await self._async_validate(data)
+            if not errors:
+                return self.async_update_reload_and_abort(entry, data_updates=data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
+    async def _async_validate(self, data: dict[str, Any]) -> dict[str, str]:
+        """Probe the device, returning form errors (empty if it checked out)."""
+        params = ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
+        try:
+            async with async_get_temporary_unit(
+                self.hass, params, data[CONF_UNIT_ID]
+            ) as unit:
+                device = get_device(data[CONF_DEVICE_TYPE], unit)
+                if device is None:
+                    return {"base": "unsupported_device_type"}
+                await device.async_update()
+        except HomeAssistantError, ModbusError:
+            # HomeAssistantError: the device is already in use over different
+            # link settings, which one shared connection cannot honour.
+            return {"base": "cannot_connect"}
+
+        return {}

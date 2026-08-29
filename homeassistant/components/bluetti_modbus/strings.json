@@ -1,0 +1,215 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_device_type": "This device type is not supported by the installed version of bluetti-modbus."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "device_type": "[%key:component::bluetti_modbus::config::step::user::data::device_type%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "[%key:component::bluetti_modbus::config::step::user::data::unit_id%]"
+        },
+        "data_description": {
+          "device_type": "[%key:component::bluetti_modbus::config::step::user::data_description::device_type%]",
+          "host": "[%key:component::bluetti_modbus::config::step::user::data_description::host%]",
+          "port": "[%key:component::bluetti_modbus::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::bluetti_modbus::config::step::user::data_description::unit_id%]"
+        },
+        "description": "Update how this device is reached, for example after it moved to another address."
+      },
+      "user": {
+        "data": {
+          "device_type": "Model",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Device ID"
+        },
+        "data_description": {
+          "device_type": "The BLUETTI power station model you are connecting to.",
+          "host": "The hostname or IP address of your BLUETTI power station.",
+          "port": "The TCP port the device listens on for Modbus requests. The BLUETTI default is 502.",
+          "unit_id": "The Modbus device ID of the power station. The BLUETTI default is 1."
+        },
+        "description": "Connect to your BLUETTI power station over Modbus to monitor it locally."
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "balco260": "Balco260",
+        "ep2000": "EP2000"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_o_e_total": {
+        "name": "Total AC Output Energy"
+      },
+      "ac_o_p_total": {
+        "name": "AC Output Power"
+      },
+      "ac_o_switch": {
+        "name": "AC Output Switch"
+      },
+      "b_c": {
+        "name": "Battery Current"
+      },
+      "b_c_total": {
+        "name": "Total Battery Current"
+      },
+      "b_cell_count": {
+        "name": "Cell Count"
+      },
+      "b_cycle_count": {
+        "name": "Battery Cycle Count"
+      },
+      "b_i_e": {
+        "name": "Total Battery Charged Energy"
+      },
+      "b_ntc_count": {
+        "name": "Temperature Sensor Count"
+      },
+      "b_o_e": {
+        "name": "Total Battery Discharged Energy"
+      },
+      "b_soc": {
+        "name": "Battery SoC"
+      },
+      "b_soc_high": {
+        "name": "Max Charge Limit (SoC High)"
+      },
+      "b_soc_low": {
+        "name": "Min Discharge Limit (SoC Low)"
+      },
+      "b_soc_total": {
+        "name": "Total Battery SoC"
+      },
+      "b_soh": {
+        "name": "Battery SoH"
+      },
+      "b_soh_total": {
+        "name": "Total Battery SoH"
+      },
+      "b_t_avg": {
+        "name": "Average Battery Temperature"
+      },
+      "b_type": {
+        "name": "Battery Type"
+      },
+      "b_v": {
+        "name": "Battery Voltage"
+      },
+      "b_v_total": {
+        "name": "Total Battery Voltage"
+      },
+      "d_inverter_fault": {
+        "name": "Inverter Fault"
+      },
+      "d_inverter_status": {
+        "name": "Inverter Status"
+      },
+      "d_inverter_total": {
+        "name": "Total Inverter Power"
+      },
+      "d_inverter_type": {
+        "name": "Inverter Type"
+      },
+      "d_inverter_warning": {
+        "name": "Inverter Warning"
+      },
+      "d_num_battery_packs": {
+        "name": "Number of Battery Packs"
+      },
+      "d_num_inverters": {
+        "name": "Inverter Count"
+      },
+      "g_i_e_total": {
+        "name": "Total Grid Import Energy"
+      },
+      "g_i_f": {
+        "name": "Grid Frequency"
+      },
+      "g_i_p_total": {
+        "name": "Grid Input Power"
+      },
+      "g_i_switch": {
+        "name": "Grid Charging Switch"
+      },
+      "g_o_e_total": {
+        "name": "Total Grid Export Energy"
+      },
+      "g_o_switch": {
+        "name": "Grid Feed-in Switch"
+      },
+      "pv_1_i_c": {
+        "name": "PV 1 Input Current"
+      },
+      "pv_1_i_p": {
+        "name": "PV 1 Input Power"
+      },
+      "pv_1_i_v": {
+        "name": "PV 1 Input Voltage"
+      },
+      "pv_2_i_c": {
+        "name": "PV 2 Input Current"
+      },
+      "pv_2_i_p": {
+        "name": "PV 2 Input Power"
+      },
+      "pv_2_i_v": {
+        "name": "PV 2 Input Voltage"
+      },
+      "pv_3_i_c": {
+        "name": "PV 3 Input Current"
+      },
+      "pv_3_i_p": {
+        "name": "PV 3 Input Power"
+      },
+      "pv_3_i_v": {
+        "name": "PV 3 Input Voltage"
+      },
+      "pv_4_i_c": {
+        "name": "PV 4 Input Current"
+      },
+      "pv_4_i_p": {
+        "name": "PV 4 Input Power"
+      },
+      "pv_4_i_v": {
+        "name": "PV 4 Input Voltage"
+      },
+      "pv_ac_e": {
+        "name": "PV AC Energy"
+      },
+      "pv_ac_p": {
+        "name": "PV AC Power"
+      },
+      "pv_i_e_total": {
+        "name": "Total PV Input Energy"
+      },
+      "pv_i_p_total": {
+        "name": "Total PV Input Power"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the BLUETTI power station: {error}"
+    },
+    "link_settings_in_use": {
+      "message": "The device cannot be set up with these link settings: {error}"
+    },
+    "unsupported_device_type": {
+      "message": "This entry's device type is not supported by the installed version of bluetti-modbus."
+    }
+  }
+}

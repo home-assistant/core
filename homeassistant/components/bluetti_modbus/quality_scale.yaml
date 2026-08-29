@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  # ^ bluetti-modbus is a properly published, versioned PyPI package
+  #   (bluetti-community/bluetti-modbus on GitHub) - no vendored code.
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: >-
+      Entities read cached state from the coordinator; they subscribe via
+      CoordinatorEntity and register no other event handlers.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: A Modbus link has no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: >-
+      Devices are added via the BLUETTI cloud account, not discovered on the
+      local network; the local Modbus connection (host/port) has no
+      discovery protocol of its own either.
+  discovery-update-info:
+    status: exempt
+    comment: Same reasoning as discovery - there is nothing to discover.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: A config entry is one power station, which is one device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entity here is a less popular or noisy candidate to disable.
+  entity-translations: done
+  # ^ Unlike the cloud bluetti integration, these register names are known at
+  #   dev time (bluetti-modbus's generated device classes), not supplied
+  #   dynamically by the cloud API - real translations are possible here.
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repairable issues are raised.
+  stale-devices:
+    status: exempt
+    comment: A config entry is one power station, so no device can go stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration talks Modbus, not HTTP.
+  strict-typing: done

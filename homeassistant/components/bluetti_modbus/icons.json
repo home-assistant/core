@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "ac_o_switch": {
+        "default": "mdi:power-socket"
+      },
+      "g_i_switch": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "g_o_switch": {
+        "default": "mdi:transmission-tower-export"
+      }
+    }
+  }
+}
