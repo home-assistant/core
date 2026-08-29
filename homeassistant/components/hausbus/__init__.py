@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     """Set up Haus-Bus integration from a config entry."""
     try:
         gateway = await HausbusGateway.async_create(hass, entry)
-    except OSError, TimeoutError as err:
+    except (OSError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             "Unable to open the Haus-Bus network connection"
         ) from err
