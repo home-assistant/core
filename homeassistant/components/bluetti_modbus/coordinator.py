@@ -1,14 +1,10 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
 from dataclasses import dataclass
-from typing import NoReturn, override
+from typing import override
 
 from bluetti_modbus_lib.base_devices.bluetti_device import BluettiDevice
-from modbus_connection.exceptions import (
-    AcknowledgeError,
-    ModbusError,
-    ServerDeviceBusyError,
-)
+from modbus_connection.exceptions import ModbusError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -48,35 +44,19 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @override
     async def _async_update_data(self) -> None:
-        """Poll the device, retrying once on a transient device-busy response.
+        """Poll the device.
 
-        Codes 5/6 (acknowledge / server device busy) mean the device accepted
-        the request but wants more time - retried once immediately rather than
-        treated as a hard failure, the same as bluetti-modbus-lib's own
-        connection-owning client already does for this hardware.
+        A transient device-busy response is already retried once by
+        ``async_update_with_retry()`` itself; only a real failure reaches here.
         """
         try:
-            await self.device.async_update()
-        except AcknowledgeError, ServerDeviceBusyError:
-            LOGGER.debug("%s: device asked for a retry, trying once more", self.name)
-            await self._async_read()
+            await self.device.async_update_with_retry()
         except ModbusError as err:
-            self._raise_update_failed(err)
-
-    async def _async_read(self) -> None:
-        """Read the device once more, surfacing a failure this time."""
-        try:
-            await self.device.async_update()
-        except ModbusError as err:
-            self._raise_update_failed(err)
-
-    def _raise_update_failed(self, err: ModbusError) -> NoReturn:
-        """Translate a Modbus failure into UpdateFailed."""
-        raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
 
 @dataclass(kw_only=True)
