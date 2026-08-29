@@ -99,9 +99,6 @@
           "throttled": "Throttled"
         }
       },
-      "vendor_status": {
-        "name": "Vendor status"
-      },
       "voltage_phase_ab": {
         "name": "Voltage phase A-B"
       },
