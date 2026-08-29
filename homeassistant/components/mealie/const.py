@@ -20,4 +20,4 @@ ATTR_NOTE_TEXT = "note_text"
 ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
 
-MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v2.0.0")
+MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v3.1.0")
