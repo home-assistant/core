@@ -151,7 +151,7 @@ async def test_no_entity_for_model_without_remote_keys(
 
     with (
         patch(
-            "homeassistant.components.lyngdorf.lookup_receiver_model",
+            "homeassistant.components.lyngdorf.lookup_model",
             return_value=LyngdorfModel.TDAI_3400,
         ),
         patch("homeassistant.components.lyngdorf.PLATFORMS", [Platform.REMOTE]),

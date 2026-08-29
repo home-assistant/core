@@ -51,6 +51,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import (
     set_attribute_value,
@@ -841,6 +842,45 @@ async def test_ac_setpoint_range_update(
     assert state.attributes[ATTR_MIN_TEMP] == 16
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["aux_ac"])
+async def test_ac_default_temperature_range_in_device_unit(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the default temperature range is expressed in the unit of the device."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    devices.get_device_status.return_value[MAIN][Capability.TEMPERATURE_MEASUREMENT][
+        Attribute.TEMPERATURE
+    ].unit = "F"
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.aux_a_c_on_off")
+    assert state.attributes[ATTR_MIN_TEMP] == 45
+    assert state.attributes[ATTR_MAX_TEMP] == 95
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_01001"])
+async def test_ac_setpoint_range_converted_to_device_unit(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the setpoint range is converted when it uses another unit."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    devices.get_device_status.return_value[MAIN][Capability.TEMPERATURE_MEASUREMENT][
+        Attribute.TEMPERATURE
+    ].unit = "F"
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_aire_dormitorio_principal")
+    assert state.attributes[ATTR_MIN_TEMP] == 61
+    assert state.attributes[ATTR_MAX_TEMP] == 86
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1.8
 
 
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])

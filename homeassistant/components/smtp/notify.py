@@ -64,6 +64,7 @@ from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
     ATTR_MEDIA_SOURCE,
+    ATTR_PRIORITY,
     CONF_ENCRYPTION,
     CONF_ENTRY,
     CONF_SENDER_NAME,
@@ -108,6 +109,14 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
+
+MAP_X_PRIORITY = {
+    "highest": "1 (Highest)",
+    "high": "2 (High)",
+    "normal": "3 (Normal)",
+    "low": "4 (Low)",
+    "lowest": "5 (Lowest)",
+}
 
 
 async def async_get_service(
@@ -224,6 +233,9 @@ class MailNotifyEntity(NotifyEntity):
         msg = EmailMessage()
         msg.set_content(message)
         msg.add_header("Subject", title or ATTR_TITLE_DEFAULT)
+
+        if ATTR_PRIORITY in kwargs:
+            msg.add_header("X-Priority", MAP_X_PRIORITY[kwargs[ATTR_PRIORITY]])
 
         if ATTR_HTML in kwargs:
             msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
