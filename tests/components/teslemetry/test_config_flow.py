@@ -43,6 +43,7 @@ async def test_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_register_client: AsyncMock,
 ) -> None:
     """Test we get the form."""
 
@@ -51,6 +52,15 @@ async def test_oauth_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    # The registration request must carry the correct client identity so the
+    # external contract cannot silently drift.
+    mock_register_client.assert_called_once()
+    assert mock_register_client.call_args.args[1:] == (
+        "Home Assistant",
+        SOFTWARE_ID,
+        __version__,
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

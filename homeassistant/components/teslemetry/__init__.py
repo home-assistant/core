@@ -96,9 +96,10 @@ STREAM_TOPICS: Final = (
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    # A v1 entry migrates using the legacy static client_id (async_migrate_entry);
-    # registering a DCR client first would leave auth_implementation pointing at
-    # a client_id that never minted that entry's refresh token.
+    # A pending v1 entry migrates onto the legacy static client_id and keeps
+    # DOMAIN as its auth_implementation (async_migrate_entry), so a DCR client
+    # registered here under DCR_AUTH_DOMAIN would go unused; defer registration
+    # until no v1 entry remains.
     if not any(
         entry.version == 1 for entry in hass.config_entries.async_entries(DOMAIN)
     ):
