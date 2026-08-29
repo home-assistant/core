@@ -61,6 +61,56 @@ async def test_enum_sensor_ignores_unknown_device_value(
     assert hass.states.get("sensor.mock_lyngdorf_audio_input").state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "attribute", "value"),
+    [
+        pytest.param(
+            "sensor.mock_lyngdorf_video_input", "video_inputs", ["DP"], id="video"
+        ),
+        pytest.param(
+            "sensor.mock_lyngdorf_streaming_source",
+            "stream_types",
+            ["Spotify"],
+            id="stream",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_sensors_read_the_current_lists_not_the_deprecated_aliases(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    entity_id: str,
+    attribute: str,
+    value: list[str],
+) -> None:
+    """Test the lists come from the 2.0 names while the aliases say otherwise."""
+    setattr(mock_receiver, attribute, value)
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes["options"] == value
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_b_sensors_read_the_zone_object(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test the Zone B sensors follow the zone, not the receiver aliases."""
+    mock_receiver.zone_b.audio_input = "optical"
+    mock_receiver.zone_b.streaming_source = "AirPlay"
+    mock_receiver.zone_b_audio_input = "aux"
+    mock_receiver.zone_b_streaming_source = "DLNA"
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_lyngdorf_zone_b_audio_input").state == "optical"
+    assert (
+        hass.states.get("sensor.mock_lyngdorf_zone_b_streaming_source").state
+        == "AirPlay"
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_enum_options_follow_the_device(
     hass: HomeAssistant,
