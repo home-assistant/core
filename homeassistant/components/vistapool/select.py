@@ -186,6 +186,7 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(self.entity_description.value_path, value)
 
 
 class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
@@ -221,13 +222,14 @@ class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Send the option's field set to the controller as one command."""
+        updates = _LIGHT_MODE_UPDATES[option]
         try:
-            await self.coordinator.api.set_values(
-                self.coordinator.pool_id, _LIGHT_MODE_UPDATES[option]
-            )
+            await self.coordinator.api.set_values(self.coordinator.pool_id, updates)
         except AquariteError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        for path, value in updates.items():
+            self.coordinator.apply_optimistic(path, value)

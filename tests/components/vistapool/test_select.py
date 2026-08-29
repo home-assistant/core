@@ -326,3 +326,75 @@ async def test_light_schedule_frequency_writes_raw_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", "light.freq", 604800
     )
+
+
+async def test_select_reflects_choice_before_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
+) -> None:
+    """Test a select shows the chosen option without waiting for the push."""
+    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.my_pool_pump_speed", ATTR_OPTION: "high"},
+        blocking=True,
+    )
+
+    assert hass.states.get("select.my_pool_pump_speed").state == "high"
+
+
+async def test_light_mode_reflects_choice_before_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the light mode select applies every field of the chosen option."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("select.my_pool_light_mode").state == "auto"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
+        blocking=True,
+    )
+
+    # Reads back as on only if both light.mode and light.status were applied.
+    assert hass.states.get("select.my_pool_light_mode").state == "on"
+
+
+async def test_light_schedule_frequency_reflects_choice_before_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the frequency select shows the chosen option immediately."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
+            ATTR_OPTION: "weekly",
+        },
+        blocking=True,
+    )
+
+    assert hass.states.get("select.my_pool_light_schedule_frequency").state == "weekly"
