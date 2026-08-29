@@ -3431,7 +3431,7 @@ webmin-xmlrpc==0.0.2
 weheat==2026.4.8
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==2.0.0
+whirlpool-sixth-sense==2.0.1
 
 # homeassistant.components.whois
 whoisdomain==2.20260806.3

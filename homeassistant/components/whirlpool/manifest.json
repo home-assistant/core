@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["whirlpool"],
   "quality_scale": "silver",
-  "requirements": ["whirlpool-sixth-sense==2.0.0"]
+  "requirements": ["whirlpool-sixth-sense==2.0.1"]
 }
