@@ -11,6 +11,7 @@ from aioshelly.const import (
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
     MODEL_1,
+    MODEL_25,
     MODEL_PLUS_2PM,
 )
 from aioshelly.exceptions import (
@@ -20,22 +21,28 @@ from aioshelly.exceptions import (
     InvalidHostError,
     RpcCallError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_DEVICE_NAME,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
+    RPC_RECONNECT_INTERVAL,
+    UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -47,6 +54,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+)
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
@@ -54,7 +70,7 @@ from homeassistant.helpers.service_info.zeroconf import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import init_integration
+from . import MOCK_MAC, init_integration, register_entity, register_sub_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -72,6 +88,62 @@ async def _async_inject_ble_discovery(
     with patch.object(hass.config_entries.flow, "async_init"):
         inject_bluetooth_service_info_bleak(hass, info)
         await hass.async_block_till_done()
+
+
+# MAC address of the device replacing the one set up with MOCK_MAC.
+NEW_MAC = "AABBCCDDEEFF"
+# A BLU sub-device is keyed by its own BLE address, not by the gateway MAC.
+BLU_ADDR = "11:22:33:44:55:66"
+
+
+def _replacement_info(gen: int) -> dict[str, Any]:
+    """Return the get_info payload of the replacement device."""
+    return {
+        "mac": NEW_MAC,
+        "type": MODEL_1,
+        "model": MODEL_PLUS_2PM,
+        "auth": False,
+        "gen": gen,
+        "port": DEFAULT_HTTP_PORT,
+    }
+
+
+async def _async_run_user_flow(hass: HomeAssistant, gen: int) -> ConfigFlowResult:
+    """Run the user flow for the replacement device at a new host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value=_replacement_info(gen),
+    ):
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_PORT: DEFAULT_HTTP_PORT}
+        )
+
+
+async def _async_add_replaced_entry(
+    hass: HomeAssistant,
+    gen: int | None,
+    model: str,
+    data: dict[str, Any] | None = None,
+) -> MockConfigEntry:
+    """Add an unloaded entry for the device that is about to be replaced."""
+    return await init_integration(
+        hass,
+        gen,
+        model=model,
+        skip_setup=True,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: model,
+            CONF_DEVICE_NAME: "Test name",
+            **(data or {}),
+        },
+    )
 
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
@@ -464,6 +536,7 @@ async def test_form(
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -504,6 +577,7 @@ async def test_form_https_verify_ssl_disabled_by_default(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -549,6 +623,7 @@ async def test_form_https_verify_ssl_enabled(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
         CONF_VERIFY_SSL: True,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -598,6 +673,7 @@ async def test_form_enhanced_security(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
         CONF_VERIFY_SSL: False,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -636,6 +712,7 @@ async def test_form_enhanced_security_older_firmware(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -691,6 +768,7 @@ async def test_user_flow_overrides_existing_discovery(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "AABBCCDDEEFF"
     assert len(mock_setup.mock_calls) == 1
@@ -748,6 +826,7 @@ async def test_form_gen1_custom_port(
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -821,6 +900,7 @@ async def test_form_auth(
         CONF_GEN: gen,
         CONF_USERNAME: username,
         CONF_PASSWORD: user_input[CONF_PASSWORD],
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -873,6 +953,7 @@ async def test_form_errors_get_info(
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -1006,6 +1087,7 @@ async def test_form_errors_test_connection(
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -2143,6 +2225,7 @@ async def test_user_flow_filters_devices_with_active_discovery_flows(
         CONF_SLEEP_PERIOD: 0,
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
 
 
@@ -2207,6 +2290,7 @@ async def test_form_auth_errors_test_connection_gen1(
         CONF_GEN: 1,
         CONF_USERNAME: "test username",
         CONF_PASSWORD: "test password",
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -2273,6 +2357,7 @@ async def test_form_auth_errors_test_connection_gen2(
         CONF_GEN: 2,
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "test password",
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -2342,6 +2427,7 @@ async def test_zeroconf(
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2407,6 +2493,7 @@ async def test_zeroconf_enhanced_security(
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2461,6 +2548,7 @@ async def test_zeroconf_sleeping_device(
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 600,
         CONF_GEN: 1,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2667,6 +2755,7 @@ async def test_zeroconf_require_auth(
         CONF_GEN: 1,
         CONF_USERNAME: "test username",
         CONF_PASSWORD: "test password",
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2832,6 +2921,7 @@ async def test_reauth_enhanced_security(
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "test password",
         CONF_VERIFY_SSL: False,
+        CONF_DEVICE_NAME: "Test name",
     }
 
 
@@ -3344,6 +3434,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 666,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
 
 
@@ -3378,7 +3469,12 @@ async def test_reconfigure_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: gen}
+    assert entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_PORT: 99,
+        CONF_GEN: gen,
+        CONF_DEVICE_NAME: "Test name",
+    }
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -3462,7 +3558,12 @@ async def test_reconfigure_with_exception(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: 2}
+    assert entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_PORT: 99,
+        CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
+    }
 
 
 async def test_reconfigure_enhanced_security(
@@ -3504,6 +3605,7 @@ async def test_reconfigure_enhanced_security(
         CONF_PORT: DEFAULT_HTTPS_PORT,
         CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
+        CONF_DEVICE_NAME: "Test name",
     }
 
 
@@ -3571,6 +3673,7 @@ async def test_zeroconf_wrong_device_name(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
@@ -3641,6 +3744,7 @@ async def test_bluetooth_discovery(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -4016,6 +4120,7 @@ async def test_bluetooth_wifi_scan_success(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -4099,6 +4204,7 @@ async def test_bluetooth_wifi_scan_failure(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -4204,6 +4310,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     mock_ble_rpc_device.wifi_setconfig.assert_called_once()
     assert len(mock_setup.mock_calls) == 1
@@ -4301,6 +4408,7 @@ async def test_bluetooth_wifi_provision_failure(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -4514,6 +4622,7 @@ async def test_bluetooth_provision_requires_auth(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -5599,3 +5708,680 @@ async def test_bluetooth_provision_ble_reconnect_fails_during_ip_fetch(
         # Abort flow to reach terminal state
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(("gen", "model"), [(1, MODEL_1), (2, MODEL_PLUS_2PM)])
+async def test_name_conflict_migrate(
+    hass: HomeAssistant,
+    gen: int,
+    model: str,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating an entry onto a device that took over its name."""
+    entry = await init_integration(hass, gen, model=model)
+    assert entry.data[CONF_DEVICE_NAME] == "Test name"
+
+    # An energy meter phase sub-device, the three part identifier shape.
+    emeter_device = register_sub_device(device_registry, entry, "em:0-a")
+    emeter_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_em_0_a",
+        "em:0-a-power",
+        entry,
+        device_id=emeter_device.id,
+    )
+    # A BLU sub-device is keyed by its own BLE address and must not be touched.
+    blu_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, BLU_ADDR)},
+        connections={(CONNECTION_BLUETOOTH, BLU_ADDR)},
+        via_device=(DOMAIN, MOCK_MAC),
+    )
+    blu_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{BLU_ADDR}-temperature",
+        suggested_object_id="blu_temperature",
+        config_entry=entry,
+        device_id=blu_device.id,
+    )
+
+    # The device this entry was set up for is gone, so the entry no longer loads.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await _async_run_user_flow(hass, gen)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "name_conflict"
+    assert result["description_placeholders"] == {
+        "name": "Test name",
+        "host": "2.2.2.2",
+        "existing_title": "Test name",
+        "existing_mac": "12:34:56:78:9A:BC",
+        "mac": "AA:BB:CC:DD:EE:FF",
+    }
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_migrated"
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    # No second entry was created, the existing one was moved over.
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.unique_id == NEW_MAC
+    assert entry.data == {
+        CONF_HOST: "2.2.2.2",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: model,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: gen,
+        CONF_DEVICE_NAME: "Test name",
+    }
+
+    # Main device: identifier and network MAC connection rewritten.
+    main_device = device_registry.async_get_device(identifiers={(DOMAIN, NEW_MAC)})
+    assert main_device is not None
+    assert (CONNECTION_NETWORK_MAC, dr.format_mac(NEW_MAC)) in main_device.connections
+    assert (
+        CONNECTION_NETWORK_MAC,
+        dr.format_mac(MOCK_MAC),
+    ) not in main_device.connections
+    assert device_registry.async_get_device(identifiers={(DOMAIN, MOCK_MAC)}) is None
+
+    # Sub-device identifiers rewritten, none left on the old MAC.
+    assert device_registry.async_get(emeter_device.id).identifiers == {
+        (DOMAIN, f"{NEW_MAC}-em:0-a")
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        assert not any(
+            identifier.startswith(MOCK_MAC) for _, identifier in device.identifiers
+        )
+
+    # Entity unique_ids rewritten, entity IDs preserved.
+    assert entity_registry.async_get(emeter_id).unique_id == f"{NEW_MAC}-em:0-a-power"
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        assert not entity.unique_id.startswith(MOCK_MAC)
+
+    # The BLU sub-device and its entity are untouched.
+    assert device_registry.async_get(blu_device.id) == blu_device
+    assert entity_registry.async_get(blu_entity.entity_id) == blu_entity
+
+
+async def test_name_conflict_migrate_reload(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the reload of a migrated entry does not duplicate its entities."""
+    entry = await init_integration(hass, 2, model=MODEL_PLUS_2PM)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    entity_ids = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert entity_ids
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+    # Let the scheduled reload of the migrated entry run for real.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.state is ConfigEntryState.LOADED
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert {entity.entity_id for entity in entities} == entity_ids
+    for entity in entities:
+        assert entity.unique_id.startswith(NEW_MAC)
+
+
+async def test_name_conflict_migrate_zeroconf(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test the migrated entry does not keep the host, port and credentials."""
+    entry = await _async_add_replaced_entry(
+        hass,
+        2,
+        MODEL_PLUS_2PM,
+        data={
+            CONF_HOST: "9.9.9.9",
+            CONF_PORT: 8080,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "test password",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value=_replacement_info(2),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_migrated"
+    assert entry.unique_id == NEW_MAC
+    assert entry.data == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
+    }
+
+
+async def test_name_conflict_migrate_mac_in_use(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test aborting the migration when another device row holds the new MAC."""
+    entry = await init_integration(hass, 2, model=MODEL_PLUS_2PM)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    # Connections are unique per config entry, so the collision the migration has
+    # to avoid is another device row of this same entry holding the new MAC.
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(NEW_MAC))},
+    )
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_device_in_use"
+    assert entry.unique_id == MOCK_MAC
+    assert entry.data[CONF_HOST] == "192.168.1.37"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, MOCK_MAC)}) is not None
+    )
+
+
+async def test_name_conflict_migrate_entity_id_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test aborting the migration when a target entity unique ID is taken.
+
+    This is the second guard in `async_can_replace_device`: the devices can move
+    while an entity of the replacement is already registered, which would leave
+    the entry renamed but its entities behind.
+    """
+    entry = await init_integration(hass, 2, model=MODEL_PLUS_2PM)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    entity = next(
+        entity
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if entity.unique_id.startswith(MOCK_MAC)
+    )
+    # Something already holds the unique ID this entity would be moved to.
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        entity.domain,
+        entity.platform,
+        NEW_MAC + entity.unique_id.removeprefix(MOCK_MAC),
+        config_entry=other_entry,
+    )
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_device_in_use"
+    assert entry.unique_id == MOCK_MAC
+    assert entity_registry.async_get(entity.entity_id).unique_id == entity.unique_id
+
+
+async def test_name_conflict_add_new_unique_id_claimed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test the add new path does not replace an entry that claimed the new MAC.
+
+    Creating an entry for a unique ID another entry already has makes Core remove
+    that entry together with its devices and entities, so this path has to abort.
+    """
+    await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    # A second flow for the same replacement finished in the meantime.
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id=NEW_MAC)
+    other_entry.add_to_hass(hass)
+    other_entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, f"{NEW_MAC}-sensor", config_entry=other_entry
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_add_new"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_get_entry(other_entry.entry_id) is not None
+    assert entity_registry.async_get(other_entity.entity_id) is not None
+
+
+async def test_name_conflict_migrate_unique_id_claimed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test aborting when another entry claims the new MAC while the menu is open.
+
+    Updating a config entry to a unique ID another entry already has does not
+    fail, it is only logged, so the two would silently share one.
+    """
+    entry = await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    # A second flow for the same replacement finished in the meantime.
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id=NEW_MAC)
+    other_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_device_in_use"
+    assert entry.unique_id == MOCK_MAC
+
+
+async def test_name_conflict_migrate_recovered_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test aborting when the old device answers again while the menu is open.
+
+    The menu can stay open for a long time, and a device that only lost power
+    comes back within seconds, so the conditions cannot be checked only once.
+    """
+    entry = await init_integration(hass, 2, model=MODEL_PLUS_2PM)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # The device stops answering, but the entry stays loaded.
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = entry.runtime_data.rpc
+    assert coordinator is not None
+    assert coordinator.last_update_success is False
+
+    # The replacement answers, the coordinator of the existing entry has not
+    # polled again yet, so the menu is offered.
+    monkeypatch.undo()
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    # The old device comes back before the user picks an option.
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator.last_update_success is True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_entry_working"
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["other_domain"])
+async def test_name_conflict_migrate_deletes_old_issues(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test issues raised for the replaced device are deleted.
+
+    Every issue this integration raises is keyed by the MAC of its device and
+    most of them are persistent, so after the entry stops using the old MAC
+    nothing would ever delete them again.
+    """
+    await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+    old_issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=MOCK_MAC)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        old_issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_firmware",
+        translation_placeholders={"device_name": "Test name", "model": MODEL_PLUS_2PM},
+    )
+    # An issue of another integration that happens to end with the same MAC.
+    ir.async_create_issue(
+        hass,
+        "other_domain",
+        f"unrelated_{MOCK_MAC}",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="unrelated",
+    )
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["reason"] == "name_conflict_migrated"
+    assert issue_registry.async_get_issue(DOMAIN, old_issue_id) is None
+    assert (
+        issue_registry.async_get_issue("other_domain", f"unrelated_{MOCK_MAC}")
+        is not None
+    )
+
+
+async def test_name_conflict_migrate_entry_removed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test aborting the migration when the entry is removed while the menu is open."""
+    entry = await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_entry_removed"
+
+
+async def test_name_conflict_add_new(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test declining the migration creates a separate entry."""
+    entry = await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+
+    result = await _async_run_user_flow(hass, 2)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_add_new"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "2.2.2.2",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+        CONF_DEVICE_NAME: "Test name",
+    }
+    assert result["result"].unique_id == NEW_MAC
+    # The existing entry is left alone.
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_name_conflict_working_entry(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test that an entry whose device still answers is never migrated."""
+    entry = await init_integration(hass, 2, model=MODEL_PLUS_2PM)
+    assert entry.state is ConfigEntryState.LOADED
+
+    result = await _async_run_user_flow(hass, 2)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_name_conflict_disabled_entry(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that a disabled entry is not offered for migration."""
+    entry = await _async_add_replaced_entry(hass, 2, MODEL_PLUS_2PM)
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+
+    result = await _async_run_user_flow(hass, 2)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_name_conflict_different_model(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that a same-named device of another model is not offered a migration."""
+    # MODEL_25 differs from the model the mocked device reports.
+    entry = await _async_add_replaced_entry(hass, 2, MODEL_25)
+
+    result = await _async_run_user_flow(hass, 2)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_MODEL] == MODEL_PLUS_2PM
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_name_conflict_different_generation(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that a same-named device of another generation gets its own entry."""
+    # Same name and same model as the discovered device, but stored as gen1.
+    entry = await _async_add_replaced_entry(hass, 1, MODEL_PLUS_2PM)
+
+    result = await _async_run_user_flow(hass, 2)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.unique_id == MOCK_MAC
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_name_conflict_entry_without_gen(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+) -> None:
+    """Test a gen1 entry predating CONF_GEN still matches.
+
+    CONF_GEN was added later, so the oldest gen1 entries do not carry it.
+    """
+    entry = await _async_add_replaced_entry(hass, None, MODEL_1)
+    assert CONF_GEN not in entry.data
+
+    result = await _async_run_user_flow(hass, 1)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "name_conflict"
+
+
+@pytest.mark.parametrize(
+    ("gen", "model", "poll_interval"),
+    [
+        (1, MODEL_1, UPDATE_PERIOD_MULTIPLIER * 15),
+        (2, MODEL_PLUS_2PM, RPC_RECONNECT_INTERVAL),
+    ],
+)
+async def test_name_conflict_migrate_loaded_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    gen: int,
+    model: str,
+    poll_interval: float,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating an entry that is still loaded while its device is gone.
+
+    A device that dies while Home Assistant keeps running leaves its entry
+    loaded, so the entry can only be recognised as broken by its coordinator.
+    """
+    entry = await init_integration(hass, gen, model=model)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_ids = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert entity_ids
+
+    # The device stops answering, but the entry stays loaded. Both mocks are set
+    # up, only the coordinator of the generation under test consumes its own.
+    monkeypatch.setattr(
+        mock_block_device, "update", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    freezer.tick(timedelta(seconds=poll_interval))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = entry.runtime_data.rpc or entry.runtime_data.block
+    assert entry.state is ConfigEntryState.LOADED
+    # The device stays initialized, only the coordinator knows it is gone.
+    assert coordinator.device.initialized is True
+    assert coordinator.last_update_success is False
+
+    # The replacement hardware at the new address answers; the coordinator of
+    # the existing entry stays failed until its next poll.
+    monkeypatch.undo()
+
+    result = await _async_run_user_flow(hass, gen)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "name_conflict"
+    assert coordinator.last_update_success is False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "name_conflict_migrate"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_migrated"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == NEW_MAC
+
+    # The entity IDs survived the rewrite and no duplicates were created.
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert {entity.entity_id for entity in entities} == entity_ids
+    for entity in entities:
+        assert entity.unique_id.startswith(NEW_MAC)
+
+
+@pytest.mark.parametrize(
+    ("elapsed_periods", "expected_update_success", "expected_type"),
+    [
+        (0, True, FlowResultType.CREATE_ENTRY),
+        (UPDATE_PERIOD_MULTIPLIER, False, FlowResultType.MENU),
+    ],
+    ids=["checked_in", "missed_checkin"],
+)
+async def test_name_conflict_sleeping_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    elapsed_periods: float,
+    expected_update_success: bool,
+    expected_type: FlowResultType,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a battery device is only offered for migration once it stops waking up."""
+    sleep_period = 1000
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", sleep_period)
+    entry = await init_integration(
+        hass, 2, model=MODEL_PLUS_2PM, sleep_period=sleep_period
+    )
+
+    # The device checks in, which marks the coordinator as up to date.
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.runtime_data.rpc.last_update_success is True
+
+    # Only the missed check-in case moves past the window the device is given.
+    freezer.tick(timedelta(seconds=elapsed_periods * sleep_period))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.runtime_data.rpc.last_update_success is expected_update_success
+
+    result = await _async_run_user_flow(hass, 2)
+
+    assert result["type"] is expected_type

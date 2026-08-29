@@ -66,7 +66,7 @@ async def init_integration(
         unique_id=MOCK_MAC,
         options=options,
         title="Test name",
-        minor_version=3,
+        minor_version=4,
     )
     entry.add_to_hass(hass)
 

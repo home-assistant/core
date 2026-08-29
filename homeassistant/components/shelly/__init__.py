@@ -43,6 +43,7 @@ from .const import (
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
+    CONF_DEVICE_NAME,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -146,6 +147,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> 
         if options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE:
             options[CONF_BLE_SCANNER_MODE] = BLEScannerMode.AUTO
         hass.config_entries.async_update_entry(entry, options=options, minor_version=3)
+
+    if entry.minor_version < 4:
+        # Seed the device name used to detect a replacement device. The device
+        # registry holds the name the integration gave the device, separately from
+        # any user rename, so it is preferred over the entry title, which the user
+        # can have changed and which a dead device never gets to correct. The next
+        # successful setup replaces it with the name the device reports.
+        device = None
+        if entry.unique_id is not None:
+            device = dr.async_get(hass).async_get_device_by_identifier(
+                (DOMAIN, entry.unique_id), entry.entry_id
+            )
+        data = dict(entry.data)
+        data.setdefault(CONF_DEVICE_NAME, (device and device.name) or entry.title)
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=4)
     return True
 
 

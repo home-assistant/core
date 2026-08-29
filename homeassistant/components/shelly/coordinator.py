@@ -72,6 +72,7 @@ from .const import (
 from .utils import (
     async_create_issue_unsupported_firmware,
     async_manage_coiot_issues_task,
+    async_update_entry_device_name,
     get_block_device_sleep_period,
     get_device_entry_gen,
     get_host,
@@ -182,6 +183,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
+        async_update_entry_device_name(self.hass, self.config_entry, self.device)
         dev_reg = dr.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -217,6 +219,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         try:
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.config_entry)
+            async_update_entry_device_name(self.hass, self.config_entry, self.device)
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             LOGGER.debug(
                 "Error connecting to Shelly device %s, error: %r", self.name, err

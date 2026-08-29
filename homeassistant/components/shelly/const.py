@@ -290,6 +290,8 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
+CONF_DEVICE_NAME = "device_name"
+
 VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
