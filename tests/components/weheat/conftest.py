@@ -140,6 +140,15 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
+    mock_heat_pump_instance.raw_content = {
+        "heat_pump_id": TEST_HP_UUID,
+        "t_water_in": 11,
+        "state": 70,
+        "current_control_method": 4,
+        "cooling_pause_reason": 4,
+        "cooling_stop_reason": 0,
+        "total_ein_heating": 12345,
+    }
 
     return mock_heat_pump_instance
 
