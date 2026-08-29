@@ -164,7 +164,7 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Midea Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
-            return
+            return  # pragma: no cover
         with midea_api_call():
             temperature = float(kwargs[ATTR_TEMPERATURE])
             self._device.set_attribute("target_temperature", temperature)
@@ -290,7 +290,7 @@ class MideaC3WaterHeater(MideaWaterHeater):
     def set_temperature(self, **kwargs: Any) -> None:
         """Midea C3 Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
-            return
+            return  # pragma: no cover
         with midea_api_call():
             temperature = float(kwargs[ATTR_TEMPERATURE])
             self._device.set_attribute(C3Attributes.dhw_target_temp, temperature)
@@ -395,7 +395,7 @@ class MideaE6WaterHeater(MideaWaterHeater):
     def set_temperature(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
-            return
+            return  # pragma: no cover
         with midea_api_call():
             temperature = float(kwargs[ATTR_TEMPERATURE])
             self._device.set_attribute(self._target_temperature_attr, temperature)
