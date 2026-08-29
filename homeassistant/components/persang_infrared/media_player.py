@@ -1,7 +1,6 @@
 """Media player platform for the Persang Infrared integration."""
 
-from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from infrared_protocols.codes.persang.speaker import PersangSpeakerCode
 
@@ -14,7 +13,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID
 from .entity import PersangIrEntity
@@ -27,31 +26,6 @@ RESTORED_STATES = (
     MediaPlayerState.PLAYING,
     MediaPlayerState.PAUSED,
 )
-
-# States in which the speaker is assumed to be powered on. The remote only has a
-# power toggle, so turning on while already on would switch the speaker off.
-ON_STATES = (
-    MediaPlayerState.ON,
-    MediaPlayerState.PLAYING,
-    MediaPlayerState.PAUSED,
-)
-
-
-@dataclass
-class _PersangSpeakerExtraData(ExtraStoredData):
-    """Persisted assumed-state data for a Persang speaker.
-
-    Stored separately from the entity state because while the speaker is OFF,
-    ``MediaPlayerEntity.state_attributes`` strips mute, so a restart in the OFF
-    state would otherwise lose it.
-    """
-
-    is_volume_muted: bool | None
-
-    @override
-    def as_dict(self) -> dict[str, Any]:
-        """Serialize for the restore-state store."""
-        return {"is_volume_muted": self.is_volume_muted}
 
 
 async def async_setup_entry(
@@ -81,19 +55,9 @@ class PersangIrMediaPlayer(PersangIrEntity, MediaPlayerEntity, RestoreEntity):
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
     )
 
-    def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
-        """Initialize the Persang IR media player."""
-        super().__init__(entry, infrared_entity_id, unique_id_suffix="media_player")
-
-    @property
-    @override
-    def extra_restore_state_data(self) -> ExtraStoredData:
-        """Persist mute regardless of the ON/OFF state."""
-        return _PersangSpeakerExtraData(is_volume_muted=self._attr_is_volume_muted)
-
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore the last assumed state and mute."""
+        """Restore the last assumed state."""
         await super().async_added_to_hass()
 
         if (last_state := await self.async_get_last_state()) is not None and (
@@ -101,27 +65,16 @@ class PersangIrMediaPlayer(PersangIrEntity, MediaPlayerEntity, RestoreEntity):
         ):
             self._attr_state = MediaPlayerState(last_state.state)
 
-        if (extra := await self.async_get_last_extra_data()) is not None and (
-            muted := extra.as_dict().get("is_volume_muted")
-        ) is not None:
-            self._attr_is_volume_muted = bool(muted)
-
     @override
     async def async_turn_on(self) -> None:
-        """Send the power toggle unless the speaker is already assumed to be on."""
-        if self._attr_state in ON_STATES:
-            return
-
+        """Send the power command."""
         await self._send_command(PersangSpeakerCode.POWER.to_command())
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self) -> None:
-        """Send the power toggle unless the speaker is already assumed to be off."""
-        if self._attr_state == MediaPlayerState.OFF:
-            return
-
+        """Send the power command."""
         await self._send_command(PersangSpeakerCode.POWER.to_command())
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
@@ -138,30 +91,21 @@ class PersangIrMediaPlayer(PersangIrEntity, MediaPlayerEntity, RestoreEntity):
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
-        """Send the mute toggle unless mute is already at the requested value."""
-        if self._attr_is_volume_muted == mute:
-            return
-
+        """Send the mute command."""
         await self._send_command(PersangSpeakerCode.MUTE.to_command())
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()
 
     @override
     async def async_media_play(self) -> None:
-        """Send the play/pause toggle unless playback is already assumed to run."""
-        if self._attr_state == MediaPlayerState.PLAYING:
-            return
-
+        """Send the play/pause command."""
         await self._send_command(PersangSpeakerCode.PLAY_PAUSE.to_command())
         self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
     @override
     async def async_media_pause(self) -> None:
-        """Send the play/pause toggle unless playback is already assumed paused."""
-        if self._attr_state == MediaPlayerState.PAUSED:
-            return
-
+        """Send the play/pause command."""
         await self._send_command(PersangSpeakerCode.PLAY_PAUSE.to_command())
         self._attr_state = MediaPlayerState.PAUSED
         self.async_write_ha_state()

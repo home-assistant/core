@@ -26,13 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
@@ -146,83 +140,6 @@ async def test_mute(
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is mute
 
 
-@pytest.mark.parametrize(
-    ("restored_state", "service"),
-    [
-        (MediaPlayerState.ON, SERVICE_TURN_ON),
-        (MediaPlayerState.PLAYING, SERVICE_TURN_ON),
-        (MediaPlayerState.PAUSED, SERVICE_TURN_ON),
-        (MediaPlayerState.OFF, SERVICE_TURN_OFF),
-        (MediaPlayerState.PLAYING, SERVICE_MEDIA_PLAY),
-        (MediaPlayerState.PAUSED, SERVICE_MEDIA_PAUSE),
-    ],
-)
-async def test_toggle_skipped_when_state_already_matches(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    platforms: list[Platform],
-    restored_state: MediaPlayerState,
-    service: str,
-) -> None:
-    """Test a toggle is not sent when the speaker already is in the target state."""
-    mock_restore_cache(hass, [State(MEDIA_PLAYER_ENTITY_ID, restored_state)])
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.persang_infrared.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
-        blocking=True,
-    )
-
-    assert not mock_infrared_emitter_entity.send_command_calls
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state
-    assert state.state == restored_state
-
-
-@pytest.mark.parametrize("mute", [True, False])
-async def test_mute_skipped_when_already_at_requested_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    platforms: list[Platform],
-    mute: bool,
-) -> None:
-    """Test the mute toggle is not sent when mute already is at the wanted value."""
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            (
-                State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.ON),
-                {"is_volume_muted": mute},
-            )
-        ],
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.persang_infrared.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
-        blocking=True,
-    )
-
-    assert not mock_infrared_emitter_entity.send_command_calls
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state
-    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is mute
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_state_unknown_without_restored_state(hass: HomeAssistant) -> None:
     """Test the entity starts as unknown when nothing was restored."""
@@ -258,59 +175,6 @@ async def test_restore_state(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state
     assert state.state == restored_state
-
-
-@pytest.mark.parametrize("restored_mute", [True, False])
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_restore_mute(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    platforms: list[Platform],
-    restored_mute: bool,
-) -> None:
-    """Test mute is restored even from the OFF state, which strips it."""
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            (
-                State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.OFF),
-                {"is_volume_muted": restored_mute},
-            )
-        ],
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.persang_infrared.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
-        blocking=True,
-    )
-
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state
-    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is restored_mute
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_mute_is_written_to_the_restore_store(hass: HomeAssistant) -> None:
-    """Test mute is stored as extra restore data on shutdown."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
-        blocking=True,
-    )
-
-    data = await async_mock_restore_state_shutdown_restart(hass)
-
-    stored_state = data.last_states[MEDIA_PLAYER_ENTITY_ID]
-    assert stored_state.extra_data
-    assert stored_state.extra_data.as_dict() == {"is_volume_muted": True}
 
 
 @pytest.mark.usefixtures("init_integration")
