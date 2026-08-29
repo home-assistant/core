@@ -1,6 +1,5 @@
 """Tests for the Modern Forms light platform."""
 
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -30,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4, modern_forms_gen4_call_mock
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
@@ -200,6 +199,73 @@ async def test_light_state_gen4(
     assert entry.unique_id == "AA:BB:CC:00:11:22_3"
 
 
+async def test_light_name_requires_word_boundary_gen4(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a fixture name isn't stripped without a real device-name boundary."""
+
+    async def partial_word_name_mock(
+        hass: HomeAssistant, method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Serve the normal Gen4 fixtures, with the uplight renamed."""
+        if not url.path.endswith("/fixture"):
+            return await modern_forms_gen4_call_mock(hass, method, url, data)
+        payload = await async_load_json_object_fixture(
+            hass, "fixture_gen4.json", DOMAIN
+        )
+        for fixture in payload["fixture"]:
+            if fixture["addr"] == 2:
+                fixture["name"] = "ModernFormsFancy Light"
+        return AiohttpClientMockResponse(method=method, url=url, json=payload)
+
+    await init_integration_gen4(hass, aioclient_mock, mock_type=partial_word_name_mock)
+
+    entity_id = entity_registry.async_get_entity_id(
+        LIGHT_DOMAIN, DOMAIN, "AA:BB:CC:00:11:22_2"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "ModernFormsFan ModernFormsFancy Light"
+    )
+
+
+async def test_light_name_falls_back_to_device_name_gen4(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a fixture named exactly like the device falls back to that name alone."""
+
+    async def exact_match_name_mock(
+        hass: HomeAssistant, method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Serve the normal Gen4 fixtures, with the uplight renamed."""
+        if not url.path.endswith("/fixture"):
+            return await modern_forms_gen4_call_mock(hass, method, url, data)
+        payload = await async_load_json_object_fixture(
+            hass, "fixture_gen4.json", DOMAIN
+        )
+        for fixture in payload["fixture"]:
+            if fixture["addr"] == 2:
+                fixture["name"] = "ModernFormsFan"
+        return AiohttpClientMockResponse(method=method, url=url, json=payload)
+
+    await init_integration_gen4(hass, aioclient_mock, mock_type=exact_match_name_mock)
+
+    entity_id = entity_registry.async_get_entity_id(
+        LIGHT_DOMAIN, DOMAIN, "AA:BB:CC:00:11:22_2"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ModernFormsFan"
+
+
 async def test_light_unavailable_when_fixture_disappears_gen4(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -212,8 +278,8 @@ async def test_light_unavailable_when_fixture_disappears_gen4(
         """Serve the normal Gen4 fixtures, minus any addresses removed."""
         if not url.path.endswith("/fixture") or not removed_addresses:
             return await modern_forms_gen4_call_mock(hass, method, url, data)
-        payload = json.loads(
-            await async_load_fixture(hass, "fixture_gen4.json", DOMAIN)
+        payload = await async_load_json_object_fixture(
+            hass, "fixture_gen4.json", DOMAIN
         )
         payload["fixture"] = [
             fixture

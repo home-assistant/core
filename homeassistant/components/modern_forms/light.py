@@ -107,10 +107,10 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     @property
     def _light(self) -> Light | None:
         """Return this entity's current fixture data, if it still exists."""
-        for light in self.coordinator.data.state.light_fixtures:
-            if light.address == self._address:
-                return light
-        return None
+        lights_by_address = {
+            light.address: light for light in self.coordinator.data.state.light_fixtures
+        }
+        return lights_by_address.get(self._address)
 
     @property
     @override

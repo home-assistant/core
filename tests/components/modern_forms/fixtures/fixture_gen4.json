@@ -16,14 +16,14 @@
     {
       "addr": 2,
       "type": 0,
-      "name": "Uplight",
+      "name": "ModernFormsFan Uplight",
       "detail": { "minColorTemp": 2700, "maxColorTemp": 5000 },
       "state": { "status": true, "level": 8000, "mixColorTemp": 3000 }
     },
     {
       "addr": 3,
       "type": 0,
-      "name": "Downlight",
+      "name": "ModernFormsFan Downlight",
       "detail": { "minColorTemp": 2700, "maxColorTemp": 5000 },
       "state": { "status": false, "level": 5000, "mixColorTemp": 4000 }
     }
