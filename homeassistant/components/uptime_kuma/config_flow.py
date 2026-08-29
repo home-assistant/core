@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pythonkuma import (
     UptimeKuma,
@@ -74,6 +74,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: HassioServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -176,6 +177,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDER,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

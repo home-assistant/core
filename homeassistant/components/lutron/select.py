@@ -1,5 +1,7 @@
 """Support for Lutron selects."""
 
+from typing import override
+
 from pylutron import Button, Keypad, Led, Lutron
 
 from homeassistant.components.select import SelectEntity
@@ -30,7 +32,15 @@ async def async_setup_entry(
     # Add the indicator LEDs for scenes (keypad buttons)
     async_add_entities(
         [
-            LutronLedSelect(area_name, keypad, scene, led, entry_data.client)
+            LutronLedSelect(
+                hass,
+                area_name,
+                keypad,
+                scene,
+                led,
+                entry_data.client,
+                config_entry.entry_id,
+            )
             for area_name, keypad, scene, led in entry_data.scenes
             if led is not None
         ],
@@ -47,25 +57,32 @@ class LutronLedSelect(LutronKeypad, SelectEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         keypad: Keypad,
         scene_device: Button,
         led_device: Led,
         controller: Lutron,
+        config_entry_id: str,
     ) -> None:
         """Initialize the select entity."""
-        super().__init__(area_name, led_device, controller, keypad)
+        super().__init__(
+            hass, area_name, led_device, controller, keypad, config_entry_id
+        )
         self._attr_name = f"{scene_device.name} LED"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return _LED_STATE_TO_OPTION.get(self._lutron_device.last_state)
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         self._lutron_device.state = _LED_OPTION_TO_STATE[option]
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.state

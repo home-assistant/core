@@ -1,7 +1,7 @@
 """Support for APCUPSd sensors."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 import dateutil
 
@@ -480,6 +480,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         self._update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs()

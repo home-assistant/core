@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyhelty"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pyhelty==0.2.0"]
 }

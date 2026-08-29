@@ -19,6 +19,9 @@
     {
       "hostname": "roomba-*",
       "macaddress": "204EF6*"
+    },
+    {
+      "registered_devices": true
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/roomba",

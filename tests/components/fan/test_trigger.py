@@ -12,7 +12,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -26,21 +25,6 @@ async def target_fans(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "fan")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "fan.turned_off",
-        "fan.turned_on",
-    ],
-)
-async def test_fan_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the fan triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -65,7 +49,6 @@ async def test_fan_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),
@@ -108,7 +91,6 @@ async def test_fan_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),
@@ -151,7 +133,6 @@ async def test_fan_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),

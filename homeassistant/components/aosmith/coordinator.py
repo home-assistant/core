@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from py_aosmith import (
     AOSmithAPIClient,
@@ -52,6 +53,7 @@ class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, AOSmithDevice]:
         """Fetch latest data from the device status endpoint."""
         try:
@@ -97,6 +99,7 @@ class AOSmithEnergyCoordinator(DataUpdateCoordinator[dict[str, float]]):
         self.client = client
         self.junction_ids = junction_ids
 
+    @override
     async def _async_update_data(self) -> dict[str, float]:
         """Fetch latest data from the energy usage endpoint."""
         energy_usage_by_junction_id: dict[str, float] = {}

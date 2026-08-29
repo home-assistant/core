@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pytrydan import Trydan, TrydanData
 from pytrydan.exceptions import TrydanError
@@ -36,6 +37,7 @@ class V2CUpdateCoordinator(DataUpdateCoordinator[TrydanData]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> TrydanData:
         """Fetch sensor data from api."""
         try:

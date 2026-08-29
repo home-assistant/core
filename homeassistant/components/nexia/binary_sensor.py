@@ -1,5 +1,7 @@
 """Support for Nexia / Trane XL Thermostats."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -53,6 +55,7 @@ class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
         self._attr_translation_key = translation_key
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the status of the sensor."""
         return getattr(self._thermostat, self._call)()

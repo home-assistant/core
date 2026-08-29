@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from nx584 import client
 import requests
@@ -136,14 +137,17 @@ class NX584Alarm(AlarmControlPanelEntity):
             if flag == "Siren on":
                 self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._alarm.disarm(code)
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._alarm.arm("stay")
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._alarm.arm("exit")

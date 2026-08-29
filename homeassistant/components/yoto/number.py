@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import PlayerConfig, YotoPlayer
 
@@ -11,7 +12,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
@@ -92,11 +93,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Yoto number platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        YotoNumber(coordinator, player, description)
-        for player in coordinator.client.players.values()
-        for description in NUMBERS
-    )
+    known_players: set[str] = set()
+
+    @callback
+    def _add_players() -> None:
+        current = set(coordinator.data)
+        new_players = current - known_players
+        known_players.clear()
+        known_players.update(current)
+        if new_players:
+            async_add_entities(
+                YotoNumber(coordinator, coordinator.data[player_id], description)
+                for player_id in new_players
+                for description in NUMBERS
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_players))
+    _add_players()
 
 
 class YotoNumber(YotoConfigEntity, NumberEntity):
@@ -116,6 +129,7 @@ class YotoNumber(YotoConfigEntity, NumberEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -123,10 +137,12 @@ class YotoNumber(YotoConfigEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the configured value."""
         return self.entity_description.value_fn(self.player.info.config)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the configured value."""
         await self._async_set_config(

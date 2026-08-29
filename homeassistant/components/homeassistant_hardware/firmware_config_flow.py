@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
@@ -641,6 +641,7 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
     @staticmethod
     @callback
     @abstractmethod
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -664,6 +665,7 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         return await self.async_step_pick_firmware()
 
     @callback
+    @override
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
         """Continue the ZHA flow."""
         next_flow_id = zha_result["flow_id"]
@@ -701,6 +703,7 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
         """Manage the options flow."""
         return await self.async_step_pick_firmware()
 
+    @override
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -718,6 +721,7 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
 
         return await super().async_step_pick_firmware_zigbee(user_input)
 
+    @override
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -737,6 +741,7 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
         return await super().async_step_pick_firmware_thread(user_input)
 
     @callback
+    @override
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
         """Continue the ZHA flow."""
         # The options flow cannot return a next_flow yet, so we just finish here.

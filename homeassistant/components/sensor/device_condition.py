@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
+from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
 
 DEVICE_CLASS_NONE = "none"
 
@@ -69,6 +69,7 @@ CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRECIPITATION = "is_precipitation"
 CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_RADON = "is_radon"
 CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_ENERGY = "is_reactive_energy"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
@@ -132,6 +133,7 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.RADON: [{CONF_TYPE: CONF_IS_RADON}],
     SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_IS_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
@@ -201,6 +203,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
+                    CONF_IS_RADON,
                     CONF_IS_REACTIVE_ENERGY,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
@@ -243,7 +246,9 @@ async def async_get_conditions(
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
-        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
+        state_class = get_capability(
+            hass, entry.entity_id, SensorEntityCapabilityAttribute.STATE_CLASS
+        )
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
         if not unit_of_measurement and not state_class:

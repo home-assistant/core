@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -240,6 +240,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
@@ -282,6 +283,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:

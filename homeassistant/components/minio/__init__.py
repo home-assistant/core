@@ -4,6 +4,7 @@ import logging
 import os
 from queue import Queue
 import threading
+from typing import override
 
 import voluptuous as vol
 
@@ -176,6 +177,7 @@ class QueueListener(threading.Thread):
         self._hass = hass
         self._queue = Queue()
 
+    @override
     def run(self):
         """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.debug("Running QueueListener")

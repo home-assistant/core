@@ -6,6 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 import logging
 import threading
+from typing import override
 import urllib.parse
 
 from aiohttp import ClientTimeout, hdrs, web
@@ -280,6 +281,7 @@ class IcloudMediaSourceIdentifier:
             photo_id=photo_id,
         )
 
+    @override
     def __str__(self) -> str:
         """Return string representation of the identifier."""
         parts = [self.config_entry_id]
@@ -302,6 +304,7 @@ class IcloudMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self._hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable object."""
         if not self._hass.config_entries.async_loaded_entries(DOMAIN):
@@ -349,6 +352,7 @@ class IcloudMediaSource(MediaSource):
 
         return " / ".join(title_parts)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

@@ -1,7 +1,7 @@
 """Config flow for Midea ccm15 AC Controller integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from ccm15 import CCM15Device
 import voluptuous as vol
@@ -28,6 +28,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

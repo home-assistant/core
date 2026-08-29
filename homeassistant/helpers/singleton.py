@@ -59,19 +59,28 @@ def singleton[_S, _T, _U](
         @functools.wraps(func)
         async def async_wrapped(hass: HomeAssistant) -> _T:
             if data_key not in hass.data:
-                evt = hass.data[data_key] = asyncio.Event()
-                result = await func(hass)
+                future: asyncio.Future[_T] = asyncio.get_running_loop().create_future()
+                hass.data[data_key] = future
+                try:
+                    result = await func(hass)
+                except BaseException as err:
+                    # Clear the key so a future call retries, and propagate the
+                    # failure to any waiters instead of leaving them hung.
+                    del hass.data[data_key]
+                    future.set_exception(err)
+                    # Retrieve so an unawaited future does not log the exception.
+                    future.exception()
+                    raise
                 hass.data[data_key] = result
-                evt.set()
+                future.set_result(result)
                 return cast(_T, result)
 
-            obj_or_evt = hass.data[data_key]
+            obj_or_future = hass.data[data_key]
 
-            if isinstance(obj_or_evt, asyncio.Event):
-                await obj_or_evt.wait()
-                return cast(_T, hass.data[data_key])
+            if isinstance(obj_or_future, asyncio.Future):
+                return cast(_T, await obj_or_future)
 
-            return cast(_T, obj_or_evt)
+            return cast(_T, obj_or_future)
 
         return async_wrapped
 

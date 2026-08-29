@@ -1,6 +1,6 @@
 """Config flow for Pure Energie integration."""
 
-from typing import Any
+from typing import Any, override
 
 from gridnet import Device, GridNet, GridNetConnectionError
 import voluptuous as vol
@@ -21,6 +21,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
     discovered_host: str
     discovered_device: Device
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,6 +56,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

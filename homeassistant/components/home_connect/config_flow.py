@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, Final, override
 
 import jwt
 import voluptuous as vol
@@ -12,6 +12,8 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
+
+INPUT_IMAGES_SCOPE: Final = "images_scope"
 
 
 class OAuth2FlowHandler(
@@ -23,10 +25,48 @@ class OAuth2FlowHandler(
 
     MINOR_VERSION = 3
 
+    images_scope: bool | None = None
+
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
+
+    @property
+    @override
+    def extra_authorize_data(self) -> dict[str, str]:
+        return {
+            "scope": (
+                "Control Monitor Settings"
+                f" IdentifyAppliance{' Images' if self.images_scope else ''}"
+            ),
+        }
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow start."""
+        return await self.async_step_scopes(user_input)
+
+    async def async_step_scopes(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the scopes to use."""
+        if user_input is not None:
+            self.images_scope = user_input[INPUT_IMAGES_SCOPE]
+        if self.images_scope is not None:
+            return await self.async_step_pick_implementation(None)
+
+        return self.async_show_form(
+            step_id="scopes",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(INPUT_IMAGES_SCOPE): bool,
+                }
+            ),
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -45,6 +85,7 @@ class OAuth2FlowHandler(
             )
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(
@@ -60,19 +101,20 @@ class OAuth2FlowHandler(
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         device_registry = dr.async_get(self.hass)
-        if device_entry := device_registry.async_get_device(
+        for device in device_registry.async_get_devices(
             identifiers={
                 (DOMAIN, discovery_info.hostname),
                 (DOMAIN, discovery_info.hostname.split("-")[-1]),
             }
         ):
             device_registry.async_update_device(
-                device_entry.id,
+                device.id,
                 new_connections={
                     (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
                 },

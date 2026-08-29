@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from iotawattpy.sensor import Sensor
 
@@ -163,9 +164,15 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
 
         self._key = key
         data = self._sensor_data
+        # An entity without a unique ID cannot be attached to a device.
         if data.getType() == "Input":
             self._attr_unique_id = (
                 f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
+            )
+            self._attr_device_info = dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, data.hub_mac_address)},
+                manufacturer="IoTaWatt",
+                model="IoTaWatt",
             )
         self.entity_description = entity_description
 
@@ -175,22 +182,13 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         return self.coordinator.data["sensors"][self._key]
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the entity."""
         return self._sensor_data.getName()
 
-    @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return device info."""
-        return dr.DeviceInfo(
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
-            },
-            manufacturer="IoTaWatt",
-            model="IoTaWatt",
-        )
-
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._key not in self.coordinator.data["sensors"]:
@@ -208,6 +206,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the extra state attributes of the entity."""
         data = self._sensor_data
@@ -218,6 +217,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if func := self.entity_description.value:

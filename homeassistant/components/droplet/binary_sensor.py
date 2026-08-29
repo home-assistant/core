@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pydroplet.droplet import Droplet
 
@@ -84,11 +85,13 @@ class DropletBinarySensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Get Droplet's availability."""
         return self.coordinator.get_availability()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.droplet)

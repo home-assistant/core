@@ -1,6 +1,6 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -43,6 +43,7 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.coordinator.diffuser.is_online

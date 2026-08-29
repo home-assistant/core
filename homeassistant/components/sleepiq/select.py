@@ -1,5 +1,7 @@
 """Support for SleepIQ foundation preset selection."""
 
+from typing import override
+
 from asyncsleepiq import (
     CoreTemps,
     FootWarmingTemps,
@@ -57,7 +59,7 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
 
         self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
         self._attr_unique_id = f"{bed.id}_preset"
-        if preset.side is not Side.NONE:
+        if preset.side != Side.NONE:
             self._attr_name += f" {preset.side_full}"
             self._attr_unique_id += f"_{preset.side.value}"
         self._attr_options = preset.options
@@ -66,10 +68,12 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         self._attr_current_option = self.preset.preset
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the current preset."""
         await self.preset.set_preset(option)
@@ -99,12 +103,14 @@ class SleepIQFootWarmingTempSelectEntity(
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         self._attr_current_option = FootWarmingTemps(
             self.foot_warmer.temperature
         ).name.lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the current preset."""
         temperature = FootWarmingTemps[option.upper()]
@@ -154,17 +160,19 @@ class SleepIQCoreTempSelectEntity(
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         sleepiq_option = CoreTemps(self.core_climate.temperature)
         self._attr_current_option = self.SLEEPIQ_TO_HA_CORE_TEMP_MAP[sleepiq_option]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the current preset."""
         temperature = self.HA_TO_SLEEPIQ_CORE_TEMP_MAP[option]
         timer = self.core_climate.timer or 240
 
-        if temperature is CoreTemps.OFF:
+        if temperature == CoreTemps.OFF:
             await self.core_climate.turn_off()
         else:
             await self.core_climate.turn_on(temperature, timer)

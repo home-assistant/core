@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiobotocore.client import AioBaseClient as S3Client
 from botocore.exceptions import BotoCoreError
@@ -105,6 +105,7 @@ class IDriveE2BackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_boto_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -123,6 +124,7 @@ class IDriveE2BackupAgent(BackupAgent):
         )
         return response["Body"].iter_chunks()
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -285,6 +287,7 @@ class IDriveE2BackupAgent(BackupAgent):
             raise
 
     @handle_boto_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -312,12 +315,14 @@ class IDriveE2BackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_boto_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups = await self._list_backups()
         return list(backups.values())
 
     @handle_boto_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

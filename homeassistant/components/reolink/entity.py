@@ -2,10 +2,12 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, DUAL_LENS_MODELS, Chime, Host
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, Chime, Host
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -94,6 +96,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -123,6 +126,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
             callback_id, self._push_callback, cmd_id
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -139,6 +143,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         # Privacy mode
         self.register_callback(f"{callback_id}_623", 623)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -153,6 +158,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
         for channel in self._host.api.channels:
@@ -185,38 +191,38 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
             )
 
-        dev_ch = channel
-        if self._host.api.model in DUAL_LENS_MODELS:
-            dev_ch = 0
-
         if self._host.api.is_nvr:
-            if self._host.api.supported(dev_ch, "UID"):
+            if self._host.api.supported(channel, "UID"):
                 self._dev_id = (
-                    f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+                    f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}"
                 )
             else:
-                self._dev_id = f"{self._host.unique_id}_ch{dev_ch}"
+                self._dev_id = f"{self._host.unique_id}_ch{channel}"
 
             connections = set()
-            if mac := self._host.api.baichuan.mac_address(dev_ch):
+            if mac := self._host.api.baichuan.mac_address(channel):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
             if self._conf_url is None:
                 conf_url = None
             else:
-                conf_url = f"{self._conf_url}/?ch={dev_ch}"
+                conf_url = f"{self._conf_url}/?ch={channel}"
 
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 connections=connections,
-                via_device=(DOMAIN, self._host.unique_id),
-                name=self._host.api.camera_name(dev_ch),
-                model=self._host.api.camera_model(dev_ch),
-                model_id=self._host.api.item_number(dev_ch),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, self._host.unique_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
+                name=self._host.api.camera_name(channel),
+                model=self._host.api.camera_model(channel),
+                model_id=self._host.api.item_number(channel),
                 manufacturer=self._host.api.manufacturer,
-                hw_version=self._host.api.camera_hardware_version(dev_ch),
-                sw_version=self._host.api.camera_sw_version(dev_ch),
-                serial_number=self._host.api.camera_uid(dev_ch),
+                hw_version=self._host.api.camera_hardware_version(channel),
+                sw_version=self._host.api.camera_sw_version(channel),
+                serial_number=self._host.api.camera_uid(channel),
                 configuration_url=conf_url,
             )
 
@@ -230,14 +236,19 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             self._dev_id = f"{self._host.unique_id}_lens{channel}"
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
-                via_device=(DOMAIN, parent_dev_id),
-                name=f"{self._host.api.camera_name(dev_ch)} lens {channel}",
-                model=self._host.api.camera_model(channel),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, parent_dev_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
+                name=f"{self._host.api.camera_name(0)} lens {channel}",
+                model=self._host.api.camera_model(0),
                 manufacturer=self._host.api.manufacturer,
                 configuration_url=self._conf_url,
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -249,12 +260,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             and not self._host.api.baichuan.privacy_mode(self._channel)
         )
 
+    @override
     def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(
             callback_id, self._push_callback, cmd_id, self._channel
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -262,6 +275,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key, self._channel)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -293,7 +307,11 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
-            via_device=(DOMAIN, via_dev_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, via_dev_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,
@@ -303,6 +321,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._chime.online
@@ -330,7 +349,11 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
-            via_device=(DOMAIN, via_dev_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, via_dev_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,
@@ -340,6 +363,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._chime.online and super().available

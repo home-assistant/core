@@ -1,6 +1,9 @@
 """BSBLan base entity."""
 
+from typing import override
+
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -51,7 +54,11 @@ class BSBLanCircuitEntity(BSBLanEntity):
             identifiers={(DOMAIN, f"{mac}-circuit-{circuit}")},
             translation_key="heating_circuit",
             translation_placeholders={"circuit": str(circuit)},
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, mac),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             manufacturer=main_info["manufacturer"],
             model=main_info.get("model"),
             model_id=main_info.get("model_id"),
@@ -71,6 +78,7 @@ class BSBLanDualCoordinatorEntity(BSBLanEntity):
         super().__init__(fast_coordinator, data)
         self.slow_coordinator = slow_coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -98,7 +106,11 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{mac}-water-heater")},
             translation_key="water_heater",
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                fast_coordinator.hass,
+                (DOMAIN, mac),
+                config_entry_id=fast_coordinator.config_entry.entry_id,
+            ),
             manufacturer=main_info["manufacturer"],
             model=main_info.get("model"),
             model_id=main_info.get("model_id"),

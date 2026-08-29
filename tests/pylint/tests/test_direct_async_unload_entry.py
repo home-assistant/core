@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.tests.direct_async_unload_entry import (
     DirectAsyncUnloadEntry,
 )
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 # Pre-load so astroid can resolve ``async_unload_entry`` in parsed snippets.
 astroid.MANAGER.ast_from_module_name("homeassistant.components.ps4")
@@ -70,11 +69,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -110,9 +107,7 @@ def test_warning(
 ) -> None:
     """Test cases that should trigger a warning."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -136,9 +131,7 @@ async def test_b(hass, mock_config_entry):
 """,
         "tests.components.ps4.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2

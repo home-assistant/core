@@ -4,7 +4,7 @@ import base64
 from http import HTTPStatus
 import logging
 import mimetypes
-from typing import Any
+from typing import Any, override
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -74,6 +74,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._private_key = private_key
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to specified target."""
         targets: list[str] | None

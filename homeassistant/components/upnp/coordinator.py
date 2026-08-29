@@ -3,6 +3,7 @@
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import override
 
 from async_upnp_client.exceptions import UpnpCommunicationError
 
@@ -67,6 +68,7 @@ class UpnpDataUpdateCoordinator(
 
         return list(self._features_by_entity_id)
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[str, str | datetime | int | float | None]:

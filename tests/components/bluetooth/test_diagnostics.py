@@ -187,6 +187,8 @@ async def test_diagnostics(
                     "workers": {
                         "00:00:00:00:00:02": {
                             "failed_window": False,
+                            "last_window_at": 0.0,
+                            "last_window_duration": 0.0,
                             "name": "hci1 (00:00:00:00:00:02)",
                             "next_event_at": ANY,
                             "next_sweep_at": ANY,
@@ -562,6 +564,14 @@ async def test_diagnostics_remote_adapter(
                         "free": 5,
                         "slots": 5,
                         "source": "00:00:00:00:00:01",
+                    },
+                    # Registering a connectable scanner seeds a zeroed
+                    # entry (slots=0 means no slot info reported yet).
+                    "esp32": {
+                        "allocated": [],
+                        "free": 0,
+                        "slots": 0,
+                        "source": "esp32",
                     },
                 },
                 "adapters": {

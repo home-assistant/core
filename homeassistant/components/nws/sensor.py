@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pynws import SimpleNWS
 
@@ -195,11 +196,13 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         return self._nws_data.api
 
     @property
+    @override
     def name(self) -> str:
         """Return the sensor name with current station."""
         return f"{self._nws.station} {self.entity_description.name}"
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -247,6 +247,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
+    @override
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
@@ -276,6 +277,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
         device_trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
         await device_trigger.update_trigger(config)
 
+    @override
     async def async_tear_down(self) -> None:
         """Cleanup device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]

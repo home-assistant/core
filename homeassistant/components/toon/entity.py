@@ -1,7 +1,9 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
 
 from dataclasses import dataclass
+from typing import override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,6 +19,7 @@ class ToonDisplayDeviceEntity(ToonEntity):
     """Defines a Toon display device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this thermostat."""
         agreement = self.coordinator.data.agreement
@@ -33,6 +36,7 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
     """Defines a Electricity Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -41,10 +45,10 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
             identifiers={
                 (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
             },
-            via_device=(
-                DOMAIN,
-                agreement_id,  # type: ignore[typeddict-item]
-                "meter_adapter",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[arg-type]
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
@@ -53,6 +57,7 @@ class ToonGasMeterDeviceEntity(ToonEntity):
     """Defines a Gas Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -61,10 +66,10 @@ class ToonGasMeterDeviceEntity(ToonEntity):
             identifiers={
                 (DOMAIN, agreement_id, "gas"),  # type: ignore[arg-type]
             },
-            via_device=(
-                DOMAIN,
-                agreement_id,  # type: ignore[typeddict-item]
-                "electricity",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
@@ -73,6 +78,7 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
     """Defines a Water Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -81,10 +87,10 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
             identifiers={
                 (DOMAIN, agreement_id, "water"),  # type: ignore[arg-type]
             },
-            via_device=(
-                DOMAIN,
-                agreement_id,  # type: ignore[typeddict-item]
-                "electricity",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
@@ -93,6 +99,7 @@ class ToonSolarDeviceEntity(ToonEntity):
     """Defines a Solar Device device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -101,10 +108,10 @@ class ToonSolarDeviceEntity(ToonEntity):
             identifiers={
                 (DOMAIN, agreement_id, "solar"),  # type: ignore[arg-type]
             },
-            via_device=(
-                DOMAIN,
-                agreement_id,  # type: ignore[typeddict-item]
-                "meter_adapter",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[arg-type]
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
@@ -113,6 +120,7 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
     """Defines a Boiler Module device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -126,7 +134,11 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
                     "boiler_module",
                 )
             },
-            via_device=(DOMAIN, agreement_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )
 
 
@@ -134,6 +146,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
     """Defines a Boiler device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -142,10 +155,10 @@ class ToonBoilerDeviceEntity(ToonEntity):
             identifiers={
                 (DOMAIN, agreement_id, "boiler"),  # type: ignore[arg-type]
             },
-            via_device=(
-                DOMAIN,
-                agreement_id,  # type: ignore[typeddict-item]
-                "boiler_module",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, agreement_id, "boiler_module"),  # type: ignore[arg-type]
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 

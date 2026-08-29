@@ -1,7 +1,7 @@
 """Config flow for Elk-M1 Control integration."""
 
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
@@ -149,6 +149,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -159,6 +160,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Elk discovered from dhcp: %s", self._discovered_device)
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -201,6 +203,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -291,6 +294,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

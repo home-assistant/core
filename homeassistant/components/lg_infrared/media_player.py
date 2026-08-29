@@ -1,5 +1,7 @@
 """Media player platform for LG IR integration."""
 
+from typing import override
+
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -57,42 +59,52 @@ class LgIrTvMediaPlayer(LgIrEntity, InfraredEmitterConsumerEntity, MediaPlayerEn
         self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_state = MediaPlayerState.ON
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
         await self._send_command(LGTVCode.POWER_ON.to_command())
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the TV."""
         await self._send_command(LGTVCode.POWER_OFF.to_command())
 
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self._send_command(LGTVCode.VOLUME_UP.to_command())
 
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self._send_command(LGTVCode.VOLUME_DOWN.to_command())
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._send_command(LGTVCode.MUTE.to_command())
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send channel up command."""
         await self._send_command(LGTVCode.CHANNEL_UP.to_command())
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send channel down command."""
         await self._send_command(LGTVCode.CHANNEL_DOWN.to_command())
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._send_command(LGTVCode.PLAY.to_command())
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._send_command(LGTVCode.PAUSE.to_command())
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._send_command(LGTVCode.STOP.to_command())

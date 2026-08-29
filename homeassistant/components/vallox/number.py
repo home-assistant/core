@@ -1,6 +1,7 @@
 """Support for Vallox ventilation unit numbers."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -35,6 +36,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if (
@@ -44,6 +46,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
         return float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.coordinator.client.set_values(

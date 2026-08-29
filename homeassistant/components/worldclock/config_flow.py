@@ -1,7 +1,7 @@
 """Config flow for World clock."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 import zoneinfo
 
 import voluptuous as vol
@@ -94,6 +94,7 @@ class WorldclockConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_TIME_ZONE])

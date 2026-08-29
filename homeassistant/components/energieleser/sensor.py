@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from energieleser import (
     GasleserDevice,
+    GasleserPulseDevice,
     StromleserOneDevice,
     WaermeleserDevice,
     WasserleserDevice,
@@ -38,6 +39,9 @@ from .coordinator import EnergieleserConfigEntry, EnergieleserCoordinator
 
 PARALLEL_UPDATES = 0
 
+# both use the same payload
+type AnyGasleserDevice = GasleserDevice | GasleserPulseDevice
+
 
 @dataclass(frozen=True, kw_only=True)
 class StromleserSensorEntityDescription(SensorEntityDescription):
@@ -52,8 +56,8 @@ class StromleserSensorEntityDescription(SensorEntityDescription):
 class GasleserSensorEntityDescription(SensorEntityDescription):
     """Describes a gasleser sensor."""
 
-    value_fn: Callable[[GasleserDevice], StateType]
-    present_fn: Callable[[GasleserDevice], bool] = lambda _: True
+    value_fn: Callable[[AnyGasleserDevice], StateType]
+    present_fn: Callable[[AnyGasleserDevice], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -348,7 +352,7 @@ async def async_setup_entry(
             for description in STROMLESER_SENSORS
             if description.present_fn(device)
         )
-    elif isinstance(device, GasleserDevice):
+    elif isinstance(device, GasleserDevice | GasleserPulseDevice):
         async_add_entities(
             GasleserSensor(coordinator, description)
             for description in GASLESER_SENSORS
@@ -405,6 +409,7 @@ class StromleserSensor(_EnergieleserSensorBase):
     entity_description: StromleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
@@ -413,6 +418,7 @@ class StromleserSensor(_EnergieleserSensorBase):
         return self.entity_description.value_fn(device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit, preferring the device-reported one when available."""
         if self.entity_description.unit_fn is not None:
@@ -426,16 +432,17 @@ class StromleserSensor(_EnergieleserSensorBase):
 
 
 class GasleserSensor(_EnergieleserSensorBase):
-    """Sensor entity for a gasleser device."""
+    """Sensor entity for a gasleser or gasleser.pulse device."""
 
     entity_description: GasleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
         if TYPE_CHECKING:
-            assert isinstance(device, GasleserDevice)
+            assert isinstance(device, GasleserDevice | GasleserPulseDevice)
         return self.entity_description.value_fn(device)
 
 
@@ -445,6 +452,7 @@ class WasserleserSensor(_EnergieleserSensorBase):
     entity_description: WasserleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
@@ -459,6 +467,7 @@ class WaermeleserSensor(_EnergieleserSensorBase):
     entity_description: WaermeleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiomelcloudhome import MELCloudHome, MelCloudHomeAuth
 from aiomelcloudhome.exceptions import (
@@ -31,7 +31,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
         ),
     }
 )
@@ -69,6 +71,7 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, user_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,6 +128,43 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            errors, user_id = await self._async_validate_credentials(
+                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+            )
+            if not errors:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {
+                    CONF_EMAIL: reconf_entry.data[CONF_EMAIL],
+                    CONF_PASSWORD: reconf_entry.data[CONF_PASSWORD],
+                },
+            ),
             errors=errors,
         )

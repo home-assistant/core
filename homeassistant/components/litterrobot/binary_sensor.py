@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
+from typing import Generic, override
 
 from pylitterbot import (
     FeederRobot,
@@ -153,6 +153,7 @@ class LitterRobotBinarySensorEntity(
     entity_description: RobotBinarySensorEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return self.entity_description.is_on_fn(self.robot)

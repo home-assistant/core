@@ -4,7 +4,7 @@ import dataclasses
 from datetime import datetime
 from enum import StrEnum
 import functools as ft
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -100,6 +100,7 @@ class IssueEntry:
 class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -256,6 +257,7 @@ class IssueRegistry(BaseRegistry):
         """
         self._store.make_read_only()
 
+    @override
     async def _async_load(self) -> None:
         """Load the issue registry."""
         data = await self._store.async_load()
@@ -303,6 +305,7 @@ class IssueRegistry(BaseRegistry):
         self.issues = issues
 
     @callback
+    @override
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
         """Return data of issue registry to store in a file."""
         data = {}

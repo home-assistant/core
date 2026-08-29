@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -55,6 +55,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type: str | None = None
         self.plants: list[dict[str, Any]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -389,6 +390,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             # Traditional API
+            assert self.user_id is not None
             try:
                 plant_info = await self.hass.async_add_executor_job(
                     self.api.plant_list, self.user_id

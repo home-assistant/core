@@ -1,6 +1,6 @@
 """Homekit Controller entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
@@ -87,6 +87,7 @@ class HomeKitEntity(Entity):
         self._async_subscribe_chars()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self._async_subscribe_chars()
@@ -97,6 +98,7 @@ class HomeKitEntity(Entity):
             self._accessory.async_subscribe_availability(self._async_write_ha_state)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
         self._async_unsubscribe_chars()
@@ -206,6 +208,7 @@ class HomeKitEntity(Entity):
         return None
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
@@ -226,6 +229,7 @@ class HomeKitEntity(Entity):
         return accessory_name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         all_iids = self.all_iids
@@ -235,6 +239,7 @@ class HomeKitEntity(Entity):
         return self._accessory.available
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._accessory.device_info_for_accessory(self.accessory)
@@ -257,6 +262,7 @@ class AccessoryEntity(HomeKitEntity):
         self._attr_unique_id = f"{accessory.unique_id}_{self._aid}"
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
@@ -292,6 +298,7 @@ class BaseCharacteristicEntity(HomeKitEntity):
         return False
 
     @callback
+    @override
     def _async_config_changed(self) -> None:
         """Handle accessory discovery changes."""
         if (
@@ -319,6 +326,7 @@ class CharacteristicEntity(BaseCharacteristicEntity):
         )
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)

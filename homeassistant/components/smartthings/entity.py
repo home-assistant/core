@@ -1,6 +1,6 @@
 """Support for SmartThings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import (
     Attribute,
@@ -50,6 +50,7 @@ class SmartThingsEntity(Entity):
         )
         self._attr_available = device.online
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()

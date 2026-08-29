@@ -11,7 +11,7 @@ It supports:
 """
 
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Command
@@ -85,6 +85,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ, STATE_PERFORMANCE]
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if min_temp := self.device.states.get(
@@ -94,6 +95,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         return DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if max_temp := self.device.states.get(
@@ -103,6 +105,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         return DEFAULT_MAX_TEMP
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if current_temp := self.device.states.get(
@@ -112,6 +115,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if target_temp := self.device.states.get(
@@ -120,6 +124,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
             return target_temp.value_as_float
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -143,6 +148,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         )
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on.
 
@@ -155,6 +161,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         return absence_mode != OverkizCommandParam.OFF
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation."""
         if self.is_boost_mode_on:
@@ -165,6 +172,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 
         return None
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         if operation_mode == STATE_PERFORMANCE:
@@ -199,6 +207,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode on.
 
@@ -227,6 +236,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
             refresh_afterwards=refresh_afterwards,
         )
 
+    @override
     async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode off."""
         await self.executor.async_execute_command(

@@ -1,7 +1,7 @@
 """Config flow for Yeelight integration."""
 
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -59,6 +59,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: YeelightConfigEntry,
     ) -> OptionsFlowHandler:
@@ -69,6 +70,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Any] = {}
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -76,6 +78,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -83,6 +86,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -91,6 +95,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{int(discovery_info.name[-26:-18]):#018x}")
         return await self._async_handle_discovery_with_unique_id()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -141,6 +146,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow._discovered_ip == self._discovered_ip
@@ -170,6 +176,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

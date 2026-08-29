@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.device import YoLinkDevice
@@ -64,6 +64,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.dev_online = True
         self.dev_net_type = None
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:

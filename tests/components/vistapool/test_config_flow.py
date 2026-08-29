@@ -7,6 +7,7 @@ Run with: pytest tests/components/vistapool/test_config_flow.py
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
@@ -307,42 +308,65 @@ async def test_dhcp_discovery_aborts_when_in_progress(
 
 _NEW_PASSWORD = "new-password"
 
+_FLOW_PARAMS = [
+    pytest.param(
+        MockConfigEntry.start_reauth_flow,
+        "reauth_confirm",
+        "reauth_successful",
+        id="reauth",
+    ),
+    pytest.param(
+        MockConfigEntry.start_reconfigure_flow,
+        "reconfigure",
+        "reconfigure_successful",
+        id="reconfigure",
+    ),
+]
 
-async def test_reconfigure_flow(
+
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+async def test_credential_update_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_vistapool_client: AsyncMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
 ) -> None:
-    """Test the reconfigure flow updates the stored password and reloads the entry."""
+    """Test reauth / reconfigure updates the stored password and reloads the entry."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == step_id
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == success_reason
     assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
     assert mock_setup_entry.call_count == 1
 
 
-async def test_reconfigure_invalid_auth(
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+async def test_credential_update_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_vistapool_client: AsyncMock,
     mock_vistapool_auth: MagicMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
 ) -> None:
-    """Test the reconfigure flow surfaces invalid_auth and recovers on retry."""
+    """Test reauth / reconfigure surfaces invalid_auth and recovers on retry."""
     mock_config_entry.add_to_hass(hass)
     mock_vistapool_auth.authenticate.side_effect = AuthenticationError
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
     )
@@ -356,23 +380,27 @@ async def test_reconfigure_invalid_auth(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == success_reason
     assert mock_config_entry.data[CONF_PASSWORD] == _NEW_PASSWORD
     assert mock_setup_entry.call_count == 1
 
 
-async def test_reconfigure_account_mismatch(
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+async def test_credential_update_account_mismatch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_vistapool_client: AsyncMock,
     mock_vistapool_auth: MagicMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
 ) -> None:
-    """Test the reconfigure flow aborts when credentials belong to a different account."""
+    """Test reauth / reconfigure aborts when credentials belong to a different account."""
     mock_config_entry.add_to_hass(hass)
     mock_vistapool_auth.user_id = "a-different-firebase-uid"
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
     )
@@ -380,3 +408,46 @@ async def test_reconfigure_account_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "account_mismatch"
     assert mock_setup_entry.call_count == 0
+
+
+@pytest.mark.parametrize(("flow_starter", "step_id", "success_reason"), _FLOW_PARAMS)
+@pytest.mark.parametrize(
+    ("auth_exception", "expected_error"),
+    [
+        pytest.param(AquariteError("network"), "cannot_connect", id="cannot_connect"),
+        pytest.param(RuntimeError("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_credential_update_error_paths(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_vistapool_client: AsyncMock,
+    mock_vistapool_auth: MagicMock,
+    flow_starter: Any,
+    step_id: str,
+    success_reason: str,
+    auth_exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth / reconfigure surfaces non-auth errors and recovers on retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vistapool_auth.authenticate.side_effect = auth_exception
+
+    result = await flow_starter(mock_config_entry, hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] == {"base": expected_error}
+
+    mock_vistapool_auth.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: _NEW_PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == success_reason
+    assert mock_setup_entry.call_count == 1

@@ -21,7 +21,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Self, TypedDict, cast, override
 
 from async_interrupt import interrupt
 from propcache.api import cached_property
@@ -274,6 +274,7 @@ type UpdateListenerType = Callable[
 STATE_KEYS = {
     "state",
     "reason",
+    "error_reason_translation_domain",
     "error_reason_translation_key",
     "error_reason_translation_placeholders",
 }
@@ -401,6 +402,7 @@ class ConfigEntry[_DataT = Any]:
     unique_id: str | None
     state: ConfigEntryState
     reason: str | None
+    error_reason_translation_domain: str | None
     error_reason_translation_key: str | None
     error_reason_translation_placeholders: dict[str, Any] | None
     pref_disable_new_entities: bool
@@ -533,6 +535,7 @@ class ConfigEntry[_DataT = Any]:
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
+        _setter(self, "error_reason_translation_domain", None)
         _setter(self, "error_reason_translation_key", None)
         _setter(self, "error_reason_translation_placeholders", None)
 
@@ -559,6 +562,7 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "modified_at", modified_at or utcnow())
         _setter(self, "discovery_keys", discovery_keys)
 
+    @override
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
         return (
@@ -570,6 +574,7 @@ class ConfigEntry[_DataT = Any]:
             f" unique_id={self.unique_id}>"
         )
 
+    @override
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
         if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
@@ -670,6 +675,7 @@ class ConfigEntry[_DataT = Any]:
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
             "reason": self.reason,
+            "error_reason_translation_domain": self.error_reason_translation_domain,
             "error_reason_translation_key": self.error_reason_translation_key,
             "error_reason_translation_placeholders": (
                 self.error_reason_translation_placeholders
@@ -785,6 +791,7 @@ class ConfigEntry[_DataT = Any]:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
         error_reason = None
+        error_reason_translation_domain = None
         error_reason_translation_key = None
         error_reason_translation_placeholders = None
 
@@ -802,6 +809,7 @@ class ConfigEntry[_DataT = Any]:
                 result = False
         except ConfigEntryError as exc:
             error_reason = str(exc) or "Unknown fatal config entry error"
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             logger.exception(
@@ -814,6 +822,7 @@ class ConfigEntry[_DataT = Any]:
             message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             auth_message = (
@@ -829,6 +838,7 @@ class ConfigEntry[_DataT = Any]:
             self.async_start_reauth_if_available(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
+            error_reason_translation_domain = exc.translation_domain
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             self._async_set_state(
@@ -837,6 +847,7 @@ class ConfigEntry[_DataT = Any]:
                 message or None,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             )
             wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
@@ -927,6 +938,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+                error_reason_translation_domain,
             )
 
     @callback
@@ -1108,6 +1120,7 @@ class ConfigEntry[_DataT = Any]:
         reason: str | None,
         error_reason_translation_key: str | None = None,
         error_reason_translation_placeholders: dict[str, str] | None = None,
+        error_reason_translation_domain: str | None = None,
     ) -> None:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
@@ -1115,6 +1128,9 @@ class ConfigEntry[_DataT = Any]:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        _setter(
+            self, "error_reason_translation_domain", error_reason_translation_domain
+        )
         _setter(self, "error_reason_translation_key", error_reason_translation_key)
         _setter(
             self,
@@ -1237,24 +1253,25 @@ class ConfigEntry[_DataT = Any]:
                 if job := self._on_unload.pop()():
                     self.async_create_task(hass, job, eager_start=True)
 
-        if not self._tasks and not self._background_tasks:
-            return
+        if self._tasks or self._background_tasks:
+            cancel_message = f"Config entry {self.title} with {self.domain} unloading"
+            for task in self._background_tasks:
+                task.cancel(cancel_message)
 
-        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
-        for task in self._background_tasks:
-            task.cancel(cancel_message)
-
-        _, pending = await asyncio.wait(
-            [*self._tasks, *self._background_tasks], timeout=10
-        )
-
-        for task in pending:
-            self.logger.warning(
-                "Unloading %s (%s) config entry. Task %s did not complete in time",
-                self.title,
-                self.domain,
-                task,
+            _, pending = await asyncio.wait(
+                [*self._tasks, *self._background_tasks], timeout=10
             )
+
+            for task in pending:
+                self.logger.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.title,
+                    self.domain,
+                    task,
+                )
+
+        if (dev_reg := hass.data.get(dr.DATA_REGISTRY)) is not None:
+            dev_reg.async_config_entry_unloaded(self.entry_id)
 
     @callback
     def async_on_state_change(self, func: CALLBACK_TYPE) -> CALLBACK_TYPE:
@@ -1485,6 +1502,7 @@ class ConfigEntriesFlowManager(
 
         await asyncio.wait(current.values())
 
+    @override
     async def async_init(
         self,
         handler: str,
@@ -1572,6 +1590,7 @@ class ConfigEntriesFlowManager(
 
         return result
 
+    @override
     async def _async_configure(
         self, flow_id: str, user_input: dict | None = None
     ) -> ConfigFlowResult:
@@ -1628,6 +1647,7 @@ class ConfigEntriesFlowManager(
         self._discovery_event_debouncer.async_shutdown()
 
     @callback
+    @override
     def async_flow_removed(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1662,6 +1682,7 @@ class ConfigEntriesFlowManager(
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.subentries.async_get(flow_id)
 
+    @override
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1832,6 +1853,7 @@ class ConfigEntriesFlowManager(
 
         return result
 
+    @override
     async def async_create_flow(
         self,
         handler_key: str,
@@ -1898,6 +1920,7 @@ class ConfigEntriesFlowManager(
         return lambda: self._flow_subscriptions.remove(listener)
 
     @callback
+    @override
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
         flow = self._progress.get(flow_id)
@@ -1928,10 +1951,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._domain_unique_id_index: dict[str, dict[str, list[ConfigEntry]]] = {}
 
+    @override
     def values(self) -> ValuesView[ConfigEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
 
+    @override
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
@@ -2004,6 +2029,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
+    @override
     def __delitem__(self, entry_id: str) -> None:
         """Remove an item."""
         self._unindex_entry(entry_id)
@@ -2054,6 +2080,7 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
         )
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -2121,6 +2148,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
+        self._initialized = asyncio.Event()
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -2265,7 +2293,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_entry(entry_id)
+        dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
@@ -2290,6 +2318,7 @@ class ConfigEntries:
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
+            self._initialized.set()
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
@@ -2328,6 +2357,12 @@ class ConfigEntries:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
             )
+
+        self._initialized.set()
+
+    async def async_wait_initialized(self) -> None:
+        """Wait until the config entries are loaded from storage."""
+        await self._initialized.wait()
 
     async def _async_scan_orphan_ignored_entries(
         self, event: Event[NoEventData]
@@ -2520,7 +2555,7 @@ class ConfigEntries:
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2559,7 +2594,7 @@ class ConfigEntries:
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2674,7 +2709,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
         ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
         return result
 
@@ -2686,7 +2721,7 @@ class ConfigEntries:
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
     ) -> bool:
         """Update a config subentry.
 
@@ -3001,6 +3036,7 @@ class ConfigEntryBaseFlow(
 class ConfigFlow(ConfigEntryBaseFlow):
     """Base class for config flows with some helpers."""
 
+    @override
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
@@ -3374,17 +3410,20 @@ class ConfigFlow(ConfigEntryBaseFlow):
         result["next_flow"] = next_flow
 
     @callback
+    @override
     def async_abort(
         self,
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> ConfigFlowResult:
         """Abort the config flow."""
         result = super().async_abort(
             reason=reason,
             description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
         )
         self._async_set_next_flow_if_valid(result, next_flow)
         return result
@@ -3399,6 +3438,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return result
 
     @callback
+    @override
     def async_create_entry(  # type: ignore[override]
         self,
         *,
@@ -3437,7 +3477,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType,
+        unique_id: str | UndefinedType | None,
         title: str | UndefinedType,
         data: Mapping[str, Any] | UndefinedType,
         data_updates: Mapping[str, Any] | UndefinedType,
@@ -3466,7 +3506,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3508,7 +3548,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3558,6 +3598,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
     @callback
+    @override
     def async_show_form(
         self,
         *,
@@ -3637,6 +3678,7 @@ class ConfigSubentryFlowManager(
 
     _flow_result = SubentryFlowResult
 
+    @override
     async def async_create_flow(
         self,
         handler_key: tuple[str, str],
@@ -3664,6 +3706,7 @@ class ConfigSubentryFlowManager(
         subentry_flow.init_step = context["source"]
         return subentry_flow
 
+    @override
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[
@@ -3713,6 +3756,7 @@ class ConfigSubentryFlow(
     handler: tuple[str, str]
 
     @callback
+    @override
     def async_create_entry(
         self,
         *,
@@ -3743,7 +3787,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3772,7 +3816,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3801,7 +3845,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3871,6 +3915,7 @@ class OptionsFlowManager(
 
     _flow_result = ConfigFlowResult
 
+    @override
     async def async_create_flow(
         self,
         handler_key: str,
@@ -3886,6 +3931,7 @@ class OptionsFlowManager(
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
         return handler.async_get_options_flow(entry)
 
+    @override
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -3926,6 +3972,7 @@ class OptionsFlowManager(
 
         return result
 
+    @override
     async def _async_setup_preview(
         self, flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult]
     ) -> None:
@@ -4089,8 +4136,18 @@ class EntityRegistryDisabledHandler:
     def _async_handle_reload(self, _now: Any) -> None:
         """Handle a reload."""
         self._remove_call_later = None
-        to_reload = self.changed
+        # An entry may have been removed since the reload was scheduled. Scheduling a
+        # reload for it raises UnknownEntry, which would leave the rest of the batch
+        # unreloaded with nothing to retry it.
+        to_reload = {
+            entry_id
+            for entry_id in self.changed
+            if self.hass.config_entries.async_get_entry(entry_id) is not None
+        }
         self.changed = set()
+
+        if not to_reload:
+            return
 
         _LOGGER.info(
             (

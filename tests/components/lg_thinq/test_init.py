@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
+from thinqconnect import ThinQAPIException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -32,16 +34,43 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("exception", [AttributeError(), TypeError(), ValueError()])
-async def test_config_not_ready(
+@pytest.mark.parametrize(
+    "exception",
+    [AttributeError(), TypeError(), ValueError(), ClientError(), TimeoutError()],
+)
+async def test_config_not_ready_mqtt(
     hass: HomeAssistant,
     mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Test for setup failure exception occurred."""
+    """Test for setup failure exception occurred during MQTT setup."""
     with patch(
         "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        side_effect=exception,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ThinQAPIException(code="1309", message="Not allowed api call", headers={}),
+        ClientError(),
+        TimeoutError(),
+    ],
+)
+async def test_config_not_ready_bridge_list(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test for setup failure exception occurred during coordinator setup."""
+    with patch(
+        "homeassistant.components.lg_thinq.async_get_ha_bridge_list",
         side_effect=exception,
     ):
         await setup_integration(hass, mock_config_entry)

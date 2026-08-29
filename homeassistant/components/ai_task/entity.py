@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 import contextlib
-from typing import final
+from typing import final, override
 
 from propcache.api import cached_property
 
@@ -12,6 +12,7 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import Context
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -30,6 +31,7 @@ class AITaskEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         if self.__last_activity is None:
@@ -37,10 +39,12 @@ class AITaskEntity(RestoreEntity):
         return self.__last_activity
 
     @cached_property
+    @override
     def supported_features(self) -> AITaskEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -58,6 +62,7 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenDataTask | GenImageTask,
+        context: Context | None,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
         user_llm_hass_api: llm.API | None = None
@@ -75,7 +80,7 @@ class AITaskEntity(RestoreEntity):
             await chat_log.async_provide_llm_data(
                 llm.LLMContext(
                     platform=self.platform.domain,
-                    context=None,
+                    context=context,
                     language=None,
                     assistant=DOMAIN,
                     device_id=None,
@@ -95,11 +100,14 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenDataTask,
+        context: Context | None = None,
     ) -> GenDataTaskResult:
         """Run a gen data task."""
+        if context is not None:
+            self.async_set_context(context)
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
+        async with self._async_get_ai_task_chat_log(session, task, context) as chat_log:
             return await self._async_generate_data(task, chat_log)
 
     async def _async_generate_data(
@@ -115,11 +123,14 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenImageTask,
+        context: Context | None = None,
     ) -> GenImageTaskResult:
         """Run a gen image task."""
+        if context is not None:
+            self.async_set_context(context)
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
+        async with self._async_get_ai_task_chat_log(session, task, context) as chat_log:
             return await self._async_generate_image(task, chat_log)
 
     async def _async_generate_image(
