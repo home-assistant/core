@@ -26,9 +26,8 @@ PARALLEL_UPDATES = 1
 class LyngdorfNumberEntityDescription(NumberEntityDescription):
     """Describe a Lyngdorf number entity."""
 
-    # range_fn must not depend on the device having reported a value: on the
-    # 1.11 pin lipsync reads None until it does, and the entity would be
-    # dropped at startup. It doubles as the "model has this control" test.
+    # Whether the model has this control at all. Must not depend on the device
+    # having reported a value, or the entity is dropped at startup.
     range_fn: Callable[[LyngdorfReceiver], NumericRange | None]
     control_fn: Callable[[LyngdorfReceiver], NumericControl | None]
     set_value_fn: Callable[[NumericControl, float], Awaitable[None]]
