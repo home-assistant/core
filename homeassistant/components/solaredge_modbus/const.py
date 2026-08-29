@@ -27,5 +27,15 @@ SUBSYSTEM_INVERTER: Final = "inverter"
 SUBSYSTEM_BATTERIES: Final = "batteries"
 SUBSYSTEM_METERS: Final = "meters"
 
+# The writable control blocks, as an UpdateReport names them. Export control's
+# read spans storage control, so the library reads and reports the two as one.
+SUBSYSTEM_ADVANCED_POWER_CONTROL: Final = "advanced_power_control"
+SUBSYSTEM_POWER_CONTROL: Final = "power_control"
+SUBSYSTEM_SITE_CONTROL: Final = "site_control"
+
 # Local Modbus is cheap to read and PV production moves fast.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
+
+# The control blocks hold what the site was told to do; they only move when
+# something writes them, so they do not need a live measurement's cadence.
+SETTINGS_SCAN_INTERVAL: Final = timedelta(minutes=5)
