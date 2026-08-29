@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import Receiver
+from lyngdorf import LyngdorfModel, LyngdorfReceiver
 from lyngdorf.models.base import NumericRange
 from lyngdorf.remote import RemoteKey
 import pytest
@@ -58,10 +57,8 @@ def mock_setup_entry() -> Generator[None]:
 @pytest.fixture
 def mock_receiver() -> Generator[MagicMock]:
     """Return a mocked Lyngdorf receiver."""
-    with patch(
-        "homeassistant.components.lyngdorf.async_create_receiver"
-    ) as create_mock:
-        receiver = MagicMock(spec=Receiver)
+    with patch("homeassistant.components.lyngdorf.create_receiver") as create_mock:
+        receiver = MagicMock(spec=LyngdorfReceiver)
         receiver.name = "Mock Lyngdorf"
         receiver.connected = True
         receiver.has_remote_keys = True
@@ -148,19 +145,25 @@ def mock_receiver() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_get_device_serial() -> Generator[AsyncMock]:
-    """Return a mocked async_get_device_serial function."""
-    with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_get_device_serial",
-        new=AsyncMock(return_value="0050c27c76b2"),
-    ) as serial_mock:
+    """Return a mocked fetch_device_serial function."""
+    with (
+        patch(
+            "homeassistant.components.lyngdorf.config_flow.discover_ssdp_location",
+            new=AsyncMock(return_value="http://127.0.0.1:8080/desc.xml"),
+        ),
+        patch(
+            "homeassistant.components.lyngdorf.config_flow.fetch_device_serial",
+            new=AsyncMock(return_value="0050c27c76b2"),
+        ) as serial_mock,
+    ):
         yield serial_mock
 
 
 @pytest.fixture
 def mock_find_receiver_model() -> Generator[AsyncMock]:
-    """Return a mocked async_find_receiver_model function."""
+    """Return a mocked discover_model function."""
     with patch(
-        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        "homeassistant.components.lyngdorf.config_flow.discover_model",
         new=AsyncMock(return_value=LyngdorfModel.MP_60),
     ) as find_mock:
         yield find_mock
@@ -168,7 +171,7 @@ def mock_find_receiver_model() -> Generator[AsyncMock]:
 
 def notify_receiver_update(receiver: MagicMock) -> None:
     """Fire every notification callback the entities registered."""
-    for call in receiver.register_notification_callback.call_args_list:
+    for call in receiver.on_change.call_args_list:
         call.args[0]()
 
 
@@ -195,7 +198,7 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup,
+        patch("homeassistant.components.lyngdorf.lookup_model") as lookup,
         patch("homeassistant.components.lyngdorf.PLATFORMS", platforms),
     ):
         lookup.return_value = LyngdorfModel.MP_60

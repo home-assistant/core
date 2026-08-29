@@ -35,7 +35,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
@@ -68,7 +68,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No known repair scenarios
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

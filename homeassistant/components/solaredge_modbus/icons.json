@@ -3,9 +3,6 @@
     "sensor": {
       "inverter_status": {
         "default": "mdi:solar-power"
-      },
-      "vendor_status": {
-        "default": "mdi:information-outline"
       }
     }
   }

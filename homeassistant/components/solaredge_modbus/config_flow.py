@@ -17,6 +17,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
     TextSelector,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_UNIT_ID,
@@ -83,10 +84,82 @@ def _sectioned(data: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _discovered_unit_id(discovery_info: ZeroconfServiceInfo) -> int:
+    """Read the Modbus device ID out of the announcement.
+
+    SolarEdge puts it in a MODBUS_ID TXT record. Anything unusable there falls
+    back to the factory default, which is what the device would answer on.
+    """
+    try:
+        unit_id = int(discovery_info.properties["MODBUS_ID"])
+    except KeyError, TypeError, ValueError:
+        return DEFAULT_UNIT_ID
+
+    if not 1 <= unit_id <= 247:
+        return DEFAULT_UNIT_ID
+
+    return unit_id
+
+
 class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SolarEdge Modbus config flow."""
 
     VERSION = 1
+
+    _discovered: dict[str, Any]
+    _discovered_title: str
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle an inverter announcing itself over mDNS."""
+        data = {
+            CONF_TYPE: TYPE_TCP,
+            CONF_HOST: discovery_info.host,
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+            CONF_UNIT_ID: _discovered_unit_id(discovery_info),
+        }
+
+        # The announcement carries no serial number, and every identity here
+        # derives from one, so the inverter has to be asked. An address is not
+        # an identity: the one an entry is configured with can end up hosting
+        # another inverter, and that one deserves to be offered.
+        errors, solaredge = await self._async_validate(data)
+        if solaredge is None:
+            return self.async_abort(reason=errors["base"])
+
+        await self.async_set_unique_id(solaredge.common.serial_number)
+        # Keep up with a device that moved, but leave the device ID alone: the
+        # user may be reaching it on one the announcement does not mention.
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
+        )
+
+        self._discovered = data
+        self._discovered_title = inverter_name(solaredge.common.model)
+        self.context["title_placeholders"] = {"name": self._discovered_title}
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setting up a discovered inverter."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_title, data=self._discovered
+            )
+
+        self._set_confirm_only()
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "name": self._discovered_title,
+                "host": self._discovered[CONF_HOST],
+            },
+        )
 
     @override
     async def async_step_user(

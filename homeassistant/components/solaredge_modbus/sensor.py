@@ -295,13 +295,6 @@ INVERTER_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Inverter], ...] =
             inverter.status.name.lower() if inverter.status else None
         ),
     ),
-    SolarEdgeModbusSensorEntityDescription(
-        key="vendor_status",
-        translation_key="vendor_status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda inverter: inverter.vendor_status,
-    ),
 )
 
 
