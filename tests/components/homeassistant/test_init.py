@@ -1,5 +1,6 @@
 """The tests for Core components."""
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -47,6 +48,16 @@ from tests.common import (
     async_mock_service,
     patch_yaml_files,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_missing_cpu_features() -> Generator[None]:
+    """Prevent CPU feature detection from depending on the host running the tests."""
+    with patch(
+        "homeassistant.components.homeassistant._get_missing_cpu_features",
+        return_value=None,
+    ):
+        yield
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:
