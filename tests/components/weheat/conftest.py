@@ -1,6 +1,7 @@
 """Fixtures for Weheat tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -107,19 +108,39 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     """Mock an Weheat heat pump instance with a set of default values."""
     mock_heat_pump_instance = MagicMock(spec_set=HeatPump)
 
+    mock_heat_pump_instance.is_online = True
     mock_heat_pump_instance.water_inlet_temperature = 11
     mock_heat_pump_instance.water_outlet_temperature = 22
     mock_heat_pump_instance.water_house_in_temperature = 33
     mock_heat_pump_instance.air_inlet_temperature = 44
+    mock_heat_pump_instance.air_outlet_temperature = 50
     mock_heat_pump_instance.power_input = 55
     mock_heat_pump_instance.power_output = 66
     mock_heat_pump_instance.dhw_top_temperature = 77
     mock_heat_pump_instance.dhw_bottom_temperature = 88
+    mock_heat_pump_instance.dhw_target_temperature = 55
     mock_heat_pump_instance.thermostat_water_setpoint = 35
     mock_heat_pump_instance.thermostat_room_temperature = 19
     mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
+    mock_heat_pump_instance.last_cooling_time = datetime(
+        2025, 6, 21, 14, 30, tzinfo=UTC
+    )
+    mock_heat_pump_instance.current_control_method = (
+        HeatPump.ControlMethod.SMART_OPEN_THERM
+    )
+    mock_heat_pump_instance.cooling_pause_reason = (
+        HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT
+    )
+    mock_heat_pump_instance.cooling_stop_reason = HeatPump.CoolingStopReason.NONE
+    mock_heat_pump_instance.cooling_backoff = 60
+    mock_heat_pump_instance.cooling_available_from = datetime(
+        2025, 6, 21, 15, 30, tzinfo=UTC
+    )
+    mock_heat_pump_instance.cooling_start_conditions = {
+        name: name != "demand" for name in HeatPump.COOLING_START_CONDITION_BITS
+    }
     mock_heat_pump_instance.energy_in_heating = 12345
     mock_heat_pump_instance.energy_in_dhw = 6789
     mock_heat_pump_instance.energy_in_defrost = 555

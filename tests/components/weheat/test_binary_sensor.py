@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,4 +47,23 @@ async def test_create_binary_entities(
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_connectivity_available_while_offline(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the connectivity sensor reports offline instead of becoming unavailable."""
+    mock_weheat_heat_pump.is_online = False
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.test_model_connectivity").state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.test_model_indoor_unit_water_pump").state
+        == STATE_UNAVAILABLE
+    )

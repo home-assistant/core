@@ -1,5 +1,7 @@
 """Base entity for Weheat."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -30,3 +32,9 @@ class WeheatEntity[
             manufacturer=MANUFACTURER,
             model=heat_pump_info.model,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.heat_pump_online

@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -62,22 +63,59 @@ BINARY_SENSORS = [
 ]
 
 
+def _cooling_start_condition(condition: str) -> WeHeatBinarySensorEntityDescription:
+    """Describe one of the conditions that must be met before cooling can start."""
+    return WeHeatBinarySensorEntityDescription(
+        translation_key=f"cooling_start_condition_{condition}",
+        key=f"cooling_start_condition_{condition}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda status: (
+            status.cooling_start_conditions.get(condition)
+            if status.cooling_start_conditions is not None
+            else None
+        ),
+    )
+
+
+COOLING_START_CONDITION_SENSORS = [
+    _cooling_start_condition(condition)
+    for condition in HeatPump.COOLING_START_CONDITION_BITS
+]
+
+CONNECTIVITY_SENSOR = WeHeatBinarySensorEntityDescription(
+    key="is_online",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda status: status.is_online,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WeheatConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
-    entities = [
+    entities: list[WeheatHeatPumpBinarySensor] = [
         WeheatHeatPumpBinarySensor(
             weheatdata.heat_pump_info,
             weheatdata.data_coordinator,
             entity_description,
         )
         for weheatdata in entry.runtime_data
-        for entity_description in BINARY_SENSORS
+        for entity_description in BINARY_SENSORS + COOLING_START_CONDITION_SENSORS
         if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
     ]
+    entities.extend(
+        WeheatHeatPumpConnectivityBinarySensor(
+            weheatdata.heat_pump_info,
+            weheatdata.data_coordinator,
+            CONNECTIVITY_SENSOR,
+        )
+        for weheatdata in entry.runtime_data
+        if CONNECTIVITY_SENSOR.value_fn(weheatdata.data_coordinator.data) is not None
+    )
 
     async_add_entities(entities)
 
@@ -107,3 +145,13 @@ class WeheatHeatPumpBinarySensor(WeheatEntity, BinarySensorEntity):
         """Return True if the binary sensor is on."""
         value = self.entity_description.value_fn(self.coordinator.data)
         return bool(value) if value is not None else None
+
+
+class WeheatHeatPumpConnectivityBinarySensor(WeheatHeatPumpBinarySensor):
+    """Defines a Weheat connectivity sensor, which stays available while offline."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success

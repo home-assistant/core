@@ -32,6 +32,39 @@
   },
   "entity": {
     "binary_sensor": {
+      "cooling_start_condition_contact_not_blocked": {
+        "name": "External contact not blocking"
+      },
+      "cooling_start_condition_control_method": {
+        "name": "Cooling allowed by control method"
+      },
+      "cooling_start_condition_demand": {
+        "name": "Cooling demand"
+      },
+      "cooling_start_condition_dtc": {
+        "name": "Cooling allowed by diagnostics"
+      },
+      "cooling_start_condition_exponential_backoff": {
+        "name": "Restart delay elapsed"
+      },
+      "cooling_start_condition_heat_cool_delay": {
+        "name": "Heating to cooling delay elapsed"
+      },
+      "cooling_start_condition_indoor_unit_connected": {
+        "name": "Indoor unit connected"
+      },
+      "cooling_start_condition_inside_temperature": {
+        "name": "Room temperature high enough"
+      },
+      "cooling_start_condition_outside_air_temperature": {
+        "name": "Outside air temperature high enough"
+      },
+      "cooling_start_condition_water_temperature": {
+        "name": "Water temperature high enough"
+      },
+      "cooling_start_condition_water_to_air": {
+        "name": "Water warmer than outside air"
+      },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
       },
@@ -49,6 +82,9 @@
       }
     },
     "sensor": {
+      "air_outlet_temperature": {
+        "name": "Air outlet temperature"
+      },
       "central_heating_flow_volume": {
         "name": "Central heating pump flow"
       },
@@ -61,14 +97,62 @@
       "compressor_rpm": {
         "name": "Compressor speed"
       },
+      "cooling_available_from": {
+        "name": "Cooling available from"
+      },
+      "cooling_pause_reason": {
+        "name": "Cooling pause reason",
+        "state": {
+          "contact_blocked": "Blocked by external contact",
+          "demand": "No cooling demand",
+          "heat_pump_control": "Blocked by heat pump control",
+          "none": "Not paused",
+          "outside_colder_than_water_temperature": "Outside colder than water",
+          "outside_temperature_too_low": "Outside temperature too low",
+          "room_temperature_too_low": "Room temperature too low",
+          "water_temperature_below_dewpoint": "Water temperature below dew point",
+          "water_temperature_below_setpoint": "Water temperature below setpoint"
+        }
+      },
+      "cooling_stop_reason": {
+        "name": "Cooling stop reason",
+        "state": {
+          "contact_switch_over": "External contact switched over",
+          "control_method": "Stopped by control method",
+          "cooling_control": "Stopped by cooling control",
+          "dtc": "Stopped by diagnostics",
+          "heat_pump_control": "Stopped by heat pump control",
+          "no_indoor_unit_communication": "No indoor unit communication",
+          "none": "Not stopped",
+          "thermostat_disabled": "Thermostat disabled"
+        }
+      },
       "cop": {
         "name": "COP"
+      },
+      "current_control_method": {
+        "name": "Control method",
+        "state": {
+          "auto_input_select": "Auto input select",
+          "base_open_therm": "Base OpenTherm",
+          "cloud_thermostat": "Cloud thermostat",
+          "heating_curve": "Heating curve",
+          "manual_power": "Manual power",
+          "manual_setpoint": "Manual setpoint",
+          "none": "None",
+          "on_off_thermostat": "On/off thermostat",
+          "smart_open_therm": "Smart OpenTherm",
+          "weheat_intelligence": "Weheat Intelligence"
+        }
       },
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
       "dhw_flow_volume": {
         "name": "DHW pump flow"
+      },
+      "dhw_target_temperature": {
+        "name": "DHW target temperature"
       },
       "dhw_top_temperature": {
         "name": "DHW top temperature"
@@ -118,6 +202,9 @@
           "standby": "[%key:common::state::standby%]",
           "water_check": "Checking water temperature"
         }
+      },
+      "last_cooling_time": {
+        "name": "Last cooling"
       },
       "outside_temperature": {
         "name": "Outside temperature"

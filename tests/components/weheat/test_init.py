@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.exceptions import ServiceException
 
 from homeassistant.components.weheat import UnauthorizedException
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -83,6 +84,43 @@ async def test_setup_fail_discover(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize("failing_call", ["async_get_logs", "async_get_energy"])
+async def test_coordinator_api_failure(
+    hass: HomeAssistant,
+    mock_weheat_discover: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    failing_call: str,
+) -> None:
+    """Test that an API failure in either coordinator is reported."""
+    getattr(mock_weheat_heat_pump, failing_call).side_effect = ServiceException(
+        status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("failing_call", ["async_get_logs", "async_get_energy"])
+async def test_coordinator_reauth(
+    hass: HomeAssistant,
+    mock_weheat_discover: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    failing_call: str,
+) -> None:
+    """Test that an expired token in either coordinator triggers reauthentication."""
+    getattr(mock_weheat_heat_pump, failing_call).side_effect = UnauthorizedException(
+        status=HTTPStatus.UNAUTHORIZED
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_oauth_implementation_not_available(

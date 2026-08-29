@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -33,7 +33,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 23), (True, 28)])
+@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 29), (True, 35)])
 async def test_create_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
@@ -52,3 +52,75 @@ async def test_create_entities(
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == nr_of_entities
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_unrecognised_code_keeps_the_sensor(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a code the library cannot name still creates a sensor, reporting unknown."""
+    mock_weheat_heat_pump.cooling_pause_reason = None
+    mock_weheat_heat_pump.raw_content = {"cooling_pause_reason": 99}
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.test_model_cooling_pause_reason").state == STATE_UNKNOWN
+    )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_unreported_field_creates_no_sensor(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a field the heat pump does not report at all creates no sensor."""
+    mock_weheat_heat_pump.cooling_pause_reason = None
+    mock_weheat_heat_pump.raw_content = {}
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_cooling_pause_reason") is None
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_code_becoming_unrecognised_reports_unknown(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a sensor degrades to unknown when a later poll reports an unnamed code."""
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_weheat_heat_pump.cooling_pause_reason = None
+    await mock_config_entry.runtime_data[0].data_coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_model_cooling_pause_reason").state == STATE_UNKNOWN
+    )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_energy_totals_survive_an_offline_heat_pump(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that only the log based sensors go unavailable when the pump is offline."""
+    mock_weheat_heat_pump.is_online = False
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.test_model_water_inlet_temperature").state
+        == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("sensor.test_model_electricity_used").state == "28689"
