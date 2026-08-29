@@ -164,10 +164,14 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 # too. Telling them apart needs a real distinguishing register
                 # confirmed against actual EP2000 hardware, which isn't
                 # available yet.
-                await device.async_update()
-        except HomeAssistantError, ModbusError:
-            # HomeAssistantError: the device is already in use over different
-            # link settings, which one shared connection cannot honour.
+                await device.async_update_with_retry()
+        except HomeAssistantError:
+            # The address is already claimed by another entry with different
+            # link settings, which one shared connection cannot honour - a
+            # deterministic conflict, not a transient connection failure, so
+            # tell the user to fix it rather than to retry.
+            return {"base": "link_settings_in_use"}, None
+        except ModbusError:
             return {"base": "cannot_connect"}, None
 
         serial = device.values.get("d_serial")

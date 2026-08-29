@@ -8,6 +8,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "link_settings_in_use": "This address and device ID are already in use with different Modbus settings by another entry.",
       "unsupported_device_type": "This device type is not supported by the installed version of bluetti-modbus."
     },
     "step": {

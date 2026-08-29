@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import AcknowledgeError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.bluetti_modbus.const import (
@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import DEVICE_TYPE, HOST, PORT, SERIAL, UNIT_ID, bluetti_data, seed_unit
 
@@ -94,6 +95,60 @@ async def test_user_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
+
+
+async def test_user_flow_retries_a_transient_busy_response(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A device that asks for a retry once during the probe does not fail it."""
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    attempts = 0
+
+    async def busy_once(address: int, count: int) -> list[int]:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise AcknowledgeError
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", busy_once):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+        await hass.async_block_till_done()
+
+    assert attempts > 1  # the retry really happened
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+class _ConflictingUnit:
+    """An async context manager standing in for a claimed, incompatible link."""
+
+    async def __aenter__(self) -> None:
+        raise HomeAssistantError("already in use with different link settings")
+
+    async def __aexit__(self, *exc_info: object) -> None:
+        return None
+
+
+async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
+    """A link already claimed with different settings is not a transient failure."""
+    with patch(
+        "homeassistant.components.bluetti_modbus.config_flow.async_get_temporary_unit",
+        return_value=_ConflictingUnit(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "link_settings_in_use"}
 
 
 async def test_user_flow_unsupported_device_type(hass: HomeAssistant) -> None:
