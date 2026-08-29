@@ -32,6 +32,7 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         super().__init__(coordinator)
 
         self._reference_code = reference_code.strip().upper()
+        account_reference_code = cast(str, coordinator.data.user.reference_code)
 
         # A device can have multiple entities, and for a cache
         # which requires multiple entities we want to group them
@@ -39,7 +40,7 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         # which holds all related entities.
         self._attr_device_info = DeviceInfo(
             name=f"Geocache {cache.name}",
-            identifiers={(DOMAIN, self._reference_code)},
+            identifiers={(DOMAIN, f"{account_reference_code}_{self._reference_code}")},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=cache.owner.username,
         )
@@ -71,11 +72,12 @@ class GeocachingTrackableEntity(GeocachingBaseEntity):
         """Initialize the Geocaching trackable entity."""
         super().__init__(coordinator)
 
-        self._reference_code = trackable.reference_code
+        self._reference_code = cast(str, trackable.reference_code).strip().upper()
+        account_reference_code = cast(str, coordinator.data.user.reference_code)
 
         self._attr_device_info = DeviceInfo(
             name=f"Trackable {trackable.name}",
-            identifiers={(DOMAIN, cast(str, trackable.reference_code))},
+            identifiers={(DOMAIN, f"{account_reference_code}_{self._reference_code}")},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Groundspeak, Inc.",
         )
@@ -84,7 +86,10 @@ class GeocachingTrackableEntity(GeocachingBaseEntity):
     def trackable(self) -> GeocachingTrackable:
         """Return the latest trackable data."""
         for trackable in self.coordinator.data.trackables.values():
-            if trackable.reference_code == self._reference_code:
+            if (
+                cast(str, trackable.reference_code).strip().upper()
+                == self._reference_code
+            ):
                 return trackable
 
         raise RuntimeError(
