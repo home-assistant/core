@@ -50,7 +50,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == bluetti_data()
-    assert result["result"].unique_id == f"{HOST}_{PORT}_{UNIT_ID}"
+    assert result["result"].unique_id is None
 
 
 async def test_user_flow_cannot_connect(
@@ -129,6 +129,25 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_UNIT_ID] == 2
+
+
+async def test_reconfigure_flow_onto_another_entrys_endpoint_aborts(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Reconfiguring onto an endpoint another entry already uses aborts."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, title="Other", data=bluetti_data(unit_id=2)
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(unit_id=2)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reconfigure_flow_cannot_connect(
