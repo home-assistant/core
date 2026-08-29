@@ -11,7 +11,6 @@ from lyngdorf import (
     PlaybackState,
     Player,
     Repeat,
-    SteppableControl,
     ZoneB,
 )
 
@@ -445,20 +444,12 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return boolean if volume is currently muted."""
         return self._receiver.muted
 
-    @property
-    def _volume(self) -> SteppableControl:
-        """Return the main-zone volume control; every model documents one."""
-        volume = self._receiver.volume
-        if TYPE_CHECKING:
-            assert volume is not None
-        return volume
-
     @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        volume = self._volume
-        if volume.value is None:
+        volume = self._receiver.volume
+        if volume is None or volume.value is None:
             return None
         return _to_ha_volume(volume.value, volume.range)
 
@@ -487,18 +478,20 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        await self._volume.up()
+        if (volume := self._receiver.volume) is not None:
+            await volume.up()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
-        await self._volume.down()
+        if (volume := self._receiver.volume) is not None:
+            await volume.down()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        control = self._volume
-        await control.set(_to_lyngdorf_volume(volume, control.range))
+        if (control := self._receiver.volume) is not None:
+            await control.set(_to_lyngdorf_volume(volume, control.range))
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
