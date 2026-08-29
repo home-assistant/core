@@ -5,7 +5,11 @@ from typing import Any, override
 
 from hole import Hole
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,47 +23,56 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ads_percentage_today",
         translation_key="ads_percentage_today",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="dns_queries_today",
         translation_key="dns_queries_today",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries_cached",
         translation_key="queries_cached",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries_forwarded",
         translation_key="queries_forwarded",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="unique_clients",
         translation_key="unique_clients",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="unique_domains",
         translation_key="unique_domains",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -68,47 +81,56 @@ SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
         key="queries.blocked",
         translation_key="ads_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.percent_blocked",
         translation_key="percent_ads_blocked",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="clients.total",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.total",
         translation_key="dns_queries",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="gravity.domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.cached",
         translation_key="queries_cached",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.forwarded",
         translation_key="queries_forwarded",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="clients.active",
         translation_key="unique_clients",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.unique_domains",
         translation_key="unique_domains",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
