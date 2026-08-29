@@ -7,9 +7,16 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError, ServerTimeoutError
-from multidict import CIMultiDict
+from aiohttp import (
+    ClientError,
+    ClientPayloadError,
+    ContentTypeError,
+    RequestInfo,
+    ServerTimeoutError,
+)
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -24,7 +31,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
@@ -1153,9 +1160,70 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert err.value.translation_key == "oauth2_helper_refresh_transient"
     assert str(err.value.request_info.url) == TOKEN_URL
-    # The cause is only reachable from the log, so it has to name the failure.
+    # The rebuilt request info drops the underlying failure, so the log has to name it.
     assert f"Token request for {TEST_DOMAIN} could not reach" in caplog.text
     assert str(raised) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("raised", "expected_exception"),
+    [
+        pytest.param(
+            ClientPayloadError("Disconnected"),
+            OAuth2TokenRequestTransientError,
+            id="payload_error",
+        ),
+        pytest.param(
+            ContentTypeError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+            ),
+            OAuth2TokenRequestError,
+            id="content_type_error",
+        ),
+    ],
+)
+async def test_oauth_session_refresh_body_error_is_mapped(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    raised: Exception,
+    expected_exception: type[Exception],
+) -> None:
+    """Test a failure reading the token response body does not leak an aiohttp error."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(AiohttpClientMockResponse, "json", side_effect=raised),
+        pytest.raises(expected_exception) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    assert type(err.value) is expected_exception
+    assert isinstance(err.value, ConfigEntryNotReady)
 
 
 @pytest.mark.parametrize(
@@ -1603,8 +1671,8 @@ async def test_token_error_handled_without_integration_mapping(
 ) -> None:
     """Test setup maps token refresh errors when the integration does not.
 
-    Only the transient and reauth subclasses carry config entry semantics, the
-    base error is left to the integration.
+    Every subclass carries config entry semantics, so the reauth subclass fails
+    setup while the others retry it.
     """
     aioclient_mock.post(TOKEN_URL, status=status_code, json={})
 

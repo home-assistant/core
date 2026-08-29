@@ -306,6 +306,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     detail,
                 )
             resp.raise_for_status()
+            return cast(dict, await resp.json())
         except ClientResponseError as err:
             if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
                 # Recoverable error
@@ -345,7 +346,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 self.token_url,
                 err,
             )
-            # No response, so the request info has to be rebuilt from what was sent.
             raise OAuth2TokenRequestTransientError(
                 request_info=RequestInfo(
                     url=URL(self.token_url),
@@ -354,8 +354,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 ),
                 domain=self._domain,
             ) from err
-
-        return cast(dict, await resp.json())
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
