@@ -26,10 +26,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-# Guards _home_server_refs below. A plain module-level lock is fine here:
-# it only ever serializes the (very short) acquire/release critical
-# section, it holds no data of its own, and unrelated hass instances
-# contending on it briefly is harmless.
+# Serialize process-wide HomeServer reference-count updates.
 _home_server_lock = asyncio.Lock()
 
 # HomeServer is a process-wide singleton (see pyhausbus.HomeServer), not

@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: Bronze
+    status: exempt
     comment: |
       This integration does not register any actions.
   appropriate-polling:
@@ -29,15 +29,18 @@ rules:
     status: exempt
     comment: |
       This integration does not provide any conditions.
-  docs-high-level-description: done
-     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47688
-  docs-installation-instructions: done
-     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47688
-  docs-removal-instructions: done
-     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-high-level-description:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-installation-instructions:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-removal-instructions:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
   docs-triggers:
     status: exempt
     comment: |
