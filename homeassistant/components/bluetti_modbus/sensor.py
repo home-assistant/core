@@ -24,9 +24,9 @@ from .entity import BluettiModbusEntity
 
 PARALLEL_UPDATES = 0
 
-# No physical unit, and no entity of their own yet: the fault/warning/status
-# enums read here belong on a binary_sensor/sensor split, a follow-up PR to
-# keep this one reviewable. Exposed here as diagnostics in the meantime.
+# Fields without a physical unit that currently belong on the sensor platform
+# are exposed as diagnostics. Fault and warning fields remain excluded until
+# their bitmaps can be represented as binary sensors.
 _DIAGNOSTIC_FIELDS = frozenset(
     {
         "d_inverter_status",
