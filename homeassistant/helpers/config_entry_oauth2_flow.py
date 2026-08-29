@@ -19,10 +19,10 @@ import secrets
 import time
 from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, hdrs, web
+from aiohttp import ClientError, ClientResponseError, RequestInfo, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
-from multidict import CIMultiDict
+from multidict import CIMultiDict, CIMultiDictProxy
 import voluptuous as vol
 from yarl import URL
 
@@ -334,6 +334,24 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 status=err.status,
                 message=err.message,
                 headers=err.headers,
+                domain=self._domain,
+            ) from err
+        except ClientError as err:
+            # Bare TimeoutError is left alone so an enclosing asyncio.timeout still
+            # aborts with oauth_timeout; aiohttp's own timeouts are ClientErrors.
+            _LOGGER.debug(
+                "Token request for %s could not reach %s: %s",
+                self.domain,
+                self.token_url,
+                err,
+            )
+            # No response, so the request info has to be rebuilt from what was sent.
+            raise OAuth2TokenRequestTransientError(
+                request_info=RequestInfo(
+                    url=URL(self.token_url),
+                    method=hdrs.METH_POST,
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
                 domain=self._domain,
             ) from err
 

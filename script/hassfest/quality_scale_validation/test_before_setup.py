@@ -14,6 +14,12 @@ _VALID_EXCEPTIONS = {
     "ConfigEntryError",
 }
 
+# Helpers that reach the service and raise a valid exception on the caller's behalf.
+_VALID_CALLS = {
+    "async_config_entry_first_refresh",
+    "async_ensure_token_valid",
+}
+
 
 def _get_exception_name(expression: ast.expr) -> str:
     """Get the name of the exception being raised."""
@@ -58,13 +64,13 @@ def _raises_exception(integration: Integration) -> bool:
     return False
 
 
-def _calls_first_refresh(async_setup_entry_function: ast.AsyncFunctionDef) -> bool:
-    """Check that a async_config_entry_first_refresh within `async_setup_entry`."""
+def _calls_raising_helper(async_setup_entry_function: ast.AsyncFunctionDef) -> bool:
+    """Check that `async_setup_entry` awaits a helper that raises for it."""
     for node in ast.walk(async_setup_entry_function):
         if (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "async_config_entry_first_refresh"
+            and node.func.attr in _VALID_CALLS
         ):
             return True
 
@@ -90,6 +96,6 @@ def validate(
     if not (async_setup_entry := _get_setup_entry_function(init)):
         return [f"Could not find `async_setup_entry` in {init_file}"]
 
-    if not (_calls_first_refresh(async_setup_entry) or _raises_exception(integration)):
+    if not (_calls_raising_helper(async_setup_entry) or _raises_exception(integration)):
         return [f"Integration does not raise one of {_VALID_EXCEPTIONS}"]
     return None

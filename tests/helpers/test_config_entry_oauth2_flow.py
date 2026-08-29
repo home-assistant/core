@@ -7,7 +7,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ServerTimeoutError
 from multidict import CIMultiDict
 import pytest
 
@@ -1107,6 +1107,58 @@ async def test_oauth_session_refresh_failure_exceptions(
 
 
 @pytest.mark.parametrize(
+    "raised",
+    [
+        pytest.param(ClientError("Cannot connect"), id="client_error"),
+        pytest.param(ServerTimeoutError("Timeout"), id="timeout"),
+    ],
+)
+async def test_oauth_session_refresh_connection_error_is_transient(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    raised: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a token request that never gets a response is mapped to a transient error."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, exc=raised)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        caplog.at_level(logging.DEBUG),
+        pytest.raises(OAuth2TokenRequestTransientError) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    # Integrations rely on this to retry setup without mapping the error themselves.
+    assert isinstance(err.value, ConfigEntryNotReady)
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "oauth2_helper_refresh_transient"
+    assert str(err.value.request_info.url) == TOKEN_URL
+    # The cause is only reachable from the log, so it has to name the failure.
+    assert f"Token request for {TEST_DOMAIN} could not reach" in caplog.text
+    assert str(raised) in caplog.text
+
+
+@pytest.mark.parametrize(
     "entry_state",
     [
         pytest.param(
@@ -1534,8 +1586,8 @@ async def test_oauth2_request_replaces_caller_authorization_header(
         ),
         pytest.param(
             600,
-            config_entries.ConfigEntryState.SETUP_ERROR,
-            None,
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            "oauth2_helper_refresh_failed",
             id="generic",
         ),
     ],
