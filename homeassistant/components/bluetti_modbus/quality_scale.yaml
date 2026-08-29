@@ -21,7 +21,7 @@ rules:
     status: exempt
     comment: This integration provides no conditions.
   docs-high-level-description: done
-  # ^ home-assistant/home-assistant.io#47711, linked in the PR description
+  # ^ home-assistant/home-assistant.io#47718, linked in the PR description
   #   (same reasoning as brands: cannot merge first).
   docs-installation-instructions: done
   docs-removal-instructions: done
