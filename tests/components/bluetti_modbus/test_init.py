@@ -167,6 +167,36 @@ async def test_setup_error_when_device_type_unsupported(hass: HomeAssistant) -> 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_identity_mismatch_after_setup_fails_the_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An address reassigned to a different device stops updating, not just goes stale."""
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.holding[50206] = 1  # a different serial answers now
+    await _tick(hass, freezer)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert coordinator.last_update_success is False
+
+    state = hass.states.get(VOLTAGE_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_excluded_fields_are_dropped_from_the_read_plan(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A field with no entity yet is not polled either, not just not created."""
+    await _setup(hass, mock_config_entry)
+
+    device = mock_config_entry.runtime_data.coordinator.device
+    assert device.get_field("ac_o_switch") is None
+
+
 async def test_ep2000_loads(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
 ) -> None:

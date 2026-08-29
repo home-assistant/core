@@ -8,6 +8,7 @@ from modbus_connection.exceptions import ModbusError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -57,6 +58,21 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="communication_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        # An address can be reassigned to a different physical unit after
+        # setup. Only checked where the entry was identified by serial in
+        # the first place - a device that never reported one was never given
+        # that guarantee.
+        serial = self.device.values.get("d_serial")
+        if (
+            self.config_entry.unique_id is not None
+            and serial is not None
+            and str(serial) != self.config_entry.unique_id
+        ):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="wrong_device",
+            )
 
 
 @dataclass(kw_only=True)

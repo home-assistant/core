@@ -25,3 +25,12 @@ DEVICE_TYPES: Final = (DEVICE_TYPE_BALCO260, DEVICE_TYPE_EP2000)
 # polling pressure - proven in production at this interval in the bluetti
 # HACS integration's own Modbus coordinator. Do not poll faster.
 SCAN_INTERVAL: Final = timedelta(seconds=30)
+
+# These belong on other platforms once they exist (switch, number/select), not
+# on sensor - creating them here now would mean a breaking entity-domain
+# change or a leftover duplicate once those follow-up PRs land. Restricted out
+# of the device's read plan entirely (not just entity creation) so the
+# coordinator does not keep polling registers no entity here reads.
+EXCLUDED_FIELDS: Final = frozenset(
+    {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_high", "b_soc_low"}
+)
