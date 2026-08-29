@@ -43,14 +43,6 @@
       }
     }
   },
-  "selector": {
-    "device_type": {
-      "options": {
-        "balco260": "Balco260",
-        "ep2000": "EP2000"
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "ac_o_e_total": {
@@ -113,14 +105,14 @@
       "d_inverter_status": {
         "name": "Inverter Status",
         "state": {
-          "stop": "Stopped",
-          "off_grid": "Off-grid",
-          "grid_connected_load": "Grid-connected (load)",
-          "grid_connected_operation": "Grid-connected",
+          "abnormal_off_grid": "Off-grid (abnormal)",
           "grid_connected_charging": "Grid-connected (charging)",
           "grid_connected_discharging": "Grid-connected (discharging)",
+          "grid_connected_load": "Grid-connected (load)",
+          "grid_connected_operation": "Grid-connected",
           "inverter_fault": "Fault",
-          "abnormal_off_grid": "Off-grid (abnormal)"
+          "off_grid": "Off-grid",
+          "stop": "Stopped"
         }
       },
       "d_inverter_total": {
@@ -221,6 +213,14 @@
     },
     "unsupported_device_type": {
       "message": "This entry's device type is not supported by the installed version of bluetti-modbus."
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "balco260": "Balco260",
+        "ep2000": "EP2000"
+      }
     }
   }
 }
