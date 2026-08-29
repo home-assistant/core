@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import Self
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from lyngdorf import LyngdorfModel, LyngdorfReceiver
-from lyngdorf.models.base import NumericRange
-from lyngdorf.remote import RemoteKey
+from lyngdorf import (
+    LyngdorfModel,
+    LyngdorfReceiver,
+    NumericControl,
+    NumericRange,
+    RemoteKey,
+    Trim,
+)
 import pytest
 
 from homeassistant.components.lyngdorf.const import (
@@ -52,6 +58,26 @@ def mock_setup_entry() -> Generator[None]:
         "homeassistant.components.lyngdorf.async_setup_entry", return_value=True
     ):
         yield
+
+
+class _FloatControl(float):
+    """A float that is also a control, as the library's 1.x values are."""
+
+    def __new__(cls, value: float, value_range: NumericRange) -> Self:
+        """Return a float carrying the control interface alongside it."""
+        control = super().__new__(cls, value)
+        control.value = value
+        control.range = value_range
+        control.set = AsyncMock()
+        return control
+
+
+def _control(value: float | None, value_range: NumericRange) -> MagicMock:
+    """Return a mocked numeric control."""
+    control = MagicMock(spec=NumericControl)
+    control.value = value
+    control.range = value_range
+    return control
 
 
 @pytest.fixture
@@ -124,8 +150,16 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.can_shuffle = False
     receiver.available_repeat_modes = frozenset()
 
-    receiver.lipsync = 50
+    receiver.lipsync = _FloatControl(50, NumericRange(0, 500, 1))
     receiver.lipsync_range = NumericRange(0, 500, 1)
+    receiver.trims = {
+        Trim.BASS: _control(3.0, NumericRange(-12.0, 12.0, 0.1)),
+        Trim.TREBLE: _control(0.0, NumericRange(-12.0, 12.0, 0.1)),
+        Trim.CENTER: _control(0.0, NumericRange(-10.0, 10.0, 0.1)),
+        Trim.HEIGHT: _control(4.0, NumericRange(-10.0, 10.0, 0.1)),
+        Trim.LFE: _control(3.0, NumericRange(-10.0, 10.0, 0.1)),
+        Trim.SURROUND: _control(0.0, NumericRange(-10.0, 10.0, 0.1)),
+    }
     receiver.trim_bass = 3.0
     receiver.trim_treble = 0.0
     receiver.trim_centre = 0.0
