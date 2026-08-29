@@ -402,6 +402,7 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
     """Test a countdown ticking with the clock keeps one deadline."""
     mock_config_entry.add_to_hass(hass)
     unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 0  # Waiting
     unit.holding[0x0417] = 300
 
     with patch(
@@ -436,6 +437,34 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
     assert hass.states.get(entity_id).state != deadline
 
 
+async def test_countdown_ignores_a_stale_register_while_grid_connected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a positive register is ignored once the inverter is connected."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 2  # Grid connected
+    unit.holding[0x0417] = 60  # Left over from the last startup wait
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
 async def test_countdown_restarting_after_idle_gets_a_new_deadline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -446,6 +475,7 @@ async def test_countdown_restarting_after_idle_gets_a_new_deadline(
     """Test a finished countdown's deadline is not reused by the next one."""
     mock_config_entry.add_to_hass(hass)
     unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 0  # Waiting
     unit.holding[0x0417] = 10
 
     with patch(
