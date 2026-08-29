@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from lyngdorf.const import LyngdorfModel
+from lyngdorf import LyngdorfModel
 from lyngdorf.exceptions import LyngdorfUnsupportedError
 from lyngdorf.remote import RemoteKey, resolve_remote_key
 import pytest
