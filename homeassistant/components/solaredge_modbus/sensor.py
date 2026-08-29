@@ -4,7 +4,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from solaredged import Inverter, InverterStatus, Meter, SunSpecDID
+from solaredged import (
+    Battery,
+    BatteryStatus,
+    Inverter,
+    InverterStatus,
+    Meter,
+    SunSpecDID,
+)
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -31,7 +38,11 @@ from homeassistant.helpers.typing import StateType
 
 from .const import LOGGER
 from .coordinator import SolarEdgeModbusConfigEntry
-from .entity import SolarEdgeModbusInverterEntity, SolarEdgeModbusMeterEntity
+from .entity import (
+    SolarEdgeModbusBatteryEntity,
+    SolarEdgeModbusInverterEntity,
+    SolarEdgeModbusMeterEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -292,7 +303,7 @@ INVERTER_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Inverter], ...] =
         device_class=SensorDeviceClass.ENUM,
         options=[status.name.lower() for status in InverterStatus],
         value_fn=lambda inverter: (
-            inverter.status.name.lower() if inverter.status else None
+            inverter.status.name.lower() if inverter.status is not None else None
         ),
     ),
 )
@@ -591,6 +602,178 @@ METER_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Meter], ...] = (
 )
 
 
+BATTERY_SENSORS: tuple[SolarEdgeModbusSensorEntityDescription[Battery], ...] = (
+    SolarEdgeModbusSensorEntityDescription(
+        key="dc_power",
+        translation_key="dc_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda battery: battery.dc_power,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="energy_exported",
+        translation_key="energy_exported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda battery: battery.energy_exported,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="energy_imported",
+        translation_key="energy_imported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda battery: battery.energy_imported,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="state_of_energy",
+        translation_key="state_of_energy",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda battery: battery.state_of_energy,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="state_of_health",
+        translation_key="state_of_health",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+        value_fn=lambda battery: battery.state_of_health,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+        value_fn=lambda battery: battery.temperature_average,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="energy_available",
+        translation_key="energy_available",
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda battery: battery.energy_available,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="energy_max",
+        translation_key="energy_max",
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=2,
+        value_fn=lambda battery: battery.energy_max,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="rated_energy",
+        translation_key="rated_energy",
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=2,
+        value_fn=lambda battery: battery.rated_energy,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="dc_voltage",
+        translation_key="dc_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+        value_fn=lambda battery: battery.dc_voltage,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="dc_current",
+        translation_key="dc_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        value_fn=lambda battery: battery.dc_current,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="max_charge_power",
+        translation_key="max_charge_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery: battery.max_charge_power,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="max_discharge_power",
+        translation_key="max_discharge_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery: battery.max_discharge_power,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="max_charge_peak_power",
+        translation_key="max_charge_peak_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery: battery.max_charge_peak_power,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="max_discharge_peak_power",
+        translation_key="max_discharge_peak_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery: battery.max_discharge_peak_power,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="temperature_max",
+        translation_key="temperature_max",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+        value_fn=lambda battery: battery.temperature_max,
+    ),
+    SolarEdgeModbusSensorEntityDescription(
+        key="status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in BatteryStatus],
+        value_fn=lambda battery: (
+            battery.status.name.lower() if battery.status is not None else None
+        ),
+    ),
+)
+
+
 def _inverter_sensor(
     entry: SolarEdgeModbusConfigEntry,
     description: SolarEdgeModbusSensorEntityDescription[Inverter],
@@ -618,6 +801,21 @@ def _meter_sensor(
     )
 
 
+def _battery_sensor(
+    entry: SolarEdgeModbusConfigEntry,
+    description: SolarEdgeModbusSensorEntityDescription[Battery],
+    index: int,
+) -> SensorEntity:
+    """Build a battery sensor, monotonic where its state class asks for it."""
+    if description.state_class is SensorStateClass.TOTAL_INCREASING:
+        return SolarEdgeModbusBatteryEnergySensorEntity(
+            entry=entry, description=description, index=index
+        )
+    return SolarEdgeModbusBatterySensorEntity(
+        entry=entry, description=description, index=index
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SolarEdgeModbusConfigEntry,
@@ -636,6 +834,12 @@ async def async_setup_entry(
         for index, meter in enumerate(solaredge.meters, 1)
         for description in METER_SENSORS
         if description.exists_fn(meter)
+    )
+    entities.extend(
+        _battery_sensor(entry, description, index)
+        for index, battery in enumerate(solaredge.batteries, 1)
+        for description in BATTERY_SENSORS
+        if description.exists_fn(battery)
     )
 
     async_add_entities(entities)
@@ -728,3 +932,23 @@ class SolarEdgeModbusMeterEnergySensorEntity(
     SolarEdgeModbusEnergySensorEntity, SolarEdgeModbusMeterSensorEntity
 ):
     """Defines a monotonic SolarEdge Modbus meter energy sensor entity."""
+
+
+class SolarEdgeModbusBatterySensorEntity(SolarEdgeModbusBatteryEntity, SensorEntity):
+    """Defines a SolarEdge Modbus battery sensor entity."""
+
+    entity_description: SolarEdgeModbusSensorEntityDescription[Battery]
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(
+            self.coordinator.solaredge.batteries[self._index - 1]
+        )
+
+
+class SolarEdgeModbusBatteryEnergySensorEntity(
+    SolarEdgeModbusEnergySensorEntity, SolarEdgeModbusBatterySensorEntity
+):
+    """Defines a monotonic SolarEdge Modbus battery energy sensor entity."""
