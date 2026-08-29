@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "auth_failed": "Last.fm authorization failed. Start setup again to request a new authorization token.",
       "wrong_account": "The authorized Last.fm account ({authorized_user}) does not match the configured account ({configured_user}). Start setup again and authorize the configured account."
     },
     "error": {

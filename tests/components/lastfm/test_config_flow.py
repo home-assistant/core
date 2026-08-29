@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, call, patch
 from pylast import WSError
 import pytest
 
-from homeassistant.components.lastfm.config_flow import get_session_key
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
     CONF_MAIN_USER,
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
+    ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
@@ -43,16 +43,6 @@ FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
 POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
 MAX_POLLING_ATTEMPTS_PATH = f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS"
-
-
-def test_get_session_key_unexpected_error(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test an unexpected session key error is logged."""
-    session_key_generator = MockSessionKeyGenerator(session_key_error=Exception())
-
-    assert get_session_key(session_key_generator, AUTH_URL) is None
-    assert "Unexpected exception" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -160,7 +150,9 @@ async def test_flow_restarts_polling_after_timeout(
 ) -> None:
     """Test polling restarts when the user continues after a timeout."""
     session_key_generator = MockSessionKeyGenerator(
-        session_key_error=WSError("network", "17", "Unauthorized Token")
+        session_key_error=WSError(
+            "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized Token"
+        )
     )
     with (
         patch("pylast.User", return_value=default_user),
@@ -183,6 +175,37 @@ async def test_flow_restarts_polling_after_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "friends"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(WSError("network", "15", "Token expired"), id="expired_token"),
+        pytest.param(Exception(), id="unexpected_error"),
+    ],
+)
+async def test_flow_session_key_error(
+    hass: HomeAssistant, default_user: MockUser, error: Exception
+) -> None:
+    """Test terminal session key errors abort the flow."""
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(session_key_error=error),
+        ),
+        patch(POLLING_INTERVAL_PATH, 0),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "auth_failed"
 
 
 async def test_flow_abort_cancels_session_key_polling(
@@ -279,7 +302,9 @@ async def test_flow_waits_for_authorization(
 ) -> None:
     """Test the flow waits until the Last.fm authorization is granted."""
     mock_session_key_generator = MockSessionKeyGenerator(
-        session_key_error=WSError("network", "17", "Unauthorized Token")
+        session_key_error=WSError(
+            "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized Token"
+        )
     )
     with (
         patch("pylast.User", return_value=default_user),
