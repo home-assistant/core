@@ -143,7 +143,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "very_unique_string"
+        assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
         assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
@@ -172,7 +172,7 @@ async def test_ssdp_discovery_exist(hass: HomeAssistant) -> None:
     """Test that the existed device is not discovered."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="very_unique_string",
+        unique_id="aa:bb:cc:dd:ee:ff",
         data={
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
@@ -301,7 +301,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     """Test that error are shown when duplicates are added."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="very_unique_string",
+        unique_id="aa:bb:cc:dd:ee:ff",
         data={
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
@@ -387,7 +387,7 @@ async def test_create_entry(hass: HomeAssistant, use_psk, use_ssl) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "very_unique_string"
+        assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
         assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
@@ -417,7 +417,7 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
     """Test that the reauthorization is successful."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="very_unique_string",
+        unique_id="aa:bb:cc:dd:ee:ff",
         data={
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
