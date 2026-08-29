@@ -61,7 +61,7 @@ async def test_flow_user_invalid_auth(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONF_DATA
+        result["flow_id"], user_input=CONF_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -81,7 +81,7 @@ async def test_flow_user_cannot_connect(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONF_DATA
+        result["flow_id"], user_input=CONF_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -102,7 +102,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_DATA
+            result["flow_id"], user_input=CONF_INPUT
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
