@@ -29,9 +29,7 @@ PARALLEL_UPDATES = 0
 # keep this one reviewable. Exposed here as diagnostics in the meantime.
 _DIAGNOSTIC_FIELDS = frozenset(
     {
-        "d_inverter_fault",
         "d_inverter_status",
-        "d_inverter_warning",
         "d_inverter_type",
         "d_num_inverters",
         "d_num_battery_packs",
