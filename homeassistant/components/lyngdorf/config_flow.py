@@ -4,11 +4,12 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
-from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import (
-    async_find_receiver_model,
-    async_get_device_serial,
-    lookup_receiver_model,
+from lyngdorf import (
+    LyngdorfModel,
+    discover_model,
+    discover_ssdp_location,
+    fetch_device_serial,
+    lookup_model,
 )
 import voluptuous as vol
 
@@ -89,7 +90,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_probe(self, host: str) -> tuple[LyngdorfModel, str]:
         """Return the model and serial of the device at a host."""
         try:
-            model = await async_find_receiver_model(host)
+            model = await discover_model(host)
         except TimeoutError as err:
             raise TimeoutConnect from err
         except OSError as err:
@@ -98,7 +99,8 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise UnsupportedModel
 
         try:
-            serial = await async_get_device_serial(host)
+            location = await discover_ssdp_location(host)
+            serial = await fetch_device_serial(location) if location else None
         except TimeoutError as err:
             raise TimeoutConnect from err
         except OSError as err:
@@ -165,7 +167,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self._host
         try:
-            model = await async_find_receiver_model(self._host)
+            model = await discover_model(self._host)
         except TimeoutError, OSError:
             return self.async_abort(reason="cannot_connect")
         if not model:
@@ -226,7 +228,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("cannot_connect")
 
         device_model_name = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
-        if not (model := lookup_receiver_model(device_model_name)):
+        if not (model := lookup_model(device_model_name)):
             _LOGGER.warning(
                 "SSDP discovered device with unrecognized model name %r at %s",
                 device_model_name,

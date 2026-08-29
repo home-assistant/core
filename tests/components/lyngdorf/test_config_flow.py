@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from lyngdorf.const import LyngdorfModel
+from lyngdorf import LyngdorfModel
 import pytest
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN

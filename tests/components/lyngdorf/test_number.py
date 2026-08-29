@@ -144,7 +144,7 @@ async def test_entities_absent_for_controls_the_model_lacks(
 
     with (
         patch(
-            "homeassistant.components.lyngdorf.lookup_receiver_model",
+            "homeassistant.components.lyngdorf.lookup_model",
             return_value=LyngdorfModel.MP_60,
         ),
         patch("homeassistant.components.lyngdorf.PLATFORMS", [Platform.NUMBER]),
