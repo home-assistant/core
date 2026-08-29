@@ -17,14 +17,23 @@ def device_name(device_type: str) -> str:
     return _MODEL_NAMES.get(device_type, "BLUETTI power station")
 
 
-def bluetti_modbus_device_info(entry_id: str, device_type: str) -> DeviceInfo:
-    """Return device information for a BLUETTI Modbus device."""
+def bluetti_modbus_device_info(
+    entry_id: str, device_type: str, serial: str | None
+) -> DeviceInfo:
+    """Return device information for a BLUETTI Modbus device.
+
+    serial is entry.unique_id, not a fresh register read: identifiers stay
+    keyed on entry_id (stable even for a model with no serial field), and
+    serial_number is set from whatever was confirmed at config-flow time -
+    the same value the device would otherwise be shown as a plain sensor.
+    """
     model = device_name(device_type)
     return DeviceInfo(
         identifiers={(DOMAIN, entry_id)},
         manufacturer="BLUETTI",
         model=model,
         name=model,
+        serial_number=serial,
     )
 
 

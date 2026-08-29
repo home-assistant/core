@@ -63,7 +63,9 @@ async def async_setup_entry(
     # Built once here: every entity hangs on the same device.
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
-        device_info=bluetti_modbus_device_info(entry.entry_id, device_type),
+        device_info=bluetti_modbus_device_info(
+            entry.entry_id, device_type, entry.unique_id
+        ),
     )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **entry.runtime_data.device_info

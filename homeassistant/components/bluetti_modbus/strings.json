@@ -134,9 +134,6 @@
       "d_num_inverters": {
         "name": "Inverter Count"
       },
-      "d_serial": {
-        "name": "Serial Number"
-      },
       "d_ver_arm": {
         "name": "ARM Firmware Version"
       },

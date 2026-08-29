@@ -15,8 +15,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
-from .conftest import bluetti_data, seed_unit
+from .conftest import SERIAL, bluetti_data, seed_unit
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -44,6 +45,23 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_serial_number_is_device_metadata_not_a_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The serial number shows up as device info, not a plain sensor entity."""
+    await _setup(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.serial_number == SERIAL
+
+    assert hass.states.get("sensor.balco260_serial_number") is None
 
 
 async def test_setup_retry_when_device_unresponsive(
