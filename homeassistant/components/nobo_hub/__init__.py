@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
                 entry, data={**entry.data, CONF_IP_ADDRESS: new_ip}
             )
 
-    async def _async_close(event):
+    async def _async_close(event: Event) -> None:
         """Close the Nobø Ecohub socket connection when HA stops."""
         await hub.stop()
 

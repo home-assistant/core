@@ -9,7 +9,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import automation, group, person, script, websocket_api
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.homeassistant import scene
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
     area_registry as ar,
@@ -249,21 +252,21 @@ class Searcher:
 
             # For an automation, we want to unwrap the groups, to ensure we
             # relate this automation to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an automation, we want to unwrap the scenes, to ensure we
             # relate this automation to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is part of an automation.
             # This makes the automation return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback
@@ -282,6 +285,13 @@ class Searcher:
         ):
             self._add(ItemType.DEVICE, device_entry.id)
             self._async_search_device(device_entry.id, entry_point=False)
+
+        # async_entries_for_config_entry returns mains only; add this entry's children.
+        for child_device_entry in dr.async_child_entries_for_config_entry(
+            self._device_registry, config_entry_id
+        ):
+            self._add(ItemType.DEVICE, child_device_entry.id)
+            self._async_search_device(child_device_entry.id, entry_point=False)
 
         for entity_entry in er.async_entries_for_config_entry(
             self._entity_registry, config_entry_id
@@ -323,9 +333,17 @@ class Searcher:
             # Add all entity information as well
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
+        # Child devices are structurally part of this device; surface them and their
+        # entities, the way an area or config entry surfaces the devices under it.
+        for child_device_entry in dr.async_entries_for_parent_device(
+            self._device_registry, device_id
+        ):
+            self._add(ItemType.DEVICE, child_device_entry.id)
+            self._async_search_device(child_device_entry.id, entry_point=False)
+
     @callback
     def _async_add_automations_and_scripts_for_device(
-        self, device_entry: dr.DeviceEntry
+        self, device_entry: dr.AnyDeviceEntry
     ) -> None:
         """Add automations and scripts referencing a device.
 
@@ -335,7 +353,10 @@ class Searcher:
         references to a sibling are not matched.
         """
         device_ids = {device_entry.id}
-        if device_entry.composite_device_id is not None:
+        if (
+            isinstance(device_entry, dr.DeviceEntry)
+            and device_entry.composite_device_id is not None
+        ):
             device_ids.add(device_entry.composite_device_id)
         for device_id in device_ids:
             self._add(
@@ -565,21 +586,21 @@ class Searcher:
 
             # For an script, we want to unwrap the groups, to ensure we
             # relate this script to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an script, we want to unwrap the scenes, to ensure we
             # relate this script to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is nested.
             # This makes the script return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback
@@ -590,21 +611,31 @@ class Searcher:
         )
 
     @callback
-    def _async_resolve_up_device(self, device_id: str) -> dr.DeviceEntry | None:
+    def _async_resolve_up_device(self, device_id: str) -> dr.AnyDeviceEntry | None:
         """Resolve up from a device.
 
         Above a device is an area or floor.
         Above a device is also the config entry.
+        Above a child device is also its parent device.
         """
         if device_entry := self._device_registry.async_get(device_id):
-            if device_entry.area_id:
-                self._add(ItemType.AREA, device_entry.area_id)
-                self._async_resolve_up_area(device_entry.area_id)
+            if area_id := dr.async_get_effective_area_id(self.hass, device_entry):
+                self._add(ItemType.AREA, area_id)
+                self._async_resolve_up_area(area_id)
 
             self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
             for config_entry_id in device_entry.config_entries:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
+
+            # A child device is contained by its parent. Unlike the informational
+            # via_device link (deliberately not followed here), the parent/child
+            # relation is first-class, so the parent is resolved up like the area and
+            # config entry. The parent is not fully searched, to avoid pulling in its
+            # unrelated sibling children.
+            if isinstance(device_entry, dr.ChildDeviceEntry):
+                self._add(ItemType.DEVICE, device_entry.parent_device_id)
+                self._async_resolve_up_device(device_entry.parent_device_id)
 
         return device_entry
 
@@ -625,9 +656,9 @@ class Searcher:
             elif entity_entry.device_id and (
                 device_entry := self._device_registry.async_get(entity_entry.device_id)
             ):
-                if device_entry.area_id:
-                    self._add(ItemType.AREA, device_entry.area_id)
-                    self._async_resolve_up_area(device_entry.area_id)
+                if area_id := dr.async_get_effective_area_id(self.hass, device_entry):
+                    self._add(ItemType.AREA, area_id)
+                    self._async_resolve_up_area(area_id)
 
             # Add device that provided this entity
             self._add(ItemType.DEVICE, entity_entry.device_id)

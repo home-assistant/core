@@ -13,6 +13,7 @@ from aiocomelit.exceptions import (
 )
 from aiohttp import ClientSession, CookieJar
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,7 +47,7 @@ def load_api_data(
     # CLIMATE has a 2 item tuple:
     # - first  for Clima
     # - second for Humidifier
-    return device.val[0] if domain == "climate" else device.val[1]
+    return device.val[0] if domain == CLIMATE_DOMAIN else device.val[1]
 
 
 async def cleanup_stale_entity(
@@ -68,13 +69,13 @@ async def cleanup_stale_entity(
             identifiers.append(f"{config_entry.entry_id}-{device.type}-{device.index}")
 
     if len(identifiers) > 0:
-        _async_remove_state_config_entry_from_devices(hass, identifiers, config_entry)
+        _async_remove_stale_devices(hass, identifiers, config_entry)
 
 
-def _async_remove_state_config_entry_from_devices(
+def _async_remove_stale_devices(
     hass: HomeAssistant, identifiers: list[str], config_entry: ConfigEntry
 ) -> None:
-    """Remove config entry from device."""
+    """Remove stale devices."""
 
     device_registry = dr.async_get(hass)
     for identifier in identifiers:
@@ -82,15 +83,8 @@ def _async_remove_state_config_entry_from_devices(
             (DOMAIN, identifier), config_entry.entry_id
         )
         if device:
-            LOGGER.info(
-                "Removing config entry %s from device %s",
-                config_entry.title,
-                device.name,
-            )
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=config_entry.entry_id,
-            )
+            LOGGER.info("Removing device %s", device.name)
+            device_registry.async_remove_device(device.id)
 
 
 def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](

@@ -87,7 +87,7 @@ class TibberRuntimeData:
         try:
             async with asyncio.timeout(DISCONNECT_TIMEOUT):
                 await self._client.rt_disconnect()
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.warning(
                 "Error disconnecting the Tibber realtime connection", exc_info=True
             )

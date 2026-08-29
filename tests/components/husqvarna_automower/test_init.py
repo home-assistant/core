@@ -232,8 +232,8 @@ async def test_model_id_information(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device is not None
     assert reg_device.manufacturer == "Husqvarna"
@@ -253,8 +253,8 @@ async def test_device_info(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device == snapshot
 

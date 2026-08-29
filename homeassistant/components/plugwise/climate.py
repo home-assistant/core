@@ -27,9 +27,10 @@ ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
 
 
-def _check_for_schedule(active: bool, last_active: str | None) -> None:
+def _check_for_schedule(active: bool, last_active: str) -> None:
     """Raise a HAError when no thermostat schedule has been set."""
-    if not active and last_active is None:
+    # last_active can be stored as None from before the plugwise v1.14.3 bump
+    if not active and last_active == STATE_OFF:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=ERROR_NO_SCHEDULE,
@@ -107,7 +108,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
-        self._last_active_schedule: str | None = None
+        self._last_active_schedule = STATE_OFF
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
@@ -143,7 +144,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-            self._last_active_schedule = plugwise_extra_data.last_active_schedule
+            self._last_active_schedule = (
+                plugwise_extra_data.last_active_schedule or STATE_OFF
+            )
             self._previous_action_mode = (
                 plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
             )
@@ -209,7 +212,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if self.device.get("available_schedules"):
+        if self.device["available_schedules"] != [STATE_OFF]:
             hvac_modes.append(HVACMode.AUTO)
 
         if self._api.cooling_present:
@@ -291,8 +294,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             await self._api.set_regulation_mode(hvac_mode.value)
             return
 
-        current_schedule = self.device.get("select_schedule")
-        schedule_is_active = current_schedule not in (None, "off")
+        current_schedule = self.device["select_schedule"]
+        schedule_is_active = current_schedule != STATE_OFF
         desired_schedule = (
             current_schedule if schedule_is_active else self._last_active_schedule
         )
