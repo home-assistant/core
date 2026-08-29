@@ -13,8 +13,6 @@ from homeassistant.components.geocaching.sensor import (
     CACHE_SENSORS,
     PROFILE_SENSORS,
     TRACKABLE_SENSORS,
-    GeoEntityCacheSensorEntity,
-    GeoEntityTrackableSensorEntity,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_CODE, STATE_UNAVAILABLE
@@ -49,141 +47,10 @@ async def _async_setup_geocaching_entry(
         await hass.async_block_till_done()
 
 
-def test_cache_sensor_uses_latest_coordinator_data() -> None:
-    """Test that a cache sensor uses the latest coordinator data."""
-    owner = MagicMock()
-    owner.username = "CacheOwner"
-
-    first_cache = GeocachingCache(
-        reference_code="GC12345",
-        name="Test cache",
-        owner=owner,
-        favorite_points=10,
-    )
-
-    coordinator = MagicMock()
-    user = MagicMock()
-    user.reference_code = "PR12345"
-    coordinator.data = GeocachingCoordinatorData(
-        user=user,
-        trackables={},
-        nearby_caches=[],
-        tracked_caches={"GC12345": first_cache},
-    )
-
-    description = next(
-        description
-        for description in CACHE_SENSORS
-        if description.key == "favorite_points"
-    )
-
-    entity = GeoEntityCacheSensorEntity(
-        coordinator,
-        first_cache,
-        "GC12345",
-        description,
-    )
-
-    assert entity.available
-    assert entity.unique_id == "GC12345_favorite_points"
-    assert entity.device_info["identifiers"] == {(DOMAIN, "GC12345")}
-    assert entity.native_value == 10
-
-    updated_cache = GeocachingCache(
-        reference_code="GC12345",
-        name="Test cache",
-        owner=owner,
-        favorite_points=20,
-    )
-
-    coordinator.data = GeocachingCoordinatorData(
-        user=user,
-        trackables={},
-        nearby_caches=[],
-        tracked_caches={"GC12345": updated_cache},
-    )
-
-    assert entity.cache is updated_cache
-    assert entity.native_value == 20
-
-    coordinator.data = GeocachingCoordinatorData(
-        user=user, trackables={}, nearby_caches=[], tracked_caches={}
-    )
-    assert not entity.available
-
-    coordinator.last_update_success = True
-    coordinator.data = None
-    assert not entity.available
-
-
-def test_trackable_sensor_uses_latest_coordinator_data() -> None:
-    """Test that a trackable sensor uses the latest coordinator data."""
-    owner = MagicMock()
-    owner.username = "TrackableOwner"
-
-    first_trackable = GeocachingTrackable(
-        reference_code=" tb12345 ",
-        name="Test trackable",
-        owner=owner,
-        kilometers_traveled=10.5,
-    )
-
-    coordinator = MagicMock()
-    coordinator.last_update_success = True
-    user = MagicMock()
-    user.reference_code = "PR12345"
-    coordinator.data = GeocachingCoordinatorData(
-        user=user,
-        trackables={"TB12345": first_trackable},
-        nearby_caches=[],
-        tracked_caches={},
-    )
-
-    description = next(
-        description
-        for description in TRACKABLE_SENSORS
-        if description.key == "kilometers_traveled"
-    )
-
-    entity = GeoEntityTrackableSensorEntity(
-        coordinator,
-        first_trackable,
-        description,
-    )
-
-    assert entity.available
-    assert entity.unique_id == "PR12345_TB12345_kilometers_traveled"
-    assert entity.device_info["identifiers"] == {(DOMAIN, "PR12345_TB12345")}
-    assert entity.native_value == 10.5
-
-    updated_trackable = GeocachingTrackable(
-        reference_code="TB12345",
-        name="Test trackable",
-        owner=owner,
-        kilometers_traveled=20.5,
-    )
-
-    coordinator.data = GeocachingCoordinatorData(
-        user=user,
-        trackables={"TB12345": updated_trackable},
-        nearby_caches=[],
-        tracked_caches={},
-    )
-
-    assert entity.trackable is updated_trackable
-    assert entity.native_value == 20.5
-
-    coordinator.data = GeocachingCoordinatorData(
-        user=user, trackables={}, nearby_caches=[], tracked_caches={}
-    )
-    assert not entity.available
-
-    coordinator.data = None
-    assert not entity.available
-
-
 async def test_entities_are_linked_to_subentries(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test entities are linked to their matching config subentries."""
     cache_code = "GC12345"
@@ -223,7 +90,7 @@ async def test_entities_are_linked_to_subentries(
         favorite_points=10,
     )
     trackable = GeocachingTrackable(
-        reference_code=trackable_code,
+        reference_code=" tb12345 ",
         name="Test trackable",
         owner=owner,
         kilometers_traveled=10.5,
@@ -268,9 +135,10 @@ async def test_entities_are_linked_to_subentries(
             "sensor", DOMAIN, f"{cache_code}_{description.key}"
         )
         assert entity_id is not None
-        assert (
-            entity_registry.async_get(entity_id).config_subentry_id == cache_subentry_id
-        )
+        entity = entity_registry.async_get(entity_id)
+        assert entity is not None
+        assert entity.config_entry_id == config_entry.entry_id
+        assert entity.config_subentry_id == cache_subentry_id
 
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{cache_code}_favorite_points"
@@ -279,19 +147,27 @@ async def test_entities_are_linked_to_subentries(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "10"
+    cache_entity_id = entity_id
 
     for description in TRACKABLE_SENSORS:
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"PR12345_{trackable_code}_{description.key}"
         )
         assert entity_id is not None
-        assert entity_registry.async_get(entity_id).config_subentry_id is None
+        entity = entity_registry.async_get(entity_id)
+        assert entity is not None
+        assert entity.config_entry_id == config_entry.entry_id
+        assert entity.config_subentry_id is None
         assert (
             entity_registry.async_get_entity_id(
                 "sensor", DOMAIN, f"PR12345_TB99999_{description.key}"
             )
             is not None
         )
+    trackable_entity_id = entity_id
+    state = hass.states.get(trackable_entity_id)
+    assert state is not None
+    assert state.state == "10.5"
 
     for description in CACHE_SENSORS:
         assert (
@@ -306,24 +182,70 @@ async def test_entities_are_linked_to_subentries(
             "sensor", DOMAIN, f"PR12345_{description.key}"
         )
         assert entity_id is not None
-        assert entity_registry.async_get(entity_id).config_subentry_id is None
+        entity = entity_registry.async_get(entity_id)
+        assert entity is not None
+        assert entity.config_entry_id == config_entry.entry_id
+        assert entity.config_subentry_id is None
+
+    cache_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cache_code), config_entry.entry_id
+    )
+    assert cache_device is not None
+    trackable_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"PR12345_{trackable_code}"), config_entry.entry_id
+    )
+    assert trackable_device is not None
 
     coordinator = config_entry.runtime_data
+    updated_cache = GeocachingCache(
+        reference_code=cache_code,
+        name="Test cache",
+        owner=owner,
+        favorite_points=20,
+    )
+    updated_trackable = GeocachingTrackable(
+        reference_code=trackable_code,
+        name="Test trackable",
+        owner=owner,
+        kilometers_traveled=20.5,
+    )
+    coordinator.async_set_updated_data(
+        GeocachingCoordinatorData(
+            user=status.user,
+            trackables={trackable_code: updated_trackable},
+            nearby_caches=status.nearby_caches,
+            tracked_caches={cache_code: updated_cache},
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(cache_entity_id)
+    assert state is not None
+    assert state.state == "20"
+    state = hass.states.get(trackable_entity_id)
+    assert state is not None
+    assert state.state == "20.5"
+
     coordinator.async_set_updated_data(
         GeocachingCoordinatorData(
             user=status.user,
             trackables={},
             nearby_caches=status.nearby_caches,
-            tracked_caches={cache_code: cache},
+            tracked_caches={},
         )
     )
     await hass.async_block_till_done()
 
-    for description in TRACKABLE_SENSORS:
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"PR12345_{trackable_code}_{description.key}"
-        )
-        assert entity_id is not None
+    for entity_id in (cache_entity_id, trackable_entity_id):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
+    coordinator.data = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    for entity_id in (cache_entity_id, trackable_entity_id):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
