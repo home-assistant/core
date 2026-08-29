@@ -1,8 +1,10 @@
 """Support for Sofar switches."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import RemoteSwitchOnOff
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -19,12 +21,18 @@ PARALLEL_UPDATES = 1
 class SofarSwitchEntityDescription(SwitchEntityDescription, SofarEntityDescription):
     """Describe a Sofar switch entity."""
 
+    write_fn: Callable[[SofarInverter, bool], Awaitable[None]]
+
 
 SWITCH_DESCRIPTIONS: tuple[SofarSwitchEntityDescription, ...] = (
     SofarSwitchEntityDescription(
         key="remote_switch_on_off",
         component="remote",
-        translation_key="remote_switch_on_off",
+        translation_key="remote_switch",
+        write_fn=lambda device, value: device.remote.write(
+            "remote_switch_on_off",
+            RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF,
+        ),
     ),
 )
 
@@ -57,18 +65,17 @@ class SofarSwitch(SofarEntity, SwitchEntity):
         value = getattr(component, self.entity_description.key)
         return None if value is None else bool(value)
 
-    async def _async_write(self, value: RemoteSwitchOnOff) -> None:
+    async def _async_write(self, value: bool) -> None:
         """Write the switch state to the device."""
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        await component.write(self.entity_description.key, value)
+        await self.entity_description.write_fn(self.coordinator.device, value)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote switch on."""
-        await self._async_write(RemoteSwitchOnOff.ON)
+        await self._async_write(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote switch off."""
-        await self._async_write(RemoteSwitchOnOff.OFF)
+        await self._async_write(False)

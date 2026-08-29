@@ -504,7 +504,7 @@
       }
     },
     "switch": {
-      "remote_switch_on_off": {
+      "remote_switch": {
         "name": "Remote switch"
       }
     }

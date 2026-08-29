@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'remote_switch_on_off',
+    'translation_key': 'remote_switch',
     'unique_id': 'SS2ES104N5S445_remote_switch_on_off',
     'unit_of_measurement': None,
   })
