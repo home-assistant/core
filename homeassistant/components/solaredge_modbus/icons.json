@@ -31,6 +31,26 @@
         "default": "mdi:transmission-tower-export"
       }
     },
+    "select": {
+      "export_control_limit_type": {
+        "default": "mdi:scale-balance"
+      },
+      "export_control_mode": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "storage_ac_charge_policy": {
+        "default": "mdi:battery-charging"
+      },
+      "storage_command_mode": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "storage_control_mode": {
+        "default": "mdi:battery-sync"
+      },
+      "storage_default_mode": {
+        "default": "mdi:battery-sync-outline"
+      }
+    },
     "sensor": {
       "battery_status": {
         "default": "mdi:home-battery"
