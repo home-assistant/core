@@ -55,92 +55,98 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_receiver() -> Generator[MagicMock]:
-    """Return a mocked Lyngdorf receiver."""
+def mock_create_receiver() -> Generator[MagicMock]:
+    """Return a mocked create_receiver factory."""
     with patch("homeassistant.components.lyngdorf.create_receiver") as create_mock:
-        receiver = MagicMock(spec=LyngdorfReceiver)
-        receiver.name = "Mock Lyngdorf"
-        receiver.connected = True
-        receiver.has_remote_keys = True
-        receiver.available_remote_keys = frozenset(
-            {
-                RemoteKey.UP,
-                RemoteKey.DOWN,
-                RemoteKey.ENTER,
-                RemoteKey.MENU,
-                RemoteKey.DIGIT_0,
-            }
-        )
+        yield create_mock
 
-        # Diagnostics reports the whole receiver, so every property it reads
-        # needs a value here; an unset one is a mock the response cannot encode.
-        receiver.model = LyngdorfModel.MP_60
-        receiver.max_volume = 0.0
-        receiver.room_perfect_position = "Focus 1"
-        receiver.available_room_perfect_positions = ["Global", "Focus 1"]
-        receiver.voicing = "Neutral"
-        receiver.available_voicings = ["Neutral", "Music", "Movie"]
-        receiver.lipsync = None
-        receiver.lipsync_range = NumericRange(0, 500, 1)
-        for _t in ("bass", "treble"):
-            setattr(receiver, f"trim_{_t}", None)
-            setattr(receiver, f"trim_{_t}_range", NumericRange(-12.0, 12.0, 0.1))
-        for _t in ("centre", "height", "lfe", "surround"):
-            setattr(receiver, f"trim_{_t}", None)
-            setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
 
-        receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
-        receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
+@pytest.fixture
+def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
+    """Return a mocked Lyngdorf receiver."""
+    receiver = MagicMock(spec=LyngdorfReceiver)
+    receiver.name = "Mock Lyngdorf"
+    receiver.connected = True
+    receiver.has_remote_keys = True
+    receiver.available_remote_keys = frozenset(
+        {
+            RemoteKey.UP,
+            RemoteKey.DOWN,
+            RemoteKey.ENTER,
+            RemoteKey.MENU,
+            RemoteKey.DIGIT_0,
+        }
+    )
 
-        receiver.power_on = False
-        receiver.volume = -40.0
-        receiver.mute_enabled = False
-        receiver.source = None
-        receiver.available_sources = []
-        receiver.sound_mode = None
-        receiver.available_sound_modes = []
+    # Diagnostics reports the whole receiver, so every property it reads
+    # needs a value here; an unset one is a mock the response cannot encode.
+    receiver.model = LyngdorfModel.MP_60
+    receiver.max_volume = 0.0
+    receiver.room_perfect_position = "Focus 1"
+    receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+    receiver.voicing = "Neutral"
+    receiver.available_voicings = ["Neutral", "Music", "Movie"]
+    receiver.lipsync = None
+    receiver.lipsync_range = NumericRange(0, 500, 1)
+    for _t in ("bass", "treble"):
+        setattr(receiver, f"trim_{_t}", None)
+        setattr(receiver, f"trim_{_t}_range", NumericRange(-12.0, 12.0, 0.1))
+    for _t in ("centre", "height", "lfe", "surround"):
+        setattr(receiver, f"trim_{_t}", None)
+        setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
 
-        receiver.audio_information = "Stereo"
-        receiver.video_information = "4K HDR"
-        receiver.audio_input = "optical"
-        receiver.video_input = "hdmi"
-        receiver.streaming_source = "AirPlay"
-        receiver.available_audio_inputs = ["optical", "aux"]
-        receiver.available_video_inputs = ["hdmi"]
-        receiver.available_stream_types = ["AirPlay", "DLNA"]
+    receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
+    receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
 
-        receiver.now_playing = None
-        receiver.has_position = False
-        receiver.position_ms = None
-        receiver.position_updated_at = None
-        receiver.shuffle = None
-        receiver.repeat = None
-        receiver.can_shuffle = False
-        receiver.available_repeat_modes = frozenset()
+    receiver.power_on = False
+    receiver.volume = -40.0
+    receiver.mute_enabled = False
+    receiver.source = None
+    receiver.available_sources = []
+    receiver.sound_mode = None
+    receiver.available_sound_modes = []
 
-        receiver.lipsync = 50
-        receiver.lipsync_range = NumericRange(0, 500, 1)
-        receiver.trim_bass = 3.0
-        receiver.trim_treble = 0.0
-        receiver.trim_centre = 0.0
-        receiver.trim_height = 4.0
-        receiver.trim_lfe = 3.0
-        receiver.trim_surround = 0.0
-        receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
-        receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
-        for _trim in ("centre", "height", "lfe", "surround"):
-            setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
+    receiver.audio_information = "Stereo"
+    receiver.video_information = "4K HDR"
+    receiver.audio_input = "optical"
+    receiver.video_input = "hdmi"
+    receiver.streaming_source = "AirPlay"
+    receiver.available_audio_inputs = ["optical", "aux"]
+    receiver.available_video_inputs = ["hdmi"]
+    receiver.available_stream_types = ["AirPlay", "DLNA"]
 
-        receiver.zone_b_power_on = False
-        receiver.zone_b_volume = -40.0
-        receiver.zone_b_mute_enabled = False
-        receiver.zone_b_source = None
-        receiver.zone_b_available_sources = []
-        receiver.zone_b_audio_input = "aux"
-        receiver.zone_b_streaming_source = "DLNA"
+    receiver.now_playing = None
+    receiver.has_position = False
+    receiver.position_ms = None
+    receiver.position_updated_at = None
+    receiver.shuffle = None
+    receiver.repeat = None
+    receiver.can_shuffle = False
+    receiver.available_repeat_modes = frozenset()
 
-        create_mock.return_value = receiver
-        yield receiver
+    receiver.lipsync = 50
+    receiver.lipsync_range = NumericRange(0, 500, 1)
+    receiver.trim_bass = 3.0
+    receiver.trim_treble = 0.0
+    receiver.trim_centre = 0.0
+    receiver.trim_height = 4.0
+    receiver.trim_lfe = 3.0
+    receiver.trim_surround = 0.0
+    receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
+    receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
+    for _trim in ("centre", "height", "lfe", "surround"):
+        setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
+
+    receiver.zone_b_power_on = False
+    receiver.zone_b_volume = -40.0
+    receiver.zone_b_mute_enabled = False
+    receiver.zone_b_source = None
+    receiver.zone_b_available_sources = []
+    receiver.zone_b_audio_input = "aux"
+    receiver.zone_b_streaming_source = "DLNA"
+
+    mock_create_receiver.return_value = receiver
+    return receiver
 
 
 @pytest.fixture
