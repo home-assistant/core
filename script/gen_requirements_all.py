@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.78.0
-grpcio-status==1.78.0
-grpcio-reflection==1.78.0
+grpcio==1.83.1
+grpcio-status==1.83.1
+grpcio-reflection==1.83.1
 
 # boto3 and botocore are shared requirements of multiple integrations,
 # with botocore also being a transitive dependency of aiobotocore, which
