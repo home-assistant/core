@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "inverter_status": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}
