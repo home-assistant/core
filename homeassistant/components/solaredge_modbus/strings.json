@@ -2,39 +2,69 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ev_charger": "[%key:component::solaredge_modbus::config::error::ev_charger%]",
+      "no_serial_number": "[%key:component::solaredge_modbus::config::error::no_serial_number%]",
+      "no_solaredge_device": "[%key:component::solaredge_modbus::config::error::no_solaredge_device%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The device at that address and device ID is a different inverter than the one this entry is set up for."
+      "wrong_device": "The inverter answering on that connection and device ID is a different one than this entry is set up for."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ev_charger": "That device is a SolarEdge EV charger. It answers as an inverter, but serves no measurements over Modbus.",
       "no_serial_number": "The inverter did not report a serial number, which is needed to identify it.",
-      "no_solaredge_device": "The device at that address and device ID does not answer as a SolarEdge inverter."
+      "no_solaredge_device": "No SolarEdge inverter answers on that connection and device ID."
     },
     "step": {
       "reconfigure": {
         "data": {
+          "baudrate": "[%key:component::solaredge_modbus::config::step::serial::data::baudrate%]",
+          "device": "[%key:component::solaredge_modbus::config::step::serial::data::device%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "[%key:component::solaredge_modbus::config::step::user::data_description::host%]",
-          "port": "[%key:component::solaredge_modbus::config::step::user::data_description::port%]"
+          "baudrate": "[%key:component::solaredge_modbus::config::step::serial::data_description::baudrate%]",
+          "device": "[%key:component::solaredge_modbus::config::step::serial::data_description::device%]",
+          "host": "[%key:component::solaredge_modbus::config::step::tcp::data_description::host%]",
+          "port": "[%key:component::solaredge_modbus::config::step::tcp::data_description::port%]"
         },
-        "description": "Update how this inverter is reached, for example after it moved to another address or its device ID changed.",
+        "description": "Update how this inverter is reached, for example after it moved to another address or its bus was rewired.",
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data::unit_id%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
-              "unit_id": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::data_description::unit_id%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
             },
-            "name": "[%key:component::solaredge_modbus::config::step::user::sections::more_options::name%]"
+            "name": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::name%]"
           }
         }
       },
-      "user": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port"
+        },
+        "data_description": {
+          "baudrate": "The baud rate of the RS485 bus, as configured on the inverter. The SolarEdge default is 115200.",
+          "device": "The serial port the inverter's RS485 bus is wired to."
+        },
+        "description": "Set up an inverter wired to this machine over RS485.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
+            },
+            "name": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::name%]"
+          }
+        }
+      },
+      "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -43,7 +73,7 @@
           "host": "The hostname or IP address of your SolarEdge inverter. Modbus TCP has to be enabled on the inverter first, in the installer settings.",
           "port": "The TCP port the inverter listens on for Modbus requests. The SolarEdge default is 1502."
         },
-        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "description": "Set up an inverter reached over the network.",
         "sections": {
           "more_options": {
             "data": {
@@ -55,6 +85,17 @@
             "name": "More options"
           }
         }
+      },
+      "user": {
+        "description": "Connect to your SolarEdge inverter over Modbus to monitor your solar energy production locally.",
+        "menu_options": {
+          "serial": "Serial (RS485)",
+          "tcp": "Network (Modbus TCP)"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} at {host}?",
+        "title": "Discovered SolarEdge inverter"
       }
     }
   },
@@ -78,6 +119,30 @@
       "dc_voltage": {
         "name": "DC voltage"
       },
+      "energy_exported": {
+        "name": "Energy exported"
+      },
+      "energy_exported_phase_a": {
+        "name": "Energy exported phase A"
+      },
+      "energy_exported_phase_b": {
+        "name": "Energy exported phase B"
+      },
+      "energy_exported_phase_c": {
+        "name": "Energy exported phase C"
+      },
+      "energy_imported": {
+        "name": "Energy imported"
+      },
+      "energy_imported_phase_a": {
+        "name": "Energy imported phase A"
+      },
+      "energy_imported_phase_b": {
+        "name": "Energy imported phase B"
+      },
+      "energy_imported_phase_c": {
+        "name": "Energy imported phase C"
+      },
       "inverter_status": {
         "name": "Status",
         "state": {
@@ -91,8 +156,14 @@
           "throttled": "Throttled"
         }
       },
-      "vendor_status": {
-        "name": "Vendor status"
+      "power_phase_a": {
+        "name": "Power phase A"
+      },
+      "power_phase_b": {
+        "name": "Power phase B"
+      },
+      "power_phase_c": {
+        "name": "Power phase C"
       },
       "voltage_phase_ab": {
         "name": "Voltage phase A-B"
@@ -131,7 +202,7 @@
       "message": "The configured Modbus device does not answer as a SolarEdge inverter."
     },
     "wrong_inverter": {
-      "message": "The device at this address is a different inverter than the one this entry was set up for. Reconfigure the entry to point at the right device."
+      "message": "A different inverter is answering than the one this entry was set up for. Reconfigure the entry to point at the right device."
     }
   }
 }

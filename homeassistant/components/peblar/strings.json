@@ -206,6 +206,9 @@
     "communication_error": {
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
     },
+    "no_autocharge_hardware": {
+      "message": "{charger} has no power line communication hardware, so it cannot use autocharge."
+    },
     "no_rfid_hardware": {
       "message": "{charger} has no RFID reader, so it has no standalone authorization list."
     },
@@ -232,6 +235,24 @@
       },
       "name": "Add RFID token"
     },
+    "add_vehicle_token": {
+      "description": "Adds a vehicle to the charger's autocharge list, so it is authorized to charge as soon as it is plugged in.",
+      "fields": {
+        "alias": {
+          "description": "A human-readable label for this vehicle.",
+          "name": "Alias"
+        },
+        "config_entry_id": {
+          "description": "The Peblar EV charger to add the vehicle to.",
+          "name": "Peblar EV charger"
+        },
+        "evcc_id": {
+          "description": "The identifier the vehicle presents to the charger.",
+          "name": "EVCC ID"
+        }
+      },
+      "name": "Add autocharge vehicle"
+    },
     "delete_rfid_token": {
       "description": "Deletes an RFID token from the charger's standalone authorization list.",
       "fields": {
@@ -246,6 +267,20 @@
       },
       "name": "Delete RFID token"
     },
+    "delete_vehicle_token": {
+      "description": "Deletes a vehicle from the charger's autocharge list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to delete the vehicle from.",
+          "name": "Peblar EV charger"
+        },
+        "evcc_id": {
+          "description": "The identifier of the vehicle to delete.",
+          "name": "EVCC ID"
+        }
+      },
+      "name": "Delete autocharge vehicle"
+    },
     "list_rfid_tokens": {
       "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
       "fields": {
@@ -255,6 +290,16 @@
         }
       },
       "name": "List RFID tokens"
+    },
+    "list_vehicle_tokens": {
+      "description": "Returns the vehicles configured in the charger's autocharge list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to list autocharge vehicles for.",
+          "name": "Peblar EV charger"
+        }
+      },
+      "name": "List autocharge vehicles"
     }
   }
 }

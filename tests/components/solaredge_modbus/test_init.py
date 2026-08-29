@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError, ServerDeviceFailureError
+from modbus_connection import (
+    IllegalDataAddressError,
+    ModbusTimeoutError,
+    ServerDeviceFailureError,
+)
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
@@ -14,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import SERIAL_NUMBER, async_seed_unit, tcp_data
+from .conftest import METER_SERIAL_NUMBER, SERIAL_NUMBER, async_seed_unit, tcp_data
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -65,6 +69,185 @@ async def test_inverter_that_does_not_name_itself(
     assert inverter.name == "SolarEdge inverter"
     assert inverter.model is None
     assert inverter.model_id is None
+
+
+async def test_meter_is_a_sub_device_of_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A meter is real hardware of its own, hanging off the inverter."""
+    await _setup(hass, mock_config_entry)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert inverter is not None
+
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}"),
+        mock_config_entry.entry_id,
+    )
+    assert meter is not None
+    assert meter.via_device_id == inverter.id
+    assert meter.name == "Meter 1"
+    assert meter.model_id == "SE-MTR-3Y-400V-A"
+    assert meter.serial_number == METER_SERIAL_NUMBER
+
+
+async def test_meter_without_a_serial_number_is_known_by_its_slot(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Not every meter names itself, and then its place on the inverter does.
+
+    The fallback says which slot it is rather than just the number, so it
+    cannot be read as a serial number that happens to be short.
+    """
+    mock_modbus_unit.holding.update(dict.fromkeys(range(40171, 40187), 0))
+
+    await _setup(hass, mock_config_entry)
+
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_meter_slot_1"), mock_config_entry.entry_id
+    )
+    assert meter is not None
+    assert meter.serial_number is None
+
+
+async def test_meter_that_left_the_installation_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter taken off the inverter does not linger as a device.
+
+    Which meters are attached is read while the entry is set up, so a meter
+    that was removed is gone by the time the entry loads again.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter_identifier = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(40188, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_setup_retry_when_a_meter_is_unreadable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter that answers the probe but not the poll holds up setup.
+
+    Which sensors a meter offers is decided from its DID, once, so an entry
+    accepted without it would be missing its phase measurements until a reload.
+    """
+    mock_modbus_unit.fail_read(40190, ServerDeviceFailureError())
+
+    await _setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_meter_that_did_not_answer_the_probe_is_kept(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Silence while probing is not proof that a meter is gone.
+
+    The library takes a block that does not answer for absent, which keeps the
+    rest of the device usable. Removing the device on that would throw away a
+    meter's history over a single timeout.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter_identifier = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(40188, ModbusTimeoutError("timed out"))
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter_identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_replaced_meter_is_a_new_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Another meter in the same place is another device.
+
+    Its counters start where the old meter's did not, and reusing the device
+    would hold the new readings against the old meter's totals.
+    """
+    await _setup(hass, mock_config_entry)
+
+    replacement = "7E5B22D3"
+    padded = replacement.ljust(32, "\0").encode()
+    mock_modbus_unit.holding.update(
+        {
+            40171 + index: (padded[index * 2] << 8) | padded[index * 2 + 1]
+            for index in range(16)
+        }
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}"),
+            mock_config_entry.entry_id,
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{replacement}"),
+            mock_config_entry.entry_id,
+        )
+        is not None
+    )
 
 
 async def test_single_late_answer_is_retried(

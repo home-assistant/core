@@ -7,6 +7,7 @@ from peblar import ChargeLimiter, CPState
 
 DOMAIN: Final = "peblar"
 
+CONF_EVCC_ID: Final = "evcc_id"
 CONF_UID: Final = "uid"
 
 LOGGER = logging.getLogger(__package__)
