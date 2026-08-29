@@ -318,7 +318,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         assert self._energy_site is not None
         try:
-            # Not revoked on removal by design; see the class docstring.
+            # Keep the gateway authorization when the subentry is removed.
             LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
             await self._energy_site.add_authorized_client(
                 self._public_key_der,
