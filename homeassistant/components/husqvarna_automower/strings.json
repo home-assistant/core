@@ -33,6 +33,11 @@
       }
     }
   },
+  "device": {
+    "my_lawn": {
+      "name": "My lawn"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "leaving_dock": {
