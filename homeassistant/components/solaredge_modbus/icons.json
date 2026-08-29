@@ -1,8 +1,14 @@
 {
   "entity": {
     "sensor": {
+      "battery_status": {
+        "default": "mdi:home-battery"
+      },
       "inverter_status": {
         "default": "mdi:solar-power"
+      },
+      "state_of_health": {
+        "default": "mdi:battery-heart-variant"
       }
     }
   }
