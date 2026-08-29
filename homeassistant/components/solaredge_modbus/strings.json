@@ -101,6 +101,20 @@
   },
   "entity": {
     "sensor": {
+      "battery_status": {
+        "name": "Status",
+        "state": {
+          "charge": "Charging",
+          "discharge": "Discharging",
+          "fault": "Fault",
+          "idle": "[%key:common::state::idle%]",
+          "init": "Initializing",
+          "off": "[%key:common::state::off%]",
+          "power_saving": "Power saving",
+          "preserve_charge": "Preserving charge",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "current_phase_a": {
         "name": "Current phase A"
       },
@@ -118,6 +132,9 @@
       },
       "dc_voltage": {
         "name": "DC voltage"
+      },
+      "energy_available": {
+        "name": "Available energy"
       },
       "energy_exported": {
         "name": "Energy exported"
@@ -143,6 +160,9 @@
       "energy_imported_phase_c": {
         "name": "Energy imported phase C"
       },
+      "energy_max": {
+        "name": "Usable capacity"
+      },
       "inverter_status": {
         "name": "Status",
         "state": {
@@ -156,6 +176,18 @@
           "throttled": "Throttled"
         }
       },
+      "max_charge_peak_power": {
+        "name": "Maximum charge peak power"
+      },
+      "max_charge_power": {
+        "name": "Maximum charge power"
+      },
+      "max_discharge_peak_power": {
+        "name": "Maximum discharge peak power"
+      },
+      "max_discharge_power": {
+        "name": "Maximum discharge power"
+      },
       "power_phase_a": {
         "name": "Power phase A"
       },
@@ -164,6 +196,18 @@
       },
       "power_phase_c": {
         "name": "Power phase C"
+      },
+      "rated_energy": {
+        "name": "Rated energy"
+      },
+      "state_of_energy": {
+        "name": "State of energy"
+      },
+      "state_of_health": {
+        "name": "State of health"
+      },
+      "temperature_max": {
+        "name": "Maximum temperature"
       },
       "voltage_phase_ab": {
         "name": "Voltage phase A-B"
