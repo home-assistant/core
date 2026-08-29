@@ -28,6 +28,7 @@ async def test_load_unload_config_entry(
 
     assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_tailscale.close.assert_called_once()
 
 
 async def test_config_entry_not_ready(
@@ -44,6 +45,7 @@ async def test_config_entry_not_ready(
 
     assert len(mock_tailscale.devices.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_tailscale.close.assert_called_once()
 
 
 async def test_config_entry_authentication_failed(
@@ -71,3 +73,24 @@ async def test_config_entry_authentication_failed(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_api_key_entry_triggers_migration_reauth(
+    hass: HomeAssistant,
+    mock_config_entry_api_key: MockConfigEntry,
+) -> None:
+    """Test a legacy API access token entry is migrated to OAuth via reauth."""
+    mock_config_entry_api_key.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_api_key.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_api_key.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry_api_key.entry_id
