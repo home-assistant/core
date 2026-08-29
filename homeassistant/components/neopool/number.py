@@ -1,8 +1,6 @@
 """Number platform for the NeoPool integration."""
 
-import asyncio
-from collections.abc import Callable
-from contextlib import suppress
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any, override
@@ -33,6 +31,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_USE_COVER_SENSOR
@@ -42,6 +41,9 @@ from .entity import NeoPoolEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+# Debounce stepper clicks so only the final value hits the device's EEPROM.
+DEBOUNCE_COOLDOWN = 2.0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,7 +61,6 @@ class NeoPoolNumberEntityDescription(NumberEntityDescription):
     data_key: str | None = None
     scale: float = 1.0
     supported_fn: Callable[[dict[str, Any]], bool] | None = None
-    precision_fn: Callable[[dict[str, Any]], int | None] | None = None
     unit_fn: Callable[[dict[str, Any]], str | None] | None = None
     max_fn: Callable[[dict[str, Any]], float | None] | None = None
     step_fn: Callable[[dict[str, Any]], float | None] | None = None
@@ -83,11 +84,6 @@ def _support_ph_min(data: dict[str, Any]) -> bool:
         "MBF_PAR_PH_BASE_RELAY_GPIO" not in data
         or is_valid_relay_gpio(data["MBF_PAR_PH_BASE_RELAY_GPIO"] or 0)
     )
-
-
-def _hidro_precision(data: dict[str, Any]) -> int:
-    """0 decimals in percent mode, 1 decimal in g/h mode."""
-    return 0 if is_hydrolysis_in_percent(data) else 1
 
 
 def _hidro_unit(data: dict[str, Any]) -> str:
@@ -118,7 +114,6 @@ NUMBER_DESCRIPTIONS: dict[str, NeoPoolNumberEntityDescription] = {
         scale=10.0,
         entity_category=EntityCategory.CONFIG,
         supported_fn=is_hydrolysis_present,
-        precision_fn=_hidro_precision,
         unit_fn=_hidro_unit,
         max_fn=_hidro_max,
         step_fn=_hidro_step,
@@ -184,7 +179,6 @@ NUMBER_DESCRIPTIONS: dict[str, NeoPoolNumberEntityDescription] = {
         scale=1.0,
         entity_category=EntityCategory.CONFIG,
         supported_fn=_support_heating_temp,
-        precision_fn=lambda data: 0,
     ),
     "MBF_PAR_SMART_TEMP_HIGH": NeoPoolNumberEntityDescription(
         key="MBF_PAR_SMART_TEMP_HIGH",
@@ -291,9 +285,8 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
 
-        self._pending_write_task: asyncio.Task[None] | None = None
+        self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._pending_value: float | None = None
-        self._debounce_delay = 2.0
 
     def _decode_raw(self) -> float | None:
         """Decode the current coordinator-data value for this entity."""
@@ -307,41 +300,43 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         """Run when the entity is added to hass."""
         await super().async_added_to_hass()
 
-        val = self._decode_raw()
-        self._attr_native_value = (
-            round(val, 2) if isinstance(val, (int, float)) else None
+        self._debouncer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=DEBOUNCE_COOLDOWN,
+            immediate=False,
+            function=self._async_write_pending,
         )
+
+        val = self._decode_raw()
+        self._attr_native_value = float(val) if isinstance(val, (int, float)) else None
 
         self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel and await any pending debounced write when removed."""
-        if self._pending_write_task is not None and not self._pending_write_task.done():
-            self._pending_write_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await self._pending_write_task
+        """Shut down the write debouncer when removed."""
+        if self._debouncer is not None:
+            self._debouncer.async_shutdown()
         await super().async_will_remove_from_hass()
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the number entity."""
         self._pending_value = value
-        if self._pending_write_task is not None and not self._pending_write_task.done():
-            self._pending_write_task.cancel()
-        self._pending_write_task = asyncio.create_task(self._debounced_write())
         # Show the pending value optimistically. Write happens after debounce.
         self.async_write_ha_state()
+        assert self._debouncer is not None
+        await self._debouncer.async_call()
 
-    async def _debounced_write(self) -> None:
-        """Debounced write via the appropriate lib high-level API."""
-        task = asyncio.current_task()
+    async def _async_write_pending(self) -> None:
+        """Write the pending value via the appropriate lib high-level API."""
+        if (pending := self._pending_value) is None:
+            return
         client = self.coordinator.client
         desc = self.entity_description
+        raw = round(pending * desc.scale)
         try:
-            await asyncio.sleep(self._debounce_delay)
-            pending = self._pending_value or 0
-            raw = round(pending * desc.scale)
             if desc.setpoint is not None:
                 await client.async_set_setpoint(desc.setpoint, raw)
                 # Merge the decoded value; native_value reads it back verbatim.
@@ -354,26 +349,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     )
             else:  # pragma: no cover - description validated upstream
                 return
-            self.coordinator.async_set_updated_data(
-                {**self.coordinator.data, **overrides}
-            )
-            self.coordinator.request_refresh_with_followup()
-        except asyncio.CancelledError:
-            pass
         except (NeoPoolError, OSError, TimeoutError) as err:
             # Background write: log and drop; the next poll restores state.
             _LOGGER.warning("Failed to write %s: %s", self.entity_description.key, err)
-        finally:
-            # Clear the pending value only if a newer write has not superseded us.
-            if self._pending_write_task is task:
-                self._pending_value = None
-
-    @property
-    def suggested_display_precision(self) -> int | None:
-        """Return the suggested display precision for the number value."""
-        if (precision_fn := self.entity_description.precision_fn) is not None:
-            return precision_fn(self.coordinator.data)
-        return None
+            return
+        self._pending_value = None
+        self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
+        self.coordinator.request_refresh_with_followup()
 
     @property
     @override
@@ -381,18 +363,12 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         """Return the actual number value."""
         # While a debounced write is pending, surface the requested value so the
         # UI reflects it optimistically instead of the stale coordinator value.
-        if (
-            self._pending_write_task is not None
-            and not self._pending_write_task.done()
-            and self._pending_value is not None
-        ):
+        if self._pending_value is not None:
             return self._pending_value
         raw = self._decode_raw()
-        if self.suggested_display_precision == 0 and raw is not None:
-            return float(round(raw))
         if raw is None:
             return self._attr_native_value
-        return round(float(raw), 2)
+        return float(raw)
 
     @property
     @override

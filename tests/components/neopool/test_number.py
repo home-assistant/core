@@ -16,14 +16,17 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import PERCENTAGE, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform as ep, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+# Longer than the entity's debounce cooldown so a single tick flushes the write.
+FLUSH = timedelta(seconds=5)
 
 
 def _number_entity_id(
@@ -55,36 +58,31 @@ async def _set_value(hass: HomeAssistant, entity_id: str, value: float) -> None:
     )
 
 
-def _disable_debounce(hass: HomeAssistant) -> None:
-    """Set ``_debounce_delay = 0`` on every number entity so writes run at once."""
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if ent.entity_id.startswith("number."):
-                ent._debounce_delay = 0
+async def _flush(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance past the debounce cooldown and let the pending write run."""
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def _flush_debounce(hass: HomeAssistant, entity_obj) -> None:
-    """Wait for the entity's pending debounced write task to complete."""
-    task = getattr(entity_obj, "_pending_write_task", None)
-    if task is None:
-        return
-    await asyncio.wait_for(task, timeout=1)
+async def _poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MagicMock,
+    data: dict[str, Any],
+) -> None:
+    """Push a coordinator poll returning ``data``."""
+    mock_client.async_read_all.return_value = data
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-
-def _entity_by_id(hass: HomeAssistant, entity_id: str):
-    """Return the loaded entity object for a given entity_id."""
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if ent.entity_id == entity_id:
-                return ent
-    return None
 
 
 async def test_simple_number_writes_register_after_debounce(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Setting a numeric value dispatches to the correct lib high-level API.
 
@@ -97,15 +95,12 @@ async def test_simple_number_writes_register_after_debounce(
     )
 
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
     mock_neopool_client.async_set_setpoint.reset_mock()
 
     await _set_value(hass, ph1_entity_id, 7.5)
-
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-    await _flush_debounce(hass, ph1_obj)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 750
@@ -117,9 +112,7 @@ async def test_simple_number_writes_register_after_debounce(
     mock_neopool_client.async_set_setpoint.reset_mock()
 
     await _set_value(hass, smart_entity_id, 30.0)
-
-    smart_obj = _entity_by_id(hass, smart_entity_id)
-    await _flush_debounce(hass, smart_obj)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.SMART_TEMP_HIGH, 30
@@ -130,29 +123,27 @@ async def test_scaled_setpoint_optimistic_value_is_ui_scaled(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Optimistic native_value after a scaled setpoint write is UI-scaled.
+    """Optimistic state after a scaled setpoint write is UI-scaled.
 
-    The lib override carries the raw register value (7.5 pH -> 750), but
-    native_value must read back the decoded value. Regression guard: the
-    merged optimistic value must surface as 7.5, not 750. The refresh poll
-    is stubbed out so it cannot mask the merge.
+    The lib override carries the raw register value (7.5 pH -> 750), but the
+    entity state must read back the decoded value. Regression guard: the merged
+    optimistic value must surface as 7.5, not 750.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
     )
 
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
+    await _set_value(hass, ph1_entity_id, 7.5)
+    await _flush(hass, freezer)
 
-    with patch.object(ph1_obj.coordinator, "async_request_refresh", AsyncMock()):
-        await _set_value(hass, ph1_entity_id, 7.5)
-        await _flush_debounce(hass, ph1_obj)
-
-    assert ph1_obj.native_value == 7.5
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.5
 
 
 async def test_pending_value_shown_optimistically_before_write(
@@ -160,11 +151,11 @@ async def test_pending_value_shown_optimistically_before_write(
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """native_value surfaces the pending value while the debounce is in flight.
+    """State surfaces the requested value while the debounce is in flight.
 
     Until the debounced write merges the override, the coordinator still holds
     the old register. The entity must report the requested value optimistically
-    so the UI does not snap back to the stale reading.
+    so the UI does not snap back to the stale reading before the cooldown fires.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
@@ -172,24 +163,21 @@ async def test_pending_value_shown_optimistically_before_write(
     await setup_integration(hass, mock_config_entry_number)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-    ph1_obj._debounce_delay = 5.0
 
-    await ph1_obj.async_set_native_value(7.5)
-    task = ph1_obj._pending_write_task
-    assert task is not None and not task.done()
+    await _set_value(hass, ph1_entity_id, 7.5)
 
-    assert ph1_obj.native_value == 7.5
+    # No flush: the cooldown has not elapsed, so no write yet.
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.5
     mock_neopool_client.async_set_setpoint.assert_not_awaited()
-
-    task.cancel()
-    await hass.async_block_till_done()
 
 
 async def test_scaled_write_rounds_to_nearest_register_int(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """The scaled register value is rounded, not truncated.
 
@@ -200,211 +188,142 @@ async def test_scaled_write_rounds_to_nearest_register_int(
         return_value={"MBF_PAR_PH1": 410}
     )
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-
     mock_neopool_client.async_set_setpoint.reset_mock()
+
     await _set_value(hass, ph1_entity_id, 4.1)
-    await _flush_debounce(hass, ph1_obj)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 410
     )
 
 
-async def test_heating_setpoint_mirrors_to_intelligent(
+async def test_heating_setpoint_writes_via_high_level_api(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Writing the heating setpoint delegates to async_set_setpoint(HEATING).
 
     Since lib v4 the number entity no longer talks to ``async_set_temp_setpoint``;
     the high-level ``async_set_setpoint`` API owns the write and returns the
-    optimistic-update dict the coordinator merges in. The heating<->intelligent
-    mirror lives in the coordinator's ``_sync_heating_intelligent_setpoints``
-    and fires on the *next* refresh cycle, not from the entity itself.
+    optimistic-update dict the coordinator merges in.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_HEATING_TEMP": 28}
     )
 
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
     entity_id = _number_entity_id(
         hass, mock_config_entry_number, "mbf_par_heating_temp"
     )
-
     mock_neopool_client.async_set_setpoint.reset_mock()
-    await _set_value(hass, entity_id, 28.0)
 
-    entity_obj = _entity_by_id(hass, entity_id)
-    await _flush_debounce(hass, entity_obj)
+    await _set_value(hass, entity_id, 28.0)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.HEATING, 28
     )
 
 
-async def test_number_native_value_returns_rounded_raw(
+async def test_number_state_returns_raw_register_value(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """native_value returns round(raw, 2) when coordinator has the register."""
+    """The entity state reflects the register value the coordinator holds."""
     await setup_integration(hass, mock_config_entry_number)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_PH1": 7.55,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _poll(
+        hass, freezer, mock_neopool_client, {**MOCK_POOL_DATA, "MBF_PAR_PH1": 7.55}
+    )
 
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("number.")
-                and getattr(ent, "_data_key", None) == "MBF_PAR_PH1"
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    if entity_obj is None:
-        pytest.skip("MBF_PAR_PH1 number entity not registered")
-    assert entity_obj.native_value == 7.55
-
-
-async def test_native_value_zero_precision_rounds_to_int(
-    hass: HomeAssistant,
-    mock_config_entry_number: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A zero-precision entity rounds its coordinator value to a whole number."""
-    await setup_integration(hass, mock_config_entry_number)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HEATING_TEMP": 27.6,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("number.")
-                and getattr(ent.entity_description, "key", None)
-                == "MBF_PAR_HEATING_TEMP"
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    if entity_obj is None:
-        pytest.skip("MBF_PAR_HEATING_TEMP number entity not registered")
-    assert entity_obj.suggested_display_precision == 0
-    assert entity_obj.native_value == 28.0
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.55
 
 
 @pytest.mark.parametrize(
-    ("visual_style", "expected_unit", "expected_step", "expected_precision"),
+    ("visual_style", "expected_unit", "expected_step"),
     [
-        pytest.param(0x4000, PERCENTAGE, 1.0, 0, id="percent"),
-        pytest.param(0x2000, "g/h", 0.1, 1, id="grh"),
+        pytest.param(0x4000, PERCENTAGE, "1.0", id="percent"),
+        pytest.param(0x2000, "g/h", "0.1", id="grh"),
     ],
 )
-async def test_hidro_native_value_units_follow_visual_style(
+async def test_hidro_units_follow_visual_style(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     visual_style: int,
     expected_unit: str,
-    expected_step: float,
-    expected_precision: int,
+    expected_step: str,
 ) -> None:
-    """MBF_PAR_HIDRO unit, step and precision follow the reported percent/g-h mode.
+    """MBF_PAR_HIDRO unit, step and max follow the reported percent/g-h mode.
 
     ``MBF_PAR_UICFG_MACH_VISUAL_STYLE`` forces percentage (0x4000) or g/h
-    (0x2000); the nominal (``MBF_PAR_HIDRO_NOM``) drives native_max_value in
-    both modes.
+    (0x2000); the nominal (``MBF_PAR_HIDRO_NOM``) drives the maximum in both
+    modes.
     """
     await setup_integration(hass, mock_config_entry_number)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HIDRO_NOM": 100,
-        "MBF_PAR_MODEL": 0x0002,
-        "MBF_PAR_UICFG_MACH_VISUAL_STYLE": visual_style,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _poll(
+        hass,
+        freezer,
+        mock_neopool_client,
+        {
+            **MOCK_POOL_DATA,
+            "MBF_PAR_HIDRO_NOM": 100,
+            "MBF_PAR_MODEL": 0x0002,
+            "MBF_PAR_UICFG_MACH_VISUAL_STYLE": visual_style,
+        },
+    )
 
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("number.")
-                and getattr(ent.entity_description, "key", None) == "MBF_PAR_HIDRO"
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    if entity_obj is None:
-        pytest.skip("MBF_PAR_HIDRO entity not registered on this fixture")
-    assert entity_obj.native_max_value == 100
-    assert entity_obj.native_unit_of_measurement == expected_unit
-    assert entity_obj.native_step == expected_step
-    assert entity_obj.suggested_display_precision == expected_precision
+    entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_hidro")
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert state.attributes["step"] == float(expected_step)
+    assert state.attributes["max"] == 100
 
 
-async def test_masked_number_native_value_decodes_via_mask_shift(
+async def test_masked_number_state_decodes_field(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that masked compound numbers decode via _mask/_shift.
+    """Masked compound numbers decode their field from the shared register.
 
-    HIDRO_COVER_REDUCTION / SHUTDOWN_TEMPERATURE share register 0x042D,
-    lower byte holds cover reduction %, upper byte the shutdown
-    temperature. native_value must isolate each via _mask/_shift.
+    HIDRO_COVER_REDUCTION / SHUTDOWN_TEMPERATURE share register 0x042D: the
+    lower byte holds cover reduction %, the upper byte the shutdown temperature.
+    Each entity's state must isolate its own field.
     """
     await setup_integration(hass, mock_config_entry_number)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _poll(
+        hass,
+        freezer,
+        mock_neopool_client,
+        {**MOCK_POOL_DATA, "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19},
+    )
 
-    cover, shutdown = None, None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            key = getattr(ent.entity_description, "key", None)
-            if not ent.entity_id.startswith("number."):
-                continue
-            if key == "MBF_PAR_HIDRO_COVER_REDUCTION":
-                cover = ent
-            elif key == "MBF_PAR_HIDRO_SHUTDOWN_TEMPERATURE":
-                shutdown = ent
-    if cover is None or shutdown is None:
-        pytest.skip("masked numbers not registered on this fixture")
-    assert cover.native_value == 25
-    assert shutdown.native_value == 12
+    cover_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_hidro_cover_reduction"
+    )
+    shutdown_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_hidro_shutdown_temperature"
+    )
+    cover = hass.states.get(cover_id)
+    shutdown = hass.states.get(shutdown_id)
+    assert cover is not None and float(cover.state) == 25
+    assert shutdown is not None and float(shutdown.state) == 12
 
 
-async def test_masked_number_write_preserves_other_byte(
+async def test_masked_number_write_passes_field_value(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
@@ -412,51 +331,36 @@ async def test_masked_number_write_preserves_other_byte(
 ) -> None:
     """Writing one masked number dispatches to async_set_masked_register.
 
-    The read-modify-write that keeps the sibling byte intact is now a lib
-    concern (``async_set_masked_register`` performs it internally). The
-    custom entity must therefore pass the *field value* (25 → 50), not the
-    packed 16-bit register, to the high-level API.
+    The read-modify-write that keeps the sibling byte intact is a lib concern
+    (``async_set_masked_register`` performs it internally). The entity passes
+    the *field value* (25 -> 50), not the packed 16-bit register.
     """
     mock_neopool_client.async_set_masked_register = AsyncMock(
         return_value={"MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C32}
     )
 
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _poll(
+        hass,
+        freezer,
+        mock_neopool_client,
+        {**MOCK_POOL_DATA, "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19},
+    )
 
-    cover_entity_id = None
-    cover_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("number.")
-                and getattr(ent.entity_description, "key", None)
-                == "MBF_PAR_HIDRO_COVER_REDUCTION"
-            ):
-                cover_entity_id = ent.entity_id
-                cover_obj = ent
-    if cover_entity_id is None:
-        pytest.skip("MBF_PAR_HIDRO_COVER_REDUCTION entity not registered")
-
+    cover_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_hidro_cover_reduction"
+    )
     mock_neopool_client.async_set_masked_register.reset_mock()
-    await _set_value(hass, cover_entity_id, 50)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C32,
-    }
-    await _flush_debounce(hass, cover_obj)
+
+    await _set_value(hass, cover_id, 50)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_masked_register.assert_awaited_once_with(
         MaskedFlag.HIDRO_COVER_REDUCTION_PERCENT, 50
     )
-    assert cover_obj.native_value == 50
+    state = hass.states.get(cover_id)
+    assert state is not None
+    assert float(state.state) == 50
 
 
 async def test_masked_writes_are_serialized(
@@ -486,32 +390,24 @@ async def test_masked_writes_are_serialized(
     mock_neopool_client.async_set_masked_register = AsyncMock(side_effect=_slow_masked)
 
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
-    }
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _poll(
+        hass,
+        freezer,
+        mock_neopool_client,
+        {**MOCK_POOL_DATA, "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19},
+    )
 
-    cover, shutdown = None, None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            key = getattr(ent.entity_description, "key", None)
-            if not ent.entity_id.startswith("number."):
-                continue
-            if key == "MBF_PAR_HIDRO_COVER_REDUCTION":
-                cover = ent
-            elif key == "MBF_PAR_HIDRO_SHUTDOWN_TEMPERATURE":
-                shutdown = ent
-    if cover is None or shutdown is None:
-        pytest.skip("masked numbers not registered on this fixture")
+    cover_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_hidro_cover_reduction"
+    )
+    shutdown_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_hidro_shutdown_temperature"
+    )
 
-    # Kick off both writes so their debounce tasks race the shared register.
-    await _set_value(hass, cover.entity_id, 50)
-    await _set_value(hass, shutdown.entity_id, 20)
-    await asyncio.gather(cover._pending_write_task, shutdown._pending_write_task)
+    # Queue both writes so their debounced flushes race the shared register.
+    await _set_value(hass, cover_id, 50)
+    await _set_value(hass, shutdown_id, 20)
+    await _flush(hass, freezer)
 
     assert not overlap
     assert mock_neopool_client.async_set_masked_register.await_count == 2
@@ -525,114 +421,75 @@ async def test_masked_writes_are_serialized(
         pytest.param(OSError("boom"), id="os-error"),
     ],
 )
-async def test_number_debounced_write_logs_communication_error(
+async def test_number_write_logs_communication_error(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     write_error: Exception,
 ) -> None:
     """Communication errors in the debounced write are logged, not raised.
 
-    The debounced write runs as a background task, so raising would surface
-    as an unhandled task exception. The next successful poll restores the
-    entity state.
+    The debounced write runs after the service call returns, so raising would
+    surface as an unhandled task exception. The next successful poll restores
+    the entity state.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=write_error)
     await setup_integration(hass, mock_config_entry_number)
-    _disable_debounce(hass)
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
 
     caplog.clear()
     await _set_value(hass, ph1_entity_id, 7.5)
-    await _flush_debounce(hass, ph1_obj)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once()
     assert "Failed to write" in caplog.text
 
 
-async def test_repeated_set_value_cancels_pending_task(
+async def test_repeated_set_value_writes_only_latest(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A second set_value cancels the first pending task; only the latest writes."""
+    """Two quick set_value calls debounce to a single write of the last value."""
     mock_neopool_client.async_set_setpoint = AsyncMock(
-        return_value={"MBF_PAR_PH1": 700}
+        return_value={"MBF_PAR_PH1": 750}
     )
     await setup_integration(hass, mock_config_entry_number)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-    ph1_obj._debounce_delay = 0.05
-
     mock_neopool_client.async_set_setpoint.reset_mock()
-    await ph1_obj.async_set_native_value(7.0)
-    first_task = ph1_obj._pending_write_task
-    await ph1_obj.async_set_native_value(7.5)
-    assert first_task is not None
-    await hass.async_block_till_done()
-    assert first_task.cancelled()
-    await _flush_debounce(hass, ph1_obj)
+
+    await _set_value(hass, ph1_entity_id, 7.0)
+    await _set_value(hass, ph1_entity_id, 7.5)
+    await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 750
     )
 
 
-async def test_pending_write_cancelled_on_remove(
+async def test_pending_write_dropped_on_remove(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Removing the entity cancels and awaits an in-flight debounced write."""
+    """Unloading the entry cancels an un-elapsed debounced write."""
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
     )
     await setup_integration(hass, mock_config_entry_number)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-    ph1_obj._debounce_delay = 5.0
+    await _set_value(hass, ph1_entity_id, 7.5)
 
-    await ph1_obj.async_set_native_value(7.5)
-    task = ph1_obj._pending_write_task
-    assert task is not None and not task.done()
+    # Unload before the cooldown elapses: the queued write must never fire.
+    await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
+    await _flush(hass, freezer)
 
-    await ph1_obj.async_will_remove_from_hass()
-    assert task.done()
-    mock_neopool_client.async_set_setpoint.assert_not_awaited()
-
-
-async def test_cancelled_debounce_swallows_cancelled_error(
-    hass: HomeAssistant,
-    mock_config_entry_number: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """Cancelling a write already inside the debounce sleep is swallowed cleanly.
-
-    The task must be running its ``asyncio.sleep`` when cancelled so the
-    ``except asyncio.CancelledError`` branch in ``_debounced_write`` handles it,
-    rather than the task being cancelled before its body starts.
-    """
-    mock_neopool_client.async_set_setpoint = AsyncMock(
-        return_value={"MBF_PAR_PH1": 750}
-    )
-    await setup_integration(hass, mock_config_entry_number)
-
-    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    ph1_obj = _entity_by_id(hass, ph1_entity_id)
-    ph1_obj._debounce_delay = 5.0
-
-    await ph1_obj.async_set_native_value(7.5)
-    task = ph1_obj._pending_write_task
-    assert task is not None
-    await asyncio.sleep(0)
-    task.cancel()
-    await hass.async_block_till_done()
-
-    assert task.done() and not task.cancelled()
     mock_neopool_client.async_set_setpoint.assert_not_awaited()
 
 
