@@ -328,22 +328,27 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.async_update_listeners()
 
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
-        """Handle changes on To-Do lists."""
-        if list_event.type == AmazonListEventType.DELETED:
-            self._todo_list_items.get(list_event.list_id, {}).pop(
-                list_event.item_id, None
-            )
-        elif (
-            list_event.type
-            in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
-        ) and list_event.items:
-            if list_event.list_id not in self._todo_list_items:
-                # List was newly created after initial sync
-                self._todo_list_items[list_event.list_id] = {}
+        """Handle changes on To-Do lists.
 
-            self._todo_list_items[list_event.list_id][list_event.item_id] = (
-                list_event.items
-            )
+        Takes the refresh lock, so an event arriving while a list is being
+        read back is applied on top of that read instead of under it.
+        """
+        async with self._todo_refresh_lock:
+            if list_event.type == AmazonListEventType.DELETED:
+                self._todo_list_items.get(list_event.list_id, {}).pop(
+                    list_event.item_id, None
+                )
+            elif (
+                list_event.type
+                in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
+            ) and list_event.items:
+                if list_event.list_id not in self._todo_list_items:
+                    # List was newly created after initial sync
+                    self._todo_list_items[list_event.list_id] = {}
+
+                self._todo_list_items[list_event.list_id][list_event.item_id] = (
+                    list_event.items
+                )
 
         self.async_update_listeners()
 
