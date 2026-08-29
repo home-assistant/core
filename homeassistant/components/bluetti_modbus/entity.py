@@ -22,14 +22,15 @@ def bluetti_modbus_device_info(
 ) -> DeviceInfo:
     """Return device information for a BLUETTI Modbus device.
 
-    serial is entry.unique_id, not a fresh register read: identifiers stay
-    keyed on entry_id (stable even for a model with no serial field), and
-    serial_number is set from whatever was confirmed at config-flow time -
-    the same value the device would otherwise be shown as a plain sensor.
+    serial is entry.unique_id, not a fresh register read - the same value
+    confirmed at config-flow time, before this device would otherwise be
+    shown as a plain sensor. Identity keys on it where the model reports one
+    (Balco260), falling back to entry_id only for a model with no serial
+    field over Modbus (EP2000).
     """
     model = device_name(device_type)
     return DeviceInfo(
-        identifiers={(DOMAIN, entry_id)},
+        identifiers={(DOMAIN, serial or entry_id)},
         manufacturer="BLUETTI",
         model=model,
         name=model,
@@ -51,6 +52,8 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
         """Initialize a BLUETTI Modbus entity."""
         super().__init__(coordinator=entry.runtime_data.coordinator)
         self._field_name = field_name
-        self._attr_unique_id = f"{entry.entry_id}_{field_name}"
+        # entry.unique_id is the confirmed serial where the model reports one
+        # (Balco260); entry_id is the fallback for one that doesn't (EP2000).
+        self._attr_unique_id = f"{entry.unique_id or entry.entry_id}_{field_name}"
         self._attr_translation_key = field_name
         self._attr_device_info = entry.runtime_data.device_info
