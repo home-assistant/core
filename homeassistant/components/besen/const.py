@@ -7,4 +7,4 @@ from homeassistant.const import Platform
 DOMAIN: Final = "besen"
 NAME: Final = "Besen"
 
-PLATFORMS: Final = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
