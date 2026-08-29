@@ -13,6 +13,8 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import add_second_meter
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -130,6 +132,49 @@ async def test_phase_currents_on_three_phase(
     assert hass.states.get("sensor.solaredge_se10000h_current_phase_a") is not None
     assert hass.states.get("sensor.solaredge_se10000h_current_phase_b") is not None
     assert hass.states.get("sensor.solaredge_se10000h_current_phase_c") is not None
+
+
+async def test_two_meters_are_told_apart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A second meter reads its own block and goes unavailable on its own.
+
+    Both meters report the same measurements here, so what is worth proving is
+    that each entity reaches the meter it belongs to: the values move apart
+    when one block does, and only that meter's entities go unavailable when it
+    stops answering.
+    """
+    add_second_meter(mock_modbus_unit, "7E5B22D3")
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    first = hass.states.get("sensor.meter_1_power")
+    second = hass.states.get("sensor.meter_2_power")
+    assert first is not None
+    assert second is not None
+    assert first.state == second.state
+
+    # Only the second meter's power register moves.
+    mock_modbus_unit.holding[40206 + 174] = 1000
+
+    await _tick(hass, freezer)
+
+    assert hass.states.get("sensor.meter_1_power") == first
+    second = hass.states.get("sensor.meter_2_power")
+    assert second is not None
+    assert second.state != first.state
+
+    # Only the second meter falls silent.
+    mock_modbus_unit.fail_read(40297, ModbusTimeoutError("timed out"))
+
+    await _tick(hass, freezer)
+    await _tick(hass, freezer)
+
+    assert hass.states.get("sensor.meter_2_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.meter_1_power").state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

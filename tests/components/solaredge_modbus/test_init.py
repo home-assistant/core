@@ -95,6 +95,28 @@ async def test_meter_is_a_sub_device_of_the_inverter(
     assert meter.serial_number == METER_SERIAL_NUMBER
 
 
+async def test_meter_without_a_serial_number_is_known_by_its_slot(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Not every meter names itself, and then its place on the inverter does.
+
+    The fallback says which slot it is rather than just the number, so it
+    cannot be read as a serial number that happens to be short.
+    """
+    mock_modbus_unit.holding.update(dict.fromkeys(range(40171, 40187), 0))
+
+    await _setup(hass, mock_config_entry)
+
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_meter_slot_1"), mock_config_entry.entry_id
+    )
+    assert meter is not None
+    assert meter.serial_number is None
+
+
 async def test_meter_that_left_the_installation_is_removed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

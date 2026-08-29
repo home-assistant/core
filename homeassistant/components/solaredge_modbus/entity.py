@@ -47,8 +47,9 @@ def meter_identity(meter: Meter, index: int) -> str:
     A meter that reports a serial number is known by it, so replacing one is a
     different device rather than the same slot with other numbers in it. Not
     every meter reports one, and then the slot it is wired to is all there is.
+    That fallback says so, since a bare number could be a serial itself.
     """
-    return meter.serial_number or str(index)
+    return meter.serial_number or f"slot_{index}"
 
 
 def inverter_device_info(solaredge: SolarEdge, serial_number: str) -> DeviceInfo:

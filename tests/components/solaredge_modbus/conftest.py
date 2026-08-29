@@ -31,6 +31,12 @@ UNIT_ID = 1
 SERIAL_NUMBER = "7E123ABC"
 METER_SERIAL_NUMBER = "7E4A11C2"
 
+# Where a meter's block starts, how far the next one sits, and where in it the
+# serial number lives, as SunSpec lays them out.
+METER_BASE = 40121
+METER_STRIDE = 174
+METER_SERIAL_BASE = 40171
+
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
     """Config entry data for an inverter reached over Modbus TCP."""
@@ -64,6 +70,30 @@ async def async_seed_unit(
         unit.holding.update(
             dict(zip(range(40052, 40056), serial_registers, strict=True))
         )
+
+
+def add_second_meter(unit: MockModbusUnit, serial_number: str) -> None:
+    """Wire a second meter onto a seeded unit.
+
+    Every address of a meter shifts by the SunSpec stride per meter, so the
+    first meter's block, copied one stride up, is a second meter that reports
+    the same measurements under its own serial number.
+    """
+    block = {
+        address + METER_STRIDE: value
+        for address, value in unit.holding.items()
+        if METER_BASE <= address < METER_BASE + METER_STRIDE
+    }
+    padded = serial_number.ljust(32, "\0").encode()
+    block.update(
+        {
+            METER_SERIAL_BASE + METER_STRIDE + index: (
+                (padded[index * 2] << 8) | padded[index * 2 + 1]
+            )
+            for index in range(16)
+        }
+    )
+    unit.holding.update(block)
 
 
 @pytest.fixture

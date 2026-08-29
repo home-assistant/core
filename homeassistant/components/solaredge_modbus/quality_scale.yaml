@@ -72,7 +72,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No repairable issues are raised.
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
