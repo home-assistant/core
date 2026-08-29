@@ -372,7 +372,10 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_position_updated_at(self) -> datetime | None:
         """Return when the position was last valid."""
-        if (player := self._receiver.player) is None:
+        # The timestamp advances on every poll, including ones that report no
+        # position, so it is only meaningful alongside a position.
+        player = self._receiver.player
+        if player is None or player.position_ms is None:
             return None
         return player.position_updated_at
 

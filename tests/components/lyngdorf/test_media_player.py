@@ -561,6 +561,8 @@ async def test_no_position_before_the_streamer_reports_one(
 
     state = hass.states.get(MAIN_ZONE)
     assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    # The timestamp advances on every poll, so it must not be published alone.
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
 
 
 @pytest.mark.usefixtures("init_integration")
