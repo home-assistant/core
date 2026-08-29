@@ -173,6 +173,7 @@ class _RebootWatcher:
         self._entry = coordinator.config_entry
         self._data_coordinator = self._entry.runtime_data.data_coordinator
         self._went_down_at: datetime | None = None
+        self._start_deadline: datetime | None = None
         self._unsubscribe_listener: CALLBACK_TYPE | None = None
         self._unsubscribe_timer: CALLBACK_TYPE | None = None
 
@@ -182,6 +183,7 @@ class _RebootWatcher:
         self._unsubscribe_listener = self._data_coordinator.async_add_listener(
             self._handle_data_coordinator_update
         )
+        self._start_deadline = dt_util.utcnow() + UPDATE_REBOOT_START_TIMEOUT
         self._async_set_deadline(UPDATE_REBOOT_START_TIMEOUT)
         self._entry.async_on_unload(self._async_stop)
 
@@ -226,10 +228,14 @@ class _RebootWatcher:
             return
 
         if dt_util.utcnow() - self._went_down_at < UPDATE_REBOOT_MINIMUM_DOWNTIME:
-            # Gone for a moment is the network, not a charger rebooting.
-            # Go back to waiting for the reboot to start.
+            # Gone for a moment is the network, not a charger rebooting. Go
+            # back to waiting for the reboot to start, on what is left of the
+            # original allowance: blips must not keep extending it.
             self._went_down_at = None
-            self._async_set_deadline(UPDATE_REBOOT_START_TIMEOUT)
+            assert self._start_deadline is not None
+            self._async_set_deadline(
+                max(self._start_deadline - dt_util.utcnow(), timedelta(0))
+            )
             return
 
         self._async_stop()

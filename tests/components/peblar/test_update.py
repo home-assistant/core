@@ -313,3 +313,86 @@ async def test_waiting_stops_for_a_charger_that_never_returns(
         await hass.async_block_till_done()
 
         mock_refresh.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_installing_waits_for_the_charger_to_come_back(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test installing an update sets the wait up, end to end.
+
+    The other tests here start the wait by hand, which leaves the one line
+    that connects the two free to go missing.
+    """
+    runtime_data = mock_config_entry.runtime_data
+    meter = mock_peblar.rest_api.return_value.meter
+
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            blocking=True,
+        )
+
+        meter.side_effect = PeblarConnectionError("Gone")
+        await _async_poll(hass, freezer)
+        await _async_poll(hass, freezer, after=timedelta(minutes=1))
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
+
+        mock_refresh.assert_called_once()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_blips_do_not_extend_the_wait(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the charger does not get longer than it was given.
+
+    A blip puts the wait back to waiting for the reboot to start, but on
+    what is left of the original allowance. Handing out a fresh three hours
+    each time would let a flaky network keep this going forever.
+    """
+    runtime_data = mock_config_entry.runtime_data
+    data_coordinator = runtime_data.data_coordinator
+    meter = mock_peblar.rest_api.return_value.meter
+
+    with patch.object(
+        runtime_data.version_coordinator, "async_request_refresh"
+    ) as mock_refresh:
+        runtime_data.version_coordinator.async_refresh_after_restart()
+
+        # Nearly out of time, then a blip.
+        freezer.tick(timedelta(hours=2, minutes=59))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        meter.side_effect = PeblarConnectionError("Blip")
+        await _async_poll(hass, freezer)
+        meter.side_effect = None
+        await _async_poll(hass, freezer)
+
+        # Past the three hours the charger was given from the start.
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # So a reboot now is no longer this update landing, however long
+        # the charger stays away for.
+        data_coordinator.async_set_update_error(PeblarConnectionError("Gone"))
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(minutes=1))
+        data_coordinator.async_set_updated_data(data_coordinator.data)
+        await hass.async_block_till_done()
+
+        mock_refresh.assert_not_called()
