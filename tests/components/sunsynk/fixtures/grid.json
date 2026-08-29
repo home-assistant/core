@@ -1,0 +1,20 @@
+{
+  "vip": [
+    {
+      "volt": "233.6",
+      "current": "0.8",
+      "power": 610
+    }
+  ],
+  "pac": 610,
+  "qac": 0,
+  "fac": 50.08,
+  "pf": 1.0,
+  "status": 1,
+  "etodayFrom": "12.2",
+  "etodayTo": "0.0",
+  "etotalFrom": "998.5",
+  "etotalTo": "48.2",
+  "limiterPowerArr": [610, 0],
+  "limiterTotalPower": 610
+}
