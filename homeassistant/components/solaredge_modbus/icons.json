@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      }
+    },
     "sensor": {
       "battery_status": {
         "default": "mdi:home-battery"
