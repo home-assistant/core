@@ -1,18 +1,21 @@
 """Test Roborock Sensors."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockDyadDataProtocol
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -90,3 +93,138 @@ async def test_sensors_coordinator_state(
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
     assert state.state == expected_state
+
+
+async def test_dyad_push_updates_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test an unsolicited device push updates state without waiting for a poll."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
+
+    push_listener = dyad.add_listener.call_args[0][0]
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
+
+
+async def test_dyad_push_unsubscribed_on_unload(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the push listener is unsubscribed when the config entry unloads."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    unsub = dyad.add_listener.return_value
+
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unsub.assert_called_once()
+
+
+async def test_dyad_push_before_first_successful_poll(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test a partial push with no prior poll leaves protocols it does not carry unknown."""
+    setup_coordinator_side_effect(fake_devices, RoborockException("Simulated failure"))
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    assert hass.states.get("sensor.dyad_pro_battery").state == STATE_UNAVAILABLE
+
+    push_listener = dyad.add_listener.call_args[0][0]
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+    assert hass.states.get("sensor.dyad_pro_status").state == STATE_UNKNOWN
+
+
+async def test_dyad_partial_push_does_not_postpone_poll(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a partial push leaves the fallback poll schedule untouched."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    dyad.query_values.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+    assert dyad.query_values.call_count == 0
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert dyad.query_values.call_count == 1
+
+
+async def test_dyad_push_during_poll_is_not_overwritten(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push received while a poll is in flight survives the poll result."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+    polled = dyad.query_values.return_value
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    async def push_while_polling(
+        protocols: list[RoborockDyadDataProtocol],
+    ) -> dict[RoborockDyadDataProtocol, Any]:
+        push_listener({RoborockDyadDataProtocol.POWER: 50})
+        return polled
+
+    dyad.query_values.side_effect = push_while_polling
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+
+
+async def test_dyad_push_survives_a_failed_poll(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push received during a poll survives that poll failing."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    push_listener = dyad.add_listener.call_args[0][0]
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    async def push_then_fail(
+        protocols: list[RoborockDyadDataProtocol],
+    ) -> dict[RoborockDyadDataProtocol, Any]:
+        push_listener({RoborockDyadDataProtocol.POWER: 50})
+        raise RoborockException("Simulated failure")
+
+    dyad.query_values.side_effect = push_then_fail
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
