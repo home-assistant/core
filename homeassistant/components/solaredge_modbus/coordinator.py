@@ -1,7 +1,9 @@
-"""DataUpdateCoordinator for the SolarEdge Modbus integration."""
+"""DataUpdateCoordinators for the SolarEdge Modbus integration."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import override
+from datetime import timedelta
+from typing import Final, override
 
 from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
 
@@ -11,9 +13,24 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL, SUBSYSTEM_COMMON
+from .const import (
+    DOMAIN,
+    LOGGER,
+    SUBSYSTEM_ADVANCED_POWER_CONTROL,
+    SUBSYSTEM_COMMON,
+    SUBSYSTEM_POWER_CONTROL,
+    SUBSYSTEM_SITE_CONTROL,
+)
 
 type SolarEdgeModbusConfigEntry = ConfigEntry[SolarEdgeModbusRuntimeData]
+
+SETTINGS_SUBSYSTEMS: Final = frozenset(
+    {
+        SUBSYSTEM_ADVANCED_POWER_CONTROL,
+        SUBSYSTEM_POWER_CONTROL,
+        SUBSYSTEM_SITE_CONTROL,
+    }
+)
 
 
 def _merge(first: UpdateReport, second: UpdateReport) -> UpdateReport:
@@ -33,7 +50,7 @@ def _merge(first: UpdateReport, second: UpdateReport) -> UpdateReport:
 
 
 class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Polls the inverter's sub-systems over Modbus.
+    """Polls one set of the inverter's sub-systems over Modbus.
 
     A poll can come back partial: the library reads every sub-system on its
     own, so one that falls silent no longer takes the others down with it. The
@@ -48,9 +65,14 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SolarEdgeModbusConfigEntry,
         solaredge: SolarEdge,
+        *,
+        poll: Callable[[], Awaitable[UpdateReport]],
+        interval: timedelta,
+        label: str,
     ) -> None:
         """Initialize the coordinator."""
         self.solaredge = solaredge
+        self._poll = poll
         self._silent: set[str] = set()
         super().__init__(
             hass,
@@ -58,8 +80,8 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             config_entry=entry,
             # The serial number identifies this inverter, but it would also end
             # up in every log line a name is written to, so the title stands in.
-            name=f"{entry.title} readings",
-            update_interval=SCAN_INTERVAL,
+            name=f"{entry.title} {label}",
+            update_interval=interval,
         )
 
     @override
@@ -99,7 +121,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         enough.
         """
         try:
-            retried = await self.solaredge.async_update_readings()
+            retried = await self._poll()
         except SolarEdgeConnectionError as err:
             LOGGER.debug(
                 "%s: nothing answered the retry (%s); keeping the first poll",
@@ -113,7 +135,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_poll(self) -> UpdateReport:
         """Poll the inverter's sub-systems, translating a dead link."""
         try:
-            return await self.solaredge.async_update_readings()
+            return await self._poll()
         except SolarEdgeConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -143,9 +165,17 @@ class SolarEdgeModbusRuntimeData:
     """Runtime data for a SolarEdge Modbus config entry."""
 
     readings: SolarEdgeModbusDataUpdateCoordinator
+    settings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
+    inverter_device_id: str
 
     @property
     def solaredge(self) -> SolarEdge:
-        """Return the polled device."""
+        """Return the polled device, which both coordinators share."""
         return self.readings.solaredge
+
+    def coordinator_for(self, subsystem: str) -> SolarEdgeModbusDataUpdateCoordinator:
+        """Return the coordinator that refreshes a given sub-system."""
+        if subsystem in SETTINGS_SUBSYSTEMS:
+            return self.settings
+        return self.readings
