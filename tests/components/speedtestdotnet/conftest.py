@@ -20,6 +20,12 @@ def mock_setup_entry():
 @pytest.fixture
 def mock_api():
     """Mock entry setup."""
-    with patch("speedtest.Speedtest") as mock_api:
+    with (
+        patch("speedtest.Speedtest") as mock_api,
+        patch(
+            "homeassistant.components.speedtestdotnet.coordinator._get_dynamic_servers",
+            return_value={},
+        ),
+    ):
         mock_api.return_value.get_servers.return_value = MOCK_SERVERS
         yield mock_api
