@@ -29,7 +29,8 @@ class VistapoolTimeEntityDescription(TimeEntityDescription):
     """Describes a Vistapool time entity."""
 
     value_path: str
-    exists_path: str | None = None
+    # A field the controller only reports when it supports the feature.
+    presence_path: str | None = None
 
 
 TIME_DESCRIPTIONS: tuple[VistapoolTimeEntityDescription, ...] = (
@@ -50,7 +51,7 @@ TIME_DESCRIPTIONS: tuple[VistapoolTimeEntityDescription, ...] = (
             translation_key=f"light_schedule_{bound}",
             entity_category=EntityCategory.CONFIG,
             value_path=f"light.{api_field}",
-            exists_path=f"light.{api_field}",
+            presence_path=f"light.{api_field}",
         )
         for bound, api_field in (("start", "from"), ("end", "to"))
     ),
@@ -64,8 +65,8 @@ def _build_time_entities(
     return [
         VistapoolTime(coordinator, description)
         for description in TIME_DESCRIPTIONS
-        if description.exists_path is None
-        or coordinator.get_value(description.exists_path) is not None
+        if description.presence_path is None
+        or coordinator.get_value(description.presence_path) is not None
     ]
 
 

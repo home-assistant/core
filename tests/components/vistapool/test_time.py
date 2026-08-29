@@ -242,3 +242,23 @@ async def test_light_schedule_time_set_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", "light.from", 77400
     )
+
+
+async def test_light_schedule_time_created_for_midnight(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a schedule bound of zero seconds still creates the entity.
+
+    Zero is midnight, a legitimate schedule bound, not a missing field.
+    """
+    data = deepcopy(_LIGHT_SCHEDULE_DATA)
+    data["light"]["from"] = 0
+    mock_vistapool_client.fetch_pool_data.return_value = data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("time.my_pool_light_schedule_start").state == "00:00:00"

@@ -463,3 +463,26 @@ async def test_light_mode_raises_on_api_error(
 
     # The write never reached the controller, so nothing may be applied.
     assert hass.states.get("select.my_pool_light_mode").state == "auto"
+
+
+async def test_light_schedule_frequency_created_for_zero_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a reported zero still creates the entity.
+
+    Zero is a value the controller reports, not a missing field, so it must
+    surface as an unknown option rather than silently dropping the entity.
+    """
+    data = deepcopy(_LIGHT_SCHEDULE_DATA)
+    data["light"]["freq"] = 0
+    mock_vistapool_client.fetch_pool_data.return_value = data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_pool_light_schedule_frequency")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

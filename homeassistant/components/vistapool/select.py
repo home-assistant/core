@@ -41,7 +41,11 @@ class VistapoolSelectEntityDescription(SelectEntityDescription):
     """Describes a Vistapool select entity."""
 
     value_path: str
+    # A capability flag that must be set, such as main.hasPH.
     exists_path: str | tuple[str, ...] | None = None
+    # A field the controller only reports when it supports the feature. Unlike
+    # exists_path this is a presence check, so a valid zero still counts.
+    presence_path: str | None = None
     value_map: dict[str, int] | None = None
 
 
@@ -77,7 +81,7 @@ SELECT_DESCRIPTIONS: tuple[VistapoolSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         options=list(_LIGHT_FREQUENCIES),
         value_path="light.freq",
-        exists_path="light.freq",
+        presence_path="light.freq",
         value_map=_LIGHT_FREQUENCIES,
     ),
 )
@@ -97,6 +101,11 @@ def _build_select_entities(
             )
             if not all(coordinator.get_value(path) for path in required):
                 continue
+        if (
+            description.presence_path is not None
+            and coordinator.get_value(description.presence_path) is None
+        ):
+            continue
         entities.append(VistapoolSelect(coordinator, description))
     if coordinator.get_value(_LIGHT_MODE_PATH) is not None:
         entities.append(VistapoolLightModeSelect(coordinator))
