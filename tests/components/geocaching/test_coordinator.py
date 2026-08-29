@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from geocachingapi.models import GeocachingCache, GeocachingSettings, GeocachingStatus
+from geocachingapi.models import (
+    GeocachingCache,
+    GeocachingSettings,
+    GeocachingStatus,
+    GeocachingTrackable,
+)
 import pytest
 
 from homeassistant.components.geocaching.const import (
@@ -75,7 +80,10 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     ):
         status = GeocachingStatus()
         cache = GeocachingCache(reference_code="gc12345")
+        trackable = GeocachingTrackable(reference_code=" tb12345 ")
         status.tracked_caches = [cache]
+        status.trackables = {"original-key": trackable}
+        original_trackables = status.trackables
         geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -88,4 +96,7 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     assert settings.tracked_cache_codes == expected_cache_codes
     assert settings.tracked_trackable_codes == expected_trackable_codes
     assert config_entry.runtime_data.data.tracked_caches == {"GC12345": cache}
+    assert config_entry.runtime_data.data.trackables == {"TB12345": trackable}
     assert status.tracked_caches == [cache]
+    assert status.trackables is original_trackables
+    assert status.trackables == {"original-key": trackable}
