@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "loggers": ["pyhausbus"],
   "quality_scale": "bronze",
-  "requirements": ["pyhausbus==1.0.65"],
+  "requirements": ["pyhausbus==1.0.66"],
   "single_config_entry": true
 }
