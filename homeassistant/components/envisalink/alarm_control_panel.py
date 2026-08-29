@@ -1,9 +1,9 @@
 """Support for Envisalink-based alarm control panels (Honeywell/DSC)."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any, override
 
+from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import (
     CONF_PANIC,
     CONF_PARTITIONNAME,
+    CONF_PARTITIONS,
     DATA_EVL,
     DOMAIN,
     PARTITION_SCHEMA,
@@ -51,15 +52,14 @@ async def async_setup_platform(
     """Perform the setup for Envisalink alarm panels."""
     if not discovery_info:
         return
-    configured_partitions = discovery_info["partitions"]
-    code = discovery_info[CONF_CODE]
-    panic_type = discovery_info[CONF_PANIC]
+    configured_partitions: dict[int, dict[str, Any]] = discovery_info[CONF_PARTITIONS]
+    code: str | None = discovery_info[CONF_CODE]
+    panic_type: str = discovery_info[CONF_PANIC]
 
     entities = []
-    for part_num in configured_partitions:
-        entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+    for part_num, part_config in configured_partitions.items():
+        entity_config_data = PARTITION_SCHEMA(part_config)
         entity = EnvisalinkAlarm(
-            hass,
             part_num,
             entity_config_data[CONF_PARTITIONNAME],
             code,
@@ -103,8 +103,14 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, info, controller
-    ):
+        self,
+        partition_number: int,
+        alarm_name: str,
+        code: str | None,
+        panic_type: str,
+        info: dict[str, Any],
+        controller: EnvisalinkAlarmPanel,
+    ) -> None:
         """Initialize the alarm panel."""
         self._partition_number = partition_number
         self._panic_type = panic_type
@@ -114,6 +120,7 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -134,6 +141,7 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         state = None
@@ -154,22 +162,27 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
             state = AlarmControlPanelState.DISARMED
         return state
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.hass.data[DATA_EVL].disarm_partition(code, self._partition_number)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self.hass.data[DATA_EVL].arm_stay_partition(code, self._partition_number)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self.hass.data[DATA_EVL].arm_night_partition(code, self._partition_number)

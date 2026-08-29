@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.to_home_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,8 +39,8 @@
 # name: test_sensor[sensor.to_home_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Actual arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_arrival_platform',
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensor[sensor.to_home_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -86,9 +90,9 @@
 # name: test_sensor[sensor.to_home_actual_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Actual arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_arrival_time',
@@ -100,8 +104,9 @@
 # ---
 # name: test_sensor[sensor.to_home_actual_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -119,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -136,8 +142,8 @@
 # name: test_sensor[sensor.to_home_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Actual departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_departure_platform',
@@ -149,8 +155,9 @@
 # ---
 # name: test_sensor[sensor.to_home_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -168,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -185,9 +193,9 @@
 # name: test_sensor[sensor.to_home_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Actual departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_departure_time',
@@ -199,8 +207,9 @@
 # ---
 # name: test_sensor[sensor.to_home_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -218,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -240,14 +250,14 @@
       'arrival_platform_planned': '12',
       'arrival_time_actual': '18:37',
       'arrival_time_planned': '18:37',
-      'attribution': 'Data provided by NS',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
       'departure_delay': True,
       'departure_platform_actual': '4',
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Departure',
       'going': True,
       'next': '16:46',
       'remarks': None,
@@ -270,8 +280,9 @@
 # ---
 # name: test_sensor[sensor.to_home_next_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -289,6 +300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -306,9 +318,9 @@
 # name: test_sensor[sensor.to_home_next_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Next departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Next departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_next_departure',
@@ -320,8 +332,9 @@
 # ---
 # name: test_sensor[sensor.to_home_planned_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -339,6 +352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,8 +370,8 @@
 # name: test_sensor[sensor.to_home_planned_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Planned arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_arrival_platform',
@@ -369,8 +383,9 @@
 # ---
 # name: test_sensor[sensor.to_home_planned_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -388,6 +403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -405,9 +421,9 @@
 # name: test_sensor[sensor.to_home_planned_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Planned arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_arrival_time',
@@ -419,8 +435,9 @@
 # ---
 # name: test_sensor[sensor.to_home_planned_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -438,6 +455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -455,8 +473,8 @@
 # name: test_sensor[sensor.to_home_planned_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Planned departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_departure_platform',
@@ -468,8 +486,9 @@
 # ---
 # name: test_sensor[sensor.to_home_planned_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -487,6 +506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -504,9 +524,9 @@
 # name: test_sensor[sensor.to_home_planned_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Planned departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_departure_time',
@@ -518,8 +538,9 @@
 # ---
 # name: test_sensor[sensor.to_home_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -537,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -554,8 +576,8 @@
 # name: test_sensor[sensor.to_home_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Route',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_route',
@@ -567,11 +589,12 @@
 # ---
 # name: test_sensor[sensor.to_home_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -591,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -608,10 +632,10 @@
 # name: test_sensor[sensor.to_home_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'enum',
-      'friendly_name': 'To home Status',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -626,8 +650,9 @@
 # ---
 # name: test_sensor[sensor.to_home_transfers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -645,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -662,8 +688,8 @@
 # name: test_sensor[sensor.to_home_transfers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Transfers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Transfers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_transfers',
@@ -675,8 +701,9 @@
 # ---
 # name: test_sensor[sensor.to_work_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -694,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -711,8 +739,8 @@
 # name: test_sensor[sensor.to_work_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Actual arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_arrival_platform',
@@ -724,8 +752,9 @@
 # ---
 # name: test_sensor[sensor.to_work_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -743,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -760,9 +790,9 @@
 # name: test_sensor[sensor.to_work_actual_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Actual arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_arrival_time',
@@ -774,8 +804,9 @@
 # ---
 # name: test_sensor[sensor.to_work_actual_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -793,6 +824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -810,8 +842,8 @@
 # name: test_sensor[sensor.to_work_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Actual departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_departure_platform',
@@ -823,8 +855,9 @@
 # ---
 # name: test_sensor[sensor.to_work_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -842,6 +875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -859,9 +893,9 @@
 # name: test_sensor[sensor.to_work_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Actual departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_departure_time',
@@ -873,8 +907,9 @@
 # ---
 # name: test_sensor[sensor.to_work_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -892,6 +927,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -914,14 +950,14 @@
       'arrival_platform_planned': '12',
       'arrival_time_actual': '18:37',
       'arrival_time_planned': '18:37',
-      'attribution': 'Data provided by NS',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
       'departure_delay': True,
       'departure_platform_actual': '4',
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Departure',
       'going': True,
       'next': '16:46',
       'remarks': None,
@@ -944,8 +980,9 @@
 # ---
 # name: test_sensor[sensor.to_work_next_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -963,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -980,9 +1018,9 @@
 # name: test_sensor[sensor.to_work_next_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Next departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Next departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_next_departure',
@@ -994,8 +1032,9 @@
 # ---
 # name: test_sensor[sensor.to_work_planned_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1013,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1030,8 +1070,8 @@
 # name: test_sensor[sensor.to_work_planned_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Planned arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_arrival_platform',
@@ -1043,8 +1083,9 @@
 # ---
 # name: test_sensor[sensor.to_work_planned_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1062,6 +1103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1079,9 +1121,9 @@
 # name: test_sensor[sensor.to_work_planned_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Planned arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_arrival_time',
@@ -1093,8 +1135,9 @@
 # ---
 # name: test_sensor[sensor.to_work_planned_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1112,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1129,8 +1173,8 @@
 # name: test_sensor[sensor.to_work_planned_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Planned departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_departure_platform',
@@ -1142,8 +1186,9 @@
 # ---
 # name: test_sensor[sensor.to_work_planned_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1161,6 +1206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1178,9 +1224,9 @@
 # name: test_sensor[sensor.to_work_planned_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Planned departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_departure_time',
@@ -1192,8 +1238,9 @@
 # ---
 # name: test_sensor[sensor.to_work_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1211,6 +1258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1228,8 +1276,8 @@
 # name: test_sensor[sensor.to_work_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Route',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_route',
@@ -1241,11 +1289,12 @@
 # ---
 # name: test_sensor[sensor.to_work_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1265,6 +1314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1282,10 +1332,10 @@
 # name: test_sensor[sensor.to_work_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'enum',
-      'friendly_name': 'To work Status',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1300,8 +1350,9 @@
 # ---
 # name: test_sensor[sensor.to_work_transfers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1319,6 +1370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1336,8 +1388,8 @@
 # name: test_sensor[sensor.to_work_transfers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Transfers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Transfers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_transfers',
@@ -1349,8 +1401,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1368,6 +1421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1385,8 +1439,8 @@
 # name: test_single_trip_sensor[sensor.to_home_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Actual arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_arrival_platform',
@@ -1398,8 +1452,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1417,6 +1472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1434,9 +1490,9 @@
 # name: test_single_trip_sensor[sensor.to_home_actual_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Actual arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_arrival_time',
@@ -1448,8 +1504,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_actual_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1467,6 +1524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1484,8 +1542,8 @@
 # name: test_single_trip_sensor[sensor.to_home_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Actual departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_departure_platform',
@@ -1497,8 +1555,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1516,6 +1575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1533,9 +1593,9 @@
 # name: test_single_trip_sensor[sensor.to_home_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Actual departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Actual departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_actual_departure_time',
@@ -1547,8 +1607,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1566,6 +1627,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1588,14 +1650,14 @@
       'arrival_platform_planned': '13',
       'arrival_time_actual': '18:45',
       'arrival_time_planned': '18:45',
-      'attribution': 'Data provided by NS',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
       'departure_delay': True,
       'departure_platform_actual': '4',
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Departure',
       'going': True,
       'next': None,
       'remarks': None,
@@ -1618,8 +1680,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_next_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1637,6 +1700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1654,9 +1718,9 @@
 # name: test_single_trip_sensor[sensor.to_home_next_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Next departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Next departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_next_departure',
@@ -1668,8 +1732,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_planned_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1687,6 +1752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1704,8 +1770,8 @@
 # name: test_single_trip_sensor[sensor.to_home_planned_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Planned arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_arrival_platform',
@@ -1717,8 +1783,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_planned_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1736,6 +1803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1753,9 +1821,9 @@
 # name: test_single_trip_sensor[sensor.to_home_planned_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Planned arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_arrival_time',
@@ -1767,8 +1835,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_planned_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1786,6 +1855,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1803,8 +1873,8 @@
 # name: test_single_trip_sensor[sensor.to_home_planned_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Planned departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_departure_platform',
@@ -1816,8 +1886,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_planned_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1835,6 +1906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1852,9 +1924,9 @@
 # name: test_single_trip_sensor[sensor.to_home_planned_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Planned departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Planned departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_planned_departure_time',
@@ -1866,8 +1938,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1885,6 +1958,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1902,8 +1976,8 @@
 # name: test_single_trip_sensor[sensor.to_home_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Route',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_route',
@@ -1915,11 +1989,12 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1939,6 +2014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1956,10 +2032,10 @@
 # name: test_single_trip_sensor[sensor.to_home_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'enum',
-      'friendly_name': 'To home Status',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1974,8 +2050,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_home_transfers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1993,6 +2070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2010,8 +2088,8 @@
 # name: test_single_trip_sensor[sensor.to_home_transfers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Transfers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Transfers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_transfers',
@@ -2023,8 +2101,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2042,6 +2121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2059,8 +2139,8 @@
 # name: test_single_trip_sensor[sensor.to_work_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Actual arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_arrival_platform',
@@ -2072,8 +2152,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2091,6 +2172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2108,9 +2190,9 @@
 # name: test_single_trip_sensor[sensor.to_work_actual_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Actual arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_arrival_time',
@@ -2122,8 +2204,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_actual_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2141,6 +2224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2158,8 +2242,8 @@
 # name: test_single_trip_sensor[sensor.to_work_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Actual departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_departure_platform',
@@ -2171,8 +2255,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2190,6 +2275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2207,9 +2293,9 @@
 # name: test_single_trip_sensor[sensor.to_work_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Actual departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Actual departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_actual_departure_time',
@@ -2221,8 +2307,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2240,6 +2327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2262,14 +2350,14 @@
       'arrival_platform_planned': '13',
       'arrival_time_actual': '18:45',
       'arrival_time_planned': '18:45',
-      'attribution': 'Data provided by NS',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
       'departure_delay': True,
       'departure_platform_actual': '4',
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Departure',
       'going': True,
       'next': None,
       'remarks': None,
@@ -2292,8 +2380,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_next_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2311,6 +2400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2328,9 +2418,9 @@
 # name: test_single_trip_sensor[sensor.to_work_next_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Next departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Next departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_next_departure',
@@ -2342,8 +2432,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_planned_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2361,6 +2452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2378,8 +2470,8 @@
 # name: test_single_trip_sensor[sensor.to_work_planned_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Planned arrival platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned arrival platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_arrival_platform',
@@ -2391,8 +2483,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_planned_arrival_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2410,6 +2503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2427,9 +2521,9 @@
 # name: test_single_trip_sensor[sensor.to_work_planned_arrival_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Planned arrival time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned arrival time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_arrival_time',
@@ -2441,8 +2535,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_planned_departure_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2460,6 +2555,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2477,8 +2573,8 @@
 # name: test_single_trip_sensor[sensor.to_work_planned_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Planned departure platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned departure platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_departure_platform',
@@ -2490,8 +2586,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_planned_departure_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2509,6 +2606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2526,9 +2624,9 @@
 # name: test_single_trip_sensor[sensor.to_work_planned_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Planned departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Planned departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_planned_departure_time',
@@ -2540,8 +2638,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2559,6 +2658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2576,8 +2676,8 @@
 # name: test_single_trip_sensor[sensor.to_work_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Route',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_route',
@@ -2589,11 +2689,12 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -2613,6 +2714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2630,10 +2732,10 @@
 # name: test_single_trip_sensor[sensor.to_work_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'enum',
-      'friendly_name': 'To work Status',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -2648,8 +2750,9 @@
 # ---
 # name: test_single_trip_sensor[sensor.to_work_transfers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2667,6 +2770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2684,8 +2788,8 @@
 # name: test_single_trip_sensor[sensor.to_work_transfers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Transfers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Transfers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_transfers',

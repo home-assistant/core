@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.webhook import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -12,16 +13,11 @@ from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(autouse=True)
 async def setup_http(hass: HomeAssistant) -> None:
     """Set up http."""
     assert await async_setup_component(hass, "http", {})
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
 

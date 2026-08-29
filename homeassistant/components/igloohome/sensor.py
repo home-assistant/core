@@ -61,7 +61,7 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
             response = await self.api.get_device_info(
                 deviceId=self.api_device_info.deviceId
             )
-        except (ApiException, ClientError):
+        except ApiException, ClientError:
             self._attr_available = False
         else:
             self._attr_available = True

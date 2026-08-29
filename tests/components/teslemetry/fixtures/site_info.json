@@ -122,6 +122,132 @@
     "installation_time_zone": "",
     "max_site_meter_power_ac": 1000000000,
     "min_site_meter_power_ac": -1000000000,
+    "tariff_content_v2": {
+      "code": "Test",
+      "name": "Battery Maximiser",
+      "utility": "Origin",
+      "daily_charges": [
+        {
+          "name": "Charge"
+        }
+      ],
+      "demand_charges": {
+        "ALL": {
+          "rates": {
+            "ALL": 0
+          }
+        },
+        "Summer": {},
+        "Winter": {}
+      },
+      "energy_charges": {
+        "ALL": {
+          "rates": {
+            "ALL": 0
+          }
+        },
+        "Summer": {
+          "rates": {
+            "OFF_PEAK": 0.198,
+            "ON_PEAK": 0.22
+          }
+        },
+        "Winter": {}
+      },
+      "seasons": {
+        "Summer": {
+          "fromDay": 1,
+          "toDay": 31,
+          "fromMonth": 1,
+          "toMonth": 12,
+          "tou_periods": {
+            "OFF_PEAK": {
+              "periods": [
+                {
+                  "fromDayOfWeek": 0,
+                  "toDayOfWeek": 6,
+                  "fromHour": 21,
+                  "toHour": 16
+                }
+              ]
+            },
+            "ON_PEAK": {
+              "periods": [
+                {
+                  "fromDayOfWeek": 0,
+                  "toDayOfWeek": 6,
+                  "fromHour": 16,
+                  "toHour": 21
+                }
+              ]
+            }
+          }
+        },
+        "Winter": {}
+      },
+      "sell_tariff": {
+        "name": "Battery Maximiser",
+        "utility": "Origin",
+        "daily_charges": [
+          {
+            "name": "Charge"
+          }
+        ],
+        "demand_charges": {
+          "ALL": {
+            "rates": {
+              "ALL": 0
+            }
+          },
+          "Summer": {},
+          "Winter": {}
+        },
+        "energy_charges": {
+          "ALL": {
+            "rates": {
+              "ALL": 0
+            }
+          },
+          "Summer": {
+            "rates": {
+              "OFF_PEAK": 0.08,
+              "ON_PEAK": 0.16
+            }
+          },
+          "Winter": {}
+        },
+        "seasons": {
+          "Summer": {
+            "fromDay": 1,
+            "toDay": 31,
+            "fromMonth": 1,
+            "toMonth": 12,
+            "tou_periods": {
+              "OFF_PEAK": {
+                "periods": [
+                  {
+                    "toDayOfWeek": 6,
+                    "fromHour": 21,
+                    "toHour": 16
+                  }
+                ]
+              },
+              "ON_PEAK": {
+                "periods": [
+                  {
+                    "toDayOfWeek": 6,
+                    "fromHour": 16,
+                    "toHour": 21
+                  }
+                ]
+              }
+            }
+          },
+          "Winter": {}
+        }
+      },
+      "version": 1
+    },
     "vpp_backup_reserve_percent": 0
   }
 }

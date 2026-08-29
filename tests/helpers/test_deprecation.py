@@ -121,6 +121,10 @@ class MockDeprecatedClass:
     """Mock class for deprecated testing."""
 
 
+class MockDeprecatedSubClass(MockDeprecatedClass):
+    """Mock subclass for deprecated testing."""
+
+
 @patch("logging.getLogger")
 def test_deprecated_class(mock_get_logger) -> None:
     """Test deprecated class."""
@@ -130,6 +134,9 @@ def test_deprecated_class(mock_get_logger) -> None:
     MockDeprecatedClass()
     assert mock_logger.warning.called
     assert len(mock_logger.warning.mock_calls) == 1
+
+    MockDeprecatedSubClass()
+    assert len(mock_logger.warning.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
@@ -328,7 +335,8 @@ def _get_value(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            ". It will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            ". It will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -407,7 +415,8 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"The deprecated {description} TEST_CONSTANT was used from hue{extra_msg}{extra_extra_msg}",
+        f"The deprecated {description} TEST_CONSTANT"
+        f" was used from hue{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
 
 
@@ -431,7 +440,8 @@ def test_check_if_deprecated_constant(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            " which will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (

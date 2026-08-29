@@ -67,6 +67,7 @@ def handle_integration_log_info(
         vol.Required("persistence"): vol.Coerce(LogPersistance),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_integration_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -99,6 +100,7 @@ async def handle_integration_log_level(
         vol.Required("persistence"): vol.Coerce(LogPersistance),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def handle_module_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

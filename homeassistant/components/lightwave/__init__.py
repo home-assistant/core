@@ -93,7 +93,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             lwlink.set_trv_proxy(proxy_ip, proxy_port)
             _LOGGER.warning(
-                "Proxy no longer required, remove `proxy_ip` from config to use builtin listener"
+                "Proxy no longer required, remove"
+                " `proxy_ip` from config to use"
+                " builtin listener"
             )
 
         for platform in PLATFORMS:

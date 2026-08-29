@@ -1,7 +1,5 @@
 """Test the unit system helper."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
@@ -19,6 +17,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -27,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.unit_system import (  # pylint: disable=hass-deprecated-import
+from homeassistant.util.unit_system import (  # pylint: disable=home-assistant-deprecated-import
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -611,6 +610,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.MILLIPASCAL,
         UnitOfPressure.PA,
     ),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,),
     SensorDeviceClass.SPEED: (
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -643,6 +643,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
@@ -859,6 +860,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.PICOCURIES_PER_LITER,),
     SensorDeviceClass.SPEED: (
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.FEET_PER_SECOND,
@@ -893,6 +895,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,

@@ -3,13 +3,7 @@
     "abort": {
       "already_configured": "Configuration updated for profile.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
@@ -17,6 +11,7 @@
       "default": "Successfully authenticated with Tesla."
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
       "invalid_response": "The registration was rejected by Tesla",
       "precondition_failed": "The domain does not match the application's allowed origins.",
@@ -28,6 +23,9 @@
       "domain_input": {
         "data": {
           "domain": "Domain"
+        },
+        "data_description": {
+          "domain": "The domain that hosts your public key for Tesla Fleet API authentication."
         },
         "description": "Enter the domain that will host your public key. This is typically the domain of the origin you specified during registration at {dashboard}.",
         "title": "Tesla Fleet domain registration"
@@ -46,11 +44,26 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The {name} integration needs to re-authenticate your account",
+        "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "region": {
+        "data": {
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "The region to register your application in. This defaults to the region detected from your Tesla account and only needs changing if your vehicles or energy sites are in a different region."
+        },
+        "title": "Select region"
+      },
       "registration_complete": {
-        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}",
+        "data": {
+          "qr_code": "QR code"
+        },
+        "data_description": {
+          "qr_code": "Scan this QR code with your phone to set up the virtual key."
+        },
+        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}\n\nIf you later enable additional Tesla API permissions, reauthenticate the integration to refresh the granted scopes.",
         "title": "Command signing"
       }
     }
@@ -593,11 +606,20 @@
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
     },
+    "command_no_response": {
+      "message": "Command had no response"
+    },
     "command_reason": {
       "message": "Command was unsuccessful: {reason}"
     },
+    "homelink_no_location": {
+      "message": "Vehicle location is not available. Ensure the vehicle is awake and that the location scope has been granted."
+    },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
+    },
+    "invalid_data": {
+      "message": "Received invalid data"
     },
     "missing_scope_energy_cmds": {
       "message": "Missing energy commands scope."
@@ -619,6 +641,20 @@
     },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
+    },
+    "wake_up_failed": {
+      "message": "Failed to wake up vehicle"
+    },
+    "wake_up_timeout": {
+      "message": "Could not wake up vehicle"
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "eu": "Europe, Middle East & Africa",
+        "na": "North America & Asia-Pacific"
+      }
     }
   }
 }

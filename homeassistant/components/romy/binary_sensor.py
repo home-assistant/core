@@ -1,16 +1,16 @@
 """Checking binary status values from your ROMY."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RomyVacuumCoordinator
+from .coordinator import RomyConfigEntry, RomyVacuumCoordinator
 from .entity import RomyEntity
 
 BINARY_SENSORS: list[BinarySensorEntityDescription] = [
@@ -38,12 +38,12 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RomyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
 
-    coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         RomyBinarySensor(coordinator, entity_description)
@@ -68,6 +68,7 @@ class RomyBinarySensor(RomyEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value of the sensor."""
         return bool(self.romy.binary_sensors[self.entity_description.key])

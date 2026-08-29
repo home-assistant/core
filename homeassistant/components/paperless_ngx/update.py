@@ -1,8 +1,7 @@
 """Update platform for Paperless-ngx."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from pypaperless.exceptions import PaperlessConnectionError
 
@@ -55,20 +54,24 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     release_url = PAPERLESS_CHANGELOGS
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Return True because we need to poll the latest version."""
         return True
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
         return self.coordinator.api.host_version
 
+    @override
     async def async_update(self) -> None:
         """Update the entity."""
         remote_version = None

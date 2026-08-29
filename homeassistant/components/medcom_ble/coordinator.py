@@ -1,9 +1,8 @@
 """The Medcom BLE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from bleak import BleakError
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
@@ -18,13 +17,17 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MedcomBleConfigEntry = ConfigEntry[MedcomBleUpdateCoordinator]
+
 
 class MedcomBleUpdateCoordinator(DataUpdateCoordinator[MedcomBleDevice]):
     """Coordinator for Medcom BLE radiation monitor data."""
 
-    config_entry: ConfigEntry
+    config_entry: MedcomBleConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, address: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: MedcomBleConfigEntry, address: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -37,6 +40,7 @@ class MedcomBleUpdateCoordinator(DataUpdateCoordinator[MedcomBleDevice]):
         self._elevation = hass.config.elevation
         self._is_metric = hass.config.units is METRIC_SYSTEM
 
+    @override
     async def _async_update_data(self) -> MedcomBleDevice:
         """Get data from Medcom BLE radiation monitor."""
         ble_device = bluetooth.async_ble_device_from_address(self.hass, self._address)

@@ -1,9 +1,7 @@
 """Config flow for youless integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import HTTPError, URLError
 
 import voluptuous as vol
@@ -24,6 +22,7 @@ class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -33,7 +32,7 @@ class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 api = YoulessAPI(user_input[CONF_HOST])
                 await self.hass.async_add_executor_job(api.initialize)
-            except (HTTPError, URLError):
+            except HTTPError, URLError:
                 _LOGGER.exception("Cannot connect to host")
                 errors["base"] = "cannot_connect"
             else:

@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "freeze_prevent": {
+      "freeze_prevent_enabled": {
         "default": "mdi:snowflake-alert"
       },
       "standby": {
@@ -18,6 +18,20 @@
         "state": {
           "off": "mdi:toggle-switch-off"
         }
+      }
+    },
+    "sensor": {
+      "active_zone_count": {
+        "default": "mdi:counter"
+      },
+      "rain_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "water_hammer_duration": {
+        "default": "mdi:hammer"
+      },
+      "zone_delay": {
+        "default": "mdi:timer-pause"
       }
     },
     "switch": {

@@ -1,7 +1,5 @@
 """Test function in __init__.py."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock
 
@@ -29,7 +27,7 @@ async def test_load_unload(
     """Test loading and unloading the MySensors config entry."""
     config_entry = integration
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = "binary_sensor.door_sensor_1_1"
     state = hass.states.get(entity_id)
@@ -79,8 +77,8 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-{node_id}")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}-{node_id}"), config_entry.entry_id
     )
     state = hass.states.get(entity_id)
 
@@ -90,14 +88,44 @@ async def test_remove_config_entry_device(
     assert state
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
 
     assert node_id not in gateway.sensors
     assert gateway.tasks.persistence.need_save is True
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-1")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}-1"), config_entry.entry_id
     )
     assert not entity_registry.async_get(entity_id)
     assert not hass.states.get(entity_id)
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that removing an unexpected child device is rejected."""
+    config_entry = integration
+    assert await async_setup_component(hass, "config", {})
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)

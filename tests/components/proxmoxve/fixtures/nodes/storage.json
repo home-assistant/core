@@ -1,0 +1,26 @@
+[
+  {
+    "type": "dir",
+    "used_fraction": 0.85,
+    "storage": "local",
+    "content": "iso,backup,vztmpl",
+    "used": 85734563840,
+    "active": 1,
+    "enabled": 1,
+    "shared": 0,
+    "total": 100861726720,
+    "avail": 9956425728
+  },
+  {
+    "shared": 1,
+    "enabled": 1,
+    "avail": 523769479168,
+    "total": 1915211874304,
+    "used_fraction": 0.73,
+    "storage": "synology",
+    "type": "nfs",
+    "active": 1,
+    "content": "backup,images",
+    "used": 1391442395136
+  }
+]

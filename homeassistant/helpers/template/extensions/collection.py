@@ -1,7 +1,5 @@
 """Collection and data structure functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, MutableSequence
 import random
 from typing import TYPE_CHECKING, Any

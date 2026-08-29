@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': list([
+      dict({
+        'battery_voltage': 3.87,
+        'friendly_id': '1RJXS4',
+        'identifier': 42793,
+        'mac_address': '**REDACTED**',
+        'name': 'Test TRMNL',
+        'percent_charged': 72.5,
+        'rssi': -64,
+        'sleep_end_time': 480,
+        'sleep_mode_enabled': False,
+        'sleep_start_time': 1320,
+        'wifi_strength': 50,
+      }),
+    ]),
+  })
+# ---

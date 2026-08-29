@@ -128,6 +128,8 @@ def create_mock_api_v1() -> Mock:
         software_version="1935144040",
     )
     api.config.name = "Home"
+    # aiohue exposes the bridge id as both `bridge_id` and `bridgeid`
+    api.config.bridgeid = api.config.bridge_id
 
     api.lights = aiohue_v1.Lights(logger, {}, mock_request)
     api.groups = aiohue_v1.Groups(logger, {}, mock_request)
@@ -254,7 +256,7 @@ async def setup_bridge(
         with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
             await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def setup_platform(

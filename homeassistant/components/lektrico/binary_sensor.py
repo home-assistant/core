@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,70 +30,70 @@ BINARY_SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
         translation_key="state_e_activated",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["state_e_activated"]),
+        value_fn=lambda data: data["state_e_activated"],
     ),
     LektricoBinarySensorEntityDescription(
         key="overtemp",
         translation_key="overtemp",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["overtemp"]),
+        value_fn=lambda data: data["overtemp"],
     ),
     LektricoBinarySensorEntityDescription(
         key="critical_temp",
         translation_key="critical_temp",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["critical_temp"]),
+        value_fn=lambda data: data["critical_temp"],
     ),
     LektricoBinarySensorEntityDescription(
         key="overcurrent",
         translation_key="overcurrent",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["overcurrent"]),
+        value_fn=lambda data: data["overcurrent"],
     ),
     LektricoBinarySensorEntityDescription(
         key="meter_fault",
         translation_key="meter_fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["meter_fault"]),
+        value_fn=lambda data: data["meter_fault"],
     ),
     LektricoBinarySensorEntityDescription(
         key="undervoltage",
         translation_key="undervoltage",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["undervoltage_error"]),
+        value_fn=lambda data: data["undervoltage_error"],
     ),
     LektricoBinarySensorEntityDescription(
         key="overvoltage",
         translation_key="overvoltage",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["overvoltage_error"]),
+        value_fn=lambda data: data["overvoltage_error"],
     ),
     LektricoBinarySensorEntityDescription(
         key="rcd_error",
         translation_key="rcd_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["rcd_error"]),
+        value_fn=lambda data: data["rcd_error"],
     ),
     LektricoBinarySensorEntityDescription(
         key="cp_diode_failure",
         translation_key="cp_diode_failure",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["cp_diode_failure"]),
+        value_fn=lambda data: data["cp_diode_failure"],
     ),
     LektricoBinarySensorEntityDescription(
         key="contactor_failure",
         translation_key="contactor_failure",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: bool(data["contactor_failure"]),
+        value_fn=lambda data: data["contactor_failure"],
     ),
 )
 
@@ -134,6 +134,7 @@ class LektricoBinarySensor(LektricoEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,8 +1,6 @@
 """Validate device conditions."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol, override
 
 import voluptuous as vol
 
@@ -13,15 +11,11 @@ from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckerType,
     ConditionConfig,
-    trace_condition_function,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
 from .helpers import async_validate_device_automation_config
-
-if TYPE_CHECKING:
-    from homeassistant.helpers import condition
 
 
 class DeviceAutomationConditionProtocol(Protocol):
@@ -57,8 +51,10 @@ class DeviceCondition(Condition):
     """Device condition."""
 
     _config: ConfigType
+    _platform_checker: ConditionCheckerType
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -75,6 +71,7 @@ class DeviceCondition(Condition):
         return complete_config
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -90,14 +87,21 @@ class DeviceCondition(Condition):
         assert config.options is not None
         self._config = config.options
 
-    async def async_get_checker(self) -> condition.ConditionCheckerType:
-        """Test a device condition."""
+    @override
+    async def _async_setup(self) -> None:
+        """Set up a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
-        return trace_condition_function(
-            platform.async_condition_from_config(self._hass, self._config)
+        self._platform_checker = platform.async_condition_from_config(
+            self._hass, self._config
         )
+
+    @override
+    def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
+        """Check the condition."""
+        result = self._platform_checker(self._hass, variables)
+        return result is not False
 
 
 CONDITIONS: dict[str, type[Condition]] = {

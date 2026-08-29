@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
+from mozart_api.models import (
+    BeolinkSelf,
+    BeoRemoteButton,
+    ButtonEvent,
+    PairedRemoteResponse,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,7 +23,12 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import mock_websocket_connection
 from .const import (
+    TEST_BATTERY,
     TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_FRIENDLY_NAME_3,
+    TEST_FRIENDLY_NAME_4,
+    TEST_JID_3,
+    TEST_JID_4,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
     TEST_SERIAL_NUMBER_4,
@@ -56,7 +66,7 @@ async def _check_button_event_creation(
     entity_ids_available = list(entity_registry.entities.keys())
 
     assert entity_ids_available == unordered(entity_ids)
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_button_event_creation_balance(
@@ -66,7 +76,11 @@ async def test_button_event_creation_balance(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+    """Test button event entities are created.
+
+    Uses a Balance (Most devices support all buttons
+    like the Balance).
+    """
 
     await _check_button_event_creation(
         hass,
@@ -85,7 +99,10 @@ async def test_no_button_and_remote_key_event_creation_core(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event entities are not created when using a Beoconnect Core with no Beoremote One connected."""
+    """Test button event entities are not created.
+
+    Uses a Beoconnect Core with no Beoremote One connected.
+    """
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
         items=[]
     )
@@ -107,7 +124,13 @@ async def test_button_event_creation_premiere(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Bluetooth and Microphone button event entities are not created when using a Beosound Premiere."""
+    """Test Bluetooth and Microphone button event entities.
+
+    These are not created when using a Beosound Premiere.
+    """
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3
+    )
 
     await _check_button_event_creation(
         hass,
@@ -130,6 +153,10 @@ async def test_button_event_creation_a5(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Microphone button event entity is not created when using a Beosound A5."""
+    mock_mozart_client.get_battery_state.return_value = TEST_BATTERY
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
+    )
 
     await _check_button_event_creation(
         hass,

@@ -1,7 +1,5 @@
 """The test for the sensibo select platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -47,7 +45,7 @@ async def test_select(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "dim"
 
 
@@ -73,7 +71,7 @@ async def test_select_set_option(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_set_ac_state_property.return_value = {
@@ -90,7 +88,7 @@ async def test_select_set_option(
             blocking=True,
         )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_get_devices_data.return_value.parsed[
@@ -120,7 +118,7 @@ async def test_select_set_option(
             blocking=True,
         )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_set_ac_state_property.return_value = {
@@ -134,7 +132,7 @@ async def test_select_set_option(
         blocking=True,
     )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "dim"
 
     mock_client.async_get_devices_data.return_value.parsed[
@@ -149,5 +147,5 @@ async def test_select_set_option(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == STATE_UNAVAILABLE

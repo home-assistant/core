@@ -1,10 +1,9 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -17,7 +16,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from . import WirelessTagPlatform
+from .const import WIRELESSTAG_DATA
 from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
 
@@ -62,7 +62,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data[DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
 
     tags = platform.load_tags()
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -82,31 +82,41 @@ async def async_setup_platform(
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
+    def __init__(
+        self,
+        api: WirelessTagPlatform,
+        tag: SensorTag,
+        description: SwitchEntityDescription,
+    ) -> None:
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
         self.entity_description = description
-        self._name = f"{self._tag.name} {description.name}"
+        self._attr_name = f"{self._tag.name} {description.name}"
         self._attr_unique_id = f"{self._uuid}_{description.key}"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.arm(self)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.disarm(self)
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
+    @override
     def updated_state_value(self):
         """Provide formatted value."""
         return self.principal_value
 
     @property
+    @override
     def principal_value(self):
         """Provide actual value of switch."""
         attr_name = f"is_{self.entity_description.key}_sensor_armed"

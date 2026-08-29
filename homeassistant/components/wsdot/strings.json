@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_travel_time_id": "WSDOT TravelTimeId does not describe a valid travel time route {travel_time_id}",
+      "no_travel_time": "Travel time route created without a travel time entity"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your WSDOT API key."
+        },
+        "description": "Set up your Washington State Department of Transportation integration.",
+        "title": "WSDOT setup"
+      }
+    }
+  },
+  "config_subentries": {
+    "travel_time": {
+      "entry_type": "Travel time",
+      "initiate_flow": {
+        "user": "Travel time"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "Travel Route Description"
+          },
+          "data_description": {
+            "name": "The official WSDOT description of the route."
+          },
+          "description": "Select one of the provided the highway routes to monitor estimated driving time along that route",
+          "title": "WSDOT travel time setup"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {domain} using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the {domain} API. Please check your internet connection and the status of the {domain} API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::wsdot::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {domain} using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an invalid API key was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "{domain} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_invalid_travel_time_id": {
+      "description": "Configuring {domain} using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an invalid travel_time_id was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::wsdot::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {domain} using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::wsdot::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    }
+  }
+}

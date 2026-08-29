@@ -1,7 +1,7 @@
 """Support for Broadlink climate devices."""
 
 from enum import IntEnum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
@@ -34,6 +34,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink climate entities."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
@@ -60,6 +62,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         self._attr_hvac_mode = None
         self.sensor_mode = SensorMode.INNER_SENSOR_CONTROL
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -68,6 +71,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
         if (sensor := data.get("sensor")) is not None:
@@ -91,6 +95,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
             self._attr_current_temperature = data.get("room_temp")
         self._attr_target_temperature = data.get("thermostat_temp")
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:

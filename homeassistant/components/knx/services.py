@@ -1,7 +1,5 @@
 """KNX integration services."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -116,20 +114,27 @@ async def service_event_register_modify(call: ServiceCall) -> None:
     knx_module = get_knx_module(call.hass)
 
     attr_address = call.data[KNX_ADDRESS]
-    group_addresses = list(map(parse_device_group_address, attr_address))
+    group_addresses = set(map(parse_device_group_address, attr_address))
 
     if call.data.get(SERVICE_KNX_ATTR_REMOVE):
+        _error_gas = set()
         for group_address in group_addresses:
             try:
                 knx_module.knx_event_callback.group_addresses.remove(group_address)
             except ValueError:
-                _LOGGER.warning(
-                    "Service event_register could not remove event for '%s'",
-                    str(group_address),
-                )
+                _error_gas.add(group_address)
             if group_address in knx_module.group_address_transcoder:
                 del knx_module.group_address_transcoder[group_address]
-        return
+
+        if not _error_gas:
+            return
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_event_register_ga_not_found",
+            translation_placeholders={
+                "group_addresses": ", ".join(map(str, sorted(_error_gas)))
+            },
+        )
 
     if (dpt := call.data.get(CONF_TYPE)) and (
         transcoder := DPTBase.parse_transcoder(dpt)
@@ -193,7 +198,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
                 " for '%s' - %s"
             ),
             group_address,
-            replaced_exposure.device.name,
+            replaced_exposure.name,
         )
         replaced_exposure.async_remove()
     exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
@@ -201,7 +206,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     _LOGGER.debug(
         "Service exposure_register registered exposure for '%s' - %s",
         group_address,
-        exposure.device.name,
+        exposure.name,
     )
 
 

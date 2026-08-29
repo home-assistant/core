@@ -83,7 +83,11 @@ def _add_entity_info(peripheral, device, entity_dict) -> None:
             KEY_PARENT_MAC: device.mac,
         }
 
-        key = f"{entity_info[KEY_PARENT_MAC]}/{entity_info[KEY_IDENTIFIER]}/{entity_info[KEY_MEASUREMENT]}"
+        key = (
+            f"{entity_info[KEY_PARENT_MAC]}"
+            f"/{entity_info[KEY_IDENTIFIER]}"
+            f"/{entity_info[KEY_MEASUREMENT]}"
+        )
         entity_dict[key] = entity_info
 
     return entity_dict

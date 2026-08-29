@@ -1,7 +1,5 @@
 """The CO2 Signal integration."""
 
-from __future__ import annotations
-
 from aioelectricitymaps import ElectricityMaps
 
 from homeassistant.const import CONF_API_KEY, Platform

@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "gateway": {
+        "time": "2026-02-16T18:04:53+01:00",
+        "sn": "P16000A024500000",
+        "model": "COM-WF",
+        "status": "offline",
+        "push_time": 60,
+        "pid": "0"
+      },
+      "plant_name": "Balcon",
+      "sn": "P16000A024500000",
+      "gateway_sn": "P16000A024500000",
+      "status": "offline",
+      "model": "HMS-1600W",
+      "software_version": "V1.0.0.10",
+      "lcd_version": "V0.0.0.0",
+      "afci_version": "V0.0.0.0",
+      "afci_version0": "",
+      "afci_version1": "",
+      "afci_version2": "",
+      "time": "2026-02-16T18:04:50+01:00",
+      "spn": "H910-07100-10",
+      "port": [
+        {
+          "sn": "P16000A024500000",
+          "id": "0",
+          "x": -1,
+          "y": -1,
+          "port": 1
+        },
+        {
+          "sn": "P16000A024500000",
+          "id": "0",
+          "x": -1,
+          "y": -1,
+          "port": 2
+        },
+        {
+          "sn": "P16000A024500000",
+          "id": "0",
+          "x": -1,
+          "y": -1,
+          "port": 3
+        },
+        {
+          "sn": "P16000A024500000",
+          "id": "0",
+          "x": -1,
+          "y": -1,
+          "port": 4
+        }
+      ],
+      "power": 0,
+      "eid": "0",
+      "device_type": "2",
+      "fault": 0,
+      "warning": 0,
+      "plant_id": "1123456789123456789",
+      "modbus": 1,
+      "e_total": 48.01,
+      "e_today": 1.54,
+      "property": 1,
+      "nick_name": "",
+      "com": 0,
+      "system_connect_mode": 0,
+      "third_active_power": 0,
+      "third_meter_energy": 0,
+      "today_generation_third": 0
+    }
+  ],
+  "message": "ok",
+  "time": 1771277551,
+  "totalPage": 1,
+  "totalCount": 1,
+  "code": 20000
+}

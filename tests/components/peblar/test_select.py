@@ -1,12 +1,15 @@
 """Tests for the Peblar select platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from peblar import (
+    LedBrightness,
     PeblarAuthenticationError,
     PeblarConnectionError,
     PeblarError,
     SmartChargingMode,
+    SoundVolume,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -42,8 +45,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure all entities are correctly assigned to the Peblar EV charger
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "23-45-A4O-MOF")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "23-45-A4O-MOF"), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -182,3 +185,68 @@ async def test_select_option_authentication_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "method_name", "option", "expected_kwargs"),
+    [
+        (
+            "select.peblar_ev_charger_buzzer_volume",
+            "set_buzzer_volume",
+            "medium",
+            {"volume": SoundVolume.MEDIUM},
+        ),
+        (
+            "select.peblar_ev_charger_led_brightness",
+            "set_led_brightness",
+            "bright",
+            {"brightness": LedBrightness.BRIGHT},
+        ),
+    ],
+)
+async def test_select_hardware_entity(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    entity_id: str,
+    method_name: str,
+    option: str,
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test the Peblar EV charger hardware select entities."""
+    mocked_method = getattr(mock_peblar, method_name)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+
+    mocked_method.assert_called_once_with(**expected_kwargs)
+
+
+@pytest.mark.parametrize(
+    ("mock_peblar", "entity_key"),
+    [
+        ({"HwHasBuzzer": False}, "buzzer_volume"),
+        ({"HwHasLed": False}, "led_brightness"),
+    ],
+    indirect=["mock_peblar"],
+)
+async def test_hw_entity_absent_when_hw_flag_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_key: str,
+) -> None:
+    """Test hardware select entity is absent when the hardware flag is false."""
+    assert entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{mock_config_entry.unique_id}_smart_charging"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mock_config_entry.unique_id}_{entity_key}"
+        )
+        is None
+    )

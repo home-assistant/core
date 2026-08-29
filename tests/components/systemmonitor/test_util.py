@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-from psutil._common import sdiskpart
+from psutil._ntuples import sdiskpart
 import pytest
 
 from homeassistant.core import HomeAssistant

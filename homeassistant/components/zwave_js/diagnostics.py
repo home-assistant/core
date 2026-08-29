@@ -1,7 +1,5 @@
 """Provides diagnostics for Z-Wave JS."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
@@ -28,7 +26,7 @@ from .helpers import (
 )
 from .models import ZwaveJSConfigEntry
 
-KEYS_TO_REDACT = {"homeId", "location"}
+KEYS_TO_REDACT = {"homeId", "location", "dsk"}
 
 VALUES_TO_REDACT = (
     ZwaveValueMatcher(property_="userCode", command_class=CommandClass.USER_CODE),

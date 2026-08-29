@@ -1,10 +1,9 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -116,6 +115,7 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         index = self._find_index_by_bus_id()
@@ -137,6 +137,7 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         return -1
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.data is not None

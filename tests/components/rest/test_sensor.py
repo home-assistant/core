@@ -801,7 +801,7 @@ async def test_update_with_json_attrs_bad_JSON(
 async def test_update_with_json_attrs_with_json_attrs_path(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test attributes get extracted from a JSON result with a template for the attributes."""
+    """Test attributes extracted from JSON with a path template."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -848,7 +848,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
+    """Test attributes extracted from XML-to-JSON with a path."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -893,7 +893,19 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
         "http://localhost",
         status=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        text='<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>123</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
+        text=(
+            '<?xml version="1.0" encoding="utf-8"?><response>'
+            "<scan>0</scan><ver>12556</ver><count>48</count>"
+            "<ssid>alexander</ssid><bss><valid>0</valid><name>0"
+            "</name><privacy>0</privacy><wlan>123</wlan>"
+            "<strength>0</strength></bss><led0>0</led0>"
+            "<led1>0</led1><led2>0</led2><led3>0</led3>"
+            "<led4>0</led4><led5>0</led5><led6>0</led6>"
+            "<led7>0</led7><btn0>up</btn0><btn1>up</btn1>"
+            "<btn2>up</btn2><btn3>up</btn3><pot0>0</pot0>"
+            "<usr0>0</usr0><temp0>0x0XF0x0XF</temp0>"
+            "<time0> 0</time0></response>"
+        ),
     )
     assert await async_setup_component(
         hass,
@@ -929,7 +941,7 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test attributes get extracted from a JSON result that was converted from XML with application/xml mime type."""
+    """Test attributes extracted from XML with application/xml type."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -1123,7 +1135,7 @@ async def test_query_param_json_string_preserved(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that JSON strings in query params are preserved and not converted to dicts."""
+    """Test JSON strings in query params are preserved."""
     # Mock response
     aioclient_mock.get(
         "https://api.example.com/data",
@@ -1277,7 +1289,11 @@ async def test_availability_in_config(
                             "unique_id": "somethingunique",
                             "availability": "{{ value_json.available }}",
                             "value_template": "{{ value_json.state }}",
-                            "name": "{{ value_json.name if value_json is defined else 'rest_sensor' }}",
+                            "name": (
+                                "{{ value_json.name if"
+                                " value_json is defined"
+                                " else 'rest_sensor' }}"
+                            ),
                             "icon": "{{ value_json.icon }}",
                             "picture": "{{ value_json.picture }}",
                         }
@@ -1317,7 +1333,7 @@ async def test_availability_in_config(
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == STATE_UNAVAILABLE
-    assert "friendly_name" not in state.attributes
+    assert state.attributes["friendly_name"] == "rest_sensor"
     assert "icon" not in state.attributes
     assert "entity_picture" not in state.attributes
 
@@ -1345,7 +1361,11 @@ async def test_json_response_with_availability_syntax_error(
                         {
                             "unique_id": "complex_json",
                             "name": "complex_json",
-                            "value_template": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.ping }}',
+                            "value_template": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.ping }}"
+                            ),
                             "availability": "{{ what_the_heck == 2 }}",
                         }
                     ],
@@ -1361,8 +1381,9 @@ async def test_json_response_with_availability_syntax_error(
     assert state.state == "21.4"
 
     assert (
-        "Error rendering availability template for sensor.complex_json: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for"
+        " sensor.complex_json: UndefinedError:"
+        " 'what_the_heck' is undefined" in caplog.text
     )
 
 
@@ -1387,8 +1408,17 @@ async def test_json_response_with_availability(
                         {
                             "unique_id": "complex_json",
                             "name": "complex_json",
-                            "value_template": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.ping }}',
-                            "availability": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.status == 1 and is_number(v.ping) }}',
+                            "value_template": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.ping }}"
+                            ),
+                            "availability": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.status == 1 and"
+                                " is_number(v.ping) }}"
+                            ),
                             "unit_of_measurement": "ms",
                             "state_class": "measurement",
                         }

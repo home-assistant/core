@@ -58,3 +58,62 @@ async def test_setting_value(
         blocking=True,
     )
     mock_stream_magic_client.set_early_update.assert_called_once_with(False)
+
+
+async def test_equalizer_switch(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test equalizer switch."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test turning equalizer on
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+        },
+        blocking=True,
+    )
+    mock_stream_magic_client.set_equalizer_mode.assert_called_once_with(True)
+    mock_stream_magic_client.set_equalizer_mode.reset_mock()
+
+    # Test turning equalizer off
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+        },
+        blocking=True,
+    )
+    mock_stream_magic_client.set_equalizer_mode.assert_called_once_with(False)
+
+
+async def test_equalizer_switch_without_user_eq(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that equalizer switch entity is not created when user_eq is None."""
+    # Set user_eq to None to simulate a device without EQ support
+    mock_stream_magic_client.audio.user_eq = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify the equalizer switch entity was not created
+    assert entity_registry.async_get("switch.cambridge_audio_cxnv2_equalizer") is None
+
+    # Verify other switch entities still exist
+    assert entity_registry.async_get("switch.cambridge_audio_cxnv2_pre_amp") is not None
+    assert (
+        entity_registry.async_get("switch.cambridge_audio_cxnv2_early_update")
+        is not None
+    )
+    assert (
+        entity_registry.async_get("switch.cambridge_audio_cxnv2_room_correction")
+        is not None
+    )

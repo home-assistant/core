@@ -4,14 +4,14 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zhaquirks.builder import QuirkBuilder
 from zigpy.device import Device
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -284,9 +284,6 @@ async def async_test_powerconfiguration2(
     hass: HomeAssistant, cluster: Cluster, entity_id: str
 ):
     """Test powerconfiguration/battery sensor."""
-    await send_attributes_report(hass, cluster, {33: -1})
-    assert_state(hass, entity_id, STATE_UNKNOWN, "%")
-
     await send_attributes_report(hass, cluster, {33: 255})
     assert_state(hass, entity_id, STATE_UNKNOWN, "%")
 
@@ -311,6 +308,8 @@ async def async_test_setpoint_change_source(
     )
     hass_state = hass.states.get(entity_id)
     assert hass_state.state == "Schedule"
+    assert hass_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert hass_state.attributes[ATTR_OPTIONS] == ["Manual", "Schedule", "External"]
 
 
 async def async_test_pi_heating_demand(
@@ -399,7 +398,7 @@ async def async_test_pi_heating_demand(
                 "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x00,
             },
-            {"instaneneous_demand", "current_summ_received"},
+            {"instantaneous_demand", "current_summ_received"},
             STATE_UNKNOWN,
         ),
         (
@@ -417,7 +416,7 @@ async def async_test_pi_heating_demand(
                 "unit_of_measure": 0x00,
                 "current_summ_received": 0,
             },
-            {"instaneneous_demand", "current_summ_delivered"},
+            {"instantaneous_demand", "current_summ_delivered"},
             "0.0",
         ),
         (

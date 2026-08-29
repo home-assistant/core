@@ -1,24 +1,20 @@
 """Support for Streamlabs Water Monitor Usage."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import StreamlabsCoordinator
-from .const import DOMAIN
-from .coordinator import StreamlabsData
+from .coordinator import StreamlabsConfigEntry, StreamlabsCoordinator, StreamlabsData
 from .entity import StreamlabsWaterEntity
 
 
@@ -59,11 +55,11 @@ SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StreamlabsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Streamlabs water sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         StreamLabsSensor(coordinator, location_id, entity_description)
@@ -88,6 +84,7 @@ class StreamLabsSensor(StreamlabsWaterEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current daily usage."""
         return self.entity_description.value_fn(self.location_data)

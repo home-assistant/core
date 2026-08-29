@@ -34,9 +34,12 @@ def _generate(src_dir: Path, target_dir: Path, info: Info) -> None:
 
         target_file = target_dir / source_file.relative_to(src_dir)
 
-        # If the target file exists, create our template as EXAMPLE_<filename>.
-        # Exception: If we are creating a new integration, we can end up running integration base
-        # and a config flows on top of one another. In that case, we want to override the files.
+        # If the target file exists, create our template as
+        # EXAMPLE_<filename>.
+        # Exception: If we are creating a new integration,
+        # we can end up running integration base and a config
+        # flows on top of one another. In that case, we want
+        # to override the files.
         if not info.is_new and target_file.exists():
             new_name = f"EXAMPLE_{target_file.name}"
             print(f"File {target_file} already exists, creating {new_name} instead.")
@@ -75,6 +78,8 @@ def _custom_tasks(template, info: Info) -> None:
 
         if info.requirement:
             changes["requirements"] = [info.requirement]
+        if info.integration_type:
+            changes["integration_type"] = info.integration_type
 
         info.update_manifest(**changes)
 
@@ -125,12 +130,18 @@ def _custom_tasks(template, info: Info) -> None:
                     }
                 },
                 "error": {
-                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-                    "unknown": "[%key:common::config_flow::error::unknown%]",
+                    "cannot_connect": (
+                        "[%key:common::config_flow::error::cannot_connect%]"
+                    ),
+                    "invalid_auth": (
+                        "[%key:common::config_flow::error::invalid_auth%]"
+                    ),
+                    "unknown": ("[%key:common::config_flow::error::unknown%]"),
                 },
                 "abort": {
-                    "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+                    "already_configured": (
+                        "[%key:common::config_flow::abort::already_configured_device%]"
+                    )
                 },
             },
         )
@@ -141,24 +152,36 @@ def _custom_tasks(template, info: Info) -> None:
             config={
                 "step": {
                     "confirm": {
-                        "description": "[%key:common::config_flow::description::confirm_setup%]",
+                        "description": (
+                            "[%key:common::config_flow::description::confirm_setup%]"
+                        ),
                     }
                 },
                 "abort": {
-                    "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-                    "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+                    "single_instance_allowed": (
+                        "[%key:common::config_flow::abort::single_instance_allowed%]"
+                    ),
+                    "no_devices_found": (
+                        "[%key:common::config_flow::abort::no_devices_found%]"
+                    ),
                 },
             },
         )
 
     elif template == "config_flow_helper":
-        info.update_manifest(config_flow=True, integration_type="helper")
+        info.update_manifest(
+            config_flow=True,
+            integration_type="helper",
+        )
         info.update_strings(
             config={
                 "step": {
                     "user": {
                         "description": "New NEW_NAME Sensor",
-                        "data": {"entity_id": "Input sensor", "name": "Name"},
+                        "data": {
+                            "entity_id": "Input sensor",
+                            "name": "Name",
+                        },
                     },
                 },
             },
@@ -166,7 +189,12 @@ def _custom_tasks(template, info: Info) -> None:
                 "step": {
                     "init": {
                         "data": {
-                            "entity_id": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
+                            "entity_id": (
+                                "[%key:component"
+                                "::NEW_DOMAIN"
+                                "::config::step::user"
+                                "::description%]"
+                            )
                         },
                     },
                 },
@@ -174,28 +202,68 @@ def _custom_tasks(template, info: Info) -> None:
         )
 
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True, dependencies=["application_credentials"])
+        info.update_manifest(
+            config_flow=True,
+            dependencies=["application_credentials"],
+        )
         info.update_strings(
             config={
                 "step": {
                     "pick_implementation": {
-                        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+                        "title": (
+                            "[%key:common::config_flow"
+                            "::title"
+                            "::oauth2_pick_implementation%]"
+                        )
                     }
                 },
                 "abort": {
-                    "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-                    "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-                    "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-                    "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-                    "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-                    "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-                    "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-                    "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-                    "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+                    "already_configured": (
+                        "[%key:common::config_flow::abort::already_configured_account%]"
+                    ),
+                    "already_in_progress": (
+                        "[%key:common::config_flow::abort::already_in_progress%]"
+                    ),
+                    "oauth_error": ("[%key:common::config_flow::abort::oauth2_error%]"),
+                    "oauth_failed": (
+                        "[%key:common::config_flow::abort::oauth2_failed%]"
+                    ),
+                    "oauth_implementation_unavailable": (
+                        "[%key:common::config_flow"
+                        "::abort"
+                        "::oauth2_implementation"
+                        "_unavailable%]"
+                    ),
+                    "oauth_timeout": (
+                        "[%key:common::config_flow::abort::oauth2_timeout%]"
+                    ),
+                    "oauth_unauthorized": (
+                        "[%key:common::config_flow::abort::oauth2_unauthorized%]"
+                    ),
+                    "missing_configuration": (
+                        "[%key:common::config_flow"
+                        "::abort"
+                        "::oauth2_missing_configuration%]"
+                    ),
+                    "authorize_url_timeout": (
+                        "[%key:common::config_flow"
+                        "::abort"
+                        "::oauth2_authorize_url_timeout%]"
+                    ),
+                    "no_url_available": (
+                        "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+                    ),
+                    "user_rejected_authorize": (
+                        "[%key:common::config_flow"
+                        "::abort"
+                        "::oauth2_user_rejected"
+                        "_authorize%]"
+                    ),
                 },
                 "create_entry": {
-                    "default": "[%key:common::config_flow::create_entry::authenticated%]"
+                    "default": (
+                        "[%key:common::config_flow::create_entry::authenticated%]"
+                    )
                 },
             },
         )

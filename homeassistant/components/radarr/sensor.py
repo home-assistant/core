@@ -1,11 +1,9 @@
 """Support for Radarr."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from datetime import UTC, datetime
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
 
@@ -47,7 +45,7 @@ def get_modified_description(
 
 
 @dataclasses.dataclass(frozen=True)
-class RadarrSensorEntityDescriptionMixIn(Generic[T]):
+class RadarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int | datetime]
@@ -55,7 +53,9 @@ class RadarrSensorEntityDescriptionMixIn(Generic[T]):
 
 @dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescription(
-    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
+    SensorEntityDescription,
+    RadarrSensorEntityDescriptionMixIn[T],
+    Generic[T],  # noqa: UP046
 ):
     """Class to describe a Radarr sensor."""
 
@@ -148,6 +148,7 @@ class RadarrSensor(RadarrEntity[T], SensorEntity):
         self.folder_name = folder_name
 
     @property
+    @override
     def native_value(self) -> str | int | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)

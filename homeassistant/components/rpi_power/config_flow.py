@@ -1,7 +1,5 @@
 """Config flow for Raspberry Pi Power Supply Checker."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from typing import Any
 

@@ -17,11 +17,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_mock_service, mock_component
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
@@ -473,6 +468,6 @@ async def test_zone_undefined(
     assert len(service_calls) == 0
 
     assert (
-        f"Unable to execute automation automation 0: Zone {zone_does_not_exist} not found"
-        in caplog.text
+        "Unable to execute automation automation 0:"
+        f" Zone {zone_does_not_exist} not found" in caplog.text
     )

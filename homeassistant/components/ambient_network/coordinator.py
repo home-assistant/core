@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioambient import OpenAPI
 from aioambient.errors import RequestError
@@ -42,6 +40,7 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the Ambient Network."""
 

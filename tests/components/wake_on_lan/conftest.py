@@ -1,14 +1,12 @@
 """Test fixtures for Wake on Lan."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
@@ -58,6 +56,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     """
     return {
         CONF_MAC: DEFAULT_MAC,
+        CONF_SECUREON_PASSWORD: "00:aa:22:bb:33:cc",
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
     }
@@ -67,7 +66,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
 async def load_integration(
     hass: HomeAssistant, get_config: dict[str, Any]
 ) -> MockConfigEntry:
-    """Set up the Statistics integration in Home Assistant."""
+    """Set up the Wake on LAN integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"Wake on LAN {DEFAULT_MAC}",

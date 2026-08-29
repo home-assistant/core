@@ -1,0 +1,10 @@
+{
+  "domain": "brands",
+  "name": "Brands",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["http", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/brands",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

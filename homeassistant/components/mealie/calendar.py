@@ -1,10 +1,10 @@
 """Calendar platform for Mealie."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from aiomealie import Mealplan, MealplanEntryType
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -15,13 +15,6 @@ from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
 
-SUPPORTED_MEALPLAN_ENTRY_TYPES = [
-    MealplanEntryType.BREAKFAST,
-    MealplanEntryType.DINNER,
-    MealplanEntryType.LUNCH,
-    MealplanEntryType.SIDE,
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,10 +23,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the calendar platform for entity."""
     coordinator = entry.runtime_data.mealplan_coordinator
+    version = entry.runtime_data.version
+
+    supported_mealplan_entry_types: list[MealplanEntryType]
+    if version.valid and version < AwesomeVersion("v3.7.0"):
+        # Prior to Mealie 3.7.0, only these mealplan entry types were supported
+        supported_mealplan_entry_types = [
+            MealplanEntryType.BREAKFAST,
+            MealplanEntryType.DINNER,
+            MealplanEntryType.LUNCH,
+            MealplanEntryType.SIDE,
+        ]
+    else:
+        # For Mealie 3.7.0 and newer and nightlies, add all current mealplan entry types
+        supported_mealplan_entry_types = list(MealplanEntryType)
 
     async_add_entities(
         MealieMealplanCalendarEntity(coordinator, entry_type)
-        for entry_type in SUPPORTED_MEALPLAN_ENTRY_TYPES
+        for entry_type in supported_mealplan_entry_types
     )
 
 
@@ -64,6 +71,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         self._attr_translation_key = entry_type.name.lower()
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         mealplans = self.coordinator.data[self._entry_type]
@@ -72,6 +80,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         sorted_mealplans = sorted(mealplans, key=lambda x: x.mealplan_date)
         return _get_event_from_mealplan(sorted_mealplans[0])
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

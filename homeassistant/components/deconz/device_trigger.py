@@ -1,7 +1,5 @@
 """Provides device automations for deconz events."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -169,6 +167,7 @@ FRIENDS_OF_HUE_SWITCH = {
 }
 
 RODRET_REMOTE_MODEL = "RODRET Dimmer"
+RODRET_REMOTE_MODEL_2 = "RODRET wireless dimmer"
 RODRET_REMOTE = {
     (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
@@ -624,6 +623,7 @@ REMOTES = {
     HUE_WALL_REMOTE_MODEL: HUE_WALL_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
     RODRET_REMOTE_MODEL: RODRET_REMOTE,
+    RODRET_REMOTE_MODEL_2: RODRET_REMOTE,
     SOMRIG_REMOTE_MODEL: SOMRIG_REMOTE,
     STYRBAR_REMOTE_MODEL: STYRBAR_REMOTE,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
@@ -702,7 +702,9 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
@@ -731,7 +733,14 @@ async def async_attach_trigger(
     event_data: dict[str, int | str] = {}
 
     device_registry = dr.async_get(hass)
-    device = device_registry.devices[config[CONF_DEVICE_ID]]
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
+
+    if not device:
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger device with ID {config[CONF_DEVICE_ID]} not found"
+        )
 
     deconz_event = _get_deconz_event_from_device(hass, device)
     if event_id := deconz_event.serial:
@@ -764,9 +773,9 @@ async def async_get_triggers(
     Generate device trigger list.
     """
     device_registry = dr.async_get(hass)
-    device = device_registry.devices[device_id]
+    device = device_registry.async_get(device_id, include_child_devices=False)
 
-    if device.model not in REMOTES:
+    if device is None or device.model not in REMOTES:
         return []
 
     triggers = []

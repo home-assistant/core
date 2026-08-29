@@ -20,7 +20,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
-      "name": "Log"
+      "name": "Log activity"
     }
   },
   "title": "Activity"

@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 import logging
@@ -326,10 +324,12 @@ async def build_item_response(
                 child_media = _build_response_favorites(item)
 
             elif search_type in ["apps", "radios"]:
-                # item["cmd"] contains the name of the command to use with the cli for the app
+                # item["cmd"] contains the name of the command
+                # to use with the cli for the app;
                 # add the command to the dictionaries
                 if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
-                    # Skip searches in apps as they'd need UI or if the link isn't to audio
+                    # Skip searches in apps as they'd need UI
+                    # or if the link isn't to audio
                     continue
                 app_cmd = "app-" + item["cmd"]
 

@@ -1,9 +1,8 @@
 """SendGrid notification service."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
+from typing import Any, override
 
 from sendgrid import SendGridAPIClient
 import voluptuous as vol
@@ -61,7 +60,8 @@ class SendgridNotificationService(BaseNotificationService):
 
         self._sg = SendGridAPIClient(self.api_key)
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send an email to a user via SendGrid."""
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

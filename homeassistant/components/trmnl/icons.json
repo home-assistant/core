@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "wifi_strength": {
+        "default": "mdi:wifi-strength-off-outline",
+        "range": {
+          "0": "mdi:wifi-strength-1",
+          "25": "mdi:wifi-strength-2",
+          "50": "mdi:wifi-strength-3",
+          "75": "mdi:wifi-strength-4"
+        }
+      }
+    },
+    "switch": {
+      "sleep_mode": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      }
+    },
+    "time": {
+      "sleep_end_time": {
+        "default": "mdi:sleep-off"
+      },
+      "sleep_start_time": {
+        "default": "mdi:sleep"
+      }
+    }
+  }
+}

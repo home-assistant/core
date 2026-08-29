@@ -154,6 +154,249 @@
     }
   },
   "config_panel": {
+    "common": {
+      "exposes_count": "Exposes: {count}",
+      "group_address": "Group address",
+      "group_addresses": "Group addresses",
+      "monitor_x_group_addresses": "Monitor {count} group addresses"
+    },
+    "dashboard": {
+      "connection_flow": {
+        "description": "Reconfigure KNX connection or import a new KNX keyring file",
+        "title": "Connection settings"
+      },
+      "options_flow": {
+        "description": "Configure integration settings",
+        "title": "Integration options"
+      },
+      "project_upload": {
+        "description": "Import a KNX project file to help configure group addresses and datapoint types",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      },
+      "send": {
+        "description": "Send an arbitrary telegram to the KNX bus.",
+        "title": "[%key:component::knx::config_panel::dialogs::send::title%]"
+      },
+      "time_server": {
+        "description": "Broadcast the current local time and date to the KNX bus",
+        "title": "[%key:component::knx::config_panel::dialogs::time_server::title%]"
+      }
+    },
+    "dialogs": {
+      "project_upload": {
+        "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
+        "file_upload_label": "ETS project file",
+        "title": "Import ETS project"
+      },
+      "send": {
+        "data": {
+          "description": "The data to send in the telegram. The format depends on the selected datapoint type.",
+          "label": "Data"
+        },
+        "description": "You can use the hotkey `s` to spawn this dialog from anywhere in the KNX config panel.",
+        "read_button": "Read",
+        "response": {
+          "description": "Send as GroupValueResponse telegram.",
+          "label": "Response"
+        },
+        "title": "Send KNX telegram",
+        "write_button": "Write"
+      },
+      "time_server": {
+        "date": {
+          "label": "Date"
+        },
+        "datetime": {
+          "label": "Combined date and time"
+        },
+        "description": "Periodically sends the current local time and date to the KNX bus. Values are broadcast every hour to the configured group addresses.\n\nLeave an address field empty to disable sending for that format.",
+        "time": {
+          "label": "Time"
+        },
+        "title": "Time server"
+      }
+    },
+    "dpt": {
+      "options": {
+        "5": "Generic 1-byte unsigned integer",
+        "5_001": "Percent (0 … 100)",
+        "5_003": "Angle",
+        "5_004": "Percent (0 … 255)",
+        "5_005": "Decimal factor",
+        "5_006": "Tariff",
+        "5_010": "Counter (0 … 255)",
+        "6": "Generic 1-byte signed integer",
+        "6_001": "Percent (-128 … 127)",
+        "6_010": "Counter (-128 … 127)",
+        "7": "Generic 2-byte unsigned integer",
+        "7_001": "Counter (0 … 65535)",
+        "7_002": "Time period",
+        "7_003": "Time period (10 ms)",
+        "7_004": "Time period (100 ms)",
+        "7_005": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_006": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_007": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_010": "Interface Object Property",
+        "7_011": "Length",
+        "7_012": "Electrical current",
+        "7_013": "Brightness",
+        "7_600": "Color temperature",
+        "8": "Generic 2-byte signed integer",
+        "8_001": "Counter (-32 768 … 32 767)",
+        "8_002": "Delta time",
+        "8_003": "Delta time (10 ms)",
+        "8_004": "Delta time (100 ms)",
+        "8_005": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_006": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_007": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_010": "Percent (-327.68 … 327.67)",
+        "8_011": "Rotation angle",
+        "8_012": "Length (Altitude)",
+        "9": "Generic 2-byte floating point",
+        "9_001": "Temperature",
+        "9_002": "Temperature difference",
+        "9_003": "Temperature change",
+        "9_004": "Illuminance",
+        "9_005": "Wind speed",
+        "9_006": "Pressure (2-byte)",
+        "9_007": "Humidity",
+        "9_008": "Air quality",
+        "9_009": "Air flow",
+        "9_010": "Time",
+        "9_011": "[%key:component::knx::config_panel::dpt::options::9_010%]",
+        "9_020": "Voltage",
+        "9_021": "Current",
+        "9_022": "Power density",
+        "9_023": "Temperature sensitivity",
+        "9_024": "Power (2-byte)",
+        "9_025": "Volume flow",
+        "9_026": "Rain amount",
+        "9_027": "[%key:component::knx::config_panel::dpt::options::9_001%]",
+        "9_028": "[%key:component::knx::config_panel::dpt::options::9_005%]",
+        "9_029": "Absolute humidity",
+        "9_030": "Concentration",
+        "9_60000": "Enthalpy",
+        "12": "Generic 4-byte unsigned integer",
+        "12_001": "Counter (0 … 4 294 967 295)",
+        "12_100": "Time period (4-byte)",
+        "12_101": "[%key:component::knx::config_panel::dpt::options::12_100%]",
+        "12_102": "[%key:component::knx::config_panel::dpt::options::12_100%]",
+        "12_1200": "Liquid volume",
+        "12_1201": "Volume",
+        "13": "Generic 4-byte signed integer",
+        "13_001": "Counter (-2 147 483 648 … 2 147 483 647)",
+        "13_002": "Flow rate",
+        "13_010": "Active energy",
+        "13_011": "Apparent energy",
+        "13_012": "Reactive energy",
+        "13_013": "[%key:component::knx::config_panel::dpt::options::13_010%]",
+        "13_014": "[%key:component::knx::config_panel::dpt::options::13_011%]",
+        "13_015": "[%key:component::knx::config_panel::dpt::options::13_012%]",
+        "13_016": "[%key:component::knx::config_panel::dpt::options::13_010%]",
+        "13_100": "Operating hours",
+        "13_1200": "Delta liquid volume",
+        "13_1201": "Delta volume",
+        "14": "Generic 4-byte floating point",
+        "14_000": "Acceleration",
+        "14_001": "Angular acceleration",
+        "14_002": "Activation energy",
+        "14_003": "Activity (radioactive)",
+        "14_004": "Amount of substance",
+        "14_005": "Amplitude",
+        "14_006": "Angle",
+        "14_007": "[%key:component::knx::config_panel::dpt::options::14_006%]",
+        "14_008": "Angular momentum",
+        "14_009": "Angular velocity",
+        "14_010": "Area",
+        "14_011": "Capacitance",
+        "14_012": "Charge density (surface)",
+        "14_013": "Charge density (volume)",
+        "14_014": "Compressibility",
+        "14_015": "Conductance",
+        "14_016": "Electrical conductivity",
+        "14_017": "Density",
+        "14_018": "Electric charge",
+        "14_019": "Electric current",
+        "14_020": "Electric current density",
+        "14_021": "Electric dipole moment",
+        "14_022": "Electric displacement",
+        "14_023": "Electric field strength",
+        "14_024": "Electric flux",
+        "14_025": "Electric flux density",
+        "14_026": "Electric polarization",
+        "14_027": "Electric potential",
+        "14_028": "Potential difference",
+        "14_029": "Electromagnetic moment",
+        "14_030": "Electromotive force",
+        "14_031": "Energy",
+        "14_032": "Force",
+        "14_033": "Frequency",
+        "14_034": "Angular frequency",
+        "14_035": "Heat capacity",
+        "14_036": "Heat flow rate",
+        "14_037": "Heat quantity",
+        "14_038": "Impedance",
+        "14_039": "Length",
+        "14_040": "Light quantity",
+        "14_041": "Luminance",
+        "14_042": "Luminous flux",
+        "14_043": "Luminous intensity",
+        "14_044": "Magnetic field strength",
+        "14_045": "Magnetic flux",
+        "14_046": "Magnetic flux density",
+        "14_047": "Magnetic moment",
+        "14_048": "Magnetic polarization",
+        "14_049": "Magnetization",
+        "14_050": "Magnetomotive force",
+        "14_051": "Mass",
+        "14_052": "Mass flux",
+        "14_053": "Momentum",
+        "14_054": "Phase angle",
+        "14_055": "[%key:component::knx::config_panel::dpt::options::14_054%]",
+        "14_056": "Power (4-byte)",
+        "14_057": "Power factor",
+        "14_058": "Pressure (4-byte)",
+        "14_059": "Reactance",
+        "14_060": "Resistance",
+        "14_061": "Resistivity",
+        "14_062": "Self inductance",
+        "14_063": "Solid angle",
+        "14_064": "Sound intensity",
+        "14_065": "Speed",
+        "14_066": "Stress",
+        "14_067": "Surface tension",
+        "14_068": "Common temperature",
+        "14_069": "Absolute temperature",
+        "14_070": "[%key:component::knx::config_panel::dpt::options::9_002%]",
+        "14_071": "Thermal capacity",
+        "14_072": "Thermal conductivity",
+        "14_073": "Thermoelectric power",
+        "14_074": "[%key:component::knx::config_panel::dpt::options::9_010%]",
+        "14_075": "Torque",
+        "14_076": "[%key:component::knx::config_panel::dpt::options::12_1201%]",
+        "14_077": "Volume flux",
+        "14_078": "Weight",
+        "14_079": "Work",
+        "14_080": "Apparent power",
+        "14_1200": "Meter flow",
+        "14_1201": "[%key:component::knx::config_panel::dpt::options::14_1200%]",
+        "16_000": "String (ASCII)",
+        "16_001": "String (Latin-1)",
+        "17_001": "Scene number",
+        "29": "Generic 8-byte signed integer",
+        "29_010": "Active energy (8-byte)",
+        "29_011": "Apparent energy (8-byte)",
+        "29_012": "Reactive energy (8-byte)"
+      },
+      "selector": {
+        "label": "Select a datapoint type",
+        "no_selection": "No DPT selected"
+      }
+    },
+    "dpt_reference": {
+      "description": "Browse supported KNX datapoint types",
+      "title": "DPT reference"
+    },
     "entities": {
       "create": {
         "_": {
@@ -170,8 +413,16 @@
           },
           "knx": {
             "knx_group_address": {
+              "add_passive_address": "+ Add passive address",
               "dpt": "Datapoint type",
-              "passive_addresses": "Passive addresses",
+              "dpt_incompatible": "DPT {dpt} is incompatible with this field's expected DPTs.",
+              "dpt_no_selection": "No DPT selected",
+              "dpt_select": "Select DPT",
+              "group_address_none_for_dpt": "No group addresses known for expected DPT",
+              "group_address_none_for_filter": "No group addresses known for current filter",
+              "group_address_search": "Search group address",
+              "group_address_unknown": "Unknown group address",
+              "passive_address": "Passive address",
               "send_address": "Send address",
               "state_address": "State address",
               "valid_dpts": "Valid DPTs"
@@ -221,6 +472,19 @@
             "section_advanced_options": {
               "description": "Properties of the binary sensor state.",
               "title": "State properties"
+            }
+          }
+        },
+        "button": {
+          "description": "Entity for sending predefined values.",
+          "knx": {
+            "data": {
+              "description": "The value sent when the button is pressed. The format of the value depends on the DPT of the configured address.",
+              "label": "Data"
+            },
+            "ga_send": {
+              "description": "Group address the value is sent to.",
+              "label": "Address"
             }
           }
         },
@@ -460,7 +724,45 @@
             }
           }
         },
-        "header": "Create new entity",
+        "fan": {
+          "description": "The KNX fan platform is used as an interface to fan actuators.",
+          "knx": {
+            "ga_oscillation": {
+              "description": "Toggle oscillation of the fan.",
+              "label": "Oscillation"
+            },
+            "ga_switch": {
+              "description": "Group address to turn the fan on/off.",
+              "label": "Switch"
+            },
+            "speed": {
+              "description": "Control the speed of the fan.",
+              "ga_speed": {
+                "description": "Group address to control the current speed of the fan as a percentage value.",
+                "label": "Speed"
+              },
+              "ga_step": {
+                "description": "Group address to control the current speed step.",
+                "label": "Step"
+              },
+              "max_step": {
+                "description": "Number of discrete fan speed steps (Off excluded).",
+                "label": "Fan steps"
+              },
+              "options": {
+                "percentage_mode": {
+                  "description": "Set the fan speed as a percentage value (0-100%).",
+                  "label": "Percentage"
+                },
+                "step_mode": {
+                  "description": "Set the fan speed in discrete steps.",
+                  "label": "Steps"
+                }
+              },
+              "title": "Fan speed"
+            }
+          }
+        },
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -558,6 +860,130 @@
             }
           }
         },
+        "notify": {
+          "description": "The KNX notify platform allows you to send text messages to the KNX bus.",
+          "knx": {
+            "ga_send": {
+              "description": "The group address messages are sent to.",
+              "label": "Address"
+            }
+          }
+        },
+        "number": {
+          "description": "Entity for numeric datapoints. Temperature, percent, etc.",
+          "knx": {
+            "device_class": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::label%]"
+            },
+            "ga_sensor": {
+              "description": "Group address representing value.",
+              "label": "Value"
+            },
+            "max": {
+              "description": "Override the DPT's maximum value allowed to be set.",
+              "label": "Maximum value"
+            },
+            "min": {
+              "description": "Override the DPT's minimum value allowed to be set.",
+              "label": "Minimum value"
+            },
+            "mode": {
+              "description": "[%key:component::knx::config_panel::entities::create::text::knx::mode::description%]",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "auto": "[%key:component::number::entity_component::_::state_attributes::mode::state::auto%]",
+                "box": "[%key:component::number::entity_component::_::state_attributes::mode::state::box%]",
+                "slider": "[%key:component::number::entity_component::_::state_attributes::mode::state::slider%]"
+              }
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT-based entity attributes.",
+              "title": "[%key:component::knx::config_panel::entities::create::sensor::knx::section_advanced_options::title%]"
+            },
+            "step": {
+              "description": "Override the DPT's smallest step size to change the value.",
+              "label": "Step size"
+            },
+            "unit_of_measurement": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::label%]"
+            }
+          }
+        },
+        "scene": {
+          "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
+          "knx": {
+            "ga_scene": {
+              "description": "Group address to activate a scene.",
+              "label": "Scene"
+            },
+            "scene_number": {
+              "description": "The scene number this entity is associated with.",
+              "label": "Scene number"
+            }
+          }
+        },
+        "select": {
+          "description": "The KNX select platform lets you present a list of named options and map each to a value sent to and read from the KNX bus.",
+          "knx": {
+            "options_source": {
+              "custom_options": {
+                "description": "Define the selectable options and the value each one sends.",
+                "label": "Options"
+              },
+              "description": "Choose how the selectable options are defined.",
+              "ga_custom": {
+                "description": "Group address the selected value is sent to and read from.",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "ga_enum": {
+                "description": "[%key:component::knx::config_panel::entities::create::select::knx::options_source::ga_custom::description%]",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "options": {
+                "custom": {
+                  "description": "Define the options and the value each one sends manually.",
+                  "label": "Custom options"
+                },
+                "from_dpt": {
+                  "description": "The options are derived from the values of an enum data point type.",
+                  "label": "Options from data point type"
+                }
+              },
+              "title": "Options"
+            }
+          }
+        },
+        "sensor": {
+          "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
+          "knx": {
+            "always_callback": {
+              "description": "Write each update to the state machine, even if the data is the same.",
+              "label": "Force update"
+            },
+            "device_class": {
+              "description": "Override the DPT's default device class.",
+              "label": "Device class"
+            },
+            "ga_sensor": {
+              "description": "Group address representing state.",
+              "label": "State"
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT-based sensor attributes.",
+              "title": "Overrides"
+            },
+            "state_class": {
+              "description": "Override the DPT's default state class.",
+              "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
+            },
+            "unit_of_measurement": {
+              "description": "Override the DPT's default unit of measurement.",
+              "label": "Unit of measurement"
+            }
+          }
+        },
         "switch": {
           "description": "The KNX switch platform is used as an interface to switching actuators.",
           "knx": {
@@ -571,6 +997,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%key:common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
@@ -580,10 +1023,184 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
+        },
+        "weather": {
+          "description": "The KNX weather platform is used as an interface to KNX weather stations.",
+          "knx": {
+            "ga_air_pressure": {
+              "description": "Group address for reading the current air pressure.",
+              "label": "Air pressure"
+            },
+            "ga_brightness_east": {
+              "description": "Group address for reading the current brightness to the east.",
+              "label": "Brightness east"
+            },
+            "ga_brightness_north": {
+              "description": "Group address for reading the current brightness to the north.",
+              "label": "Brightness north"
+            },
+            "ga_brightness_south": {
+              "description": "Group address for reading the current brightness to the south.",
+              "label": "Brightness south"
+            },
+            "ga_brightness_west": {
+              "description": "Group address for reading the current brightness to the west.",
+              "label": "Brightness west"
+            },
+            "ga_day_night": {
+              "description": "Group address for reading whether it is day or night.",
+              "label": "Day/Night"
+            },
+            "ga_frost_alarm": {
+              "description": "Group address for reading whether the frost alarm is active.",
+              "label": "Frost alarm"
+            },
+            "ga_humidity": {
+              "description": "Group address for reading the current humidity.",
+              "label": "Humidity"
+            },
+            "ga_rain_alarm": {
+              "description": "Group address for reading whether the rain alarm is active.",
+              "label": "Rain alarm"
+            },
+            "ga_temperature": {
+              "description": "Group address for reading the current outside temperature.",
+              "label": "Temperature"
+            },
+            "ga_wind_alarm": {
+              "description": "Group address for reading whether the wind alarm is active.",
+              "label": "Wind alarm"
+            },
+            "ga_wind_bearing": {
+              "description": "Group address for reading the current wind bearing.",
+              "label": "Wind bearing"
+            },
+            "ga_wind_speed": {
+              "description": "Group address for reading the current wind speed.",
+              "label": "Wind speed"
+            },
+            "invert_day_night": {
+              "description": "By default `0` is interpreted as day and `1` as night (DPT 1.024). Enable to invert this.",
+              "label": "Invert day/night"
+            },
+            "section_alarms": {
+              "description": "Binary states used to determine the weather condition.",
+              "title": "Alarms"
+            },
+            "section_brightness": {
+              "description": "Brightness readings used to determine the weather condition.",
+              "title": "Brightness"
+            },
+            "section_day_night": {
+              "description": "Day and night state used to determine the weather condition.",
+              "title": "Day/Night"
+            }
+          }
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the entity configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "There are YAML errors and it cannot be parsed. Switching to the visual editor may cause pending changes to be lost."
         }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "expose": {
+      "create": {
+        "add_expose": "Add expose",
+        "attribute": {
+          "description": "Expose changes of a specific attribute of the entity instead of the state. Optional. If the attribute is not set, the entity state is exposed."
+        },
+        "cooldown": {
+          "description": "Minimum time between consecutive sends. This can be used to prevent high traffic on the KNX bus when values change very frequently. Only the most recent value during the cooldown period is sent.",
+          "label": "Cooldown"
+        },
+        "copy_info": "Copying options of {entity_name} ({entity_id}).",
+        "default": {
+          "description": "The value to send if the entity state is `unavailable` or `unknown`, or if the attribute is not set. If `default` is omitted, nothing is sent in these cases, but the last known value remains available for read requests.",
+          "label": "Default value"
+        },
+        "entity": {
+          "description": "Home Assistant entity to expose state changes to the KNX bus.",
+          "label": "Entity"
+        },
+        "ga": {
+          "label": "[%key:component::knx::config_panel::common::group_address%]"
+        },
+        "notes": {
+          "label": "Notes",
+          "placeholder": "Add your notes here..."
+        },
+        "periodic_send": {
+          "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
+          "label": "Periodic send interval"
+        },
+        "respond_to_read": {
+          "description": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::description%]",
+          "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
+        },
+        "section_advanced_options": {
+          "title": "Additional settings"
+        },
+        "send_on_init": {
+          "description": "Send the value to the KNX bus when the expose is initialized. When disabled, a state change will trigger the first telegram.",
+          "label": "Send on initialization"
+        },
+        "show_raw_values": "Show raw values",
+        "title": "Add exposure",
+        "value_template": {
+          "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
+          "label": "Value template"
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the expose configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "[%key:component::knx::config_panel::entities::create::yaml::yaml_error%]"
+        }
+      },
+      "description": "Expose Home Assistant entity states to the KNX bus",
+      "title": "Expose"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported project",
+      "devices": {
+        "channels": "Channels",
+        "group_objects": "Group objects",
+        "lines": "Lines",
+        "locations": "Locations",
+        "not_found": "No devices found in project data.",
+        "title": "Devices"
+      },
+      "group_addresses": {
+        "title": "[%key:component::knx::config_panel::common::group_addresses%]"
+      },
+      "title": "Project"
+    },
+    "selectors": {
+      "knx-payload-selector": {
+        "dpt_missing": "No DPT selected – Typed mode not available",
+        "mode": {
+          "label": "Payload format",
+          "raw": "Raw payload",
+          "typed": "Typed value"
+        },
+        "raw_length": "Payload length",
+        "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
+        "raw_payload": "Raw payload"
+      },
+      "knx-select-options-selector": {
+        "add_option": "Add option",
+        "option": "Option name"
       }
     }
   },
@@ -662,8 +1279,14 @@
     }
   },
   "exceptions": {
+    "device_trigger_invalid_config": {
+      "message": "Invalid KNX telegram trigger configuration: {error}"
+    },
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
+    },
+    "service_event_register_ga_not_found": {
+      "message": "Could not find registered event for `{group_addresses}` to remove."
     },
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
@@ -675,20 +1298,105 @@
       "message": "Invalid type for `knx.send` service: {type}"
     }
   },
+  "issues": {
+    "data_secure_group_key_issue": {
+      "fix_flow": {
+        "error": {
+          "keyfile_invalid_signature": "[%key:component::knx::config::error::keyfile_invalid_signature%]"
+        },
+        "step": {
+          "secure_knxkeys": {
+            "data": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
+            },
+            "data_description": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
+            },
+            "description": "Telegrams for group addresses used in Home Assistant could not be decrypted because Data Secure keys are missing or invalid:\n\n{addresses}\n\nTo fix this, update the sending devices configurations via ETS and provide an updated ETS interface information export or Keyring file. Make sure that the group addresses used in Home Assistant are associated with the interface used by Home Assistant (`{interface}` when the issue last occurred).",
+            "title": "Update KNX Keyring"
+          }
+        }
+      },
+      "title": "KNX Data Secure telegrams can't be decrypted"
+    },
+    "telegram_storage_error": {
+      "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
+      "title": "KNX telegram storage error"
+    }
+  },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "database_missing": "The specified database does not exist.",
+      "host_unreachable": "Could not reach the database host.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_dependency": "Required database driver is not installed.",
+      "permission": "Insufficient privileges to access the database.",
+      "timeout": "Connection timed out."
+    },
     "step": {
       "communication_settings": {
         "data": {
           "rate_limit": "Rate limit",
-          "state_updater": "State updater",
-          "telegram_log_size": "Telegram history limit"
+          "state_updater": "State updater"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
-          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option."
+        },
+        "sections": {
+          "telegram_store_section": {
+            "data": {
+              "telegram_db_backend": "Telegram storage backend",
+              "telegram_db_load_hours": "Group monitor history",
+              "telegram_db_retention_days": "Retention period"
+            },
+            "data_description": {
+              "telegram_db_backend": "Select where to store KNX telegram history.",
+              "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened.",
+              "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
+            },
+            "name": "Telegram store settings"
+          }
         },
         "title": "Communication settings"
+      },
+      "telegram_store_postgres": {
+        "data": {
+          "database": "Database name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "tls": "Use TLS",
+          "user": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "database": "Name of the database to store telegrams in.",
+          "host": "Hostname or IP address of the PostgreSQL server.",
+          "password": "Password for the PostgreSQL user. Leave blank to keep the current password.",
+          "port": "Port the PostgreSQL server is listening on.",
+          "tls": "Encrypt the connection to the PostgreSQL server (`sslmode=require`). Note that the server certificate is not verified.",
+          "user": "Username to authenticate with the PostgreSQL server."
+        },
+        "title": "PostgreSQL connection"
+      }
+    }
+  },
+  "selector": {
+    "sensor_state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
+    "telegram_backend": {
+      "options": {
+        "postgres": "PostgreSQL (External)",
+        "sqlite": "Internal storage (Default)"
       }
     }
   },
@@ -698,7 +1406,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) that shall be added or removed. Lists are allowed.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "remove": {
           "description": "Whether the group address(es) will be removed.",
@@ -716,10 +1424,10 @@
       "fields": {
         "address": {
           "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "attribute": {
-          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”.",
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
           "name": "Entity attribute"
         },
         "default": {
@@ -746,7 +1454,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         }
       },
       "name": "Read from KNX bus"
@@ -760,7 +1468,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to write to. Lists will send to multiple group addresses successively.",
-          "name": "Group address"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "payload": {
           "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length.",

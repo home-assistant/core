@@ -1,1 +1,1 @@
-"""The bitcoin component."""
+"""The Bitcoin integration."""

@@ -1,7 +1,5 @@
 """Support for Ring Doorbell/Chimes."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 import uuid
@@ -87,7 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: RingConfigEntry) -> boo
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: RingConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: RingConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True

@@ -18,7 +18,7 @@ from homeassistant.components.workday.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.dt import UTC
 
 from . import (
@@ -69,6 +69,7 @@ from tests.common import async_fire_time_changed
         (TEST_CONFIG_DAY_AFTER_TOMORROW, "off", "off"),
         (TEST_CONFIG_YESTERDAY, "on", "off"),  # Friday was good Friday
         (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off", "off"),
+        (TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY, "off", "off"),
     ],
 )
 async def test_setup(
@@ -84,11 +85,18 @@ async def test_setup(
     freezer.move_to(datetime(2022, 4, 15, 0, tzinfo=timezone(timedelta(hours=1))))
     await init_integration(hass, config)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    name = "Workday Sensor"
+    if config.get("country"):
+        name += f" {config['country']}"
+    if config.get("province"):
+        name += f" {config['province']}"
+    slug_name = slugify(name)
+
+    state = hass.states.get(f"binary_sensor.{slug_name}")
     assert state is not None
     assert state.state == expected_state
     assert state.attributes == {
-        "friendly_name": "Workday Sensor",
+        "friendly_name": name,
         "workdays": config["workdays"],
         "excludes": config["excludes"],
         "days_offset": config["days_offset"],
@@ -97,7 +105,7 @@ async def test_setup(
     freezer.tick(timedelta(days=1))  # Saturday
     async_fire_time_changed(hass)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get(f"binary_sensor.{slug_name}")
     assert state is not None
     assert state.state == expected_state_weekend
 
@@ -129,28 +137,20 @@ async def test_setup_with_working_holiday(
     freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_INCLUDE_HOLIDAY)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "on"
 
 
-@pytest.mark.parametrize(
-    "config",
-    [
-        TEST_CONFIG_EXAMPLE_2,
-        TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
-    ],
-)
 async def test_setup_add_holiday(
     hass: HomeAssistant,
-    config: dict[str, Any],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup from various configs."""
     freezer.move_to(datetime(2020, 2, 24, 12, tzinfo=UTC))  # Monday
     await init_integration(hass, TEST_CONFIG_EXAMPLE_2)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "off"
 
@@ -217,7 +217,7 @@ async def test_setup_remove_holiday(
     freezer.move_to(datetime(2020, 12, 25, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_REMOVE_HOLIDAY)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state is not None
     assert state.state == "on"
 
@@ -230,7 +230,7 @@ async def test_setup_remove_holiday_named(
     freezer.move_to(datetime(2020, 12, 25, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_REMOVE_NAMED)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state is not None
     assert state.state == "on"
 
@@ -243,7 +243,7 @@ async def test_setup_day_after_tomorrow(
     freezer.move_to(datetime(2022, 5, 27, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_DAY_AFTER_TOMORROW)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de")
     assert state is not None
     assert state.state == "off"
 
@@ -342,7 +342,7 @@ async def test_setup_date_range(
     )  # Boxing Day should be working day
     await init_integration(hass, TEST_CONFIG_ADD_REMOVE_DATE_RANGE)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state.state == "on"
 
 
@@ -355,43 +355,43 @@ async def test_check_date_service(
     freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
 
-    hass.states.get("binary_sensor.workday_sensor")
+    hass.states.get("binary_sensor.workday_sensor_de_bw")
 
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_CHECK_DATE,
         {
-            "entity_id": "binary_sensor.workday_sensor",
+            "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 25),  # Christmas Day
         },
         blocking=True,
         return_response=True,
     )
-    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+    assert response == {"binary_sensor.workday_sensor_de_bw": {"workday": False}}
 
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_CHECK_DATE,
         {
-            "entity_id": "binary_sensor.workday_sensor",
+            "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 23),  # Normal Friday
         },
         blocking=True,
         return_response=True,
     )
-    assert response == {"binary_sensor.workday_sensor": {"workday": True}}
+    assert response == {"binary_sensor.workday_sensor_de_bw": {"workday": True}}
 
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_CHECK_DATE,
         {
-            "entity_id": "binary_sensor.workday_sensor",
+            "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 17),  # Saturday (no workday)
         },
         blocking=True,
         return_response=True,
     )
-    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+    assert response == {"binary_sensor.workday_sensor_de_bw": {"workday": False}}
 
 
 async def test_language_difference_english_language(
@@ -427,7 +427,7 @@ async def test_optional_category(
     freezer.move_to(datetime(2024, 1, 2, 12, tzinfo=UTC))  # Tuesday
     await init_integration(hass, config)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_ch_fr")
     assert state is not None
     assert state.state == end_state
 

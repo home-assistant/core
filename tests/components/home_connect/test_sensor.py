@@ -17,6 +17,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_CLOSED,
@@ -33,21 +34,29 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_HC_APP = "Dishwasher"
 
 
 EVENT_PROG_DELAYED_START = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.DelayedStart",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.DelayedStart"
+        ),
+    },
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 30,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
     },
 }
 
 
 EVENT_PROG_RUN = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
     EventType.EVENT: {
         EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 0,
@@ -61,7 +70,9 @@ EVENT_PROG_UPDATE_1 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 80,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
@@ -71,7 +82,9 @@ EVENT_PROG_UPDATE_2 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
@@ -82,19 +95,23 @@ EVENT_PROG_UPDATE_3 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
 EVENT_PROG_END = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Ready",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Ready"
+        ),
     },
 }
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
 
@@ -109,11 +126,13 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -129,7 +148,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -146,7 +167,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
@@ -190,7 +213,9 @@ async def test_connected_devices(
     assert config_entry.state is ConfigEntryState.LOADED
     client.get_status = get_status_original_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     for key in keys_to_check:
         assert not entity_registry.async_get_entity_id(
@@ -227,7 +252,7 @@ async def test_sensor_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if sensor entities availability are based on the appliance connection state."""
+    """Test sensor entities availability based on appliance connection."""
     entity_ids = [
         "sensor.dishwasher_operation_state",
         "sensor.dishwasher_salt_nearly_empty",
@@ -292,20 +317,20 @@ ENTITY_ID_STATES = {
         "ready",
     ),
     "sensor.dishwasher_program_finish_time": (
-        "unavailable",
+        "2021-01-09T12:00:30+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:20+00:00",
         STATE_UNKNOWN,
-        "unavailable",
+        STATE_UNAVAILABLE,
     ),
     "sensor.dishwasher_program_progress": (
-        "unavailable",
+        "0",
         "60",
         "80",
         "99",
         "99",
-        "unavailable",
+        STATE_UNAVAILABLE,
     ),
 }
 
@@ -460,10 +485,10 @@ PROGRAM_SEQUENCE_EDGE_CASE = [
 
 # Expected state at each sequence.
 ENTITY_ID_EDGE_CASE_STATES = [
-    "unavailable",
+    "2021-01-09T12:00:30+00:00",
     "2021-01-09T12:00:01+00:00",
-    "unavailable",
-    "unavailable",
+    STATE_UNAVAILABLE,
+    STATE_UNAVAILABLE,
 ]
 
 
@@ -874,3 +899,18 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes["unit_of_measurement"] == unit
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot all sensor entities to fixate the full set and their attributes."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

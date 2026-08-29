@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "incoming_video_interlaced": {
+        "default": "mdi:reorder-horizontal"
+      }
+    },
+    "sensor": {
+      "incoming_audio_config": {
+        "default": "mdi:surround-sound"
+      },
+      "incoming_audio_format": {
+        "default": "mdi:dolby"
+      },
+      "incoming_audio_sample_rate": {
+        "default": "mdi:waveform"
+      },
+      "incoming_video_aspect_ratio": {
+        "default": "mdi:aspect-ratio"
+      },
+      "incoming_video_colorspace": {
+        "default": "mdi:palette"
+      },
+      "incoming_video_horizontal_resolution": {
+        "default": "mdi:arrow-expand-horizontal"
+      },
+      "incoming_video_refresh_rate": {
+        "default": "mdi:animation"
+      },
+      "incoming_video_vertical_resolution": {
+        "default": "mdi:arrow-expand-vertical"
+      }
+    }
+  }
+}

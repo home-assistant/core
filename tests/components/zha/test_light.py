@@ -199,7 +199,7 @@ async def test_on_with_off_color(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test turning on the light and sending color commands before on/level commands for supporting lights."""
+    """Test color commands sent before on/level for supporting lights."""
 
     await setup_zha()
     gateway = get_zha_gateway(hass)
@@ -242,7 +242,8 @@ async def test_on_with_off_color(
     dev1_cluster_on_off = zigpy_device.endpoints[1].on_off
     dev1_cluster_level = zigpy_device.endpoints[1].level
 
-    # Execute_if_off will override the "enhanced turn on from an off-state" config option that's enabled here
+    # Execute_if_off will override the "enhanced turn on from an
+    # off-state" config option that's enabled here
     dev1_cluster_color.PLUGGED_ATTR_READS = {
         "options": lighting.Color.Options.Execute_if_off
     }
@@ -258,7 +259,7 @@ async def test_on_with_off_color(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "color_temp": 235,
+            "color_temp_kelvin": 4255,
         },
         blocking=True,
     )
@@ -276,7 +277,6 @@ async def test_on_with_off_color(
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -286,22 +286,24 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
     assert light1_state.state == STATE_ON
-    assert light1_state.attributes["color_temp"] == 235
+    assert light1_state.attributes["color_temp_kelvin"] == 4255
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
-    # now let's turn off the Execute_if_off option and see if the old behavior is restored
+    # now let's turn off Execute_if_off and see if old behavior
+    # is restored
     dev1_cluster_color.PLUGGED_ATTR_READS = {"options": 0}
     update_attribute_cache(dev1_cluster_color)
 
-    # turn off via UI, so the old "enhanced turn on from an off-state" behavior can do something
+    # turn off via UI, so the old "enhanced turn on from an
+    # off-state" behavior can do something
     await async_test_off_from_hass(hass, dev1_cluster_on_off, device_1_entity_id)
 
-    # turn on via UI (with a different color temp, so the "enhanced turn on" does something)
+    # turn on via UI (with a different color temp, so the
+    # "enhanced turn on" does something)
     dev1_cluster_on_off.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
     dev1_cluster_color.request.reset_mock()
@@ -311,7 +313,7 @@ async def test_on_with_off_color(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "color_temp": 240,
+            "color_temp_kelvin": 4166,
         },
         blocking=True,
     )
@@ -332,7 +334,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -342,7 +343,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
         False,
@@ -352,13 +352,12 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
     assert light1_state.state == STATE_ON
     assert light1_state.attributes["brightness"] == 254
-    assert light1_state.attributes["color_temp"] == 240
+    assert light1_state.attributes["color_temp_kelvin"] == 4166
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
 
@@ -404,7 +403,6 @@ async def async_test_on_off_from_hass(
         cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -428,7 +426,6 @@ async def async_test_off_from_hass(
         cluster.commands_by_name["off"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 
@@ -459,7 +456,6 @@ async def async_test_level_on_off_from_hass(
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -484,7 +480,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=100,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -508,7 +503,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=int(expected_default_transition),
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -558,7 +552,6 @@ async def async_test_flash_from_hass(
         effect_variant=general.Identify.EffectVariant.Default,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 

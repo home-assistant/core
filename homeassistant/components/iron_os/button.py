@@ -1,9 +1,8 @@
 """Button platform for IronOS integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from pynecil import CharSetting
 
@@ -79,6 +78,7 @@ class IronOSButtonEntity(IronOSBaseEntity, ButtonEntity):
 
         self.settings = coordinators.settings
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
 

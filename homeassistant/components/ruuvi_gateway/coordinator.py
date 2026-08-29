@@ -1,8 +1,7 @@
 """Update coordinator for Ruuvi Gateway."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from aioruuvigateway.api import get_gateway_history_data
 from aioruuvigateway.models import TagData
@@ -17,7 +16,7 @@ from .const import SCAN_INTERVAL
 
 
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
-    """Polls the gateway for data and returns a list of TagData objects that have changed since the last poll."""
+    """Poll the gateway for data and return changed TagData objects."""
 
     config_entry: ConfigEntry
 
@@ -39,6 +38,7 @@ class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
         self.token = config_entry.data[CONF_TOKEN]
         self.last_tag_datas: dict[str, TagData] = {}
 
+    @override
     async def _async_update_data(self) -> list[TagData]:
         changed_tag_datas: list[TagData] = []
         async with get_async_client(self.hass) as client:

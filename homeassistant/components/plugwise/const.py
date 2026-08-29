@@ -1,7 +1,5 @@
 """Constants for Plugwise component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Final, Literal
@@ -47,12 +45,13 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
 }
 
 type NumberType = Literal[
-    "maximum_boiler_temperature",
-    "max_dhw_temperature",
+    "boiler_temperature",
+    "dhw_temperature",
     "temperature_offset",
 ]
 
 type SelectType = Literal[
+    "dhw_mode",
     "select_dhw_mode",
     "select_gateway_mode",
     "select_regulation_mode",
@@ -71,12 +70,9 @@ type SelectOptionsType = Literal[
 DEFAULT_MAX_TEMP: Final = 30
 DEFAULT_MIN_TEMP: Final = 4
 DEFAULT_PORT: Final = 80
-DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
-    "power": timedelta(seconds=10),
-    "stretch": timedelta(seconds=60),
-    "thermostat": timedelta(seconds=60),
-}
+DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
 DEFAULT_USERNAME: Final = "smile"
+P1_UPDATE_INTERVAL = timedelta(seconds=10)
 
 MASTER_THERMOSTATS: Final[list[str]] = [
     "thermostat",
@@ -86,6 +82,7 @@ MASTER_THERMOSTATS: Final[list[str]] = [
 ]
 
 # Select constants
+DHW_MODE: Final = "dhw_mode"
 SELECT_DHW_MODE: Final = "select_dhw_mode"
 SELECT_GATEWAY_MODE: Final = "select_gateway_mode"
 SELECT_REGULATION_MODE: Final = "select_regulation_mode"

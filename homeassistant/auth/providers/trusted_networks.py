@@ -4,8 +4,6 @@ It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import (
     IPv4Address,
@@ -15,7 +13,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -100,10 +98,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
         ]
 
     @property
+    @override
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
 
+    @override
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> TrustedNetworksLoginFlow:
@@ -146,6 +146,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
             self.config[CONF_ALLOW_BYPASS_LOGIN],
         )
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -174,6 +175,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         # We only allow login as exist user
         raise InvalidUserError
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -205,6 +207,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
             raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
 
     @callback
+    @override
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:
@@ -232,6 +235,7 @@ class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
         self._ip_address = ip_addr
         self._allow_bypass_login = allow_bypass_login
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:

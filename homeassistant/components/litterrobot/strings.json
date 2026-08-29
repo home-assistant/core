@@ -2,7 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The Whisker account does not match the previously configured account. Please re-authenticate using the same account, or remove this integration and set it up again if you want to use a different account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -20,6 +23,14 @@
         "description": "Please update your password for {username}",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -34,8 +45,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "name": "Bonnet removed"
+      },
+      "drawer_removed": {
+        "name": "Drawer removed"
+      },
       "hopper_connected": {
         "name": "Hopper connected"
+      },
+      "laser_dirty": {
+        "name": "Laser dirty"
+      },
+      "online": {
+        "name": "Online"
       },
       "power_status": {
         "name": "Power status"
@@ -48,6 +71,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "name": "Change filter"
+      },
       "give_snack": {
         "name": "Give snack"
       },
@@ -121,8 +147,15 @@
       "next_feeding": {
         "name": "Next feeding"
       },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
+      },
       "pet_weight": {
         "name": "Pet weight"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
       },
       "sleep_mode_end_time": {
         "name": "Sleep mode end time"
@@ -181,11 +214,74 @@
       },
       "panel_lockout": {
         "name": "Panel lockout"
+      },
+      "sleep_mode_friday": {
+        "name": "Friday sleep mode"
+      },
+      "sleep_mode_monday": {
+        "name": "Monday sleep mode"
+      },
+      "sleep_mode_saturday": {
+        "name": "Saturday sleep mode"
+      },
+      "sleep_mode_sunday": {
+        "name": "Sunday sleep mode"
+      },
+      "sleep_mode_thursday": {
+        "name": "Thursday sleep mode"
+      },
+      "sleep_mode_tuesday": {
+        "name": "Tuesday sleep mode"
+      },
+      "sleep_mode_wednesday": {
+        "name": "Wednesday sleep mode"
       }
     },
     "time": {
+      "sleep_mode_end_time_friday": {
+        "name": "Friday sleep mode end time"
+      },
+      "sleep_mode_end_time_monday": {
+        "name": "Monday sleep mode end time"
+      },
+      "sleep_mode_end_time_saturday": {
+        "name": "Saturday sleep mode end time"
+      },
+      "sleep_mode_end_time_sunday": {
+        "name": "Sunday sleep mode end time"
+      },
+      "sleep_mode_end_time_thursday": {
+        "name": "Thursday sleep mode end time"
+      },
+      "sleep_mode_end_time_tuesday": {
+        "name": "Tuesday sleep mode end time"
+      },
+      "sleep_mode_end_time_wednesday": {
+        "name": "Wednesday sleep mode end time"
+      },
       "sleep_mode_start_time": {
         "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
+      },
+      "sleep_mode_start_time_friday": {
+        "name": "Friday sleep mode start time"
+      },
+      "sleep_mode_start_time_monday": {
+        "name": "Monday sleep mode start time"
+      },
+      "sleep_mode_start_time_saturday": {
+        "name": "Saturday sleep mode start time"
+      },
+      "sleep_mode_start_time_sunday": {
+        "name": "Sunday sleep mode start time"
+      },
+      "sleep_mode_start_time_thursday": {
+        "name": "Thursday sleep mode start time"
+      },
+      "sleep_mode_start_time_tuesday": {
+        "name": "Tuesday sleep mode start time"
+      },
+      "sleep_mode_start_time_wednesday": {
+        "name": "Wednesday sleep mode start time"
       }
     },
     "vacuum": {
@@ -194,10 +290,21 @@
       }
     }
   },
-  "issues": {
-    "deprecated_entity": {
-      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch data from the Whisker API: {error}"
+    },
+    "command_failed": {
+      "message": "An error occurred while communicating with the device: {error}"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to start firmware update on {name}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials. Please check your username and password, then try again"
+    },
+    "update_failed": {
+      "message": "Unable to update {entity_id}"
     }
   },
   "services": {

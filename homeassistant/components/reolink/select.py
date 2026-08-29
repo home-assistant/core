@@ -1,13 +1,12 @@
 """Component providing support for Reolink select entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import (
+    AntiFlickerEnum,
     BinningModeEnum,
     Chime,
     ChimeToneEnum,
@@ -105,10 +104,8 @@ SELECT_ENTITIES = (
         get_options=[mode.name for mode in SpotlightEventModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodlight_event"),
         value=lambda api, ch: SpotlightEventModeEnum(api.whiteled_event_mode(ch)).name,
-        method=lambda api, ch, name: (
-            api.baichuan.set_floodlight(
-                ch, event_mode=SpotlightEventModeEnum[name].value
-            )
+        method=lambda api, ch, name: api.baichuan.set_floodlight(
+            ch, event_mode=SpotlightEventModeEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -134,8 +131,8 @@ SELECT_ENTITIES = (
         translation_key="play_quick_reply_message",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
-        method=lambda api, ch, mess: (
-            api.play_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.play_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -146,8 +143,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
-        method=lambda api, ch, mess: (
-            api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.set_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -158,8 +155,8 @@ SELECT_ENTITIES = (
         get_options=[mode.name for mode in HubToneEnum],
         supported=lambda api, ch: api.supported(ch, "hub_audio"),
         value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, alarm_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -172,8 +169,8 @@ SELECT_ENTITIES = (
             api.supported(ch, "hub_audio") and api.is_doorbell(ch)
         ),
         value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, visitor_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -189,13 +186,14 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="status_led",
         cmd_key="GetPowerLed",
+        cmd_id=208,
         translation_key="doorbell_led",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.doorbell_led_list(ch),
         supported=lambda api, ch: api.supported(ch, "doorbell_led"),
         value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_status_led(ch, StatusLedEnum[name].value, doorbell=True)
+        method=lambda api, ch, name: api.set_status_led(
+            ch, StatusLedEnum[name].value, doorbell=True
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -221,6 +219,19 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
+        key="anti_flicker",
+        cmd_key="GetIsp",
+        translation_key="anti_flicker",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in AntiFlickerEnum],
+        supported=lambda api, ch: api.supported(ch, "anti_flicker"),
+        value=lambda api, ch: AntiFlickerEnum(api.anti_flicker_mode(ch)).name,
+        method=lambda api, ch, name: api.set_anti_flicker(
+            ch, AntiFlickerEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="binning_mode",
         cmd_key="GetIsp",
         translation_key="binning_mode",
@@ -236,6 +247,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -248,6 +260,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -260,6 +273,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -272,6 +286,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -284,6 +299,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -295,6 +311,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -310,7 +327,7 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
-        get_options=["1", "2", "5"],
+        get_options=lambda api, ch: api.baichuan.pre_record_fps_list(ch),
         supported=lambda api, ch: api.supported(ch, "pre_record"),
         value=lambda api, ch: str(api.baichuan.pre_record_fps(ch)),
         method=lambda api, ch, value: api.baichuan.set_pre_recording(
@@ -320,6 +337,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="post_rec_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="post_rec_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -327,6 +345,26 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "post_rec_time"),
         value=lambda api, ch: api.post_recording_time(ch),
         method=lambda api, ch, value: api.set_post_recording_time(ch, value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_battery",
+        cmd_key="626",
+        translation_key="work_mode_battery",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_battery_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_battery"),
+        value=lambda api, ch: api.work_mode_battery(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_battery(ch, value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_powered",
+        cmd_key="771",
+        translation_key="work_mode_powered",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_powered_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_powered"),
+        value=lambda api, ch: api.work_mode_powered(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_powered(ch, value),
     ),
 )
 
@@ -344,6 +382,7 @@ HOST_SELECT_ENTITIES = (
     ReolinkHostSelectEntityDescription(
         key="packing_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="packing_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -405,6 +444,16 @@ CHIME_SELECT_ENTITIES = (
         value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
     ),
+    ReolinkChimeSelectEntityDescription(
+        key="pet_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="pet_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "dog_cat" in chime.chime_event_types,
+        value=lambda chime: chime.tone_name("dog_cat"),
+        method=lambda chime, name: chime.set_tone("dog_cat", ChimeToneEnum[name].value),
+    ),
 )
 
 
@@ -419,7 +468,7 @@ async def async_setup_entry(
     entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
@@ -464,6 +513,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
             self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         if self.entity_description.value is None:
@@ -471,7 +521,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except (ValueError, KeyError):
+        except ValueError, KeyError:
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False
@@ -481,6 +531,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         return option
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
@@ -503,11 +554,13 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options(self._host.api)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, option)
@@ -531,11 +584,13 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)
@@ -559,11 +614,13 @@ class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEnti
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)

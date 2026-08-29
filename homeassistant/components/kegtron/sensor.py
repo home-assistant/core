@@ -1,6 +1,6 @@
 """Support for Kegtron sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from kegtron_ble import (
     SensorDeviceClass as KegtronSensorDeviceClass,
@@ -118,7 +118,9 @@ async def async_setup_entry(
             KegtronBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class KegtronBluetoothSensorEntity(
@@ -130,6 +132,7 @@ class KegtronBluetoothSensorEntity(
     """Representation of a Kegtron sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

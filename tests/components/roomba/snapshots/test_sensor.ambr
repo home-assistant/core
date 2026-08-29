@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.test_roomba_average_mission_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average mission time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,8 +39,8 @@
 # name: test_entities[sensor.test_roomba_average_mission_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Average mission time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Average mission time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_average_mission_time',
@@ -50,8 +52,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -86,9 +90,9 @@
 # name: test_entities[sensor.test_roomba_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Roomba Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_battery',
@@ -100,11 +104,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_battery_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -138,8 +144,8 @@
 # name: test_entities[sensor.test_roomba_battery_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Battery cycles',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Battery cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_battery_cycles',
@@ -151,11 +157,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_canceled_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Canceled missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -189,9 +197,9 @@
 # name: test_entities[sensor.test_roomba_canceled_missions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Canceled missions',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Missions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Canceled missions',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Missions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_canceled_missions',
@@ -203,8 +211,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_dock_tank_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -222,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -239,8 +249,8 @@
 # name: test_entities[sensor.test_roomba_dock_tank_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Dock tank level',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Dock tank level',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_dock_tank_level',
@@ -252,11 +262,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_failed_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failed missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -290,9 +302,9 @@
 # name: test_entities[sensor.test_roomba_failed_missions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Failed missions',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Missions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Failed missions',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Missions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_failed_missions',
@@ -304,8 +316,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_last_mission_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -323,6 +336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last mission start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -340,8 +354,8 @@
 # name: test_entities[sensor.test_roomba_last_mission_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Roomba Last mission start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Last mission start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_last_mission_start_time',
@@ -353,11 +367,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_scrubs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -374,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrubs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,9 +407,9 @@
 # name: test_entities[sensor.test_roomba_scrubs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Scrubs',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Scrubs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Scrubs',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Scrubs',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_scrubs',
@@ -405,11 +421,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_successful_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -426,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Successful missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -443,9 +461,9 @@
 # name: test_entities[sensor.test_roomba_successful_missions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Successful missions',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Missions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Successful missions',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Missions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_successful_missions',
@@ -457,8 +475,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_tank_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -476,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -493,8 +513,8 @@
 # name: test_entities[sensor.test_roomba_tank_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Tank level',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Tank level',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_tank_level',
@@ -506,8 +526,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_cleaned_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -525,6 +546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaned area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -545,8 +567,8 @@
 # name: test_entities[sensor.test_roomba_total_cleaned_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Total cleaned area',
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Total cleaned area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_total_cleaned_area',
@@ -558,8 +580,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -577,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,8 +618,8 @@
 # name: test_entities[sensor.test_roomba_total_cleaning_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Total cleaning time',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Total cleaning time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_total_cleaning_time',
@@ -607,11 +631,12 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -628,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -645,9 +671,9 @@
 # name: test_entities[sensor.test_roomba_total_missions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Total missions',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Missions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Total missions',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Missions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_roomba_total_missions',

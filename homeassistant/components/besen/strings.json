@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "This Bluetooth device is not a supported Besen charger."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+        },
+        "description": "Enter the 6-digit Bluetooth PIN for this charger.",
+        "title": "Set up Besen"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "address": "The discovered Besen charger to set up.",
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+        },
+        "description": "Select the discovered charger and enter its Bluetooth PIN.",
+        "title": "Set up Besen"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "charging": { "name": "Charge" }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the charger: {error}"
+    },
+    "command_failed": {
+      "message": "The charger did not accept the command."
+    },
+    "no_connectable_path": {
+      "message": "No connectable Bluetooth path is available for this charger: {reason}"
+    }
+  }
+}

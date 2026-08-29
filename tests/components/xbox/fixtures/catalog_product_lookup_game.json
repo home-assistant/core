@@ -1,0 +1,37 @@
+{
+  "BigIds": ["9WZDNCRFJ3TJ"],
+  "HasMorePages": false,
+  "Products": [
+    {
+      "LocalizedProperties": [
+        {
+          "Images": [
+            {
+              "FileId": "2000000000037288315",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 2514491,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "FeaturePromotionalSquareArt",
+              "UnscaledImageSHA256Hash": "i7GhC2HdYXf69+X/mLHtm8B36zR1gEOfuG2g2bXAAnY=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+              "Width": 1080
+            }
+          ],
+          "ProductTitle": "Blue Dragon"
+        }
+      ],
+      "MarketProperties": [],
+      "ProductBSchema": "ProductGame;1",
+      "ProductId": "C2HGK9J5367F",
+      "PartD": "",
+      "ProductFamily": "Games",
+      "ProductKind": "Game",
+      "DisplaySkuAvailabilities": []
+    }
+  ],
+  "TotalResultCount": 1
+}

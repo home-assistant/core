@@ -1,12 +1,11 @@
 """Support for iammeter via local API."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from iammeter.client import IamMeter
 import voluptuous as vol
@@ -135,6 +134,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=config_name,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -181,6 +181,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self):
         """Return the native sensor value."""
         raw_attr = self.coordinator.data.get(self.entity_description.key, None)

@@ -1,6 +1,8 @@
 """Light platform for fressnapf_tracker."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
+
+from fressnapftracker import FressnapfTrackerError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FressnapfTrackerConfigEntry
 from .const import DOMAIN
 from .entity import FressnapfTrackerEntity
+from .services import handle_fressnapf_tracker_exception
 
 PARALLEL_UPDATES = 1
 
@@ -49,24 +52,33 @@ class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
     _attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if TYPE_CHECKING:
             # The entity is not created if led_brightness_value is None
             assert self.coordinator.data.led_brightness_value is not None
-        return int(round((self.coordinator.data.led_brightness_value / 100) * 255))
+        return round((self.coordinator.data.led_brightness_value / 100) * 255)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self.raise_if_not_activatable()
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         brightness = int((brightness / 255) * 100)
-        await self.coordinator.client.set_led_brightness(brightness)
+        try:
+            await self.coordinator.client.set_led_brightness(brightness)
+        except FressnapfTrackerError as e:
+            handle_fressnapf_tracker_exception(e)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        await self.coordinator.client.set_led_brightness(0)
+        try:
+            await self.coordinator.client.set_led_brightness(0)
+        except FressnapfTrackerError as e:
+            handle_fressnapf_tracker_exception(e)
         await self.coordinator.async_request_refresh()
 
     def raise_if_not_activatable(self) -> None:
@@ -88,6 +100,7 @@ class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if self.coordinator.data.led_brightness_value is not None:

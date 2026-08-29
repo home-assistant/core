@@ -1,7 +1,5 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
@@ -40,7 +38,7 @@ def tariff_transform(value: str) -> str:
 
 
 @dataclass(frozen=True)
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class DSMRReaderSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for DSMR Reader."""
 

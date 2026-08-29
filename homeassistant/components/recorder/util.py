@@ -1,7 +1,5 @@
 """SQLAlchemy util functions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
@@ -10,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -29,6 +27,9 @@ import voluptuous as vol
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.generated.recorder_database_versions import (
+    SUPPORTED_DATABASE_VERSIONS,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
     DATA_INSTANCE,
@@ -90,6 +91,47 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.40.1")
+
+# PostgreSQL has no LTS/short-term split, so we warn once the version drops
+# below this upcoming minimum, as (version, breaks_in_ha_version).
+UPCOMING_MIN_VERSION_PGSQL = (_simple_version("15.0"), "2027.3.0")
+
+
+# MariaDB and MySQL ship both long-term support (LTS) releases, supported for
+# years, and short-term/innovation releases, supported only until the next
+# release (~3 months). We allow versions on a currently-supported (non-EoL) LTS
+# series and warn against all others (short-term releases and end-of-life LTS
+# series).
+# Versions newer than the latest known non-LTS release are assumed supported
+# so we don't warn about releases we don't know about yet.
+class _LTSVersionSupport(NamedTuple):
+    """Supported LTS policy for an engine that ships LTS + short-term releases."""
+
+    supported_series: frozenset[tuple[int, int]]
+    latest_non_lts_series: tuple[int, int]
+    breaks_in_ha_version: str
+
+
+def _parse_db_series(cycle: str) -> tuple[int, int]:
+    """Parse a "<major>.<minor>" release series into a tuple."""
+    major, _, minor = cycle.partition(".")
+    return int(major), int(minor)
+
+
+def _lts_support(engine: str, breaks_in_ha_version: str) -> _LTSVersionSupport:
+    """Build the LTS support policy for an engine from the generated version file."""
+    versions = SUPPORTED_DATABASE_VERSIONS[engine]
+    return _LTSVersionSupport(
+        supported_series=frozenset(
+            _parse_db_series(cycle) for cycle in versions["supported_lts"]
+        ),
+        latest_non_lts_series=_parse_db_series(versions["latest_non_lts"]),
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+SUPPORTED_MARIA_DB_LTS = _lts_support("mariadb", "2027.3.0")
+SUPPORTED_MYSQL_LTS = _lts_support("mysql", "2027.3.0")
 
 
 # This is the maximum time after the recorder ends the session
@@ -242,9 +284,8 @@ def validate_sqlite_database(dbpath: str) -> bool:
     import sqlite3  # noqa: PLC0415
 
     try:
-        conn = sqlite3.connect(dbpath)
-        run_checks_on_open_db(dbpath, conn.cursor())
-        conn.close()
+        with contextlib.closing(sqlite3.connect(dbpath)) as conn:
+            run_checks_on_open_db(dbpath, conn.cursor())
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False
@@ -348,6 +389,122 @@ def _raise_if_version_unsupported(
     raise UnsupportedDialect
 
 
+@callback
+def _async_delete_issue_deprecated_version(hass: HomeAssistant, issue_id: str) -> None:
+    """Delete a deprecated database version repair issue."""
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    min_version: AwesomeVersion,
+    breaks_in_ha_version: str,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "database_engine_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="database_engine_too_old",
+        translation_placeholders={
+            "database_engine": database_engine,
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+@callback
+def _async_create_issue_not_supported_lts(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    lts_versions: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Warn about a database version that is not a supported LTS release."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "database_engine_not_supported_lts",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="database_engine_not_supported_lts",
+        translation_placeholders={
+            "database_engine": database_engine,
+            "server_version": str(server_version),
+            "lts_versions": lts_versions,
+        },
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+def _check_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    upcoming_min_version: tuple[AwesomeVersion, str],
+) -> None:
+    """Create or remove the issue about an upcoming unsupported database version."""
+    min_version, breaks_in_ha_version = upcoming_min_version
+    if server_version < min_version:
+        hass.add_job(
+            _async_create_issue_deprecated_version,
+            hass,
+            server_version,
+            database_engine,
+            min_version,
+            breaks_in_ha_version,
+        )
+    else:
+        hass.add_job(
+            _async_delete_issue_deprecated_version, hass, "database_engine_too_old"
+        )
+
+
+def _check_lts_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    lts_support: _LTSVersionSupport,
+) -> None:
+    """Warn unless the version is on a supported LTS series or newer than we know.
+
+    MariaDB and MySQL only support long-term support (LTS) releases for years;
+    short-term releases and end-of-life LTS series are deprecated. Versions newer
+    than the latest known non-LTS release are assumed supported to avoid warning
+    about releases we don't know about yet.
+    """
+    series = (server_version.section(0), server_version.section(1))
+    if (
+        series in lts_support.supported_series
+        or series > lts_support.latest_non_lts_series
+    ):
+        hass.add_job(
+            _async_delete_issue_deprecated_version,
+            hass,
+            "database_engine_not_supported_lts",
+        )
+    else:
+        lts_versions = ", ".join(
+            f"{major}.{minor}" for major, minor in sorted(lts_support.supported_series)
+        )
+        hass.add_job(
+            _async_create_issue_not_supported_lts,
+            hass,
+            server_version,
+            database_engine,
+            lts_versions,
+            lts_support.breaks_in_ha_version,
+        )
+
+
 def _extract_version_from_server_response_or_raise(
     server_response: str,
 ) -> AwesomeVersion:
@@ -447,10 +604,10 @@ def setup_connection_for_dialect(
     slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
-            old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
-            dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
             execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-            dbapi_connection.isolation_level = old_isolation  # type: ignore[attr-defined]
+            dbapi_connection.isolation_level = old_isolation
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
@@ -492,6 +649,10 @@ def setup_connection_for_dialect(
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
+                # No elif here since _raise_if_version_unsupported raises
+                _check_lts_version(
+                    instance.hass, version, "MariaDB", SUPPORTED_MARIA_DB_LTS
+                )
                 if version and (
                     (version < RECOMMENDED_MIN_VERSION_MARIA_DB)
                     or (MARIA_DB_106 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_106)
@@ -518,6 +679,7 @@ def setup_connection_for_dialect(
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
                 slow_dependent_subquery = True
+                _check_lts_version(instance.hass, version, "MySQL", SUPPORTED_MYSQL_LTS)
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -537,6 +699,10 @@ def setup_connection_for_dialect(
                 _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
+            # No elif here since _raise_if_version_unsupported raises
+            _check_deprecated_version(
+                instance.hass, version, "PostgreSQL", UPCOMING_MIN_VERSION_PGSQL
+            )
 
     else:
         _fail_unsupported_dialect(dialect_name)

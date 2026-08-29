@@ -1,9 +1,7 @@
 """Sensor for checking the status of London Underground tube lines."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -42,7 +40,8 @@ async def async_setup_platform(
     """Set up the Tube sensor."""
 
     # If configuration.yaml config exists, trigger the import flow.
-    # If the config entry already exists, this will not be triggered as only one config is allowed.
+    # If the config entry already exists, this will not be
+    # triggered as only one config is allowed.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
@@ -114,16 +113,19 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data[self.name]["State"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return {"Description": self.coordinator.data[self.name]["Description"]}

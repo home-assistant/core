@@ -46,7 +46,7 @@ def _patch_discovery(device=None, no_device=False):
 
 def _patch_elk(elk=None):
     def _elk(*args, **kwargs):
-        return elk if elk else mock_elk()
+        return elk or mock_elk()
 
     @contextmanager
     def _patcher():

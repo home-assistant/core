@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -49,8 +49,8 @@ async def test_service_set_guest_wifi_password(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
@@ -68,6 +68,7 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service set_guest_wifi_password with unknown parameter."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -76,8 +77,8 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -98,6 +99,7 @@ async def test_service_set_guest_wifi_password_service_not_supported(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service set_guest_wifi_password with connection error."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -106,8 +108,8 @@ async def test_service_set_guest_wifi_password_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -138,8 +140,9 @@ async def test_service_set_guest_wifi_password_unloaded(
         )
         assert not mock_async_trigger_set_guest_password.called
         assert (
-            'ServiceValidationError: Failed to perform action "set_guest_wifi_password". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            ' "set_guest_wifi_password".'
+            " Config entry for target not found" in caplog.text
         )
 
 
@@ -149,6 +152,7 @@ async def test_service_dial(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service dial."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -157,8 +161,8 @@ async def test_service_dial(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
@@ -180,6 +184,7 @@ async def test_service_dial_unknown_parameter(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service dial with unknown parameters."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -188,8 +193,8 @@ async def test_service_dial_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -212,6 +217,7 @@ async def test_service_dial_wrong_parameter(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service dial with unknown parameters."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -220,8 +226,8 @@ async def test_service_dial_wrong_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -261,6 +267,7 @@ async def test_service_dial_service_not_supported(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test service dial with connection error."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -269,8 +276,8 @@ async def test_service_dial_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -293,6 +300,7 @@ async def test_service_dial_failed(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test dial service when the dial help is disabled."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -301,8 +309,8 @@ async def test_service_dial_failed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -317,14 +325,15 @@ async def test_service_dial_failed(
         )
         assert mock_async_trigger_dial.called
         assert (
-            "HomeAssistantError: Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
-            in caplog.text
+            "HomeAssistantError: Failed to dial, check if the"
+            " click to dial service of the FRITZ!Box is activated" in caplog.text
         )
 
 
 async def test_service_dial_unloaded(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    fs_class_mock,
 ) -> None:
     """Test service dial."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -340,6 +349,7 @@ async def test_service_dial_unloaded(
         )
         assert not mock_async_trigger_dial.called
         assert (
-            f'ServiceValidationError: Failed to perform action "{SERVICE_DIAL}". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            f' "{SERVICE_DIAL}".'
+            " Config entry for target not found" in caplog.text
         )

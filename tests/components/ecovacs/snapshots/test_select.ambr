@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -42,8 +44,8 @@
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Active map',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Active map',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -58,11 +60,12 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -99,8 +103,8 @@
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Auto-empty frequency',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Auto-empty frequency',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -115,11 +119,12 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -158,8 +164,8 @@
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Work mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Work mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -176,11 +182,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -200,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -217,8 +225,8 @@
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Active map',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Active map',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -233,11 +241,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -257,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,8 +284,8 @@
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Auto-empty frequency',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Auto-empty frequency',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -290,11 +300,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -315,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -332,8 +344,8 @@
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Water flow level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Water flow level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -349,11 +361,12 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -373,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -390,8 +404,8 @@
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Active map',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Active map',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -406,11 +420,12 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -432,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,8 +465,8 @@
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Water flow level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Water flow level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',

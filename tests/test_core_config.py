@@ -211,8 +211,17 @@ def testvalidate_stun_or_turn_url() -> None:
 
 def test_customize_glob_is_ordered() -> None:
     """Test that customize_glob preserves order."""
-    conf = CORE_CONFIG_SCHEMA({"customize_glob": OrderedDict()})
-    assert isinstance(conf["customize_glob"], OrderedDict)
+    customize_glob = OrderedDict(
+        [
+            ("cover.*", {"friendly_name": "Cover"}),
+            ("light.*", {"friendly_name": "Light"}),
+            ("sensor.*", {"friendly_name": "Sensor"}),
+        ]
+    )
+    conf = CORE_CONFIG_SCHEMA({"customize_glob": customize_glob})
+    # The schema returns a plain dict, which preserves insertion order.
+    assert isinstance(conf["customize_glob"], dict)
+    assert list(conf["customize_glob"]) == ["cover.*", "light.*", "sensor.*"]
 
 
 async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State | None:
@@ -882,6 +891,25 @@ async def test_config_path_with_dir_and_file() -> None:
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
+async def test_config_cache_path_with_file() -> None:
+    """Test cache_path method with file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert config.cache_path("test.cache") == "/test/ha-config/.cache/test.cache"
+
+
+async def test_config_cache_path_with_dir_and_file() -> None:
+    """Test cache_path method with dir and file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert (
+        config.cache_path("dir", "test.cache")
+        == "/test/ha-config/.cache/dir/test.cache"
+    )
+
+
 async def test_config_as_dict() -> None:
     """Test as dict."""
     hass = Mock()
@@ -909,6 +937,9 @@ async def test_config_as_dict() -> None:
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "logging": {
+            "log_file_disabled_reason": None,
+        },
         "safe_mode": False,
         "debug": False,
         "radius": 100,

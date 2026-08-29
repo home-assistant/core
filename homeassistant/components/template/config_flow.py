@@ -1,29 +1,23 @@
 """Config flow for the Template integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.button import ButtonDeviceClass
-from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
-    SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -31,6 +25,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
@@ -58,7 +53,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_AVAILABILITY,
     CONF_PRESS,
     CONF_TURN_OFF,
@@ -73,6 +68,11 @@ from .cover import (
     POSITION_ACTION,
     STOP_ACTION,
     async_create_preview_cover,
+)
+from .device_tracker import (
+    CONF_IN_ZONES,
+    CONF_LOCATION_ACCURACY,
+    async_create_preview_tracker,
 )
 from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
@@ -132,6 +132,15 @@ from .vacuum import (
     SERVICE_STOP,
     async_create_preview_vacuum,
 )
+from .weather import (
+    CONF_CONDITION,
+    CONF_FORECAST_DAILY,
+    CONF_FORECAST_HOURLY,
+    CONF_HUMIDITY,
+    CONF_TEMPERATURE as CONF_WEATHER_TEMPERATURE,
+    CONF_TEMPERATURE_UNIT,
+    async_create_preview_weather,
+)
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
@@ -141,6 +150,7 @@ _SCHEMA_STATE: dict[vol.Marker, Any] = {
 def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+    additional_options: dict[vol.Marker, Any] = {}
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
@@ -170,18 +180,11 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.BINARY_SENSOR:
-        schema |= _SCHEMA_STATE
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in BinarySensorDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="binary_sensor_device_class",
-                        sort=True,
-                    ),
-                ),
-            }
+        schema |= _SCHEMA_STATE | {
+            vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
@@ -189,14 +192,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in ButtonDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="button_device_class",
-                        sort=True,
-                    ),
-                )
+                vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.BUTTON),
+                ),
             }
 
     if domain == Platform.COVER:
@@ -209,15 +207,20 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in CoverDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="cover_device_class",
-                        sort=True,
-                    ),
-                )
+                vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
+                ),
             }
+
+    if domain == Platform.DEVICE_TRACKER:
+        schema |= {
+            vol.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
+            vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
+            vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
+        }
+        additional_options |= {
+            vol.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
+        }
 
     if domain == Platform.EVENT:
         schema |= {
@@ -227,14 +230,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in EventDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="event_device_class",
-                        sort=True,
-                    ),
-                )
+                vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.EVENT),
+                ),
             }
 
     if domain == Platform.FAN:
@@ -278,6 +276,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.NUMBER:
         schema |= {
+            vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
+            ),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
@@ -320,17 +321,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     sort=True,
                 ),
             ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        cls.value
-                        for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
-                    ],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_device_class",
-                    sort=True,
-                ),
+            vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
             ),
             vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -364,13 +356,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in UpdateDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="update_device_class",
-                        sort=True,
-                    ),
+                vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.UPDATE),
                 ),
             }
 
@@ -394,12 +381,29 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    if domain == Platform.WEATHER:
+        schema |= {
+            vol.Required(CONF_CONDITION): selector.TemplateSelector(),
+            vol.Required(CONF_HUMIDITY): selector.TemplateSelector(),
+            vol.Required(CONF_WEATHER_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+            vol.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
+            vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Optional(CONF_ADVANCED_OPTIONS): section(
+        vol.Optional(CONF_ADDITIONAL_OPTIONS): section(
             vol.Schema(
                 {
                     vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                    **additional_options,
                 }
             ),
             {"collapsed": True},
@@ -412,6 +416,15 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 options_schema = partial(generate_schema, flow_type="options")
 
 config_schema = partial(generate_schema, flow_type="config")
+
+
+async def _get_forecast_description_place_holders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    return {
+        "daily_link": "https://www.home-assistant.io/integrations/template/#daily-weather-forecast",
+        "hourly_link": "https://www.home-assistant.io/integrations/template/#hourly-weather-forecast",
+    }
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
@@ -500,6 +513,7 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
@@ -511,6 +525,7 @@ TEMPLATE_TYPES = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WEATHER,
 ]
 
 CONFIG_FLOW = {
@@ -534,6 +549,11 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        config_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+    ),
     Platform.EVENT: SchemaFlowFormStep(
         config_schema(Platform.EVENT),
         preview="template",
@@ -546,7 +566,6 @@ CONFIG_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
@@ -589,6 +608,12 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        config_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
+    ),
 }
 
 
@@ -613,6 +638,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        options_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+    ),
     Platform.EVENT: SchemaFlowFormStep(
         options_schema(Platform.EVENT),
         preview="template",
@@ -625,7 +655,6 @@ OPTIONS_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
@@ -668,6 +697,12 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        options_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
+    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -677,6 +712,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
@@ -687,6 +723,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SWITCH: async_create_preview_switch,
     Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WEATHER: async_create_preview_weather,
 }
 
 
@@ -697,15 +734,16 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
-    MINOR_VERSION = 2
-    VERSION = 1
+    VERSION = 2
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -793,7 +831,12 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "listeners": listeners, "state": state},
+                {
+                    "attributes": attributes,
+                    "domain": template_type,
+                    "listeners": listeners,
+                    "state": state,
+                },
             )
         )
 
@@ -809,9 +852,9 @@ def ws_start_preview(
         return
 
     config: dict = msg["user_input"]
-    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    additional_options = config.pop(CONF_ADDITIONAL_OPTIONS, {})
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](
-        hass, name, {**config, **advanced_options}
+        hass, name, {**config, **additional_options}
     )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry

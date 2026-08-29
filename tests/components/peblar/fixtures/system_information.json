@@ -26,7 +26,7 @@
   "HwHasRfid": true,
   "HwHasRs485": true,
   "HwHasShutter": false,
-  "HwHasSocket": false,
+  "HwHasSocket": true,
   "HwHasTpm": false,
   "HwHasWlan": true,
   "HwMaxCurrent": 16,

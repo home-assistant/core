@@ -74,10 +74,6 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate old entry."""
 
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 1 and entry.minor_version < 3:
         new_options = {**entry.options}
         if entry.minor_version == 1:

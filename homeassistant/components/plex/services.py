@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__package__)
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for the Plex component."""
+    """Set up services for the Plex integration."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
@@ -174,6 +174,7 @@ def process_plex_payload(
 
     search_query = content.copy()
     shuffle = search_query.pop("shuffle", 0)
+    continuous = search_query.pop("continuous", 0)
 
     # Remove internal kwargs before passing copy to plexapi
     for internal_key in ("resume", "offset"):
@@ -181,9 +182,12 @@ def process_plex_payload(
 
     media = plex_server.lookup_media(content_type, **search_query)
 
-    if supports_playqueues and (isinstance(media, list) or shuffle):
+    if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(
-            media, includeRelated=0, shuffle=shuffle
+            media,
+            includeRelated=0,
+            shuffle=1 if shuffle else 0,
+            continuous=1 if continuous else 0,
         )
         return PlexMediaSearchResult(playqueue, content)
 

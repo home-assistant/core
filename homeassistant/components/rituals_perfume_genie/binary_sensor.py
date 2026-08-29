@@ -1,9 +1,8 @@
 """Support for Rituals Perfume Genie binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyrituals import Diffuser
 
@@ -12,14 +11,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry
 from .entity import DiffuserEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,13 +42,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RitualsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser binary sensors."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators = config_entry.runtime_data
 
     async_add_entities(
         RitualsBinarySensorEntity(coordinator, description)
@@ -65,6 +62,7 @@ class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
     entity_description: RitualsBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.diffuser)

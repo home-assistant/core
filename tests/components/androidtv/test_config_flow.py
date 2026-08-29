@@ -22,6 +22,7 @@ from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
+    CONF_MORE_OPTIONS,
     CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -65,6 +66,22 @@ CONFIG_ADB_SERVER = {
     CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
 }
 
+# Flow input variants (with section nesting)
+FLOW_PYTHON_ADB = {
+    **CONFIG_PYTHON_ADB,
+    CONF_MORE_OPTIONS: {},
+}
+
+FLOW_ADB_SERVER = {
+    CONF_HOST: HOST,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+    CONF_MORE_OPTIONS: {
+        CONF_ADB_SERVER_IP: "127.0.0.1",
+        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
+    },
+}
+
 CONNECT_METHOD = (
     "homeassistant.components.androidtv.config_flow.async_connect_androidtv"
 )
@@ -84,25 +101,26 @@ class MockConfigDevice:
 
 
 @pytest.mark.parametrize(
-    ("config", "eth_mac", "wifi_mac"),
+    ("flow_input", "expected_data", "eth_mac", "wifi_mac"),
     [
-        (CONFIG_PYTHON_ADB, ETH_MAC, None),
-        (CONFIG_ADB_SERVER, ETH_MAC, None),
-        (CONFIG_PYTHON_ADB, None, WIFI_MAC),
-        (CONFIG_ADB_SERVER, None, WIFI_MAC),
-        (CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
-        (CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, None),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, None),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, None, WIFI_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, None, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
     ],
 )
 async def test_user(
     hass: HomeAssistant,
-    config: dict[str, Any],
+    flow_input: dict[str, Any],
+    expected_data: dict[str, Any],
     eth_mac: str | None,
     wifi_mac: str | None,
 ) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert flow_result["type"] is FlowResultType.FORM
     assert flow_result["step_id"] == "user"
@@ -116,21 +134,24 @@ async def test_user(
         PATCH_SETUP_ENTRY as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
-            flow_result["flow_id"], user_input=config
+            flow_result["flow_id"], user_input=flow_input
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
-        assert result["data"] == config
+        assert result["data"] == expected_data
 
         assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_adbkey(hass: HomeAssistant) -> None:
     """Test user step with adbkey file."""
-    config_data = CONFIG_PYTHON_ADB.copy()
-    config_data[CONF_ADBKEY] = ADBKEY
+    flow_input = {
+        **CONFIG_PYTHON_ADB,
+        CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
+    }
+    expected_data = {**CONFIG_PYTHON_ADB, CONF_ADBKEY: ADBKEY}
 
     with (
         patch(
@@ -143,27 +164,34 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER, "show_advanced_options": True},
-            data=config_data,
+            context={"source": SOURCE_USER},
+            data=flow_input,
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
-        assert result["data"] == config_data
+        assert result["data"] == expected_data
 
         assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_error_both_key_server(hass: HomeAssistant) -> None:
     """Test we abort if both adb key and server are provided."""
-    config_data = CONFIG_ADB_SERVER.copy()
-
-    config_data[CONF_ADBKEY] = ADBKEY
+    flow_input = {
+        CONF_HOST: HOST,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+        CONF_MORE_OPTIONS: {
+            CONF_ADB_SERVER_IP: "127.0.0.1",
+            CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
+            CONF_ADBKEY: ADBKEY,
+        },
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
-        data=config_data,
+        context={"source": SOURCE_USER},
+        data=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -177,7 +205,7 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
         PATCH_SETUP_ENTRY,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_ADB_SERVER
+            result["flow_id"], user_input=FLOW_ADB_SERVER
         )
         await hass.async_block_till_done()
 
@@ -188,12 +216,14 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
 
 async def test_error_invalid_key(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
-    config_data = CONFIG_PYTHON_ADB.copy()
-    config_data[CONF_ADBKEY] = ADBKEY
+    flow_input = {
+        **CONFIG_PYTHON_ADB,
+        CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
-        data=config_data,
+        context={"source": SOURCE_USER},
+        data=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -207,7 +237,7 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
         PATCH_SETUP_ENTRY,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_ADB_SERVER
+            result["flow_id"], user_input=FLOW_ADB_SERVER
         )
         await hass.async_block_till_done()
 
@@ -217,19 +247,19 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("config", "eth_mac", "wifi_mac"),
+    ("flow_input", "eth_mac", "wifi_mac"),
     [
-        (CONFIG_ADB_SERVER, None, None),
-        (CONFIG_PYTHON_ADB, None, None),
-        (CONFIG_ADB_SERVER, INVALID_MAC, None),
-        (CONFIG_PYTHON_ADB, INVALID_MAC, None),
-        (CONFIG_ADB_SERVER, None, INVALID_MAC),
-        (CONFIG_PYTHON_ADB, None, INVALID_MAC),
+        (FLOW_ADB_SERVER, None, None),
+        (FLOW_PYTHON_ADB, None, None),
+        (FLOW_ADB_SERVER, INVALID_MAC, None),
+        (FLOW_PYTHON_ADB, INVALID_MAC, None),
+        (FLOW_ADB_SERVER, None, INVALID_MAC),
+        (FLOW_PYTHON_ADB, None, INVALID_MAC),
     ],
 )
 async def test_invalid_mac(
     hass: HomeAssistant,
-    config: dict[str, Any],
+    flow_input: dict[str, Any],
     eth_mac: str | None,
     wifi_mac: str | None,
 ) -> None:
@@ -241,7 +271,7 @@ async def test_invalid_mac(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=config,
+            data=flow_input,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -293,12 +323,12 @@ async def test_on_connect_failed(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
+        context={"source": SOURCE_USER},
     )
 
     with patch(CONNECT_METHOD, return_value=(None, "Error")):
         result = await hass.config_entries.flow.async_configure(
-            flow_result["flow_id"], user_input=CONFIG_ADB_SERVER
+            flow_result["flow_id"], user_input=FLOW_ADB_SERVER
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
@@ -308,7 +338,7 @@ async def test_on_connect_failed(hass: HomeAssistant) -> None:
         side_effect=TypeError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_ADB_SERVER
+            result["flow_id"], user_input=FLOW_ADB_SERVER
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "unknown"}
@@ -321,7 +351,7 @@ async def test_on_connect_failed(hass: HomeAssistant) -> None:
         PATCH_SETUP_ENTRY,
     ):
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], user_input=CONFIG_ADB_SERVER
+            result2["flow_id"], user_input=FLOW_ADB_SERVER
         )
         await hass.async_block_till_done()
 

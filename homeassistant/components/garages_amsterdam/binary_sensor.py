@@ -1,9 +1,8 @@
 """Binary Sensor platform for Garages Amsterdam."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from odp_amsterdam import Garage
 
@@ -75,6 +74,7 @@ class GaragesAmsterdamBinarySensor(GaragesAmsterdamEntity, BinarySensorEntity):
         self._attr_unique_id = f"{garage_name}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """If the binary sensor is currently on or off."""
         return self.entity_description.is_on(self.coordinator.data[self._garage_name])

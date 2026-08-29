@@ -1,146 +1,87 @@
 """Test the GitHub config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock
 
 from aiogithubapi import GitHubException
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.github.config_flow import get_repositories
 from homeassistant.components.github.const import (
-    CONF_REPOSITORIES,
-    DEFAULT_REPOSITORIES,
+    CONF_REPOSITORY,
     DOMAIN,
+    SUBENTRY_TYPE_REPOSITORY,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
-from .common import MOCK_ACCESS_TOKEN
+from .const import MOCK_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_setup_entry: None,
-    aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    github_device_client: AsyncMock,
+    github_client: AsyncMock,
+    device_activation_event: asyncio.Event,
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        json={
-            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
-            "user_code": "WDJB-MJHT",
-            "verification_uri": "https://github.com/login/device",
-            "expires_in": 900,
-            "interval": 5,
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    # User has not yet entered the code
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={"error": "authorization_pending"},
-        headers={"Content-Type": "application/json"},
-    )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    # User enters the code
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={
-            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
-            "token_type": "bearer",
-            "scope": "",
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    freezer.tick(10)
+    device_activation_event.set()
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_REPOSITORIES: DEFAULT_REPOSITORIES,
-        },
-    )
-
     assert result["title"] == ""
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert "data" in result
-    assert result["data"][CONF_ACCESS_TOKEN] == MOCK_ACCESS_TOKEN
-    assert "options" in result
-    assert result["options"][CONF_REPOSITORIES] == DEFAULT_REPOSITORIES
+    assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
 
 
 async def test_flow_with_registration_failure(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    github_device_client: AsyncMock,
 ) -> None:
     """Test flow with registration failure of the device."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        exc=GitHubException("Registration failed"),
-    )
+    github_device_client.register.side_effect = GitHubException("Registration failed")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result.get("reason") == "could_not_register"
+    assert result["reason"] == "could_not_register"
 
 
 async def test_flow_with_activation_failure(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    github_device_client: AsyncMock,
+    device_activation_event: asyncio.Event,
 ) -> None:
     """Test flow with activation failure of the device."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        json={
-            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
-            "user_code": "WDJB-MJHT",
-            "verification_uri": "https://github.com/login/device",
-            "expires_in": 900,
-            "interval": 5,
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    # User has not yet entered the code
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={"error": "authorization_pending"},
-        headers={"Content-Type": "application/json"},
-    )
+
+    async def mock_api_device_activation(device_code) -> None:
+        # Simulate the device activation process
+        await device_activation_event.wait()
+        raise GitHubException("Activation failed")
+
+    github_device_client.activation = mock_api_device_activation
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    # Activation fails
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        exc=GitHubException("Activation failed"),
-    )
-    freezer.tick(10)
+    device_activation_event.set()
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -149,30 +90,14 @@ async def test_flow_with_activation_failure(
 
 
 async def test_flow_with_remove_while_activating(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant, github_device_client: AsyncMock
 ) -> None:
     """Test flow with user canceling while activating."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        json={
-            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
-            "user_code": "WDJB-MJHT",
-            "verification_uri": "https://github.com/login/device",
-            "expires_in": 900,
-            "interval": 5,
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={"error": "authorization_pending"},
-        headers={"Content-Type": "application/json"},
-    )
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
@@ -194,111 +119,130 @@ async def test_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["reason"] == "already_configured"
 
 
-async def test_starred_pagination_with_paginated_result(hass: HomeAssistant) -> None:
-    """Test pagination of starred repositories with paginated result."""
-    with patch(
-        "homeassistant.components.github.config_flow.GitHubAPI",
-        return_value=MagicMock(
-            user=MagicMock(
-                starred=AsyncMock(
-                    return_value=MagicMock(
-                        is_last_page=False,
-                        next_page_number=2,
-                        last_page_number=2,
-                        data=[MagicMock(full_name="home-assistant/core")],
-                    )
-                ),
-                repos=AsyncMock(
-                    return_value=MagicMock(
-                        is_last_page=False,
-                        next_page_number=2,
-                        last_page_number=2,
-                        data=[MagicMock(full_name="awesome/reposiotry")],
-                    )
-                ),
-            )
-        ),
-    ):
-        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
-
-    assert len(repos) == 2
-    assert repos[-1] == DEFAULT_REPOSITORIES[0]
-
-
-async def test_starred_pagination_with_no_starred(hass: HomeAssistant) -> None:
-    """Test pagination of starred repositories with no starred."""
-    with patch(
-        "homeassistant.components.github.config_flow.GitHubAPI",
-        return_value=MagicMock(
-            user=MagicMock(
-                starred=AsyncMock(
-                    return_value=MagicMock(
-                        is_last_page=True,
-                        data=[],
-                    )
-                ),
-                repos=AsyncMock(
-                    return_value=MagicMock(
-                        is_last_page=True,
-                        data=[],
-                    )
-                ),
-            )
-        ),
-    ):
-        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
-
-    assert len(repos) == 2
-    assert repos == DEFAULT_REPOSITORIES
-
-
-async def test_starred_pagination_with_exception(hass: HomeAssistant) -> None:
-    """Test pagination of starred repositories with exception."""
-    with patch(
-        "homeassistant.components.github.config_flow.GitHubAPI",
-        return_value=MagicMock(
-            user=MagicMock(starred=AsyncMock(side_effect=GitHubException("Error")))
-        ),
-    ):
-        repos = await get_repositories(hass, MOCK_ACCESS_TOKEN)
-
-    assert len(repos) == 2
-    assert repos == DEFAULT_REPOSITORIES
-
-
-async def test_options_flow(
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_repository_subentry_flow(
     hass: HomeAssistant,
+    github_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: None,
 ) -> None:
-    """Test options flow."""
+    """Test the repository subentry flow."""
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
-        },
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),
+        context={"source": SOURCE_USER},
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_REPOSITORIES: ["homeassistant/core"]},
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REPOSITORY: "home-assistant/core"}
     )
 
-    assert "homeassistant/architecture" not in result["data"][CONF_REPOSITORIES]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_REPOSITORY: "home-assistant/core"}
+    subentry = list(mock_config_entry.subentries.values())[0]
+    assert subentry.unique_id == "home-assistant/core"
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_repository_subentry_flow_repository_error(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the repository subentry flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    github_client.user.repos.side_effect = GitHubException()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    schema = result["data_schema"]
+    repositories = schema.schema[CONF_REPOSITORY]
+    assert len(repositories.config["options"]) == 2
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REPOSITORY: "home-assistant/core"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_REPOSITORY: "home-assistant/core"}
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_repository_subentry_flow_no_repositories(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the repository subentry flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    github_client.user.repos.side_effect = [MagicMock(is_last_page=True, data=[])]
+    github_client.user.starred.side_effect = [MagicMock(is_last_page=True, data=[])]
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    schema = result["data_schema"]
+    repositories = schema.schema[CONF_REPOSITORY]
+    assert len(repositories.config["options"]) == 2
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REPOSITORY: "home-assistant/core"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_REPOSITORY: "home-assistant/core"}
+
+
+async def test_repository_subentry_flow_omit_already_setup_repository(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the repository subentry flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    schema = result["data_schema"]
+    repositories = schema.schema[CONF_REPOSITORY]
+    assert len(repositories.config["options"]) == 3
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REPOSITORY: "esphome/esphome"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_REPOSITORY: "esphome/esphome"}

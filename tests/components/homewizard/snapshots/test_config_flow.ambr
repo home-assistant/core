@@ -47,6 +47,7 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'P1 meter',
@@ -95,6 +96,7 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Energy Socket (5c2fafabcdef)',

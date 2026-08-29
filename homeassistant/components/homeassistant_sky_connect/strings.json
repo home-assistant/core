@@ -106,6 +106,37 @@
       "message": "The device is not plugged in"
     }
   },
+  "issues": {
+    "multi_pan_migration": {
+      "fix_flow": {
+        "abort": {
+          "addon_already_running": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_already_running%]",
+          "addon_info_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_info_failed%]",
+          "addon_install_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_install_failed%]",
+          "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
+          "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+          "fw_install_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_install_failed%]",
+          "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
+          "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
+        },
+        "progress": {
+          "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+          "install_zigbee_firmware": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_zigbee_firmware%]",
+          "uninstall_multiprotocol_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::uninstall_multiprotocol_addon%]"
+        },
+        "step": {
+          "uninstall_addon": {
+            "data": {
+              "disable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::data::disable_multi_pan%]"
+            },
+            "description": "Multiprotocol support for the IEEE 802.15.4 radio in your {hardware_name} has been deprecated. Migrate the radio back to Zigbee-only firmware to keep it working in the future.\n\nDisabling multiprotocol support will disable Thread support provided by the {hardware_name}. Your Thread devices will continue working only if you have another Thread border router nearby.\n\nIt will take a few minutes to install the Zigbee firmware and restore a backup.",
+            "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
+          }
+        }
+      },
+      "title": "Multiprotocol support is deprecated"
+    }
+  },
   "options": {
     "abort": {
       "addon_already_running": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_already_running%]",
@@ -130,8 +161,10 @@
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
       "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
+      "install_zigbee_firmware": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_zigbee_firmware%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]",
+      "uninstall_multiprotocol_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::uninstall_multiprotocol_addon%]"
     },
     "step": {
       "addon_installed_other_device": {

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_registry[button.dining_room_two_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,7 +39,7 @@
 # name: test_entity_registry[button.dining_room_two_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dining Room Two Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Two Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.dining_room_two_door_bypass',
@@ -49,8 +51,9 @@
 # ---
 # name: test_entity_registry[button.doorbell_other_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,7 +89,7 @@
 # name: test_entity_registry[button.doorbell_other_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Doorbell  Other Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Doorbell  Other Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.doorbell_other_bypass',
@@ -97,8 +101,9 @@
 # ---
 # name: test_entity_registry[button.fire_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,7 +139,7 @@
 # name: test_entity_registry[button.fire_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fire Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fire Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.fire_bypass',
@@ -145,8 +151,9 @@
 # ---
 # name: test_entity_registry[button.front_door_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,7 +189,7 @@
 # name: test_entity_registry[button.front_door_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door  Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door  Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_door_bypass',
@@ -193,8 +201,9 @@
 # ---
 # name: test_entity_registry[button.garage_side_other_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,7 +239,7 @@
 # name: test_entity_registry[button.garage_side_other_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Side  Other Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Side  Other Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_side_other_bypass',
@@ -241,8 +251,9 @@
 # ---
 # name: test_entity_registry[button.gas_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,7 +289,7 @@
 # name: test_entity_registry[button.gas_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gas Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.gas_bypass',
@@ -289,8 +301,9 @@
 # ---
 # name: test_entity_registry[button.living_room_two_window_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -325,7 +339,7 @@
 # name: test_entity_registry[button.living_room_two_window_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Two Window Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Two Window Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_two_window_bypass',
@@ -337,8 +351,9 @@
 # ---
 # name: test_entity_registry[button.living_room_window_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -373,7 +389,7 @@
 # name: test_entity_registry[button.living_room_window_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room  Window Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room  Window Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_window_bypass',
@@ -385,8 +401,9 @@
 # ---
 # name: test_entity_registry[button.master_bedroom_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -421,7 +439,7 @@
 # name: test_entity_registry[button.master_bedroom_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Master Bedroom  Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom  Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.master_bedroom_door_bypass',
@@ -433,8 +451,9 @@
 # ---
 # name: test_entity_registry[button.office_back_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -469,7 +489,7 @@
 # name: test_entity_registry[button.office_back_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Back Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Back Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_back_door_bypass',
@@ -481,8 +501,9 @@
 # ---
 # name: test_entity_registry[button.office_side_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -517,7 +539,7 @@
 # name: test_entity_registry[button.office_side_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Side Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Side Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_side_door_bypass',
@@ -529,8 +551,9 @@
 # ---
 # name: test_entity_registry[button.patio_door_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -548,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -565,7 +589,7 @@
 # name: test_entity_registry[button.patio_door_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio  Door Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio  Door Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.patio_door_bypass',
@@ -577,8 +601,9 @@
 # ---
 # name: test_entity_registry[button.security_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -596,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -613,7 +639,7 @@
 # name: test_entity_registry[button.security_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Security Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.security_bypass',
@@ -625,8 +651,9 @@
 # ---
 # name: test_entity_registry[button.temperature_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -644,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -661,7 +689,7 @@
 # name: test_entity_registry[button.temperature_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Temperature Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.temperature_bypass',
@@ -673,8 +701,9 @@
 # ---
 # name: test_entity_registry[button.test_bypass_all-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -692,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass all',
     'options': dict({
     }),
     'original_device_class': None,
@@ -709,7 +739,7 @@
 # name: test_entity_registry[button.test_bypass_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test Bypass all',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test Bypass all',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_bypass_all',
@@ -721,8 +751,9 @@
 # ---
 # name: test_entity_registry[button.test_clear_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -740,6 +771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clear bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -757,7 +789,7 @@
 # name: test_entity_registry[button.test_clear_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test Clear bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test Clear bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_clear_bypass',
@@ -769,8 +801,9 @@
 # ---
 # name: test_entity_registry[button.unknown_bypass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -788,6 +821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -805,7 +839,7 @@
 # name: test_entity_registry[button.unknown_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Unknown Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Unknown Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.unknown_bypass',

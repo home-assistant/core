@@ -1,0 +1,77 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 0.0,
+          "unit": "W",
+          "timestamp": "2026-03-13T12:10:35.558Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "deltaEnergy": 0.0,
+            "end": "2026-03-13T14:44:20Z",
+            "energy": 9233.836,
+            "start": "2026-03-13T14:28:21Z"
+          },
+          "timestamp": "2026-03-13T14:44:21.817Z"
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 9233.836,
+          "unit": "Wh",
+          "timestamp": "2026-03-13T14:35:25.695Z"
+        }
+      },
+      "refresh": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "9.3.26 (1)",
+          "timestamp": "2026-03-04T14:22:41.264Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-04T14:22:41.263Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-03-04T14:22:41.244Z"
+        },
+        "currentVersion": {
+          "value": "9.3.26 (1)",
+          "timestamp": "2026-03-04T14:22:41.286Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2026-03-13T12:10:35.561Z"
+        }
+      }
+    }
+  }
+}

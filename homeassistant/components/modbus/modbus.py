@@ -1,7 +1,5 @@
 """Support for Modbus."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import namedtuple
 from typing import Any
@@ -35,7 +33,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
-    _LOGGER,
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
@@ -57,6 +54,7 @@ from .const import (
     DEFAULT_HUB,
     DEVICE_ID,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
@@ -307,21 +305,23 @@ class ModbusHub:
             return
         self._last_log_error = text
         log_text = f"Pymodbus: {self.name}: {text}"
-        _LOGGER.error(log_text)
+        LOGGER.error(log_text)
 
     async def async_pb_connect(self) -> None:
         """Connect to device, async."""
         while True:
             try:
                 if await self._client.connect():  # type: ignore[union-attr]
-                    _LOGGER.info(f"modbus {self.name} communication open")
+                    LOGGER.info(f"modbus {self.name} communication open")
                     break
             except ModbusException as exception_error:
                 self._log_error(
-                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                    f"{self.name} connect failed, please check"
+                    f" your configuration ({exception_error!s})"
                 )
-            _LOGGER.info(
-                f"modbus {self.name} connect NOT a success ! retrying in {PRIMARY_RECONNECT_DELAY} seconds"
+            LOGGER.info(
+                f"modbus {self.name} connect NOT a success !"
+                f" retrying in {PRIMARY_RECONNECT_DELAY} seconds"
             )
             await asyncio.sleep(PRIMARY_RECONNECT_DELAY)
 
@@ -368,7 +368,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(str(exception_error))
             self._client = None
-            _LOGGER.info(f"modbus {self.name} communication closed")
+            LOGGER.info(f"modbus {self.name} communication closed")
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
@@ -401,7 +401,10 @@ class ModbusHub:
             self._log_error(error)
             return None
         if result.isError():
-            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            error = (
+                f"Error: device: {slave} address: {address}"
+                " -> pymodbus returned isError True"
+            )
             self._log_error(error)
             return None
         return result

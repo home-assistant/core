@@ -1,7 +1,5 @@
 """Integration to integrate Keymitt BLE devices with Home Assistant."""
 
-from __future__ import annotations
-
 from microbot import MicroBotApiClient
 
 from homeassistant.components import bluetooth

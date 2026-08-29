@@ -1,24 +1,22 @@
 """Classes to help gather user submissions."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
+from collections.abc import Callable, Container, Hashable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
-import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Concatenate, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import deprecated_function
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
@@ -109,18 +107,22 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: Mapping[str, str] | None = None
+        self,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        *,
+        translation_domain: str | None = None,
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
         self.reason = reason
         self.description_placeholders = description_placeholders
+        self.translation_domain = translation_domain
 
 
 class FlowContext(TypedDict, total=False):
     """Typed context dict."""
 
-    show_advanced_options: bool
     source: str
 
 
@@ -149,15 +151,6 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     translation_domain: str
     type: FlowResultType
     url: str
-
-
-class ProgressStepData[_FlowResultT](TypedDict):
-    """Typed data for progress step tracking."""
-
-    tasks: dict[str, asyncio.Task[Any]]
-    abort_reason: str
-    abort_description_placeholders: Mapping[str, str]
-    next_step_result: _FlowResultT | None
 
 
 def _map_error_to_schema_errors(
@@ -275,7 +268,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         matcher: Callable[[Any], bool],
         include_uninitialized: bool = False,
     ) -> list[_FlowResultT]:
-        """Return flows in progress init matching by data type as a partial FlowResult."""
+        """Return flows in progress matching by data type."""
         return self._async_flow_handler_to_flow_result(
             [
                 progress
@@ -338,11 +331,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if flow and flow.deprecated_show_progress:
             if (cur_step := flow.cur_step) and cur_step[
                 "type"
-            ] == FlowResultType.SHOW_PROGRESS:
+            ] is FlowResultType.SHOW_PROGRESS:
                 # Allow the progress task to finish before we call the flow handler
                 await asyncio.sleep(0)
 
-        while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
+        while not result or result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
             result = await self._async_configure(flow_id, user_input)
             flow = self._progress.get(flow_id)
             if flow and flow.deprecated_show_progress:
@@ -375,7 +368,8 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     try:
                         _map_error_to_schema_errors(schema_errors, error, data_schema)
                     except ValueError:
-                        # If we get here, the path in the exception does not exist in the schema.
+                        # If we get here, the path in the exception
+                        # does not exist in the schema.
                         schema_errors.setdefault("base", []).append(str(error))
                 raise InvalidData(
                     "Schema validation failed",
@@ -385,7 +379,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 ) from ex
 
         # Handle a menu navigation choice
-        if cur_step["type"] == FlowResultType.MENU and user_input:
+        if cur_step["type"] is FlowResultType.MENU and user_input:
             result = await self._async_handle_step(
                 flow, user_input["next_step_id"], None
             )
@@ -398,7 +392,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             FlowResultType.EXTERNAL_STEP,
             FlowResultType.SHOW_PROGRESS,
         ):
-            if cur_step["type"] == FlowResultType.EXTERNAL_STEP and result[
+            if cur_step["type"] is FlowResultType.EXTERNAL_STEP and result[
                 "type"
             ] not in (
                 FlowResultType.EXTERNAL_STEP,
@@ -408,7 +402,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     "External step can only transition to "
                     "external step or external step done."
                 )
-            if cur_step["type"] == FlowResultType.SHOW_PROGRESS and result[
+            if cur_step["type"] is FlowResultType.SHOW_PROGRESS and result[
                 "type"
             ] not in (
                 FlowResultType.SHOW_PROGRESS,
@@ -425,7 +419,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             # - The step is same but result type is SHOW_PROGRESS and progress_action
             #   or description_placeholders has changed
             if cur_step["step_id"] != result.get("step_id") or (
-                result["type"] == FlowResultType.SHOW_PROGRESS
+                result["type"] is FlowResultType.SHOW_PROGRESS
                 and (
                     cur_step["progress_action"] != result.get("progress_action")
                     or cur_step["description_placeholders"]
@@ -479,6 +473,23 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         except Exception:
             _LOGGER.exception("Error removing %s flow", flow.handler)
 
+    def _abort_flow_result(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+        err: AbortFlow,
+    ) -> _FlowResultT:
+        """Convert an AbortFlow exception into an abort result."""
+        result = self._flow_result(
+            type=FlowResultType.ABORT,
+            flow_id=flow.flow_id,
+            handler=flow.handler,
+            reason=err.reason,
+            description_placeholders=err.description_placeholders,
+        )
+        if err.translation_domain is not None:
+            result["translation_domain"] = err.translation_domain
+        return result
+
     async def _async_handle_step(
         self,
         flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
@@ -492,18 +503,14 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         try:
             result: _FlowResultT = await getattr(flow, method)(user_input)
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         if flow.flow_id not in self._progress:
-            # The flow was removed during the step, raise UnknownFlow
-            # unless the result is an abort
-            if result["type"] != FlowResultType.ABORT:
+            # The flow was removed during the step, raise UnknownFlow unless
+            # the result is an abort. Compares against the string value
+            # because this runs before the legacy-string normalization
+            # below, and out-of-tree flow handlers may still return raw "abort".
+            if result["type"] != FlowResultType.ABORT.value:
                 raise UnknownFlow
             return result
 
@@ -520,7 +527,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         if (
-            result["type"] == FlowResultType.SHOW_PROGRESS
+            result["type"] is FlowResultType.SHOW_PROGRESS
             # Mypy does not agree with using pop on _FlowResultT
             and (progress_task := result.pop("progress_task", None))  # type: ignore[arg-type]
             and progress_task != flow.async_get_progress_task()
@@ -537,7 +544,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             progress_task.add_done_callback(schedule_configure)  # type: ignore[attr-defined]
             flow.async_set_progress_task(progress_task)  # type: ignore[arg-type]
 
-        elif result["type"] != FlowResultType.SHOW_PROGRESS:
+        elif result["type"] is not FlowResultType.SHOW_PROGRESS:
             flow.async_cancel_progress_task()
 
         if result["type"] in STEP_ID_OPTIONAL_STEPS:
@@ -553,16 +560,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             # We pass a copy of the result because we're mutating our version
             result = await self.async_finish_flow(flow, result.copy())
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         # _async_finish_flow may change result type, check it again
-        if result["type"] == FlowResultType.FORM:
+        if result["type"] is FlowResultType.FORM:
             flow.cur_step = result
             return result
 
@@ -597,7 +598,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flows: Iterable[FlowHandler[_FlowContextT, _FlowResultT, _HandlerT]],
         include_uninitialized: bool,
     ) -> list[_FlowResultT]:
-        """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
+        """Convert a list of FlowHandler to a partial FlowResult."""
         return [
             self._flow_result(
                 flow_id=flow.flow_id,
@@ -645,24 +646,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
     deprecated_show_progress = False
-    __progress_step_data: ProgressStepData[_FlowResultT] | None = None
-
-    @property
-    def _progress_step_data(self) -> ProgressStepData[_FlowResultT]:
-        """Return progress step data.
-
-        A property is used instead of a simple attribute as derived classes
-        do not call super().__init__.
-        The property makes sure that the dict is initialized if needed.
-        """
-        if not self.__progress_step_data:
-            self.__progress_step_data = {
-                "tasks": {},
-                "abort_reason": "",
-                "abort_description_placeholders": MappingProxyType({}),
-                "next_step_result": None,
-            }
-        return self.__progress_step_data
 
     @property
     def source(self) -> str | None:
@@ -670,9 +653,17 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return self.context.get("source", None)  # type: ignore[return-value]
 
     @property
+    @deprecated_function(
+        "a user friendly way to present additional options in the UI, for example a section",
+        breaks_in_ha_version="2027.6",
+    )
     def show_advanced_options(self) -> bool:
-        """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)  # type: ignore[return-value]
+        """If we should show advanced options.
+
+        During the deprecation period return True to not break existing flows that use
+        this property to determine whether to show additional options.
+        """
+        return True
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
@@ -685,15 +676,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """
         schema = {}
         for key, val in data_schema.schema.items():
-            if isinstance(key, vol.Marker):
-                # Exclude advanced field
-                if (
-                    key.description
-                    and key.description.get("advanced")
-                    and not self.show_advanced_options
-                ):
-                    continue
-
             # Process the section schema options
             if (
                 suggested_values is not None
@@ -775,48 +757,23 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
     ) -> _FlowResultT:
-        """Abort the flow."""
-        return self._flow_result(
+        """Abort the flow.
+
+        Pass `translation_domain` to resolve the reason from another integration's
+        translations instead of the one owning the flow.
+        """
+        flow_result = self._flow_result(
             type=FlowResultType.ABORT,
             flow_id=self.flow_id,
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
         )
-
-    async def async_step__progress_step_abort(
-        self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
-        """Abort the flow."""
-        progress_step_data = self._progress_step_data
-        return self.async_abort(
-            reason=progress_step_data["abort_reason"],
-            description_placeholders=progress_step_data[
-                "abort_description_placeholders"
-            ],
-        )
-
-    async def async_step__progress_step_progress_done(
-        self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
-        """Progress done. Return the next step.
-
-        Used by the progress_step decorator
-        to allow decorated step methods
-        to call the next step method, to change step,
-        without using async_show_progress_done.
-        If no next step is set, abort the flow.
-        """
-        progress_step_data = self._progress_step_data
-        if (next_step_result := progress_step_data["next_step_result"]) is None:
-            return self.async_abort(
-                reason=progress_step_data["abort_reason"],
-                description_placeholders=progress_step_data[
-                    "abort_description_placeholders"
-                ],
-            )
-        return next_step_result
+        if translation_domain is not None:
+            flow_result["translation_domain"] = translation_domain
+        return flow_result
 
     @callback
     def async_external_step(
@@ -998,90 +955,3 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
-
-
-type _FuncType[_T: FlowHandler[Any, Any, Any], _R: FlowResult[Any, Any], **_P] = (
-    Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
-)
-
-
-def progress_step[
-    HandlerT: FlowHandler[Any, Any, Any],
-    ResultT: FlowResult[Any, Any],
-    **P,
-](
-    description_placeholders: (
-        dict[str, str] | Callable[[Any], dict[str, str]] | None
-    ) = None,
-) -> Callable[[_FuncType[HandlerT, ResultT, P]], _FuncType[HandlerT, ResultT, P]]:
-    """Decorator to create a progress step from an async function.
-
-    The decorated method should be a step method
-    which needs to show progress.
-    The method should accept dict[str, Any] as user_input
-    and should return a FlowResult or raise AbortFlow.
-    The method can call self.async_update_progress(progress)
-    to update progress.
-
-    Args:
-        description_placeholders: Static dict or callable that returns dict for progress UI placeholders.
-    """
-
-    def decorator(
-        func: _FuncType[HandlerT, ResultT, P],
-    ) -> _FuncType[HandlerT, ResultT, P]:
-        @functools.wraps(func)
-        async def wrapper(
-            self: FlowHandler[Any, ResultT], *args: P.args, **kwargs: P.kwargs
-        ) -> ResultT:
-            step_id = func.__name__.replace("async_step_", "")
-            progress_step_data = self._progress_step_data
-            # Check if we have a progress task running
-            progress_task = progress_step_data["tasks"].get(step_id)
-
-            if progress_task is None:
-                # First call - create and start the progress task
-                progress_task = self.hass.async_create_task(
-                    func(self, *args, **kwargs),  # type: ignore[arg-type]
-                    f"Progress step {step_id}",
-                )
-                progress_step_data["tasks"][step_id] = progress_task
-
-            if not progress_task.done():
-                # Handle description placeholders
-                placeholders = None
-                if description_placeholders is not None:
-                    if callable(description_placeholders):
-                        placeholders = description_placeholders(self)
-                    else:
-                        placeholders = description_placeholders
-
-                return self.async_show_progress(
-                    step_id=step_id,
-                    progress_action=step_id,
-                    progress_task=progress_task,
-                    description_placeholders=placeholders,
-                )
-
-            # Task is done or this is a subsequent call
-            try:
-                progress_step_data["next_step_result"] = await progress_task
-            except AbortFlow as err:
-                progress_step_data["abort_reason"] = err.reason
-                progress_step_data["abort_description_placeholders"] = (
-                    err.description_placeholders or {}
-                )
-                return self.async_show_progress_done(
-                    next_step_id="_progress_step_abort"
-                )
-            finally:
-                # Clean up task reference
-                progress_step_data["tasks"].pop(step_id, None)
-
-            return self.async_show_progress_done(
-                next_step_id="_progress_step_progress_done"
-            )
-
-        return wrapper
-
-    return decorator

@@ -1,6 +1,14 @@
 {
   "entity": {
+    "alarm_control_panel": {
+      "nvr_alarm": {
+        "default": "mdi:shield-home"
+      }
+    },
     "binary_sensor": {
+      "alarm_sound_detection": {
+        "default": "mdi:alarm-bell"
+      },
       "animal_detected": {
         "default": "mdi:paw"
       },
@@ -85,11 +93,20 @@
       "humidity_sensor": {
         "default": "mdi:water-percent"
       },
+      "humidity_sensor_enabled": {
+        "default": "mdi:water-percent"
+      },
       "is_dark": {
         "default": "mdi:brightness-6"
       },
       "light_sensor": {
         "default": "mdi:brightness-5"
+      },
+      "light_sensor_enabled": {
+        "default": "mdi:brightness-5"
+      },
+      "motion_detection_enabled": {
+        "default": "mdi:walk"
       },
       "object_detected": {
         "default": "mdi:eye"
@@ -105,9 +122,6 @@
       },
       "overlay_show_nerd_mode": {
         "default": "mdi:fullscreen"
-      },
-      "package_detected": {
-        "default": "mdi:package-variant-closed"
       },
       "person_detected": {
         "default": "mdi:walk"
@@ -131,6 +145,9 @@
         "default": "mdi:speaker"
       },
       "temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_sensor_enabled": {
         "default": "mdi:thermometer"
       },
       "tracking_person": {
@@ -164,17 +181,26 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "motion_detection": {
+        "default": "mdi:motion-sensor"
+      },
       "nfc": {
         "default": "mdi:nfc"
+      },
+      "package": {
+        "default": "mdi:package-variant-closed"
+      },
+      "smart_detection": {
+        "default": "mdi:cctv"
+      },
+      "sound_detection": {
+        "default": "mdi:waveform"
       },
       "vehicle": {
         "default": "mdi:car"
       }
     },
     "number": {
-      "auto_lock_timeout": {
-        "default": "mdi:walk"
-      },
       "auto_shutoff_duration": {
         "default": "mdi:camera-timer"
       },
@@ -230,6 +256,9 @@
       },
       "paired_camera": {
         "default": "mdi:cctv"
+      },
+      "ptz_patrol": {
+        "default": "mdi:rotate-360"
       },
       "recording_mode": {
         "default": "mdi:video-outline"
@@ -423,6 +452,9 @@
     },
     "get_user_keyring_info": {
       "service": "mdi:key-chain"
+    },
+    "ptz_goto_preset": {
+      "service": "mdi:camera-marker"
     },
     "remove_doorbell_text": {
       "service": "mdi:message-minus"

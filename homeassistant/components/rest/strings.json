@@ -1,4 +1,15 @@
 {
+  "exceptions": {
+    "error_communicating": {
+      "message": "Error communicating with {resource}"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off {resource}"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on {resource}"
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads REST entities from the YAML-configuration.",

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "circulate": "mdi:fan-clock"
+            }
+          }
+        }
+      }
+    }
+  }
+}

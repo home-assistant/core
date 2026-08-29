@@ -1,6 +1,6 @@
 """UptimeRobot sensor platform."""
 
-from __future__ import annotations
+from typing import override
 
 from pyuptimerobot import UptimeRobotMonitor
 
@@ -16,14 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 from .utils import new_device_listener
-
-SENSORS_INFO = {
-    0: "pause",
-    1: "not_checked_yet",
-    2: "up",
-    8: "seems_down",
-    9: "down",
-}
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -51,11 +43,11 @@ async def async_setup_entry(
                         "not_checked_yet",
                         "pause",
                         "seems_down",
+                        "started",
                         "up",
                     ],
                     translation_key="monitor_status",
                 ),
-                monitor=monitor,
             )
             for monitor in new_monitors
         ]
@@ -69,6 +61,13 @@ class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
 
     @property
-    def native_value(self) -> str:
+    @override
+    def native_value(self) -> str | None:
         """Return the status of the monitor."""
-        return SENSORS_INFO[self.monitor.status]
+        if not self._monitor.status:
+            return None
+
+        status = self._monitor.status.lower()
+        # The API returns "paused"
+        # but the entity state will be "pause" to avoid a breaking change
+        return {"paused": "pause"}.get(status, status)

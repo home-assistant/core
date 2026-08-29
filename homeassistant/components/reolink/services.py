@@ -1,50 +1,33 @@
 """Reolink additional services."""
 
-from __future__ import annotations
-
 from reolink_aio.api import Chime
 from reolink_aio.enums import ChimeToneEnum
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORT_PTZ_SPEED
 from .host import ReolinkHost
 from .util import get_device_uid_and_ch, raise_translated_error
 
 ATTR_RINGTONE = "ringtone"
+ATTR_SPEED = "speed"
+SERVICE_PTZ_MOVE = "ptz_move"
 
 
 @raise_translated_error
 async def _async_play_chime(service_call: ServiceCall) -> None:
     """Play a ringtone."""
     service_data = service_call.data
-    device_registry = dr.async_get(service_call.hass)
 
     for device_id in service_data[ATTR_DEVICE_ID]:
-        config_entry = None
-        device = device_registry.async_get(device_id)
-        if device is not None:
-            for entry_id in device.config_entries:
-                config_entry = service_call.hass.config_entries.async_get_entry(
-                    entry_id
-                )
-                if config_entry is not None and config_entry.domain == DOMAIN:
-                    break
-        if (
-            config_entry is None
-            or device is None
-            or config_entry.state != ConfigEntryState.LOADED
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="service_entry_ex",
-                translation_placeholders={"service_name": "play_chime"},
-            )
+        device, config_entry = service.async_get_device_and_config_entry(
+            service_call.hass, DOMAIN, device_id
+        )
         host: ReolinkHost = config_entry.runtime_data.host
         (_device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
         chime: Chime | None = host.api.chime(chime_id)
@@ -75,4 +58,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ),
             }
         ),
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_PTZ_MOVE,
+        entity_domain=BUTTON_DOMAIN,
+        schema={vol.Required(ATTR_SPEED): cv.positive_int},
+        func="async_ptz_move",
+        required_features=[SUPPORT_PTZ_SPEED],
     )

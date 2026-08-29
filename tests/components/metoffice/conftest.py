@@ -9,7 +9,9 @@ import pytest
 @pytest.fixture
 def mock_simple_manager_fail():
     """Mock datapoint Manager with default values for testing in config_flow."""
-    with patch("datapoint.Manager.Manager") as mock_manager:
+    with patch(
+        "homeassistant.components.metoffice.config_flow.Manager"
+    ) as mock_manager:
         instance = mock_manager.return_value
         instance.get_forecast = APIException()
         instance.latitude = None

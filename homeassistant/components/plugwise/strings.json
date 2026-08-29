@@ -115,6 +115,7 @@
           "auto": "[%key:common::state::auto%]",
           "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -319,7 +320,10 @@
     "failed_to_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "invalid_xml_data": {
+    "invalid_setup": {
+      "message": "Add your Adam instead of your Anna, see the documentation"
+    },
+    "response_error": {
       "message": "[%key:component::plugwise::config::error::response_error%]"
     },
     "set_schedule_first": {

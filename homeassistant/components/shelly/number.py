@@ -1,17 +1,15 @@
 """Number for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
-    DOMAIN as NUMBER_PLATFORM,
+    DOMAIN as NUMBER_DOMAIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -19,7 +17,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -107,11 +105,13 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             self._attr_mode = description.mode_fn(coordinator.device.config[key])
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         return self.attribute_value
 
     @rpc_call
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -126,6 +126,7 @@ class RpcCuryIntensityNumber(RpcNumber):
     """Represent a RPC Cury Intensity entity."""
 
     @rpc_call
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -154,7 +155,12 @@ class RpcBluTrvNumber(RpcNumber):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -164,10 +170,12 @@ class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
     _reported_value: float | None = None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         return self._reported_value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         await super().async_set_native_value(value)
@@ -180,7 +188,7 @@ BLOCK_NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         translation_key="valve_position",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -209,8 +217,8 @@ RPC_NUMBERS: Final = {
     "number_generic": RpcNumberDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, NUMBER_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, NUMBER_DOMAIN)
         ),
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -288,10 +296,11 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="blu_trv_set_valve_position",
-        removal_condition=lambda config, _, key: config[key].get("enable", True)
-        is True,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", True) is True
+        ),
         entity_class=RpcBluTrvNumber,
     ),
     "left_slot_intensity": RpcNumberDescription(
@@ -303,11 +312,13 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="cury_set",
         slot="left",
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
         entity_class=RpcCuryIntensityNumber,
     ),
     "right_slot_intensity": RpcNumberDescription(
@@ -319,11 +330,13 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="cury_set",
         slot="right",
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
         entity_class=RpcCuryIntensityNumber,
     ),
 }
@@ -375,13 +388,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
     virtual_number_ids = get_virtual_component_ids(
-        coordinator.device.config, NUMBER_PLATFORM
+        coordinator.device.config, NUMBER_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        NUMBER_PLATFORM,
+        NUMBER_DOMAIN,
         virtual_number_ids,
         "number",
     )
@@ -404,12 +417,14 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         self.restored_data: NumberExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_number_data()
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         if self.block is not None:
@@ -420,6 +435,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
 
         return cast(float, self.restored_data.native_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
         LOGGER.debug(

@@ -1,29 +1,26 @@
 """Platform allowing several event entities to be grouped into one event."""
 
-from __future__ import annotations
-
 import itertools
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN as EVENT_DOMAIN,
     PLATFORM_SCHEMA as EVENT_PLATFORM_SCHEMA,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -120,6 +117,7 @@ class EventGroup(GroupEntity, EventEntity):
         self._attr_unique_id = unique_id
         self._attr_event_types = []
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
@@ -143,16 +141,20 @@ class EventGroup(GroupEntity, EventEntity):
                 and old_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
                 and (new_state := event.data["new_state"])
                 and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                and (event_type := new_state.attributes.get(ATTR_EVENT_TYPE))
+                and (
+                    event_type := new_state.attributes.get(
+                        EventEntityStateAttribute.EVENT_TYPE
+                    )
+                )
             ):
                 event_attributes = new_state.attributes.copy()
 
                 # We should not propagate the event properties as
                 # fired event attributes.
-                del event_attributes[ATTR_EVENT_TYPE]
-                del event_attributes[ATTR_EVENT_TYPES]
-                event_attributes.pop(ATTR_DEVICE_CLASS, None)
-                event_attributes.pop(ATTR_FRIENDLY_NAME, None)
+                del event_attributes[EventEntityStateAttribute.EVENT_TYPE]
+                del event_attributes[EventEntityCapabilityAttribute.EVENT_TYPES]
+                event_attributes.pop(EntityStateAttribute.DEVICE_CLASS, None)
+                event_attributes.pop(EntityStateAttribute.FRIENDLY_NAME, None)
 
                 # Fire the group event
                 self._trigger_event(event_type, event_attributes)
@@ -168,6 +170,7 @@ class EventGroup(GroupEntity, EventEntity):
         await super().async_added_to_hass()
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the event group properties."""
         states = [
@@ -185,7 +188,8 @@ class EventGroup(GroupEntity, EventEntity):
         self._attr_event_types = list(
             set(
                 itertools.chain.from_iterable(
-                    state.attributes.get(ATTR_EVENT_TYPES, []) for state in states
+                    state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES, [])
+                    for state in states
                 )
             )
         )

@@ -1,6 +1,6 @@
 """The config_flow for APsystems local API integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import APsystemsEZ1M
@@ -26,6 +26,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,7 +42,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 device_info = await api.get_device_info()
-            except (TimeoutError, ClientConnectionError):
+            except TimeoutError, ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.deviceId)

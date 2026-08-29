@@ -1,7 +1,7 @@
 """Coordinator for 17Track."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
@@ -20,6 +20,8 @@ from .const import (
     LOGGER,
 )
 
+type SeventeenTrackConfigEntry = ConfigEntry[SeventeenTrackCoordinator]
+
 
 @dataclass
 class SeventeenTrackData:
@@ -32,12 +34,12 @@ class SeventeenTrackData:
 class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     """Class to manage fetching 17Track data."""
 
-    config_entry: ConfigEntry
+    config_entry: SeventeenTrackConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SeventeenTrackConfigEntry,
         client: SeventeenTrackClient,
     ) -> None:
         """Initialize."""
@@ -54,6 +56,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         self.show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
         self.client = client
 
+    @override
     async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 

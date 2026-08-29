@@ -47,11 +47,6 @@ CLOUD_DEVICE_DATA: dict[str, Any] = [
     }
 ]
 
-LOCAL_DEVICE_DATA: dict[str, Any] = {
-    "current_temperature": 15,
-    "target_temperature": 20,
-}
-
 
 @pytest.fixture
 def mock_cloud_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
@@ -94,5 +89,9 @@ def mock_adax_local():
         mock_adax_class = mock_adax.return_value
 
         mock_adax_class.get_status = AsyncMock()
-        mock_adax_class.get_status.return_value = LOCAL_DEVICE_DATA
+        mock_adax_class.get_status.return_value = {
+            "current_temperature": 15,
+            "target_temperature": 20,
+        }
+        mock_adax_class.set_target_temperature = AsyncMock()
         yield mock_adax_class

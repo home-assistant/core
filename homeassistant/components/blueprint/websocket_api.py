@@ -1,7 +1,5 @@
 """Websocket API for blueprint."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools
@@ -64,6 +62,7 @@ def _ws_with_blueprint_domain(
     return with_domain_blueprints
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/list",
@@ -97,6 +96,7 @@ async def ws_list_blueprints(
     connection.send_result(msg["id"], results)
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/import",
@@ -150,6 +150,7 @@ async def ws_import_blueprint(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/save",
@@ -206,6 +207,7 @@ async def ws_save_blueprint(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/delete",
@@ -233,6 +235,7 @@ async def ws_delete_blueprint(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/substitute",

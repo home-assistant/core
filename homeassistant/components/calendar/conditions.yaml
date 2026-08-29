@@ -1,0 +1,16 @@
+is_event_active:
+  target:
+    entity:
+      - domain: calendar
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:

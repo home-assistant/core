@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Hashable, Iterable, Sequence
@@ -15,9 +13,10 @@ import os
 from pathlib import Path
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from awesomeversion import AwesomeVersion
+from probatio import Undefined
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 from yaml.error import MarkedYAMLError
@@ -385,7 +384,7 @@ def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """
     try:
         return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
-    except (KeyError, IndexError, TypeError):
+    except KeyError, IndexError, TypeError:
         return None
 
 
@@ -480,7 +479,7 @@ def stringify_invalid(
     if annotation := find_annotation(config, exc.path):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in exc.path)
-    if exc.error_message == "extra keys not allowed":
+    if exc.code == "extra_keys_not_allowed":
         return (
             f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
@@ -604,15 +603,13 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     try:
         key = next(k for k in schema if k == module.DOMAIN)
-    except (TypeError, AttributeError, StopIteration):
+    except TypeError, AttributeError, StopIteration:
         return None
     except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
-    if hasattr(key, "default") and not isinstance(
-        key.default, vol.schema_builder.Undefined
-    ):
+    if hasattr(key, "default") and not isinstance(key.default, Undefined):
         default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
             module.DOMAIN
         ]
@@ -851,6 +848,36 @@ def _get_log_message_and_stack_print_pref(
     return (log_message, show_stack_trace, placeholders)
 
 
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+) -> ConfigType | None: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: bool,
+) -> ConfigType | None: ...
+
+
 async def async_process_component_and_handle_errors(
     hass: HomeAssistant,
     config: ConfigType,
@@ -1011,7 +1038,7 @@ def extract_platform_integrations(
                 platform = item.get(CONF_PLATFORM)
             except AttributeError:
                 continue
-            if platform and isinstance(platform, Hashable):
+            if platform and isinstance(platform, str):
                 platform_integrations.setdefault(domain, set()).add(platform)
     return platform_integrations
 

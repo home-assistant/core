@@ -18,9 +18,12 @@ HAS_PORT = {
     MonitorType.RADIUS,
     MonitorType.SNMP,
     MonitorType.SMTP,
+    MonitorType.NTP,
 }
 HAS_HOST = HAS_PORT | {
     MonitorType.PING,
     MonitorType.TAILSCALE_PING,
     MonitorType.DNS,
 }
+
+LOCAL_INSTANCE = ("127.0.0.1", "localhost", "a0d7b954-uptime-kuma")

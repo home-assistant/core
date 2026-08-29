@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': list([
+      dict({
+        'account': dict({
+          'meter_type': 'ELEC',
+          'read_resolution': 'HOUR',
+          'utility_account_id': '**REDACTED**',
+        }),
+        'forecast': dict({
+          'cost_to_date': 20.0,
+          'current_date': '2023-01-15',
+          'end_date': '2023-01-31',
+          'forecasted_cost': 40.0,
+          'forecasted_usage': 200,
+          'start_date': '2023-01-01',
+          'typical_cost': 36.0,
+          'typical_usage': 180,
+          'unit_of_measure': 'KWH',
+          'usage_to_date': 100,
+        }),
+        'last_changed': None,
+        'last_updated': '2026-03-07T23:00:00+00:00',
+      }),
+      dict({
+        'account': dict({
+          'meter_type': 'GAS',
+          'read_resolution': 'DAY',
+          'utility_account_id': '**REDACTED**',
+        }),
+        'forecast': dict({
+          'cost_to_date': 15.0,
+          'current_date': '2023-01-15',
+          'end_date': '2023-01-31',
+          'forecasted_cost': 30.0,
+          'forecasted_usage': 100,
+          'start_date': '2023-01-01',
+          'typical_cost': 27.0,
+          'typical_usage': 90,
+          'unit_of_measure': 'CCF',
+          'usage_to_date': 50,
+        }),
+        'last_changed': None,
+        'last_updated': '2026-03-07T23:00:00+00:00',
+      }),
+    ]),
+    'entry': dict({
+      'created_at': '2026-03-07T23:00:00+00:00',
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+        'utility': 'Pacific Gas and Electric Company (PG&E)',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'opower',
+      'minor_version': 1,
+      'modified_at': '2026-03-07T23:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

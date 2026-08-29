@@ -1,9 +1,8 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from technove import Station as TechnoVEStation, Status
 
@@ -27,7 +26,9 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
-STATUS_TYPE = [s.value for s in Status if s != Status.UNKNOWN]
+PARALLEL_UPDATES = 0
+
+STATUS_TYPE = [s.value for s in Status if s is not Status.UNKNOWN]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,7 +71,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.current,
     ),
     TechnoVESensorEntityDescription(
@@ -79,7 +79,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.energy_total,
     ),
     TechnoVESensorEntityDescription(
@@ -88,7 +87,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.energy_session,
     ),
     TechnoVESensorEntityDescription(
@@ -112,7 +110,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=STATUS_TYPE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.status.value,
     ),
 )
@@ -144,6 +141,7 @@ class TechnoVESensorEntity(TechnoVEEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

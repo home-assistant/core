@@ -31,7 +31,7 @@ async def help_test_async_alarm_control_panel_service(
     hass: HomeAssistant,
     entity_id: str,
     service: str,
-    code: str | None | UndefinedType = UNDEFINED,
+    code: str | UndefinedType | None = UNDEFINED,
 ) -> None:
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}
@@ -221,6 +221,6 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
     state = hass.states.get(mock_alarm_control_panel_entity.entity_id)
     assert state is not None
     assert (
-        "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
-        not in caplog.text
+        "the 'alarm_state' property and return its state"
+        " using the AlarmControlPanelState enum" not in caplog.text
     )

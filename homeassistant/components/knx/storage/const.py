@@ -17,6 +17,11 @@ CONF_GA_DATE: Final = "ga_date"
 CONF_GA_DATETIME: Final = "ga_datetime"
 CONF_GA_TIME: Final = "ga_time"
 
+CONF_GA_STEP: Final = "ga_step"
+
+# Button
+CONF_GA_SEND: Final = "ga_send"
+
 # Climate
 CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"
 CONF_GA_HUMIDITY_CURRENT: Final = "ga_humidity_current"
@@ -42,10 +47,14 @@ CONF_GA_FAN_SWING_HORIZONTAL: Final = "ga_fan_swing_horizontal"
 # Cover
 CONF_GA_UP_DOWN: Final = "ga_up_down"
 CONF_GA_STOP: Final = "ga_stop"
-CONF_GA_STEP: Final = "ga_step"
 CONF_GA_POSITION_SET: Final = "ga_position_set"
 CONF_GA_POSITION_STATE: Final = "ga_position_state"
 CONF_GA_ANGLE: Final = "ga_angle"
+
+# Fan
+CONF_SPEED: Final = "speed"
+CONF_GA_SPEED: Final = "ga_speed"
+CONF_GA_OSCILLATION: Final = "ga_oscillation"
 
 # Light
 CONF_COLOR_TEMP_MIN: Final = "color_temp_min"
@@ -65,3 +74,28 @@ CONF_GA_WHITE_BRIGHTNESS: Final = "ga_white_brightness"
 CONF_GA_WHITE_SWITCH: Final = "ga_white_switch"
 CONF_GA_HUE: Final = "ga_hue"
 CONF_GA_SATURATION: Final = "ga_saturation"
+
+# Scene
+CONF_GA_SCENE: Final = "ga_scene"
+
+# Sensor
+CONF_ALWAYS_CALLBACK: Final = "always_callback"
+
+# Text
+CONF_GA_TEXT: Final = "ga_text"
+
+# Weather
+CONF_GA_TEMPERATURE: Final = "ga_temperature"
+CONF_GA_BRIGHTNESS_SOUTH: Final = "ga_brightness_south"
+CONF_GA_BRIGHTNESS_NORTH: Final = "ga_brightness_north"
+CONF_GA_BRIGHTNESS_WEST: Final = "ga_brightness_west"
+CONF_GA_BRIGHTNESS_EAST: Final = "ga_brightness_east"
+CONF_GA_WIND_SPEED: Final = "ga_wind_speed"
+CONF_GA_WIND_BEARING: Final = "ga_wind_bearing"
+CONF_GA_RAIN_ALARM: Final = "ga_rain_alarm"
+CONF_GA_FROST_ALARM: Final = "ga_frost_alarm"
+CONF_GA_WIND_ALARM: Final = "ga_wind_alarm"
+CONF_GA_DAY_NIGHT: Final = "ga_day_night"
+CONF_INVERT_DAY_NIGHT: Final = "invert_day_night"
+CONF_GA_AIR_PRESSURE: Final = "ga_air_pressure"
+CONF_GA_HUMIDITY: Final = "ga_humidity"

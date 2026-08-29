@@ -7,9 +7,15 @@
     },
     "select": {
       "pipeline": {
-        "name": "Assistant{index}",
+        "name": "Assistant",
         "state": {
           "preferred": "Preferred"
+        }
+      },
+      "pipeline_n": {
+        "name": "Assistant {index}",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       },
       "vad_sensitivity": {

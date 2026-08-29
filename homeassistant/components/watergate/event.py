@@ -1,5 +1,7 @@
 """Module contains the AutoShutOffEvent class for handling auto shut off events."""
 
+from typing import override
+
 from watergate_local_api.models.auto_shut_off_report import AutoShutOffReport
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
@@ -58,6 +60,7 @@ class AutoShutOffEvent(WatergateEntity, EventEntity):
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self):
         """Register the callback for event handling when the entity is added."""
         await super().async_added_to_hass()

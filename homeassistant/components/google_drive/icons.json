@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "backups_size": {
+        "default": "mdi:database"
+      },
+      "storage_total": {
+        "default": "mdi:database"
+      },
+      "storage_used": {
+        "default": "mdi:database"
+      },
+      "storage_used_in_drive": {
+        "default": "mdi:database"
+      },
+      "storage_used_in_drive_trash": {
+        "default": "mdi:database"
+      }
+    }
+  }
+}

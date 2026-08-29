@@ -1,7 +1,5 @@
 """The Kaleidescape integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from kaleidescape import Device as KaleidescapeDevice, KaleidescapeError
@@ -75,7 +73,7 @@ async def validate_host(host: str) -> KaleidescapeDeviceInfo:
 
     try:
         await device.connect()
-    except (KaleidescapeError, ConnectionError):
+    except KaleidescapeError, ConnectionError:
         await device.disconnect()
         raise
 

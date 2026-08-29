@@ -114,8 +114,9 @@ async def test_user_flow_failure(
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_manual_mode(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, emoncms_client: AsyncMock
+    hass: HomeAssistant, emoncms_client: AsyncMock
 ) -> None:
     """Test we get the user forms and the entry in manual mode."""
     result = await hass.config_entries.flow.async_init(
@@ -202,9 +203,9 @@ async def test_options_flow_failure(
     assert result["step_id"] == "init"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_unique_id_exists(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry_unique_id: MockConfigEntry,
 ) -> None:

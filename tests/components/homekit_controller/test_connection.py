@@ -1,6 +1,6 @@
 """Tests for HKDevice."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import dataclasses
 from typing import Any
 from unittest import mock
@@ -10,6 +10,7 @@ from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
+import attr
 import pytest
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
@@ -43,7 +44,7 @@ from tests.common import MockConfigEntry
 
 @dataclasses.dataclass
 class DeviceMigrationTest:
-    """Holds the expected state before and after testing a device identifier migration."""
+    """Holds expected state before and after device identifier migration."""
 
     fixture: str
     manufacturer: str
@@ -52,7 +53,8 @@ class DeviceMigrationTest:
 
 
 DEVICE_MIGRATION_TESTS = [
-    # 0401.3521.0679 was incorrectly treated as a serial number, it should be stripped out during migration
+    # 0401.3521.0679 was incorrectly treated as a serial number, it should be stripped
+    # out during migration
     DeviceMigrationTest(
         fixture="ryse_smart_bridge_four_shades.json",
         manufacturer="RYSE Inc.",
@@ -61,7 +63,8 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")},
     ),
-    # This shade has a serial of 1.0.0, which we should already ignore. Make sure it gets migrated to a 2-tuple
+    # This shade has a serial of 1.0.0, which we should already ignore. Make sure it
+    # gets migrated to a 2-tuple
     DeviceMigrationTest(
         fixture="ryse_smart_bridge_four_shades.json",
         manufacturer="RYSE Inc.",
@@ -93,7 +96,8 @@ DEVICE_MIGRATION_TESTS = [
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:6623462389072572"),
         },
     ),
-    # Test migrating a Koogeek LS1. This is just for completeness (testing hub and hub-less devices)
+    # Test migrating a Koogeek LS1. This is just for completeness (testing hub and
+    # hub-less devices)
     DeviceMigrationTest(
         fixture="koogeek_ls1.json",
         manufacturer="Koogeek",
@@ -147,14 +151,14 @@ async def test_migrate_device_id_no_serial(
     device_registry: dr.DeviceRegistry,
     variant: DeviceMigrationTest,
 ) -> None:
-    """Test that a Ryse smart bridge with four shades can be migrated correctly in HA."""
+    """Test Ryse smart bridge with four shades can be migrated in HA."""
     accessories = await setup_accessories_from_file(hass, variant.fixture)
 
     fake_controller = await setup_platform(hass)
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -180,6 +184,92 @@ async def test_migrate_device_id_no_serial(
     assert device.manufacturer == variant.manufacturer
 
 
+@pytest.fixture
+def allow_deprecated_device_registry_apis() -> Generator[None]:
+    """Allow tests to call the deprecated device registry APIs without raising.
+
+    A restored composite device can only be retrieved with async_get_device, so tests
+    exercising composite devices keep calling it; downgrade the deprecation report to a
+    log instead of raising.
+    """
+    real_report_usage = dr.report_usage
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = dr.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = dr.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = dr.ReportBehavior.LOG
+        real_report_usage(what, **kwargs)
+
+    with mock.patch.object(dr, "report_usage", _log_only):
+        yield
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
+async def test_migrate_device_id_shared_identifier_only_migrates_own(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Migrate this config entry's own split when the legacy identifier is shared.
+
+    When several homekit config entries own a device with the same legacy identifier the
+    registry resolves the identifier to a read-only composite. The migration must still
+    rename this config entry's own device and leave the other entry's device untouched.
+    """
+    before = {(DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00")}
+    after = {(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")}
+
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    fake_controller = await setup_platform(hass)
+    await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
+    config_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id="TestData",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        title="test",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers=before,
+        manufacturer="Dummy Manufacturer",
+        model="Dummy Model",
+        name="Dummy Name",
+    )
+    # A second homekit config entry owns a device with the same legacy identifier; both
+    # are splits of one pre-migration composite.
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers=before,
+        manufacturer="Other",
+        model="Other",
+        name="Other",
+    )
+    old_id = "composite00000000000000000000ab"
+    device_registry._devices[device.id] = attr.evolve(
+        device, composite_device_id=old_id
+    )
+    device_registry._devices[other_device.id] = attr.evolve(
+        other_device, composite_device_id=old_id
+    )
+    # The shared identifier now resolves to the read-only composite
+    resolved = device_registry.async_get_device(identifiers=before)  # type: ignore[arg-type]
+    assert resolved is not None
+    assert resolved.id == old_id
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # This entry's own device was migrated; the other entry's device was left untouched.
+    assert device_registry.async_get(device.id).identifiers == after
+    assert device_registry.async_get(other_device.id).identifiers == before
+
+
 async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:
     """Test that a config entry with incorrect unique_id is repaired."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
@@ -188,7 +278,7 @@ async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
         title="test",
@@ -212,7 +302,7 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
         title="test",
@@ -230,7 +320,9 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
             "button",
             "press",
             {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                "entity_id": (
+                    "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                )
             },
             blocking=True,
         )
@@ -257,7 +349,7 @@ async def test_thread_provision(
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -289,7 +381,9 @@ async def test_thread_provision(
         "button",
         "press",
         {
-            "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            "entity_id": (
+                "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            )
         },
         blocking=True,
     )
@@ -306,7 +400,7 @@ async def test_thread_provision(
 
 
 async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
-    """Test that when a device 'migrates' but doesn't show up in CoAP, we remain in BLE mode."""
+    """Test device remains in BLE mode when CoAP migration fails."""
     await async_add_dataset(
         hass,
         "Tests",
@@ -321,7 +415,7 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00", "Connection": "BLE"},
         title="test",
@@ -345,7 +439,9 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
             "button",
             "press",
             {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                "entity_id": (
+                    "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                )
             },
             blocking=True,
         )
@@ -356,7 +452,7 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
 async def test_poll_firmware_version_only_all_watchable_accessory_mode(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that we only poll firmware if available and all chars are watchable accessory mode."""
+    """Test firmware poll only when all chars are watchable."""
 
     def _create_accessory(accessory: Accessory) -> Service:
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
@@ -380,7 +476,8 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
         assert mock_get_characteristics.call_count == 2
-        # Verify everything is polled (convert to set for comparison since batching changes the type)
+        # Verify everything is polled (convert to set for comparison since batching
+        # changes the type)
         assert set(mock_get_characteristics.call_args_list[0][0][0]) == {
             (1, 10),
             (1, 11),
@@ -511,7 +608,7 @@ async def test_poll_all_on_startup_refreshes_stale_values(
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -531,7 +628,8 @@ async def test_poll_all_on_startup_refreshes_stale_values(
         len(polled_chars) == 79
     )  # The Ecobee fixture has exactly 79 readable characteristics
 
-    # Check that the climate entity has the fresh temperature (22.5°C) not the stale fixture value (21.8°C)
+    # Check that the climate entity has the fresh temperature (22.5°C) not the stale
+    # fixture value (21.8°C)
     state = hass.states.get("climate.homew")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
@@ -540,7 +638,7 @@ async def test_poll_all_on_startup_refreshes_stale_values(
 async def test_characteristic_polling_batching(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that characteristic polling is batched to MAX_CHARACTERISTICS_PER_REQUEST."""
+    """Test characteristic polling is batched to max per request."""
 
     # Create a large accessory with many characteristics (more than 49)
     def create_large_accessory_with_many_chars(accessory: Accessory) -> None:
@@ -596,7 +694,8 @@ async def test_characteristic_polling_batching(
     # Check that no batch exceeded MAX_CHARACTERISTICS_PER_REQUEST
     for i, batch in enumerate(get_chars_calls):
         assert len(batch) <= MAX_CHARACTERISTICS_PER_REQUEST, (
-            f"Batch {i} size {len(batch)} exceeded maximum {MAX_CHARACTERISTICS_PER_REQUEST}"
+            f"Batch {i} size {len(batch)} exceeded maximum"
+            f" {MAX_CHARACTERISTICS_PER_REQUEST}"
         )
 
     # Verify the total number of characteristics polled
@@ -609,12 +708,14 @@ async def test_characteristic_polling_batching(
 
     # The first batch should be full (49 characteristics)
     assert len(get_chars_calls[0]) == 49, (
-        f"First batch should have exactly 49 characteristics, got {len(get_chars_calls[0])}"
+        "First batch should have exactly 49 characteristics,"
+        f" got {len(get_chars_calls[0])}"
     )
 
     # The second batch should have exactly 1 characteristic
     assert len(get_chars_calls[1]) == 1, (
-        f"Second batch should have exactly 1 characteristic, got {len(get_chars_calls[1])}"
+        "Second batch should have exactly 1 characteristic,"
+        f" got {len(get_chars_calls[1])}"
     )
 
 
@@ -645,7 +746,7 @@ async def test_async_setup_handles_unparsable_response(
 
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -670,3 +771,28 @@ async def test_async_setup_handles_unparsable_response(
     # though initial polling failed
     state = hass.states.get("light.testdevice")
     assert state is not None
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test bridged accessories link to the bridge via via_device_id."""
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"), config_entry.entry_id
+    )
+    assert bridge_device is not None
+    assert bridge_device.via_device_id is None
+
+    for aid in (2, 3, 4, 5):
+        shade_device = device_registry.async_get_device_by_identifier(
+            (IDENTIFIER_ACCESSORY_ID, f"00:00:00:00:00:00:aid:{aid}"),
+            config_entry.entry_id,
+        )
+        assert shade_device is not None
+        assert shade_device.via_device_id == bridge_device.id

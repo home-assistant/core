@@ -25,12 +25,6 @@
   "exceptions": {
     "channel_not_found": {
       "message": "There is no {channel_type} channel at this site."
-    },
-    "integration_not_found": {
-      "message": "Config entry \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     }
   },
   "selector": {

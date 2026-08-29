@@ -65,7 +65,8 @@ async def test_generate_structured_data(
             }
         ),
     )
-    # Arbitrary data returned by the mock entity (not determined by above schema in test)
+    # Arbitrary data returned by the mock entity
+    # (not determined by above schema in test)
     assert result.data == {
         "name": "Tracy Chen",
         "age": 30,

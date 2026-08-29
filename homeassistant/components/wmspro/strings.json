@@ -21,5 +21,47 @@
         }
       }
     }
+  },
+  "entity": {
+    "button": {
+      "rotation-reset": {
+        "name": "Reset rotation"
+      }
+    },
+    "cover": {
+      "valance": {
+        "name": "Valance"
+      }
+    },
+    "number": {
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotation-max": {
+        "name": "Maximum rotation"
+      },
+      "rotation-min": {
+        "name": "Minimum rotation"
+      },
+      "rotation-raw": {
+        "name": "Raw rotation"
+      }
+    }
+  },
+  "services": {
+    "set_cover_position_and_tilt": {
+      "description": "Moves the cover and tilt to the target position simultaneously, preventing cancellation of individual movements.",
+      "fields": {
+        "position": {
+          "description": "Target vertical position. 0 means closed, 100 means fully open.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "Target tilt position.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt"
+    }
   }
 }

@@ -15,8 +15,9 @@ async def update_callback_entity(
 ) -> None:
     """Simulate an update triggered by the pyvlx lib for a Velux node."""
 
-    callback = mock_velux_node.register_device_updated_cb.call_args[0][0]
-    await callback(mock_velux_node)
+    for c in mock_velux_node.register_device_updated_cb.call_args_list:
+        callback = c[0][0]
+        await callback(mock_velux_node)
     await hass.async_block_till_done()
 
 
@@ -28,4 +29,4 @@ async def update_polled_entities(
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)

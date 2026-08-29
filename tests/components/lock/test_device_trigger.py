@@ -23,11 +23,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -239,8 +234,10 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "locked - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - "
+                                "{{ trigger.for }}"
                             )
                         },
                     },
@@ -258,8 +255,10 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "unlocked - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - "
+                                "{{ trigger.for }}"
                             )
                         },
                     },
@@ -277,8 +276,10 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "open - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - "
+                                "{{ trigger.for }}"
                             )
                         },
                     },
@@ -352,8 +353,10 @@ async def test_if_fires_on_state_change_legacy(
                         "data_template": {
                             "some": (
                                 "locked - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - "
+                                "{{ trigger.for }}"
                             )
                         },
                     },

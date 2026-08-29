@@ -1,21 +1,32 @@
 """The Husqvarna Automower integration."""
 
-import logging
-
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import api
+from .const import DOMAIN
 from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
+from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -30,13 +41,25 @@ PLATFORMS: list[Platform] = [
 ]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
     """Set up this integration using UI."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     api_api = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
@@ -49,9 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
     )
     try:
         await api_api.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
     if "amc:api" not in entry.data["token"]["scope"]:

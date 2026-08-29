@@ -1,8 +1,7 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -47,6 +46,7 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data:

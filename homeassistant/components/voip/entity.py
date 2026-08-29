@@ -1,7 +1,5 @@
 """VoIP entities."""
 
-from __future__ import annotations
-
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 

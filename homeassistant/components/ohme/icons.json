@@ -9,6 +9,9 @@
       "preconditioning_duration": {
         "default": "mdi:fan-clock"
       },
+      "state_of_charge_input": {
+        "default": "mdi:battery"
+      },
       "target_percentage": {
         "default": "mdi:battery-heart"
       }
@@ -57,6 +60,9 @@
         "state": {
           "off": "mdi:sleep-off"
         }
+      },
+      "solar_boost": {
+        "default": "mdi:solar-power"
       }
     },
     "time": {

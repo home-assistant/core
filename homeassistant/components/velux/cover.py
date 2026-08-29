@@ -1,21 +1,24 @@
 """Support for Velux covers."""
 
-from __future__ import annotations
+from enum import StrEnum
+from typing import Any, override
 
-from typing import Any, cast
-
-from pyvlx import (
+from pyvlx.const import Velocity
+from pyvlx.opening_device import (
     Awning,
     Blind,
+    DualRollerShutter,
     GarageDoor,
     Gate,
     OpeningDevice,
     Position,
     RollerShutter,
+    Window,
 )
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -25,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
-from .entity import VeluxEntity
+from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
@@ -36,119 +39,279 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config_entry.runtime_data
-    async_add_entities(
-        VeluxCover(node, config_entry.entry_id)
-        for node in pyvlx.nodes
-        if isinstance(node, OpeningDevice)
-    )
+    pyvlx = config_entry.runtime_data.pyvlx
+
+    entities: list[VeluxCover] = []
+    for node in pyvlx.nodes:
+        if isinstance(node, Blind):
+            entities.append(VeluxBlind(hass, node, config_entry.entry_id))
+        elif isinstance(node, DualRollerShutter):
+            # add three entities, one for each part and the "dual" control
+            entities.append(
+                VeluxDualRollerShutter(
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.DUAL
+                )
+            )
+            entities.append(
+                VeluxDualRollerShutter(
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.UPPER
+                )
+            )
+            entities.append(
+                VeluxDualRollerShutter(
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.LOWER
+                )
+            )
+        elif isinstance(node, OpeningDevice):
+            entities.append(VeluxCover(hass, node, config_entry.entry_id))
+
+    async_add_entities(entities)
 
 
 class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
-    _is_blind = False
     node: OpeningDevice
+    _attr_translation_key = "cover"
 
-    # Do not name the "main" feature of the device (position control)
-    _attr_name = None
+    # Features common to all covers
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SPEED
+    )
+    _attr_supported_speeds = [
+        Velocity.SILENT.name.lower(),
+        Velocity.FAST.name.lower(),
+        Velocity.DEFAULT.name.lower(),
+    ]
 
-    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
+    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
+        """Return pyvlx Velocity for the given speed string, or None for default."""
+        if speed in self._attr_supported_speeds:
+            return Velocity[speed.upper()]
+        return None
+
+    def __init__(
+        self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
+    ) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node, config_entry_id)
-        # Features common to all covers
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.STOP
-        )
-        # Window is the default device class for covers
-        self._attr_device_class = CoverDeviceClass.WINDOW
-        if isinstance(node, Awning):
-            self._attr_device_class = CoverDeviceClass.AWNING
-        if isinstance(node, GarageDoor):
-            self._attr_device_class = CoverDeviceClass.GARAGE
-        if isinstance(node, Gate):
-            self._attr_device_class = CoverDeviceClass.GATE
-        if isinstance(node, RollerShutter):
-            self._attr_device_class = CoverDeviceClass.SHUTTER
-        if isinstance(node, Blind):
-            self._attr_device_class = CoverDeviceClass.BLIND
-            self._is_blind = True
-            self._attr_supported_features |= (
-                CoverEntityFeature.OPEN_TILT
-                | CoverEntityFeature.CLOSE_TILT
-                | CoverEntityFeature.SET_TILT_POSITION
-                | CoverEntityFeature.STOP_TILT
-            )
+        super().__init__(hass, node, config_entry_id)
+        match node:
+            case Window():
+                self._attr_device_class = CoverDeviceClass.WINDOW
+            case Awning():
+                self._attr_device_class = CoverDeviceClass.AWNING
+            case GarageDoor():
+                self._attr_device_class = CoverDeviceClass.GARAGE
+            case Gate():
+                self._attr_device_class = CoverDeviceClass.GATE
+            case RollerShutter():
+                self._attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    @override
+    def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
+        if not self.node.position.known:
+            return None
         return 100 - self.node.position.position_percent
 
     @property
-    def current_cover_tilt_position(self) -> int | None:
-        """Return the current position of the cover."""
-        if self._is_blind:
-            return 100 - cast(Blind, self.node).orientation.position_percent
-        return None
-
-    @property
-    def is_closed(self) -> bool:
+    @override
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        # do not use the node's closed state but rely on cover position
-        # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
-        # once merged this can again return self.node.position.closed
-        return self.current_cover_position == 0
+        if not self.node.position.known:
+            return None
+        return self.node.position.closed
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.node.is_opening
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.node.is_closing
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.node.close(wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.close(velocity=velocity, wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.node.open(wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.open(velocity=velocity, wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
 
         await self.node.set_position(
-            Position(position_percent=position_percent), wait_for_completion=False
+            Position(position_percent=position_percent),
+            velocity=velocity,
+            wait_for_completion=False,
         )
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.node.stop(wait_for_completion=False)
 
+
+class VeluxDualRollerPart(StrEnum):
+    """Enum for the parts of a dual roller shutter."""
+
+    UPPER = "upper"
+    LOWER = "lower"
+    DUAL = "dual"
+
+
+class VeluxDualRollerShutter(VeluxCover):
+    """Representation of a Velux dual roller shutter cover."""
+
+    node: DualRollerShutter
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        node: DualRollerShutter,
+        config_entry_id: str,
+        part: VeluxDualRollerPart,
+    ) -> None:
+        """Initialize VeluxDualRollerShutter."""
+        super().__init__(hass, node, config_entry_id)
+        if part == VeluxDualRollerPart.DUAL:
+            self._attr_name = None
+        else:
+            self._attr_unique_id = f"{self._attr_unique_id}_{part}"
+            self._attr_translation_key = f"dual_roller_shutter_{part}"
+        self.part = part
+
+    @property
+    def _part_position(self) -> Position:
+        """Return the pyvlx Position for this part of the shutter."""
+        if self.part == VeluxDualRollerPart.UPPER:
+            return self.node.position_upper_curtain
+        if self.part == VeluxDualRollerPart.LOWER:
+            return self.node.position_lower_curtain
+        return self.node.position
+
+    @property
+    @override
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the cover."""
+        position = self._part_position
+        if not position.known:
+            return None
+        return 100 - position.position_percent
+
+    @property
+    @override
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
+        position = self._part_position
+        if not position.known:
+            return None
+        return position.closed
+
+    @wrap_pyvlx_call_exceptions
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.close(
+            curtain=self.part, velocity=velocity, wait_for_completion=False
+        )
+
+    @wrap_pyvlx_call_exceptions
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.open(
+            curtain=self.part, velocity=velocity, wait_for_completion=False
+        )
+
+    @wrap_pyvlx_call_exceptions
+    @override
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        position_percent = 100 - kwargs[ATTR_POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+
+        await self.node.set_position(
+            Position(position_percent=position_percent),
+            curtain=self.part,
+            velocity=velocity,
+            wait_for_completion=False,
+        )
+
+
+class VeluxBlind(VeluxCover):
+    """Representation of a Velux blind cover."""
+
+    node: Blind
+    _attr_device_class = CoverDeviceClass.BLIND
+
+    def __init__(self, hass: HomeAssistant, node: Blind, config_entry_id: str) -> None:
+        """Initialize VeluxBlind."""
+        super().__init__(hass, node, config_entry_id)
+
+        self._attr_supported_features |= (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.STOP_TILT
+        )
+
+    @property
+    @override
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt position of the cover."""
+        if not self.node.orientation.known:
+            return None
+        return 100 - self.node.orientation.position_percent
+
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
-        await cast(Blind, self.node).close_orientation(wait_for_completion=False)
+        await self.node.close_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
-        await cast(Blind, self.node).open_orientation(wait_for_completion=False)
+        await self.node.open_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
-        await cast(Blind, self.node).stop_orientation(wait_for_completion=False)
+        await self.node.stop_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]
         orientation = Position(position_percent=position_percent)
-        await cast(Blind, self.node).set_orientation(
+        await self.node.set_orientation(
             orientation=orientation, wait_for_completion=False
         )

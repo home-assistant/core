@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_selects[select.ohme_home_pro_charge_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_charge',
         'max_charge',
         'paused',
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -43,8 +45,8 @@
 # name: test_selects[select.ohme_home_pro_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_charge',
         'max_charge',
         'paused',
@@ -60,11 +62,12 @@
 # ---
 # name: test_selects[select.ohme_home_pro_vehicle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Nissan Leaf',
         'Tesla Model 3',
       ]),
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -101,8 +105,8 @@
 # name: test_selects[select.ohme_home_pro_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Vehicle',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Vehicle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Nissan Leaf',
         'Tesla Model 3',
       ]),

@@ -1,11 +1,9 @@
 """Provides functionality to interact with humidifier devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -24,7 +22,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
@@ -34,6 +31,7 @@ from .const import (  # noqa: F401
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_TARGET_HUMIDITY_STEP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
@@ -49,7 +47,9 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
+    HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +77,6 @@ DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the humidifier is on based on the statemachine.
 
@@ -141,6 +140,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "min_humidity",
     "max_humidity",
     "supported_features",
+    "target_humidity_step",
 }
 
 
@@ -148,7 +148,12 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     """Base class for humidifier entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+        {
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+            HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP,
+        }
     )
 
     entity_description: HumidifierEntityDescription
@@ -161,21 +166,30 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     _attr_mode: str | None
     _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(0)
     _attr_target_humidity: float | None = None
+    _attr_target_humidity_step: float | None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: self.min_humidity,
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: self.max_humidity,
         }
+        if self.target_humidity_step is not None:
+            data[HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP] = (
+                self.target_humidity_step
+            )
 
         if HumidifierEntityFeature.MODES in self.supported_features:
-            data[ATTR_AVAILABLE_MODES] = self.available_modes
+            data[HumidifierEntityCapabilityAttribute.AVAILABLE_MODES] = (
+                self.available_modes
+            )
 
         return data
 
     @cached_property
+    @override
     def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -186,21 +200,26 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         data: dict[str, Any] = {}
 
         if self.action is not None:
-            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
+            data[HumidifierEntityStateAttribute.ACTION] = (
+                self.action if self.is_on else HumidifierAction.OFF
+            )
 
         if self.current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+            data[HumidifierEntityStateAttribute.CURRENT_HUMIDITY] = (
+                self.current_humidity
+            )
 
         if self.target_humidity is not None:
-            data[ATTR_HUMIDITY] = self.target_humidity
+            data[HumidifierEntityStateAttribute.HUMIDITY] = self.target_humidity
 
         if HumidifierEntityFeature.MODES in self.supported_features:
-            data[ATTR_MODE] = self.mode
+            data[HumidifierEntityStateAttribute.MODE] = self.mode
 
         return data
 
@@ -252,6 +271,11 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         await self.hass.async_add_executor_job(self.set_mode, mode)
 
     @cached_property
+    def target_humidity_step(self) -> float | None:
+        """Return the supported step of humidity."""
+        return self._attr_target_humidity_step
+
+    @cached_property
     def min_humidity(self) -> float:
         """Return the minimum humidity."""
         return self._attr_min_humidity
@@ -262,6 +286,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         return self._attr_max_humidity
 
     @cached_property
+    @override
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

@@ -1,24 +1,24 @@
 """Support for Alpha2 heat control valve opening sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import Alpha2BaseCoordinator
+from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Alpha2ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Alpha2 sensor entities from a config_entry."""
 
-    coordinator: Alpha2BaseCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # HEATCTRL attribute ACTOR_PERCENT is not available in older firmware versions
     async_add_entities(
@@ -52,6 +52,7 @@ class Alpha2HeatControlValveOpeningSensor(
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the current valve opening percentage."""
         return self.coordinator.data["heat_controls"][self.heat_control_id][

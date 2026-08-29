@@ -109,7 +109,7 @@ async def test_devices_multiple_created_count(
     """Test that multiple devices are created."""
     await setup_integration(hass, mock_config_entry)
 
-    assert len(device_registry.devices) == 5
+    assert len(device_registry.devices) == 8
 
 
 async def test_device_info(
@@ -121,8 +121,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "Dummy_Appliance_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Dummy_Appliance_1"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -143,25 +143,19 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                "Dummy_Appliance_1",
-            )
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Dummy_Appliance_1"),
+        mock_config_entry.entry_id,
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    response = await client.remove_device(
-        old_device_entry.id, mock_config_entry.entry_id
-    )
+    response = await client.remove_device(old_device_entry.id)
     assert response["success"]
 
 
@@ -205,7 +199,7 @@ async def test_setup_all_platforms(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(device_registry.devices) == prev_devices + 2
+    assert len(device_registry.devices) == prev_devices + 1
 
     # Check a sample sensor for each new device
     assert hass.states.get("sensor.dishwasher").state == "in_use"

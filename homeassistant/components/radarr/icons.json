@@ -8,5 +8,13 @@
         "default": "mdi:download"
       }
     }
+  },
+  "services": {
+    "get_movies": {
+      "service": "mdi:filmstrip"
+    },
+    "get_queue": {
+      "service": "mdi:download"
+    }
   }
 }

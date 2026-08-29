@@ -1,11 +1,9 @@
 """Summary data from Fyta."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from fyta_cli.fyta_models import Plant
 
@@ -240,6 +238,7 @@ class FytaPlantSensor(FytaPlantEntity, SensorEntity):
     entity_description: FytaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
@@ -252,6 +251,7 @@ class FytaPlantMeasurementSensor(FytaPlantSensor):
     entity_description: FytaMeasurementSensorEntityDescription
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, float | None]:
         """Return the device state attributes."""
 

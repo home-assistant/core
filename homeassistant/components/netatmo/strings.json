@@ -1,13 +1,7 @@
 {
   "config": {
     "abort": {
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
@@ -53,6 +47,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "furniture": {
+        "name": "Furniture"
+      },
+      "gate": {
+        "name": "Gate"
+      },
+      "opening_sensor": {
+        "name": "Opening"
+      }
+    },
     "button": {
       "preferred_position": {
         "name": "Preferred position"
@@ -69,6 +74,11 @@
             }
           }
         }
+      }
+    },
+    "select": {
+      "schedule": {
+        "name": "Schedule"
       }
     },
     "sensor": {
@@ -144,8 +154,17 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "issues": {
+    "deprecated_webhook_service": {
+      "description": "The `register_webhook` and `unregister_webhook` actions are deprecated and will be removed in a future release. Netatmo manages the webhook automatically, so these actions are no longer needed. Please remove them from your automations and scripts.",
+      "title": "Netatmo webhook actions are deprecated"
     }
   },
   "options": {
@@ -160,6 +179,15 @@
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },
+        "data_description": {
+          "area_name": "Name used to identify this weather area.",
+          "lat_ne": "Latitude of the northeast corner of the area.",
+          "lat_sw": "Latitude of the southwest corner of the area.",
+          "lon_ne": "Longitude of the northeast corner of the area.",
+          "lon_sw": "Longitude of the southwest corner of the area.",
+          "mode": "How values from multiple stations in the area are aggregated.",
+          "show_on_map": "Whether to show the sensors on the map."
+        },
         "description": "Configure a public weather sensor for an area.",
         "title": "Netatmo public weather sensor"
       },
@@ -167,6 +195,10 @@
         "data": {
           "new_area": "Area name",
           "weather_areas": "Weather areas"
+        },
+        "data_description": {
+          "new_area": "Name of a new weather area to add.",
+          "weather_areas": "Configured weather areas to edit or remove."
         },
         "description": "Configure public weather sensors.",
         "title": "[%key:component::netatmo::options::step::public_weather::title%]"
@@ -179,7 +211,7 @@
       "name": "Clear temperature setting"
     },
     "register_webhook": {
-      "description": "Registers the webhook to the Netatmo backend.",
+      "description": "Registers the webhook to the Netatmo backend. Deprecated: the webhook is managed automatically and this action will be removed in 2027.2.0.",
       "name": "Register webhook"
     },
     "set_camera_light": {
@@ -265,7 +297,7 @@
       "name": "Set temperature with time period"
     },
     "unregister_webhook": {
-      "description": "Unregisters the webhook from the Netatmo backend.",
+      "description": "Unregisters the webhook from the Netatmo backend. Deprecated: the webhook is managed automatically and this action will be removed in 2027.2.0.",
       "name": "Unregister webhook"
     }
   }

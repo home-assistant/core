@@ -1,7 +1,5 @@
 """Code to handle a Pulse Hub."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 
@@ -11,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ACMEDA_ENTITY_REMOVE, ACMEDA_HUB_UPDATE, LOGGER
+from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .helpers import update_devices
 
 
@@ -25,7 +23,6 @@ class PulseHub:
         self.config_entry = config_entry
         self.hass = hass
         self.tasks: list[asyncio.Task[None]] = []
-        self.current_rollers: dict[int, aiopulse.Roller] = {}
         self.cleanup_callbacks: list[Callable[[], None]] = []
 
     @property
@@ -81,11 +78,3 @@ class PulseHub:
             async_dispatcher_send(
                 self.hass, ACMEDA_HUB_UPDATE.format(self.config_entry.entry_id)
             )
-
-            for unique_id in list(self.current_rollers):
-                if unique_id not in self.api.rollers:
-                    LOGGER.debug("Notifying remove of %s", unique_id)
-                    self.current_rollers.pop(unique_id)
-                    async_dispatcher_send(
-                        self.hass, ACMEDA_ENTITY_REMOVE.format(unique_id)
-                    )

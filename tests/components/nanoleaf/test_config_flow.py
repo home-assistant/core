@@ -1,11 +1,9 @@
 """Test the Nanoleaf config flow."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aionanoleaf import InvalidToken, Unauthorized, Unavailable
+from aionanoleaf2 import InvalidToken, Unauthorized, Unavailable
 import pytest
 
 from homeassistant import config_entries
@@ -360,7 +358,8 @@ async def test_import_discovery_integration(
     """Test discovery integration import.
 
     Test with different discovery flow sources and corresponding types.
-    Test with different .nanoleaf_conf files with device_id (>= 2021.4), host (< 2021.4) and combination.
+    Test with different .nanoleaf_conf files with device_id
+    (>= 2021.4), host (< 2021.4) and combination.
     Test removing the .nanoleaf_conf file if it was the only device in the file.
     Test updating the .nanoleaf_conf file if it was not the only device in the file.
     """

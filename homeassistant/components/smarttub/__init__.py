@@ -19,8 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartTubConfigEntry) -> 
 
     controller = SmartTubController(hass)
 
-    if not await controller.async_setup_entry(entry):
-        return False
+    await controller.async_setup_entry(entry)
 
     entry.runtime_data = controller
 
