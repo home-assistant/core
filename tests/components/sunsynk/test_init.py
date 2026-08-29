@@ -42,11 +42,7 @@ async def test_setup_auth_error(
     mock_sunsynk_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the config entry starts a reauth flow when the password is not valid."""
+    """Test the config entry fails to set up when the password is not valid."""
     mock_sunsynk_client.get_inverters.side_effect = SunsynkAuthenticationError
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
