@@ -21,5 +21,8 @@ DEFAULT_UNIT_ID: Final = 1
 SUBSYSTEM_COMMON: Final = "common"
 SUBSYSTEM_INVERTER: Final = "inverter"
 
+# How the library names the meter block it probes for.
+SUBSYSTEM_METERS: Final = "meters"
+
 # Local Modbus is cheap to read and PV production moves fast.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
