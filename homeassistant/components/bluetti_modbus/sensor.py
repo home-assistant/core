@@ -35,7 +35,6 @@ _DIAGNOSTIC_FIELDS = frozenset(
         "d_inverter_type",
         "d_num_inverters",
         "d_num_battery_packs",
-        "d_serial",
         "d_ver_arm",
         "d_ver_dsp",
         "b_cell_count",
@@ -44,6 +43,12 @@ _DIAGNOSTIC_FIELDS = frozenset(
         "b_type",
     }
 )
+
+# Exposed as DeviceInfo.serial_number (see entity.py) instead of a sensor -
+# a serial number is device identity, not a measurement. Still read every
+# poll, unlike EXCLUDED_FIELDS in const.py: the coordinator's own per-poll
+# identity check (coordinator.py) depends on it.
+_ENTITY_EXCLUDED_FIELDS = frozenset({"d_serial"})
 
 # Lifetime counters. HA's own TOTAL_INCREASING handling covers an occasional
 # drop as a meter reset; this integration does not additionally clamp or
@@ -156,6 +161,8 @@ def _describe_fields(device: BluettiDevice) -> list[SensorEntityDescription]:
     """Build entity descriptions for every field this device exposes as a sensor."""
     descriptions = []
     for name in device.field_names():
+        if name in _ENTITY_EXCLUDED_FIELDS:
+            continue
         field = device.get_field(name)
         assert field is not None  # every name from field_names() has one
         descriptions.append(_describe(name, field))
