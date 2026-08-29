@@ -80,15 +80,22 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             data = _normalized(user_input)
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: data[CONF_HOST],
-                    CONF_PORT: data[CONF_PORT],
-                    CONF_UNIT_ID: data[CONF_UNIT_ID],
-                }
-            )
-            errors = await self._async_validate(data)
+            errors, serial = await self._async_validate(data)
             if not errors:
+                if serial is not None:
+                    # Catches the same device already added under a
+                    # different link (moved to a new address, for example).
+                    await self.async_set_unique_id(serial)
+                    self._abort_if_unique_id_configured()
+                # Always checked too: this exact link claimed by some other
+                # entry, whether or not either side has a serial number.
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: data[CONF_HOST],
+                        CONF_PORT: data[CONF_PORT],
+                        CONF_UNIT_ID: data[CONF_UNIT_ID],
+                    }
+                )
                 return self.async_create_entry(
                     title=device_name(data[CONF_DEVICE_TYPE]), data=data
                 )
@@ -100,21 +107,31 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of how the device is reached."""
+        """Handle reconfiguration of how the device is reached.
+
+        The device may move to another address or device ID, but it must
+        stay the same device: where the entry was identified by serial
+        number, a reconfigure probe that returns a different one (or none at
+        all) is rejected rather than silently adopted.
+        """
         errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             data = _normalized(user_input)
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: data[CONF_HOST],
-                    CONF_PORT: data[CONF_PORT],
-                    CONF_UNIT_ID: data[CONF_UNIT_ID],
-                }
-            )
-            errors = await self._async_validate(data)
+            errors, serial = await self._async_validate(data)
             if not errors:
+                if entry.unique_id is not None and serial != entry.unique_id:
+                    return self.async_abort(reason="wrong_device")
+                # Always checked too: this exact link claimed by some other
+                # entry, whether or not either side has a serial number.
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: data[CONF_HOST],
+                        CONF_PORT: data[CONF_PORT],
+                        CONF_UNIT_ID: data[CONF_UNIT_ID],
+                    }
+                )
                 return self.async_update_reload_and_abort(entry, data_updates=data)
 
         return self.async_show_form(
@@ -125,8 +142,14 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_validate(self, data: dict[str, Any]) -> dict[str, str]:
-        """Probe the device, returning form errors (empty if it checked out)."""
+    async def _async_validate(
+        self, data: dict[str, Any]
+    ) -> tuple[dict[str, str], str | None]:
+        """Probe the device, returning form errors and its serial number.
+
+        The serial number is ``None`` both on failure and when the device
+        type doesn't report one over Modbus.
+        """
         params = ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
         try:
             async with async_get_temporary_unit(
@@ -134,11 +157,12 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             ) as unit:
                 device = get_device(data[CONF_DEVICE_TYPE], unit)
                 if device is None:
-                    return {"base": "unsupported_device_type"}
+                    return {"base": "unsupported_device_type"}, None
                 await device.async_update()
         except HomeAssistantError, ModbusError:
             # HomeAssistantError: the device is already in use over different
             # link settings, which one shared connection cannot honour.
-            return {"base": "cannot_connect"}
+            return {"base": "cannot_connect"}, None
 
-        return {}
+        serial = device.values.get("d_serial")
+        return {}, str(serial) if serial is not None else None

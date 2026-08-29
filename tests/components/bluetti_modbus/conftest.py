@@ -31,6 +31,10 @@ PORT = 502
 UNIT_ID = 1
 DEVICE_TYPE = DEVICE_TYPE_BALCO260
 ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
+# Balco260's d_serial decodes from raw registers - zero-seeded here like
+# everything else, same as a real device's serial number would be a fixed,
+# non-zero value.
+SERIAL = "0"
 
 
 def bluetti_data(
@@ -108,6 +112,7 @@ def mock_config_entry(mock_modbus_unit: MockModbusUnit) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id=ENTRY_ID,
+        unique_id=SERIAL,
         title="Balco260",
         data=bluetti_data(),
     )
