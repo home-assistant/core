@@ -9,7 +9,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from homeassistant.components.update import (
+    ATTR_IN_PROGRESS,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -396,3 +400,74 @@ async def test_blips_do_not_extend_the_wait(
         await hass.async_block_till_done()
 
         mock_refresh.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_a_second_install_is_refused_while_one_runs(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the charger is not handed a second package mid update.
+
+    The install call returns while the charger is still downloading, so
+    without saying so the button would be offered again straight away.
+    Reporting the install as in progress is what makes the update
+    component refuse a second one.
+    """
+    entity_id = "update.peblar_ev_charger_firmware"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    # Once the charger is back, it can be asked again.
+    meter = mock_peblar.rest_api.return_value.meter
+    meter.side_effect = PeblarConnectionError("Gone")
+    await _async_poll(hass, freezer)
+    await _async_poll(hass, freezer, after=timedelta(minutes=1))
+    meter.side_effect = None
+    await _async_poll(hass, freezer)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_the_button_returns_for_a_charger_that_never_came_back(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a charger that goes missing does not block installs forever."""
+    entity_id = "update.peblar_ev_charger_firmware"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    meter = mock_peblar.rest_api.return_value.meter
+    meter.side_effect = PeblarConnectionError("Gone")
+    await _async_poll(hass, freezer)
+    await _async_poll(hass, freezer, after=timedelta(minutes=1))
+
+    # Well past the ten minutes a reboot is allowed to take.
+    freezer.tick(timedelta(minutes=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is False

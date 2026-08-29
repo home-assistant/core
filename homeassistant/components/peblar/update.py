@@ -91,7 +91,23 @@ class PeblarUpdateEntity(
 
     entity_description: PeblarUpdateEntityDescription
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+
+    @property
+    @override
+    def in_progress(self) -> bool:
+        """Return whether the charger is busy installing a package.
+
+        The install call returns while the charger is still downloading, so
+        without this Home Assistant would offer the button again straight
+        away, and hand the charger a second package mid update.
+
+        No percentage goes with it: the charger reports only whether an
+        update succeeded, never how far along it is.
+        """
+        return self.coordinator.install_in_progress
 
     @property
     @override

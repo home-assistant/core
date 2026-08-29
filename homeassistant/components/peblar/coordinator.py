@@ -121,6 +121,9 @@ class PeblarVersionDataUpdateCoordinator(
 
     config_entry: PeblarConfigEntry
 
+    install_in_progress = False
+    """Set while the charger is busy installing a package."""
+
     def __init__(
         self, hass: HomeAssistant, entry: PeblarConfigEntry, peblar: Peblar
     ) -> None:
@@ -156,6 +159,7 @@ class PeblarVersionDataUpdateCoordinator(
         Without this a charger that just updated keeps offering the update
         it already took, until the two hourly version poll comes round.
         """
+        self.install_in_progress = True
         _RebootWatcher(self).async_start()
 
 
@@ -204,13 +208,18 @@ class _RebootWatcher:
 
     @callback
     def _async_stop(self) -> None:
-        """Stop watching."""
+        """Stop watching, however it ended."""
         if self._unsubscribe_listener is not None:
             self._unsubscribe_listener()
             self._unsubscribe_listener = None
         if self._unsubscribe_timer is not None:
             self._unsubscribe_timer()
             self._unsubscribe_timer = None
+
+        # The install is over as far as anyone here can tell, whether the
+        # charger came back or ran out of time.
+        self._coordinator.install_in_progress = False
+        self._coordinator.async_update_listeners()
 
     @callback
     def _handle_data_coordinator_update(self) -> None:
