@@ -1156,10 +1156,10 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.29.0
 
 # homeassistant.components.google_cloud
-google-cloud-speech==2.31.1
+google-cloud-speech==2.40.0
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.25.1
+google-cloud-texttospeech==2.37.0
 
 # homeassistant.components.google_generative_ai_conversation
 google-genai==2.16.0
@@ -1611,7 +1611,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==10.0.1
+midea-local==10.1.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -3314,7 +3314,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==16.1.0
+uiprotect==16.6.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

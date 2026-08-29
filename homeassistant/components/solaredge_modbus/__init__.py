@@ -6,6 +6,7 @@ connection per device between everything talking to it, and hands that unit to
 the ``solaredged`` library.
 """
 
+from collections.abc import Set as AbstractSet
 from typing import TYPE_CHECKING
 
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
@@ -24,6 +25,9 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     LOGGER,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+    SUBSYSTEM_BATTERIES,
     SUBSYSTEM_COMMON,
     SUBSYSTEM_INVERTER,
     SUBSYSTEM_METERS,
@@ -33,10 +37,10 @@ from .coordinator import (
     SolarEdgeModbusDataUpdateCoordinator,
     SolarEdgeModbusRuntimeData,
 )
-from .entity import inverter_device_info, meter_identity
+from .entity import attachment_identity, inverter_device_info
 from .helpers import create_modbus_params
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -74,7 +78,23 @@ async def async_setup_entry(
             translation_key="no_solaredge_device",
         ) from err
 
-    readings = SolarEdgeModbusDataUpdateCoordinator(hass, entry, solaredge)
+    readings = SolarEdgeModbusDataUpdateCoordinator(
+        hass,
+        entry,
+        solaredge,
+        poll=solaredge.async_update_readings,
+        interval=SCAN_INTERVAL,
+        label="readings",
+    )
+    settings = SolarEdgeModbusDataUpdateCoordinator(
+        hass,
+        entry,
+        solaredge,
+        poll=solaredge.async_update_settings,
+        interval=SETTINGS_SCAN_INTERVAL,
+        label="settings",
+    )
+
     await readings.async_config_entry_first_refresh()
 
     # Identity arrives with that first read, and a poll can come back without
@@ -92,6 +112,7 @@ async def async_setup_entry(
     # entities would stay missing until a reload.
     measuring = {SUBSYSTEM_INVERTER}
     measuring.update(f"meters[{index}]" for index in range(len(solaredge.meters)))
+    measuring.update(f"batteries[{index}]" for index in range(len(solaredge.batteries)))
     if measuring & readings.data.failed.keys():
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -104,21 +125,29 @@ async def async_setup_entry(
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **device_info
     )
+    # The readings poll already proved the link; a control block that refuses
+    # one read leaves its own entities unavailable instead of failing setup.
+    await settings.async_refresh()
+
     entry.runtime_data = SolarEdgeModbusRuntimeData(
-        readings=readings, device_info=device_info, inverter_device_id=inverter.id
+        readings=readings,
+        settings=settings,
+        device_info=device_info,
+        inverter_device_id=inverter.id,
     )
 
-    # A block that stayed silent while probing is taken for absent, so a meter
-    # that timed out cannot be told from one that was unwired. Its device stays
-    # where it is until the device says for itself that it is gone.
-    if SUBSYSTEM_METERS in solaredge.unresponsive_blocks:
+    if silent := solaredge.unresponsive_blocks & {
+        SUBSYSTEM_BATTERIES,
+        SUBSYSTEM_METERS,
+    }:
         LOGGER.warning(
-            "%s did not answer for its meters while probing, so their entities"
-            " are missing until it does; reloading probes again",
+            "%s did not answer for its %s while probing, so their entities are"
+            " missing until it does; reloading probes again",
             entry.title,
+            " and ".join(sorted(silent)),
         )
-    else:
-        _async_remove_stale_devices(hass, entry, solaredge, serial_number)
+
+    _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -130,18 +159,41 @@ def _async_remove_stale_devices(
     entry: SolarEdgeModbusConfigEntry,
     solaredge: SolarEdge,
     serial_number: str,
+    *,
+    silent: AbstractSet[str],
 ) -> None:
-    """Remove devices for meters no longer attached to the inverter."""
+    """Remove devices for meters and batteries no longer attached.
+
+    A block that stayed silent while probing is taken for absent, and silence
+    is not the inverter saying its hardware is gone. Devices of that kind stay
+    where they are; the kind that did answer is still cleaned up.
+    """
     current = {(DOMAIN, serial_number)}
     current.update(
-        (DOMAIN, f"{serial_number}_meter_{meter_identity(meter, index)}")
+        (DOMAIN, f"{serial_number}_meter_{attachment_identity(meter, index)}")
         for index, meter in enumerate(solaredge.meters, 1)
+    )
+    current.update(
+        (DOMAIN, f"{serial_number}_battery_{attachment_identity(battery, index)}")
+        for index, battery in enumerate(solaredge.batteries, 1)
+    )
+
+    unproven = tuple(
+        f"{serial_number}_{kind}_"
+        for block, kind in (
+            (SUBSYSTEM_BATTERIES, "battery"),
+            (SUBSYSTEM_METERS, "meter"),
+        )
+        if block in silent
     )
 
     device_registry = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        if not current.intersection(device.identifiers):
-            device_registry.async_remove_device(device.id)
+        if current.intersection(device.identifiers):
+            continue
+        if any(identifier.startswith(unproven) for _, identifier in device.identifiers):
+            continue
+        device_registry.async_remove_device(device.id)
 
 
 async def async_unload_entry(
