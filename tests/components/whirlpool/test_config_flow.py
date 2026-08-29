@@ -71,6 +71,7 @@ async def test_user_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
     brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
     mock_backend_selector_api: MagicMock,
     mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
@@ -87,6 +88,8 @@ async def test_user_flow(
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+    mock_appliances_manager_api.return_value.connect.assert_awaited_once()
+    mock_appliances_manager_api.return_value.disconnect.assert_awaited_once()
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
