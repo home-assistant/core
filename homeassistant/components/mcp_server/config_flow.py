@@ -32,6 +32,19 @@ def _llm_api_names(hass: HomeAssistant) -> dict[str, str]:
     return {api.id: api.name for api in llm.async_get_apis(hass)}
 
 
+def _llm_api_title(llm_apis: dict[str, str], api_ids: list[str]) -> str:
+    """Return the entry title generated for the selected LLM APIs."""
+    return ", ".join(llm_apis[api_id] for api_id in api_ids if api_id in llm_apis)
+
+
+def _selected_llm_apis(entry: ConfigEntry, llm_apis: dict[str, str]) -> list[str]:
+    """Return the still registered LLM APIs selected by the config entry."""
+    api_ids = entry.data.get(CONF_LLM_HASS_API) or []
+    if isinstance(api_ids, str):  # Old config entries stored a single API
+        api_ids = [api_ids]
+    return [api_id for api_id in api_ids if api_id in llm_apis]
+
+
 def _llm_api_schema(llm_apis: dict[str, str], default: list[str]) -> vol.Schema:
     """Return the schema for selecting LLM APIs."""
     return vol.Schema(
@@ -81,9 +94,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LLM_HASS_API] = "llm_api_required"
             else:
                 return self.async_create_entry(
-                    title=", ".join(
-                        llm_apis[api_id] for api_id in user_input[CONF_LLM_HASS_API]
-                    ),
+                    title=_llm_api_title(llm_apis, user_input[CONF_LLM_HASS_API]),
                     data=user_input,
                 )
 
@@ -104,24 +115,26 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         """Handle the options step."""
         errors: dict[str, str] = {}
         llm_apis = _llm_api_names(self.hass)
+        current = _selected_llm_apis(self.config_entry, llm_apis)
         if user_input is not None:
             if not user_input[CONF_LLM_HASS_API]:
                 errors[CONF_LLM_HASS_API] = "llm_api_required"
             else:
+                updates: dict[str, Any] = {
+                    "data": {**self.config_entry.data, **user_input}
+                }
+                # Keep a title the user renamed, only refresh a generated one.
+                if self.config_entry.title == _llm_api_title(llm_apis, current):
+                    updates["title"] = _llm_api_title(
+                        llm_apis, user_input[CONF_LLM_HASS_API]
+                    )
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={**self.config_entry.data, **user_input},
-                    title=", ".join(
-                        llm_apis[api_id] for api_id in user_input[CONF_LLM_HASS_API]
-                    ),
+                    self.config_entry, **updates
                 )
+                # An open SSE session keeps serving the APIs it started with.
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 return self.async_create_entry(data={})
 
-        current = [
-            api_id
-            for api_id in self.config_entry.data.get(CONF_LLM_HASS_API, [])
-            if api_id in llm_apis
-        ]
         return self.async_show_form(
             step_id="init",
             data_schema=_llm_api_schema(llm_apis, current),
