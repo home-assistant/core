@@ -162,7 +162,8 @@ class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator, cache, reference_code)
 
-        self._attr_unique_id = f"{reference_code}_{key}"
+        account_reference_code = cast(str, coordinator.data.user.reference_code)
+        self._attr_unique_id = f"{account_reference_code}_{self._reference_code}_{key}"
 
         # The translation key determines the name of the entity
         # as this is the lookup for the `strings.json` file.
@@ -204,7 +205,8 @@ class GeoEntityBaseTrackable(GeocachingTrackableEntity, SensorEntity):
         """Initialize the Geocaching trackable sensor."""
         super().__init__(coordinator, trackable)
 
-        self._attr_unique_id = f"{trackable.reference_code}_{key}"
+        account_reference_code = cast(str, coordinator.data.user.reference_code)
+        self._attr_unique_id = f"{account_reference_code}_{self._reference_code}_{key}"
         self._attr_translation_key = f"trackable_{key}"
 
 
