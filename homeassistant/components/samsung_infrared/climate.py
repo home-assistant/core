@@ -1,5 +1,6 @@
 """Climate platform for Samsung IR integration."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from infrared_protocols.commands.samsung_ac import (
@@ -10,6 +11,7 @@ from infrared_protocols.commands.samsung_ac import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
@@ -21,9 +23,15 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
 from .entity import SamsungIrEntity
@@ -49,6 +57,32 @@ HA_TO_LIB_FAN = {
 }
 
 
+@dataclass
+class _SamsungAcExtraStoredData(ExtraStoredData):
+    """Extra data restored alongside the entity's visible state.
+
+    Holds the last non-OFF HVAC mode, which isn't part of the visible state (the
+    entity may currently be OFF) but is needed by turn_on to know which mode to
+    resume, so it can't be recovered from last_state.state alone when that state
+    is OFF.
+    """
+
+    last_on_hvac_mode: str
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation for storage."""
+        return {"last_on_hvac_mode": self.last_on_hvac_mode}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> _SamsungAcExtraStoredData | None:
+        """Build from a stored dict, or None if it doesn't look valid."""
+        last_on_hvac_mode = restored.get("last_on_hvac_mode")
+        if not isinstance(last_on_hvac_mode, str):
+            return None
+        return cls(last_on_hvac_mode=last_on_hvac_mode)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -64,7 +98,9 @@ async def async_setup_entry(
         )
 
 
-class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEntity):
+class SamsungIrClimate(
+    SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
+):
     """Samsung IR climate entity."""
 
     _attr_name = None
@@ -102,6 +138,42 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
 
         self._last_on_hvac_mode = HVACMode.COOL
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the assumed state, as infrared cannot read it back from the AC."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if last_state is None or last_state.state in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            return
+
+        if last_state.state in self._attr_hvac_modes:
+            self._attr_hvac_mode = HVACMode(last_state.state)
+        if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in HA_TO_LIB_FAN:
+            self._attr_fan_mode = fan_mode
+        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
+            self._attr_target_temperature = float(temperature)
+
+        if self._attr_hvac_mode != HVACMode.OFF:
+            self._last_on_hvac_mode = self._attr_hvac_mode
+        elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
+            restored = _SamsungAcExtraStoredData.from_dict(last_extra_data.as_dict())
+            if restored is not None and restored.last_on_hvac_mode in (
+                mode.value for mode in self._attr_hvac_modes if mode != HVACMode.OFF
+            ):
+                self._last_on_hvac_mode = HVACMode(restored.last_on_hvac_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ExtraStoredData:
+        """Return extra data to be restored alongside the entity's state."""
+        return _SamsungAcExtraStoredData(
+            last_on_hvac_mode=self._last_on_hvac_mode.value
+        )
+
     async def _async_send_command(self) -> None:
         """Generate the logical state and delegate transmission to the infrared platform."""
         hvac_mode = HA_TO_LIB_HVAC.get(self._attr_hvac_mode, SamsungAC0292HvacMode.OFF)
@@ -125,6 +197,11 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
         self._attr_hvac_mode = hvac_mode
         if hvac_mode != HVACMode.OFF:
             self._last_on_hvac_mode = hvac_mode
+        # The unit always transmits a fixed fan value in auto mode, regardless of
+        # what was previously selected; keep the reported state consistent with
+        # what's actually being sent.
+        if hvac_mode == HVACMode.AUTO:
+            self._attr_fan_mode = FAN_AUTO
 
         await self._async_send_command()
         self.async_write_ha_state()
@@ -143,6 +220,8 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
             self._attr_hvac_mode = hvac_mode
             if hvac_mode != HVACMode.OFF:
                 self._last_on_hvac_mode = hvac_mode
+            if hvac_mode == HVACMode.AUTO:
+                self._attr_fan_mode = FAN_AUTO
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._attr_target_temperature = round(temperature)
