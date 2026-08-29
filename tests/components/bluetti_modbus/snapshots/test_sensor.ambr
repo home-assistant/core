@@ -653,64 +653,6 @@
     'state': '0',
   })
 # ---
-# name: test_ep2000_sensors[sensor.ep2000_inverter_fault-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_fault',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ep2000_inverter_fault',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Inverter Fault',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Inverter Fault',
-    'platform': 'bluetti_modbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'd_inverter_fault',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZEP_d_inverter_fault',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_ep2000_sensors[sensor.ep2000_inverter_fault-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EP2000 Inverter Fault',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_fault',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ep2000_inverter_fault',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_fault',
-  })
-# ---
 # name: test_ep2000_sensors[sensor.ep2000_inverter_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -831,64 +773,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '',
-  })
-# ---
-# name: test_ep2000_sensors[sensor.ep2000_inverter_warning-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_warning',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ep2000_inverter_warning',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Inverter Warning',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Inverter Warning',
-    'platform': 'bluetti_modbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'd_inverter_warning',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZEP_d_inverter_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_ep2000_sensors[sensor.ep2000_inverter_warning-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EP2000 Inverter Warning',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_warning',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ep2000_inverter_warning',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_warning',
   })
 # ---
 # name: test_ep2000_sensors[sensor.ep2000_number_of_battery_packs-entry]
@@ -2063,7 +1947,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_o_p_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_ac_o_p_total',
+    'unique_id': '0_ac_o_p_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -2116,7 +2000,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_ver_arm',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_ver_arm',
+    'unique_id': '0_d_ver_arm',
     'unit_of_measurement': None,
   })
 # ---
@@ -2171,7 +2055,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_t_avg',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_t_avg',
+    'unique_id': '0_b_t_avg',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2224,7 +2108,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_cycle_count',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_cycle_count',
+    'unique_id': '0_b_cycle_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -2276,7 +2160,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soc',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_soc',
+    'unique_id': '0_b_soc',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2329,7 +2213,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soh',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_soh',
+    'unique_id': '0_b_soh',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2380,7 +2264,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_type',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_type',
+    'unique_id': '0_b_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -2435,7 +2319,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_v',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_v',
+    'unique_id': '0_b_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -2488,7 +2372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_cell_count',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_cell_count',
+    'unique_id': '0_b_cell_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -2538,7 +2422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_ver_dsp',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_ver_dsp',
+    'unique_id': '0_d_ver_dsp',
     'unit_of_measurement': None,
   })
 # ---
@@ -2593,7 +2477,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_f',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_g_i_f',
+    'unique_id': '0_g_i_f',
     'unit_of_measurement': 'Hz',
   })
 # ---
@@ -2651,7 +2535,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_p_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_g_i_p_total',
+    'unique_id': '0_g_i_p_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -2704,7 +2588,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_num_inverters',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_num_inverters',
+    'unique_id': '0_d_num_inverters',
     'unit_of_measurement': None,
   })
 # ---
@@ -2719,64 +2603,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.balco260_inverter_fault-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_fault',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_inverter_fault',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Inverter Fault',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Inverter Fault',
-    'platform': 'bluetti_modbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'd_inverter_fault',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_inverter_fault',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.balco260_inverter_fault-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter Fault',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_fault',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_fault',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_fault',
   })
 # ---
 # name: test_sensors[sensor.balco260_inverter_status-entry]
@@ -2823,7 +2649,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_status',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_inverter_status',
+    'unique_id': '0_d_inverter_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -2884,7 +2710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_type',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_inverter_type',
+    'unique_id': '0_d_inverter_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -2899,64 +2725,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '',
-  })
-# ---
-# name: test_sensors[sensor.balco260_inverter_warning-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_warning',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.balco260_inverter_warning',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Inverter Warning',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Inverter Warning',
-    'platform': 'bluetti_modbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'd_inverter_warning',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_inverter_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.balco260_inverter_warning-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balco260 Inverter Warning',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_warning',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.balco260_inverter_warning',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_warning',
   })
 # ---
 # name: test_sensors[sensor.balco260_number_of_battery_packs-entry]
@@ -2992,7 +2760,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_num_battery_packs',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_num_battery_packs',
+    'unique_id': '0_d_num_battery_packs',
     'unit_of_measurement': None,
   })
 # ---
@@ -3047,7 +2815,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_c',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_1_i_c',
+    'unique_id': '0_pv_1_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -3105,7 +2873,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_p',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_1_i_p',
+    'unique_id': '0_pv_1_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -3163,7 +2931,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_v',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_1_i_v',
+    'unique_id': '0_pv_1_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -3221,7 +2989,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_c',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_2_i_c',
+    'unique_id': '0_pv_2_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -3279,7 +3047,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_p',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_2_i_p',
+    'unique_id': '0_pv_2_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -3337,7 +3105,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_v',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_2_i_v',
+    'unique_id': '0_pv_2_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -3395,7 +3163,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_c',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_3_i_c',
+    'unique_id': '0_pv_3_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -3453,7 +3221,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_p',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_3_i_p',
+    'unique_id': '0_pv_3_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -3511,7 +3279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_v',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_3_i_v',
+    'unique_id': '0_pv_3_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -3569,7 +3337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_c',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_4_i_c',
+    'unique_id': '0_pv_4_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -3627,7 +3395,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_p',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_4_i_p',
+    'unique_id': '0_pv_4_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -3685,7 +3453,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_v',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_4_i_v',
+    'unique_id': '0_pv_4_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -3743,7 +3511,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_ac_e',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_ac_e',
+    'unique_id': '0_pv_ac_e',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -3801,7 +3569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_ac_p',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_ac_p',
+    'unique_id': '0_pv_ac_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -3854,7 +3622,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_ntc_count',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_ntc_count',
+    'unique_id': '0_b_ntc_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -3909,7 +3677,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_o_e_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_ac_o_e_total',
+    'unique_id': '0_ac_o_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -3967,7 +3735,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_i_e',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_i_e',
+    'unique_id': '0_b_i_e',
     'unit_of_measurement': 'Wh',
   })
 # ---
@@ -4025,7 +3793,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_c_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_c_total',
+    'unique_id': '0_b_c_total',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -4083,7 +3851,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_o_e',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_o_e',
+    'unique_id': '0_b_o_e',
     'unit_of_measurement': 'Wh',
   })
 # ---
@@ -4138,7 +3906,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soc_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_soc_total',
+    'unique_id': '0_b_soc_total',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4191,7 +3959,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soh_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_soh_total',
+    'unique_id': '0_b_soh_total',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4247,7 +4015,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_v_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_b_v_total',
+    'unique_id': '0_b_v_total',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -4305,7 +4073,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_o_e_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_g_o_e_total',
+    'unique_id': '0_g_o_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -4363,7 +4131,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_e_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_g_i_e_total',
+    'unique_id': '0_g_i_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -4421,7 +4189,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_d_inverter_total',
+    'unique_id': '0_d_inverter_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -4479,7 +4247,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_i_e_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_i_e_total',
+    'unique_id': '0_pv_i_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -4537,7 +4305,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_i_p_total',
-    'unique_id': '01K3ZZZZZZZZZZZZZZZZZZZZZZ_pv_i_p_total',
+    'unique_id': '0_pv_i_p_total',
     'unit_of_measurement': 'W',
   })
 # ---

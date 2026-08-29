@@ -56,7 +56,7 @@ async def test_serial_number_is_device_metadata_not_a_sensor(
     await _setup(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.serial_number == SERIAL
