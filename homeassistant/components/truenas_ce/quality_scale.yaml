@@ -5,8 +5,8 @@ rules:
     comment: No custom actions/services in bronze scope; see the PR review guide's minimal-initial-submission guidance.
   appropriate-polling: done
   brands:
-    status: done
-    comment: Logos are ready; a home-assistant/brands PR is open awaiting review.
+    status: todo
+    comment: Logos are ready; blocked on home-assistant/brands#10948 (open, awaiting review).
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -34,7 +34,9 @@ rules:
     status: exempt
     comment: No custom actions/services in bronze scope; see action-setup.
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Linked docs PR home-assistant/home-assistant.io#47351 still lists options (cron-skip toggle, poll interval) this Bronze scope does not expose; will be marked done once the docs PR is aligned.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
