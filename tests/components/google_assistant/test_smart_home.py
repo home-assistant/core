@@ -176,6 +176,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
+                # Ignored: the entity already has registry aliases below.
                 const.CONF_ALIASES: ["Hello", "World"],
             }
         },
@@ -204,8 +205,6 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                         "nicknames": unordered(
                             [
                                 "Demo Light",
-                                "Hello",
-                                "World",
                                 "Stay",
                                 "Healthy",
                             ]

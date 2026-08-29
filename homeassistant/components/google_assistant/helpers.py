@@ -614,10 +614,12 @@ class GoogleEntity:
             self.hass, entity_entry, state=state, allow_empty=False
         )
         name, *aliases = aliases
-        name = entity_config.get(CONF_NAME) or name
+        if entity_entry is None:
+            name = entity_config.get(CONF_NAME) or name
+            aliases = entity_config.get(CONF_ALIASES, [])
         device["name"] = {"name": name}
-        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or aliases:
-            device["name"]["nicknames"] = [name, *config_aliases, *aliases]
+        if aliases:
+            device["name"]["nicknames"] = [name, *aliases]
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():

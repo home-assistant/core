@@ -489,6 +489,74 @@ async def test_migrate_expose_settings(
     assert google_config.should_expose(light_entry.entity_id) is False
 
 
+async def test_migrate_entity_aliases(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test YAML-configured name/aliases are migrated to the entity registry once."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "entity_config": {
+                entry.entity_id: {"name": "Custom Name", "aliases": ["Foo", "Bar"]}
+            },
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.aliases == ["Custom Name", "Foo", "Bar"]
+
+
+async def test_migrate_entity_aliases_keeps_existing(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test migration does not override aliases already set on the entity."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(entry.entity_id, aliases=["Existing"])
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "entity_config": {entry.entity_id: {"aliases": ["Foo", "Bar"]}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.aliases == ["Existing"]
+
+
+async def test_migrate_entity_aliases_on_registration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test aliases are migrated when a new entity is registered."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "entity_config": {"light.kitchen": {"aliases": ["Foo"]}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    # This entity did not exist during the one-time bulk migration above.
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.aliases[1:] == ["Foo"]
+
+
 async def test_expose_update_triggers_sync(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

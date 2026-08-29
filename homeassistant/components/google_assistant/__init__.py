@@ -38,16 +38,13 @@ CONF_ALLOW_UNLOCK = "allow_unlock"
 
 PLATFORMS = [Platform.BUTTON]
 
-ENTITY_SCHEMA = vol.All(
-    cv.deprecated(CONF_EXPOSE),
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
-            vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_ROOM_HINT): cv.string,
-        }
-    ),
+ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
+        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ROOM_HINT): cv.string,
+    }
 )
 
 GOOGLE_SERVICE_ACCOUNT = vol.Schema(
@@ -68,6 +65,7 @@ def _check_report_state(data):
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
     cv.deprecated(CONF_EXPOSE_BY_DEFAULT),
     cv.deprecated(CONF_EXPOSED_DOMAINS),
+    cv.deprecated(CONF_ENTITY_CONFIG),
     vol.Schema(
         {
             vol.Required(CONF_PROJECT_ID): cv.string,
