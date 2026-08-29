@@ -330,7 +330,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         entry (a spoofed device could mimic the probe) -- the flow always
         falls through to the user-facing confirm step instead.
         """
-        host = discovery_info.host
+        host = sanitize_host(discovery_info.host)
         self._async_abort_entries_match({CONF_HOST: host})
         # Provisional unique_id to dedupe concurrent events; re-keyed to the
         # stable system_id once the probe below succeeds.

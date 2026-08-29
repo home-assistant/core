@@ -323,6 +323,28 @@ async def test_zeroconf_flow_confirms_and_creates_entry(hass: HomeAssistant) -> 
     assert result["data"][CONF_HOST] == "192.168.1.50"
 
 
+async def test_zeroconf_flow_brackets_ipv6_host(hass: HomeAssistant) -> None:
+    """A bare IPv6 discovery address is bracketed before being probed.
+
+    Regression test: ``ZeroconfServiceInfo.host`` is the raw, unbracketed
+    IPv6 literal; passing it straight through would build a malformed
+    WebSocket URL (see ``helper.sanitize_host``).
+    """
+    with patch.object(
+        config_flow.TrueNASConfigFlow,
+        "_probe_is_truenas",
+        AsyncMock(return_value="[2001:db8::1]"),
+    ) as mock_probe:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_zeroconf_discovery_info("2001:db8::1"),
+        )
+    assert mock_probe.call_args.args[0] == "[2001:db8::1]"
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"] == {CONF_HOST: "[2001:db8::1]"}
+
+
 async def test_zeroconf_flow_keeps_advertised_port(hass: HomeAssistant) -> None:
     """A box found only on its advertised port is configured with that port."""
     with patch.object(

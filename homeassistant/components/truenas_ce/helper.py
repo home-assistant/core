@@ -1,5 +1,6 @@
 """Helper functions."""
 
+import ipaddress
 import re
 
 from homeassistant.const import UnitOfInformation
@@ -18,11 +19,23 @@ def sanitize_host(host: str) -> str:
     """Normalize user input to the bare hostname/IP[:port] the API expects.
 
     Lowercased so case differences don't create duplicate config entries.
+    A bare IPv6 literal is bracketed (e.g. "::1" -> "[::1]") so it combines
+    unambiguously with a scheme/port into a valid WebSocket URL.
     """
     host = host.strip()
     host = _SCHEME_RE.sub("", host)
     host = _HOST_TAIL_RE.split(host, maxsplit=1)[0]
-    return host.strip().lower()
+    host = host.strip().lower()
+    return _bracket_ipv6(host)
+
+
+def _bracket_ipv6(host: str) -> str:
+    """Bracket ``host`` if it is a bare (unbracketed) IPv6 literal."""
+    try:
+        ipaddress.IPv6Address(host)
+    except ValueError:
+        return host
+    return f"[{host}]"
 
 
 # (threshold_bytes, unit, precision) tiers; first match wins; _BASE_TIER_INDEX is the fallback tier.
