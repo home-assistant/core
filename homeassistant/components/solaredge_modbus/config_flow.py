@@ -274,19 +274,18 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
             errors, solaredge = await self._async_validate(data)
 
-            if solaredge is not None and (
-                solaredge.common.serial_number == entry.unique_id
-            ):
-                # The reload brings the entry back up on the new settings.
-                return self.async_update_reload_and_abort(entry, data_updates=data)
+            if solaredge is not None:
+                await self.async_set_unique_id(solaredge.common.serial_number)
 
-            # Every other outcome leaves the entry off the bus, so put it back
-            # before reporting what happened.
-            if relinking:
+            # Anything other than the inverter this entry is for leaves it off
+            # the bus, so put it back before reporting what happened. A match
+            # falls through: the reload below brings it up on the new settings.
+            if relinking and self.unique_id != entry.unique_id:
                 await self.hass.config_entries.async_setup(entry.entry_id)
 
             if solaredge is not None:
-                return self.async_abort(reason="wrong_device")
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(entry, data_updates=data)
 
         return self.async_show_form(
             step_id="reconfigure",

@@ -124,7 +124,7 @@ async def test_user_flow_tcp(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE  # read from the device
+    assert result["title"] == TITLE  # named after the model it reports
     assert result["data"] == tcp_data()
     assert result["result"].unique_id == SERIAL_NUMBER  # the inverter serial
 
@@ -210,6 +210,12 @@ async def test_user_flow_no_solaredge_device(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_solaredge_device"}
 
+    # The inverter is on another device ID.
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_no_serial_number(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
@@ -226,6 +232,12 @@ async def test_user_flow_no_serial_number(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_serial_number"}
 
+    # The inverter that does name itself is on another device ID.
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_ev_charger(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
@@ -240,6 +252,12 @@ async def test_user_flow_ev_charger(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "ev_charger"}
+
+    # The inverter sits next to the charger, on another device ID.
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
