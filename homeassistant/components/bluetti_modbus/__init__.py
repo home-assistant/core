@@ -6,8 +6,6 @@ which shares one connection per device between everything talking to it, and
 hands that unit to the ``bluetti-modbus`` library.
 """
 
-from typing import TYPE_CHECKING
-
 from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import ModbusTcpParams
 
@@ -32,10 +30,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry
 ) -> bool:
     """Set up BLUETTI Modbus from a config entry."""
-    unique_id = entry.unique_id
-    if TYPE_CHECKING:
-        assert unique_id is not None
-
     params = ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT])
     try:
         unit = async_get_unit(hass, entry, params, entry.data[CONF_UNIT_ID])
@@ -62,7 +56,7 @@ async def async_setup_entry(
     # Built once here: every entity hangs on the same device.
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
-        device_info=bluetti_modbus_device_info(unique_id, device_type),
+        device_info=bluetti_modbus_device_info(entry.entry_id, device_type),
     )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **entry.runtime_data.device_info

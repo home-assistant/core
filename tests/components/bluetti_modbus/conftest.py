@@ -30,6 +30,7 @@ HOST = "1.2.3.4"
 PORT = 502
 UNIT_ID = 1
 DEVICE_TYPE = DEVICE_TYPE_BALCO260
+ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
 
 
 def bluetti_data(
@@ -106,7 +107,7 @@ def mock_config_entry(mock_modbus_unit: MockModbusUnit) -> MockConfigEntry:
     """A BLUETTI Modbus config entry for the seeded device."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id=ENTRY_ID,
         title="Balco260",
-        unique_id=f"{HOST}_{PORT}_{UNIT_ID}",
         data=bluetti_data(),
     )

@@ -80,12 +80,15 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             data = _normalized(user_input)
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: data[CONF_HOST],
+                    CONF_PORT: data[CONF_PORT],
+                    CONF_UNIT_ID: data[CONF_UNIT_ID],
+                }
+            )
             errors = await self._async_validate(data)
             if not errors:
-                await self.async_set_unique_id(
-                    f"{data[CONF_HOST]}_{data[CONF_PORT]}_{data[CONF_UNIT_ID]}"
-                )
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=device_name(data[CONF_DEVICE_TYPE]), data=data
                 )
@@ -103,6 +106,13 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             data = _normalized(user_input)
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: data[CONF_HOST],
+                    CONF_PORT: data[CONF_PORT],
+                    CONF_UNIT_ID: data[CONF_UNIT_ID],
+                }
+            )
             errors = await self._async_validate(data)
             if not errors:
                 return self.async_update_reload_and_abort(entry, data_updates=data)

@@ -4,15 +4,19 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
-from homeassistant.components.bluetti_modbus.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.bluetti_modbus.const import (
+    DEVICE_TYPE_EP2000,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import HOST, PORT, UNIT_ID, bluetti_data
+from .conftest import bluetti_data, seed_unit
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -106,12 +110,7 @@ async def test_transient_busy_response_is_retried(
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """A device that asks for a retry once does not fail the refresh.
-
-    Codes 5/6 mean the device accepted the request but wants more time - the
-    coordinator retries once immediately rather than treating it as a real
-    failure, matching bluetti-modbus-lib's own connection-owning client.
-    """
+    """A device that asks for a retry once does not fail the refresh."""
     read_holding_registers = mock_modbus_unit.read_holding_registers
     attempts = 0
 
@@ -138,12 +137,7 @@ async def test_dead_link_on_the_retry_still_fails_the_refresh(
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """A device that goes fully silent right after asking for a retry still fails.
-
-    The retry is one more chance for a device that is merely busy, not a
-    second chance for one that has actually gone dead - a real failure there
-    surfaces exactly like a first-attempt failure would.
-    """
+    """A device that goes fully silent right after asking for a retry still fails."""
     attempts = 0
 
     async def busy_then_dead(address: int, count: int) -> list[int]:
@@ -165,10 +159,28 @@ async def test_setup_error_when_device_type_unsupported(hass: HomeAssistant) -> 
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Unknown",
-        unique_id=f"{HOST}_{PORT}_{UNIT_ID}",
         data=bluetti_data(device_type="unknown"),
     )
 
     await _setup(hass, entry)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_ep2000_loads(
+    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
+) -> None:
+    """An EP2000, with its own different field map, also sets up cleanly."""
+    seed_unit(mock_modbus_connection.for_unit(2), device_type=DEVICE_TYPE_EP2000)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="EP2000",
+        data=bluetti_data(unit_id=2, device_type=DEVICE_TYPE_EP2000),
+    )
+
+    await _setup(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.ep2000_battery_voltage")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE

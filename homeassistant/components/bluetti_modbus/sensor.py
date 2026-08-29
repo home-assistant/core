@@ -1,8 +1,11 @@
 """Sensor platform for the BLUETTI Modbus integration."""
 
+from enum import Enum
+import re
 from typing import cast, override
 
 from modbus_connection.model import RegisterField
+from modbus_connection.model.fields import NumberField
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import BluettiModbusConfigEntry
@@ -20,15 +23,18 @@ from .entity import BluettiModbusEntity
 
 PARALLEL_UPDATES = 0
 
+# These belong on other platforms once they exist (switch, number/select), not
+# on sensor - creating them here now would mean a breaking entity-domain
+# change or a leftover duplicate once those follow-up PRs land.
+_EXCLUDED_FIELDS = frozenset(
+    {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_high", "b_soc_low"}
+)
+
 # No physical unit, and no entity of their own yet: the fault/warning/status
-# bits and the on/off switches read here belong on binary_sensor/switch
-# platforms, each its own follow-up PR to keep this one reviewable. Exposed
-# here as read-only diagnostics in the meantime, not left out entirely.
+# enums read here belong on a binary_sensor/sensor split, a follow-up PR to
+# keep this one reviewable. Exposed here as diagnostics in the meantime.
 _DIAGNOSTIC_FIELDS = frozenset(
     {
-        "ac_o_switch",
-        "g_i_switch",
-        "g_o_switch",
         "d_inverter_fault",
         "d_inverter_status",
         "d_inverter_warning",
@@ -38,13 +44,13 @@ _DIAGNOSTIC_FIELDS = frozenset(
         "b_cell_count",
         "b_cycle_count",
         "b_ntc_count",
-        "b_soc_high",
-        "b_soc_low",
         "b_type",
     }
 )
 
-# Lifetime counters: hold the highest value the device has reported.
+# Lifetime counters. HA's own TOTAL_INCREASING handling covers an occasional
+# drop as a meter reset; this integration does not additionally clamp or
+# restore these values itself.
 _TOTAL_ENERGY_FIELDS = frozenset(
     {
         "ac_o_e_total",
@@ -70,8 +76,28 @@ _UNIT_DEVICE_CLASSES: dict[str, SensorDeviceClass] = {
 }
 
 
+def _slug(name: str) -> str:
+    """Turn an UpperCamelCase enum member name into a snake_case state slug."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+
 def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescription:
     """Build an entity description for one register field."""
+    if (
+        isinstance(field, NumberField)
+        and isinstance(field.convert, type)
+        and issubclass(field.convert, Enum)
+    ):
+        return SensorEntityDescription(
+            key=name,
+            translation_key=name,
+            device_class=SensorDeviceClass.ENUM,
+            options=[_slug(member.name) for member in field.convert],
+            entity_category=EntityCategory.DIAGNOSTIC
+            if name in _DIAGNOSTIC_FIELDS
+            else None,
+        )
+
     if name in _TOTAL_ENERGY_FIELDS:
         return SensorEntityDescription(
             key=name,
@@ -117,19 +143,28 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> StateType:
-        """Return the field's most recently read value."""
-        return cast(StateType, self.coordinator.device.values.get(self._field_name))
+        """Return the field's most recently read value.
+
+        An enum-typed field decodes to an Enum member, not a plain value -
+        translated to its stable state slug here rather than exposing the
+        library's own repr.
+        """
+        value = self.coordinator.device.values.get(self._field_name)
+        if isinstance(value, Enum):
+            return _slug(value.name)
+        return cast(StateType, value)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BluettiModbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BLUETTI Modbus sensors from a config entry."""
     device = entry.runtime_data.coordinator.device
     async_add_entities(
         BluettiModbusSensor(entry=entry, description=_describe(name, field))
         for name in device.field_names()
-        if (field := device.get_field(name)) is not None
+        if name not in _EXCLUDED_FIELDS
+        and (field := device.get_field(name)) is not None
     )

@@ -57,9 +57,8 @@ rules:
   discovery:
     status: exempt
     comment: >-
-      Devices are added via the BLUETTI cloud account, not discovered on the
-      local network; the local Modbus connection (host/port) has no
-      discovery protocol of its own either.
+      Devices are added by entering a host, port and unit ID directly; there
+      is no discovery protocol for this Modbus TCP endpoint.
   discovery-update-info:
     status: exempt
     comment: Same reasoning as discovery - there is nothing to discover.
@@ -76,8 +75,10 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
-    comment: No entity here is a less popular or noisy candidate to disable.
+    status: todo
+    comment: >-
+      Several diagnostic entities (cell/cycle/NTC counts, pack count) are
+      plausible candidates to disable by default; not yet triaged.
   entity-translations: done
   # ^ Unlike the cloud bluetti integration, these register names are known at
   #   dev time (bluetti-modbus's generated device classes), not supplied

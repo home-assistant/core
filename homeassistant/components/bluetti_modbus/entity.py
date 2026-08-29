@@ -17,11 +17,11 @@ def device_name(device_type: str) -> str:
     return _MODEL_NAMES.get(device_type, "BLUETTI power station")
 
 
-def bluetti_modbus_device_info(unique_id: str, device_type: str) -> DeviceInfo:
+def bluetti_modbus_device_info(entry_id: str, device_type: str) -> DeviceInfo:
     """Return device information for a BLUETTI Modbus device."""
     model = device_name(device_type)
     return DeviceInfo(
-        identifiers={(DOMAIN, unique_id)},
+        identifiers={(DOMAIN, entry_id)},
         manufacturer="BLUETTI",
         model=model,
         name=model,
@@ -42,6 +42,6 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
         """Initialize a BLUETTI Modbus entity."""
         super().__init__(coordinator=entry.runtime_data.coordinator)
         self._field_name = field_name
-        self._attr_unique_id = f"{entry.unique_id}_{field_name}"
+        self._attr_unique_id = f"{entry.entry_id}_{field_name}"
         self._attr_translation_key = field_name
         self._attr_device_info = entry.runtime_data.device_info
