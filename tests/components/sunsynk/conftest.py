@@ -9,6 +9,7 @@ from sunsynk.grid import Grid
 from sunsynk.input import Input
 from sunsynk.inverter import Inverter
 from sunsynk.load import Load
+from sunsynk.user import User
 
 from homeassistant.components.sunsynk.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -21,6 +22,7 @@ from tests.common import (
 
 USERNAME = "test@example.com"
 PASSWORD = "test-password"
+USER_ID = "281092"
 
 
 @pytest.fixture
@@ -45,6 +47,9 @@ def mock_sunsynk_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.get_user.return_value = User(
+            load_json_object_fixture("user.json", DOMAIN)
+        )
         client.get_inverters.return_value = [
             Inverter(inverter)
             for inverter in load_json_array_fixture("inverters.json", DOMAIN)
@@ -71,5 +76,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=USERNAME,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id=USERNAME,
+        unique_id=USER_ID,
     )

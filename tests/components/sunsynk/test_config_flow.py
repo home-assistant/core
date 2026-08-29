@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import PASSWORD, USERNAME
+from .conftest import PASSWORD, USER_ID, USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -36,8 +36,8 @@ async def test_full_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    assert result["result"].unique_id == USERNAME
-    assert len(mock_sunsynk_client.login.mock_calls) == 1
+    assert result["result"].unique_id == USER_ID
+    assert len(mock_sunsynk_client.get_user.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -52,7 +52,7 @@ async def test_duplicate_entry(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_USERNAME: USERNAME.upper(), CONF_PASSWORD: PASSWORD},
+        user_input={CONF_USERNAME: "other@example.com", CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -73,7 +73,7 @@ async def test_user_flow_errors(
     error: str,
 ) -> None:
     """Test the user flow shows an error and can recover."""
-    mock_sunsynk_client.login.side_effect = exception
+    mock_sunsynk_client.get_user.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -84,7 +84,7 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_sunsynk_client.login.side_effect = None
+    mock_sunsynk_client.get_user.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -130,7 +130,7 @@ async def test_reauth_flow_errors(
 ) -> None:
     """Test the reauth flow shows an error and can recover."""
     mock_config_entry.add_to_hass(hass)
-    mock_sunsynk_client.login.side_effect = exception
+    mock_sunsynk_client.get_user.side_effect = exception
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
@@ -138,10 +138,28 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_sunsynk_client.login.side_effect = None
+    mock_sunsynk_client.get_user.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_other_account(
+    hass: HomeAssistant,
+    mock_sunsynk_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth flow aborts when the password belongs to another account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_sunsynk_client.get_user.return_value.id = 999999
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == PASSWORD

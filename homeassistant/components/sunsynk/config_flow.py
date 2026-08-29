@@ -43,18 +43,20 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _async_validate_credentials(
-    hass: HomeAssistant, username: str, password: str
-) -> dict[str, str]:
-    """Log in to the Sunsynk API. Return the form errors."""
+async def _async_get_user_id(
+    hass: HomeAssistant, username: str, password: str, errors: dict[str, str]
+) -> str | None:
+    """Log in to the Sunsynk API and return the ID of the account."""
     client = SunsynkClient(username, password, session=async_get_clientsession(hass))
     try:
-        await client.login()
+        user = await client.get_user()
     except SunsynkAuthenticationError:
-        return {"base": "invalid_auth"}
+        errors["base"] = "invalid_auth"
     except SunsynkConnectionError:
-        return {"base": "cannot_connect"}
-    return {}
+        errors["base"] = "cannot_connect"
+    else:
+        return str(user.id)
+    return None
 
 
 class SunsynkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,12 +71,12 @@ class SunsynkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
-            self._abort_if_unique_id_configured()
-            errors = await _async_validate_credentials(
-                self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            user_id = await _async_get_user_id(
+                self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD], errors
             )
-            if not errors:
+            if user_id is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -100,10 +102,15 @@ class SunsynkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            errors = await _async_validate_credentials(
-                self.hass, reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            user_id = await _async_get_user_id(
+                self.hass,
+                reauth_entry.data[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                errors,
             )
-            if not errors:
+            if user_id is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry, data_updates=user_input
                 )
