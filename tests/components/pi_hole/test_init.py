@@ -13,6 +13,7 @@ from homeassistant.components.pi_hole.const import (
     SERVICE_DISABLE_ATTR_DURATION,
 )
 from homeassistant.components.pi_hole.coordinator import PiHoleData
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -176,6 +177,14 @@ async def test_setup_with_defaults_v5(hass: HomeAssistant) -> None:
     assert state.name == "Pi-Hole Status"
     assert state.state == "off"
 
+    # Every statistic sensor exposes long-term statistics
+    sensors = hass.states.async_all("sensor")
+    assert sensors
+    for state in sensors:
+        assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT, (
+            state.entity_id
+        )
+
 
 async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
@@ -231,6 +240,14 @@ async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.pi_hole_status")
     assert state.name == "Pi-Hole Status"
     assert state.state == "off"
+
+    # Every statistic sensor exposes long-term statistics
+    sensors = hass.states.async_all("sensor")
+    assert sensors
+    for state in sensors:
+        assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT, (
+            state.entity_id
+        )
 
 
 async def test_setup_without_api_version(hass: HomeAssistant) -> None:
