@@ -14,12 +14,17 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -398,3 +403,36 @@ async def test_light_schedule_frequency_reflects_choice_before_push(
     )
 
     assert hass.states.get("select.my_pool_light_schedule_frequency").state == "weekly"
+
+
+async def test_light_mode_never_publishes_partial_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test leaving auto does not briefly read as another option.
+
+    light.mode and light.status both feed current_option, so applying them
+    one at a time would publish an off state between the two writes.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    states = [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "select.my_pool_light_mode"
+    ]
+    assert states == ["on"]

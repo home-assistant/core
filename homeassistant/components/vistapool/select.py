@@ -231,5 +231,4 @@ class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        for path, value in updates.items():
-            self.coordinator.apply_optimistic(path, value)
+        self.coordinator.apply_optimistic_values(updates)
