@@ -12,7 +12,7 @@ from aio_wattwaechter import (
     WattwaechterError,
     WattwaechterNoDataError,
 )
-from aio_wattwaechter.models import MeterData, SystemInfo
+from aio_wattwaechter.models import MeterData, OtaData, SystemInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_MODEL
@@ -33,6 +33,7 @@ class WattwaechterData:
 
     meter: MeterData
     system: SystemInfo | None
+    ota: OtaData | None
 
 
 class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
@@ -93,13 +94,19 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
                 translation_placeholders={"host": self.host},
             )
 
-        # System info is fetched best-effort: a failure here must not take the
-        # meter sensors unavailable, so the diagnostic sensors just report
-        # unknown until the next successful poll.
+        # System info and OTA status are fetched best-effort: a failure here
+        # must not take the meter sensors unavailable, so their entities just
+        # report unknown until the next successful poll.
         system: SystemInfo | None
         try:
             system = await self.client.system_info()
         except WattwaechterError:
             system = None
 
-        return WattwaechterData(meter=data, system=system)
+        ota: OtaData | None
+        try:
+            ota = (await self.client.ota_check()).data
+        except WattwaechterError:
+            ota = None
+
+        return WattwaechterData(meter=data, system=system, ota=ota)

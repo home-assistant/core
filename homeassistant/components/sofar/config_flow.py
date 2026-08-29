@@ -1,4 +1,4 @@
-"""TCP-only config flow (Phase 1); probes the device for its unique_id."""
+"""Config flow for Sofar devices."""
 
 import logging
 from typing import Any, override
@@ -42,7 +42,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a Sofar Modbus config flow."""
+    """Handle a Sofar config flow."""
 
     VERSION = 1
 

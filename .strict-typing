@@ -324,6 +324,7 @@ homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.iron_os.*
 homeassistant.components.isal.*
+homeassistant.components.iseo_argo_ble.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -350,6 +351,7 @@ homeassistant.components.letpot.*
 homeassistant.components.lg_infrared.*
 homeassistant.components.lg_tv_rs232.*
 homeassistant.components.libre_hardware_monitor.*
+homeassistant.components.librenms.*
 homeassistant.components.lidarr.*
 homeassistant.components.liebherr.*
 homeassistant.components.lifx.*
@@ -545,9 +547,11 @@ homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*
 homeassistant.components.snooz.*
+homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
+homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
@@ -651,6 +655,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.wiim.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
