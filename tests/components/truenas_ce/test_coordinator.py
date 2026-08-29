@@ -39,15 +39,8 @@ from homeassistant.components.truenas_ce.const import (
 )
 from homeassistant.components.truenas_ce.coordinator import (
     TrueNASCoordinator,
-    _accumulate_vdev_errors,
-    _aggregate_topology_errors,
-    _arc_value,
-    _as_int,
-    _first_ipv4,
-    _median,
-    _netdata_mean_value,
+    _as_str_keyed,
     _stat_name_similar,
-    _to_int,
     _unwrap_app_stats_message,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -87,154 +80,18 @@ def test_stat_name_similar(a: str, b: str, expected: bool) -> None:
 
 
 # ---------------------------
-#   _median
+#   _as_str_keyed
 # ---------------------------
-def test_median_odd_count() -> None:
-    """The median of an odd-length list is its middle value."""
-    assert _median([3.0, 1.0, 2.0]) == pytest.approx(2.0)
+def test_as_str_keyed_stringifies_int_uids() -> None:
+    """Int-typed uids (e.g. cronjob ids) are stringified for self.ds."""
+    values = {"enabled": True}
+    assert _as_str_keyed({5: values}) == {"5": values}
 
 
-def test_median_even_count() -> None:
-    """The median of an even-length list is the mean of its two middle values."""
-    assert _median([1.0, 2.0, 3.0, 4.0]) == pytest.approx(2.5)
-
-
-def test_median_single_value() -> None:
-    """The median of a single-value list is that value."""
-    assert _median([42.0]) == pytest.approx(42.0)
-
-
-def test_median_empty_list_raises_index_error() -> None:
-    """Empty input is outside _median's contract (docstring: non-empty list).
-
-    Its only caller guards with a non-empty check. Lock in the current
-    fail-loud behaviour instead of silently returning a value.
-    """
-    with pytest.raises(IndexError):
-        _median([])
-
-
-# ---------------------------
-#   _as_int / _to_int
-# ---------------------------
-def test_as_int_returns_int_unchanged() -> None:
-    """An int value passes through _as_int unchanged."""
-    assert _as_int(5) == 5
-
-
-def test_as_int_returns_zero_for_non_int() -> None:
-    """Non-int values (str, None, float) fall back to zero."""
-    assert _as_int("5") == 0
-    assert _as_int(None) == 0
-    assert _as_int(1.5) == 0
-
-
-def test_to_int_parses_numeric_string() -> None:
-    """A numeric string is parsed into its int value."""
-    assert _to_int("48") == 48
-
-
-def test_to_int_falls_back_to_default_on_invalid() -> None:
-    """An unparsable value falls back to the given default."""
-    assert _to_int("not-a-number", default=7) == 7
-    assert _to_int(None, default=7) == 7
-
-
-# ---------------------------
-#   _accumulate_vdev_errors / _aggregate_topology_errors
-# ---------------------------
-def test_accumulate_vdev_errors_leaf_disk() -> None:
-    """A leaf disk vdev's error counts are added to the running totals."""
-    totals = {"read": 0, "write": 0, "checksum": 0}
-    vdev = {"stats": {"read_errors": 1, "write_errors": 2, "checksum_errors": 3}}
-    _accumulate_vdev_errors(vdev, totals)
-    assert totals == {"read": 1, "write": 2, "checksum": 3}
-
-
-def test_accumulate_vdev_errors_recurses_into_children_only() -> None:
-    """A mirror vdev's own stats must not be double-counted on top of its disks."""
-    totals = {"read": 0, "write": 0, "checksum": 0}
-    mirror = {
-        "stats": {"read_errors": 99, "write_errors": 99, "checksum_errors": 99},
-        "children": [
-            {"stats": {"read_errors": 1, "write_errors": 0, "checksum_errors": 0}},
-            {"stats": {"read_errors": 0, "write_errors": 1, "checksum_errors": 0}},
-        ],
-    }
-    _accumulate_vdev_errors(mirror, totals)
-    assert totals == {"read": 1, "write": 1, "checksum": 0}
-
-
-def test_accumulate_vdev_errors_ignores_non_dict() -> None:
-    """A non-dict vdev leaves the running totals untouched."""
-    totals = {"read": 0, "write": 0, "checksum": 0}
-    _accumulate_vdev_errors("not-a-dict", totals)
-    assert totals == {"read": 0, "write": 0, "checksum": 0}
-
-
-def test_aggregate_topology_errors_sums_all_categories() -> None:
-    """Errors from every topology category (data, cache, ...) are summed."""
-    topology = {
-        "data": [
-            {"stats": {"read_errors": 1, "write_errors": 0, "checksum_errors": 0}}
-        ],
-        "cache": [
-            {"stats": {"read_errors": 0, "write_errors": 2, "checksum_errors": 0}}
-        ],
-    }
-    assert _aggregate_topology_errors(topology) == (1, 2, 0)
-
-
-def test_aggregate_topology_errors_non_dict_returns_zeros() -> None:
-    """A non-dict topology yields an all-zero error tuple."""
-    assert _aggregate_topology_errors(None) == (0, 0, 0)
-
-
-# ---------------------------
-#   _netdata_mean_value / _arc_value / _ups_value
-# ---------------------------
-def test_netdata_mean_value_computes_mean() -> None:
-    """The mean of all per-series values in a netdata graph point is returned."""
-    graph_data = [{"aggregations": {"mean": {"a": 1.0, "b": 3.0}}}]
-    assert _netdata_mean_value(graph_data) == pytest.approx(2.0)
-
-
-def test_netdata_mean_value_returns_none_for_empty_list() -> None:
-    """An empty graph-data list yields None."""
-    assert _netdata_mean_value([]) is None
-
-
-def test_netdata_mean_value_returns_none_for_malformed_item() -> None:
-    """Malformed graph-data entries (wrong type/missing keys/empty mean) yield None."""
-    assert _netdata_mean_value(["not-a-dict"]) is None
-    assert _netdata_mean_value([{"aggregations": {"mean": "not-a-dict"}}]) is None
-    assert _netdata_mean_value([{"aggregations": {"mean": {}}}]) is None
-
-
-def test_arc_value_delegates_to_netdata_mean_value() -> None:
-    """_arc_value returns the same mean _netdata_mean_value would compute."""
-    graph_data = [{"aggregations": {"mean": {"a": 10.0}}}]
-    assert _arc_value(graph_data) == pytest.approx(10.0)
-
-
-# ---------------------------
-#   _first_ipv4
-# ---------------------------
-def test_first_ipv4_returns_first_inet_address() -> None:
-    """The first INET (IPv4) alias address is returned, skipping INET6 entries."""
-    aliases = [
-        {"type": "INET6", "address": "2001:db8::1"},
-        {"type": "INET", "address": "192.0.2.5"},
-        {"type": "INET", "address": "192.0.2.6"},
-    ]
-    assert _first_ipv4(aliases) == "192.0.2.5"
-
-
-def test_first_ipv4_returns_unknown_when_no_inet() -> None:
-    """Missing, empty, or IPv6-only alias lists all fall back to "unknown"."""
-    assert _first_ipv4([{"type": "INET6", "address": "2001:db8::1"}]) == "unknown"
-    assert _first_ipv4(None) == "unknown"
-    assert _first_ipv4([]) == "unknown"
+def test_as_str_keyed_leaves_str_uids_unchanged() -> None:
+    """Already-str uids pass through unchanged."""
+    values = {"enabled": True}
+    assert _as_str_keyed({"already-str": values}) == {"already-str": values}
 
 
 # ---------------------------
@@ -277,6 +134,21 @@ def test_set_optimistic_running_noop_for_unknown_object_id() -> None:
     coord.set_optimistic_running("vm", "does-not-exist")
     assert coord.ds["vm"]["1"]["state"] == "STOPPED"
     coord.async_update_listeners.assert_not_called()
+
+
+def test_set_optimistic_running_normalizes_int_object_id() -> None:
+    """A raw int object_id (e.g. rsynctask/replication/scrub ids) is looked up as str.
+
+    Migrated endpoints are str-keyed end to end (see ``_as_str_keyed``), but
+    callers pass the object's raw ``id`` field, which is still int-typed at
+    the API level for several of them.
+    """
+    coord = _bare_coordinator()
+    coord.ds = {"scrub": {"1": {"state": "PENDING"}}}
+    coord.async_update_listeners = MagicMock()
+    coord.set_optimistic_running("scrub", 1)
+    assert coord.ds["scrub"]["1"]["state"] == "RUNNING"
+    coord.async_update_listeners.assert_called_once()
 
 
 # ---------------------------
@@ -412,88 +284,6 @@ def test_update_uptime_skips_when_uptime_not_positive() -> None:
 
 
 # ---------------------------
-#   _apply_pool_capacity
-# ---------------------------
-def test_apply_pool_capacity_uses_root_dataset_when_available() -> None:
-    """Pool capacity is computed from the root dataset when one is provided."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"p1": {}}}
-    root_dataset = {"available": 40, "used": 60}
-    coord._apply_pool_capacity("p1", {}, root_dataset)
-    assert coord.ds["pool"]["p1"]["available"] == 40
-    assert coord.ds["pool"]["p1"]["total"] == 100
-    assert coord.ds["pool"]["p1"]["usage"] == 60
-
-
-def test_apply_pool_capacity_falls_back_to_pool_fields_without_root_dataset() -> None:
-    """Without a root dataset, capacity falls back to the pool's own free/size fields."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"p1": {}}}
-    vals = {"free": 30, "size": 100}
-    coord._apply_pool_capacity("p1", vals, None)
-    assert coord.ds["pool"]["p1"]["available"] == 30
-    assert coord.ds["pool"]["p1"]["total"] == 100
-    assert coord.ds["pool"]["p1"]["usage"] == 70
-
-
-def test_apply_pool_capacity_zero_total_yields_zero_usage() -> None:
-    """A zero-sized pool reports zero usage instead of dividing by zero."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"p1": {}}}
-    coord._apply_pool_capacity("p1", {"free": 0, "size": 0, "allocated": 0}, None)
-    assert coord.ds["pool"]["p1"]["usage"] == 0
-
-
-# ---------------------------
-#   _apply_pool_errors
-# ---------------------------
-def test_apply_pool_errors_aggregates_into_matching_pool() -> None:
-    """Vdev error counts from a matching-guid raw pool are aggregated in."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"guid1": {}}}
-    raw_pools = [
-        {
-            "guid": "guid1",
-            "topology": {
-                "data": [
-                    {
-                        "stats": {
-                            "read_errors": 1,
-                            "write_errors": 2,
-                            "checksum_errors": 3,
-                        }
-                    }
-                ]
-            },
-        }
-    ]
-    coord._apply_pool_errors(raw_pools)
-    pool = coord.ds["pool"]["guid1"]
-    assert (pool["read_errors"], pool["write_errors"], pool["checksum_errors"]) == (
-        1,
-        2,
-        3,
-    )
-    assert pool["errors"] == 6
-
-
-def test_apply_pool_errors_skips_unknown_guid_and_non_dict_entries() -> None:
-    """Entries with an unknown guid or a non-dict shape are skipped."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"guid1": {}}}
-    coord._apply_pool_errors([{"guid": "unknown-guid", "topology": {}}, "not-a-dict"])
-    assert coord.ds["pool"]["guid1"] == {}
-
-
-def test_apply_pool_errors_noop_for_non_list_input() -> None:
-    """A non-list raw_pools argument leaves the pool data untouched."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {"guid1": {}}}
-    coord._apply_pool_errors(None)
-    assert coord.ds["pool"]["guid1"] == {}
-
-
-# ---------------------------
 #   _systemstats_process / _store_stat_value / _store_stat_defaults
 # ---------------------------
 def test_systemstats_process_stores_matching_legend_values() -> None:
@@ -570,127 +360,54 @@ def test_store_stat_value_unknown_type_stores_raw_key() -> None:
 # ---------------------------
 #   get_alerts
 # ---------------------------
-async def test_get_alerts_malformed_response_keeps_previous_state() -> None:
-    """A non-list alerts response preserves the last known alert state.
-
-    A permission/transport error must not masquerade as "no active alerts".
-    """
-    coord = _bare_coordinator()
-    previous = {
-        "count": 2,
-        "messages": ["Pool full"],
-        "critical": 1,
-        "warning": 1,
-        "info": 0,
-        "disk_issues": True,
-    }
-    coord.ds = {"alerts": dict(previous)}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value={"not": "a list"})
-    await coord.get_alerts()
-    assert coord.ds["alerts"] == previous
-
-
-async def test_get_alerts_filters_dismissed_and_counts_levels() -> None:
-    """Dismissed alerts are excluded and remaining alerts are counted per level."""
+# The dismissed-filtering/level-counting/disk_issues-heuristic derivation
+# these tests used to exercise directly now lives in and is tested by
+# aiotruenas's own TrueNASState.get_alerts(). get_alerts() just delegates and
+# assigns the result, so this only needs to lock in that plumbing.
+async def test_get_alerts_delegates_to_state() -> None:
+    """get_alerts assigns TrueNASState.get_alerts()'s result verbatim."""
     coord = _bare_coordinator()
     coord.ds = {"alerts": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "dismissed": True,
-                "level": "CRITICAL",
-                "klass": "disk",
-                "formatted": "ignored",
-            },
-            {
-                "dismissed": False,
-                "level": "CRITICAL",
-                "klass": "PoolUsage",
-                "formatted": "Pool full",
-                "uuid": "u1",
-            },
-            {
-                "dismissed": False,
-                "level": "WARNING",
-                "klass": "Other",
-                "title": "SMART failure",
-                "formatted": "Smart warning",
-                "uuid": "u2",
-            },
-            {
-                "dismissed": False,
-                "level": "INFO",
-                "klass": "Other",
-                "title": "",
-                "formatted": "Just info",
-            },
-        ]
+    coord.state = MagicMock()
+    coord.state.get_alerts = AsyncMock(
+        return_value={
+            "count": 1,
+            "messages": ["Pool full"],
+            "critical": 1,
+            "warning": 0,
+            "info": 0,
+            "disk_issues": True,
+            "uuids": ["u1"],
+        }
     )
     await coord.get_alerts()
-    alerts = coord.ds["alerts"]
-    assert alerts["count"] == 3
-    assert alerts["critical"] == 1
-    assert alerts["warning"] == 1
-    assert alerts["info"] == 1
-    assert alerts["disk_issues"] is True
-    assert alerts["messages"] == ["Pool full", "Smart warning", "Just info"]
-    assert alerts["uuids"] == ["u1", "u2"]
-
-
-async def test_get_alerts_no_disk_issues_when_unrelated() -> None:
-    """An alert from an unrelated class does not set the disk_issues flag."""
-    coord = _bare_coordinator()
-    coord.ds = {"alerts": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "dismissed": False,
-                "level": "INFO",
-                "klass": "CertificateExpiry",
-                "title": "cert",
-                "formatted": "Cert expiring",
-            }
-        ]
-    )
-    await coord.get_alerts()
-    assert coord.ds["alerts"]["disk_issues"] is False
+    assert coord.ds["alerts"]["count"] == 1
+    assert coord.ds["alerts"]["uuids"] == ["u1"]
 
 
 # ---------------------------
 #   get_smb
 # ---------------------------
-async def test_get_smb_counts_list_response() -> None:
-    """A list SMB response's length becomes the connection count."""
+# The list-vs-dict response-shape handling these tests used to exercise
+# directly now lives in and is tested by aiotruenas's own
+# TrueNASState.get_smb(). get_smb() just delegates and merges "connections"
+# into system_info, so this only needs to lock in that plumbing.
+async def test_get_smb_merges_connections_into_system_info() -> None:
+    """get_smb copies TrueNASState.get_smb()'s "connections" into system_info."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"id": 1}, {"id": 2}])
-    await coord.get_smb()
-    assert coord.ds["system_info"]["smb_connections"] == 2
-
-
-async def test_get_smb_counts_dict_with_sessions() -> None:
-    """A dict SMB response's "sessions" list length becomes the connection count."""
-    coord = _bare_coordinator()
-    coord.ds = {"system_info": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value={"sessions": [{}, {}, {}]})
+    coord.state = MagicMock()
+    coord.state.get_smb = AsyncMock(return_value={"connections": 3})
     await coord.get_smb()
     assert coord.ds["system_info"]["smb_connections"] == 3
 
 
-async def test_get_smb_keeps_previous_count_for_unexpected_shape() -> None:
-    """An unexpected (non-list, non-dict) SMB response keeps the last known count.
-
-    A permission/transport error must not masquerade as "0 connections".
-    """
+async def test_get_smb_leaves_system_info_untouched_without_connections_key() -> None:
+    """A malformed/failed state response (no "connections" key) is a no-op."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"smb_connections": 3}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
+    coord.state = MagicMock()
+    coord.state.get_smb = AsyncMock(return_value={})
     await coord.get_smb()
     assert coord.ds["system_info"]["smb_connections"] == 3
 
@@ -698,16 +415,52 @@ async def test_get_smb_keeps_previous_count_for_unexpected_shape() -> None:
 # ---------------------------
 #   get_updatecheck
 # ---------------------------
-async def test_get_updatecheck_malformed_response_resets_idle() -> None:
-    """A non-dict update-check response resets to no-update-available."""
+# The update.status parsing/malformed-response handling these tests used to
+# exercise directly now lives in and is tested by aiotruenas's own
+# TrueNASState.get_update(). get_updatecheck just merges the result into
+# ds["system_info"], so this only needs to lock in that plumbing.
+async def test_get_updatecheck_no_update_falls_back_to_running_version() -> None:
+    """No pending update: the resting "up-to-date" version is replaced with the running one."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "25.04.1"}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value="not-a-dict")
+    coord.state = MagicMock()
+    coord.state.get_update = AsyncMock(
+        return_value={
+            "update_available": False,
+            "update_state": "IDLE",
+            "update_version": "up-to-date",
+            "update_date": None,
+            "update_profile": None,
+            "update_train": None,
+            "update_filename": None,
+        }
+    )
     await coord.get_updatecheck()
     info = coord.ds["system_info"]
     assert info["update_available"] is False
     assert info["update_version"] == "25.04.1"
+
+
+async def test_get_updatecheck_pending_update_keeps_new_version() -> None:
+    """A pending update's own version is not overridden by the running version."""
+    coord = _bare_coordinator()
+    coord.ds = {"system_info": {"version": "25.04.1"}}
+    coord.state = MagicMock()
+    coord.state.get_update = AsyncMock(
+        return_value={
+            "update_available": True,
+            "update_state": "AVAILABLE",
+            "update_version": "25.10.0",
+            "update_date": None,
+            "update_profile": None,
+            "update_train": None,
+            "update_filename": None,
+        }
+    )
+    await coord.get_updatecheck()
+    info = coord.ds["system_info"]
+    assert info["update_available"] is True
+    assert info["update_version"] == "25.10.0"
 
 
 async def test_start_app_stats_stops_when_containers_not_monitored() -> None:
@@ -1156,48 +909,6 @@ async def test_stop_app_stats_default_clears_even_when_disconnected() -> None:
     assert coord._app_stats_event_name is None
 
 
-async def test_get_updatecheck_empty_response_resets_status() -> None:
-    """An empty update-check response resets the update status."""
-    coord = _bare_coordinator()
-    coord.ds = {"system_info": {"version": "25.04.1"}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value={})
-    await coord.get_updatecheck()
-    info = coord.ds["system_info"]
-    assert info["update_available"] is False
-    assert info["update_version"] == "25.04.1"
-
-
-async def test_get_updatecheck_new_version_available() -> None:
-    """An AVAILABLE update-check response populates the new-version fields."""
-    coord = _bare_coordinator()
-    coord.ds = {"system_info": {"version": "25.04.1"}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value={
-            "status": {
-                "state": "AVAILABLE",
-                "new_version": {
-                    "version": "25.10.0",
-                    "manifest": {
-                        "date": "2026-01-01",
-                        "profile": "stable",
-                        "train": "SCALE",
-                        "filename": "update.pkg",
-                    },
-                },
-            }
-        }
-    )
-    await coord.get_updatecheck()
-    info = coord.ds["system_info"]
-    assert info["update_available"] is True
-    assert info["update_version"] == "25.10.0"
-    assert info["update_state"] == "AVAILABLE"
-    assert info["update_date"] == "2026-01-01"
-    assert info["update_train"] == "SCALE"
-
-
 async def test_get_app_stats_unwraps_collection_update_envelope() -> None:
     """A collection_update-wrapped event's params.fields are still processed."""
     coord = _bare_coordinator()
@@ -1436,20 +1147,6 @@ async def test_start_app_stats_falls_back_on_invalid_poll_interval() -> None:
         == f'app.stats:{{"interval": {DEFAULT_POLL_INTERVAL}}}'
     )
     coord.api.subscribe_events.assert_awaited_once()
-
-
-async def test_get_updatecheck_no_new_version_resets_status() -> None:
-    """An IDLE state with no new_version resets update_available to False."""
-    coord = _bare_coordinator()
-    coord.ds = {"system_info": {"version": "25.04.1", "update_available": True}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value={"status": {"state": "IDLE", "new_version": None}}
-    )
-    await coord.get_updatecheck()
-    info = coord.ds["system_info"]
-    assert info["update_available"] is False
-    assert info["update_version"] == "25.04.1"
 
 
 # ---------------------------
@@ -2062,594 +1759,209 @@ async def test_get_systemstats_processes_returned_graphs() -> None:
 # ---------------------------
 #   get_service
 # ---------------------------
-async def test_get_service_derives_running_and_display_name() -> None:
-    """A service's running flag and display name are derived from raw fields."""
+# The running/display_name derivation this test used to exercise directly
+# now lives in and is tested by aiotruenas's own TrueNASState.get_service().
+# get_service just delegates and assigns the result, so this only needs to
+# lock in that plumbing.
+async def test_get_service_delegates_to_state() -> None:
+    """get_service assigns TrueNASState.get_service()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"service": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": 1,
-                "service": "cifs",
-                "name": "",
-                "enable": True,
-                "state": "RUNNING",
-            },
-            {
-                "id": 2,
-                "service": "ssh",
-                "name": "Custom SSH",
-                "enable": False,
-                "state": "STOPPED",
-            },
-        ]
+    coord.state = MagicMock()
+    coord.state.get_service = AsyncMock(
+        return_value={1: {"running": True, "display_name": "SMB"}}
     )
     await coord.get_service()
-    assert coord.ds["service"][1]["running"] is True
-    assert coord.ds["service"][1]["display_name"] == "SMB"
-    assert coord.ds["service"][2]["display_name"] == "Custom SSH"
+    assert coord.ds["service"]["1"]["running"] is True
+    assert coord.ds["service"]["1"]["display_name"] == "SMB"
 
 
 # ---------------------------
-#   get_pool / _add_boot_pool
+#   get_pool
 # ---------------------------
-async def test_get_pool_uses_dataset_mountpoint_match() -> None:
-    """A pool's capacity is taken from the dataset matching its mountpoint."""
+# The pool capacity/mountpoint-matching/boot-pool-merge/topology-error-
+# aggregation logic these tests used to exercise directly now lives in and is
+# tested by aiotruenas's own TrueNASState.get_pool(). get_pool just delegates
+# and assigns the result, so this only needs to lock in that plumbing.
+async def test_get_pool_delegates_to_state() -> None:
+    """get_pool assigns TrueNASState.get_pool()'s result, str-keyed."""
     coord = _bare_coordinator()
-    coord.ds = {
-        "pool": {},
-        "dataset": {"tank": {"mountpoint": "/mnt/tank", "available": 40, "used": 60}},
-    }
-    coord.api = MagicMock()
-    coord.api.connected = MagicMock(return_value=True)
-    coord.api.query = AsyncMock(
-        side_effect=[
-            [
-                {
-                    "guid": "g1",
-                    "name": "tank",
-                    "path": "/mnt/tank",
-                    "fragmentation": "12",
-                    "topology": {},
-                }
-            ],
-            None,  # boot.get_state
-        ]
+    coord.ds = {"pool": {}}
+    coord.state = MagicMock()
+    coord.state.get_pool = AsyncMock(
+        return_value={"g1": {"name": "tank", "available": 40, "total": 100}}
     )
     await coord.get_pool()
     assert coord.ds["pool"]["g1"]["available"] == 40
     assert coord.ds["pool"]["g1"]["total"] == 100
-    assert coord.ds["pool"]["g1"]["fragmentation"] == 12
-
-
-async def test_get_pool_falls_back_to_name_match_when_no_mountpoint() -> None:
-    """Without a mountpoint match, the pool falls back to matching by dataset id."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "pool": {},
-        # mountpoint "unknown" is excluded from the mountpoint lookup, forcing
-        # the fallback match by dataset id == pool name.
-        "dataset": {"tank": {"mountpoint": "unknown", "available": 40, "used": 60}},
-    }
-    coord.api = MagicMock()
-    coord.api.connected = MagicMock(return_value=True)
-    coord.api.query = AsyncMock(
-        side_effect=[
-            [
-                {
-                    "guid": "g1",
-                    "name": "tank",
-                    "path": "/mnt/tank",
-                    "fragmentation": "12",
-                    "topology": {},
-                }
-            ],
-            None,  # boot.get_state
-        ]
-    )
-    await coord.get_pool()
-    assert coord.ds["pool"]["g1"]["available"] == 40
-    assert coord.ds["pool"]["g1"]["total"] == 100
-
-
-async def test_get_pool_returns_early_when_disconnected() -> None:
-    """A disconnected API leaves the pool dict empty instead of raising."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {}, "dataset": {}}
-    coord.api = MagicMock()
-    coord.api.connected = MagicMock(return_value=False)
-    coord.api.query = AsyncMock(return_value=[])
-    await coord.get_pool()
-    assert coord.ds["pool"] == {}
-
-
-async def test_add_boot_pool_adds_when_present() -> None:
-    """A present boot pool is added to the pool dict."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value={"name": "boot-pool", "topology": {}, "fragmentation": "0"}
-    )
-    await coord._add_boot_pool()
-    assert "boot-pool" in coord.ds["pool"]
-
-
-async def test_add_boot_pool_noop_when_absent() -> None:
-    """A None boot-pool response leaves the pool dict empty."""
-    coord = _bare_coordinator()
-    coord.ds = {"pool": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    await coord._add_boot_pool()
-    assert coord.ds["pool"] == {}
 
 
 # ---------------------------
 #   get_dataset
 # ---------------------------
 async def test_get_dataset_empty_when_group_not_monitored() -> None:
-    """An unmonitored datasets group clears the dict without querying the API."""
+    """An unmonitored datasets group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_dataset = AsyncMock()
     await coord.get_dataset()
     assert coord.ds["dataset"] == {}
-    coord.api.query.assert_not_awaited()
+    coord.state.get_dataset.assert_not_awaited()
 
 
-async def test_get_dataset_returns_early_when_no_datasets_found() -> None:
+async def test_get_dataset_returns_empty_when_none_found() -> None:
     """An empty datasets response leaves the dataset dict empty."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_DATASETS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[])
+    coord.state = MagicMock()
+    coord.state.get_dataset = AsyncMock(return_value={})
     await coord.get_dataset()
     assert coord.ds["dataset"] == {}
 
 
 async def test_get_dataset_parses_when_monitored() -> None:
-    """A monitored datasets group parses the API response into the dataset dict."""
+    """A monitored datasets group assigns TrueNASState.get_dataset()'s result."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_DATASETS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"id": "tank", "type": "FILESYSTEM", "name": "tank"}]
+    coord.state = MagicMock()
+    coord.state.get_dataset = AsyncMock(
+        return_value={"tank": {"id": "tank", "type": "FILESYSTEM", "name": "tank"}}
     )
     await coord.get_dataset()
     assert "tank" in coord.ds["dataset"]
 
 
-async def test_update_disk_temperatures_applies_netdata_and_falls_back() -> None:
-    """Disks with netdata readings use them; disks without fall back to SMART."""
-    coord = _bare_coordinator()
-    coord.ds = {"disk": {"d1": {"temperature": 40}, "d2": {"temperature": None}}}
-    coord._disk_temps_from_netdata = AsyncMock(return_value={"sda": 40.0})
-    coord._build_disk_name_map = MagicMock(return_value={"sda": "d1"})
-    coord._apply_netdata_temps = MagicMock()
-    coord._fallback_disk_temperatures = AsyncMock()
-
-    await coord._update_disk_temperatures()
-
-    coord._build_disk_name_map.assert_called_once()
-    coord._apply_netdata_temps.assert_called_once_with({"sda": 40.0}, {"sda": "d1"})
-    coord._fallback_disk_temperatures.assert_awaited_once_with(["d2"], True)
-
-
-async def test_update_disk_temperatures_falls_back_for_all_without_netdata() -> None:
-    """With no netdata readings, every disk falls back to the SMART lookup."""
-    coord = _bare_coordinator()
-    coord.ds = {"disk": {"d1": {"temperature": 40}, "d2": {"temperature": None}}}
-    coord._disk_temps_from_netdata = AsyncMock(return_value=None)
-    coord._build_disk_name_map = MagicMock()
-    coord._apply_netdata_temps = MagicMock()
-    coord._fallback_disk_temperatures = AsyncMock()
-
-    await coord._update_disk_temperatures()
-
-    coord._build_disk_name_map.assert_not_called()
-    coord._apply_netdata_temps.assert_not_called()
-    coord._fallback_disk_temperatures.assert_awaited_once()
-    fallback_uids = coord._fallback_disk_temperatures.call_args.args[0]
-    assert set(fallback_uids) == {"d1", "d2"}
-    assert coord._fallback_disk_temperatures.call_args.args[1] is False
-
-
 # ---------------------------
-#   get_disk and disk-temperature helpers
+#   get_disk
 # ---------------------------
-async def test_get_disk_populates_and_updates_temperatures() -> None:
-    """get_disk populates the disk dict and triggers a temperature update."""
+# The disk.query normalization and netdata/API-fallback temperature-
+# enrichment logic these tests used to exercise directly now lives in and is
+# tested by aiotruenas's own TrueNASState.get_disk(). get_disk just
+# delegates and assigns the result, so this only needs to lock in that
+# plumbing.
+async def test_get_disk_delegates_to_state() -> None:
+    """get_disk assigns TrueNASState.get_disk()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"disk": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {"identifier": "disk1", "devname": "sda", "name": "sda", "type": "HDD"}
-        ]
+    coord.state = MagicMock()
+    coord.state.get_disk = AsyncMock(
+        return_value={"disk1": {"name": "sda", "temperature": 35.0}}
     )
-    coord._update_disk_temperatures = AsyncMock()
     await coord.get_disk()
-    assert "disk1" in coord.ds["disk"]
-    coord._update_disk_temperatures.assert_awaited_once()
-
-
-def test_build_disk_name_map_collects_all_keys() -> None:
-    """The disk name map indexes each disk by both identifier and devname."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"identifier": "disk1", "devname": "sda", "name": "sda"}}
-    }
-    disk_map = coord._build_disk_name_map()
-    assert disk_map == {"disk1": "d1", "sda": "d1"}
-
-
-def test_build_disk_name_map_logs_collision(caplog: pytest.LogCaptureFixture) -> None:
-    """Two disks sharing the same identifier log a collision warning."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {
-            "d1": {"identifier": "shared", "devname": "sda", "name": "sda"},
-            "d2": {"identifier": "shared", "devname": "sdb", "name": "sdb"},
-        }
-    }
-    with caplog.at_level("DEBUG"):
-        coord._build_disk_name_map()
-    assert "collision" in caplog.text
-
-
-def test_apply_netdata_temps_matches_by_disk_map() -> None:
-    """A netdata reading is applied to the disk resolved through the name map."""
-    coord = _bare_coordinator()
-    coord.ds = {"disk": {"d1": {"temperature": None}}}
-    coord._apply_netdata_temps({"sda": 42.345}, {"sda": "d1"})
-    # 42.345 isn't exactly representable as a float, so round() gives 42.34.
-    assert coord.ds["disk"]["d1"]["temperature"] == round(42.345, 2)
-
-
-async def test_fallback_disk_temperatures_maps_matched_disk() -> None:
-    """A SMART temperature keyed by devname is applied to the matching disk."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
-    }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value={"sda": 39.0})
-    await coord._fallback_disk_temperatures(["d1"], has_netdata=False)
-    assert coord.ds["disk"]["d1"]["temperature"] == 39.0
-
-
-async def test_fallback_disk_temperatures_warns_on_invalid_payload(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A None SMART temperature response logs a warning about the failed update."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
-    }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    with caplog.at_level("WARNING"):
-        await coord._fallback_disk_temperatures(["d1"], has_netdata=False)
-    assert "Failed to update disk temperatures" in caplog.text
-
-
-def test_map_single_disk_api_temp_sets_matched_value() -> None:
-    """A matching temperature entry is written to the disk's temperature field."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
-    }
-    coord._map_single_disk_api_temp("d1", {"sda": 41.5})
-    assert coord.ds["disk"]["d1"]["temperature"] == 41.5
-
-
-def test_map_single_disk_api_temp_logs_when_no_match(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """No matching temperature entry logs a debug message instead of raising."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
-    }
-    with caplog.at_level("DEBUG"):
-        coord._map_single_disk_api_temp("d1", {"other": 41.5})
-    assert "No matching temperature entry" in caplog.text
-
-
-def test_map_single_disk_api_temp_logs_invalid_value(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A non-numeric temperature value logs a debug message instead of raising."""
-    coord = _bare_coordinator()
-    coord.ds = {
-        "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
-    }
-    with caplog.at_level("DEBUG"):
-        coord._map_single_disk_api_temp("d1", {"sda": "not-a-number"})
-    assert "Invalid temperature value" in caplog.text
-
-
-async def test_disk_temps_from_netdata_returns_none_without_graph() -> None:
-    """No discoverable disk-temp graph name yields None."""
-    coord = _bare_coordinator()
-    coord._disk_temp_graph = None
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    coord._discover_disk_temp_graph = AsyncMock(return_value="")
-    assert await coord._disk_temps_from_netdata() is None
-
-
-async def test_disk_temps_from_netdata_returns_none_on_invalid_graph_data() -> None:
-    """A None graph-data response yields None."""
-    coord = _bare_coordinator()
-    coord._disk_temp_graph = "disk_temp"
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    assert await coord._disk_temps_from_netdata() is None
-
-
-async def test_disk_temps_from_netdata_collects_temps() -> None:
-    """Valid graph data yields a dict of per-disk temperatures."""
-    coord = _bare_coordinator()
-    coord._disk_temp_graph = "disk_temp"
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"identifier": "disk1", "aggregations": {"mean": {"a": 35.0}}}]
-    )
-    result = await coord._disk_temps_from_netdata()
-    assert result == {"disk1": 35.0}
-
-
-async def test_discover_disk_temp_graph_finds_matching_name() -> None:
-    """A graph whose title contains "Disk Temperature" is discovered by name."""
-    coord = _bare_coordinator()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"name": "disk_temp_sda", "title": "Disk Temperature"}]
-    )
-    result = await coord._discover_disk_temp_graph()
-    assert result == "disk_temp_sda"
-
-
-async def test_discover_disk_temp_graph_returns_empty_when_not_found() -> None:
-    """A None graphs response yields an empty string."""
-    coord = _bare_coordinator()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    assert await coord._discover_disk_temp_graph() == ""
-
-
-async def test_discover_disk_temp_graph_returns_empty_when_no_match() -> None:
-    """No graph title matching disk-temperature yields an empty string."""
-    coord = _bare_coordinator()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"name": "cpu_load", "title": "CPU Load"}]
-    )
-    assert await coord._discover_disk_temp_graph() == ""
-
-
-def test_collect_disk_temp_uses_median_of_valid_means() -> None:
-    """Out-of-range mean values are discarded before taking the median."""
-    coord = _bare_coordinator()
-    temps: dict[str, float] = {}
-    # 200.0 is outside the 0-100 sane bound and is discarded, leaving [30.0, 32.0]
-    # whose median (even count) is their average, 31.0.
-    coord._collect_disk_temp(
-        {
-            "identifier": "disk1",
-            "aggregations": {"mean": {"a": 30.0, "b": 200.0, "c": 32.0}},
-        },
-        temps,
-    )
-    assert temps == {"disk1": 31.0}
-
-
-def test_collect_disk_temp_ignores_entry_without_identifier() -> None:
-    """An entry without an identifier is skipped, leaving temps unchanged."""
-    coord = _bare_coordinator()
-    temps: dict[str, float] = {}
-    coord._collect_disk_temp({"aggregations": {"mean": {"a": 30.0}}}, temps)
-    assert temps == {}
+    assert coord.ds["disk"]["disk1"]["temperature"] == 35.0
 
 
 # ---------------------------
 #   get_vm
 # ---------------------------
+# The memory/running derivation these tests used to exercise directly now
+# lives in and is tested by aiotruenas's own TrueNASState.get_vm(). get_vm
+# just delegates and assigns the result, so this only needs to lock in that
+# plumbing.
 async def test_get_vm_empty_when_not_monitored() -> None:
-    """An unmonitored VMs group clears the dict without querying the API."""
+    """An unmonitored VMs group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_vm = AsyncMock()
     await coord.get_vm()
     assert coord.ds["vm"] == {}
+    coord.state.get_vm.assert_not_awaited()
 
 
-async def test_get_vm_computes_memory_and_running() -> None:
-    """A VM's memory is converted to GB and its running flag derived from status."""
+async def test_get_vm_delegates_to_state() -> None:
+    """get_vm assigns TrueNASState.get_vm()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_VMS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": 1,
-                "name": "vm1",
-                "vcpus": 2,
-                "memory": 2048,
-                "status": {"state": "RUNNING"},
-            }
-        ]
-    )
+    coord.state = MagicMock()
+    coord.state.get_vm = AsyncMock(return_value={1: {"memory": 2, "running": True}})
     await coord.get_vm()
-    assert coord.ds["vm"][1]["memory"] == 2
-    assert coord.ds["vm"][1]["running"] is True
-
-
-async def test_get_vm_handles_null_memory() -> None:
-    """A None memory value normalizes to zero instead of raising."""
-    coord = _bare_coordinator()
-    coord.ds = {"vm": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_VMS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": 1,
-                "name": "vm1",
-                "vcpus": 2,
-                "memory": None,
-                "status": {"state": "STOPPED"},
-            }
-        ]
-    )
-    await coord.get_vm()
-    assert coord.ds["vm"][1]["memory"] == 0
+    assert coord.ds["vm"]["1"]["memory"] == 2
+    assert coord.ds["vm"]["1"]["running"] is True
 
 
 # ---------------------------
 #   get_container
 # ---------------------------
-async def test_get_container_filters_container_type_and_computes_fields() -> None:
-    """Only CONTAINER-type entries are kept, with cpu/memory/running/ip derived."""
-    coord = _bare_coordinator()
-    coord.ds = {"container": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CONTAINERS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": "c1",
-                "name": "app1",
-                "type": "CONTAINER",
-                "cpu": "1",
-                "memory": 1048576,
-                "status": "RUNNING",
-                "aliases": [{"type": "INET", "address": "10.0.0.5"}],
-            },
-            {"id": "v1", "name": "legacyvm", "type": "VM"},
-        ]
-    )
-    await coord.get_container()
-    assert "c1" in coord.ds["container"]
-    assert "v1" not in coord.ds["container"]
-    assert coord.ds["container"]["c1"]["cpu"] == 1
-    assert coord.ds["container"]["c1"]["memory"] == 1
-    assert coord.ds["container"]["c1"]["running"] is True
-    assert coord.ds["container"]["c1"]["ip_address"] == "10.0.0.5"
-
-
-async def test_get_container_normalizes_non_numeric_memory() -> None:
-    """A None memory value normalizes to zero instead of raising."""
-    coord = _bare_coordinator()
-    coord.ds = {"container": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CONTAINERS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"id": "c1", "name": "app1", "type": "CONTAINER", "memory": None}]
-    )
-    await coord.get_container()
-    assert coord.ds["container"]["c1"]["memory"] == 0
-
-
+# The CONTAINER-type filtering and cpu/memory/running/ip_address derivation
+# these tests used to exercise directly now lives in and is tested by
+# aiotruenas's own TrueNASState.get_container() (which also dispatches
+# between the legacy virt.instance.query and TrueNAS-26.0+ container.query
+# based on its own version detection). get_container just delegates and
+# assigns the result, so this only needs to lock in that plumbing.
 async def test_get_container_empty_when_not_monitored() -> None:
-    """An unmonitored containers group clears the dict without querying the API."""
+    """An unmonitored containers group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"container": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_container = AsyncMock()
     await coord.get_container()
     assert coord.ds["container"] == {}
+    coord.state.get_container.assert_not_awaited()
 
 
-async def test_get_container_logs_when_query_returns_non_list(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A non-list query response logs a debug message and leaves the dict empty."""
+async def test_get_container_delegates_to_state() -> None:
+    """get_container assigns TrueNASState.get_container()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"container": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CONTAINERS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    with caplog.at_level("DEBUG"):
-        await coord.get_container()
-    assert coord.ds["container"] == {}
+    coord.state = MagicMock()
+    coord.state.get_container = AsyncMock(
+        return_value={"c1": {"cpu": 1, "memory": 1, "running": True}}
+    )
+    await coord.get_container()
+    assert coord.ds["container"]["c1"]["cpu"] == 1
+    assert coord.ds["container"]["c1"]["running"] is True
 
 
 # ---------------------------
 #   get_directoryservices
 # ---------------------------
+# The config+status merge and healthy derivation these tests used to
+# exercise directly now lives in and is tested by aiotruenas's own
+# TrueNASState.get_directoryservices(). get_directoryservices just delegates
+# and assigns the result, so this only needs to lock in that plumbing.
 async def test_get_directoryservices_empty_when_not_monitored() -> None:
     """An unmonitored directory-services group clears the dict without querying."""
     coord = _bare_coordinator()
     coord.ds = {"directoryservices": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_directoryservices = AsyncMock()
     await coord.get_directoryservices()
     assert coord.ds["directoryservices"] == {}
+    coord.state.get_directoryservices.assert_not_awaited()
 
 
-async def test_get_directoryservices_empty_when_not_configured() -> None:
-    """A missing service_type leaves the directoryservices dict empty."""
+async def test_get_directoryservices_delegates_to_state() -> None:
+    """get_directoryservices assigns TrueNASState.get_directoryservices()'s result."""
     coord = _bare_coordinator()
     coord.ds = {"directoryservices": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {
         CONF_MONITORED_GROUPS: [MONITOR_GROUP_DIRECTORY_SERVICES]
     }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value={"service_type": None})
-    await coord.get_directoryservices()
-    assert coord.ds["directoryservices"] == {}
-
-
-async def test_get_directoryservices_populates_when_enabled() -> None:
-    """A configured directory service's health status is populated."""
-    coord = _bare_coordinator()
-    coord.ds = {"directoryservices": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {
-        CONF_MONITORED_GROUPS: [MONITOR_GROUP_DIRECTORY_SERVICES]
-    }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        side_effect=[
-            {
-                "id": 1,
-                "service_type": "ACTIVEDIRECTORY",
-                "enable": True,
-                "enable_account_cache": True,
-                "enable_dns_updates": True,
-                "kerberos_realm": "REALM",
-                "configuration": {"domain": "example.com", "site": "default"},
-            },
-            {"status": "HEALTHY", "status_msg": None},
-        ]
+    coord.state = MagicMock()
+    coord.state.get_directoryservices = AsyncMock(
+        return_value={1: {"status": "HEALTHY", "healthy": True}}
     )
     await coord.get_directoryservices()
-    assert coord.ds["directoryservices"][1]["healthy"] is True
+    assert coord.ds["directoryservices"]["1"]["healthy"] is True
 
 
 # ---------------------------
@@ -2688,313 +2000,224 @@ async def test_get_certificates_none_expiry_when_until_missing() -> None:
 # ---------------------------
 #   get_arc
 # ---------------------------
-async def test_get_arc_stores_none_for_missing_graph() -> None:
-    """A None graph response leaves data_hit_percent as None."""
+# The netdata-graph querying/mean-value computation these tests used to
+# exercise directly now lives in and is tested by aiotruenas's own
+# TrueNASState.get_arc(). get_arc just delegates and assigns the result, so
+# this only needs to lock in that plumbing.
+async def test_get_arc_delegates_to_state() -> None:
+    """get_arc assigns TrueNASState.get_arc()'s result verbatim."""
     coord = _bare_coordinator()
     coord.ds = {}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    await coord.get_arc()
-    assert coord.ds["arc"]["data_hit_percent"] is None
-
-
-async def test_get_arc_computes_value_for_present_graph() -> None:
-    """A present graph's mean value is stored as data_hit_percent."""
-    coord = _bare_coordinator()
-    coord.ds = {}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"aggregations": {"mean": {"a": 90.0}}}])
+    coord.state = MagicMock()
+    coord.state.get_arc = AsyncMock(
+        return_value={
+            "data_hit_percent": 90.0,
+            "metadata_hit_percent": None,
+            "l2_hit_percent": None,
+        }
+    )
     await coord.get_arc()
     assert coord.ds["arc"]["data_hit_percent"] == 90.0
 
 
 # ---------------------------
-#   get_ups / _discover_ups_graphs
+#   get_ups
 # ---------------------------
+# The netdata UPS-graph discovery/caching and per-metric value computation
+# these tests used to exercise directly now lives in and is tested by
+# aiotruenas's own TrueNASState.get_ups(). get_ups just delegates and
+# assigns the result, so this only needs to lock in that plumbing.
 async def test_get_ups_empty_when_not_monitored() -> None:
-    """An unmonitored UPS group clears the dict."""
+    """An unmonitored UPS group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {"stale": 1}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord._ups_graphs = None
+    coord.state = MagicMock()
+    coord.state.get_ups = AsyncMock()
     await coord.get_ups()
     assert coord.ds["ups"] == {}
+    coord.state.get_ups.assert_not_awaited()
 
 
-async def test_get_ups_returns_when_discovery_fails() -> None:
-    """A failed graph-discovery query leaves _ups_graphs as None."""
+async def test_get_ups_delegates_to_state() -> None:
+    """get_ups assigns TrueNASState.get_ups()'s result verbatim."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_UPS]}
-    coord._ups_graphs = None
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    await coord.get_ups()
-    assert coord._ups_graphs is None
-
-
-async def test_get_ups_returns_when_no_graphs_discovered() -> None:
-    """An empty set of previously discovered graphs skips the graph-data query."""
-    coord = _bare_coordinator()
-    coord.ds = {"ups": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_UPS]}
-    coord._ups_graphs = set()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
-    await coord.get_ups()
-    coord.api.query.assert_not_awaited()
-
-
-async def test_get_ups_assigns_discovered_graphs_when_previously_none() -> None:
-    """Freshly discovered UPS graphs are cached and used to populate ups data."""
-    coord = _bare_coordinator()
-    coord.ds = {"ups": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_UPS]}
-    coord._ups_graphs = None
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        side_effect=[
-            [{"name": "upscharge"}],  # discovery call
-            [{"aggregations": {"mean": {"a": 80.0}}}],  # graph data call
-        ]
-    )
-    await coord.get_ups()
-    assert coord._ups_graphs == {"upscharge"}
-    assert coord.ds["ups"]["battery_charge"] == 80.0
-
-
-async def test_get_ups_populates_known_graphs() -> None:
-    """Previously discovered UPS graphs are used directly to populate ups data."""
-    coord = _bare_coordinator()
-    coord.ds = {"ups": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_UPS]}
-    coord._ups_graphs = {"upscharge"}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"aggregations": {"mean": {"a": 80.0}}}])
+    coord.state = MagicMock()
+    coord.state.get_ups = AsyncMock(return_value={"battery_charge": 80.0})
     await coord.get_ups()
     assert coord.ds["ups"]["battery_charge"] == 80.0
-
-
-async def test_discover_ups_graphs_returns_none_for_invalid_response() -> None:
-    """A None graphs response yields None instead of an empty set."""
-    coord = _bare_coordinator()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=None)
-    assert await coord._discover_ups_graphs() is None
-
-
-async def test_discover_ups_graphs_filters_known_names() -> None:
-    """Only recognized UPS graph names are kept from the discovery response."""
-    coord = _bare_coordinator()
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"name": "upscharge"}, {"name": "unrelated_graph"}]
-    )
-    result = await coord._discover_ups_graphs()
-    assert result == {"upscharge"}
 
 
 # ---------------------------
 #   get_cloudsync / get_replication / get_rsync / get_snapshottask / get_scrub
 # ---------------------------
+# The response normalization (incl. replication's job.state fallback) these
+# tests used to exercise directly now lives in and is tested by aiotruenas's
+# own TrueNASState.get_cloudsync()/get_replication()/get_rsync()/
+# get_snapshottask()/get_scrub(). Each get_* method just delegates and
+# assigns the (str-keyed) result, so these only need to lock in that
+# plumbing.
 async def test_get_cloudsync_empty_when_not_monitored() -> None:
-    """An unmonitored cloudsync group clears the dict without querying the API."""
+    """An unmonitored cloudsync group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"cloudsync": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_cloudsync = AsyncMock()
     await coord.get_cloudsync()
     assert coord.ds["cloudsync"] == {}
+    coord.state.get_cloudsync.assert_not_awaited()
 
 
-async def test_get_cloudsync_parses_when_monitored() -> None:
-    """A monitored cloudsync group parses the API response into the dict."""
+async def test_get_cloudsync_delegates_to_state() -> None:
+    """get_cloudsync assigns TrueNASState.get_cloudsync()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"cloudsync": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CLOUDSYNC]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"id": "cs1", "description": "backup"}])
+    coord.state = MagicMock()
+    coord.state.get_cloudsync = AsyncMock(
+        return_value={"cs1": {"id": "cs1", "description": "backup"}}
+    )
     await coord.get_cloudsync()
     assert "cs1" in coord.ds["cloudsync"]
 
 
-async def test_get_replication_falls_back_to_job_state() -> None:
-    """The nested job.state is flattened onto the entry's own "state" field."""
-    coord = _bare_coordinator()
-    coord.ds = {"replication": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_REPLICATION]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"id": 1, "name": "repl1", "job": {"state": "RUNNING"}}]
-    )
-    await coord.get_replication()
-    assert coord.ds["replication"][1]["state"] == "RUNNING"
-    assert "job_state" not in coord.ds["replication"][1]
-
-
 async def test_get_replication_empty_when_not_monitored() -> None:
-    """An unmonitored replication group clears the dict without querying the API."""
+    """An unmonitored replication group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"replication": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_replication = AsyncMock()
     await coord.get_replication()
     assert coord.ds["replication"] == {}
+    coord.state.get_replication.assert_not_awaited()
+
+
+async def test_get_replication_delegates_to_state() -> None:
+    """get_replication assigns TrueNASState.get_replication()'s result, str-keyed."""
+    coord = _bare_coordinator()
+    coord.ds = {"replication": {}}
+    coord.config_entry = MagicMock()
+    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_REPLICATION]}
+    coord.state = MagicMock()
+    coord.state.get_replication = AsyncMock(
+        return_value={1: {"id": 1, "name": "repl1", "state": "RUNNING"}}
+    )
+    await coord.get_replication()
+    assert coord.ds["replication"]["1"]["state"] == "RUNNING"
 
 
 async def test_get_rsync_empty_when_not_monitored() -> None:
-    """An unmonitored rsync group clears the dict without querying the API."""
+    """An unmonitored rsync group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_rsync = AsyncMock()
     await coord.get_rsync()
     assert coord.ds["rsynctask"] == {}
+    coord.state.get_rsync.assert_not_awaited()
 
 
-async def test_get_rsync_parses_when_monitored() -> None:
-    """A monitored rsync group parses the API response into the dict."""
+async def test_get_rsync_delegates_to_state() -> None:
+    """get_rsync assigns TrueNASState.get_rsync()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_RSYNC]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"id": 1, "path": "/mnt/tank"}])
+    coord.state = MagicMock()
+    coord.state.get_rsync = AsyncMock(return_value={1: {"id": 1, "path": "/mnt/tank"}})
     await coord.get_rsync()
-    assert 1 in coord.ds["rsynctask"]
+    assert "1" in coord.ds["rsynctask"]
 
 
 async def test_get_snapshottask_empty_when_not_monitored() -> None:
-    """An unmonitored snapshots group clears the dict without querying the API."""
+    """An unmonitored snapshots group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"snapshottask": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_snapshottask = AsyncMock()
     await coord.get_snapshottask()
     assert coord.ds["snapshottask"] == {}
+    coord.state.get_snapshottask.assert_not_awaited()
 
 
-async def test_get_snapshottask_parses_when_monitored() -> None:
-    """A monitored snapshots group parses the entry's schedule into the dict."""
+async def test_get_snapshottask_delegates_to_state() -> None:
+    """get_snapshottask assigns TrueNASState.get_snapshottask()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"snapshottask": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_SNAPSHOTS]}
-    coord.api = MagicMock()
+    coord.state = MagicMock()
     schedule = {"minute": "0", "hour": "*", "dom": "*", "month": "*", "dow": "*"}
-    coord.api.query = AsyncMock(
-        return_value=[{"id": 1, "dataset": "tank/data", "schedule": schedule}]
+    coord.state.get_snapshottask = AsyncMock(
+        return_value={1: {"id": 1, "dataset": "tank/data", "schedule": schedule}}
     )
     await coord.get_snapshottask()
-    assert 1 in coord.ds["snapshottask"]
-    assert coord.ds["snapshottask"][1]["schedule"] == schedule
+    assert "1" in coord.ds["snapshottask"]
+    assert coord.ds["snapshottask"]["1"]["schedule"] == schedule
 
 
-async def test_get_snapshottask_defaults_schedule_when_missing() -> None:
-    """A missing schedule field defaults to an empty dict."""
-    coord = _bare_coordinator()
-    coord.ds = {"snapshottask": {}}
-    coord.config_entry = MagicMock()
-    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_SNAPSHOTS]}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"id": 1, "dataset": "tank/data"}])
-    await coord.get_snapshottask()
-    assert coord.ds["snapshottask"][1]["schedule"] == {}
-
-
-async def test_get_scrub_parses_response() -> None:
-    """A scrub query response is parsed into the scrub dict."""
+async def test_get_scrub_delegates_to_state() -> None:
+    """get_scrub assigns TrueNASState.get_scrub()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"scrub": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(return_value=[{"id": 1, "pool_name": "tank"}])
+    coord.state = MagicMock()
+    coord.state.get_scrub = AsyncMock(return_value={1: {"id": 1, "pool_name": "tank"}})
     await coord.get_scrub()
-    assert 1 in coord.ds["scrub"]
+    assert "1" in coord.ds["scrub"]
 
 
 # ---------------------------
 #   get_app / _clear_finished_app_updates
 # ---------------------------
-async def test_get_app_catalog_update_available() -> None:
-    """An app with a newer catalog version is flagged as having an update."""
+# The running/update_available derivation (catalog upgrade_available vs.
+# custom-app image_updates_available fallback) these tests used to exercise
+# directly now lives in and is tested by aiotruenas's own
+# TrueNASState.get_app(). get_app just delegates and assigns the result, so
+# this only needs to lock in that plumbing plus the update_jobid
+# carry-forward (see get_app's docstring: TrueNASState.get_app() never
+# carries this HA-only field, so it is preserved by hand across polls).
+async def test_get_app_delegates_to_state() -> None:
+    """get_app assigns TrueNASState.get_app()'s result, str-keyed."""
     coord = _bare_coordinator()
     coord.ds = {"app": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": "app1",
-                "name": "app1",
-                "state": "RUNNING",
-                "upgrade_available": True,
-                "custom_app": False,
-                "image_updates_available": False,
-            }
-        ]
+    coord.state = MagicMock()
+    coord.state.get_app = AsyncMock(
+        return_value={"app1": {"running": True, "update_available": True}}
     )
     coord._clear_finished_app_updates = AsyncMock()
     await coord.get_app()
     assert coord.ds["app"]["app1"]["running"] is True
     assert coord.ds["app"]["app1"]["update_available"] is True
+    assert coord.ds["app"]["app1"]["update_jobid"] == 0
 
 
-async def test_get_app_custom_app_falls_back_to_image_updates() -> None:
-    """A custom app's update_available comes from image_updates_available."""
+async def test_get_app_carries_forward_update_jobid() -> None:
+    """An in-progress upgrade job's update_jobid must survive across a poll.
+
+    TrueNASState.get_app() returns a freshly-built dict that never carries
+    this HA-specific field; losing it would strand app upgrade-job tracking
+    (_clear_finished_app_updates) forever on the next poll.
+    """
     coord = _bare_coordinator()
-    coord.ds = {"app": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": "app1",
-                "name": "app1",
-                "state": "STOPPED",
-                "upgrade_available": False,
-                "custom_app": True,
-                "image_updates_available": True,
-            }
-        ]
-    )
+    coord.ds = {"app": {"app1": {"update_jobid": 5}}}
+    coord.state = MagicMock()
+    coord.state.get_app = AsyncMock(return_value={"app1": {"running": True}})
     coord._clear_finished_app_updates = AsyncMock()
     await coord.get_app()
-    assert coord.ds["app"]["app1"]["update_available"] is True
-
-
-async def test_get_app_no_update_for_noncustom_without_upgrade() -> None:
-    """A non-custom app without upgrade_available ignores image_updates_available."""
-    coord = _bare_coordinator()
-    coord.ds = {"app": {}}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {
-                "id": "app1",
-                "name": "app1",
-                "state": "STOPPED",
-                "upgrade_available": False,
-                "custom_app": False,
-                "image_updates_available": True,
-            }
-        ]
-    )
-    coord._clear_finished_app_updates = AsyncMock()
-    await coord.get_app()
-    assert coord.ds["app"]["app1"]["update_available"] is False
+    assert coord.ds["app"]["app1"]["update_jobid"] == 5
 
 
 async def test_clear_finished_app_updates_resets_when_not_running() -> None:
@@ -3176,17 +2399,22 @@ def test_prune_stale_app_stats_removes_missing_entries() -> None:
 #   get_cronjob
 # ---------------------------
 async def test_get_cronjob_empty_when_not_monitored() -> None:
-    """An unmonitored cronjobs group clears the dict without querying the API."""
+    """An unmonitored cronjobs group clears the dict without querying the state layer."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock()
+    coord.state = MagicMock()
+    coord.state.get_cronjob = AsyncMock()
     await coord.get_cronjob()
     assert coord.ds["cronjob"] == {}
+    coord.state.get_cronjob.assert_not_awaited()
 
 
+# display_name derivation now lives in and is tested by aiotruenas's own
+# TrueNASState.get_cronjob(); the "skip disabled" filter below stays local
+# (an HA options-flow behavior), so these tests mock the delegated result
+# and lock in only the filtering plumbing.
 async def test_get_cronjob_skips_disabled_by_default_behavior() -> None:
     """With the skip-disabled behavior enabled, disabled cronjobs are excluded."""
     coord = _bare_coordinator()
@@ -3196,17 +2424,17 @@ async def test_get_cronjob_skips_disabled_by_default_behavior() -> None:
         CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS],
         CONF_BEHAVIORS: [BEHAVIOR_SKIP_DISABLED_CRONJOBS],
     }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[
-            {"id": 1, "enabled": True, "description": "Job A"},
-            {"id": 2, "enabled": False, "description": "Job B"},
-        ]
+    coord.state = MagicMock()
+    coord.state.get_cronjob = AsyncMock(
+        return_value={
+            1: {"enabled": True, "display_name": "Job A"},
+            2: {"enabled": False, "display_name": "Job B"},
+        }
     )
     await coord.get_cronjob()
-    assert 1 in coord.ds["cronjob"]
-    assert 2 not in coord.ds["cronjob"]
-    assert coord.ds["cronjob"][1]["display_name"] == "Job A"
+    assert "1" in coord.ds["cronjob"]
+    assert "2" not in coord.ds["cronjob"]
+    assert coord.ds["cronjob"]["1"]["display_name"] == "Job A"
 
 
 async def test_get_cronjob_keeps_disabled_when_behavior_off() -> None:
@@ -3218,12 +2446,12 @@ async def test_get_cronjob_keeps_disabled_when_behavior_off() -> None:
         CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS],
         CONF_BEHAVIORS: [],
     }
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"id": 2, "enabled": False, "description": "", "command": "ls"}]
+    coord.state = MagicMock()
+    coord.state.get_cronjob = AsyncMock(
+        return_value={2: {"enabled": False, "display_name": "ls"}}
     )
     await coord.get_cronjob()
-    assert coord.ds["cronjob"][2]["display_name"] == "ls"
+    assert coord.ds["cronjob"]["2"]["display_name"] == "ls"
 
 
 async def test_get_cronjob_falls_back_to_legacy_option_when_behaviors_absent() -> None:
@@ -3236,9 +2464,9 @@ async def test_get_cronjob_falls_back_to_legacy_option_when_behaviors_absent() -
         "cronjob_skip_disabled": False,
     }
     coord.config_entry.data = {}
-    coord.api = MagicMock()
-    coord.api.query = AsyncMock(
-        return_value=[{"id": 3, "enabled": False, "description": "", "command": ""}]
+    coord.state = MagicMock()
+    coord.state.get_cronjob = AsyncMock(
+        return_value={3: {"enabled": False, "display_name": "Cronjob 3"}}
     )
     await coord.get_cronjob()
-    assert coord.ds["cronjob"][3]["display_name"] == "Cronjob 3"
+    assert coord.ds["cronjob"]["3"]["display_name"] == "Cronjob 3"

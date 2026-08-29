@@ -44,6 +44,11 @@ def _fake_api(extra_responses: dict[str, Any] | None = None) -> SimpleNamespace:
     structural types aren't modelled here because production code (see
     ``apiparser.parse_api``) is deliberately defensive about API response
     shapes rather than trusting a fixed schema.
+
+    ``client`` mirrors the same responses via ``.call(method, params)``:
+    ``TrueNASState`` (constructed from ``self.api.client`` in the
+    coordinator's ``__init__``) calls the underlying client directly for the
+    endpoints it has taken over normalizing, bypassing ``TrueNASAPI.query()``.
     """
     responses = extra_responses or {}
 
@@ -52,6 +57,9 @@ def _fake_api(extra_responses: dict[str, Any] | None = None) -> SimpleNamespace:
             return responses[method]
         return {} if method == "system.info" else None
 
+    async def _client_call(method: str, params: object = None) -> Any:
+        return await _query(method, params)
+
     return SimpleNamespace(
         connected=MagicMock(return_value=True),
         connect=AsyncMock(return_value=True),
@@ -59,6 +67,7 @@ def _fake_api(extra_responses: dict[str, Any] | None = None) -> SimpleNamespace:
         query=AsyncMock(side_effect=_query),
         error="",
         scheme="ws",
+        client=SimpleNamespace(call=AsyncMock(side_effect=_client_call)),
     )
 
 

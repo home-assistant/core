@@ -369,6 +369,11 @@ class TrueNASAPI:
         return await self._client.is_subscribed(subscription_id)
 
     @property
+    def client(self) -> TrueNASClient:
+        """Return the underlying TrueNASClient, e.g. for aiotruenas.TrueNASState."""
+        return self._client
+
+    @property
     def error(self) -> str:
         """Return error."""
         return self._error

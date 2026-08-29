@@ -1,11 +1,13 @@
 """TrueNAS Controller."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Hashable
 from datetime import UTC, datetime, timedelta
 import logging
 import re
-from typing import Any, TypeGuard, override
+from typing import Any, override
+
+from aiotruenas import TrueNASState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
@@ -42,90 +44,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# TrueNAS reporting (netdata) API method names.
+# TrueNAS reporting (netdata) API method name used by get_systemstats().
 _NETDATA_GRAPH = "reporting.netdata_graph"
-_NETDATA_GRAPHS = "reporting.netdata_graphs"
-
-# Shared by pool.query and boot.get_state (same top-level shape).
-_POOL_VALS: list[ApiValueSpec] = [
-    {"name": "guid", "default": 0},
-    {"name": "id", "default": 0},
-    {"name": "name", "default": "unknown"},
-    {"name": "path", "default": "unknown"},
-    {"name": "status", "default": "unknown"},
-    {"name": "healthy", "type": "bool", "default": False},
-    {"name": "is_decrypted", "type": "bool", "default": False},
-    {"name": "size", "default": 0},
-    {"name": "allocated", "default": 0},
-    {"name": "free", "default": 0},
-    {"name": "fragmentation", "default": 0},
-    {
-        "name": "autotrim",
-        "source": "autotrim/parsed",
-        "type": "bool",
-        "default": False,
-    },
-    {
-        "name": "scan_function",
-        "source": "scan/function",
-        "default": "unknown",
-    },
-    {"name": "scrub_state", "source": "scan/state", "default": "unknown"},
-    {
-        "name": "scrub_start",
-        "source": "scan/start_time/$date",
-        "default": 0,
-        "convert": "utc_from_timestamp",
-    },
-    {
-        "name": "scrub_end",
-        "source": "scan/end_time/$date",
-        "default": 0,
-        "convert": "utc_from_timestamp",
-    },
-    {
-        "name": "scrub_secs_left",
-        "source": "scan/total_secs_left",
-        "default": 0,
-    },
-]
-_POOL_ENSURE_VALS: list[ApiValueSpec] = [
-    {"name": "available", "default": 0.0},
-    {"name": "total", "default": 0.0},
-    {"name": "usage", "default": 0.0},
-    {"name": "errors", "default": 0},
-    {"name": "read_errors", "default": 0},
-    {"name": "write_errors", "default": 0},
-    {"name": "checksum_errors", "default": 0},
-]
-
-# Job-progress fields shared by the cloudsync, replication and rsync queries.
-_JOB_PROGRESS_VALS: list[ApiValueSpec] = [
-    {
-        "name": "time_started",
-        "source": "job/time_started/$date",
-        "default": 0,
-        "convert": "utc_from_timestamp",
-    },
-    {
-        "name": "time_finished",
-        "source": "job/time_finished/$date",
-        "default": 0,
-        "convert": "utc_from_timestamp",
-    },
-    {"name": "job_percent", "source": "job/progress/percent", "default": 0},
-    {
-        "name": "job_description",
-        "source": "job/progress/description",
-        "default": "unknown",
-    },
-]
-
-# Replication overrides "state" with its own state/state field (see get_replication).
-_JOB_STATUS_VALS: list[ApiValueSpec] = [
-    {"name": "state", "source": "job/state", "default": "unknown"},
-    *_JOB_PROGRESS_VALS,
-]
 
 # Certificate expiry monitoring (certificate.query).
 _CERTIFICATE_VALS: list[ApiValueSpec] = [
@@ -160,117 +80,15 @@ def _stat_name_similar(a: str, b: str) -> bool:
     return abs(len(a_l) - len(b_l)) <= 2 and a_l[:3] == b_l[:3]
 
 
-def _median(values: list[float]) -> float:
-    """Return the median of a non-empty list of numbers."""
-    sorted_vals = sorted(values)
-    n = len(sorted_vals)
-    mid = n // 2
-    if n % 2 == 1:
-        return sorted_vals[mid]
-    return (sorted_vals[mid - 1] + sorted_vals[mid]) / 2
+def _as_str_keyed(data: dict[Hashable, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Convert a TrueNASState endpoint map's uid-typed keys to str for self.ds.
 
-
-def _as_int(value: Any) -> int:
-    """Return value as an int, or 0 if it is not an integer."""
-    return value if isinstance(value, int) else 0
-
-
-def _to_int(value: Any, default: int = 0) -> int:
-    """Parse value into an int (also from strings like "48"), else default."""
-    try:
-        return int(value)
-    except (TypeError, ValueError):  # fmt: skip
-        return default
-
-
-def _accumulate_vdev_errors(vdev: Any, totals: dict[str, int]) -> None:
-    """Recursively accumulate leaf-device error counts (skips parents to avoid double-counting)."""
-    if not isinstance(vdev, dict):
-        return
-
-    children = vdev.get("children")
-    if isinstance(children, list) and children:
-        for child in children:
-            _accumulate_vdev_errors(child, totals)
-        return
-
-    stats = vdev.get("stats")
-    if isinstance(stats, dict):
-        totals["read"] += _as_int(stats.get("read_errors"))
-        totals["write"] += _as_int(stats.get("write_errors"))
-        totals["checksum"] += _as_int(stats.get("checksum_errors"))
-
-
-def _aggregate_topology_errors(topology: Any) -> tuple[int, int, int]:
-    """Sum read/write/checksum errors across all leaf vdevs of a pool topology."""
-    totals = {"read": 0, "write": 0, "checksum": 0}
-    if not isinstance(topology, dict):
-        return 0, 0, 0
-
-    # Categories: data, log, cache, spare, special, dedup.
-    for category in topology.values():
-        if isinstance(category, list):
-            for vdev in category:
-                _accumulate_vdev_errors(vdev, totals)
-
-    return totals["read"], totals["write"], totals["checksum"]
-
-
-# Maps the netdata graph name (reporting.netdata_graphs) to the ds["arc"] field.
-_ARC_GRAPHS = {
-    "demanddatahitpercentage": "data_hit_percent",
-    "demandmetadatahitpercentage": "metadata_hit_percent",
-    "l2architpercentage": "l2_hit_percent",
-}
-
-# Maps the netdata graph name (reporting.netdata_graphs) to the ds["ups"] field.
-_UPS_GRAPHS = {
-    "upscharge": "battery_charge",
-    "upsruntime": "runtime_seconds",
-    "upsload": "load",
-    "upsvoltage": "voltage",
-    "upscurrent": "current",
-    "upsfrequency": "frequency",
-    "upstemperature": "temperature",
-}
-
-
-def _netdata_mean_value(graph_data: Any) -> float | None:
-    """Extract mean value from a netdata graph response, or None if malformed."""
-    if not isinstance(graph_data, list) or not graph_data:
-        return None
-
-    item = graph_data[0]
-    if not isinstance(item, dict):
-        return None
-
-    mean = item.get("aggregations", {}).get("mean", {})
-    if not isinstance(mean, dict):
-        return None
-
-    values = [v for v in mean.values() if isinstance(v, (int, float))]
-    return round(sum(values) / len(values), 2) if values else None
-
-
-def _arc_value(graph_data: Any) -> float | None:
-    """Return the mean value of a single-metric ARC netdata graph, if present."""
-    return _netdata_mean_value(graph_data)
-
-
-def _ups_value(graph_data: Any) -> float | None:
-    """Return the mean value of a single-metric UPS netdata graph, if present."""
-    return _netdata_mean_value(graph_data)
-
-
-def _first_ipv4(aliases: Any) -> str:
-    """Return the first IPv4 address from a virt instance alias list, else 'unknown'."""
-    if isinstance(aliases, list):
-        for alias in aliases:
-            if isinstance(alias, dict) and alias.get("type") == "INET":
-                addr = alias.get("address")
-                if isinstance(addr, str) and addr:
-                    return addr
-    return "unknown"
+    ``TrueNASState`` types object ids as ``Hashable`` (some uids, e.g. cronjob
+    ids, are ints at the API level); ``self.ds`` has always been str-keyed
+    end to end here, so convert at the boundary rather than widening self.ds's
+    declared type for every not-yet-migrated endpoint.
+    """
+    return {str(uid): values for uid, values in data.items()}
 
 
 # Typed alias: a TrueNAS config entry carries its coordinator as runtime_data.
@@ -352,11 +170,14 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry.data[CONF_API_KEY],
             config_entry.data[CONF_VERIFY_SSL],
         )
+        # Normalized TrueNAS domain state (aiotruenas.domain.state.TrueNASState),
+        # incrementally taking over the parse_api(...) normalization this
+        # coordinator used to do inline. Endpoints not yet migrated still
+        # compute their own self.ds[...] entries directly below.
+        self.state = TrueNASState(self.api.client)
 
         self._systemstats_errored: dict[str, datetime] = {}
         self._systemstats_error_cooldown = timedelta(minutes=10)
-        self._disk_temp_graph: str | None = None
-        self._ups_graphs: set[str] | None = None
         self.datasets_hass_device_id = None
         self.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
 
@@ -383,10 +204,19 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return group in monitored
 
     def set_optimistic_running(self, data_path: str, object_id: Any) -> None:
-        """Optimistically mark a task RUNNING in-memory; next poll re-syncs to TrueNAS."""
+        """Optimistically mark a task RUNNING in-memory; next poll re-syncs to TrueNAS.
+
+        ``object_id`` is looked up as a str: callers pass the object's raw
+        ``id`` field, which for migrated endpoints (e.g. rsynctask,
+        replication, snapshottask, scrub) is still int-typed at the API
+        level, while ``self.ds`` is str-keyed end to end (see
+        ``_as_str_keyed``) -- the original ``object_id`` is left untouched
+        for the middleware call in ``async_run_task``.
+        """
         group = self.ds.get(data_path)
-        if isinstance(group, dict) and isinstance(group.get(object_id), dict):
-            group[object_id]["state"] = "RUNNING"
+        uid = str(object_id)
+        if isinstance(group, dict) and isinstance(group.get(uid), dict):
+            group[uid]["state"] = "RUNNING"
             self.async_update_listeners()
         else:
             _LOGGER.debug(
@@ -705,73 +535,24 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             interface["link_up"] = interface.get("link_state") == LINK_STATE_UP
 
     async def get_updatecheck(self) -> None:
-        """Check for updates using the new 25.10/26.04 API structure."""
-        update_data = await self.api.query("update.status")
+        """Check for pending updates via the aiotruenas domain layer.
 
-        # Initialize default values to prevent invalid entity IDs
-        self.ds.setdefault("system_info", {})
-        self.ds["system_info"].setdefault("update_available", False)
-        self.ds["system_info"].setdefault("update_state", "IDLE")
-        if "update_version" not in self.ds["system_info"] or self.ds["system_info"][
-            "update_version"
-        ] in [None, "unknown", ""]:
-            self.ds["system_info"]["update_version"] = self.ds["system_info"].get(
-                "version", "up-to-date"
-            )
-
-        if not isinstance(update_data, dict):
-            _LOGGER.warning(
-                "TrueNAS update status returned malformed data: %s",
-                update_data,
-            )
-            self._reset_update_status(status="IDLE")
-            return
-
-        if not update_data:
-            self._reset_update_status()
-            return
-
-        status_obj = update_data.get("status")
-
-        if isinstance(status_obj, dict):
-            raw_status = status_obj.get("state") or status_obj.get("status")
-            if isinstance(raw_status, str):
-                self.ds["system_info"]["update_state"] = raw_status
-
-        new_version_obj = (
-            status_obj.get("new_version") if isinstance(status_obj, dict) else None
-        )
-
-        if isinstance(new_version_obj, dict) and new_version_obj.get("version"):
-            self._updatecheck_process_new_version(new_version_obj)
-        else:
-            self._reset_update_status()
-
-    def _updatecheck_process_new_version(self, new_version_obj: dict[str, Any]) -> None:
-        """Process new version data for updatecheck."""
-        self.ds["system_info"]["update_version"] = new_version_obj["version"]
-        self.ds["system_info"]["update_available"] = True
-
-        manifest = new_version_obj.get("manifest", {})
-        self.ds["system_info"]["update_date"] = manifest.get("date")
-        self.ds["system_info"]["update_profile"] = manifest.get("profile")
-        self.ds["system_info"]["update_train"] = manifest.get("train")
-        self.ds["system_info"]["update_filename"] = manifest.get("filename")
-
-        _LOGGER.debug("TrueNAS Update found: %s", new_version_obj["version"])
-
-    def _reset_update_status(self, status: str | None = None) -> None:
-        """Reset update status to idle/up-to-date."""
-        self.ds["system_info"]["update_available"] = False
-        if status is not None:
-            self.ds["system_info"]["update_state"] = status
-        self.ds["system_info"]["update_version"] = self.ds["system_info"].get(
-            "version", "up-to-date"
-        )
-        self.ds["system_info"]["update_date"] = None
-        self.ds["system_info"]["update_profile"] = None
-        self.ds["system_info"]["update_train"] = None
-        self.ds["system_info"]["update_filename"] = None
+        ``TrueNASState.get_update()`` returns a standalone flat map (its
+        "no update pending" resting state already matches this coordinator's
+        prior defaults: ``update_state="IDLE"``, ``update_version=
+        "up-to-date"``); merged into ``system_info`` here so the update
+        sensors' data paths are unchanged. Falls back to the current running
+        version, matching the previous local default, when no update is
+        pending and ``system_info`` already has one.
+        """
+        update = await self.state.get_update()
+        if update["update_version"] == "up-to-date" and self.ds["system_info"].get(
+            "version"
+        ):
+            update = {**update, "update_version": self.ds["system_info"]["version"]}
+        self.ds["system_info"].update(update)
+        if update["update_available"]:
+            _LOGGER.debug("TrueNAS Update found: %s", update["update_version"])
 
     async def get_systemstats(self) -> None:
         """Get system statistics."""
@@ -1020,649 +801,74 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 info[tmp_load] = 0.0
 
     async def get_service(self) -> None:
-        """Get service info from TrueNAS."""
-        service_names = {
-            "afp": "AFP",
-            "cifs": "SMB",
-            "dynamicdns": "Dynamic DNS",
-            "ftp": "FTP",
-            "iscsitarget": "iSCSI",
-            "lldp": "LLDP",
-            "nfs": "NFS",
-            "openvpn_client": "OpenVPN Client",
-            "openvpn_server": "OpenVPN Server",
-            "rsync": "Rsync",
-            "s3": "S3",
-            "snmp": "SNMP",
-            "ssh": "SSH",
-            "tftp": "TFTP",
-            "ups": "UPS",
-            "webdav": "WebDAV",
-        }
-
-        self.ds["service"] = parse_api(
-            data=self.ds["service"],
-            source=await self.api.query("service.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "service", "default": "unknown"},
-                {"name": "name", "default": ""},
-                {"name": "enable", "type": "bool", "default": False},
-                {"name": "state", "default": "unknown"},
-            ],
-            ensure_vals=[
-                {"name": "running", "type": "bool", "default": False},
-                {"name": "display_name", "default": "unknown"},
-            ],
-        )
-
-        for uid, vals in self.ds["service"].items():
-            self.ds["service"][uid]["running"] = vals["state"] == "RUNNING"
-            name = vals.get("name")
-            if not name or name == "unknown":
-                name = service_names.get(
-                    vals.get("service"), vals.get("service", "unknown")
-                )
-            self.ds["service"][uid]["display_name"] = name
+        """Query services via the aiotruenas domain layer."""
+        self.ds["service"] = _as_str_keyed(await self.state.get_service())
 
     async def get_pool(self) -> None:
-        """Get pools from TrueNAS."""
-        raw_pools = await self.api.query("pool.query")
-        self.ds["pool"] = parse_api(
-            data=self.ds["pool"],
-            source=raw_pools,
-            key="guid",
-            vals=_POOL_VALS,
-            ensure_vals=_POOL_ENSURE_VALS,
-        )
-        if not self.api.connected():
-            return
+        """Refresh pool state via the aiotruenas domain layer.
 
-        self._apply_pool_errors(raw_pools)
-        await self._add_boot_pool()
-
-        # Looked up by mountpoint (primary) or dataset id (fallback) to find
-        # each pool's root dataset for capacity derivation.
-        dataset_by_mountpoint: dict[str, dict[str, Any]] = {
-            dataset["mountpoint"]: dataset
-            for dataset in self.ds["dataset"].values()
-            if isinstance(dataset.get("mountpoint"), str)
-            and dataset["mountpoint"] not in ("", "unknown")
-        }
-
-        _LOGGER.debug(
-            "get_pool: processing %d pool(s); dataset mountpoints=%s",
-            len(self.ds["pool"]),
-            sorted(dataset_by_mountpoint),
-        )
-
-        for uid, vals in self.ds["pool"].items():
-            root_dataset = dataset_by_mountpoint.get(vals.get("path"))
-            match_source = "mountpoint"
-            if root_dataset is None:
-                root_dataset = self.ds["dataset"].get(vals.get("name"))
-                match_source = "name" if root_dataset is not None else "pool-fallback"
-
-            _LOGGER.debug(
-                "get_pool: pool=%s path=%s match=%s "
-                "dataset(available=%s, used=%s) pool(free=%s, size=%s, allocated=%s)",
-                vals.get("name"),
-                vals.get("path"),
-                match_source,
-                root_dataset.get("available") if root_dataset else None,
-                root_dataset.get("used") if root_dataset else None,
-                vals.get("free"),
-                vals.get("size"),
-                vals.get("allocated"),
-            )
-
-            self._apply_pool_capacity(uid, vals, root_dataset)
-
-            # pool.query reports fragmentation as a percentage string (e.g. "48").
-            self.ds["pool"][uid]["fragmentation"] = _to_int(vals.get("fragmentation"))
-
-    async def _add_boot_pool(self) -> None:
-        """Add the boot-pool to the pool data (not included in ``pool.query``)."""
-        raw_boot = await self.api.query("boot.get_state")
-        if not isinstance(raw_boot, dict) or not raw_boot:
-            return
-
-        # boot.get_state carries no guid/id; use the pool name as a stable key.
-        raw_boot.setdefault("guid", raw_boot.get("name", "boot-pool"))
-        raw_boot.setdefault("id", raw_boot.get("name", "boot-pool"))
-        self.ds["pool"] = parse_api(
-            data=self.ds["pool"],
-            source=raw_boot,
-            key="guid",
-            vals=_POOL_VALS,
-            ensure_vals=_POOL_ENSURE_VALS,
-            prune=False,
-        )
-        self._apply_pool_errors([raw_boot])
-
-    def _apply_pool_capacity(
-        self, uid: str, vals: dict[str, Any], root_dataset: dict[str, Any] | None
-    ) -> None:
-        """Set available/total/usage for a pool from its root dataset, if any.
-
-        Prefers the root dataset's figures (matches the TrueNAS UI, including
-        for raidz parity layouts); falls back to the pool's own free/size.
+        ``TrueNASState.get_pool()`` refreshes and derives pool capacity from
+        its own, internally-fetched dataset snapshot (including the
+        boot-pool merge and per-pool error aggregation this coordinator used
+        to do inline), so this no longer reads/writes ``self.ds["dataset"]``
+        -- that key remains exclusively owned by ``get_dataset()`` below,
+        which is gated by the "datasets" monitored group independently of
+        pool monitoring.
         """
-        if root_dataset:
-            available = root_dataset.get("available") or 0
-            used = root_dataset.get("used") or 0
-            total = available + used
-            self.ds["pool"][uid]["size"] = total
-            self.ds["pool"][uid]["allocated"] = used
-        else:
-            available = vals.get("free") or 0
-            total = vals.get("size") or (
-                (vals.get("allocated") or 0) + (vals.get("free") or 0)
-            )
-
-        self.ds["pool"][uid]["available"] = available
-        self.ds["pool"][uid]["total"] = total
-        self.ds["pool"][uid]["usage"] = (
-            round((total - available) / total * 100) if total > 0 else 0
-        )
-
-        _LOGGER.debug(
-            "get_pool: pool uid=%s -> available=%s total=%s usage=%s%%",
-            uid,
-            available,
-            total,
-            self.ds["pool"][uid]["usage"],
-        )
-
-    def _apply_pool_errors(self, raw_pools: Any) -> None:
-        """Aggregate read/write/checksum errors from each pool's topology."""
-        if not isinstance(raw_pools, list):
-            return
-
-        for raw_pool in raw_pools:
-            if not isinstance(raw_pool, dict):
-                continue
-            uid = raw_pool.get("guid")
-            if uid not in self.ds["pool"]:
-                continue
-
-            read, write, checksum = _aggregate_topology_errors(raw_pool.get("topology"))
-            pool = self.ds["pool"][uid]
-            pool["read_errors"] = read
-            pool["write_errors"] = write
-            pool["checksum_errors"] = checksum
-            pool["errors"] = read + write + checksum
-
-            if pool["errors"]:
-                _LOGGER.debug(
-                    "get_pool: pool=%s errors read=%s write=%s checksum=%s",
-                    raw_pool.get("name"),
-                    read,
-                    write,
-                    checksum,
-                )
+        self.ds["pool"] = _as_str_keyed(await self.state.get_pool())
 
     async def get_dataset(self) -> None:
-        """Get datasets from TrueNAS."""
+        """Query datasets via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_DATASETS):
             self.ds["dataset"] = {}
             return
-        self.ds["dataset"] = parse_api(
-            data={},
-            source=await self.api.query("pool.dataset.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": "unknown"},
-                {"name": "type", "default": "unknown"},
-                {"name": "name", "default": "unknown"},
-                {"name": "pool", "default": "unknown"},
-                {"name": "mountpoint", "default": "unknown"},
-                {"name": "comments", "source": "comments/parsed", "default": ""},
-                {
-                    "name": "deduplication",
-                    "source": "deduplication/parsed",
-                    "type": "bool",
-                    "default": False,
-                },
-                {
-                    "name": "atime",
-                    "source": "atime/parsed",
-                    "type": "bool",
-                    "default": False,
-                },
-                {
-                    "name": "casesensitivity",
-                    "source": "casesensitivity/parsed",
-                    "default": "unknown",
-                },
-                {"name": "checksum", "source": "checksum/parsed", "default": "unknown"},
-                {
-                    "name": "exec",
-                    "source": "exec/parsed",
-                    "type": "bool",
-                    "default": False,
-                },
-                {"name": "sync", "source": "sync/parsed", "default": "unknown"},
-                {
-                    "name": "compression",
-                    "source": "compression/parsed",
-                    "default": "unknown",
-                },
-                {
-                    "name": "compressratio",
-                    "source": "compressratio/parsed",
-                    "default": "unknown",
-                },
-                {"name": "quota", "source": "quota/parsed", "default": "unknown"},
-                {"name": "copies", "source": "copies/parsed", "default": 0},
-                {
-                    "name": "readonly",
-                    "source": "readonly/parsed",
-                    "type": "bool",
-                    "default": False,
-                },
-                {"name": "recordsize", "source": "recordsize/parsed", "default": 0},
-                {
-                    "name": "encryption_algorithm",
-                    "source": "encryption_algorithm/parsed",
-                    "default": "unknown",
-                },
-                {
-                    "name": "encryption_key_format",
-                    "source": "key_format/parsed",
-                    "default": "unknown",
-                },
-                {"name": "encrypted", "type": "bool", "default": False},
-                {"name": "locked", "type": "bool", "default": False},
-                {"name": "used", "source": "used/parsed", "default": 0},
-                {"name": "available", "source": "available/parsed", "default": 0},
-            ],
-        )
-
-        if len(self.ds["dataset"]) == 0:
-            return
+        self.ds["dataset"] = _as_str_keyed(await self.state.get_dataset())
 
     async def get_disk(self) -> None:
-        """Get disks from TrueNAS."""
-        self.ds["disk"] = parse_api(
-            data=self.ds["disk"],
-            source=await self.api.query("disk.query"),
-            key="identifier",
-            vals=[
-                {"name": "name", "default": "unknown"},
-                {"name": "devname", "default": "unknown"},
-                {"name": "serial", "default": "unknown"},
-                {"name": "size", "default": "unknown"},
-                {"name": "hddstandby", "default": "unknown"},
-                {"name": "hddstandby_force", "type": "bool", "default": False},
-                {"name": "advpowermgmt", "default": "unknown"},
-                {"name": "acousticlevel", "default": "unknown"},
-                {"name": "model", "default": "unknown"},
-                {"name": "rotationrate", "default": "unknown"},
-                {"name": "type", "default": "unknown"},
-                {"name": "zfs_guid", "default": "unknown"},
-                {"name": "identifier", "default": "unknown"},
-            ],
-            ensure_vals=[
-                {"name": "temperature", "default": None},
-            ],
-        )
+        """Get disks via the aiotruenas domain layer.
 
-        await self._update_disk_temperatures()
-
-    async def _update_disk_temperatures(self) -> None:
-        """Update disk temperatures from netdata and fallback to API."""
-        netdata_temps = await self._disk_temps_from_netdata()
-
-        if netdata_temps:
-            disk_map = self._build_disk_name_map()
-            self._apply_netdata_temps(netdata_temps, disk_map)
-
-        if fallback_disks := [
-            uid
-            for uid, vals in self.ds["disk"].items()
-            if vals.get("temperature") is None or netdata_temps is None
-        ]:
-            await self._fallback_disk_temperatures(fallback_disks, bool(netdata_temps))
-
-    def _build_disk_name_map(self) -> dict[str, str]:
-        """Build a mapping from disk name/identifier to uid."""
-        disk_map: dict[str, str] = {}
-        for uid, vals in self.ds["disk"].items():
-            for key in (
-                vals.get("identifier"),
-                vals.get("devname"),
-                vals.get("name"),
-            ):
-                if key:
-                    if key not in disk_map:
-                        disk_map[key] = uid
-                    elif disk_map[key] != uid:
-                        _LOGGER.debug(
-                            "Disk mapping collision: key '%s' resolves "
-                            "to both %s and %s",
-                            key,
-                            disk_map[key],
-                            uid,
-                        )
-        return disk_map
-
-    def _apply_netdata_temps(
-        self, netdata_temps: dict[str, float], disk_map: dict[str, str]
-    ) -> None:
-        """Apply netdata temperatures to the matching disks."""
-        for disk_name, temp in netdata_temps.items():
-            if disk_name in disk_map:
-                self.ds["disk"][disk_map[disk_name]]["temperature"] = round(temp, 2)
-
-    async def _fallback_disk_temperatures(
-        self, missing_disks: list[str], has_netdata: bool
-    ) -> None:
-        """Fetch fallback temperatures from API and map them to missing disks."""
-        # An empty list (not a dict) returns temperatures for all disks; a
-        # dict/empty mapping is rejected on TrueNAS 25.10+.
-        disk_names: list[str] = []
-        for uid in missing_disks:
-            name = self.ds["disk"].get(uid, {}).get("name")
-            if name and name != "unknown":
-                disk_names.append(name)
-
-        temps = await self.api.query(
-            "disk.temperatures",
-            params=[disk_names],
-        )
-
-        if self._is_valid_disk_temperature_payload(temps):
-            for uid in missing_disks:
-                self._map_single_disk_api_temp(uid, temps)
-        elif not has_netdata:
-            _LOGGER.warning(
-                "Failed to update disk temperatures from API 'disk.temperatures': %s",
-                temps,
-            )
-
-    def _is_valid_disk_temperature_payload(
-        self, temps: Any
-    ) -> TypeGuard[dict[str, Any]]:
-        """Validate the shape of the disk temperature API payload."""
-        return isinstance(temps, dict)
-
-    def _map_single_disk_api_temp(self, uid: str, temps: dict[str, Any]) -> None:
-        """Map a single disk's temperature from the API payload."""
-        vals = self.ds["disk"][uid]
-        candidate_keys: list[str] = []
-        for key in ("name", "devname", "identifier"):
-            value = vals.get(key)
-            if isinstance(value, str) and value:
-                candidate_keys.append(value)
-
-        matched_temp = next(
-            (temps[key] for key in candidate_keys if key in temps), None
-        )
-
-        if matched_temp is None:
-            _LOGGER.debug(
-                "No matching temperature entry in 'disk.temperatures' "
-                "for disk uid=%s (candidates: %s)",
-                uid,
-                candidate_keys,
-            )
-        elif isinstance(matched_temp, (int, float)):
-            self.ds["disk"][uid]["temperature"] = matched_temp
-        else:
-            _LOGGER.debug(
-                "Invalid temperature value %r for disk uid=%s",
-                matched_temp,
-                uid,
-            )
-
-    async def _disk_temps_from_netdata(self) -> dict[str, float] | None:
-        """Return disk temperatures from netdata graphs when available."""
-        if self._disk_temp_graph is None:
-            self._disk_temp_graph = await self._discover_disk_temp_graph()
-
-        if not self._disk_temp_graph:
-            return None
-
-        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
-        graph_query = {
-            "start": report_epoch - 90,
-            "end": report_epoch - 30,
-            "aggregate": True,
-        }
-        graph_data = await self.api.query(
-            _NETDATA_GRAPH,
-            params=[self._disk_temp_graph, graph_query],
-        )
-        if not isinstance(graph_data, list):
-            return None
-
-        temps: dict[str, float] = {}
-        for entry in graph_data:
-            self._collect_disk_temp(entry, temps)
-
-        return temps or None
-
-    async def _discover_disk_temp_graph(self) -> str:
-        """Find the netdata graph name that reports disk temperatures."""
-        graphs = await self.api.query(_NETDATA_GRAPHS)
-        if not isinstance(graphs, list):
-            return ""
-
-        for graph in graphs:
-            name = str(graph.get("name", ""))
-            title = str(graph.get("title", "")).lower()
-            vertical = str(graph.get("vertical_label", "")).lower()
-            if ("disk" in name or "disk" in title) and (
-                "temp" in name or "temp" in title or "celsius" in vertical
-            ):
-                return name
-
-        return ""
-
-    def _collect_disk_temp(
-        self, entry: dict[str, Any], temps: dict[str, float]
-    ) -> None:
-        """Extract a single disk's median temperature into temps."""
-        identifier = entry.get("identifier")
-        mean = entry.get("aggregations", {}).get("mean", {})
-        if not identifier or not isinstance(mean, dict) or not mean:
-            return
-
-        # Discard readings outside sane bounds; median reduces outlier impact.
-        if valid_means := [
-            v
-            for v in mean.values()
-            if isinstance(v, (int, float)) and 0.0 <= v <= 100.0
-        ]:
-            temps[str(identifier)] = _median(valid_means)
+        Includes netdata/API-fallback temperature enrichment.
+        """
+        self.ds["disk"] = _as_str_keyed(await self.state.get_disk())
 
     async def get_vm(self) -> None:
-        """Get VMs from TrueNAS."""
+        """Query VMs via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_VMS):
             self.ds["vm"] = {}
             return
-        self.ds["vm"] = parse_api(
-            data=self.ds["vm"],
-            source=await self.api.query("vm.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "name", "default": "unknown"},
-                {"name": "type", "default": "unknown"},
-                {"name": "cpu", "source": "vcpus", "default": 0},
-                {"name": "memory", "default": 0},
-                {"name": "autostart", "type": "bool", "default": False},
-                {"name": "image", "source": "description", "default": "unknown"},
-                {"name": "status", "source": "status/state", "default": "unknown"},
-            ],
-            ensure_vals=[
-                {"name": "running", "type": "bool", "default": False},
-            ],
-        )
-
-        for uid, vals in self.ds["vm"].items():
-            # Only null memory is substituted with 0 (avoids a TypeError on
-            # division); other invalid types should still surface.
-            memory = vals.get("memory")
-            if memory is None:
-                memory = 0
-            self.ds["vm"][uid]["memory"] = round(memory / 1024)
-            self.ds["vm"][uid]["running"] = vals["status"] == "RUNNING"
+        self.ds["vm"] = _as_str_keyed(await self.state.get_vm())
 
     async def get_container(self) -> None:
-        """Get virt CONTAINER instances (Incus) from TrueNAS; VM instances go via get_vm."""
+        """Get container instances via the aiotruenas domain layer.
+
+        ``TrueNASState.get_container()`` dispatches internally between
+        ``container.query`` (TrueNAS 26.0+) and ``virt.instance.query``
+        (legacy, filtered to CONTAINER-type instances -- VM-type instances
+        go via ``get_vm()``) based on its own version detection.
+        """
         if not self._is_group_monitored(MONITOR_GROUP_CONTAINERS):
             self.ds["container"] = {}
             return
-
-        instances = await self.api.query("virt.instance.query")
-        if isinstance(instances, list):
-            containers = [
-                inst
-                for inst in instances
-                if isinstance(inst, dict) and inst.get("type") == "CONTAINER"
-            ]
-        else:
-            _LOGGER.debug(
-                "virt.instance.query returned %s (expected list); no containers",
-                type(instances).__name__,
-            )
-            containers = []
-
-        self.ds["container"] = parse_api(
-            data=self.ds["container"],
-            source=containers,
-            key="id",
-            vals=[
-                {"name": "id", "default": "unknown"},
-                {"name": "name", "default": "unknown"},
-                {"name": "type", "default": "unknown"},
-                {"name": "cpu", "default": 0},
-                {"name": "memory", "default": 0},
-                {"name": "autostart", "type": "bool", "default": False},
-                {"name": "image", "source": "image/description", "default": "unknown"},
-                {"name": "status", "default": "unknown"},
-                {"name": "aliases", "default": []},
-            ],
-            ensure_vals=[
-                {"name": "running", "type": "bool", "default": False},
-                {"name": "ip_address", "default": "unknown"},
-            ],
-        )
-
-        for uid, vals in self.ds["container"].items():
-            # cpu is a possibly-null string (e.g. "1"); normalize to int.
-            self.ds["container"][uid]["cpu"] = _to_int(vals.get("cpu"))
-            # Container memory is reported in bytes and may be null; show MiB.
-            memory = vals.get("memory")
-            if not isinstance(memory, (int, float)):
-                memory = 0
-            self.ds["container"][uid]["memory"] = round(memory / 1048576)
-            self.ds["container"][uid]["running"] = vals.get("status") == "RUNNING"
-            self.ds["container"][uid]["ip_address"] = _first_ipv4(vals.get("aliases"))
+        self.ds["container"] = _as_str_keyed(await self.state.get_container())
 
     async def get_directoryservices(self) -> None:
-        """Get Directory Services (AD/LDAP/IPA) status; only surfaced when configured+enabled."""
+        """Get Directory Services (AD/LDAP/IPA) status via the domain layer.
+
+        Gating on whether the group is monitored stays here (an HA
+        options-flow concern); ``TrueNASState.get_directoryservices()``
+        always queries and normalizes, returning an empty map when no
+        directory service is configured/enabled.
+        """
         if not self._is_group_monitored(MONITOR_GROUP_DIRECTORY_SERVICES):
             self.ds["directoryservices"] = {}
             return
-
-        config = await self.api.query("directoryservices.config")
-        if (
-            not isinstance(config, dict)
-            or not config.get("service_type")
-            or not config.get("enable")
-        ):
-            self.ds["directoryservices"] = {}
-            return
-
-        status = await self.api.query("directoryservices.status")
-        status = status if isinstance(status, dict) else {}
-
-        # Merge config + status into one source row so parse_api can pull both.
-        merged = dict(config)
-        merged["status"] = status.get("status", "unknown")
-        merged["status_msg"] = status.get("status_msg")
-
-        self.ds["directoryservices"] = parse_api(
-            data=self.ds["directoryservices"],
-            source=[merged],
-            key="id",
-            vals=[
-                {"name": "id", "default": 1},
-                {"name": "type", "source": "service_type", "default": "unknown"},
-                {"name": "enable", "type": "bool", "default": False},
-                {
-                    "name": "account_cache",
-                    "source": "enable_account_cache",
-                    "type": "bool",
-                    "default": False,
-                },
-                {
-                    "name": "dns_updates",
-                    "source": "enable_dns_updates",
-                    "type": "bool",
-                    "default": False,
-                },
-                {"name": "kerberos_realm", "default": "unknown"},
-                {
-                    "name": "domain",
-                    "source": "configuration/domain",
-                    "default": "unknown",
-                },
-                {
-                    "name": "site",
-                    "source": "configuration/site",
-                    "default": "unknown",
-                },
-                {"name": "status", "default": "unknown"},
-                {"name": "status_msg", "default": None},
-            ],
-            ensure_vals=[
-                {"name": "healthy", "type": "bool", "default": False},
-            ],
+        self.ds["directoryservices"] = _as_str_keyed(
+            await self.state.get_directoryservices()
         )
 
-        for uid, vals in self.ds["directoryservices"].items():
-            self.ds["directoryservices"][uid]["healthy"] = (
-                vals.get("status") == "HEALTHY"
-            )
-
     async def get_alerts(self) -> None:
-        """Get alerts from TrueNAS."""
-        alerts = await self.api.query("alert.list")
-        if not isinstance(alerts, list):
-            _LOGGER.warning(
-                "Unexpected response from alert.list (expected list, got %s)",
-                type(alerts).__name__,
-            )
-            # Keep the last known alert state instead of reporting a false
-            # "no active alerts" on a permission/transport error.
-            return
-
-        active_alerts = [alert for alert in alerts if not alert.get("dismissed", False)]
-
-        disk_issues = False
-        for alert in active_alerts:
-            klass = str(alert.get("klass", "")).lower()
-            title = str(alert.get("title", "")).lower()
-            if "disk" in klass or "pool" in klass or "smart" in title:
-                disk_issues = True
-                break
-
-        self.ds["alerts"] = {
-            "count": len(active_alerts),
-            "messages": [
-                alert.get("formatted", "Unknown alert") for alert in active_alerts
-            ],
-            "critical": sum(a.get("level") == "CRITICAL" for a in active_alerts),
-            "warning": sum(a.get("level") == "WARNING" for a in active_alerts),
-            "info": sum(a.get("level") == "INFO" for a in active_alerts),
-            "disk_issues": disk_issues,
-            "uuids": [a.get("uuid") for a in active_alerts if a.get("uuid")],
-        }
+        """Query and aggregate alerts via the aiotruenas domain layer."""
+        self.ds["alerts"] = await self.state.get_alerts()
 
     async def get_certificates(self) -> None:
         """Get TrueNAS certificates, keyed by ``name`` since renewal changes ``id`` (#61)."""
@@ -1683,250 +889,78 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
     async def get_arc(self) -> None:
-        """Get ZFS ARC hit ratio from netdata graphs."""
-        self.ds["arc"] = {}
-        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
-        graph_query = {
-            "start": report_epoch - 300,
-            "end": report_epoch,
-            "aggregate": True,
-        }
-
-        for graph_name, field_name in _ARC_GRAPHS.items():
-            graph_data = await self.api.query(
-                _NETDATA_GRAPH,
-                params=[graph_name, graph_query],
-            )
-            if graph_data is None:
-                self.ds["arc"][field_name] = None
-                continue
-
-            value = _arc_value(graph_data)
-            self.ds["arc"][field_name] = value
+        """Get ZFS ARC hit ratio via the aiotruenas domain layer."""
+        self.ds["arc"] = await self.state.get_arc()
 
     async def get_smb(self) -> None:
-        """Get active SMB connections."""
-        smb_status = await self.api.query("smb.status")
+        """Get active SMB connections via the aiotruenas domain layer.
 
-        if isinstance(smb_status, list):
-            self.ds["system_info"]["smb_connections"] = len(smb_status)
-        elif isinstance(smb_status, dict) and "sessions" in smb_status:
-            self.ds["system_info"]["smb_connections"] = len(
-                smb_status.get("sessions", [])
-            )
-        # else: query failed/unexpected shape -- keep the last known count
-        # instead of reporting a false "0 connections".
+        ``TrueNASState.get_smb()`` returns a standalone ``{"connections": N}``
+        map; merged into ``system_info`` here so the ``smb_connections``
+        sensor's data path is unchanged.
+        """
+        smb = await self.state.get_smb()
+        if "connections" in smb:
+            self.ds["system_info"]["smb_connections"] = smb["connections"]
 
     async def get_ups(self) -> None:
-        """Get UPS readings from the netdata UPS graphs, if a UPS is present."""
+        """Get UPS readings via the aiotruenas domain layer, if a UPS is present."""
         if not self._is_group_monitored(MONITOR_GROUP_UPS):
             self.ds["ups"] = {}
             return
-        if self._ups_graphs is None:
-            discovered = await self._discover_ups_graphs()
-            if discovered is None:
-                return  # discovery failed; retry on the next update
-            self._ups_graphs = discovered
-
-        if not self._ups_graphs:
-            return
-
-        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
-        graph_query = {
-            "start": report_epoch - 90,
-            "end": report_epoch - 30,
-            "aggregate": True,
-        }
-
-        ups: dict[str, float] = {}
-        for graph_name, field in _UPS_GRAPHS.items():
-            if graph_name not in self._ups_graphs:
-                continue
-            graph_data = await self.api.query(
-                _NETDATA_GRAPH,
-                params=[graph_name, graph_query],
-            )
-            value = _ups_value(graph_data)
-            if value is not None:
-                ups[field] = value
-
-        self.ds["ups"] = ups
-
-    async def _discover_ups_graphs(self) -> set[str] | None:
-        """Return available UPS netdata graph names, or None if the fetch failed (retried later)."""
-        graphs = await self.api.query(_NETDATA_GRAPHS)
-        if not isinstance(graphs, list):
-            return None
-
-        return {
-            name
-            for graph in graphs
-            if (name := str(graph.get("name", ""))) in _UPS_GRAPHS
-        }
+        self.ds["ups"] = await self.state.get_ups()
 
     async def get_cloudsync(self) -> None:
-        """Get cloudsync from TrueNAS."""
+        """Query cloudsync tasks via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_CLOUDSYNC):
             self.ds["cloudsync"] = {}
             return
-        self.ds["cloudsync"] = parse_api(
-            data=self.ds["cloudsync"],
-            source=await self.api.query("cloudsync.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": "unknown"},
-                {"name": "description", "default": "unknown"},
-                {"name": "direction", "default": "unknown"},
-                {"name": "path", "default": "unknown"},
-                {"name": "enabled", "type": "bool", "default": False},
-                {"name": "transfer_mode", "default": "unknown"},
-                {"name": "snapshot", "type": "bool", "default": False},
-                *_JOB_STATUS_VALS,
-            ],
-        )
+        self.ds["cloudsync"] = _as_str_keyed(await self.state.get_cloudsync())
 
     async def get_replication(self) -> None:
-        """Get replication from TrueNAS."""
+        """Query replication tasks via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_REPLICATION):
             self.ds["replication"] = {}
             return
-        self.ds["replication"] = parse_api(
-            data=self.ds["replication"],
-            source=await self.api.query("replication.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "name", "default": "unknown"},
-                {"name": "source_datasets", "default": "unknown"},
-                {"name": "target_dataset", "default": "unknown"},
-                {"name": "recursive", "type": "bool", "default": False},
-                {"name": "enabled", "type": "bool", "default": False},
-                {"name": "direction", "default": "unknown"},
-                {"name": "transport", "default": "unknown"},
-                {"name": "auto", "type": "bool", "default": False},
-                {"name": "retention_policy", "default": "unknown"},
-                # WebUI-shown state; the last job is often null (#34).
-                {"name": "state", "source": "state/state", "default": "unknown"},
-                # Fallback only; dropped below once used.
-                {"name": "job_state", "source": "job/state", "default": "unknown"},
-                *_JOB_PROGRESS_VALS,
-            ],
-        )
-
-        for vals in self.ds["replication"].values():
-            if vals.get("state", "unknown") == "unknown":
-                vals["state"] = vals.get("job_state", "unknown")
-            vals.pop("job_state", None)
+        self.ds["replication"] = _as_str_keyed(await self.state.get_replication())
 
     async def get_rsync(self) -> None:
-        """Get rsync tasks from TrueNAS."""
+        """Query rsync tasks via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_RSYNC):
             self.ds["rsynctask"] = {}
             return
-        self.ds["rsynctask"] = parse_api(
-            data=self.ds["rsynctask"],
-            source=await self.api.query("rsynctask.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "path", "default": "unknown"},
-                {"name": "desc", "default": "unknown"},
-                {"name": "remotehost", "default": "unknown"},
-                {"name": "remotemodule", "default": "unknown"},
-                {"name": "direction", "default": "unknown"},
-                {"name": "mode", "default": "unknown"},
-                {"name": "enabled", "type": "bool", "default": False},
-                *_JOB_STATUS_VALS,
-            ],
-        )
+        self.ds["rsynctask"] = _as_str_keyed(await self.state.get_rsync())
 
     async def get_snapshottask(self) -> None:
-        """Get snapshot tasks from TrueNAS."""
+        """Get snapshot tasks via the aiotruenas domain layer."""
         if not self._is_group_monitored(MONITOR_GROUP_SNAPSHOTS):
             self.ds["snapshottask"] = {}
             return
-        self.ds["snapshottask"] = parse_api(
-            data=self.ds["snapshottask"],
-            source=await self.api.query("pool.snapshottask.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "dataset", "default": "unknown"},
-                {"name": "recursive", "type": "bool", "default": False},
-                {"name": "lifetime_value", "default": 0},
-                {"name": "lifetime_unit", "default": "unknown"},
-                {"name": "enabled", "type": "bool", "default": False},
-                {"name": "naming_schema", "default": "unknown"},
-                {"name": "allow_empty", "type": "bool", "default": False},
-                {"name": "vmware_sync", "type": "bool", "default": False},
-                {"name": "schedule", "default": {}},
-                {"name": "state", "source": "state/state", "default": "unknown"},
-                {
-                    "name": "datetime",
-                    "source": "state/datetime/$date",
-                    "default": 0,
-                    "convert": "utc_from_timestamp",
-                },
-            ],
-        )
+        self.ds["snapshottask"] = _as_str_keyed(await self.state.get_snapshottask())
 
     async def get_scrub(self) -> None:
-        """Get pool scrub tasks from TrueNAS."""
-        self.ds["scrub"] = parse_api(
-            data=self.ds["scrub"],
-            source=await self.api.query("pool.scrub.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": None},
-                {"name": "pool_name", "default": ""},
-                {"name": "enabled", "type": "bool", "default": False},
-            ],
-        )
+        """Get pool scrub tasks via the aiotruenas domain layer."""
+        self.ds["scrub"] = _as_str_keyed(await self.state.get_scrub())
+
+    _APP_UPDATE_JOB_FIELDS = ("update_jobid",)
+    _APP_UPDATE_JOB_DEFAULTS: dict[str, Any] = {"update_jobid": 0}
 
     async def get_app(self) -> None:
-        """Get Apps from TrueNAS."""
-        self.ds["app"] = parse_api(
-            data=self.ds["app"],
-            source=await self.api.query("app.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "name", "default": "unknown"},
-                {"name": "human_version", "default": "unknown"},
-                {"name": "version", "default": "unknown"},
-                {"name": "latest_version", "default": "unknown"},
-                {"name": "custom_app", "type": "bool", "default": False},
-                {
-                    "name": "update_available",
-                    "source": "upgrade_available",
-                    "type": "bool",
-                    "default": False,
-                },
-                {
-                    "name": "image_updates_available",
-                    "type": "bool",
-                    "default": False,
-                },
-                {
-                    "name": "portal",
-                    "source": "portals/Web UI",
-                    "default": "unknown",
-                },
-                {"name": "state", "default": "unknown"},
-            ],
-            ensure_vals=[
-                {"name": "running", "type": "bool", "default": False},
-            ],
-        )
+        """Query apps via the aiotruenas domain layer, then track update jobs.
 
-        for vals in self.ds["app"].values():
-            vals["running"] = vals["state"] == "RUNNING"
-            # image_updates_available only counts for custom apps; otherwise a
-            # chart-up-to-date catalog app could show a phantom update (#31).
-            vals["update_available"] = bool(vals.get("update_available")) or (
-                bool(vals.get("custom_app"))
-                and bool(vals.get("image_updates_available"))
-            )
+        Update-job tracking (``update_jobid``) is not part of the domain
+        layer's normalization -- ``TrueNASState`` returns its own
+        internally-cached dict on every call, which never carries this
+        field, so an in-progress job's tracking state is carried forward by
+        hand from the previous ``self.ds["app"]`` snapshot instead of being
+        lost (reset to "no job running") on every poll.
+        """
+        previous = self.ds["app"]
+        self.ds["app"] = _as_str_keyed(await self.state.get_app())
+        for uid, vals in self.ds["app"].items():
+            carried = previous.get(uid, {})
+            for field in self._APP_UPDATE_JOB_FIELDS:
+                vals[field] = carried.get(field, self._APP_UPDATE_JOB_DEFAULTS[field])
 
         await self._clear_finished_app_updates()
 
@@ -2190,28 +1224,16 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._app_stats_event_name = None
 
     async def get_cronjob(self) -> None:
-        """Get cronjobs from TrueNAS."""
+        """Get cronjobs via the aiotruenas domain layer.
+
+        ``TrueNASState.get_cronjob()`` already derives ``display_name``; the
+        "skip disabled" filter stays here since it is an HA options-flow
+        behavior, not TrueNAS normalization.
+        """
         if not self._is_group_monitored(MONITOR_GROUP_CRONJOBS):
             self.ds["cronjob"] = {}
             return
-        self.ds["cronjob"] = parse_api(
-            data=self.ds["cronjob"],
-            source=await self.api.query("cronjob.query"),
-            key="id",
-            vals=[
-                {"name": "id", "default": 0},
-                {"name": "enabled", "type": "bool", "default": False},
-                {"name": "command", "default": "unknown"},
-                {"name": "description", "default": ""},
-                {"name": "user", "default": "unknown"},
-                {"name": "schedule", "default": {}},
-                {"name": "stdout", "type": "bool", "default": False},
-                {"name": "stderr", "type": "bool", "default": False},
-            ],
-            ensure_vals=[
-                {"name": "display_name", "default": ""},
-            ],
-        )
+        cronjobs = _as_str_keyed(await self.state.get_cronjob())
 
         behaviors = self.config_entry.options.get(CONF_BEHAVIORS)
         if behaviors is not None:
@@ -2222,22 +1244,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.config_entry.data.get("cronjob_skip_disabled", True),
             )
 
-        # Rebuilt (not mutated in place) to drop disabled entries while iterating.
-        filtered_cronjobs: dict[str, Any] = {}
-        for uid, vals in self.ds["cronjob"].items():
-            if skip_disabled and not vals.get("enabled", True):
-                continue
-
-            description = (vals.get("description") or "").strip()
-            command = (vals.get("command") or "").strip()
-            if description:
-                display_name = description
-            elif command:
-                display_name = command
-            else:
-                display_name = f"Cronjob {uid}"
-
-            vals["display_name"] = display_name
-            filtered_cronjobs[uid] = vals
-
-        self.ds["cronjob"] = filtered_cronjobs
+        self.ds["cronjob"] = {
+            uid: vals
+            for uid, vals in cronjobs.items()
+            if not skip_disabled or vals.get("enabled", True)
+        }
