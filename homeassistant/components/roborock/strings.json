@@ -133,6 +133,9 @@
     "number": {
       "volume": {
         "name": "Volume"
+      },
+      "zeo_delay_start": {
+        "name": "Delay start"
       }
     },
     "select": {
