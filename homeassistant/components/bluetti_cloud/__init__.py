@@ -163,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     auth_token_refresh.start_token_check()
 
-    __LOGGER__.info("bluetti init ok")
+    __LOGGER__.info("bluetti_cloud init ok")
 
     return True
 

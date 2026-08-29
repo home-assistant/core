@@ -4,10 +4,10 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.coordinator import BluettiDeviceCoordinator
-from homeassistant.components.bluetti.models import BluettiDevice, BluettiState
-from homeassistant.components.bluetti.sensor import (
+from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.coordinator import BluettiDeviceCoordinator
+from homeassistant.components.bluetti_cloud.models import BluettiDevice, BluettiState
+from homeassistant.components.bluetti_cloud.sensor import (
     BluettiEnergySensor,
     BluettiEstimatedBatteryPowerSensor,
     BluettiSensor,

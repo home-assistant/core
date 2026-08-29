@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pybluetti import UnifyResponse, UserProduct
 import pytest
 
-from homeassistant.components.bluetti import BluettiRuntimeData, _async_update_listener
-from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti.const import (
+from homeassistant.components.bluetti_cloud import BluettiRuntimeData, _async_update_listener
+from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti_cloud.const import (
     ACCOUNT_UNIQUE_ID,
     DOMAIN,
     INTEGRATION_NAME,
 )
-from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
+from homeassistant.components.bluetti_cloud.models import BluettiData, BluettiDevice
 from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
@@ -39,7 +39,7 @@ async def test_web_socket_message_handler_schedules_coordinator_refresh(
     data.loop = asyncio.get_running_loop()
 
     with patch(
-        "homeassistant.components.bluetti.models.asyncio.run_coroutine_threadsafe"
+        "homeassistant.components.bluetti_cloud.models.asyncio.run_coroutine_threadsafe"
     ) as mock_run:
         data.web_socket_message_handler('{"data": {"deviceSn": "SN1"}}')
 
@@ -55,7 +55,7 @@ async def test_web_socket_message_handler_ignores_unknown_device(
     data.loop = asyncio.get_running_loop()
 
     with patch(
-        "homeassistant.components.bluetti.models.asyncio.run_coroutine_threadsafe"
+        "homeassistant.components.bluetti_cloud.models.asyncio.run_coroutine_threadsafe"
     ) as mock_run:
         data.web_socket_message_handler('{"data": {"deviceSn": "unknown"}}')
 
@@ -150,7 +150,7 @@ async def test_handle_unbind_full_cleanup(
     with (
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
         patch(
-            "homeassistant.components.bluetti.models.persistent_notification.async_create"
+            "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create"
         ) as mock_notify,
     ):
         await device._handle_unbind()
@@ -198,7 +198,7 @@ async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "tok"},
             "products": [
                 {"sn": "SN1", "name": "Old Name", "stateList": [], "online": "1"}
@@ -222,7 +222,7 @@ async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
     device._entry_id = entry.entry_id
 
     with patch(
-        "homeassistant.components.bluetti.models.persistent_notification.async_create"
+        "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create"
     ):
         await device._handle_unbind()
         await hass.async_block_till_done()
@@ -240,7 +240,7 @@ async def test_unbind_then_rebind_uses_fresh_metadata_not_stale_cache(
     flow.handler = DOMAIN
     flow.context = {"source": SOURCE_RECONFIGURE}
     flow._oauth_data = {
-        "auth_implementation": "bluetti",
+        "auth_implementation": "bluetti_cloud",
         "token": {"access_token": "tok2", "expires_at": 9999999999},
     }
     flow._products = [UserProduct(sn="SN1", name="New Name", stateList=[], online="1")]
@@ -477,7 +477,7 @@ async def test_handle_unbind_survives_notification_error(hass: HomeAssistant) ->
     with (
         patch.object(hass.config_entries, "async_reload", AsyncMock()),
         patch(
-            "homeassistant.components.bluetti.models.persistent_notification.async_create",
+            "homeassistant.components.bluetti_cloud.models.persistent_notification.async_create",
             side_effect=RuntimeError("boom"),
         ),
     ):

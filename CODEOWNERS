@@ -250,8 +250,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
 /tests/components/bluetooth_adapters/ @bdraco
-/homeassistant/components/bluetti/ @chpego
-/tests/components/bluetti/ @chpego
+/homeassistant/components/bluetti_cloud/ @chpego
+/tests/components/bluetti_cloud/ @chpego
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_alarm/ @mag1024 @sanjay900

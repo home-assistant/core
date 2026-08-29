@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybluetti import UserProduct
 
-from homeassistant.components.bluetti import _async_update_listener
-from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.oauth import (
+from homeassistant.components.bluetti_cloud import _async_update_listener
+from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.oauth import (
     ISSUE_ID_OAUTH_EXPIRED,
     AsyncConfigEntryAuth,
     AuthTokenRefresh,
@@ -36,7 +36,7 @@ def _refresher(
 def test_logger_property() -> None:
     """Logger property."""
     flow = OAuth2FlowHandler()
-    assert flow.logger.name == "homeassistant.components.bluetti.oauth"
+    assert flow.logger.name == "homeassistant.components.bluetti_cloud.oauth"
 
 
 async def test_async_oauth_create_entry_delegates_to_select_devices(
@@ -211,7 +211,7 @@ def test_send_expired_notification_creates_notification(
     refresher, _entry = _refresher(hass, {})
 
     with patch(
-        "homeassistant.components.bluetti.oauth.persistent_notification.async_create"
+        "homeassistant.components.bluetti_cloud.oauth.persistent_notification.async_create"
     ) as mock_create:
         refresher.send_expired_notification()
 
@@ -461,7 +461,7 @@ async def test_schedule_next_check_halves_remaining_time(hass: HomeAssistant) ->
     refresher = AuthTokenRefresh(hass, entry, session)
 
     with patch(
-        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+        "homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"
     ) as mock_track:
         refresher._schedule_next_check()
 
@@ -480,7 +480,7 @@ async def test_schedule_next_check_caps_at_one_day(hass: HomeAssistant) -> None:
     refresher = AuthTokenRefresh(hass, entry, session)
 
     with patch(
-        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+        "homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"
     ) as mock_track:
         refresher._schedule_next_check()
 
@@ -498,7 +498,7 @@ async def test_schedule_next_check_floors_at_five_minutes(hass: HomeAssistant) -
     refresher = AuthTokenRefresh(hass, entry, session)
 
     with patch(
-        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+        "homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"
     ) as mock_track:
         refresher._schedule_next_check()
 
@@ -518,7 +518,7 @@ async def test_schedule_next_check_does_nothing_without_expires_at(
     refresher = AuthTokenRefresh(hass, entry, session)
 
     with patch(
-        "homeassistant.components.bluetti.oauth.async_track_point_in_time"
+        "homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"
     ) as mock_track:
         refresher._schedule_next_check()
 
@@ -537,7 +537,7 @@ async def test_schedule_next_check_cancels_the_previous_one(
     previous_unsub = MagicMock()
     refresher._unsub_next_check = previous_unsub
 
-    with patch("homeassistant.components.bluetti.oauth.async_track_point_in_time"):
+    with patch("homeassistant.components.bluetti_cloud.oauth.async_track_point_in_time"):
         refresher._schedule_next_check()
 
     previous_unsub.assert_called_once()
@@ -581,15 +581,15 @@ async def test_select_devices_shows_form_with_available_devices(
     flow.hass = hass
     flow.context = {}
     flow._oauth_data = {
-        "auth_implementation": "bluetti",
+        "auth_implementation": "bluetti_cloud",
         "token": {"access_token": "tok", "expires_at": 9999999999},
     }
     product = UserProduct(sn="SN1", name="Device 1", stateList=[], online="1")
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from pybluetti import ApplicationRuntimeException, UnifyResponse
 import pytest
 
-from homeassistant.components.bluetti.models import (
+from homeassistant.components.bluetti_cloud.models import (
     BluettiData,
     BluettiDevice,
     BluettiState,

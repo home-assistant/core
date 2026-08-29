@@ -31,10 +31,10 @@
       },
       "select_devices": {
         "data": {
-          "devices": "[%key:component::bluetti::options::step::init::data::devices%]"
+          "devices": "[%key:component::bluetti_cloud::options::step::init::data::devices%]"
         },
         "data_description": {
-          "devices": "[%key:component::bluetti::options::step::init::data_description::devices%]"
+          "devices": "[%key:component::bluetti_cloud::options::step::init::data_description::devices%]"
         },
         "title": "Select BLUETTI devices"
       }
@@ -195,9 +195,9 @@
   },
   "options": {
     "abort": {
-      "all_devices_exists": "[%key:component::bluetti::config::abort::all_devices_exists%]",
+      "all_devices_exists": "[%key:component::bluetti_cloud::config::abort::all_devices_exists%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_devices_available": "[%key:component::bluetti::config::abort::no_devices_available%]"
+      "no_devices_available": "[%key:component::bluetti_cloud::config::abort::no_devices_available%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"

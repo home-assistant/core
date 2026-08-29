@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, patch
 from pybluetti import UnifyResponse, UserProduct
 import pytest
 
-from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti.const import (
+from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti_cloud.const import (
     ACCOUNT_UNIQUE_ID,
     DOMAIN,
     INTEGRATION_NAME,
@@ -27,7 +27,7 @@ def _make_flow(hass: HomeAssistant) -> BluettiConfigFlow:
     flow.handler = DOMAIN
     flow.context = {}
     flow._oauth_data = {
-        "auth_implementation": "bluetti",
+        "auth_implementation": "bluetti_cloud",
         "token": {"access_token": "tok", "expires_at": 9999999999},
     }
     return flow
@@ -241,7 +241,7 @@ async def test_merge_into_existing_entry_reloads_exactly_once(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "original-token"},
             "products": [
                 {"sn": "SN0", "name": "Existing", "stateList": [], "online": "1"}
@@ -335,7 +335,7 @@ async def test_second_account_via_fresh_flow_aborts_already_configured(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "original-token"},
             "products": [
                 {"sn": "SN0", "name": "Existing", "stateList": [], "online": "1"}
@@ -406,9 +406,9 @@ async def test_get_user_products_failure_aborts_cannot_connect(
     flow = _make_flow(hass)
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -433,9 +433,9 @@ async def test_get_user_products_failed_envelope_aborts_cannot_connect(
     flow = _make_flow(hass)
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -452,9 +452,9 @@ async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
     flow = _make_flow(hass)
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -481,9 +481,9 @@ async def test_all_devices_exists_aborts(hass: HomeAssistant) -> None:
     product = UserProduct(sn="SN1", name="Already Added", stateList=[], online="1")
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -508,7 +508,7 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "old"},
             "products": [],
         },
@@ -525,9 +525,9 @@ async def test_reconfigure_token_updates_existing_entry(hass: HomeAssistant) -> 
     product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
     ):
@@ -574,9 +574,9 @@ async def test_reconfigure_token_updates_auth_implementation_too(
     product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -607,7 +607,7 @@ async def test_reconfigure_token_rejects_a_different_account(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "original-token"},
             "products": [{"sn": "SN0", "name": "Existing", "stateList": []}],
         },
@@ -623,9 +623,9 @@ async def test_reconfigure_token_rejects_a_different_account(
     )
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
         patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload,
     ):
@@ -663,7 +663,7 @@ async def test_reconfigure_token_accepts_partial_device_overlap(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "old"},
             "products": [
                 {"sn": "SN0", "name": "Existing", "stateList": []},
@@ -682,9 +682,9 @@ async def test_reconfigure_token_accepts_partial_device_overlap(
     )
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -716,7 +716,7 @@ async def test_reconfigure_token_with_zero_devices_on_account_still_succeeds(
         unique_id=ACCOUNT_UNIQUE_ID,
         title=f"{INTEGRATION_NAME} Power Integration",
         data={
-            "auth_implementation": "bluetti",
+            "auth_implementation": "bluetti_cloud",
             "token": {"access_token": "old"},
             "products": [],
         },
@@ -728,9 +728,9 @@ async def test_reconfigure_token_with_zero_devices_on_account_still_succeeds(
     flow.context = {"entry_id": existing_entry.entry_id}
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -752,9 +752,9 @@ async def test_reconfigure_token_missing_entry_aborts(hass: HomeAssistant) -> No
     product = UserProduct(sn="SN1", name="Device", stateList=[], online="1")
 
     with (
-        patch("homeassistant.components.bluetti.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.config_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.config_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.config_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(

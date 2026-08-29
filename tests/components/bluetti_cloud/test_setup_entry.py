@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.bluetti import BluettiRuntimeData
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.models import BluettiData, BluettiDevice
-from homeassistant.components.bluetti.sensor import (
+from homeassistant.components.bluetti_cloud import BluettiRuntimeData
+from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.models import BluettiData, BluettiDevice
+from homeassistant.components.bluetti_cloud.sensor import (
     BluettiEnergySensor,
     BluettiEstimatedBatteryPowerSensor,
     BluettiSensor,

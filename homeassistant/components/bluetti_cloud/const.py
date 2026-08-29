@@ -1,6 +1,6 @@
 """Constants for the BLUETTI integration."""
 
-DOMAIN: str = "bluetti"
+DOMAIN: str = "bluetti_cloud"
 INTEGRATION_NAME: str = "BLUETTI"
 
 SSO_URL: str = "https://sso.bluettipower.com"

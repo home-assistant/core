@@ -1,10 +1,10 @@
 {
-  "domain": "bluetti",
-  "name": "BLUETTI",
+  "domain": "bluetti_cloud",
+  "name": "BLUETTI Cloud",
   "codeowners": ["@chpego"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://www.home-assistant.io/integrations/bluetti",
+  "documentation": "https://www.home-assistant.io/integrations/bluetti_cloud",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "silver",

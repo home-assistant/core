@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybluetti import UnifyResponse, UserProduct
 
-from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.options_flow import BluettiOptionsFlowHandler
+from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.options_flow import BluettiOptionsFlowHandler
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
@@ -28,11 +28,11 @@ def _patched_oauth():
     """Patch the options flow's OAuth2Session-backed token refresh."""
     with (
         patch(
-            "homeassistant.components.bluetti.options_flow.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.bluetti_cloud.options_flow.config_entry_oauth2_flow.async_get_config_entry_implementation",
             AsyncMock(return_value=MagicMock()),
         ),
         patch(
-            "homeassistant.components.bluetti.options_flow.config_entry_oauth2_flow.OAuth2Session"
+            "homeassistant.components.bluetti_cloud.options_flow.config_entry_oauth2_flow.OAuth2Session"
         ) as mock_session_cls,
     ):
         mock_session_cls.return_value.token = {"access_token": "tok"}
@@ -65,9 +65,9 @@ async def test_shows_form_with_available_devices(hass: HomeAssistant) -> None:
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -86,9 +86,9 @@ async def test_no_devices_available_aborts(hass: HomeAssistant) -> None:
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -108,9 +108,9 @@ async def test_all_devices_already_enabled_aborts(hass: HomeAssistant) -> None:
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -129,9 +129,9 @@ async def test_fetch_failure_aborts_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -157,9 +157,9 @@ async def test_get_user_products_failed_envelope_aborts_cannot_connect(
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
     ):
         mock_client_cls.return_value.get_user_products = AsyncMock(
@@ -304,9 +304,9 @@ async def test_add_devices_through_real_flow_manager_reloads_exactly_once(
 
     with (
         _patched_oauth(),
-        patch("homeassistant.components.bluetti.options_flow.async_get_clientsession"),
+        patch("homeassistant.components.bluetti_cloud.options_flow.async_get_clientsession"),
         patch(
-            "homeassistant.components.bluetti.options_flow.ProductClient"
+            "homeassistant.components.bluetti_cloud.options_flow.ProductClient"
         ) as mock_client_cls,
         patch.object(hass.config_entries, "async_reload", _fake_reload),
     ):

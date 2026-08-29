@@ -108,7 +108,7 @@ FLOWS = {
         "bluemaestro",
         "bluesound",
         "bluetooth",
-        "bluetti",
+        "bluetti_cloud",
         "bond",
         "bosch_alarm",
         "bosch_shc",

@@ -1,11 +1,11 @@
 """Tests for application_credentials.py."""
 
 from homeassistant.components import application_credentials
-from homeassistant.components.bluetti.application_credentials import (
+from homeassistant.components.bluetti_cloud.application_credentials import (
     async_ensure_default_credential,
     async_get_authorization_server,
 )
-from homeassistant.components.bluetti.const import DOMAIN, SSO_URL
+from homeassistant.components.bluetti_cloud.const import DOMAIN, SSO_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

@@ -1,4 +1,4 @@
-"""Copyright (C) 2025 BLUETTI Corporation."""
+"""Config flow for the BLUETTI Cloud integration."""
 
 from collections.abc import Mapping
 import logging

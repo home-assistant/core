@@ -37,7 +37,7 @@ class BluettiDeviceCoordinator(DataUpdateCoordinator[BluettiDevice]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"bluetti-{device.device_id}",
+            name=f"bluetti_cloud-{device.device_id}",
             update_interval=UPDATE_INTERVAL,
         )
         self.device = device

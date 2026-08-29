@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock
 from pybluetti import ApplicationRuntimeException
 import pytest
 
-from homeassistant.components.bluetti.const import DOMAIN
-from homeassistant.components.bluetti.coordinator import BluettiDeviceCoordinator
-from homeassistant.components.bluetti.models import BluettiDevice
+from homeassistant.components.bluetti_cloud.const import DOMAIN
+from homeassistant.components.bluetti_cloud.coordinator import BluettiDeviceCoordinator
+from homeassistant.components.bluetti_cloud.models import BluettiDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed

@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.bluetti import (
+from homeassistant.components.bluetti_cloud import (
     BluettiRuntimeData,
     _async_update_listener,
     async_remove_config_entry_device,
     async_remove_entry,
 )
-from homeassistant.components.bluetti.const import DOMAIN, WSS_URL
-from homeassistant.components.bluetti.models import BluettiDevice
+from homeassistant.components.bluetti_cloud.const import DOMAIN, WSS_URL
+from homeassistant.components.bluetti_cloud.models import BluettiDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -152,7 +152,7 @@ async def test_remove_config_entry_device_stops_polling_and_updates_options(
 async def test_remove_config_entry_device_rejects_non_bluetti_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Remove config entry device rejects non bluetti device."""
+    """Remove config entry device rejects a device from a different integration."""
     entry = MockConfigEntry(domain=DOMAIN, options={"devices": ["SN1"]})
     entry.add_to_hass(hass)
     entry.runtime_data = _runtime_data(MagicMock())
@@ -161,7 +161,7 @@ async def test_remove_config_entry_device_rejects_non_bluetti_device(
     other_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id,
-        identifiers={("other_domain", "not-bluetti")},
+        identifiers={("other_domain", "not-bluetti_cloud")},
         name="Unrelated device",
     )
 

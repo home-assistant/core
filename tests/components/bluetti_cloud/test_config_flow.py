@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.bluetti.config_flow import BluettiConfigFlow
+from homeassistant.components.bluetti_cloud.config_flow import BluettiConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
