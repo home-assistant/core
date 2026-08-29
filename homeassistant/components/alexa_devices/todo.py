@@ -126,6 +126,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             self._list.name,
         )
 
+        await self.coordinator.refresh_todo_list_items(self._list.id)
+
     @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the to-do list."""
@@ -152,6 +154,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 uid,
                 existing_item.version,
             )
+
+        await self.coordinator.refresh_todo_list_items(self._list.id)
 
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
@@ -188,7 +192,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 item.status,
             )
 
-        if existing_item.name != item.summary:
+        if has_renamed := (existing_item.name != item.summary):
             # Name has changed, update it
             LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
 
@@ -202,3 +206,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             LOGGER.debug(
                 "Successfully updated item %s with new name %s", item.uid, item.summary
             )
+
+        if has_completed_changed or has_renamed:
+            await self.coordinator.refresh_todo_list_items(self._list.id)

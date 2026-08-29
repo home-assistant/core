@@ -132,11 +132,30 @@ async def test_add_todo_item(
 ) -> None:
     """Test adding a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
-    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+    list_items: dict[str, AmazonListItem] = {}
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: list_items
+    )
 
     await setup_integration(hass, mock_config_entry)
 
     entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Amazon has the item from the moment the call returns
+    mock_amazon_devices_client.add_todo_list_item = AsyncMock(
+        side_effect=lambda list_id, name: list_items.update(
+            {
+                "item_6": AmazonListItem(
+                    id="item_6",
+                    name=name,
+                    status=AmazonListItemStatus.ACTIVE,
+                    version=1,
+                )
+            }
+        )
+    )
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -148,6 +167,7 @@ async def test_add_todo_item(
     mock_amazon_devices_client.add_todo_list_item.assert_called_once_with(
         "todo_list_id", "New Task"
     )
+    assert hass.states.get(entity_id).state == "1"
 
 
 async def test_delete_todo_item(
@@ -167,6 +187,15 @@ async def test_delete_todo_item(
 
     entity_id = MOCK_TODO_LIST_ENTITY_ID
 
+    assert hass.states.get(entity_id).state == "1"
+
+    # Amazon has dropped the item from the moment the call returns
+    mock_amazon_devices_client.delete_todo_list_item = AsyncMock(
+        side_effect=lambda list_id, item_id, version: mock_todo_items[list_id].pop(
+            item_id
+        )
+    )
+
     # Delete item_2
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -178,6 +207,7 @@ async def test_delete_todo_item(
     mock_amazon_devices_client.delete_todo_list_item.assert_called_once_with(
         "todo_list_id", "item_2", 1
     )
+    assert hass.states.get(entity_id).state == "0"
 
 
 async def test_update_todo_item(

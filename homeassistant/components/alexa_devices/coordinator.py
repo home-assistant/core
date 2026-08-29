@@ -308,6 +308,17 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                     todo_list.id
                 ] = await self.api.get_todo_list_items(todo_list.id)
 
+    async def refresh_todo_list_items(self, list_id: str) -> None:
+        """Refresh the cached items of a single to-do list.
+
+        Cached items are otherwise only filled by the initial sync and by
+        pushed events, so a write of our own needs a pull to become visible.
+        """
+        async with alexa_api_call(self):
+            self._todo_list_items[list_id] = await self.api.get_todo_list_items(list_id)
+
+        self.async_update_listeners()
+
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
         if list_event.type == AmazonListEventType.DELETED:
