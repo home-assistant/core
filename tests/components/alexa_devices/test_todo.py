@@ -1,5 +1,6 @@
 """Test Alexa Devices todo entities."""
 
+import asyncio
 from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -172,6 +173,62 @@ async def test_add_todo_item(
     assert hass.states.get(entity_id).state == "1"
 
 
+async def test_concurrent_writes_keep_the_newest_answer(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test a slow read of an older list does not overwrite a newer one."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    list_items: dict[str, AmazonListItem] = {}
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(list_items)
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    def add_item(list_id: str, name: str) -> None:
+        list_items[name] = AmazonListItem(
+            id=name, name=name, status=AmazonListItemStatus.ACTIVE, version=1
+        )
+
+    mock_amazon_devices_client.add_todo_list_item = AsyncMock(side_effect=add_item)
+
+    # Hold the first read until both items have been written
+    released = asyncio.Event()
+    reads = 0
+
+    async def read_items(list_id: str) -> dict[str, AmazonListItem]:
+        nonlocal reads
+        reads += 1
+        items = dict(list_items)
+        if reads == 1:
+            await released.wait()
+        return items
+
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(side_effect=read_items)
+
+    writes = asyncio.gather(
+        *[
+            hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.ADD_ITEM,
+                {ATTR_ENTITY_ID: entity_id, "item": item},
+                blocking=True,
+            )
+            for item in ("First task", "Second task")
+        ]
+    )
+    await asyncio.sleep(0)
+    released.set()
+    await writes
+
+    assert hass.states.get(entity_id).state == "2"
+
+
 async def test_delete_todo_item(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
@@ -214,7 +271,6 @@ async def test_delete_todo_item(
 
 async def test_delete_todo_items_partial_failure(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_todo_lists: list[AmazonListInfo],
@@ -250,11 +306,7 @@ async def test_delete_todo_items_partial_failure(
             blocking=True,
         )
 
-    # The failure takes the entity down, the next poll brings it back
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
+    # Reading the list back worked, so the entity stays usable
     assert hass.states.get(entity_id).state == "0"
 
 

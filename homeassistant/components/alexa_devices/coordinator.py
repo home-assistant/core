@@ -1,5 +1,6 @@
 """Support for Alexa Devices."""
 
+from asyncio import Lock
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
@@ -167,6 +168,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         }
 
         self._todo_list_items: dict[str, dict[str, AmazonListItem]] = {}
+        self._todo_refresh_lock = Lock()
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
 
@@ -313,9 +315,15 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
         Cached items are otherwise only filled by the initial sync and by
         pushed events, so a write of our own needs a pull to become visible.
+
+        The pulls are serialized, as an older answer landing last would leave
+        the cache behind with nothing to repair it.
         """
-        async with alexa_api_call(self):
+        async with self._todo_refresh_lock, alexa_api_call(self):
             self._todo_list_items[list_id] = await self.api.get_todo_list_items(list_id)
+
+            # Reading the list back proves the API answers again
+            self.last_update_success = True
 
         self.async_update_listeners()
 
