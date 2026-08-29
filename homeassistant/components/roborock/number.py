@@ -12,6 +12,7 @@ from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -116,6 +117,7 @@ A01_NUMBER_DESCRIPTIONS: list[RoborockNumberDescriptionA01] = [
         key="zeo_delay_start",
         translation_key="zeo_delay_start",
         data_protocol=RoborockZeoProtocol.COUNTDOWN,
+        device_class=NumberDeviceClass.DURATION,
         native_min_value=0,
         native_max_value=1440,
         native_step=30,

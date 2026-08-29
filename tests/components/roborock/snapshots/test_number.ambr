@@ -209,7 +209,7 @@
     'object_id_base': 'Delay start',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': 'mdi:timer-outline',
     'original_name': 'Delay start',
     'platform': 'roborock',
@@ -224,6 +224,7 @@
 # name: test_numbers[number.zeo_one_delay_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Delay start',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-outline',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1440,

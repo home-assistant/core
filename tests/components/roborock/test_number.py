@@ -1,5 +1,7 @@
 """Test Roborock Number platform."""
 
+import copy
+
 import pytest
 from roborock.exceptions import RoborockException, RoborockTimeout
 from roborock.roborock_message import RoborockZeoProtocol
@@ -230,3 +232,36 @@ async def test_zeo_delay_start_update_failed(
             blocking=True,
             target={"entity_id": entity_id},
         )
+
+
+async def test_zeo_delay_start_absent_without_schema(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the delay start entity is not created when the schema lacks DP 217."""
+    zeo_device_1 = next(
+        (device for device in fake_devices if device.zeo is not None),
+        None,
+    )
+    assert zeo_device_1 is not None
+
+    zeo_device_2 = copy.deepcopy(zeo_device_1)
+    zeo_device_2.device_info.duid = "zeo_duid_2"
+    zeo_device_2._duid = "zeo_duid_2"
+    zeo_device_2.device_info.name = "Zeo Two"
+    zeo_device_2._name = "Zeo Two"
+    zeo_device_2.device_info.sn = "zeo_sn_2"
+
+    # Exclude the countdown parameter: 217 (COUNTDOWN)
+    zeo_device_2.product.schema = [
+        schema for schema in zeo_device_2.product.schema if schema.id != "217"
+    ]
+
+    fake_devices.append(zeo_device_2)
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.zeo_one_delay_start") is not None
+    assert hass.states.get("number.zeo_two_delay_start") is None
