@@ -17,7 +17,12 @@ from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRunt
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _IDENTITY_ATTEMPTS = 3
 

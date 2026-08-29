@@ -48,13 +48,10 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: Cloud service integration, does not support discovery.
+    comment: Cloud hub; DHCP only surfaces the integration. Device IP is not stored or updated.
   discovery:
-    status: exempt
-    comment: >-
-      Devices are reached via Imou Open Platform cloud APIs (App ID / secret). No
-      supported local discovery flow today; example cues if investigated later:
-      hostname `IPC-ABCD.imou.local`, MAC `aa:bb:cc:dd:ee:ff`.
+    status: done
+    comment: DHCP matches known Imou / Lechange MAC OUI prefixes. Setup still uses Open Platform App ID and secret.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
