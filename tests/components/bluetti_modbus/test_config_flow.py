@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.bluetti_modbus.const import (
     CONF_DEVICE_TYPE,
     CONF_UNIT_ID,
+    DEVICE_TYPE_EP2000,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -16,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEVICE_TYPE, HOST, PORT, UNIT_ID, bluetti_data
+from .conftest import DEVICE_TYPE, HOST, PORT, SERIAL, UNIT_ID, bluetti_data, seed_unit
 
 from tests.common import MockConfigEntry
 
@@ -50,6 +51,24 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == bluetti_data()
+    assert result["result"].unique_id == SERIAL
+
+
+async def test_user_flow_falls_back_to_link_identity_without_a_serial(
+    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
+) -> None:
+    """A device type with no serial number field is identified by its link."""
+    seed_unit(mock_modbus_connection.for_unit(UNIT_ID), device_type=DEVICE_TYPE_EP2000)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(device_type=DEVICE_TYPE_EP2000)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id is None
 
 
@@ -129,6 +148,27 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_UNIT_ID] == 2
+
+
+async def test_reconfigure_flow_wrong_device_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """An address that answers as a different device is rejected."""
+    mock_config_entry.add_to_hass(hass)
+    other_unit = mock_modbus_connection.for_unit(2)
+    seed_unit(other_unit)
+    other_unit.holding[50206] = 1  # a different serial number
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(unit_id=2)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert mock_config_entry.data[CONF_UNIT_ID] == UNIT_ID
 
 
 async def test_reconfigure_flow_onto_another_entrys_endpoint_aborts(

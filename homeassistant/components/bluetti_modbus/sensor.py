@@ -4,6 +4,7 @@ from enum import Enum
 import re
 from typing import cast, override
 
+from bluetti_modbus_lib.base_devices.bluetti_device import BluettiDevice
 from modbus_connection.model import RegisterField
 from modbus_connection.model.fields import NumberField
 
@@ -41,6 +42,9 @@ _DIAGNOSTIC_FIELDS = frozenset(
         "d_inverter_type",
         "d_num_inverters",
         "d_num_battery_packs",
+        "d_serial",
+        "d_ver_arm",
+        "d_ver_dsp",
         "b_cell_count",
         "b_cycle_count",
         "b_ntc_count",
@@ -155,6 +159,18 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
         return cast(StateType, value)
 
 
+def _describe_fields(device: BluettiDevice) -> list[SensorEntityDescription]:
+    """Build entity descriptions for every field this device exposes as a sensor."""
+    descriptions = []
+    for name in device.field_names():
+        if name in _EXCLUDED_FIELDS:
+            continue
+        field = device.get_field(name)
+        assert field is not None  # every name from field_names() has one
+        descriptions.append(_describe(name, field))
+    return descriptions
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BluettiModbusConfigEntry,
@@ -163,8 +179,6 @@ async def async_setup_entry(
     """Set up BLUETTI Modbus sensors from a config entry."""
     device = entry.runtime_data.coordinator.device
     async_add_entities(
-        BluettiModbusSensor(entry=entry, description=_describe(name, field))
-        for name in device.field_names()
-        if name not in _EXCLUDED_FIELDS
-        and (field := device.get_field(name)) is not None
+        BluettiModbusSensor(entry=entry, description=description)
+        for description in _describe_fields(device)
     )
