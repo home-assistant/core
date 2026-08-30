@@ -1,8 +1,7 @@
 """Support for Homevolt select entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homevolt.const import SCHEDULE_TYPE
 
@@ -29,6 +28,8 @@ SELECT_DESCRIPTION = HomevoltSelectEntityDescription(
     has_entity_name=True,
     options=list(SCHEDULE_TYPE.values()),
 )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomevoltConfigEntry,
@@ -56,12 +57,14 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
         self._attr_options = list(description.options) if description.options else []
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected mode."""
         mode_int = self.coordinator.client.schedule_mode
         return SCHEDULE_TYPE.get(mode_int)
 
     @homevolt_exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         await self.coordinator.client.set_battery_mode(mode=option)

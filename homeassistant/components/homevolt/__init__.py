@@ -9,10 +9,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.SELECT,
-    Platform.NUMBER,
 ]
 
 
