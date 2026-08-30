@@ -4,16 +4,17 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import (
     ElgatoConfigEntry,
-    ElgatoCoordinators,
     ElgatoDataUpdateCoordinator,
     ElgatoFirmwareCoordinator,
 )
 from .services import async_setup_services
 
+ELGATO_KEY: HassKey[ElgatoFirmwareCoordinator] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BUTTON,
@@ -27,8 +28,17 @@ PLATFORMS = [
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
+    """Set up the component.
+
+    Elgato publishes one firmware catalog covering every model, so a single
+    coordinator serves every device rather than each config entry fetching
+    the same thing.
+    """
     async_setup_services(hass)
+
+    hass.data[ELGATO_KEY] = ElgatoFirmwareCoordinator(hass)
+    await hass.data[ELGATO_KEY].async_request_refresh()
+
     return True
 
 
@@ -37,20 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElgatoConfigEntry) -> bo
     coordinator = ElgatoDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    firmware = ElgatoFirmwareCoordinator(
-        hass, entry, coordinator.data.info.hardware_board_type
-    )
-
-    entry.runtime_data = ElgatoCoordinators(device=coordinator, firmware=firmware)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Elgato's servers are not on the local network, and a request to them
-    # can sit there for its full timeout. A light on your own network has no
-    # business waiting on that, so nothing here does: the update entity fills
-    # itself in once the answer arrives.
-    entry.async_create_background_task(
-        hass, firmware.async_refresh(), f"{DOMAIN}_firmware_refresh"
-    )
 
     return True
 

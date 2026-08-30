@@ -74,7 +74,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elgato numbers based on a config entry."""
-    coordinator = entry.runtime_data.device
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ElgatoNumberEntity(

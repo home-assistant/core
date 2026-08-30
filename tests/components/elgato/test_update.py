@@ -10,10 +10,12 @@ from elgato import (
     ElgatoError,
     ElgatoFirmwareError,
     FirmwareImage,
+    FirmwareVersion,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.elgato import ELGATO_KEY
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -23,6 +25,8 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_MAC,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -31,6 +35,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "update.frenck_firmware"
 
@@ -68,13 +74,10 @@ async def test_up_to_date(
     The device fixture reports build 192, so the catalog is pulled back to
     match it.
     """
-    latest = mock_firmware_catalog.versions.return_value[53]
     mock_firmware_catalog.versions.return_value = {
-        53: type(latest)(board_type=53, build_number=192, version="1.0.3")
+        53: FirmwareVersion(board_type=53, build_number=192, version="1.0.3")
     }
-    await hass.config_entries.async_reload(
-        hass.config_entries.async_entries("elgato")[0].entry_id
-    )
+    await hass.data[ELGATO_KEY].async_refresh()
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -91,9 +94,7 @@ async def test_elgato_ships_nothing_for_this_board(
     with no opinion.
     """
     mock_firmware_catalog.versions.return_value = {}
-    await hass.config_entries.async_reload(
-        hass.config_entries.async_entries("elgato")[0].entry_id
-    )
+    await hass.data[ELGATO_KEY].async_refresh()
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -197,9 +198,7 @@ async def test_elgato_unreachable(
     other entities carry on.
     """
     mock_firmware_catalog.versions.side_effect = side_effect
-    await hass.config_entries.async_reload(
-        hass.config_entries.async_entries("elgato")[0].entry_id
-    )
+    await hass.data[ELGATO_KEY].async_refresh()
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -283,7 +282,7 @@ async def test_install_keeps_the_device_to_itself(
     A device stops answering while it erases a flash slot, and enough traffic
     during that window takes its HTTP server down and restarts the light.
     """
-    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.device
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
     refresh: asyncio.Task[None] | None = None
     polls_during_install = 0
 
@@ -312,3 +311,29 @@ async def test_install_keeps_the_device_to_itself(
     assert polls_during_install == 0
     # And it is not blocked forever; the poll lands once the install is done.
     assert mock_elgato.state.call_count > polls_before
+
+
+async def test_one_catalog_for_every_device(
+    hass: HomeAssistant,
+    mock_firmware_catalog: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a second device does not fetch the catalog all over again.
+
+    Elgato publishes one catalog covering every model, so it is read once
+    and shared, not once per config entry.
+    """
+    calls_for_one_device = mock_firmware_catalog.versions.call_count
+
+    second = MockConfigEntry(
+        title="CN11A1A00002",
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.2", CONF_MAC: "AA:BB:CC:DD:EE:00"},
+        unique_id="CN11A1A00002",
+    )
+    second.add_to_hass(hass)
+    await hass.config_entries.async_setup(second.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_firmware_catalog.versions.call_count == calls_for_one_device
+    assert hass.data[ELGATO_KEY] is not None

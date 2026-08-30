@@ -7,6 +7,7 @@ from elgato import (
     ElgatoError,
     ElgatoFirmwareError,
     FirmwareImage,
+    FirmwareVersion,
 )
 
 from homeassistant.components.update import (
@@ -19,8 +20,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ELGATO_KEY
 from .const import DOMAIN
-from .coordinator import ElgatoConfigEntry, ElgatoCoordinators
+from .coordinator import (
+    ElgatoConfigEntry,
+    ElgatoDataUpdateCoordinator,
+    ElgatoFirmwareCoordinator,
+)
 from .entity import ElgatoEntity
 from .helpers import elgato_exception_handler
 
@@ -33,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elgato firmware update based on a config entry."""
-    async_add_entities([ElgatoUpdateEntity(entry.runtime_data)])
+    async_add_entities([ElgatoUpdateEntity(entry.runtime_data, hass.data[ELGATO_KEY])])
 
 
 class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
@@ -50,12 +56,16 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    def __init__(self, coordinators: ElgatoCoordinators) -> None:
+    def __init__(
+        self,
+        coordinator: ElgatoDataUpdateCoordinator,
+        firmware: ElgatoFirmwareCoordinator,
+    ) -> None:
         """Initiate the Elgato firmware update."""
-        super().__init__(coordinators.device)
+        super().__init__(coordinator)
 
-        self.firmware = coordinators.firmware
-        self._attr_unique_id = coordinators.device.data.info.serial_number
+        self.firmware = firmware
+        self._attr_unique_id = coordinator.data.info.serial_number
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -88,10 +98,21 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
     @property
     @override
     def latest_version(self) -> str | None:
-        """Return the firmware Elgato currently ships for this device."""
-        if (latest := self.firmware.data) is None:
+        """Return the firmware Elgato currently ships for this device.
+
+        The catalog covers every model, so a board Elgato ships nothing for
+        simply has no entry and this entity has nothing to compare against.
+        """
+        if (latest := self._latest) is None:
             return None
         return f"{latest.version}.{latest.build_number}"
+
+    @property
+    def _latest(self) -> FirmwareVersion | None:
+        """Return the entry in the catalog for the board of this device."""
+        if not (catalog := self.firmware.data):
+            return None
+        return catalog.get(self.coordinator.data.info.hardware_board_type)
 
     @elgato_exception_handler
     @override
@@ -136,7 +157,8 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         problem that is entirely at Elgato's end.
         """
         try:
-            return await self.firmware.catalog.download(self.firmware.board_type)
+            board_type = self.coordinator.data.info.hardware_board_type
+            return await self.firmware.catalog.download(board_type)
         except ElgatoConnectionError as err:
             self.firmware.async_set_update_error(err)
             raise HomeAssistantError(
