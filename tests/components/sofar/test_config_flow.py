@@ -275,7 +275,7 @@ async def test_reconfigure_errors(
     expected_error: str,
     expected_placeholders: dict[str, str],
 ) -> None:
-    """Test the reconfigure step reports the right error, per failure."""
+    """Test the reconfigure step reports the right error and recovers."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
     result = await entry.start_reconfigure_flow(hass)
@@ -293,3 +293,15 @@ async def test_reconfigure_errors(
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == expected_placeholders
     assert entry.data == MOCK_USER_INPUT
+
+    working_conn = MockModbusConnection()
+    seed_pv_inverter(working_conn.for_unit(1))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == _NEW_USER_INPUT
