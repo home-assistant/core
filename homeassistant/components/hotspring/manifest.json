@@ -7,6 +7,12 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["hotspring"],
-  "quality_scale": "silver",
-  "requirements": ["python-hotspring==1.3.0"]
+  "quality_scale": "platinum",
+  "requirements": ["python-hotspring==2.0.1"],
+  "zeroconf": [
+    {
+      "name": "watkins_spa*",
+      "type": "_ws._tcp.local."
+    }
+  ]
 }

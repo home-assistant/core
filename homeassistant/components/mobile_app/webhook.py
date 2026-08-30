@@ -14,6 +14,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import (
     camera,
@@ -22,10 +23,17 @@ from homeassistant.components import (
     notify as hass_notify,
     tag,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -159,7 +167,7 @@ def validate_schema(schema):
             try:
                 data = schema(data)
             except vol.Invalid as ex:
-                err = vol.humanize.humanize_error(data, ex)
+                err = humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
                 return empty_okay_response()
 
@@ -200,7 +208,7 @@ async def handle_webhook(
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
     except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(req_data, ex)
+        err = humanize_error(req_data, ex)
         _LOGGER.error(
             "Received invalid webhook from %s with payload: %s", device_name, err
         )
@@ -651,7 +659,7 @@ async def webhook_update_sensor_states(
         try:
             sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
-            err_msg = vol.humanize.humanize_error(sensor, err)
+            err_msg = humanize_error(sensor, err)
             _LOGGER.error(
                 "Received invalid sensor payload from %s for %s: %s",
                 device_name,
@@ -750,7 +758,7 @@ async def webhook_get_config(
     for entry in er.async_entries_for_config_entry(
         er.async_get(hass), config_entry.entry_id
     ):
-        if entry.domain in ("binary_sensor", "sensor"):
+        if entry.domain in (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN):
             unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
         else:
             unique_id = entry.unique_id

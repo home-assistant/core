@@ -3,7 +3,7 @@
 from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
-from lunatone_rest_api_client.models import SensorAddressType, SensorType
+from lunatone_rest_api_client.models import LineStatus, SensorAddressType, SensorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     LIGHT_LUX,
+    EntityCategory,
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
@@ -24,8 +25,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LunatoneConfigEntry, LunatoneSensorsDataUpdateCoordinator
+from .coordinator import (
+    LunatoneConfigEntry,
+    LunatoneInfoDataUpdateCoordinator,
+    LunatoneSensorsDataUpdateCoordinator,
+)
 
+DALI_LINE_STATUS_SENSOR_MAPPING: dict[str, str] = {
+    LineStatus.LOW_POWER: "low_power",
+    LineStatus.NO_POWER: "no_power",
+    LineStatus.NOT_REACHABLE: "not_reachable",
+    LineStatus.OK: "ok",
+}
 PARALLEL_UPDATES = 0
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.AIR_HUMIDITY: SensorEntityDescription(
@@ -78,17 +89,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lunatone sensors from the config entry."""
+    coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_sensors = config_entry.runtime_data.coordinator_sensors
 
     assert config_entry.unique_id is not None
 
-    async_add_entities(
+    entities: list[SensorEntity] = [
         LunatoneSensor(
             coordinator_sensors, description, sensor_id, config_entry.unique_id
         )
         for sensor_id, sensor_data in coordinator_sensors.data.items()
         if (description := SENSOR_TYPES.get(sensor_data.data.type))
+    ]
+    entities.extend(
+        LunatoneDALILineStatusSensor(coordinator_info, line_id, config_entry.unique_id)
+        for line_id in coordinator_info.data.lines
     )
+
+    async_add_entities(entities)
 
 
 class LunatoneSensor(
@@ -112,7 +130,7 @@ class LunatoneSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_name = self.sensor.name
+        self._attr_name = self.sensor.data.name
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
@@ -160,3 +178,42 @@ class LunatoneSensor(
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self.sensor.data.value
+
+
+class LunatoneDALILineStatusSensor(
+    CoordinatorEntity[LunatoneInfoDataUpdateCoordinator], SensorEntity
+):
+    """Representation of a Lunatone DALI line status sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_options = list(DALI_LINE_STATUS_SENSOR_MAPPING.values())
+    _attr_state_class = None
+    _attr_translation_key = "dali_line_status"
+
+    def __init__(
+        self,
+        coordinator: LunatoneInfoDataUpdateCoordinator,
+        line_id: str,
+        config_entry_unique_id: str,
+    ) -> None:
+        """Initialize a Lunatone DALI line status sensor."""
+        super().__init__(coordinator)
+
+        self._config_entry_unique_id = config_entry_unique_id
+        self._line_id = line_id
+
+        line_unique_id = f"{config_entry_unique_id}-line{line_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, line_unique_id)},
+        )
+        self._attr_unique_id = f"{line_unique_id}-status"
+
+    @property
+    @override
+    def native_value(self) -> str:
+        """Return the value of the sensor."""
+        return DALI_LINE_STATUS_SENSOR_MAPPING[
+            self.coordinator.data.lines[self._line_id].line_status
+        ]
