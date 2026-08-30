@@ -7,11 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     IllegalDataAddressError,
     ModbusTimeoutError,
+    ModbusUnit,
     ServerDeviceFailureError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
-from solaredged import SolarEdgeConnectionError
+from solaredged import SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -58,6 +59,9 @@ METER_MODEL_REGISTER = 40188
 
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
+
+# Where the first meter's serial number lives.
+METER_SERIAL_REGISTER = 40171
 
 EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
@@ -623,11 +627,26 @@ async def test_concurrent_control_writes_keep_both_changes(
 
 async def _tick_attachment_check(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Let the check for changed hardware run, and any reload it starts."""
-    freezer.tick(ATTACHMENT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+) -> int:
+    """Let the check for changed hardware run, and report what it cost.
+
+    Setting up probes the device, so a check that reloads the entry probes
+    twice: once to look, once to build the entry again.
+    """
+    probes = 0
+    probe = SolarEdge.async_probe
+
+    async def counting_probe(unit: ModbusUnit) -> SolarEdge:
+        nonlocal probes
+        probes += 1
+        return await probe(unit)
+
+    with patch.object(SolarEdge, "async_probe", counting_probe):
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    return probes
 
 
 async def test_meter_added_later_is_picked_up(
@@ -696,6 +715,49 @@ async def test_battery_removed_later_is_dropped(
     )
 
 
+async def test_replaced_meter_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Another meter in the same place is another device, while running too.
+
+    Swapping one meter for another leaves the count alone, so what gives it
+    away is the serial number the polls have been reading all along.
+    """
+    await _setup(hass, mock_config_entry)
+
+    replacement = "7E9C55A6"
+    padded = replacement.ljust(32, "\0").encode()
+    mock_modbus_unit.holding.update(
+        {
+            METER_SERIAL_REGISTER + index: (padded[index * 2] << 8)
+            | padded[index * 2 + 1]
+            for index in range(16)
+        }
+    )
+
+    # The swap is seen without probing, so the only probe here is the reload's.
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}"),
+            mock_config_entry.entry_id,
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_meter_{replacement}"),
+            mock_config_entry.entry_id,
+        )
+        is not None
+    )
+
+
 async def test_silent_attachment_does_not_trigger_a_reload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -713,7 +775,7 @@ async def test_silent_attachment_does_not_trigger_a_reload(
     meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
     mock_modbus_unit.fail_read(METER_MODEL_REGISTER, ModbusTimeoutError("timed out"))
 
-    await _tick_attachment_check(hass, freezer)
+    assert await _tick_attachment_check(hass, freezer) == 1
 
     assert (
         device_registry.async_get_device_by_identifier(
@@ -733,7 +795,7 @@ async def test_unchanged_attachments_leave_the_entry_alone(
 
     coordinator = mock_config_entry.runtime_data.readings
 
-    await _tick_attachment_check(hass, freezer)
+    assert await _tick_attachment_check(hass, freezer) == 1
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # A reload would have built new coordinators.
@@ -756,7 +818,7 @@ async def test_a_dead_probe_leaves_the_entry_where_it_is(
     coordinator = mock_config_entry.runtime_data.readings
     mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
 
-    await _tick_attachment_check(hass, freezer)
+    assert await _tick_attachment_check(hass, freezer) == 1
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.readings is coordinator

@@ -145,6 +145,7 @@ async def async_setup_entry(
         settings=settings,
         device_info=device_info,
         inverter_device_id=inverter.id,
+        attachments=_attachment_identities(solaredge),
     )
 
     if silent := solaredge.unresponsive_blocks & {
@@ -175,20 +176,41 @@ async def async_setup_entry(
     return True
 
 
+def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
+    """Return what the meters and batteries attached right now are known by."""
+    return frozenset(
+        [
+            *(
+                f"meter_{attachment_identity(meter, index)}"
+                for index, meter in enumerate(solaredge.meters, 1)
+            ),
+            *(
+                f"battery_{attachment_identity(battery, index)}"
+                for index, battery in enumerate(solaredge.batteries, 1)
+            ),
+        ]
+    )
+
+
 async def _async_reload_when_attachments_change(
     hass: HomeAssistant,
     entry: SolarEdgeModbusConfigEntry,
     unit: ModbusUnit,
     _now: datetime,
 ) -> None:
-    """Reload the entry when the hardware wired to the inverter changed.
+    """Reload the entry when the hardware wired to the inverter changed."""
+    solaredge = entry.runtime_data.solaredge
 
-    Probing again is what tells a meter or battery apart from one that was
-    never there, and the entry is built around what that probe found, so the
-    honest way to pick up a change is to load it again. This is rare hardware
-    work, usually done with the power off, which is why looking now and then
-    and reloading is enough.
-    """
+    # Swapping one meter for another leaves the count alone, but the polls have
+    # been reading the new one's serial number since it was wired in.
+    if _attachment_identities(solaredge) != entry.runtime_data.attachments:
+        LOGGER.info(
+            "%s: what is attached changed, reloading to pick that up",
+            entry.title,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
+
     try:
         probed = await SolarEdge.async_probe(unit)
     except SolarEdgeError as err:
@@ -197,7 +219,6 @@ async def _async_reload_when_attachments_change(
         LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
         return
 
-    solaredge = entry.runtime_data.solaredge
     for name, found, known in (
         (SUBSYSTEM_METERS, len(probed.meters), len(solaredge.meters)),
         (SUBSYSTEM_BATTERIES, len(probed.batteries), len(solaredge.batteries)),
