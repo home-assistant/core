@@ -1804,6 +1804,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sun/ @home-assistant/core
 /homeassistant/components/sunricher_dali/ @niracler
 /tests/components/sunricher_dali/ @niracler
+/homeassistant/components/sunsynk/ @jamesridgway
+/tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen

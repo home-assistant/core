@@ -7069,6 +7069,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "sunsynk": {
+      "name": "Sunsynk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sunweg": {
       "name": "Sun WEG",
       "integration_type": "hub",
