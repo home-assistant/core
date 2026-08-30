@@ -7,7 +7,15 @@ from aiomodernforms import ModernFormsConnectionError
 import pytest
 from yarl import URL
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
 from homeassistant.components.modern_forms.const import (
     ATTR_SLEEP_TIME,
     DOMAIN,
@@ -362,3 +370,70 @@ async def test_clear_light_sleep_timer_not_supported_gen4(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "sleep_timer_not_supported"
+
+
+async def test_light_color_temp_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Gen4 light fixtures advertise and control color temperature."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    state = hass.states.get("light.modernformsfan_uplight")
+    assert state
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 3000
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2700
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 5000
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
+
+    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.modernformsfan_uplight",
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_fixture_mock.assert_called_once_with(2, on=True, color_temp_kelvin=4000)
+
+
+async def test_light_color_temp_missing_bounds_gen4(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test a Gen4 fixture missing color-temp bounds falls back to brightness."""
+
+    async def missing_bounds_mock(
+        hass: HomeAssistant, method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Serve the normal Gen4 fixtures, minus the downlight's color-temp bounds."""
+        if not url.path.endswith("/fixture"):
+            return await modern_forms_gen4_call_mock(hass, method, url, data)
+        payload = await async_load_json_object_fixture(
+            hass, "fixture_gen4.json", DOMAIN
+        )
+        for fixture in payload["fixture"]:
+            if fixture["addr"] == 3:
+                fixture["detail"] = {}
+        return AiohttpClientMockResponse(method=method, url=url, json=payload)
+
+    await init_integration_gen4(hass, aioclient_mock, mock_type=missing_bounds_mock)
+
+    state = hass.states.get("light.modernformsfan_downlight")
+    assert state
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.BRIGHTNESS]
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
+
+
+async def test_light_no_color_temp_on_legacy(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Gen 1/2/3 lights never advertise color temperature."""
+    await init_integration(hass, aioclient_mock)
+
+    state = hass.states.get("light.modernformsfan_light")
+    assert state
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.BRIGHTNESS]
