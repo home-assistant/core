@@ -2101,7 +2101,7 @@ async def test_reconfigure_flow_wrong_device_id_discovery(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfigure flow with no discovery in the new IP."""
+    """Test reconfigure flow when the new IP belongs to a different device."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
