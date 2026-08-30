@@ -201,10 +201,46 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         await self.coordinator.async_request_refresh()
 
     @staticmethod
+    def _serialize_recurring(schedule: RecurringSchedule) -> dict[str, Any]:
+        """Serialize a single RecurringSchedule to a dict."""
+        return {
+            "days_of_week": {
+                "sun": schedule.days_of_week.sun,
+                "mon": schedule.days_of_week.mon,
+                "tue": schedule.days_of_week.tue,
+                "wed": schedule.days_of_week.wed,
+                "thu": schedule.days_of_week.thu,
+                "fri": schedule.days_of_week.fri,
+                "sat": schedule.days_of_week.sat,
+            },
+            "start_hour": schedule.start_hour,
+            "start_minute": schedule.start_minute,
+            "end_hour": schedule.end_hour,
+            "end_minute": schedule.end_minute,
+        }
+
+    @staticmethod
     def _serialize_schedule(
         schedule: MultiRecurringSchedule | TemporarySchedule | RecurringSchedule | None,
     ) -> dict[str, Any] | None:
-        """Serialize a pyschlage schedule to a dict."""
+        """Serialize a pyschlage schedule to a dict.
+
+        The returned shape depends on the schedule type.
+
+        ``recurring``: {"type": "recurring", "days_of_week": {"sun": bool, ...},
+        "start_hour": int, "start_minute": int, "end_hour": int, "end_minute": int}.
+        Times use natural hour and minute values from the pyschlage model.
+
+        ``multi_recurring``: {"type": "multi_recurring", "windows": [<window>, ...]},
+        where each window is a dict with the same keys as ``recurring`` (days_of_week,
+        start_hour, start_minute, end_hour, end_minute) but without the ``type`` key.
+        At most two windows are present.
+
+        ``temporary``: {"type": "temporary", "start_datetime": str, "end_datetime": str}.
+        Datetime values are ISO 8601 strings.
+
+        ``None`` returns ``None``.
+        """
         if isinstance(schedule, TemporarySchedule):
             return {
                 "type": "temporary",
@@ -212,9 +248,19 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                 "end_datetime": schedule.end.isoformat(),
             }
         if isinstance(schedule, MultiRecurringSchedule):
-            return {"type": "multi_recurring", "raw": str(schedule)}
+            schedules: list[RecurringSchedule] = []
+            if schedule.schedule1 is not None:
+                schedules.append(schedule.schedule1)
+            if schedule.schedule2 is not None:
+                schedules.append(schedule.schedule2)
+            windows = [
+                SchlageLockEntity._serialize_recurring(sched) for sched in schedules
+            ]
+            return {"type": "multi_recurring", "windows": windows}
         if isinstance(schedule, RecurringSchedule):
-            return {"type": "recurring", "raw": str(schedule)}
+            result = SchlageLockEntity._serialize_recurring(schedule)
+            result["type"] = "recurring"
+            return result
         return None
 
     async def get_codes(self) -> ServiceResponse:

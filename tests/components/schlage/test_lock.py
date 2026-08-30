@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import MockSchlageConfigEntry
 
@@ -788,40 +789,74 @@ async def test_add_code_service_start_equals_end(
     assert exc_info.value.translation_key == "schlage_start_after_end"
 
 
-async def test_add_code_service_temporary_pin_utc_normalization(
+async def test_add_code_service_temporary_pin_non_utc_timezone(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
-    """Test add_code service normalizes naive datetimes to UTC."""
+    """Test add_code service converts naive datetimes from non UTC timezone to UTC."""
 
-    mock_lock.access_codes = {}
-    mock_lock.add_access_code = Mock()
+    dt_util.set_default_time_zone(dt_util.get_time_zone("America/New_York"))
+    try:
+        mock_lock.access_codes = {}
+        mock_lock.add_access_code = Mock()
 
-    # Provide naive datetimes (cv.datetime returns naive datetimes)
-    start_naive = datetime(2025, 1, 1, 8, 0, 0)
-    end_naive = datetime(2025, 1, 1, 18, 0, 0)
+        # September 2026: America/New_York is EDT (UTC-4).
+        # Naive local 08:00 becomes 12:00 UTC, naive local 18:00 becomes 22:00 UTC.
+        start_naive = datetime(2026, 9, 1, 8, 0, 0)
+        end_naive = datetime(2026, 9, 1, 18, 0, 0)
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_CODE,
-        service_data={
-            "entity_id": "lock.vault_door",
-            "name": "temp_user",
-            "code": "1234",
-            "start_datetime": start_naive.isoformat(),
-            "end_datetime": end_naive.isoformat(),
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "temp_user",
+                "code": "1234",
+                "start_datetime": start_naive.isoformat(),
+                "end_datetime": end_naive.isoformat(),
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    mock_lock.add_access_code.assert_called_once()
-    call_args = mock_lock.add_access_code.call_args[0][0]
-    assert call_args.schedule is not None
-    # The schedule should have timezone-aware UTC datetimes
-    assert call_args.schedule.start.tzinfo is not None
-    assert call_args.schedule.end.tzinfo is not None
+        mock_lock.add_access_code.assert_called_once()
+        call_args = mock_lock.add_access_code.call_args[0][0]
+        assert call_args.schedule is not None
+
+        expected_start = datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
+        expected_end = datetime(2026, 9, 1, 22, 0, 0, tzinfo=UTC)
+
+        # If 08:00 local is incorrectly treated as 08:00 UTC the assertion fails.
+        assert call_args.schedule.start == expected_start
+        assert call_args.schedule.end == expected_end
+
+        # Verify the serialized dict in get_codes output carries the same instants.
+        code = Mock()
+        code.name = "temp_user"
+        code.code = "1234"
+        code.access_code_id = "ac_001"
+        code.schedule = call_args.schedule
+        mock_lock.access_codes = {"1": code}
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_CODES,
+            service_data={
+                "entity_id": "lock.vault_door",
+            },
+            blocking=True,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+        assert response["lock.vault_door"]["1"]["schedule"] == {
+            "type": "temporary",
+            "start_datetime": "2026-09-01T12:00:00+00:00",
+            "end_datetime": "2026-09-01T22:00:00+00:00",
+        }
+    finally:
+        dt_util.set_default_time_zone(UTC)
 
 
 async def test_get_codes_service_with_access_code_id_and_schedule(
@@ -899,7 +934,19 @@ async def test_serialize_schedule_recurring(
     result = SchlageLockEntity._serialize_schedule(schedule)
     assert result is not None
     assert result["type"] == "recurring"
-    assert "raw" in result
+    assert result["days_of_week"] == {
+        "sun": True,
+        "mon": True,
+        "tue": True,
+        "wed": True,
+        "thu": True,
+        "fri": True,
+        "sat": True,
+    }
+    assert result["start_hour"] == 0
+    assert result["start_minute"] == 0
+    assert result["end_hour"] == 23
+    assert result["end_minute"] == 59
 
 
 async def test_serialize_schedule_multi_recurring(
@@ -912,7 +959,21 @@ async def test_serialize_schedule_multi_recurring(
     result = SchlageLockEntity._serialize_schedule(schedule)
     assert result is not None
     assert result["type"] == "multi_recurring"
-    assert "raw" in result
+    assert len(result["windows"]) == 1
+    window = result["windows"][0]
+    assert window["days_of_week"] == {
+        "sun": True,
+        "mon": True,
+        "tue": True,
+        "wed": True,
+        "thu": True,
+        "fri": True,
+        "sat": True,
+    }
+    assert window["start_hour"] == 0
+    assert window["start_minute"] == 0
+    assert window["end_hour"] == 23
+    assert window["end_minute"] == 59
 
 
 async def test_serialize_schedule_temporary(
