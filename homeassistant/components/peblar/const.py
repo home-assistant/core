@@ -1,5 +1,6 @@
 """Constants for the Peblar integration."""
 
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -7,7 +8,27 @@ from peblar import ChargeLimiter, CPState
 
 DOMAIN: Final = "peblar"
 
+CONF_EVCC_ID: Final = "evcc_id"
 CONF_UID: Final = "uid"
+
+# The stream only makes the poll quicker, so there is no hurry, and no
+# point hammering a charger that is switched off.
+EVENT_STREAM_RETRY_MINIMUM: Final = timedelta(seconds=5)
+EVENT_STREAM_RETRY_MAXIMUM: Final = timedelta(minutes=5)
+
+# How long a charger gets to start rebooting after it was asked to install
+# a package. It downloads first, so this is generous: Peblar's own web
+# interface waits the same three hours before it gives up.
+UPDATE_REBOOT_START_TIMEOUT: Final = timedelta(hours=3)
+
+# And how long it gets to come back once it has actually gone. Peblar
+# allows ten minutes for that.
+UPDATE_REBOOT_RETURN_TIMEOUT: Final = timedelta(minutes=10)
+
+# How long the charger has to stay away before it counts as having
+# rebooted. Peblar allows ten minutes for a reboot, so it is nowhere near
+# a matter of seconds; anything shorter is the network dropping a poll.
+UPDATE_REBOOT_MINIMUM_DOWNTIME: Final = timedelta(seconds=30)
 
 LOGGER = logging.getLogger(__package__)
 
