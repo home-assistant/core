@@ -7,13 +7,23 @@ from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.components.modbus import async_get_unit
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorExtraStoredData,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    restore_state,
+)
 
 from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .sensor import SENSOR_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +47,30 @@ async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -
                 _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
         else:
             return
+
+
+def _async_seed_high_water_marks(
+    hass: HomeAssistant, serial: str, device: SofarInverter
+) -> None:
+    """Prime high-water marks before the first poll has nothing to compare."""
+    registry = er.async_get(hass)
+    last_states = restore_state.async_get(hass).last_states
+    for description in SENSOR_DESCRIPTIONS:
+        if description.state_class is not SensorStateClass.TOTAL_INCREASING:
+            continue
+        entity_id = registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
+        )
+        if entity_id is None or (stored := last_states.get(entity_id)) is None:
+            continue
+        if stored.extra_data is None:
+            continue
+        extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
+        if extra is None or not isinstance(extra.native_value, (int, float)):
+            continue
+        getattr(device, description.component).seed_high_water(
+            description.key, float(extra.native_value)
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
@@ -64,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         model=model,
         inverter_type=inverter_type,
     )
+    _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
         hass,

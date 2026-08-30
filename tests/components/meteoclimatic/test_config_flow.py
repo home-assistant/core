@@ -49,9 +49,15 @@ async def test_user(hass: HomeAssistant, client) -> None:
 
     # test with all provided
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_STATION_CODE: TEST_STATION_CODE},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_STATION_CODE: TEST_STATION_CODE},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_STATION_CODE
@@ -66,9 +72,15 @@ async def test_not_found(hass: HomeAssistant) -> None:
         side_effect=StationNotFound(TEST_STATION_CODE),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_STATION_CODE: TEST_STATION_CODE},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_STATION_CODE: TEST_STATION_CODE},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -82,9 +94,15 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
         side_effect=MeteoclimaticError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_STATION_CODE: TEST_STATION_CODE},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_STATION_CODE: TEST_STATION_CODE},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"

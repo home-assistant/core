@@ -599,6 +599,7 @@ FLOWS = {
         "peblar",
         "peco",
         "pegel_online",
+        "persang_infrared",
         "pglab",
         "philips_js",
         "pi_hole",

@@ -2484,6 +2484,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "`async_update_device`",
                 core_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2027.8.0",
+                integration_domain=config_entry.domain,
             )
 
         self._async_purge_colliding_deleted_devices(device, identifiers, connections)

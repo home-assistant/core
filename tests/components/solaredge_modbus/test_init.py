@@ -10,15 +10,28 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from solaredged import SolarEdgeConnectionError
 
-from homeassistant.components.solaredge_modbus.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.solaredge_modbus.const import (
+    DOMAIN,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import METER_SERIAL_NUMBER, SERIAL_NUMBER, async_seed_unit, tcp_data
+from .conftest import (
+    BATTERY_RATED_ENERGY,
+    BATTERY_SERIAL_BASE,
+    BATTERY_SERIAL_NUMBERS,
+    METER_SERIAL_NUMBER,
+    SERIAL_NUMBER,
+    async_seed_unit,
+    tcp_data,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -26,6 +39,12 @@ POWER_ENTITY = "sensor.solaredge_se10000h_power"
 
 # An address inside the inverter's read, to make that read fail.
 INVERTER_REGISTER = 40069
+
+# The register the probe counts meters by.
+METER_MODEL_REGISTER = 40188
+
+# An address inside the pooled storage and export control read.
+SITE_CONTROL_REGISTER = 57348
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -250,6 +269,157 @@ async def test_replaced_meter_is_a_new_device(
     )
 
 
+async def test_batteries_are_sub_devices_of_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Each battery is hardware of its own, hanging off the inverter."""
+    await _setup(hass, mock_config_entry)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert inverter is not None
+
+    for index, serial_number in enumerate(BATTERY_SERIAL_NUMBERS, 1):
+        battery = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{SERIAL_NUMBER}_battery_{serial_number}"),
+            mock_config_entry.entry_id,
+        )
+        assert battery is not None
+        assert battery.via_device_id == inverter.id
+        assert battery.name == f"Battery {index}"
+        assert battery.model_id == "SE-BAT-48V-10KWH"
+        assert battery.serial_number == serial_number
+
+
+async def test_battery_that_left_the_installation_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery taken out does not linger as a device.
+
+    The inverter refusing its block is the device saying it is gone, where
+    silence would only mean it did not answer this time.
+    """
+    await _setup(hass, mock_config_entry)
+
+    identifiers = [
+        (DOMAIN, f"{SERIAL_NUMBER}_battery_{serial_number}")
+        for serial_number in BATTERY_SERIAL_NUMBERS
+    ]
+    assert all(
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+        for identifier in identifiers
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert all(
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is None
+        for identifier in identifiers
+    )
+
+
+async def test_battery_that_did_not_answer_the_probe_is_kept(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Silence while probing is not proof that a battery is gone."""
+    await _setup(hass, mock_config_entry)
+
+    identifier = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_silence_about_one_kind_does_not_shield_the_other(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter that is really gone goes, even when the batteries kept quiet.
+
+    Silence about one kind of attached hardware says nothing about the other,
+    and holding on to everything would leave a removed meter behind for as long
+    as a battery is slow to answer.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    battery = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, IllegalDataAddressError())
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_battery_without_a_serial_number_is_known_by_its_slot(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Not every battery names itself, and then its place on the inverter does."""
+    mock_modbus_unit.holding.update(
+        dict.fromkeys(range(BATTERY_SERIAL_BASE, BATTERY_SERIAL_BASE + 16), 0)
+    )
+
+    await _setup(hass, mock_config_entry)
+
+    battery = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL_NUMBER}_battery_slot_1"), mock_config_entry.entry_id
+    )
+    assert battery is not None
+    assert battery.serial_number is None
+
+
 async def test_single_late_answer_is_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -339,6 +509,47 @@ async def test_another_inverter_on_the_address_fails_the_refresh(
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
     state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_silent_control_block_leaves_the_others_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Storage and export controls share one read; power control has its own."""
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ServerDeviceFailureError())
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.solaredge_se10000h_backup_reserve")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("number.solaredge_se10000h_active_power_limit")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_settings_failure_does_not_block_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Readings carry the entry even when the control blocks stay silent."""
+    with patch(
+        "homeassistant.components.solaredge_modbus.SolarEdge.async_update_settings",
+        side_effect=SolarEdgeConnectionError("timed out"),
+    ):
+        await _setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(POWER_ENTITY) is not None
+
+    state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
