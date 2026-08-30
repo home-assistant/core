@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -52,13 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     ssl = entry.data[CONF_SSL]
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
 
     protocol = "https" if ssl else "http"
     url = f"{protocol}://{host}"
 
     try:
         camera = await hass.async_add_executor_job(
-            HikCamera, url, port, username, password, ssl
+            HikCamera, url, port, username, password, verify_ssl
         )
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
