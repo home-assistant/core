@@ -225,12 +225,35 @@ class HausbusGateway(IBusDataListener):
         else:
             self._pending_channels.append((channel, device_info))
 
-    async def async_flush_pending_channels(self) -> None:
-        """Mark platform as ready and dispatch channels buffered before setup.
+    def pause_channel_dispatch(self) -> None:
+        """Buffer newly discovered channels instead of dispatching them.
 
-        Call this once async_forward_entry_setups() has returned so that any
-        channels discovered during platform setup are delivered to the now-
-        registered NEW_CHANNEL_ADDED listeners.
+        Used while unloading. removeBusDeviceListener() only removes this
+        gateway from pyhausbus's own listener list - it does not
+        retroactively stop a newDeviceDetected() call already in flight on
+        pyhausbus's DeviceWorker thread, or one already queued onto the
+        event loop via call_soon_threadsafe(), from still reaching
+        _register_channel() while async_unload_platforms() runs. This is
+        called with no `await` before it, so - the event loop being
+        single-threaded - any such call can only actually run after this
+        has already taken effect: it is guaranteed to see _platform_ready
+        already False and buffer instead of dispatching, rather than
+        calling async_add_entities() on a platform that might be
+        mid-teardown. Call async_flush_pending_channels() to undo this and
+        deliver anything buffered meanwhile, e.g. if the unload attempt
+        this was guarding turns out to fail.
+        """
+        self._platform_ready = False
+
+    async def async_flush_pending_channels(self) -> None:
+        """Mark the platform ready and dispatch channels buffered while not.
+
+        Called once async_forward_entry_setups() has returned, so that any
+        channels discovered during platform setup are delivered to the
+        now-registered NEW_CHANNEL_ADDED listeners. Also undoes
+        pause_channel_dispatch() if the unload it was guarding fails, so
+        the gateway keeps discovering devices normally for as long as it
+        keeps running.
         """
         self._platform_ready = True
         for channel, device_info in self._pending_channels:
