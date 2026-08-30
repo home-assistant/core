@@ -128,12 +128,12 @@ class ElgatoFirmwareCoordinator(DataUpdateCoordinator[FirmwareVersion | None]):
         except ElgatoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="communication_error",
+                translation_key="firmware_communication_error",
             ) from err
         except ElgatoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="unknown_error",
+                translation_key="firmware_unknown_error",
             ) from err
 
         # Elgato ships nothing for a board it does not know, which leaves the

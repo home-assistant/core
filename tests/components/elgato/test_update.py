@@ -209,8 +209,16 @@ async def test_elgato_unreachable(
 @pytest.mark.parametrize(
     ("side_effect", "message", "still_reachable"),
     [
-        (ElgatoConnectionError, "An error occurred while communicating", False),
-        (ElgatoFirmwareError, "An unknown error occurred while communicating", True),
+        (
+            ElgatoConnectionError,
+            "An error occurred while downloading the firmware from Elgato",
+            False,
+        ),
+        (
+            ElgatoFirmwareError,
+            "An unknown error occurred while downloading the firmware from Elgato",
+            True,
+        ),
     ],
 )
 async def test_download_failure_leaves_the_light_alone(

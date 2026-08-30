@@ -115,10 +115,10 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         """Fetch the firmware image from Elgato.
 
         This is the half of the install that happens off the local network,
-        and it reports on the coordinator that covers it. Letting the handler
-        around async_install see these would mark the device coordinator
-        failed, taking the light and everything on it offline over a problem
-        that is entirely at Elgato's end.
+        so it reports on the coordinator that covers it and says Elgato in
+        the message. Letting the handler around async_install see these would
+        mark the device coordinator failed and blame the light, over a
+        problem that is entirely at Elgato's end.
         """
         try:
             return await self.firmware.catalog.download(self.firmware.board_type)
@@ -126,12 +126,12 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
             self.firmware.async_set_update_error(err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="communication_error",
+                translation_key="firmware_communication_error",
             ) from err
         except ElgatoError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="unknown_error",
+                translation_key="firmware_unknown_error",
             ) from err
 
     @callback
