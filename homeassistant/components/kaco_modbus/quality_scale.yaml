@@ -59,8 +59,8 @@ rules:
   discovery:
     status: exempt
     comment: >-
-      The inverter advertises no mDNS service, and its MAC OUI is Microchip's
-      rather than KACO's, so a DHCP match would catch unrelated devices.
+      The inverter advertises no mDNS service, sends no DHCP hostname, and its
+      MAC OUI is Microchip's rather than KACO's.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

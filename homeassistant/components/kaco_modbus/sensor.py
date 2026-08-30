@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import IntEnum
 from typing import override
 
 from kaco_modbus.models import InverterThreePhase
@@ -67,7 +66,9 @@ SENSOR_DESCRIPTIONS: tuple[KacoSensorDescription, ...] = (
             "fault",
             "standby",
         ],
-        value_fn=lambda inverter: inverter.st,
+        value_fn=lambda inverter: (
+            None if inverter.st is None else inverter.st.name.lower()
+        ),
     ),
 )
 
@@ -94,9 +95,4 @@ class KacoSensor(KacoEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value this sensor reads from the device."""
         component = getattr(self.coordinator.device, self.entity_description.component)
-        value = self.entity_description.value_fn(component)
-        # An IntEnum stringifies as the raw number; use the option slug the
-        # ENUM device class and the translations are keyed on.
-        if isinstance(value, IntEnum):
-            return value.name.lower()
-        return value
+        return self.entity_description.value_fn(component)

@@ -1,10 +1,9 @@
 """Test the KACO Modbus sensor platform."""
 
-from unittest.mock import patch
-
 from freezegun.api import FrozenDateTimeFactory
 from kaco_modbus import KacoInverter
-from kaco_modbus.testing import BLUEPLANET_86TL3_ASLEEP
+from kaco_modbus.const import INVERTER_MODEL_ID
+from kaco_modbus.testing import BLUEPLANET_86TL3, BLUEPLANET_86TL3_ASLEEP
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
@@ -14,11 +13,12 @@ from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.components.kaco_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.components.kaco_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_SERIAL
+from . import MOCK_SERIAL, model_registers
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -96,40 +96,39 @@ async def test_sensors_go_unavailable_when_the_link_drops(
     assert hass.states.get(power).state == "1000"
 
 
-async def test_a_failing_component_does_not_take_out_the_others(
+async def test_an_unreadable_block_takes_its_sensors_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test one unreadable block leaves the rest of the entities alone.
+    """Test a partial poll, where one block fails and the others answer.
 
-    Components are polled separately, so an entity is unavailable when its
-    own component failed, not when any of them did.
+    A different path from a dead link: the poll still succeeds, so the entry
+    stays loaded, and it is the per-component check that takes these entities
+    unavailable. That the *other* components are unaffected is not observable
+    until a second component has entities of its own.
     """
-    coordinator = init_integration.runtime_data
-    # Where the MPPT block landed in this device's discovered model chain.
-    assert coordinator.device.models is not None
-    mppt = coordinator.device.models.first(160)
-    assert mppt is not None
-    unit = mock_connection.for_unit(1)
+    power = _entity_id(entity_registry, "ac_power")
+    assert hass.states.get(power).state == "1000"
 
-    for address in range(mppt.address, mppt.address + mppt.length):
+    unit = mock_connection.for_unit(1)
+    for address in model_registers(BLUEPLANET_86TL3, INVERTER_MODEL_ID):
         unit.fail_read(address, ModbusTimeoutError("slow block"))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
-    assert "mppt" in coordinator.data.failed
-    assert hass.states.get(_entity_id(entity_registry, "ac_power")).state == "1000"
+    assert hass.states.get(power).state == STATE_UNAVAILABLE
+    assert init_integration.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize("register_image", [BLUEPLANET_86TL3_ASLEEP])
 async def test_after_dark_the_inverter_reports_a_true_zero(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test a sleeping inverter still reports what it genuinely measures.
 
@@ -137,17 +136,6 @@ async def test_after_dark_the_inverter_reports_a_true_zero(
     goes unavailable. Producing nothing really is 0 W, and the lifetime
     total must keep reporting or the Energy dashboard gains a nightly gap.
     """
-    connection = MockModbusConnection()
-    connection.for_unit(1).load_raw({"holding": dict(BLUEPLANET_86TL3_ASLEEP)})
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.kaco_modbus.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
     assert hass.states.get(_entity_id(entity_registry, "ac_power")).state == "0"
     assert (
         hass.states.get(_entity_id(entity_registry, "operating_state")).state

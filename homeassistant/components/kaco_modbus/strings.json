@@ -5,8 +5,9 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_a_kaco_inverter": "That address answers, but the device is not a KACO inverter: {error}",
-      "not_a_sunspec_inverter": "That address answers Modbus, but not as a SunSpec inverter: {error}"
+      "not_a_kaco_inverter": "That address answers, but the device is not a KACO inverter",
+      "not_a_sunspec_inverter": "That address answers Modbus, but not as a SunSpec inverter",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {

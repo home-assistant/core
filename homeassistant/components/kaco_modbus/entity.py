@@ -44,6 +44,7 @@ class KacoEntity(CoordinatorEntity[KacoDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Whether this entity's own component answered the last poll."""
-        if not super().available:
-            return False
-        return self.entity_description.component in self.coordinator.data.updated
+        return (
+            super().available
+            and self.entity_description.component in self.coordinator.data.updated
+        )

@@ -1,5 +1,6 @@
 """Adding an inverter by address."""
 
+import logging
 from typing import Any, override
 
 from kaco_modbus import KacoError, KacoInverter, NotAKacoInverterError
@@ -18,6 +19,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -49,7 +52,6 @@ class KacoModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for an address and check a KACO inverter answers there."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
             params = ModbusTcpParams(
@@ -61,15 +63,15 @@ class KacoModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 ) as unit:
                     device = KacoInverter(unit)
                     await device.async_update_readings()
-            except NotAKacoInverterError as err:
+            except NotAKacoInverterError:
                 errors["base"] = "not_a_kaco_inverter"
-                description_placeholders["error"] = str(err)
-            except KacoError as err:
+            except KacoError:
                 errors["base"] = "not_a_sunspec_inverter"
-                description_placeholders["error"] = str(err)
-            except (ModbusError, HomeAssistantError) as err:
+            except ModbusError, HomeAssistantError:
                 errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 info = device.info
                 assert info is not None
@@ -82,5 +84,4 @@ class KacoModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders=description_placeholders,
         )
