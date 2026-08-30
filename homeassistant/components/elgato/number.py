@@ -49,16 +49,13 @@ NUMBERS = [
         translation_key="power_on_temperature",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
-        # Whatever range the light itself exposes; a device that does color
-        # reaches less far at either end. The device stores mireds, which run
-        # the other way, so both ends are converted at the edge.
+        # Narrows on a device that does color, exactly as the light does.
         range_fn=color_temperature_range,
         native_step=50,
         has_fn=lambda x: x.settings.power_on_temperature is not None,
-        # A light set to power on to a color reports a zero here, which is
-        # not a color temperature. Whether it reports the field at all is a
-        # property of the device; what it currently holds is not, so the
-        # entity exists either way and goes unknown while the value is zero.
+        # A light set to power on to a color reports a zero, which is not a
+        # color temperature. The setting can be changed back, so the entity
+        # stays and goes unknown rather than disappearing.
         value_fn=lambda x: (
             color_temperature_mired_to_kelvin(x.settings.power_on_temperature)
             if x.settings.power_on_temperature
