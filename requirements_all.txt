@@ -917,7 +917,7 @@ electrickiwi-api==0.9.14
 elevenlabs==2.51.0
 
 # homeassistant.components.elgato
-elgato==6.1.0
+elgato==6.1.1
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.15
@@ -1562,7 +1562,7 @@ lw12==0.9.2
 lxml==6.1.2
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.11.0
+lyngdorf==2.1.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
