@@ -140,7 +140,7 @@ async def test_climate_entity_state(
 
     state = hass.states.get(CLIMATE_ENTITY_ID)
     assert state is not None
-    assert state.state == HVACMode.AUTO
+    assert state.state == HVACMode.HEAT_COOL
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
     assert state.attributes[ATTR_FAN_MODE] == "Medium"
