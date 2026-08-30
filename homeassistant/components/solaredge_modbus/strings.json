@@ -320,6 +320,14 @@
       "voltage_phase_cn": {
         "name": "Voltage phase C-N"
       }
+    },
+    "switch": {
+      "external_production": {
+        "name": "External production"
+      },
+      "negative_site_limit": {
+        "name": "Negative site limit"
+      }
     }
   },
   "exceptions": {
