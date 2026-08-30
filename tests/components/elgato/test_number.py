@@ -83,3 +83,26 @@ async def test_no_power_on_temperature(hass: HomeAssistant) -> None:
     """
     assert hass.states.get("number.frenck_power_on_brightness")
     assert not hass.states.get("number.frenck_power_on_color_temperature")
+
+
+@pytest.mark.parametrize(
+    ("device_fixtures", "expected_range"),
+    [
+        ("key-light", (2900, 6993)),
+        ("light-strip-power-on-temperature", (3500, 6500)),
+    ],
+)
+async def test_power_on_temperature_range(
+    hass: HomeAssistant,
+    expected_range: tuple[int, int],
+) -> None:
+    """Test the number stays inside what the device can actually do.
+
+    A light that does color reaches less far at either end, and the number
+    has to agree with the light entity about that.
+    """
+    minimum, maximum = expected_range
+
+    assert (state := hass.states.get("number.frenck_power_on_color_temperature"))
+    assert state.attributes["min"] == minimum
+    assert state.attributes["max"] == maximum

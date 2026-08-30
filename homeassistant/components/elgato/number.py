@@ -17,7 +17,7 @@ from homeassistant.util.color import (
 
 from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import color_temperature_range, elgato_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -27,6 +27,7 @@ class ElgatoNumberEntityDescription(NumberEntityDescription):
     """Class describing Elgato number entities."""
 
     has_fn: Callable[[ElgatoData], bool] = lambda _: True
+    range_fn: Callable[[ElgatoData], tuple[int, int]] | None = None
     value_fn: Callable[[ElgatoData], float | None]
     set_fn: Callable[[Elgato, float], Awaitable[Any]]
 
@@ -48,10 +49,10 @@ NUMBERS = [
         translation_key="power_on_temperature",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
-        # The same range the light itself exposes. The device stores mireds,
-        # which run the other way, so both ends are converted at the edge.
-        native_min_value=2900,
-        native_max_value=6993,
+        # Whatever range the light itself exposes; a device that does color
+        # reaches less far at either end. The device stores mireds, which run
+        # the other way, so both ends are converted at the edge.
+        range_fn=color_temperature_range,
         native_step=50,
         has_fn=lambda x: bool(x.settings.power_on_temperature),
         value_fn=lambda x: (
@@ -101,6 +102,12 @@ class ElgatoNumberEntity(ElgatoEntity, NumberEntity):
         self._attr_unique_id = (
             f"{coordinator.data.info.serial_number}_{description.key}"
         )
+
+        if description.range_fn is not None:
+            (
+                self._attr_native_min_value,
+                self._attr_native_max_value,
+            ) = description.range_fn(coordinator.data)
 
     @property
     @override
