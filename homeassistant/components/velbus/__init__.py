@@ -203,6 +203,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> b
 
 async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Remove the velbus entry, so we also have to cleanup the cache dir."""
+    # If the initial connection fails, async_setup_entry raises ConfigEntryNotReady
+    # before async_on_unload is registered, so the unload callback never clears this
+    # persistent issue. Delete it here too, so a removed entry doesn't leave it behind.
+    ir.async_delete_issue(hass, DOMAIN, f"connection_lost_{entry.entry_id}")
     await hass.async_add_executor_job(
         shutil.rmtree,
         hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),

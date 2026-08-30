@@ -305,6 +305,40 @@ async def test_setup_deletes_stale_issue(
     assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
+async def test_remove_entry_deletes_connection_lost_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that removing a stuck-retrying entry clears its connection_lost issue.
+
+    async_on_unload is only registered once connect() succeeds, so a config entry
+    that never got past setup retry has no unload hook to clean up the persistent
+    issue. async_remove_entry must delete it directly.
+    """
+    controller.return_value.connect.side_effect = VelbusConnectionFailed()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_lost",
+    )
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    with patch("shutil.rmtree"):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert (DOMAIN, issue_id) not in issue_registry.issues
+
+
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
