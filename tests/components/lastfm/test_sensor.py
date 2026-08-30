@@ -105,7 +105,6 @@ async def test_sensor_hidden_listening_information(
     ],
 )
 async def test_error_log_does_not_include_credentials(
-    hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
