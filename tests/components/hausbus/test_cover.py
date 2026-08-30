@@ -14,10 +14,12 @@ import pytest
 
 from homeassistant.components.cover import ATTR_POSITION
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
-from homeassistant.components.hausbus.cover import HausbusCover, async_setup_entry
+from homeassistant.components.hausbus.cover import HausbusCover
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from tests.common import MockConfigEntry
 
 
 def _make_channel() -> MagicMock:
@@ -38,24 +40,28 @@ def cover_entity(hass: HomeAssistant) -> HausbusCover:
 
 
 async def test_async_setup_entry_adds_only_rollladen_channels(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_home_server: MagicMock
 ) -> None:
     """async_setup_entry() only turns discovered Rollladen channels into covers."""
-    config_entry = MagicMock()
-    async_add_entities = MagicMock()
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
+    config_entry.add_to_hass(hass)
 
-    await async_setup_entry(hass, config_entry, async_add_entities)
-    config_entry.async_on_unload.assert_called_once()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     device_info = DeviceInfo(identifiers={(DOMAIN, "1")})
     async_dispatcher_send(hass, NEW_CHANNEL_ADDED, _make_channel(), device_info)
     async_dispatcher_send(hass, NEW_CHANNEL_ADDED, MagicMock(), device_info)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    async_add_entities.assert_called_once()
-    (added,), _kwargs = async_add_entities.call_args
-    assert len(added) == 1
-    assert isinstance(added[0], HausbusCover)
+    cover_entity_ids = hass.states.async_entity_ids("cover")
+    assert len(cover_entity_ids) == 1
+
+    # device_class is set by HausbusCover specifically, so this confirms the
+    # created entity is really a HausbusCover and not some other platform's.
+    state = hass.states.get(cover_entity_ids[0])
+    assert state is not None
+    assert state.attributes.get("device_class") == "shutter"
 
 
 async def test_async_open_cover(

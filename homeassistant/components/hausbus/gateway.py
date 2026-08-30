@@ -123,7 +123,19 @@ async def async_release_home_server(
         refcount = _home_server_refs.get(home_server, 0) - 1
         if refcount <= 0:
             _home_server_refs.pop(home_server, None)
-            await hass.async_add_executor_job(home_server.shutdown)
+            try:
+                await hass.async_add_executor_job(home_server.shutdown)
+            except RuntimeError:
+                # pyhausbus's background worker can still be mid-poll (up
+                # to ~12s) when stop() is requested; shutdown() then
+                # raises after its own join timeout rather than blocking
+                # indefinitely. Its finally block has already torn the
+                # singleton down at this point, so there is nothing left
+                # to retry - just don't let a slow worker thread break
+                # unloading this config entry.
+                LOGGER.warning(
+                    "HomeServer shutdown did not complete cleanly", exc_info=True
+                )
         else:
             _home_server_refs[home_server] = refcount
 

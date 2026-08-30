@@ -200,3 +200,21 @@ async def test_acquire_release_home_server_is_reference_counted(
 
     await async_release_home_server(hass, second)
     mock_home_server.shutdown.assert_called_once()
+
+
+async def test_release_home_server_survives_shutdown_runtime_error(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """A slow-to-stop HomeServer must not break releasing/unloading the entry.
+
+    pyhausbus's background worker can still be mid-poll when shutdown() is
+    called; shutdown() then raises RuntimeError after its own join timeout
+    instead of hanging. That must not propagate out of
+    async_release_home_server(), or it would break config entry unloading.
+    """
+    mock_home_server.shutdown.side_effect = RuntimeError("DeviceWorker failed to stop")
+
+    home_server = await async_acquire_home_server(hass)
+    await async_release_home_server(hass, home_server)
+
+    mock_home_server.shutdown.assert_called_once()

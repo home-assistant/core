@@ -1,6 +1,6 @@
 """Test the Haus-Bus config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
