@@ -160,15 +160,8 @@ async def test_single_pending_site(
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert enter_api_key_result["type"] is FlowResultType.FORM
-    assert enter_api_key_result["step_id"] == "user"
-
     enter_api_key_result = await hass.config_entries.flow.async_configure(
-        enter_api_key_result["flow_id"],
+        initial_result["flow_id"],
         user_input={CONF_API_TOKEN: API_KEY},
     )
     assert enter_api_key_result.get("type") is FlowResultType.FORM
@@ -197,15 +190,8 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert enter_api_key_result["type"] is FlowResultType.FORM
-    assert enter_api_key_result["step_id"] == "user"
-
     enter_api_key_result = await hass.config_entries.flow.async_configure(
-        enter_api_key_result["flow_id"],
+        initial_result["flow_id"],
         user_input={CONF_API_TOKEN: API_KEY},
     )
     assert enter_api_key_result.get("type") is FlowResultType.FORM
@@ -256,15 +242,8 @@ async def test_single_site_rejoin(
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert enter_api_key_result["type"] is FlowResultType.FORM
-    assert enter_api_key_result["step_id"] == "user"
-
     enter_api_key_result = await hass.config_entries.flow.async_configure(
-        enter_api_key_result["flow_id"],
+        initial_result["flow_id"],
         user_input={CONF_API_TOKEN: API_KEY},
     )
     assert enter_api_key_result.get("type") is FlowResultType.FORM
@@ -313,13 +292,6 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     assert result.get("step_id") == "user"
 
     # Test filling in API key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_API_TOKEN: "psk_123456789"},
@@ -339,13 +311,6 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     assert result.get("step_id") == "user"
 
     # Test filling in API key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_API_TOKEN: "psk_123456789"},
