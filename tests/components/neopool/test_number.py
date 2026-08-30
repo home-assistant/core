@@ -25,8 +25,10 @@ from .conftest import MOCK_POOL_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-# Longer than the entity's debounce cooldown so a single tick flushes the write.
+# Longer than the entity's settle delay so a single tick flushes the write.
 FLUSH = timedelta(seconds=5)
+# Shorter than the settle delay: advancing by this must NOT flush a pending write.
+PARTIAL = timedelta(seconds=2)
 
 
 def _number_entity_id(
@@ -61,6 +63,13 @@ async def _set_value(hass: HomeAssistant, entity_id: str, value: float) -> None:
 async def _flush(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Advance past the debounce cooldown and let the pending write run."""
     freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def _advance(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance by less than the cooldown; a pending write must not fire yet."""
+    freezer.tick(PARTIAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -464,6 +473,74 @@ async def test_repeated_set_value_writes_only_latest(
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 750
     )
+
+
+async def test_stepper_settle_restarts_timer(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Each click restarts the timer; the write fires after the last click.
+
+    Two clicks 2s apart (each under the 3s settle delay) span 4s in total. A
+    fixed-window debounce anchored to the first click would have written the
+    intermediate value at 3s; the restart-on-click behavior must instead write
+    only the final value once the stepper settles.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _set_value(hass, ph1_entity_id, 7.0)
+    await _advance(hass, freezer)
+    await _set_value(hass, ph1_entity_id, 7.5)
+    await _advance(hass, freezer)
+
+    # 4s elapsed since the first click, but only 2s since the last: no write yet.
+    mock_neopool_client.async_set_setpoint.assert_not_awaited()
+
+    await _flush(hass, freezer)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.PH_MAX, 750
+    )
+
+
+async def test_no_write_when_settled_value_unchanged(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A sweep that lands back on the current value writes nothing.
+
+    Stepping away and back to the device's value must not burn an EEPROM cycle:
+    the settled raw value equals the coordinator's, so the write is skipped.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+    await _poll(
+        hass, freezer, mock_neopool_client, {**MOCK_POOL_DATA, "MBF_PAR_PH1": 7.5}
+    )
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _set_value(hass, ph1_entity_id, 8.0)
+    await _set_value(hass, ph1_entity_id, 7.5)
+    await _flush(hass, freezer)
+
+    mock_neopool_client.async_set_setpoint.assert_not_awaited()
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.5
 
 
 async def test_pending_write_dropped_on_remove(

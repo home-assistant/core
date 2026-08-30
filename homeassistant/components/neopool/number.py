@@ -1,7 +1,8 @@
 """Number platform for the NeoPool integration."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -30,9 +31,9 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .const import CONF_USE_COVER_SENSOR
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
@@ -42,8 +43,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-# Debounce stepper clicks so only the final value hits the device's EEPROM.
-DEBOUNCE_COOLDOWN = 2.0
+# Wait for the stepper to settle so only the final value hits the device's EEPROM.
+WRITE_DELAY = timedelta(seconds=3)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -285,7 +286,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
 
-        self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
+        self._write_unsub: CALLBACK_TYPE | None = None
         self._pending_value: float | None = None
 
     def _decode_raw(self) -> float | None:
@@ -300,14 +301,6 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         """Run when the entity is added to hass."""
         await super().async_added_to_hass()
 
-        self._debouncer = Debouncer(
-            hass=self.hass,
-            logger=_LOGGER,
-            cooldown=DEBOUNCE_COOLDOWN,
-            immediate=False,
-            function=self._async_write_pending,
-        )
-
         val = self._decode_raw()
         self._attr_native_value = float(val) if isinstance(val, (int, float)) else None
 
@@ -315,27 +308,45 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Shut down the write debouncer when removed."""
-        if self._debouncer is not None:
-            self._debouncer.async_shutdown()
+        """Cancel a pending write when removed."""
+        self._cancel_pending_write()
         await super().async_will_remove_from_hass()
+
+    @callback
+    def _cancel_pending_write(self) -> None:
+        """Cancel a scheduled write, if any."""
+        if self._write_unsub is not None:
+            self._write_unsub()
+            self._write_unsub = None
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the number entity."""
         self._pending_value = value
-        # Show the pending value optimistically. Write happens after debounce.
+        # Show the pending value optimistically. Write happens once the stepper
+        # settles; restart the timer so it fires after the last click, not the
+        # first, sparing the device a flash cycle per intermediate step.
         self.async_write_ha_state()
-        assert self._debouncer is not None
-        await self._debouncer.async_call()
+        self._cancel_pending_write()
+        self._write_unsub = async_call_later(
+            self.hass, WRITE_DELAY, self._async_write_pending
+        )
 
-    async def _async_write_pending(self) -> None:
+    async def _async_write_pending(self, _now: datetime) -> None:
         """Write the pending value via the appropriate lib high-level API."""
-        if (pending := self._pending_value) is None:
+        self._write_unsub = None
+        if (pending := self._pending_value) is None:  # pragma: no cover
+            # Defensive: the timer only fires after a value is queued.
             return
+        self._pending_value = None
         client = self.coordinator.client
         desc = self.entity_description
         raw = round(pending * desc.scale)
+        # No EEPROM cycle if the settled value already matches the device.
+        if (current := self._decode_raw()) is not None and (
+            round(current * desc.scale) == raw
+        ):
+            return
         try:
             if desc.setpoint is not None:
                 await client.async_set_setpoint(desc.setpoint, raw)
@@ -353,7 +364,6 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             # Background write: log and drop; the next poll restores state.
             _LOGGER.warning("Failed to write %s: %s", self.entity_description.key, err)
             return
-        self._pending_value = None
         self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
         self.coordinator.request_refresh_with_followup()
 
