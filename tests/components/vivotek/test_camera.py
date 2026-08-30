@@ -7,7 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from libpyvivotek.vivotek import VivotekCameraError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vivotek.camera import VivotekCam
+from homeassistant.components.camera import (
+    SERVICE_DISABLE_MOTION,
+    SERVICE_ENABLE_MOTION,
+    async_get_image,
+    async_get_stream_source,
+)
 from homeassistant.components.vivotek.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -123,66 +128,56 @@ async def test_camera_unavailable_when_update_fails(
 
 
 async def test_camera_stream_source(
+    hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test stream source is returned from camera entity."""
-    camera = VivotekCam(
-        mock_vivotek_camera,
-        "rtsp://example/live.sdp",
-        "11:22:33:44:55:66",
-        None,
-        None,
-        None,
-        2,
-        "Vivotek Camera",
-    )
+    await setup_integration(hass, mock_config_entry)
 
-    stream_source = await camera.stream_source()
+    stream_source = await async_get_stream_source(hass, "camera.vivotek_camera")
 
-    assert stream_source == "rtsp://example/live.sdp"
+    assert stream_source == "rtsp://admin:pass1234@1.2.3.4:554//live.sdp"
 
 
-def test_camera_motion_detection_methods(
+async def test_camera_motion_detection_methods(
+    hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test motion detection commands update entity state."""
-    camera = VivotekCam(
-        mock_vivotek_camera,
-        "rtsp://example/live.sdp",
-        "11:22:33:44:55:66",
-        None,
-        None,
-        None,
-        2,
-        "Vivotek Camera",
-    )
+    await setup_integration(hass, mock_config_entry)
 
     mock_vivotek_camera.set_param.side_effect = ["1", "0"]
 
-    camera.enable_motion_detection()
-    assert camera.motion_detection_enabled
+    await hass.services.async_call(
+        "camera",
+        SERVICE_ENABLE_MOTION,
+        {"entity_id": "camera.vivotek_camera"},
+        blocking=True,
+    )
 
-    camera.disable_motion_detection()
-    assert not camera.motion_detection_enabled
+    await hass.services.async_call(
+        "camera",
+        SERVICE_DISABLE_MOTION,
+        {"entity_id": "camera.vivotek_camera"},
+        blocking=True,
+    )
+
+    mock_vivotek_camera.set_param.assert_any_call("event_i0_enable", 1)
+    mock_vivotek_camera.set_param.assert_any_call("event_i0_enable", 0)
 
 
-def test_camera_image_returns_snapshot(
+async def test_camera_image_returns_snapshot(
+    hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test camera image comes directly from camera snapshot call."""
-    camera = VivotekCam(
-        mock_vivotek_camera,
-        "rtsp://example/live.sdp",
-        "11:22:33:44:55:66",
-        None,
-        None,
-        None,
-        2,
-        "Vivotek Camera",
-    )
+    await setup_integration(hass, mock_config_entry)
 
     mock_vivotek_camera.snapshot.return_value = b"snapshot-bytes"
 
-    image = camera.camera_image()
+    image = await async_get_image(hass, "camera.vivotek_camera")
 
-    assert image == b"snapshot-bytes"
+    assert image.content == b"snapshot-bytes"
