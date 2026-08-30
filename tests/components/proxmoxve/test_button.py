@@ -1,5 +1,6 @@
 """Tests for the ProxmoxVE button platform."""
 
+import re
 from unittest.mock import MagicMock, patch
 
 from proxmoxer import AuthenticationError
@@ -142,48 +143,42 @@ async def test_vm_buttons(
     assert len(method_mock.mock_calls) == pre_calls + 1
 
 
-async def test_vm_snapshot_button(
+@pytest.mark.parametrize(
+    ("entity_id", "vmid", "guest_resource"),
+    [
+        pytest.param("button.vm_web_create_snapshot", 100, "qemu", id="vm"),
+        pytest.param("button.ct_nginx_create_snapshot", 200, "lxc", id="container"),
+    ],
+)
+async def test_snapshot_button(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    vmid: int,
+    guest_resource: str,
 ) -> None:
-    """Test pressing a ProxmoxVE VM snapshot button triggers the correct API call."""
+    """Test a ProxmoxVE snapshot button triggers the correct API call."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_proxmox_client._node_mock.qemu(100)
-    method_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
+    node = mock_proxmox_client.nodes("pve1")
+    method_mock = getattr(node, guest_resource)(vmid).snapshot.post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.vm_web_create_snapshot"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     assert len(method_mock.mock_calls) == pre_calls + 1
 
-
-async def test_container_snapshot_button(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test ProxmoxVE container snapshot button API call."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_proxmox_client._node_mock.lxc(200)
-    method_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
-    pre_calls = len(method_mock.mock_calls)
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.ct_nginx_create_snapshot"},
-        blocking=True,
-    )
-
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    # Proxmox validates the name as a `pve-configid` of at most 40 characters:
+    # two or more, starting with a letter, then only [A-Za-z0-9_-]
+    name = method_mock.call_args.kwargs["name"]
+    assert len(name) <= 40
+    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", name)
 
 
 @pytest.mark.parametrize(
