@@ -211,6 +211,7 @@ USB_DEPENDENTS = [
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "insteon",
+    "lacrosse",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
     "modem_callerid",
