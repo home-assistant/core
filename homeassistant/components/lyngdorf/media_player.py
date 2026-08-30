@@ -452,7 +452,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         volume = self._receiver.volume
-        if volume is None or volume.value is None:
+        if volume.value is None:
             return None
         return _to_ha_volume(volume.value, volume.range)
 
@@ -481,20 +481,18 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        if (volume := self._receiver.volume) is not None:
-            await volume.up()
+        await self._receiver.volume.up()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
-        if (volume := self._receiver.volume) is not None:
-            await volume.down()
+        await self._receiver.volume.down()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        if (control := self._receiver.volume) is not None:
-            await control.set(_to_lyngdorf_volume(volume, control.range))
+        control = self._receiver.volume
+        await control.set(_to_lyngdorf_volume(volume, control.range))
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:

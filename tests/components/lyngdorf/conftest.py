@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Self
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from lyngdorf import (
@@ -14,6 +13,7 @@ from lyngdorf import (
     Player,
     Remote,
     RemoteKey,
+    SteppableControl,
     Trim,
     ZoneB,
 )
@@ -63,18 +63,12 @@ def mock_setup_entry() -> Generator[None]:
         yield
 
 
-class _FloatControl(float):
-    """A float that is also a control, as the library's 1.x values are."""
-
-    def __new__(cls, value: float, value_range: NumericRange) -> Self:
-        """Return a float carrying the control interface alongside it."""
-        control = super().__new__(cls, value)
-        control.value = value
-        control.range = value_range
-        control.up = AsyncMock()
-        control.down = AsyncMock()
-        control.set = AsyncMock()
-        return control
+def _steppable(value: float | None, value_range: NumericRange) -> MagicMock:
+    """Return a mocked volume-style control."""
+    control = MagicMock(spec=SteppableControl)
+    control.value = value
+    control.range = value_range
+    return control
 
 
 def _control(value: float | None, value_range: NumericRange) -> MagicMock:
@@ -137,7 +131,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
 
     receiver.power_on = False
-    receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.muted = False
     receiver.sources = []
     receiver.sound_modes = []
@@ -166,7 +160,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.can_shuffle = False
     receiver.available_repeat_modes = frozenset()
 
-    receiver.lipsync = _FloatControl(50.0, NumericRange(0, 500, 1))
+    receiver.lipsync = _control(50.0, NumericRange(0, 500, 1))
     receiver.lipsync_range = NumericRange(0, 500, 1)
     receiver.trims = {
         Trim.BASS: _control(3.0, NumericRange(-12.0, 12.0, 0.1)),
@@ -199,7 +193,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b = zone_b
     receiver.zone_b_streaming_source = "DLNA"
 
-    receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.muted = False
     receiver.sources = []
     receiver.sound_modes = []
@@ -225,7 +219,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     zone_b.audio_input = "aux"
     zone_b.streaming_source = "DLNA"
     zone_b.sources = []
-    zone_b.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    zone_b.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.zone_b = zone_b
 
     mock_create_receiver.return_value = receiver

@@ -23,8 +23,7 @@ class LyngdorfSelectEntityDescription(SelectEntityDescription):
 
     current_option_fn: Callable[[LyngdorfReceiver], str | None]
     options_fn: Callable[[LyngdorfReceiver], list[str]]
-    # None on the pinned library, a coroutine on 2.x: await whichever it is.
-    select_option_fn: Callable[[LyngdorfReceiver, str], Awaitable[None] | None]
+    select_option_fn: Callable[[LyngdorfReceiver, str], Awaitable[None]]
 
 
 SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
@@ -95,6 +94,4 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
-        result = self.entity_description.select_option_fn(self._receiver, option)
-        if result is not None:
-            await result
+        await self.entity_description.select_option_fn(self._receiver, option)
