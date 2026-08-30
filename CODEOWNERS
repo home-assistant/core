@@ -964,6 +964,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley
 /tests/components/jvc_projector/ @SteveEasley
+/homeassistant/components/kaco_modbus/ @g4bri3lDev
+/tests/components/kaco_modbus/ @g4bri3lDev
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley

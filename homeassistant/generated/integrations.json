@@ -3582,6 +3582,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "kaco_modbus": {
+      "name": "KACO Modbus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
       "integration_type": "virtual",
