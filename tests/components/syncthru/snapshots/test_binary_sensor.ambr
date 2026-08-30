@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.sec84251907c415_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SEC84251907C415 Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sec84251907c415_connectivity',
@@ -90,8 +90,8 @@
 # name: test_all_entities[binary_sensor.sec84251907c415_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'SEC84251907C415 Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sec84251907c415_problem',

@@ -7,7 +7,7 @@ from typing import override
 from hole import Hole
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.const import CONF_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
-    name = entry.data[CONF_NAME]
+    name = entry.title
     hole_data = entry.runtime_data
 
     async_add_entities(

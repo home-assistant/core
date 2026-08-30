@@ -49,7 +49,7 @@
 # name: test_select_entities[select.tree_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tree 1 Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tree 1 Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'color',
         'demo',

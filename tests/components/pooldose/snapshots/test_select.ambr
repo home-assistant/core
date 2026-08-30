@@ -46,7 +46,7 @@
 # name: test_all_selects[select.pool_device_chlorine_dosing_method-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine dosing method',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine dosing method',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
@@ -107,7 +107,7 @@
 # name: test_all_selects[select.pool_device_chlorine_dosing_set-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine dosing set',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine dosing set',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
@@ -166,7 +166,7 @@
 # name: test_all_selects[select.pool_device_flow_rate_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Flow rate unit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Flow rate unit',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
         <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
@@ -227,7 +227,7 @@
 # name: test_all_selects[select.pool_device_orp_dosing_method-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device ORP dosing method',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP dosing method',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
@@ -288,7 +288,7 @@
 # name: test_all_selects[select.pool_device_orp_dosing_set-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device ORP dosing set',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP dosing set',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
@@ -349,7 +349,7 @@
 # name: test_all_selects[select.pool_device_ph_dosing_method-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device pH dosing method',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH dosing method',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
@@ -410,7 +410,7 @@
 # name: test_all_selects[select.pool_device_ph_dosing_set-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device pH dosing set',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH dosing set',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
@@ -469,7 +469,7 @@
 # name: test_all_selects[select.pool_device_water_meter_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Water meter unit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Water meter unit',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolume.LITERS: 'L'>,
         <UnitOfVolume.CUBIC_METERS: 'm³'>,

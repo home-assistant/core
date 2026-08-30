@@ -2,9 +2,9 @@
 # name: test_button_update[config_prod_awning_dimmer.json-status_prod_awning.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by WMS WebControl pro API',
-      'device_class': 'identify',
-      'friendly_name': 'Markise Identify',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Markise Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.terrasse_markise_identify',

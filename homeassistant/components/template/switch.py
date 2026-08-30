@@ -10,14 +10,8 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_STATE,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME, CONF_STATE, STATE_ON
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -26,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -37,7 +31,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -57,9 +51,15 @@ SWITCH_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(SWITCH_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        SWITCH_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
+)
 
 
 SWITCH_CONFIG_ENTRY_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
@@ -124,6 +124,8 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -135,7 +137,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
 
         self.setup_state_template(
             "_attr_is_on",
-            template_validators.boolean(self, CONF_STATE),
+            tcv.boolean(self, CONF_STATE),
         )
 
         # Scripts can be an empty list, therefore we need to check for None
@@ -162,6 +164,12 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_is_on = last_state.state == STATE_ON
+        return True
+
 
 class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
     """Representation of a Template switch."""
@@ -181,16 +189,6 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             assert name is not None
         AbstractTemplateSwitch.__init__(self, name, config)
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if CONF_STATE not in self._templates:
-            # restore state after startup
-            await super().async_added_to_hass()
-            if state := await self.async_get_last_state():
-                self._attr_is_on = state.state == STATE_ON
-        await super().async_added_to_hass()
-
 
 class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
     """Switch entity based on trigger data."""
@@ -207,17 +205,3 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
         TriggerEntity.__init__(self, hass, coordinator, config)
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateSwitch.__init__(self, name, config)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self.is_on is None
-        ):
-            self._attr_is_on = last_state.state == STATE_ON
-            self.restore_attributes(last_state)

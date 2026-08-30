@@ -47,15 +47,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -18,
-      'friendly_name': 'Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -14,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -28,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -18,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -18,
     }),
     'context': <ANY>,
     'entity_id': 'climate.freezer',
@@ -113,15 +113,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 4,
-      'friendly_name': 'Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -14,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -28,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 4,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 4,
     }),
     'context': <ANY>,
     'entity_id': 'climate.refrigerator',
@@ -179,15 +179,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -18,
-      'friendly_name': 'Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -13,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -27,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -18,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -18,
     }),
     'context': <ANY>,
     'entity_id': 'climate.freezer',
@@ -245,15 +245,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 4,
-      'friendly_name': 'Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 9,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 4,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 4,
     }),
     'context': <ANY>,
     'entity_id': 'climate.refrigerator',
@@ -311,15 +311,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -18,
-      'friendly_name': 'Fridge freezer Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -14,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -28,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -18,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -18,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_freezer',
@@ -377,15 +377,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -14,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -28,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_freezer_2',
@@ -443,15 +443,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 4,
-      'friendly_name': 'Fridge freezer Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 9,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 4,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 4,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_refrigerator',
@@ -509,15 +509,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 9,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_refrigerator_2',
@@ -575,15 +575,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -28,
-      'friendly_name': 'Fridge freezer Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Zone 3',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -15,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -30,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -25,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -25,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_zone_3',
@@ -641,15 +641,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Zone 3',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: -15,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -30,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_zone_3_2',
@@ -707,15 +707,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -18,
-      'friendly_name': 'Fridge freezer Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -18,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -18,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_freezer',
@@ -773,15 +773,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Freezer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Freezer',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_freezer_2',
@@ -839,15 +839,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 4,
-      'friendly_name': 'Fridge freezer Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 4,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 4,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_refrigerator',
@@ -905,15 +905,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Refrigerator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Refrigerator',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_refrigerator_2',
@@ -971,15 +971,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -28,
-      'friendly_name': 'Fridge freezer Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Zone 3',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: -25,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -25,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_zone_3',
@@ -1037,15 +1037,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Fridge freezer Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fridge freezer Zone 3',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fridge_freezer_zone_3_2',

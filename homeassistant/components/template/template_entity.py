@@ -45,6 +45,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
+from .validators import log_validation_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,18 +123,8 @@ class _TemplateAttribute:
         try:
             validated = self.validator(result)
         except vol.Invalid as ex:
-            _LOGGER.error(
-                (
-                    "Error validating template result '%s' "
-                    "from template '%s' "
-                    "for attribute '%s' in entity %s "
-                    "validation message '%s'"
-                ),
-                result,
-                self.template,
-                self._attribute,
-                self._entity.entity_id,
-                ex.msg,
+            log_validation_error(
+                result, self.template, self._attribute, self._entity.entity_id, ex
             )
             assert self.on_update
             self.on_update(None)
@@ -161,7 +152,6 @@ class TemplateEntity(AbstractTemplateEntity):
         AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
-        self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
         self._preview_callback: (
@@ -177,7 +167,6 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")
@@ -526,6 +515,29 @@ class TemplateEntity(AbstractTemplateEntity):
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
 
+        # Handle attributes as a template.
+        elif (template := self._attributes_template) is not None:
+
+            def _update_attributes(result: dict | TemplateError) -> None:
+                if isinstance(result, TemplateError):
+                    self._attr_extra_state_attributes = {}
+                    return
+
+                try:
+                    self._attr_extra_state_attributes = vol.All(
+                        dict,
+                        validate_attributes(self.entity_id, self._blocked_attributes),
+                    )(result)
+                except vol.Invalid as err:
+                    log_validation_error(
+                        result, template, CONF_ATTRIBUTES, self.entity_id, err
+                    )
+                    self._attr_extra_state_attributes = {}
+
+            self.add_template_attribute(
+                CONF_ATTRIBUTES, template, on_update=_update_attributes
+            )
+
         # Iterate all dynamic templates and add listeners.
         for entity_template in self._templates.values():
             self.add_template_attribute(
@@ -570,11 +582,19 @@ class TemplateEntity(AbstractTemplateEntity):
         return self._call_on_remove_callbacks
 
     @override
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        setattr(self, attr, restored_value)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
         self._async_setup_templates()
 
         async_at_start(self.hass, self._async_template_startup)
+        await self.async_restore_last_state()
 
     async def async_update(self) -> None:
         """Call for forced update."""

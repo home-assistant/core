@@ -88,6 +88,29 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is Awning
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_HORIZONTAL_AWNING_UNO,
+        device_class=CoverDeviceClass.AWNING,
+        current_position_state=OverkizState.CORE_DEPLOYMENT,
+        set_position_command=OverkizCommand.SET_DEPLOYMENT,
+        open_command=OverkizCommand.DEPLOY,
+        close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
+        invert_position=False,
+    ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is RollerShutter
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,
+        device_class=CoverDeviceClass.SHUTTER,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+    ),
     # Needs override to support lower/upper position control
     # uiClass is RollerShutter
     OverkizCoverDescription(
@@ -343,8 +366,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
         key=UIWidget.RTS_GENERIC,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
+        open_command=OverkizCommand.UP,
+        close_command=OverkizCommand.DOWN,
         stop_command=OverkizCommand.STOP,
     ),
     ##
@@ -510,6 +533,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
 ]
 
 SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCRIPTIONS}
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -857,7 +883,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") == command
-            for execution in self.coordinator.executions.values()
+            for executions in self.coordinator.executions.values()
+            for execution in executions
         )
 
     @property

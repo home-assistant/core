@@ -45,7 +45,7 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 1',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
@@ -106,7 +106,7 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 2',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
@@ -167,7 +167,7 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 3',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
@@ -230,7 +230,7 @@
 # name: test_all_entities[select.my_pool_pump_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Pump mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Pump mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'auto',
@@ -293,7 +293,7 @@
 # name: test_all_entities[select.my_pool_pump_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Pump speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Pump speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',

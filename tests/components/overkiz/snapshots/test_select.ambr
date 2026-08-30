@@ -45,7 +45,7 @@
 # name: test_select_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][select.living_room_garden_gate_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Gate Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate Position',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
@@ -106,7 +106,7 @@
 # name: test_select_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][select.living_room_partial_garage_door_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Partial Garage Door Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Partial Garage Door Position',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PARTIAL: 'partial'>,
@@ -167,7 +167,7 @@
 # name: test_select_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][select.living_room_sliding_gate_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sliding Gate Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sliding Gate Position',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
@@ -233,7 +233,7 @@
 # name: test_select_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][select.willow_house_protexiom_active_zones-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Protexiom Active zones',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Protexiom Active zones',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '',
         'A',
@@ -298,7 +298,7 @@
 # name: test_select_entities_snapshot[local_somfy_tahoma_v2_europe.json][select.siren_memorized_simple_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren Memorized simple volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren Memorized simple volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.STANDARD: 'standard'>,
         <OverkizCommandParam.HIGHEST: 'highest'>,

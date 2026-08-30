@@ -45,7 +45,7 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Audio output',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Audio output',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Speaker A',
         'Speaker B',
@@ -106,7 +106,7 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_control_bus_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Control Bus mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Control Bus mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'amplifier',
         'receiver',
@@ -167,7 +167,7 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Display brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Display brightness',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',

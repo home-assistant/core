@@ -39,8 +39,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.garden_test_mower_1_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Test Mower 1 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_test_mower_1_charging',
@@ -90,7 +90,7 @@
 # name: test_binary_sensor_snapshot[binary_sensor.garden_test_mower_1_leaving_dock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Leaving dock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Leaving dock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_test_mower_1_leaving_dock',
@@ -140,8 +140,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.garden_test_mower_2_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Test Mower 2 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_test_mower_2_charging',
@@ -191,7 +191,7 @@
 # name: test_binary_sensor_snapshot[binary_sensor.garden_test_mower_2_leaving_dock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 2 Leaving dock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Leaving dock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.garden_test_mower_2_leaving_dock',

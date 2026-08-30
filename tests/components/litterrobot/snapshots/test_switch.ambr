@@ -39,7 +39,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_friday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Friday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Friday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_friday_sleep_mode',
@@ -89,7 +89,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_monday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Monday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Monday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_monday_sleep_mode',
@@ -139,7 +139,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_panel_lockout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Panel lockout',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Panel lockout',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_panel_lockout',
@@ -189,7 +189,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_saturday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Saturday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Saturday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_saturday_sleep_mode',
@@ -239,7 +239,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_sunday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Sunday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sunday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sunday_sleep_mode',
@@ -289,7 +289,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_thursday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thursday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thursday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_thursday_sleep_mode',
@@ -339,7 +339,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_tuesday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Tuesday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tuesday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_tuesday_sleep_mode',
@@ -389,7 +389,7 @@
 # name: test_litter_robot_5_all_entities[switch.test_wednesday_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Wednesday sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Wednesday sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_wednesday_sleep_mode',

@@ -19,11 +19,11 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateInfo
 
 from homeassistant.components.update import (
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -196,7 +196,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
 
         # Entity class attributes
         self._attr_name = "Firmware"
-        self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
+        self._attr_unique_id = f"{self._base_unique_id}.firmware_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_installed_version = node.firmware_version
 
     @property
@@ -355,7 +355,11 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         # If we have a complete previous state, use that to set the latest version
         if (
             (state := await self.async_get_last_state())
-            and (latest_version := state.attributes.get(ATTR_LATEST_VERSION))
+            and (
+                latest_version := state.attributes.get(
+                    UpdateEntityStateAttribute.LATEST_VERSION
+                )
+            )
             is not None
             and (extra_data := await self.async_get_last_extra_data())
             and (

@@ -39,7 +39,7 @@
 # name: test_entities[binary_sensor.openevse_mock_config_divert_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'openevse_mock_config Divert active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Divert active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_divert_active',
@@ -89,7 +89,7 @@
 # name: test_entities[binary_sensor.openevse_mock_config_ethernet_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'openevse_mock_config Ethernet connected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Ethernet connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_ethernet_connected',
@@ -139,7 +139,7 @@
 # name: test_entities[binary_sensor.openevse_mock_config_limit_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'openevse_mock_config Limit active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Limit active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_limit_active',
@@ -189,8 +189,8 @@
 # name: test_entities[binary_sensor.openevse_mock_config_mqtt_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'openevse_mock_config MQTT connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config MQTT connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_mqtt_connected',
@@ -240,7 +240,7 @@
 # name: test_entities[binary_sensor.openevse_mock_config_shaper_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'openevse_mock_config Shaper active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Shaper active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_shaper_active',
@@ -290,8 +290,8 @@
 # name: test_entities[binary_sensor.openevse_mock_config_vehicle_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'openevse_mock_config Vehicle connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Vehicle connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.openevse_mock_config_vehicle_connected',

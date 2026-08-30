@@ -44,7 +44,7 @@
 # name: test_selects[select.fakespa_temperature_range-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Temperature range',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Temperature range',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',

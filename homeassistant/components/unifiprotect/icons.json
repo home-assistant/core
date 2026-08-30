@@ -181,11 +181,20 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "motion_detection": {
+        "default": "mdi:motion-sensor"
+      },
       "nfc": {
         "default": "mdi:nfc"
       },
       "package": {
         "default": "mdi:package-variant-closed"
+      },
+      "smart_detection": {
+        "default": "mdi:cctv"
+      },
+      "sound_detection": {
+        "default": "mdi:waveform"
       },
       "vehicle": {
         "default": "mdi:car"

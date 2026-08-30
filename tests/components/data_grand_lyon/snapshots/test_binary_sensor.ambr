@@ -39,7 +39,7 @@
 # name: test_velov_binary_sensor_snapshot[binary_sensor.velo_v_1001_station_open-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': "Vélo'v 1001 Station open",
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Station open",
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.velo_v_1001_station_open',

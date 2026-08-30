@@ -53,7 +53,7 @@
 # name: test_select[select.ctd_000001_stepper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CTD 000001 Stepper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CTD 000001 Stepper',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         'Here comes',

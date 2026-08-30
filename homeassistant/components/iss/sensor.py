@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -61,16 +61,13 @@ class IssSensor(CoordinatorEntity[IssDataUpdateCoordinator], SensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
+        location = self.coordinator.data.current_location
         if self._show_on_map:
-            attrs[ATTR_LONGITUDE] = self.coordinator.data.current_location.get(
-                "longitude"
-            )
-            attrs[ATTR_LATITUDE] = self.coordinator.data.current_location.get(
-                "latitude"
-            )
+            attrs[EntityStateAttribute.LONGITUDE] = location.get("longitude")
+            attrs[EntityStateAttribute.LATITUDE] = location.get("latitude")
         else:
-            attrs["long"] = self.coordinator.data.current_location.get("longitude")
-            attrs["lat"] = self.coordinator.data.current_location.get("latitude")
+            attrs["long"] = location.get("longitude")
+            attrs["lat"] = location.get("latitude")
 
         return attrs

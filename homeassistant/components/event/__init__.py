@@ -18,7 +18,16 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN, DoorbellEventType
+from .const import (
+    ATTR_EVENT_TYPE,
+    ATTR_EVENT_TYPES,
+    ATTR_MULTI_PRESS_COUNT,
+    DOMAIN,
+    ButtonEventType,
+    DoorbellEventType,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -39,13 +48,17 @@ class EventDeviceClass(StrEnum):
 __all__ = [
     "ATTR_EVENT_TYPE",
     "ATTR_EVENT_TYPES",
+    "ATTR_MULTI_PRESS_COUNT",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "ButtonEventType",
     "DoorbellEventType",
     "EventDeviceClass",
     "EventEntity",
+    "EventEntityCapabilityAttribute",
     "EventEntityDescription",
+    "EventEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics
@@ -110,7 +123,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of an Event entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_EVENT_TYPES})
+    _entity_component_unrecorded_attributes = frozenset(
+        {EventEntityCapabilityAttribute.EVENT_TYPES}
+    )
 
     entity_description: EventEntityDescription
     _attr_device_class: EventDeviceClass | None
@@ -150,7 +165,13 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """Process a new event."""
         if event_type not in self.event_types:
             raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
-        self.__last_event_triggered = dt_util.utcnow()
+        triggered = dt_util.utcnow()
+        # Force the timestamp to strictly increase so multiple events fired
+        # within the same millisecond stay distinct state changes, which state
+        # triggers such as event.received rely on to fire once per event.
+        if (last := self.__last_event_triggered) is not None:
+            triggered = max(triggered, last + timedelta(milliseconds=1))
+        self.__last_event_triggered = triggered
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 
@@ -168,7 +189,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     def capability_attributes(self) -> dict[str, list[str]]:
         """Return capability attributes."""
         return {
-            ATTR_EVENT_TYPES: self.event_types,
+            EventEntityCapabilityAttribute.EVENT_TYPES: self.event_types,
         }
 
     @property
@@ -185,7 +206,9 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
+        attributes: dict[str, Any] = {
+            EventEntityStateAttribute.EVENT_TYPE: self.__last_event_type
+        }
         if last_event_attributes := self.__last_event_attributes:
             attributes |= last_event_attributes
         return attributes

@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.nursery_yoto_bluetooth_pairing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Bluetooth pairing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Bluetooth pairing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nursery_yoto_bluetooth_pairing',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.nursery_yoto_day_mode_automatic_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Day mode automatic brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Day mode automatic brightness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nursery_yoto_day_mode_automatic_brightness',
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.nursery_yoto_maximum_headphone_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Maximum headphone volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Maximum headphone volume',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nursery_yoto_maximum_headphone_volume',
@@ -189,7 +189,7 @@
 # name: test_all_entities[switch.nursery_yoto_night_mode_automatic_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Night mode automatic brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Night mode automatic brightness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nursery_yoto_night_mode_automatic_brightness',

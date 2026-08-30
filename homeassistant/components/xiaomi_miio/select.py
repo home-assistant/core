@@ -149,7 +149,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_DISPLAY_ORIENTATION,
         attr_name=ATTR_DISPLAY_ORIENTATION,
-        name="Display Orientation",
         options_map={
             "Portrait": "Forward",
             "LandscapeLeft": "Left",
@@ -165,7 +164,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_MODE,
         attr_name=ATTR_MODE,
-        name="Mode",
         set_method="set_mode",
         set_method_error_message="Setting the mode of the fan failed.",
         icon="mdi:fan",
@@ -176,7 +174,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_LED_BRIGHTNESS,
         attr_name=ATTR_LED_BRIGHTNESS,
-        name="Led Brightness",
         set_method="set_led_brightness",
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
@@ -187,7 +184,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_PTC_LEVEL,
         attr_name=ATTR_PTC_LEVEL,
-        name="Auxiliary Heat Level",
         set_method="set_ptc_level",
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",

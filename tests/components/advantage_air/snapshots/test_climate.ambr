@@ -29,7 +29,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'myauto',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'myauto',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -47,7 +47,7 @@
         'MyTemp',
         'MyAuto',
       ]),
-      'supported_features': <ClimateEntityFeature: 410>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 410>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 24,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 20,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,

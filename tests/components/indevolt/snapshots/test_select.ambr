@@ -45,7 +45,7 @@
 # name: test_select[1][select.bk1600_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BK1600 Energy mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Energy mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'self_consumed_prioritized',
         'real_time_control',
@@ -106,7 +106,7 @@
 # name: test_select[2][select.cms_sf2000_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Energy mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Energy mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'self_consumed_prioritized',
         'real_time_control',

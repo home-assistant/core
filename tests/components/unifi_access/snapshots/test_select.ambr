@@ -46,7 +46,7 @@
 # name: test_select_entities[select.back_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Lock rule',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Lock rule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',
@@ -109,7 +109,7 @@
 # name: test_select_entities[select.front_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Lock rule',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Lock rule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',

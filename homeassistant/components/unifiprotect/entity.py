@@ -20,15 +20,18 @@ from uiprotect.data import (
     SmartDetectObjectType,
     StateType,
 )
+from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
 
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SCORE,
+    ATTR_SMART_DETECT_TYPES,
     DEFAULT_ATTRIBUTION,
     DEFAULT_BRAND,
     DOMAIN,
@@ -46,6 +49,46 @@ class PermRequired(int, Enum):
     NO_WRITE = 1
     WRITE = 2
     DELETE = 3
+
+
+@callback
+def _async_capability_supported(
+    data: ProtectData,
+    device: ProtectAdoptableDeviceModel,
+    description: ProtectEntityDescription,
+) -> bool:
+    """Whether the device advertises the description's required sensor capability."""
+    if (capability := description.ufp_capability) is None:
+        return True
+    public = data.async_get_public_device(device)
+    if not isinstance(public, PublicSensor) or not public.has_feature_flags:
+        return True
+    return public.supports(capability)
+
+
+@callback
+def async_remove_unsupported_sense_entities(
+    hass: HomeAssistant,
+    platform: Platform,
+    data: ProtectData,
+    descs: Sequence[ProtectEntityDescription],
+) -> None:
+    """Remove registry entries for sense entities the device cannot support.
+
+    Only acts when a public capability map is present (newer firmware); a console
+    upgrade then drops the never-functional entities created before the map existed.
+    """
+    entity_registry = er.async_get(hass)
+    for device in data.get_by_types({ModelType.SENSOR}):
+        for description in descs:
+            if description.ufp_capability is None or _async_capability_supported(
+                data, device, description
+            ):
+                continue
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, f"{device.mac}_{description.key}"
+            ):
+                entity_registry.async_remove(entity_id)
 
 
 @callback
@@ -101,6 +144,9 @@ def _async_device_entities(
             if not description.has_required(device):
                 continue
 
+            if not _async_capability_supported(data, device, description):
+                continue
+
             entities.append(
                 klass(
                     data,
@@ -119,7 +165,6 @@ def _async_device_entities(
 
 
 _ALL_MODEL_TYPES = (
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.SENSOR,
@@ -163,6 +208,10 @@ def async_all_device_entities(
 
     device_model_type = ufp_device.model
     assert device_model_type is not None
+    # Runtime adoption must honor the same model-type allowlist as initial setup,
+    # so unsupported devices (e.g. AI Port) get no entities when adopted live.
+    if device_model_type not in _ALL_MODEL_TYPES:
+        return []
     descs = _combine_model_descs(device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
         data, klass, device_model_type, descs, unadopted_descs, ufp_device
@@ -179,10 +228,14 @@ class BaseProtectEntity(Entity):
     _state_attrs: tuple[str, ...] = ("_attr_available",)
     _attr_has_entity_name = True
     _async_get_ufp_enabled: Callable[[ProtectAdoptableDeviceModel], bool] | None = None
+    _async_get_ufp_public_enabled: Callable[[PublicDeviceModel], bool] | None = None
     # Cached public-API object for descriptions migrated to the public path
     # (set ``ufp_public_value``); ``None`` until primed/refreshed.
     _ufp_public_obj: PublicDeviceModel | None = None
     _ufp_uses_public: bool = False
+    # Values derived from the public events websocket (detection booleans,
+    # public event entities) additionally require that websocket to be healthy.
+    _ufp_requires_events_ws: bool = False
 
     def __init__(
         self,
@@ -203,6 +256,7 @@ class BaseProtectEntity(Entity):
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
             if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
+                self._async_get_ufp_public_enabled = description.ufp_public_enabled_fn
 
         self._async_set_device_info()
         self._state_getters = tuple(
@@ -231,12 +285,26 @@ class BaseProtectEntity(Entity):
             # Migrated entities are fully public: availability tracks the public
             # websocket health and the public object's state (CONNECTED only;
             # CONNECTING/DISCONNECTED/UNKNOWN and a missing object read as
-            # unavailable), independent of the private connection.
-            available = (
+            # unavailable), independent of the private connection. Values fed by
+            # the events websocket also require it to be healthy — the devices
+            # websocket keeps the device state fresh, but only the events stream
+            # carries the detections. An optional ``ufp_public_enabled_fn`` gate
+            # then mirrors ``ufp_enabled`` against the public object (e.g. a
+            # sensor feature toggled off).
+            public_obj = self._ufp_public_obj
+            if (
                 self.data.last_public_update_success
-                and self._ufp_public_obj is not None
-                and self._ufp_public_obj.state is DeviceState.CONNECTED
-            )
+                and (
+                    not self._ufp_requires_events_ws
+                    or self.data.last_events_update_success
+                )
+                and public_obj is not None
+                and public_obj.state is DeviceState.CONNECTED
+            ):
+                get_public_enabled = self._async_get_ufp_public_enabled
+                available = get_public_enabled is None or get_public_enabled(public_obj)
+            else:
+                available = False
         elif device.model is ModelType.NVR:
             available = last_updated_success
         else:
@@ -277,10 +345,12 @@ class BaseProtectEntity(Entity):
     def _async_public_updated(self, obj: PublicDeviceModel | None) -> None:
         """Handle a public devices WS update for a migrated value.
 
-        ``obj`` is the refreshed public object from a WS message; ``None`` on a
-        public websocket state change (e.g. reconnect), where the cached object
-        is re-read from the bootstrap so a value that changed during the outage
-        is picked up — mirroring the relay/siren re-signal.
+        ``obj`` is the refreshed public object from a WS message; ``None`` when
+        there is no object to pass (a websocket state change, a delete event,
+        or a frame the library could not merge). The object is then re-read
+        from the bootstrap: a deleted device reads as missing (the entity goes
+        unavailable), and after a reconnect a value that changed during the
+        outage is picked up.
         """
         self._ufp_public_obj = (
             obj if obj is not None else self.data.async_get_public_device(self.device)
@@ -296,11 +366,18 @@ class BaseProtectEntity(Entity):
         )
         # Not every entity carries an entity_description (e.g. cameras), so getattr.
         description = getattr(self, "entity_description", None)
-        if (
-            isinstance(description, ProtectEntityDescription)
-            and description.ufp_public_value is not None
-        ):
-            self._ufp_uses_public = True
+        if isinstance(description, ProtectEntityDescription):
+            if (
+                description.ufp_public_value is not None
+                or description.ufp_public_value_fn is not None
+            ):
+                self._ufp_uses_public = True
+            if description.ufp_event_driven:
+                self._ufp_requires_events_ws = True
+        # ``_ufp_uses_public`` may also be declared as a class attribute by
+        # entities driven by the public API without a migrated value (the
+        # public event entities).
+        if self._ufp_uses_public:
             self._ufp_public_obj = self.data.async_get_public_device(self.device)
             self.async_on_remove(
                 self.data.async_subscribe_public(
@@ -339,7 +416,7 @@ class ProtectDeviceEntity(BaseProtectEntity):
             manufacturer=DEFAULT_BRAND,
             model=self.device.market_name or self.device.type,
             model_id=self.device.type,
-            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
+            via_device_id=self.data.nvr_device_id,
             sw_version=self.device.firmware_version,
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             configuration_url=self.device.protect_url,
@@ -370,7 +447,9 @@ class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
     entity_description: ProtectEventMixin
-    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
+    _unrecorded_attributes = frozenset(
+        {ATTR_EVENT_ID, ATTR_EVENT_SCORE, ATTR_SMART_DETECT_TYPES}
+    )
     _event: Event | None = None
     _event_end: datetime | None = None
 
@@ -423,7 +502,19 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_public_value: str | None = None
+    # Callable variant of ``ufp_public_value`` for public values needing a transform.
+    ufp_public_value_fn: Callable[[PublicDeviceModel], Any] | None = None
+    # True when the public value is derived from the events websocket (the
+    # detection booleans); availability then also tracks that websocket.
+    ufp_event_driven: bool = False
     ufp_enabled: str | None = None
+    # Public counterpart of ``ufp_enabled``; a callable because public enablement
+    # is often compound (e.g. mount type plus a settings flag).
+    ufp_public_enabled_fn: Callable[[PublicDeviceModel], bool] | None = None
+    # Sensor capability required to create the entity, checked against the public
+    # capability map. Without a capability map (older firmware) every description
+    # is created, matching the pre-capability behavior.
+    ufp_capability: SensorFeatureCapability | None = None
     ufp_perm: PermRequired | None = None
 
     # The below are set in __post_init__
@@ -443,10 +534,13 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     def get_value(self, obj: T, public_obj: PublicDeviceModel | None = None) -> Any:
         """Return the value, reading from the public object when migrated.
 
-        A migrated description sets ``ufp_public_value`` and drops the private
-        ``ufp_value``: the value comes only from the public object, or ``None``
-        when it is absent (the entity is then marked unavailable).
+        A migrated description sets ``ufp_public_value`` (or ``ufp_public_value_fn``)
+        and drops the private ``ufp_value``: the value comes only from the public
+        object, or ``None`` when it is absent (the entity is then marked
+        unavailable).
         """
+        if (fn := self.ufp_public_value_fn) is not None:
+            return None if public_obj is None else fn(public_obj)
         if (getter := self.get_ufp_public_value) is not None:
             return None if public_obj is None else getter(public_obj)
         return self.get_ufp_value(obj)

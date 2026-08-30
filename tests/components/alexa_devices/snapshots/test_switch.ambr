@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.echo_test_announcements-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Announcements',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Announcements',
     }),
     'context': <ANY>,
     'entity_id': 'switch.echo_test_announcements',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.echo_test_communications-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Communications',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Communications',
     }),
     'context': <ANY>,
     'entity_id': 'switch.echo_test_communications',
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.echo_test_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.echo_test_do_not_disturb',

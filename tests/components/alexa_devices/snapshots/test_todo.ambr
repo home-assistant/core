@@ -39,8 +39,8 @@
 # name: test_all_entities[todo.fake_email_gmail_com_concerts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_email@gmail.com Concerts',
-      'supported_features': <TodoListEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_email@gmail.com Concerts',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.fake_email_gmail_com_concerts',
@@ -90,8 +90,8 @@
 # name: test_all_entities[todo.fake_email_gmail_com_shopping_list-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_email@gmail.com Shopping list',
-      'supported_features': <TodoListEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_email@gmail.com Shopping list',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.fake_email_gmail_com_shopping_list',
@@ -141,8 +141,8 @@
 # name: test_all_entities[todo.fake_email_gmail_com_to_do_list-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_email@gmail.com To-do list',
-      'supported_features': <TodoListEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_email@gmail.com To-do list',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.fake_email_gmail_com_to_do_list',
