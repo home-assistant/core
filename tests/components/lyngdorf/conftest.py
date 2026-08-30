@@ -115,7 +115,6 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     # Diagnostics reports the whole receiver, so every property it reads
     # needs a value here; an unset one is a mock the response cannot encode.
     receiver.model = LyngdorfModel.MP_60
-    receiver.max_volume = 0.0
     receiver.room_perfect_position = "Focus 1"
     receiver.available_room_perfect_positions = ["Global", "Focus 1"]
     receiver.room_perfect_positions = ["Global", "Focus 1"]
