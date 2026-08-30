@@ -63,7 +63,6 @@ async def test_pending_value_survives_restart_while_device_is_unavailable(
     not be treated the same as never having a value at all.
     """
     entry = await async_init_integration(hass)
-    coordinator = entry.runtime_data.coordinators[0]
 
     await hass.services.async_call(
         "number",
@@ -130,6 +129,13 @@ async def test_numbers_fall_back_to_pending_when_a_cooking_device_goes_stale(
 @pytest.mark.usefixtures("anova_api_unsupported_device_type")
 async def test_no_numbers_for_unsupported_device_type(hass: HomeAssistant) -> None:
     """Test no number entities are created for a device type with no command capabilities."""
+    await async_init_integration(hass)
+    assert hass.states.async_all("number") == []
+
+
+@pytest.mark.usefixtures("anova_api_a3")
+async def test_no_numbers_for_a3_device(hass: HomeAssistant) -> None:
+    """Test no number entities are created for an a3 device."""
     await async_init_integration(hass)
     assert hass.states.async_all("number") == []
 
