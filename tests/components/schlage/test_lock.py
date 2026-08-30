@@ -24,7 +24,6 @@ from homeassistant.components.schlage.const import (
     SERVICE_GET_CODES,
     UPDATE_INTERVAL,
 )
-from homeassistant.components.schlage.lock import SchlageLockEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -704,6 +703,30 @@ async def test_add_code_service_start_without_end(
     assert exc_info.value.translation_key == "schlage_temporary_dates_required"
 
 
+async def test_add_code_service_validation_before_refresh(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test local date validation fires before the access code refresh."""
+    mock_lock.refresh_access_codes.side_effect = SchlageError("API error")
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_temporary_dates_required"
+    mock_lock.refresh_access_codes.assert_not_called()
+
+
 async def test_add_code_service_end_without_start(
     hass: HomeAssistant,
     mock_lock: Mock,
@@ -914,80 +937,93 @@ async def test_get_codes_service_with_access_code_id_and_schedule(
     }
 
 
-async def test_serialize_schedule_none(
+async def test_get_codes_service_recurring_schedule(
     hass: HomeAssistant,
+    mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
-    """Test _serialize_schedule returns None for permanent code."""
+    """Test get_codes serializes a recurring schedule through the public action."""
 
-    result = SchlageLockEntity._serialize_schedule(None)
-    assert result is None
+    code = Mock()
+    code.name = "weekday_user"
+    code.code = "1234"
+    code.access_code_id = "ac_001"
+    code.schedule = RecurringSchedule()
+    mock_lock.access_codes = {"1": code}
 
-
-async def test_serialize_schedule_recurring(
-    hass: HomeAssistant,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test _serialize_schedule for RecurringSchedule."""
-
-    schedule = RecurringSchedule()
-    result = SchlageLockEntity._serialize_schedule(schedule)
-    assert result is not None
-    assert result["type"] == "recurring"
-    assert result["days_of_week"] == {
-        "sun": True,
-        "mon": True,
-        "tue": True,
-        "wed": True,
-        "thu": True,
-        "fri": True,
-        "sat": True,
-    }
-    assert result["start_hour"] == 0
-    assert result["start_minute"] == 0
-    assert result["end_hour"] == 23
-    assert result["end_minute"] == 59
-
-
-async def test_serialize_schedule_multi_recurring(
-    hass: HomeAssistant,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test _serialize_schedule for MultiRecurringSchedule."""
-
-    schedule = MultiRecurringSchedule(schedule1=RecurringSchedule(), schedule2=None)
-    result = SchlageLockEntity._serialize_schedule(schedule)
-    assert result is not None
-    assert result["type"] == "multi_recurring"
-    assert len(result["windows"]) == 1
-    window = result["windows"][0]
-    assert window["days_of_week"] == {
-        "sun": True,
-        "mon": True,
-        "tue": True,
-        "wed": True,
-        "thu": True,
-        "fri": True,
-        "sat": True,
-    }
-    assert window["start_hour"] == 0
-    assert window["start_minute"] == 0
-    assert window["end_hour"] == 23
-    assert window["end_minute"] == 59
-
-
-async def test_serialize_schedule_temporary(
-    hass: HomeAssistant,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test _serialize_schedule for TemporarySchedule."""
-
-    schedule = TemporarySchedule(
-        start=datetime(2025, 6, 15, 10, 0, 0, tzinfo=UTC),
-        end=datetime(2025, 6, 15, 22, 0, 0, tzinfo=UTC),
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
     )
-    result = SchlageLockEntity._serialize_schedule(schedule)
-    assert result is not None
-    assert result["type"] == "temporary"
-    assert result["start_datetime"] == "2025-06-15T10:00:00+00:00"
-    assert result["end_datetime"] == "2025-06-15T22:00:00+00:00"
+    await hass.async_block_till_done()
+
+    assert response["lock.vault_door"]["1"]["schedule"] == {
+        "type": "recurring",
+        "days_of_week": {
+            "sun": True,
+            "mon": True,
+            "tue": True,
+            "wed": True,
+            "thu": True,
+            "fri": True,
+            "sat": True,
+        },
+        "start_hour": 0,
+        "start_minute": 0,
+        "end_hour": 23,
+        "end_minute": 59,
+    }
+
+
+async def test_get_codes_service_multi_recurring_schedule(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test get_codes serializes a multi recurring schedule through the public action."""
+
+    code = Mock()
+    code.name = "multi_user"
+    code.code = "5678"
+    code.access_code_id = "ac_002"
+    code.schedule = MultiRecurringSchedule(
+        schedule1=RecurringSchedule(), schedule2=None
+    )
+    mock_lock.access_codes = {"1": code}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert response["lock.vault_door"]["1"]["schedule"] == {
+        "type": "multi_recurring",
+        "windows": [
+            {
+                "days_of_week": {
+                    "sun": True,
+                    "mon": True,
+                    "tue": True,
+                    "wed": True,
+                    "thu": True,
+                    "fri": True,
+                    "sat": True,
+                },
+                "start_hour": 0,
+                "start_minute": 0,
+                "end_hour": 23,
+                "end_minute": 59,
+            }
+        ],
+    }

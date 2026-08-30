@@ -130,10 +130,6 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         end_datetime: datetime | None = None,
     ) -> None:
         """Add a lock code."""
-        codes = await self._async_fetch_access_codes()
-        self._validate_code_name(codes, name)
-        self._validate_code_value(codes, code)
-
         has_start = start_datetime is not None
         has_end = end_datetime is not None
 
@@ -153,6 +149,10 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                     translation_key="schlage_start_after_end",
                 )
             schedule = TemporarySchedule(start=start_utc, end=end_utc)
+
+        codes = await self._async_fetch_access_codes()
+        self._validate_code_name(codes, name)
+        self._validate_code_value(codes, code)
 
         access_code = AccessCode(
             name=name,
@@ -223,23 +223,13 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     def _serialize_schedule(
         schedule: MultiRecurringSchedule | TemporarySchedule | RecurringSchedule | None,
     ) -> dict[str, Any] | None:
-        """Serialize a pyschlage schedule to a dict.
+        """Serialize a pyschlage schedule to a dict, or ``None`` for ``None`` input.
 
-        The returned shape depends on the schedule type.
-
-        ``recurring``: {"type": "recurring", "days_of_week": {"sun": bool, ...},
-        "start_hour": int, "start_minute": int, "end_hour": int, "end_minute": int}.
-        Times use natural hour and minute values from the pyschlage model.
-
-        ``multi_recurring``: {"type": "multi_recurring", "windows": [<window>, ...]},
-        where each window is a dict with the same keys as ``recurring`` (days_of_week,
-        start_hour, start_minute, end_hour, end_minute) but without the ``type`` key.
-        At most two windows are present.
-
-        ``temporary``: {"type": "temporary", "start_datetime": str, "end_datetime": str}.
-        Datetime values are ISO 8601 strings.
-
-        ``None`` returns ``None``.
+        A ``TemporarySchedule`` is serialized with ``"type": "temporary"`` and ISO 8601
+        datetime strings for ``start_datetime`` and ``end_datetime``.  Recurring shapes
+        are serialized from pyschlage attributes (``days_of_week`` booleans,
+        ``start_hour``, ``start_minute``, ``end_hour``, ``end_minute``), with
+        ``"type"`` set to ``"recurring"`` or ``"multi_recurring"`` as appropriate.
         """
         if isinstance(schedule, TemporarySchedule):
             return {

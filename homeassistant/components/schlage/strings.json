@@ -100,7 +100,7 @@
           "name": "PIN code"
         },
         "end_datetime": {
-          "description": "When the PIN code should stop working. Leave empty for an always-active code.",
+          "description": "When the PIN code should stop working. Providing an end time makes the PIN temporary; both a start and an end time are required. Leave both fields empty for a permanent PIN.",
           "name": "End time"
         },
         "name": {
@@ -112,7 +112,7 @@
           "name": "Notify when PIN is used"
         },
         "start_datetime": {
-          "description": "When the PIN code should become active. Leave empty for an always-active code.",
+          "description": "When the PIN code should become active. Providing a start time makes the PIN temporary; both a start and an end time are required. Leave both fields empty for a permanent PIN.",
           "name": "Start time"
         }
       },
