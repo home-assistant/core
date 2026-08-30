@@ -147,7 +147,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         await hass.async_add_executor_job(camera.disconnect)
 
     # pyHik's stream thread is non-daemonic and publishes straight into hass, so
-    # it has to be joined before the event loop closes.
+    # it has to be joined before the event loop closes. Starting it yields, so
+    # the stop event may already have been fired by the time we get here, and
+    # listening for it now would never hear it.
+    if hass.is_stopping:
+        await hass.async_add_executor_job(camera.disconnect)
+        raise ConfigEntryNotReady("Home Assistant is stopping")
+
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_stream)
     )
