@@ -30,10 +30,13 @@ async def async_setup_entry(
     """Set up Anova number entities."""
     anova_data = entry.runtime_data
 
+    # anova-wifi 2.0.0 reports a3 temperatures in the device's display unit
+    # and never publishes a cook time; gate the numbers until the fix ships.
     async_add_entities(
         entity
         for coordinator in anova_data.coordinators
-        if Capability.UPDATE_RUNNING_COOK
+        if coordinator.anova_device.type != "a3"
+        and Capability.UPDATE_RUNNING_COOK
         in coordinator.anova_device.supported_capabilities
         for entity in (
             AnovaTargetTemperatureNumber(coordinator),
