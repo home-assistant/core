@@ -1878,7 +1878,7 @@ panasonic-viera==0.4.4
 pdunehd==1.3.3
 
 # homeassistant.components.peblar
-peblar==1.0.1
+peblar==2.0.0
 
 # homeassistant.components.peco
 peco==0.1.2
@@ -3117,7 +3117,7 @@ sofar-modbus==0.6.0
 solaredge-local==0.2.3
 
 # homeassistant.components.solaredge
-solaredge-web==0.3.1
+solaredge-web==0.4.0
 
 # homeassistant.components.solaredge_modbus
 solaredged==0.2.3
