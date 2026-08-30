@@ -1,9 +1,8 @@
 """Tests for the SMTP integration."""
 
-from smtplib import SMTPAuthenticationError
 from unittest.mock import AsyncMock, MagicMock
 
-from aiosmtplib import SMTPException
+from aiosmtplib import SMTPAuthenticationError, SMTPException
 import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN

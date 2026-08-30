@@ -1,6 +1,5 @@
 """Test the SMTP config flow."""
 
-from ssl import SSLCertVerificationError
 from unittest.mock import AsyncMock, MagicMock
 
 from aiosmtplib import SMTPAuthenticationError, SMTPException, SMTPTimeoutError
@@ -124,7 +123,6 @@ async def test_form_already_configured(
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (SMTPException(""), "cannot_connect"),
         (SMTPTimeoutError(""), "timeout_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
         (ValueError, "unknown"),
     ],
 )
@@ -327,7 +325,6 @@ async def test_form_reconfigure_already_configured(
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (SMTPException(""), "cannot_connect"),
         (SMTPTimeoutError(""), "timeout_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
         (ValueError, "unknown"),
     ],
 )
@@ -440,7 +437,6 @@ async def test_form_reauth(
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (SMTPException(""), "cannot_connect"),
         (SMTPTimeoutError(""), "timeout_connect"),
-        (SSLCertVerificationError, "invalid_cert"),
         (ValueError, "unknown"),
     ],
 )

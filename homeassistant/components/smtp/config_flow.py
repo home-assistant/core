@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import logging
-from ssl import SSLCertVerificationError
 from typing import Any, override
 
 from aiosmtplib import SMTP, SMTPAuthenticationError, SMTPException, SMTPTimeoutError
@@ -324,8 +323,6 @@ async def validate_input(
         errors["base"] = "timeout_connect"
     except SMTPAuthenticationError:
         errors["base"] = "invalid_auth"
-    except SSLCertVerificationError:
-        errors["base"] = "invalid_cert"
     except SMTPException:
         errors["base"] = "cannot_connect"
     except Exception:
