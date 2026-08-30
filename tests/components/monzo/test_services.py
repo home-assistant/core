@@ -28,6 +28,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestReauthError,
     ServiceValidationError,
+    Unauthorized,
 )
 from homeassistant.helpers import device_registry as dr
 
@@ -303,17 +304,18 @@ async def test_transfer_requires_admin(
     transfer_devices: TransferDevices,
 ) -> None:
     """Test pot transfers require administrator access."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_DEPOSIT_INTO_POT,
-        {
-            ATTR_ACCOUNT: transfer_devices.account_device_id,
-            ATTR_POT: transfer_devices.pot_device_id,
-            ATTR_AMOUNT: 1,
-        },
-        context=Context(user_id=hass_read_only_user.id),
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DEPOSIT_INTO_POT,
+            {
+                ATTR_ACCOUNT: transfer_devices.account_device_id,
+                ATTR_POT: transfer_devices.pot_device_id,
+                ATTR_AMOUNT: 1,
+            },
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
 
     monzo.user_account.pot_deposit.assert_not_awaited()
 
