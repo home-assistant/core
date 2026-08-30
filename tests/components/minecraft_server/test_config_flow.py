@@ -50,13 +50,6 @@ async def test_full_flow_java(hass: HomeAssistant) -> None:
             return_value=TEST_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=USER_INPUT,
@@ -87,13 +80,6 @@ async def test_full_flow_bedrock(hass: HomeAssistant) -> None:
             return_value=TEST_BEDROCK_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=USER_INPUT,
@@ -132,13 +118,6 @@ async def test_full_flow_legacy_java(hass: HomeAssistant) -> None:
             return_value=TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=USER_INPUT,
