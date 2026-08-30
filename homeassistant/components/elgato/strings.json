@@ -36,6 +36,14 @@
     }
   },
   "entity": {
+    "number": {
+      "power_on_brightness": {
+        "name": "Power-on brightness"
+      },
+      "power_on_temperature": {
+        "name": "Power-on color temperature"
+      }
+    },
     "select": {
       "power_on_behavior": {
         "name": "Power-on behavior",
@@ -57,6 +65,12 @@
       },
       "voltage": {
         "name": "Battery voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {

@@ -434,6 +434,9 @@ aioskybell==22.7.0
 # homeassistant.components.slimproto
 aioslimproto==3.0.0
 
+# homeassistant.components.smtp
+aiosmtplib==5.1.2
+
 # homeassistant.components.solaredge
 aiosolaredge==1.0.2
 
@@ -914,7 +917,7 @@ electrickiwi-api==0.9.14
 elevenlabs==2.51.0
 
 # homeassistant.components.elgato
-elgato==6.0.0
+elgato==6.1.0
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.15
@@ -1153,7 +1156,7 @@ goodwe==0.4.10
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.29.0
+google-cloud-pubsub==2.39.2
 
 # homeassistant.components.google_cloud
 google-cloud-speech==2.40.0
@@ -1315,7 +1318,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.15.0
+homematicip==2.16.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -1440,6 +1443,9 @@ jsonpath-python==1.1.6
 
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
+
+# homeassistant.components.kaco_modbus
+kaco-modbus==1.1.0
 
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
@@ -2851,7 +2857,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==1.1.1
+pytrafikverket==2.0.0
 
 # homeassistant.components.v2c
 pytrydan==1.0.5
@@ -3172,6 +3178,9 @@ streamlabswater==1.0.1
 
 # homeassistant.components.subaru
 subarulink==0.7.19
+
+# homeassistant.components.sunsynk
+sunsynk-api-client==1.4.0
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

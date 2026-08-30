@@ -163,6 +163,21 @@
           "slow": "[%key:component::vistapool::entity::select::pump_speed::state::slow%]"
         }
       },
+      "light_mode": {
+        "name": "Light mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "light_schedule_frequency": {
+        "name": "Light schedule frequency",
+        "state": {
+          "daily": "Daily",
+          "weekly": "Weekly"
+        }
+      },
       "pump_mode": {
         "name": "Pump mode",
         "state": {
@@ -234,6 +249,12 @@
       },
       "filtration_interval_start": {
         "name": "Filtration interval {number} start"
+      },
+      "light_schedule_end": {
+        "name": "Light schedule end"
+      },
+      "light_schedule_start": {
+        "name": "Light schedule start"
       }
     }
   },

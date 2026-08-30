@@ -964,6 +964,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley
 /tests/components/jvc_projector/ @SteveEasley
+/homeassistant/components/kaco_modbus/ @g4bri3lDev
+/tests/components/kaco_modbus/ @g4bri3lDev
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -1804,6 +1806,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sun/ @home-assistant/core
 /homeassistant/components/sunricher_dali/ @niracler
 /tests/components/sunricher_dali/ @niracler
+/homeassistant/components/sunsynk/ @jamesridgway
+/tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
