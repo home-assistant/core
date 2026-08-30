@@ -1,9 +1,7 @@
 """Support for Homevolt number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
@@ -12,6 +10,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 from .entity import HomevoltEntity, homevolt_exception_handler
+
+PARALLEL_UPDATES = 0  # Coordinator-based updates
+
 
 @dataclass(frozen=True, kw_only=True)
 class HomevoltNumberEntityDescription(NumberEntityDescription):
@@ -95,10 +96,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Homevolt number entities."""
     coordinator = entry.runtime_data
-    entities: list[HomevoltNumberEntity] = []
-    for description in NUMBER_DESCRIPTIONS:
-        entities.append(HomevoltNumberEntity(coordinator, description))
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            HomevoltNumberEntity(coordinator, description)
+            for description in NUMBER_DESCRIPTIONS
+        ]
+    )
 
 
 class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
@@ -119,12 +122,14 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
         super().__init__(coordinator, f"ems_{device_id}")
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         value = self.coordinator.client.schedule.get(self.entity_description.key)
         return float(value) if value is not None else None
 
     @homevolt_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         key = self.entity_description.key
