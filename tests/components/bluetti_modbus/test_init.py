@@ -64,6 +64,24 @@ async def test_serial_number_is_device_metadata_not_a_sensor(
     assert hass.states.get("sensor.balco260_serial_number") is None
 
 
+async def test_firmware_versions_are_device_metadata_not_a_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """ARM/DSP firmware versions show up as device info, not sensor entities."""
+    await _setup(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.sw_version == "ARM 0, DSP 0"
+
+    assert hass.states.get("sensor.balco260_arm_firmware_version") is None
+    assert hass.states.get("sensor.balco260_dsp_firmware_version") is None
+
+
 async def test_setup_retry_when_device_unresponsive(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

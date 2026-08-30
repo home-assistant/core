@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The device at that address and device ID is a different device than the one this entry is set up for."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,21 +10,6 @@
       "unsupported_device_type": "This device type is not supported by the installed version of bluetti-modbus."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "device_type": "[%key:component::bluetti_modbus::config::step::user::data::device_type%]",
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::bluetti_modbus::config::step::user::data::unit_id%]"
-        },
-        "data_description": {
-          "device_type": "[%key:component::bluetti_modbus::config::step::user::data_description::device_type%]",
-          "host": "[%key:component::bluetti_modbus::config::step::user::data_description::host%]",
-          "port": "[%key:component::bluetti_modbus::config::step::user::data_description::port%]",
-          "unit_id": "[%key:component::bluetti_modbus::config::step::user::data_description::unit_id%]"
-        },
-        "description": "Update how this device is reached, for example after it moved to another address."
-      },
       "user": {
         "data": {
           "device_type": "Model",
@@ -47,58 +30,58 @@
   "entity": {
     "sensor": {
       "ac_o_e_total": {
-        "name": "Total AC Output Energy"
+        "name": "Total AC output energy"
       },
       "ac_o_p_total": {
-        "name": "AC Output Power"
+        "name": "AC output power"
       },
       "b_c": {
-        "name": "Battery Current"
+        "name": "Battery current"
       },
       "b_c_total": {
-        "name": "Total Battery Current"
+        "name": "Total battery current"
       },
       "b_cell_count": {
-        "name": "Cell Count"
+        "name": "Cell count"
       },
       "b_cycle_count": {
-        "name": "Battery Cycle Count"
+        "name": "Battery cycle count"
       },
       "b_i_e": {
-        "name": "Total Battery Charged Energy"
+        "name": "Total battery charged energy"
       },
       "b_ntc_count": {
-        "name": "Temperature Sensor Count"
+        "name": "Temperature sensor count"
       },
       "b_o_e": {
-        "name": "Total Battery Discharged Energy"
+        "name": "Total battery discharged energy"
       },
       "b_soc": {
         "name": "Battery SoC"
       },
       "b_soc_total": {
-        "name": "Total Battery SoC"
+        "name": "Total battery SoC"
       },
       "b_soh": {
         "name": "Battery SoH"
       },
       "b_soh_total": {
-        "name": "Total Battery SoH"
+        "name": "Total battery SoH"
       },
       "b_t_avg": {
-        "name": "Average Battery Temperature"
+        "name": "Average battery temperature"
       },
       "b_type": {
-        "name": "Battery Type"
+        "name": "Battery type"
       },
       "b_v": {
-        "name": "Battery Voltage"
+        "name": "Battery voltage"
       },
       "b_v_total": {
-        "name": "Total Battery Voltage"
+        "name": "Total battery voltage"
       },
       "d_inverter_status": {
-        "name": "Inverter Status",
+        "name": "Inverter status",
         "state": {
           "abnormal_off_grid": "Off-grid (abnormal)",
           "grid_connected_charging": "Grid-connected (charging)",
@@ -111,82 +94,76 @@
         }
       },
       "d_inverter_total": {
-        "name": "Total Inverter Power"
+        "name": "Total inverter power"
       },
       "d_inverter_type": {
-        "name": "Inverter Type"
+        "name": "Inverter type"
       },
       "d_num_battery_packs": {
-        "name": "Number of Battery Packs"
+        "name": "Number of battery packs"
       },
       "d_num_inverters": {
-        "name": "Inverter Count"
-      },
-      "d_ver_arm": {
-        "name": "ARM Firmware Version"
-      },
-      "d_ver_dsp": {
-        "name": "DSP Firmware Version"
+        "name": "Inverter count"
       },
       "g_i_e_total": {
-        "name": "Total Grid Import Energy"
+        "name": "Total grid import energy"
       },
       "g_i_f": {
-        "name": "Grid Frequency"
+        "name": "Grid frequency"
       },
       "g_i_p_total": {
-        "name": "Grid Input Power"
+        "name": "Grid input power"
       },
       "g_o_e_total": {
-        "name": "Total Grid Export Energy"
+        "name": "Total grid export energy"
       },
       "pv_1_i_c": {
-        "name": "PV 1 Input Current"
+        "name": "PV 1 input current"
       },
       "pv_1_i_p": {
-        "name": "PV 1 Input Power"
+        "name": "PV 1 input power"
       },
       "pv_1_i_v": {
-        "name": "PV 1 Input Voltage"
+        "name": "PV 1 input voltage"
       },
       "pv_2_i_c": {
-        "name": "PV 2 Input Current"
+        "name": "PV 2 input current"
       },
       "pv_2_i_p": {
-        "name": "PV 2 Input Power"
+        "name": "PV 2 input power"
       },
       "pv_2_i_v": {
-        "name": "PV 2 Input Voltage"
+        "name": "PV 2 input voltage"
       },
       "pv_3_i_c": {
-        "name": "PV 3 Input Current"
+        "name": "PV 3 input current"
       },
       "pv_3_i_p": {
-        "name": "PV 3 Input Power"
+        "name": "PV 3 input power"
       },
       "pv_3_i_v": {
-        "name": "PV 3 Input Voltage"
+        "name": "PV 3 input voltage"
       },
       "pv_4_i_c": {
-        "name": "PV 4 Input Current"
+        "name": "PV 4 input current"
       },
       "pv_4_i_p": {
-        "name": "PV 4 Input Power"
+        "name": "PV 4 input power"
       },
       "pv_4_i_v": {
-        "name": "PV 4 Input Voltage"
+        "name": "PV 4 input voltage"
       },
       "pv_ac_e": {
-        "name": "PV AC Energy"
+        "name": "PV AC energy"
       },
       "pv_ac_p": {
-        "name": "PV AC Power"
+        "name": "PV AC power"
       },
       "pv_i_e_total": {
-        "name": "Total PV Input Energy"
+        "name": "Total PV input energy"
       },
       "pv_i_p_total": {
-        "name": "Total PV Input Power"
+        "name": "Total PV input power"
       }
     }
   },
@@ -201,7 +178,7 @@
       "message": "This entry's device type is not supported by the installed version of bluetti-modbus."
     },
     "wrong_device": {
-      "message": "The device at this address is a different device than the one this entry was set up for. Reconfigure the entry to point at the right device."
+      "message": "The device at this address is a different device than the one this entry was set up for."
     }
   },
   "selector": {
