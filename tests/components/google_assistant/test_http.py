@@ -405,29 +405,10 @@ async def test_should_expose_uses_exposed_entities_store(
     assert config.should_expose(entry.entity_id) is True
 
 
-async def test_should_expose_seeds_legacy_default_for_state_only_entity(
-    hass: HomeAssistant,
-) -> None:
-    """Test a first state seeds a legacy default for an entity with no registry entry."""
-    config = GOOGLE_ASSISTANT_SCHEMA(
-        {
-            "project_id": "1234",
-            "exposed_domains": ["light"],
-        }
-    )
-    google_config = GoogleConfig(hass, config)
-    await google_config.async_initialize()
-
-    hass.states.async_set("light.no_unique_id", "on")
-    await hass.async_block_till_done()
-
-    assert google_config.should_expose("light.no_unique_id") is True
-
-
-async def test_should_expose_seeds_legacy_default_for_new_entities(
+async def test_entities_added_after_migration_are_not_legacy_exposed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test entities created after the one-time migration still get a legacy default."""
+    """Test entities discovered after the one-time migration rely on modern exposure."""
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -440,17 +421,16 @@ async def test_should_expose_seeds_legacy_default_for_new_entities(
     light_entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
-    switch_entry = entity_registry.async_get_or_create(
-        "switch", "test", "unique", suggested_object_id="ac"
-    )
     hass.states.async_set(light_entry.entity_id, "on")
-    hass.states.async_set(switch_entry.entity_id, "on")
+    await hass.async_block_till_done()
 
-    assert google_config.should_expose(light_entry.entity_id) is True
-    assert google_config.should_expose(switch_entry.entity_id) is False
-
-    async_expose_entity(hass, DOMAIN, light_entry.entity_id, False)
+    # "light" is in exposed_domains, but this entity appeared after the
+    # one-time migration, so it must not be legacy-exposed automatically.
     assert google_config.should_expose(light_entry.entity_id) is False
+
+    # Manually exposing it (the modern method) still works.
+    async_expose_entity(hass, DOMAIN, light_entry.entity_id, True)
+    assert google_config.should_expose(light_entry.entity_id) is True
 
 
 async def test_migrate_expose_settings(
@@ -492,39 +472,6 @@ async def test_migrate_expose_settings(
     await google_config.async_initialize()
 
     assert google_config.should_expose(light_entry.entity_id) is False
-
-
-async def test_legacy_config_rescanned_on_later_startup(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test an entity added to legacy config later is picked up on the next startup."""
-    entry = entity_registry.async_get_or_create(
-        "switch", "test", "unique", suggested_object_id="ac"
-    )
-    hass.states.async_set(entry.entity_id, "on")
-
-    config = GOOGLE_ASSISTANT_SCHEMA(
-        {"project_id": "1234", "exposed_domains": ["light"]}
-    )
-    google_config = GoogleConfig(hass, config)
-    await google_config.async_initialize()
-
-    # switch isn't in exposed_domains yet, so migration leaves it untouched.
-    assert async_get_entity_settings(hass, entry.entity_id) == {}
-
-    # The user adds the entity via the deprecated entity_config key and
-    # restarts; a new GoogleConfig reuses the same, already-migrated store.
-    config = GOOGLE_ASSISTANT_SCHEMA(
-        {
-            "project_id": "1234",
-            "exposed_domains": ["light"],
-            "entity_config": {entry.entity_id: {"expose": True}},
-        }
-    )
-    google_config = GoogleConfig(hass, config)
-    await google_config.async_initialize()
-
-    assert google_config.should_expose(entry.entity_id) is True
 
 
 async def test_migrate_legacy_entity_skips_non_exposed_entities(
@@ -589,34 +536,10 @@ async def test_migrate_entity_aliases_keeps_existing(
     assert entry.aliases == ["Existing", "Foo", "Bar"]
 
 
-async def test_migrate_entity_aliases_on_first_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test aliases are migrated when a new entity gets its first state."""
-    config = GOOGLE_ASSISTANT_SCHEMA(
-        {
-            "project_id": "1234",
-            "entity_config": {"light.kitchen": {"aliases": ["Foo"]}},
-        }
-    )
-    google_config = GoogleConfig(hass, config)
-    await google_config.async_initialize()
-
-    # This entity did not exist during the one-time bulk migration above.
-    entry = entity_registry.async_get_or_create(
-        "light", "test", "unique", suggested_object_id="kitchen"
-    )
-    hass.states.async_set(entry.entity_id, "on")
-    await hass.async_block_till_done()
-
-    entry = entity_registry.async_get(entry.entity_id)
-    assert entry.aliases[1:] == ["Foo"]
-
-
 async def test_migrate_legacy_entity_does_not_restore_cleared_aliases(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a repeat migration attempt does not restore cleared aliases."""
+    """Test a later restart does not restore cleared aliases."""
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
@@ -636,42 +559,13 @@ async def test_migrate_legacy_entity_does_not_restore_cleared_aliases(
     # The user clears all aliases via the UI.
     entity_registry.async_update_entity(entry.entity_id, aliases=[])
 
-    # A repeat migration attempt (triggered by the entity's state appearing,
-    # for example after a restart) must not restore them: this entity
-    # already has a recorded google_assistant setting.
-    hass.states.async_set(entry.entity_id, "on")
-    await hass.async_block_till_done()
+    # A restart (a new GoogleConfig reusing the same, already-migrated
+    # store) must not restore them.
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
 
     entry = entity_registry.async_get(entry.entity_id)
     assert entry.aliases == []
-
-
-async def test_new_entity_exposed_via_expose_new_triggers_sync(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test a newly appeared entity exposed via expose_new schedules a sync."""
-    config = GOOGLE_ASSISTANT_SCHEMA(
-        {"project_id": "1234", "expose_by_default": False, "exposed_domains": []}
-    )
-    google_config = GoogleConfig(hass, config)
-    await google_config.async_initialize()
-    await google_config.async_connect_agent_user("mock-user-id")
-
-    hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(DOMAIN, True)
-
-    with (
-        patch.object(google_config, "async_sync_entities") as mock_sync,
-        patch.object(helpers, "SYNC_DELAY", 0),
-    ):
-        entry = entity_registry.async_get_or_create(
-            "light", "test", "unique", suggested_object_id="kitchen"
-        )
-        hass.states.async_set(entry.entity_id, "on")
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
-
-    mock_sync.assert_called_once_with("mock-user-id")
 
 
 async def test_new_entity_without_legacy_config_defers_to_expose_new(
@@ -692,6 +586,33 @@ async def test_new_entity_without_legacy_config_defers_to_expose_new(
     # the historical default during migration, and the switch is exposed
     # through that shared fallback rather than the legacy per-entity check.
     assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_new_entity_exposed_via_expose_new_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a newly registered entity exposed via expose_new schedules a sync."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "expose_by_default": False, "exposed_domains": []}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+    await google_config.async_connect_agent_user("mock-user-id")
+
+    hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(DOMAIN, True)
+
+    with (
+        patch.object(google_config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
 
 
 async def test_migrate_legacy_entity_respects_explicit_exclude(
