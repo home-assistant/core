@@ -165,7 +165,10 @@ class GoogleConfig(AbstractConfig):
         ):
             return
 
-        if not self.should_expose(event.data["entity_id"]):
+        if (
+            event.data["action"] != "remove"
+            and not self.should_expose(event.data["entity_id"])
+        ):
             return
 
         self.async_schedule_google_sync_all()
