@@ -206,7 +206,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.9.0
+aioaquarite==0.9.2
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -1611,7 +1611,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==10.0.1
+midea-local==10.1.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
