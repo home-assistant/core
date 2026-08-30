@@ -114,7 +114,13 @@ class ElgatoNumberEntity(ElgatoEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the number value."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        if (value := self.entity_description.value_fn(self.coordinator.data)) is None:
+            return None
+
+        # A Kelvin value that survives the trip out does not always survive
+        # the trip back. Setting 6500 K stores 153 mireds, which reads as
+        # 6535 K, above a maximum that cannot then be set again.
+        return min(max(value, self.native_min_value), self.native_max_value)
 
     @elgato_exception_handler
     @override

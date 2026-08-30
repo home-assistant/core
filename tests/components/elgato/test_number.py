@@ -16,9 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-pytestmark = [pytest.mark.usefixtures("init_integration")]
+from tests.common import MockConfigEntry
+
+# Each test says which device it wants, and when the integration is set up.
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixtures", ["key-light"])
 @pytest.mark.parametrize(
     ("entity_id", "value", "expected"),
@@ -74,6 +77,7 @@ async def test_numbers(
     assert len(mock_elgato.power_on_behavior.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixtures", ["light-strip"])
 async def test_power_on_temperature_unknown(hass: HomeAssistant) -> None:
     """Test a light that powers on to a color instead of a temperature.
@@ -88,6 +92,7 @@ async def test_power_on_temperature_unknown(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("device_fixtures", "expected_range"),
     [
@@ -109,3 +114,46 @@ async def test_power_on_temperature_range(
     assert (state := hass.states.get("number.frenck_power_on_color_temperature"))
     assert state.attributes["min"] == minimum
     assert state.attributes["max"] == maximum
+
+
+@pytest.mark.parametrize("device_fixtures", ["light-strip"])
+async def test_power_on_temperature_at_the_edge(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test the reported value stays inside the range that can be set.
+
+    Setting the maximum of 6500 K stores 153 mireds, which converts back to
+    6535 K. Reporting that would put the entity above a maximum the user
+    cannot submit again.
+    """
+    mock_elgato.settings.return_value.power_on_temperature = 153
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("number.frenck_power_on_color_temperature"))
+    assert state.state == "6500"
+
+
+@pytest.mark.parametrize("device_fixtures", ["light-strip"])
+async def test_power_on_temperature_absent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test a device that does not report a power-on temperature at all.
+
+    Reporting the field is what the entity hangs off, so a device without it
+    gets no entity, while the brightness one is unaffected.
+    """
+    mock_elgato.settings.return_value.power_on_temperature = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.frenck_power_on_brightness")
+    assert not hass.states.get("number.frenck_power_on_color_temperature")
