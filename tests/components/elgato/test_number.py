@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -75,21 +75,24 @@ async def test_numbers(
 
 
 @pytest.mark.parametrize("device_fixtures", ["light-strip"])
-async def test_no_power_on_temperature(hass: HomeAssistant) -> None:
-    """Test a light that powers on to a color has no temperature number.
+async def test_power_on_temperature_unknown(hass: HomeAssistant) -> None:
+    """Test a light that powers on to a color instead of a temperature.
 
-    The light strip reports a power-on temperature of zero, which is not a
-    color temperature at all.
+    It reports a power-on temperature of zero, which is not a temperature.
+    The entity still exists, because whether the device reports the field is
+    a property of the device, while what it currently holds is not.
     """
     assert hass.states.get("number.frenck_power_on_brightness")
-    assert not hass.states.get("number.frenck_power_on_color_temperature")
+
+    assert (state := hass.states.get("number.frenck_power_on_color_temperature"))
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
     ("device_fixtures", "expected_range"),
     [
         ("key-light", (2900, 6993)),
-        ("light-strip-power-on-temperature", (3500, 6500)),
+        ("light-strip", (3500, 6500)),
     ],
 )
 async def test_power_on_temperature_range(

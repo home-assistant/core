@@ -54,7 +54,11 @@ NUMBERS = [
         # the other way, so both ends are converted at the edge.
         range_fn=color_temperature_range,
         native_step=50,
-        has_fn=lambda x: bool(x.settings.power_on_temperature),
+        has_fn=lambda x: x.settings.power_on_temperature is not None,
+        # A light set to power on to a color reports a zero here, which is
+        # not a color temperature. Whether it reports the field at all is a
+        # property of the device; what it currently holds is not, so the
+        # entity exists either way and goes unknown while the value is zero.
         value_fn=lambda x: (
             color_temperature_mired_to_kelvin(x.settings.power_on_temperature)
             if x.settings.power_on_temperature
