@@ -1,5 +1,6 @@
 """Tests for the Peblar update platform."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -420,6 +421,57 @@ async def test_blips_do_not_extend_the_wait(
     await _async_poll(hass, freezer, after=timedelta(minutes=1))
 
     mock_peblar.current_versions.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_the_install_runs_on_until_the_new_versions_are_in(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the button does not come back before the versions it acts on.
+
+    Calling the install done while the versions are still the ones from
+    before it would put the button back next to the very package the
+    charger has just taken.
+    """
+    entity_id = "update.peblar_ev_charger_firmware"
+    meter = mock_peblar.rest_api.return_value.meter
+    reading_versions = asyncio.Event()
+    let_the_read_finish = asyncio.Event()
+
+    async def _read_slowly() -> PeblarVersions:
+        reading_versions.set()
+        await let_the_read_finish.wait()
+        return PeblarVersions.from_dict(
+            {"Customization": "Peblar-1.9", "Firmware": "1.6.2+1+WL-1"}
+        )
+
+    await _async_install(hass)
+
+    # It goes away to install and reboot.
+    meter.side_effect = PeblarConnectionError("Gone")
+    await _async_poll(hass, freezer)
+    await _async_poll(hass, freezer, after=timedelta(minutes=1))
+
+    # And comes back, on a charger that is slow to answer for its versions.
+    mock_peblar.current_versions.side_effect = _read_slowly
+    meter.side_effect = None
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await reading_versions.wait()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    let_the_read_finish.set()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 @pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)

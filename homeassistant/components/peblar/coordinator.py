@@ -223,14 +223,19 @@ class _RebootWatcher:
         self._coordinator.async_stop_reboot_watcher()
 
     @callback
-    def async_stop(self) -> None:
-        """Stop watching, however it ended."""
+    def _async_unsubscribe(self) -> None:
+        """Stop following the charger."""
         if self._unsubscribe_listener is not None:
             self._unsubscribe_listener()
             self._unsubscribe_listener = None
         if self._unsubscribe_timer is not None:
             self._unsubscribe_timer()
             self._unsubscribe_timer = None
+
+    @callback
+    def async_stop(self) -> None:
+        """Stop watching, however it ended."""
+        self._async_unsubscribe()
 
         # The install is over as far as anyone here can tell, whether the
         # charger came back or ran out of time.
@@ -263,12 +268,24 @@ class _RebootWatcher:
             )
             return
 
-        self._coordinator.async_stop_reboot_watcher()
+        # The polls keep coming, so stop following the charger right away
+        # rather than leave this to fire a second time.
+        self._async_unsubscribe()
         self._entry.async_create_task(
-            self._coordinator.hass,
-            self._coordinator.async_request_refresh(),
-            eager_start=False,
+            self._coordinator.hass, self._async_finish(), eager_start=False
         )
+
+    async def _async_finish(self) -> None:
+        """Read the new versions before saying the install is done.
+
+        Letting go first would publish "nothing installing" next to the
+        versions from before the update, and for as long as the read takes,
+        the charger would be offering the package it just took.
+        """
+        try:
+            await self._coordinator.async_request_refresh()
+        finally:
+            self._coordinator.async_stop_reboot_watcher()
 
 
 class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
