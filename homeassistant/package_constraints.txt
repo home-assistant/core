@@ -36,7 +36,7 @@ fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==6.26.7
+habluetooth==6.26.11
 hass-nabucasa==2.7.0
 hassil==3.12.0
 home-assistant-bluetooth==2.0.0
