@@ -236,6 +236,37 @@ async def test_delete_item(
     reminders.delete.assert_called_once_with(existing)
 
 
+async def test_partial_delete_still_refreshes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a batch failing halfway still refreshes the list.
+
+    The reminders deleted before the failure are already gone in iCloud, so
+    leaving them on screen until the next poll would be wrong.
+    """
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[_reminder("r1", "Milk"), _reminder("r2", "Eggs")]
+    )
+    reminders.delete.side_effect = [None, RemindersApiError("boom")]
+
+    await _setup(hass, config_entry)
+    before = reminders.list_reminders.call_count
+
+    with pytest.raises(HomeAssistantError, match="Error updating reminders"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert reminders.delete.call_count == 2
+    assert reminders.list_reminders.call_count > before
+
+
 async def test_api_error_raises(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

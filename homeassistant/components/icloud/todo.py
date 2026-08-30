@@ -26,6 +26,11 @@ from .coordinator import (
     IcloudRemindersCoordinator,
 )
 
+# Every action is a blocking read-modify-write against one shared reminders
+# service, so two concurrent calls could read the same reminder and then
+# overwrite each other.
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -175,8 +180,11 @@ class IcloudTodoListEntity(
             await self.hass.async_add_executor_job(lambda: func(*args, **kwargs))
         except REMINDERS_ERRORS as err:
             raise HomeAssistantError(f"Error updating reminders: {err}") from err
-
-        await self.coordinator.async_request_refresh()
+        finally:
+            # A batch that failed part of the way through still changed things
+            # in iCloud, so refresh either way rather than showing reminders
+            # that are already gone until the next poll.
+            await self.coordinator.async_request_refresh()
 
 
 def _as_due(due: date | datetime | None) -> tuple[datetime | None, bool]:
