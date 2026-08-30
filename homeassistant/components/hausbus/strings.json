@@ -1,5 +1,8 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "progress": {
       "wait_for_device": "Searching for Haus-Bus devices..."
     },
