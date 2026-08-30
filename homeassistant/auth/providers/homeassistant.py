@@ -85,9 +85,7 @@ class Data:
         self._data: dict[str, list[dict[str, str]]] | None = None
 
     @callback
-    def normalize_username(
-        self, username: str, *, force_normalize: bool = False
-    ) -> str:
+    def normalize_username(self, username: str) -> str:
         """Normalize a username based on the mode."""
         return username.strip().casefold()
 
@@ -193,9 +191,7 @@ class Data:
 
         Raises InvalidUsername if the new username is invalid.
         """
-        normalized_username = self.normalize_username(
-            new_username, force_normalize=True
-        )
+        normalized_username = self.normalize_username(new_username)
         if normalized_username != new_username:
             raise InvalidUsername(
                 translation_key="username_not_normalized",
