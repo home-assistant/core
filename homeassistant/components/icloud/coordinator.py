@@ -3,12 +3,14 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, tzinfo
 import logging
-from typing import Any, override
+from typing import override
 
 from pyicloud.exceptions import PyiCloudException
+from pyicloud.services.calendar import CalendarService, EventObject
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -54,12 +56,18 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
         )
         self.account = entry.runtime_data
 
+    @property
+    def _calendars(self) -> CalendarService:
+        """Return the calendar service of the authenticated account."""
+        if (api := self.account.api) is None:
+            raise ConfigEntryAuthFailed("iCloud account is not authenticated")
+        return api.calendar
+
     def fetch_events(
         self, start: datetime, end: datetime, guids: list[str] | None = None
     ) -> dict[str, list[CalendarEvent]]:
         """Return events per calendar between two points. Runs in the executor."""
-        if (api := self.account.api) is None:
-            raise UpdateFailed("iCloud account is not authenticated")
+        service = self._calendars
 
         # An explicit empty list means no calendars, not every calendar.
         if guids is not None and not guids:
@@ -68,12 +76,11 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
         wanted = set(guids) if guids is not None else None
         result: dict[str, list[CalendarEvent]] = {guid: [] for guid in (wanted or ())}
 
-        for event in api.calendar.get_events(from_dt=start, to_dt=end, as_objs=True):
-            guid = getattr(event, "pguid", None)
-            if guid is None or (wanted is not None and guid not in wanted):
+        for event in service.get_events(from_dt=start, to_dt=end, as_objs=True):
+            if wanted is not None and event.pguid not in wanted:
                 continue
             if (parsed := _as_calendar_event(event)) is not None:
-                result.setdefault(guid, []).append(parsed)
+                result.setdefault(event.pguid, []).append(parsed)
 
         for events in result.values():
             events.sort(key=lambda event: localize(event.start))
@@ -81,12 +88,9 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
 
     def _fetch(self) -> dict[str, IcloudCalendarData]:
         """Fetch the calendars and their events. Runs in the executor."""
-        if (api := self.account.api) is None:
-            raise UpdateFailed("iCloud account is not authenticated")
-
         names = {
             calendar.guid: calendar.title
-            for calendar in api.calendar.get_calendars(as_objs=True)
+            for calendar in self._calendars.get_calendars(as_objs=True)
         }
         now = dt_util.now()
         events = self.fetch_events(now - LOOKBACK, now + LOOKAHEAD, list(names))
@@ -105,7 +109,7 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
             raise UpdateFailed(f"Error fetching calendars: {err}") from err
 
 
-def _parse_apple_date(value: Any) -> datetime | None:
+def _parse_apple_date(value: datetime | list[int] | None) -> datetime | None:
     """Parse the date format iCloud returns for calendar events.
 
     ``EventObject`` is annotated as holding ``datetime``, but pyicloud hands
@@ -117,7 +121,7 @@ def _parse_apple_date(value: Any) -> datetime | None:
         return None
     if isinstance(value, datetime):
         return value
-    if isinstance(value, (list, tuple)) and len(value) >= 6:
+    if len(value) >= 6:
         try:
             _, year, month, day, hour, minute = value[:6]
             return datetime(int(year), int(month), int(day), int(hour), int(minute))
@@ -126,15 +130,14 @@ def _parse_apple_date(value: Any) -> datetime | None:
     return None
 
 
-def _event_timezone(event: Any) -> tzinfo:
+def _event_timezone(event: EventObject) -> tzinfo:
     """Return the timezone an event's wall-clock times are expressed in.
 
     iCloud reports naive local times alongside a `tz` field. "Floating" means
     the event has no zone of its own and should follow the viewer, so fall
     back to Home Assistant's timezone in that case.
     """
-    name = getattr(event, "tz", None)
-    if isinstance(name, str) and name and name != "Floating":
+    if (name := event.tz) and name != "Floating":
         try:
             if (zone := dt_util.get_time_zone(name)) is not None:
                 return zone
@@ -144,23 +147,21 @@ def _event_timezone(event: Any) -> tzinfo:
     return dt_util.get_default_time_zone()
 
 
-def _as_calendar_event(event: Any) -> CalendarEvent | None:
+def _as_calendar_event(event: EventObject) -> CalendarEvent | None:
     """Convert a pyicloud event into a Home Assistant calendar event."""
-    start = _parse_apple_date(
-        getattr(event, "local_start_date", None)
-    ) or _parse_apple_date(getattr(event, "start_date", None))
+    start = _parse_apple_date(event.local_start_date) or _parse_apple_date(
+        event.start_date
+    )
     if start is None:
         return None
 
-    end = _parse_apple_date(
-        getattr(event, "local_end_date", None)
-    ) or _parse_apple_date(getattr(event, "end_date", None))
+    end = _parse_apple_date(event.local_end_date) or _parse_apple_date(event.end_date)
     if end is None:
         end = start + timedelta(hours=1)
 
     start_value: date | datetime
     end_value: date | datetime
-    if getattr(event, "all_day", False):
+    if event.all_day:
         start_value = start.date()
         end_value = end.date()
         # Home Assistant treats the end of an all-day event as exclusive.
@@ -174,9 +175,9 @@ def _as_calendar_event(event: Any) -> CalendarEvent | None:
             end_value = start_value + timedelta(minutes=30)
 
     return CalendarEvent(
-        uid=getattr(event, "guid", None) or None,
-        summary=getattr(event, "title", None) or "",
+        uid=event.guid or None,
+        summary=event.title or "",
         start=start_value,
         end=end_value,
-        location=getattr(event, "location", None) or None,
+        location=event.location or None,
     )

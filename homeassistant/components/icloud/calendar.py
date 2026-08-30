@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .account import IcloudConfigEntry
 from .const import DOMAIN
-from .coordinator import IcloudCalendarCoordinator, localize
+from .coordinator import IcloudCalendarCoordinator, IcloudCalendarData, localize
 
 
 async def async_setup_entry(
@@ -61,24 +61,28 @@ class IcloudCalendarEntity(
         self._guid = guid
         self._attr_unique_id = f"{entry.unique_id}_{guid}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.unique_id}_calendars")},
+            identifiers={(DOMAIN, f"{entry.unique_id}_account")},
             manufacturer="Apple",
-            model="Calendar",
-            name="Calendar",
+            name=entry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def _calendar(self) -> IcloudCalendarData | None:
+        """Return the cached calendar, or None once it is gone from iCloud."""
+        return self.coordinator.data.get(self._guid)
 
     @property
     @override
     def available(self) -> bool:
         """Return True if the calendar still exists in iCloud."""
-        return super().available and self._guid in (self.coordinator.data or {})
+        return super().available and self._calendar is not None
 
     @property
     @override
     def name(self) -> str | None:
         """Return the name of the calendar."""
-        if (calendar := (self.coordinator.data or {}).get(self._guid)) is not None:
+        if (calendar := self._calendar) is not None:
             return calendar.name
         return None
 
@@ -86,7 +90,7 @@ class IcloudCalendarEntity(
     @override
     def event(self) -> CalendarEvent | None:
         """Return the event in progress, or the next one to start."""
-        if (calendar := (self.coordinator.data or {}).get(self._guid)) is None:
+        if (calendar := self._calendar) is None:
             return None
 
         now = dt_util.now()

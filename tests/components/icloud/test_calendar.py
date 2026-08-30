@@ -5,18 +5,26 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyicloud.exceptions import PyiCloudException
+from pyicloud.services.calendar import CalendarObject, EventObject
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.icloud.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import AsyncMock, MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
-ENTITY_ID = "calendar.calendar_personal"
+ENTITY_ID = "calendar.test_icloud_account_personal"
 
 
 def _apple_date(value: datetime) -> list[int]:
@@ -44,7 +52,7 @@ def _event(
     tz: str = "Floating",
 ) -> MagicMock:
     """Build a mock pyicloud event."""
-    event = MagicMock()
+    event = MagicMock(spec=EventObject)
     event.guid = guid
     event.pguid = pguid
     event.title = title
@@ -60,7 +68,7 @@ def _event(
 
 def _calendar(guid: str, title: str) -> MagicMock:
     """Build a mock pyicloud calendar."""
-    calendar = MagicMock()
+    calendar = MagicMock(spec=CalendarObject)
     calendar.guid = guid
     calendar.title = title
     return calendar
@@ -85,23 +93,22 @@ def mock_calendars(icloud_client: AsyncMock) -> MagicMock:
 async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the config entry with only the calendar platform loaded."""
     config_entry.add_to_hass(hass)
-    with (
-        patch("homeassistant.components.icloud.const.PLATFORMS", [Platform.CALENDAR]),
-        patch("homeassistant.components.icloud.PLATFORMS", [Platform.CALENDAR]),
-    ):
+    with patch("homeassistant.components.icloud.PLATFORMS", [Platform.CALENDAR]):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def test_calendar_created(
+async def test_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     calendars: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a calendar becomes an entity."""
     await _setup(hass, config_entry)
 
-    assert hass.states.get(ENTITY_ID) is not None
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_event_in_progress_wins(
@@ -138,6 +145,7 @@ async def test_all_day_event_end_is_exclusive(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     calendars: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a single all-day event ends on the following day.
 
@@ -167,9 +175,7 @@ async def test_all_day_event_end_is_exclusive(
         blocking=True,
         return_response=True,
     )
-    event = events[ENTITY_ID]["events"][0]
-    assert event["start"] == "2024-05-01"
-    assert event["end"] == "2024-05-02"
+    assert events == snapshot
 
 
 async def test_new_calendar_added_on_later_poll(
@@ -180,7 +186,7 @@ async def test_new_calendar_added_on_later_poll(
 ) -> None:
     """Test that a calendar created after setup appears on a later refresh."""
     await _setup(hass, config_entry)
-    assert hass.states.get("calendar.calendar_work") is None
+    assert hass.states.get("calendar.test_icloud_account_work") is None
 
     calendars.get_calendars.return_value = [
         _calendar("cal1", "Personal"),
@@ -188,9 +194,10 @@ async def test_new_calendar_added_on_later_poll(
     ]
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # The scheduled refresh runs as a background task of the config entry.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("calendar.calendar_work") is not None
+    assert hass.states.get("calendar.test_icloud_account_work") is not None
 
 
 async def test_get_events_error_raises(
@@ -220,6 +227,7 @@ async def test_event_uses_its_own_timezone(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     calendars: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that an event in another timezone keeps its own instant.
 
@@ -249,11 +257,7 @@ async def test_event_uses_its_own_timezone(
         blocking=True,
         return_response=True,
     )
-    start = dt_util.parse_datetime(events[ENTITY_ID]["events"][0]["start"])
-    assert start is not None
-    assert start == datetime(
-        2024, 5, 1, 10, 0, tzinfo=dt_util.get_time_zone("Europe/Rome")
-    )
+    assert events == snapshot
 
 
 async def test_unknown_event_timezone_falls_back(
