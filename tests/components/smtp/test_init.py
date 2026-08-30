@@ -1,6 +1,6 @@
 """Tests for the SMTP integration."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from aiosmtplib import SMTPAuthenticationError, SMTPException
 import pytest
@@ -202,14 +202,15 @@ async def test_import_already_configured(
     )
 
 
+@pytest.mark.usefixtures("smtp")
 async def test_import_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
-    smtp: MagicMock,
+    aiosmtplib: AsyncMock,
 ) -> None:
     """Test yaml triggers import flow, aborts with errors, and creates error issue."""
-    smtp.login.side_effect = ValueError
+    aiosmtplib.__aenter__.side_effect = ValueError
 
     await async_setup_component(
         hass,
