@@ -181,7 +181,17 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def apply_optimistic(self, value_path: str, value: Any) -> None:
         """Reflect a just-written value and protect it from stale Firestore pushes."""
-        self.record_optimistic(value_path, value)
+        self.apply_optimistic_values({value_path: value})
+
+    def apply_optimistic_values(self, updates: dict[str, Any]) -> None:
+        """Reflect several just-written values as a single update.
+
+        Applying them one at a time would publish a state where only part
+        of the write has landed, which entities derived from more than one
+        path briefly read as a different value.
+        """
+        for value_path, value in updates.items():
+            self.record_optimistic(value_path, value)
         self.async_set_updated_data(self.data)
 
     def discard_optimistic(self, value_path: str) -> None:
