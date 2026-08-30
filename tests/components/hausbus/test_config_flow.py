@@ -190,7 +190,7 @@ async def test_flow_removal_waits_for_active_search_before_releasing(
 
     # Wait until searchDevices() has actually started on the executor, so
     # aborting below lands while it is genuinely still running.
-    await hass.async_add_executor_job(search_started.wait, 5)
+    assert await hass.async_add_executor_job(search_started.wait, 5)
 
     hass.config_entries.flow.async_abort(result["flow_id"])
 
