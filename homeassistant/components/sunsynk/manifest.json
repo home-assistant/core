@@ -3,6 +3,11 @@
   "name": "Sunsynk",
   "codeowners": ["@jamesridgway"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "e-linter*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/sunsynk",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

@@ -53,11 +53,11 @@ rules:
   devices: done
   diagnostics: todo
   discovery:
-    status: exempt
-    comment: The integration connects to a cloud service. There is nothing to discover.
+    status: done
+    comment: DHCP. The data logger of the inverter has the hostname e-linter.
   discovery-update-info:
     status: exempt
-    comment: The integration connects to a cloud service. There is nothing to discover.
+    comment: The integration connects to the cloud. It does not store a local address.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

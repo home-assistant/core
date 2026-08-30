@@ -1127,6 +1127,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "sunsynk",
+        "hostname": "e-linter*",
+    },
+    {
         "domain": "tado",
         "hostname": "tado*",
     },
