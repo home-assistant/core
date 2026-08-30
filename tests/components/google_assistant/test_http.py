@@ -5,7 +5,7 @@ from http import HTTPStatus
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 from uuid import uuid4
 
 import pytest
@@ -684,17 +684,21 @@ async def test_expose_update_triggers_sync(
 
 
 @pytest.mark.parametrize(
-    ("update_kwargs", "expect_sync"),
+    ("update_kwargs", "expected_calls"),
     [
-        pytest.param({"aliases": ["Kitchen Light"]}, True, id="aliases_changed"),
-        pytest.param({"icon": "mdi:lightbulb"}, False, id="unrelated_field_changed"),
+        pytest.param(
+            {"aliases": ["Kitchen Light"]},
+            [call("mock-user-id")],
+            id="aliases_changed",
+        ),
+        pytest.param({"icon": "mdi:lightbulb"}, [], id="unrelated_field_changed"),
     ],
 )
 async def test_registry_update_triggers_sync_only_for_aliases(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     update_kwargs: dict[str, Any],
-    expect_sync: bool,
+    expected_calls: list[Any],
 ) -> None:
     """Test only alias changes on an exposed entity schedule a Google sync."""
     entry = entity_registry.async_get_or_create(
@@ -718,10 +722,7 @@ async def test_registry_update_triggers_sync_only_for_aliases(
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
-    if expect_sync:
-        mock_sync.assert_called_once_with("mock-user-id")
-    else:
-        mock_sync.assert_not_called()
+    assert mock_sync.call_args_list == expected_calls
 
 
 async def test_async_enable_local_sdk(
