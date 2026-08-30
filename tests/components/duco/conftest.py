@@ -297,28 +297,19 @@ def mock_duco_client(
         client.async_get_ventilation_temperature_info.return_value = (
             mock_ventilation_temperature_info
         )
-
-        async def async_get_bypass_supply_temperature_targets() -> dict[
-            int, BypassSupplyTemperatureTarget
-        ]:
-            return mock_bypass_supply_temperature_targets.copy()
-
         client.async_get_bypass_supply_temperature_targets.side_effect = (
-            async_get_bypass_supply_temperature_targets
+            mock_bypass_supply_temperature_targets.copy
         )
-
-        async def async_set_bypass_supply_temperature_target(
-            zone_id: int,
-            temperature: float,
-        ) -> BypassSupplyTemperatureTarget:
-            target = replace(
-                mock_bypass_supply_temperature_targets[zone_id], value=temperature
-            )
-            mock_bypass_supply_temperature_targets[zone_id] = target
-            return target
-
         client.async_set_bypass_supply_temperature_target.side_effect = (
-            async_set_bypass_supply_temperature_target
+            lambda zone_id, temperature: (
+                mock_bypass_supply_temperature_targets.__setitem__(
+                    zone_id,
+                    replace(
+                        mock_bypass_supply_temperature_targets[zone_id],
+                        value=temperature,
+                    ),
+                )
+            )
         )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
