@@ -214,9 +214,11 @@ REMINDERS_ERRORS = (
 
 # pyicloud substitutes this when a reminder's title cannot be decrypted, which
 # happens on Advanced Data Protection accounts whose session has no Protected
-# Cloud Storage key. `update()` rewrites TitleDocument and NotesDocument
-# unconditionally, so writing such a reminder back would replace the real title
-# with this placeholder and blank the notes.
+# Cloud Storage key. Such a reminder has no readable title and no notes, and
+# `update()` rewrites TitleDocument and NotesDocument unconditionally, so
+# writing one back would replace the real title with this placeholder and blank
+# the notes. They are left out of the to-do lists entirely until the library
+# requests Protected Cloud Storage access.
 UNDECODED_TITLE = "Error Decoding Title"
 
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
@@ -259,6 +261,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         )
         self.account = entry.runtime_data
         self._warned_undecoded = False
+        self._skipped_undecoded = False
 
     @property
     def reminders(self) -> RemindersService:
@@ -271,6 +274,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         """Fetch every list and its reminders. Runs in the executor."""
         service = self.reminders
         result: dict[str, IcloudReminderList] = {}
+        self._skipped_undecoded = False
 
         for list_id, name in _live_lists(service):
             batch = service.list_reminders(
@@ -278,14 +282,17 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
                 include_completed=True,
                 results_limit=RESULTS_LIMIT,
             )
+            reminders = []
+            for reminder in batch.reminders:
+                if reminder.deleted:
+                    continue
+                if reminder.title == UNDECODED_TITLE:
+                    self._skipped_undecoded = True
+                    continue
+                reminders.append(_as_reminder(reminder))
+
             result[list_id] = IcloudReminderList(
-                list_id=list_id,
-                name=name,
-                reminders=[
-                    _as_reminder(reminder)
-                    for reminder in batch.reminders
-                    if not reminder.deleted
-                ],
+                list_id=list_id, name=name, reminders=reminders
             )
 
         return result
@@ -298,31 +305,25 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         except REMINDERS_ERRORS as err:
             raise UpdateFailed(f"Error fetching reminders: {err}") from err
 
-        self._warn_if_undecoded(data)
+        self._warn_if_undecoded()
         return data
 
-    def _warn_if_undecoded(self, data: dict[str, IcloudReminderList]) -> None:
-        """Warn once if reminder titles came back encrypted.
+    def _warn_if_undecoded(self) -> None:
+        """Warn once if reminders had to be left out because of encryption.
 
         With Advanced Data Protection enabled, CloudKit only returns readable
-        content to a session holding a Protected Cloud Storage key. Without it
-        every title arrives as a placeholder, which is otherwise a confusing
-        thing to see in a to-do list.
+        content to a session holding a Protected Cloud Storage key, which
+        pyicloud does not yet request. Those reminders are skipped rather than
+        shown as placeholders, so say once why a list looks short.
         """
-        if self._warned_undecoded:
-            return
-        if not any(
-            reminder.summary == UNDECODED_TITLE
-            for reminder_list in data.values()
-            for reminder in reminder_list.reminders
-        ):
+        if self._warned_undecoded or not self._skipped_undecoded:
             return
 
         self._warned_undecoded = True
         _LOGGER.warning(
-            "Some reminder titles could not be decrypted. This account uses "
-            "Advanced Data Protection, so approve access on one of your Apple "
-            "devices to make them readable"
+            "Some reminders could not be decrypted and have been left out of "
+            "the to-do lists. This account uses Advanced Data Protection, "
+            "which Home Assistant cannot read Reminders from yet"
         )
 
 

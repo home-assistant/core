@@ -442,6 +442,37 @@ async def test_missing_reminder_raises_service_error(
         )
 
 
+async def test_undecryptable_reminders_are_left_out(
+    hass: HomeAssistant,
+    config_entry: MagicMock,
+    reminders: MagicMock,
+) -> None:
+    """Test that reminders which cannot be decrypted are skipped.
+
+    On an Advanced Data Protection account pyicloud returns a placeholder
+    title and no notes, which is worse than useless in a to-do list, and
+    writing such a reminder back would destroy its real content.
+    """
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[
+            _reminder("r1", "Milk"),
+            _reminder("r2", UNDECODED_TITLE),
+        ]
+    )
+
+    await _setup(hass, config_entry)
+
+    items = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [item["summary"] for item in items[ENTITY_ID]["items"]]
+    assert summaries == ["Milk"]
+
+
 async def test_warns_once_when_titles_undecrypted(
     hass: HomeAssistant,
     config_entry: MagicMock,
@@ -449,7 +480,7 @@ async def test_warns_once_when_titles_undecrypted(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that encrypted titles are explained once, not on every poll."""
+    """Test that encrypted reminders are explained once, not on every poll."""
     reminders.list_reminders.return_value = MagicMock(
         reminders=[_reminder("r1", UNDECODED_TITLE)]
     )
