@@ -44,11 +44,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "expired": {
-        "name": "Expired"
-      }
-    },
     "sensor": {
       "expires": {
         "name": "Expires"
