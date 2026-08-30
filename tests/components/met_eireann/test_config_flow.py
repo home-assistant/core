@@ -64,7 +64,15 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_data,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -86,13 +94,29 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     # Create the first entry and assert that it is created successfully
     result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user"
+
+    result1 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input=test_data,
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted
     result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input=test_data,
     )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

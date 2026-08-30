@@ -1,6 +1,7 @@
 """Test the OneDrive setup."""
 
 from copy import copy
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from onedrive_personal_sdk.exceptions import (
@@ -14,6 +15,8 @@ import pytest
 from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_PATH,
+    CONF_TENANT_ID,
+    OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -24,6 +27,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(
@@ -49,6 +53,58 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("status", "state", "reason", "reauth_expected"),
+    [
+        pytest.param(
+            HTTPStatus.BAD_REQUEST,
+            ConfigEntryState.SETUP_ERROR,
+            "Authentication failed",
+            True,
+            id="reauth",
+        ),
+        pytest.param(
+            HTTPStatus.TOO_MANY_REQUESTS,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to OneDrive",
+            False,
+            id="transient",
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to OneDrive",
+            False,
+            id="server_error",
+        ),
+    ],
+)
+@pytest.mark.parametrize("expires_at", [0], ids=["expired"])
+async def test_token_refresh_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    state: ConfigEntryState,
+    reason: str,
+    reauth_expected: bool,
+) -> None:
+    """Test a failing token refresh during setup."""
+    aioclient_mock.post(
+        OAUTH2_TOKEN.format(tenant_id=mock_config_entry.data[CONF_TENANT_ID]),
+        status=status,
+        json={},
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is state
+    assert mock_config_entry.reason == reason
+    assert bool(hass.config_entries.flow.async_progress()) is reauth_expected
 
 
 @pytest.mark.parametrize(

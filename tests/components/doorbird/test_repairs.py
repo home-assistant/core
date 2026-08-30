@@ -7,7 +7,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import mock_not_found_exception
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
@@ -39,6 +39,8 @@ async def test_change_schedule_fails(
     assert "404" in placeholders["error"]
     assert data["step_id"] == "confirm"
 
-    data = await process_repair_fix_flow(client, flow_id)
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        data = await process_repair_fix_flow(client, flow_id)
+        await hass.async_block_till_done()
 
     assert data["type"] == "create_entry"

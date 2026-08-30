@@ -6,9 +6,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from vizaio import (
     AppConfig,
+    ChargingStatus,
     InputInfo,
     SettingInfo,
     SettingType,
+    VizioAuthError,
     VizioConnectionError,
     VizioNotFoundError,
 )
@@ -26,6 +28,7 @@ from .const import (
     EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
+    MOCK_CRAVE_CONFIG,
     MOCK_SPEAKER_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
     MODEL,
@@ -71,6 +74,42 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.fixture(autouse=True)
+def vizio_no_classification() -> Generator[None]:
+    """Mock device-type classification as unavailable by default."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+        side_effect=VizioConnectionError("cannot connect"),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_crave_config_entry() -> MockConfigEntry:
+    """Return a mock Crave speaker config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CRAVE_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+
+
+@pytest.fixture(name="vizio_battery")
+def vizio_battery_fixture() -> Generator[None]:
+    """Mock battery state for a Crave device."""
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
@@ -217,6 +256,14 @@ def vizio_bypass_update_fixture() -> Generator[None]:
             return_value=None,
         ),
         patch(
+            "homeassistant.components.vizio.Vizio.get_volume",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.is_muted",
+            return_value=None,
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_current_input",
             return_value=None,
         ),
@@ -236,6 +283,16 @@ def vizio_bypass_update_fixture() -> Generator[None]:
             "homeassistant.components.vizio.Vizio.get_version",
             return_value=None,
         ),
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_detect_tv", autouse=True)
+def vizio_detect_tv_fixture() -> Generator[None]:
+    """Mock vizio device type probe to report a TV."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_is_tv",
+        return_value=True,
     ):
         yield
 
@@ -290,12 +347,18 @@ def vizio_guess_device_type_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="vizio_detect_tv")
-def vizio_detect_tv_fixture() -> Generator[None]:
-    """Mock vizio device type probe to report a TV."""
-    with patch(
-        "homeassistant.components.vizio.config_flow.async_is_tv",
-        return_value=True,
+@pytest.fixture(name="vizio_invalid_auth")
+def vizio_invalid_auth_fixture() -> Generator[None]:
+    """Mock a reachable device that rejects the stored auth token."""
+    with (
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.ping",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.ping_auth",
+            side_effect=VizioAuthError("invalid token"),
+        ),
     ):
         yield
 
@@ -358,6 +421,14 @@ def vizio_update_fixture() -> Generator[None]:
                 type=SettingType.LIST,
                 options=tuple(EQ_LIST),
             ),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_volume",
+            return_value=int(SOUNDBAR_PROFILE.max_volume / 2),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.is_muted",
+            return_value=False,
         ),
         patch(
             "homeassistant.components.vizio.Vizio.get_current_input",
