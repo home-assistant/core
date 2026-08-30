@@ -4,7 +4,7 @@ from abc import abstractmethod
 from asyncio import Lock
 from datetime import datetime
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aiohttp import ClientError
 
@@ -14,9 +14,9 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -86,7 +86,14 @@ class BondEntity(Entity):
         if self.name is not None:
             device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._hub.bond_id),
+                config_entry_id=config_entry.entry_id,
+            )
         if self._device.location is not None:
             device_info[ATTR_SUGGESTED_AREA] = self._device.location
         if not self._hub.is_bridge:

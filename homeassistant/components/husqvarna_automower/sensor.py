@@ -98,12 +98,7 @@ def _get_restricted_reason(data: MowerAttributes) -> str:
 @callback
 def _get_work_area_names(data: MowerAttributes) -> list[str]:
     """Return a list with all work area names."""
-    if TYPE_CHECKING:
-        # Sensor does not get created if it is None
-        assert data.work_areas is not None
-    work_area_list = [
-        data.work_areas[work_area_id].name for work_area_id in data.work_areas
-    ]
+    work_area_list = [work_area.name for work_area in (data.work_areas or {}).values()]
     work_area_list.append(STATE_NO_WORK_AREA_ACTIVE)
     return work_area_list
 
@@ -111,14 +106,12 @@ def _get_work_area_names(data: MowerAttributes) -> list[str]:
 @callback
 def _get_current_work_area_name(data: MowerAttributes) -> str:
     """Return the name of the current work area."""
-    if TYPE_CHECKING:
-        # Sensor does not get created if values are None
-        assert data.work_areas is not None
+    work_areas = data.work_areas or {}
     if (
         data.mower.work_area_id is not None
-        and data.mower.work_area_id in data.work_areas
+        and (work_area := work_areas.get(data.mower.work_area_id)) is not None
     ):
-        return data.work_areas[data.mower.work_area_id].name
+        return work_area.name
 
     return STATE_NO_WORK_AREA_ACTIVE
 
@@ -133,10 +126,9 @@ def _get_remaining_charging_time(data: MowerAttributes) -> int | None:
 @callback
 def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
     """Return the name of the current work area."""
-    if TYPE_CHECKING:
-        # Sensor does not get created if it is None
-        assert data.work_areas is not None
-    return {ATTR_WORK_AREA_ID_ASSIGNMENT: data.work_area_dict}
+    return {
+        ATTR_WORK_AREA_ID_ASSIGNMENT: data.work_area_dict if data.work_areas else {}
+    }
 
 
 @callback
@@ -383,8 +375,8 @@ async def async_setup_entry(
                         mower_id, coordinator, description, work_area_id
                     )
                     for description in WORK_AREA_SENSOR_TYPES
-                    for work_area_id in _work_areas
-                    if description.exists_fn(_work_areas[work_area_id])
+                    for work_area_id, work_area in _work_areas.items()
+                    if description.exists_fn(work_area)
                 )
         entities.extend(
             AutomowerSensorEntity(mower_id, coordinator, description)
@@ -394,16 +386,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
-        mower_data = coordinator.data[mower_id]
-        if mower_data.work_areas is None:
+        if (work_areas := coordinator.data[mower_id].work_areas) is None:
             return
 
         async_add_entities(
             WorkAreaSensorEntity(mower_id, coordinator, description, work_area_id)
             for description in WORK_AREA_SENSOR_TYPES
             for work_area_id in work_area_ids
-            if work_area_id in mower_data.work_areas
-            and description.exists_fn(mower_data.work_areas[work_area_id])
+            if (work_area := work_areas.get(work_area_id)) is not None
+            and description.exists_fn(work_area)
         )
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
@@ -464,7 +455,11 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return the available attribute of the entity."""
-        return super().available and self.native_value is not None
+        return (
+            super().available
+            and self.entity_description.exists_fn(self.mower_attributes)
+            and self.native_value is not None
+        )
 
 
 class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
@@ -483,15 +478,19 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+        if TYPE_CHECKING:
+            assert self.work_area_attributes is not None
         self._attr_translation_placeholders = {
             "work_area": self.work_area_attributes.name
         }
 
     @property
     @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.work_area_attributes)
+        if (work_area := self.work_area_attributes) is None:
+            return None
+        return self.entity_description.value_fn(work_area)
 
     @property
     @override

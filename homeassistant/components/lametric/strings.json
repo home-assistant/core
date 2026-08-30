@@ -2,17 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "invalid_discovery_info": "Invalid discovery information received",
       "link_local_address": "Link local addresses are not supported",
       "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
       "no_devices": "The authorized user has no LaMetric devices",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
