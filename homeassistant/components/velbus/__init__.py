@@ -136,7 +136,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing a Velbus device and its sub-devices.
 

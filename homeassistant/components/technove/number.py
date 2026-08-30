@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +44,7 @@ async def _set_max_current(
             translation_domain=DOMAIN, translation_key="max_current_in_sharing_mode"
         )
     await coordinator.technove.set_max_current(int(value))
+    await coordinator.async_request_refresh()
 
 
 NUMBERS = [
@@ -52,6 +53,7 @@ NUMBERS = [
         translation_key="max_current",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         mode=NumberMode.BOX,
         native_step=1,
         native_min_value=MIN_CURRENT,

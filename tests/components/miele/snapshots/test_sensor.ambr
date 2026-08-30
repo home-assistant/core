@@ -520,7 +520,7 @@
     'state': 'own_program',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -534,7 +534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -557,21 +557,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.5',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -585,7 +585,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -608,21 +608,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -636,7 +636,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -659,21 +659,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -687,7 +687,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -710,21 +710,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -738,7 +738,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -761,21 +761,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -789,7 +789,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -812,21 +812,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -840,7 +840,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -863,21 +863,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.miele_test_twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.degreasing_cycles-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -893,7 +893,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -916,21 +916,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.degreasing_cycles-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.descaling_cycles-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -946,7 +946,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -969,14 +969,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.descaling_cycles-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2168,7 +2168,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2184,7 +2184,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2207,21 +2207,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2235,7 +2235,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2258,21 +2258,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.5',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2286,7 +2286,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2309,21 +2309,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2337,7 +2337,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2360,21 +2360,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2388,7 +2388,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2411,21 +2411,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2439,7 +2439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2462,21 +2462,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2490,7 +2490,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2513,21 +2513,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2541,7 +2541,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2564,21 +2564,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_test_twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.degreasing_cycles-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2594,7 +2594,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2617,21 +2617,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.degreasing_cycles-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.descaling_cycles-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2647,7 +2647,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2670,14 +2670,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.descaling_cycles-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3048,7 +3048,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3064,7 +3064,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3087,21 +3087,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3115,7 +3115,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3138,21 +3138,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.5',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3166,7 +3166,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3189,21 +3189,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3217,7 +3217,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3240,21 +3240,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3268,7 +3268,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3291,21 +3291,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3319,7 +3319,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3342,21 +3342,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3370,7 +3370,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3393,21 +3393,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3421,7 +3421,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3444,21 +3444,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_test_twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.degreasing_cycles-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3474,7 +3474,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3497,21 +3497,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.degreasing_cycles-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.descaling_cycles-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3527,7 +3527,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3550,14 +3550,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.descaling_cycles-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4159,7 +4159,7 @@
     'state': 'plate_step_boost',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4175,7 +4175,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4198,21 +4198,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4226,7 +4226,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4249,21 +4249,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.5',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4277,7 +4277,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4300,21 +4300,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4328,7 +4328,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4351,21 +4351,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4379,7 +4379,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4402,21 +4402,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4430,7 +4430,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4453,21 +4453,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4481,7 +4481,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4504,21 +4504,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4532,7 +4532,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4555,21 +4555,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_test_twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.degreasing_cycles-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4585,7 +4585,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4608,21 +4608,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.degreasing_cycles-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.descaling_cycles-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4638,7 +4638,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4661,14 +4661,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.descaling_cycles-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4923,7 +4923,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4939,7 +4939,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4962,14 +4962,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6863,7 +6863,7 @@
     'state': '19.54',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.powerdisk_level-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6877,7 +6877,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6900,14 +6900,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.powerdisk_level-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7067,7 +7067,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7081,7 +7081,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7104,21 +7104,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.rinse_aid_level-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.salt_level-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7132,7 +7132,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7155,21 +7155,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.salt_level-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7183,7 +7183,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7206,21 +7206,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.twindos_1_level-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
+# name: test_sensor_states[platforms0][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7234,7 +7234,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7257,14 +7257,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.twindos_2_level-state]
+# name: test_sensor_states[platforms0][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8383,7 +8383,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.degreasing_cycles-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8399,7 +8399,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8422,21 +8422,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.degreasing_cycles-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.descaling_cycles-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8452,7 +8452,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8475,14 +8475,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.descaling_cycles-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8737,7 +8737,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8753,7 +8753,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8776,14 +8776,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -10677,7 +10677,7 @@
     'state': '19.54',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -10691,7 +10691,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10714,14 +10714,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -10881,7 +10881,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -10895,7 +10895,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10918,21 +10918,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -10946,7 +10946,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10969,21 +10969,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.salt_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -10997,7 +10997,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11020,21 +11020,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11048,7 +11048,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11071,14 +11071,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -12197,7 +12197,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.degreasing_cycles-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12213,7 +12213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12236,21 +12236,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.degreasing_cycles-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.descaling_cycles-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12266,7 +12266,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12289,14 +12289,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.descaling_cycles-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -12551,7 +12551,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12567,7 +12567,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12590,14 +12590,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14491,7 +14491,7 @@
     'state': '19.54',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.powerdisk_level-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14505,7 +14505,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14528,14 +14528,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.powerdisk_level-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14695,7 +14695,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.rinse_aid_level-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14709,7 +14709,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14732,21 +14732,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.rinse_aid_level-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.salt_level-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14760,7 +14760,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14783,21 +14783,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.salt_level-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.twindos_1_level-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14811,7 +14811,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14834,21 +14834,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.twindos_1_level-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.twindos_2_level-entry]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14862,7 +14862,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -14885,14 +14885,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push_one_device[platforms0][sensor.twindos_2_level-state]
+# name: test_sensor_states_api_push_one_device[platforms0][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -16011,7 +16011,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.degreasing_cycles-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_degreasing_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16027,7 +16027,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16050,21 +16050,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.degreasing_cycles-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_degreasing_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Degreasing cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Degreasing cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.degreasing_cycles',
+    'entity_id': 'sensor.miele_test_degreasing_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.descaling_cycles-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_descaling_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16080,7 +16080,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16103,21 +16103,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.descaling_cycles-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_descaling_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Descaling cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Descaling cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.descaling_cycles',
+    'entity_id': 'sensor.miele_test_descaling_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.milk_pipework_cleaning_cycles-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_milk_pipework_cleaning_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16133,7 +16133,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16156,21 +16156,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.milk_pipework_cleaning_cycles-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_milk_pipework_cleaning_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Milk pipework cleaning cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Milk pipework cleaning cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'entity_id': 'sensor.miele_test_milk_pipework_cleaning_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16184,7 +16184,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16207,21 +16207,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_powerdisk_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PowerDisk level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test PowerDisk level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.powerdisk_level',
+    'entity_id': 'sensor.miele_test_powerdisk_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.5',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16235,7 +16235,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16258,14 +16258,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rinse aid level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Rinse aid level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rinse_aid_level',
+    'entity_id': 'sensor.miele_test_rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -16761,7 +16761,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16775,7 +16775,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16798,21 +16798,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test Salt level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.salt_level',
+    'entity_id': 'sensor.miele_test_salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16826,7 +16826,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16849,21 +16849,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level',
+    'entity_id': 'sensor.miele_test_twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16877,7 +16877,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16900,21 +16900,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 1 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 1 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_1_level_2',
+    'entity_id': 'sensor.miele_test_twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16928,7 +16928,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16951,21 +16951,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level',
+    'entity_id': 'sensor.miele_test_twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16979,7 +16979,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17002,14 +17002,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_test_twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TwinDos 2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miele test TwinDos 2 level',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.twindos_2_level_2',
+    'entity_id': 'sensor.miele_test_twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

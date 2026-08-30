@@ -45,6 +45,6 @@
   "loggers": ["tuya_sharing"],
   "requirements": [
     "tuya-device-handlers==0.0.26",
-    "tuya-device-sharing-sdk==0.2.14"
+    "tuya-device-sharing-sdk==0.2.15"
   ]
 }
