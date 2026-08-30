@@ -43,6 +43,8 @@ from .const import (
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DEFAULT_EXPOSE_BY_DEFAULT,
+    DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
@@ -142,7 +144,7 @@ class GoogleConfig(AbstractConfig):
             *self.entity_config,
         }
         for entity_id in entity_ids:
-            self._migrate_legacy_entity(entity_id)
+            self._migrate_legacy_entity(entity_id, initial=True)
 
     @callback
     def _async_state_added_filter(self, data: EventStateChangedData) -> bool:
@@ -153,7 +155,7 @@ class GoogleConfig(AbstractConfig):
     def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
         """Migrate legacy settings and sync a newly appeared state."""
         entity_id = event.data["entity_id"]
-        self._migrate_legacy_entity(entity_id)
+        self._migrate_legacy_entity(entity_id, initial=False)
         if self.should_expose(entity_id):
             self.async_schedule_google_sync_all()
 
@@ -229,14 +231,26 @@ class GoogleConfig(AbstractConfig):
         """Return if entity should be exposed."""
         return async_should_expose(self.hass, DOMAIN, entity_id)
 
-    def _should_expose_legacy(self, entity_id: str) -> bool:
+    def _should_expose_legacy(self, entity_id: str, *, respect_defaults: bool) -> bool:
         """Return if entity should be exposed, based on YAML configuration.
 
-        Only used to seed the shared expose settings store for entities that
-        don't have a google_assistant setting there yet.
+        For initial migrations, we use the legacy default for the exposed domains.
+        For the continuous migrations, we only apply that default if the user still
+        has one of the two deprecated keys configured, so removing both stops this
+        from applying to newly discovered entities.
         """
-        expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
-        exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
+        apply_default = (
+            respect_defaults
+            or CONF_EXPOSE_BY_DEFAULT in self._config
+            or CONF_EXPOSED_DOMAINS in self._config
+        )
+        expose_by_default = self._config.get(
+            CONF_EXPOSE_BY_DEFAULT,
+            DEFAULT_EXPOSE_BY_DEFAULT if apply_default else False,
+        )
+        exposed_domains = self._config.get(
+            CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS if apply_default else []
+        )
 
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(entity_id)
@@ -265,7 +279,7 @@ class GoogleConfig(AbstractConfig):
 
         return bool(is_default_exposed or explicit_expose)
 
-    def _migrate_legacy_entity(self, entity_id: str) -> None:
+    def _migrate_legacy_entity(self, entity_id: str, *, initial: bool) -> None:
         """Migrate should_expose/name/aliases computed from YAML."""
         try:
             settings = async_get_entity_settings(self.hass, entity_id)
@@ -274,7 +288,7 @@ class GoogleConfig(AbstractConfig):
         if DOMAIN in settings:
             return
 
-        if not self._should_expose_legacy(entity_id):
+        if not self._should_expose_legacy(entity_id, respect_defaults=initial):
             return
 
         async_expose_entity(self.hass, DOMAIN, entity_id, True)

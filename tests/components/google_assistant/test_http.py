@@ -603,10 +603,11 @@ async def test_migrate_legacy_entity_does_not_restore_cleared_aliases(
     # The user clears all aliases via the UI.
     entity_registry.async_update_entity(entry.entity_id, aliases=[])
 
-    # A repeat migration attempt (for example, after the entity's state
-    # disappears and reappears across a restart) must not restore them: this
-    # entity already has a recorded google_assistant setting.
-    google_config._migrate_legacy_entity(entry.entity_id)
+    # A repeat migration attempt (triggered by the entity's state appearing,
+    # for example after a restart) must not restore them: this entity
+    # already has a recorded google_assistant setting.
+    hass.states.async_set(entry.entity_id, "on")
+    await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entry.entity_id)
     assert entry.aliases == []
@@ -638,6 +639,25 @@ async def test_new_entity_exposed_via_expose_new_triggers_sync(
         await hass.async_block_till_done()
 
     mock_sync.assert_called_once_with("mock-user-id")
+
+
+async def test_new_entity_without_legacy_config_defers_to_expose_new(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a new entity isn't auto-exposed by legacy defaults once YAML keys are gone."""
+    config = GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234"})
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    await hass.async_block_till_done()
+
+    # switch is in the legacy default domain set, but legacy defaults
+    # should not apply since neither key is configured.
+    assert google_config.should_expose(entry.entity_id) is False
 
 
 async def test_expose_update_triggers_sync(

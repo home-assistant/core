@@ -63,18 +63,15 @@ def _check_report_state(data):
 
 
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
+    # These deprecated keys can be removed in HA Core 2027.5.
     cv.deprecated(CONF_EXPOSE_BY_DEFAULT),
     cv.deprecated(CONF_EXPOSED_DOMAINS),
     cv.deprecated(CONF_ENTITY_CONFIG),
     vol.Schema(
         {
             vol.Required(CONF_PROJECT_ID): cv.string,
-            vol.Optional(
-                CONF_EXPOSE_BY_DEFAULT, default=DEFAULT_EXPOSE_BY_DEFAULT
-            ): cv.boolean,
-            vol.Optional(
-                CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
-            ): cv.ensure_list,
+            vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
+            vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
