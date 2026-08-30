@@ -163,6 +163,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     data: dict[str, Any] = {}
     _auth_url: str
     _authorized_username: str | None = None
+    _session_key_lock: asyncio.Lock
     _session_key_error: bool = False
     _session_key_generator: SessionKeyGenerator
     _polling_task: asyncio.Task[None] | None = None
@@ -192,18 +193,23 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if username.casefold() == self.data[CONF_MAIN_USER].casefold():
             self.data[CONF_SESSION_KEY] = session_key
 
-    async def _async_get_session_key(self) -> tuple[str, str] | None:
-        """Get the session key and record terminal exchange failures."""
-        try:
-            return await self.hass.async_add_executor_job(
-                get_session_key, self._session_key_generator, self._auth_url
-            )
-        except PyLastError:
-            self._session_key_error = True
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            self._session_key_error = True
-        return None
+    async def _async_get_session_key(self) -> None:
+        """Exchange the token once and record the result."""
+        async with self._session_key_lock:
+            if self._authorized_username is not None or self._session_key_error:
+                return
+            try:
+                session = await self.hass.async_add_executor_job(
+                    get_session_key, self._session_key_generator, self._auth_url
+                )
+            except PyLastError:
+                self._session_key_error = True
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                self._session_key_error = True
+            else:
+                if session is not None:
+                    self._set_session(session)
 
     async def _async_start_web_auth(self) -> str | None:
         """Start Last.fm web authentication and return an error key on failure."""
@@ -228,6 +234,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
+        self._session_key_lock = asyncio.Lock()
         return None
 
     async def _async_start_reauth(self) -> ConfigFlowResult:
@@ -296,7 +303,11 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Wait for the user to authorize the application on Last.fm."""
-        if not self._session_key_error and CONF_SESSION_KEY not in self.data:
+        if (
+            not self._session_key_error
+            and self._authorized_username is None
+            and CONF_SESSION_KEY not in self.data
+        ):
             if self._polling_task is None:
                 self._polling_task = self.hass.async_create_background_task(
                     self._async_poll_for_session_key(),
@@ -305,19 +316,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             else:
                 # The user continued manually before authorization was detected
-                session = await self._async_get_session_key()
-                if session is not None:
-                    self._set_session(session)
-        if self._session_key_error:
-            if self._polling_task:
-                self._polling_task.cancel()
-                self._polling_task = None
-            return self.async_external_step_done(next_step_id="auth_failed")
-        if self._authorized_username is not None and CONF_SESSION_KEY not in self.data:
-            if self._polling_task:
-                self._polling_task.cancel()
-                self._polling_task = None
-            return self.async_external_step_done(next_step_id="wrong_account")
+                await self._async_get_session_key()
         if CONF_SESSION_KEY in self.data:
             if self._polling_task:
                 self._polling_task.cancel()
@@ -327,6 +326,16 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     "finish_reauth" if self.source == SOURCE_REAUTH else "friends"
                 )
             )
+        if self._authorized_username is not None and CONF_SESSION_KEY not in self.data:
+            if self._polling_task:
+                self._polling_task.cancel()
+                self._polling_task = None
+            return self.async_external_step_done(next_step_id="wrong_account")
+        if self._session_key_error:
+            if self._polling_task:
+                self._polling_task.cancel()
+                self._polling_task = None
+            return self.async_external_step_done(next_step_id="auth_failed")
         return self.async_external_step(step_id="auth_url", url=self._auth_url)
 
     async def async_step_finish_reauth(
@@ -366,15 +375,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
                 await asyncio.sleep(POLLING_INTERVAL)
-                session = await self._async_get_session_key()
+                await self._async_get_session_key()
                 if self._session_key_error:
                     self._polling_task = None
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_configure(self.flow_id)
                     )
                     return
-                if session is not None:
-                    self._set_session(session)
+                if self._authorized_username is not None:
                     self._polling_task = None
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_configure(self.flow_id)

@@ -12,10 +12,8 @@ from homeassistant.components.lastfm.const import (
     ERROR_CODE_INVALID_SESSION_KEY,
     ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
-from homeassistant.components.lastfm.coordinator import LastFMDataUpdateCoordinator
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -102,34 +100,17 @@ async def test_load_entry_with_session_key(
         ),
     ],
 )
-async def test_invalid_session_key_raises_auth_failed(
-    hass: HomeAssistant,
-    authenticated_config_entry: MockConfigEntry,
-    user: MockUser,
-) -> None:
-    """Test an invalid stored session key raises an authentication failure."""
-    coordinator = LastFMDataUpdateCoordinator(hass, authenticated_config_entry)
-    with (
-        patch("pylast.User", return_value=user),
-        pytest.raises(ConfigEntryAuthFailed),
-    ):
-        await coordinator._async_update_data()
-
-
 async def test_invalid_session_key_starts_reauth(
     hass: HomeAssistant,
     authenticated_config_entry: MockConfigEntry,
+    user: MockUser,
 ) -> None:
     """Test an invalid stored session key starts reauthentication."""
     authenticated_config_entry.add_to_hass(hass)
     with (
         patch(
             "pylast.User",
-            return_value=MockUser(
-                thrown_error=WSError(
-                    "network", ERROR_CODE_INVALID_SESSION_KEY, "Invalid session key"
-                )
-            ),
+            return_value=user,
         ),
         patch(
             "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",

@@ -1,5 +1,6 @@
 """Test Lastfm config flow."""
 
+from threading import Event
 from unittest.mock import MagicMock, call, patch
 
 from pylast import MalformedResponseError, NetworkError, WSError
@@ -45,6 +46,26 @@ FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
 POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
 MAX_POLLING_ATTEMPTS_PATH = f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS"
+
+
+class BlockingSessionKeyGenerator(MockSessionKeyGenerator):
+    """Block a session exchange until the test releases it."""
+
+    def __init__(self) -> None:
+        """Initialize the blocking session key generator."""
+        super().__init__()
+        self.exchange_calls = 0
+        self.exchange_started = Event()
+        self.exchange_release = Event()
+
+    def get_web_auth_session_key_username(
+        self, url: str, token: str = ""
+    ) -> tuple[str, str]:
+        """Wait before returning the session key and username."""
+        self.exchange_calls += 1
+        self.exchange_started.set()
+        assert self.exchange_release.wait(1)
+        return super().get_web_auth_session_key_username(url, token)
 
 
 @pytest.mark.parametrize(
@@ -116,6 +137,39 @@ async def test_full_user_flow_with_session_key(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["options"] == CONF_DATA_WITH_SESSION_KEY
+
+
+async def test_session_key_exchange_is_serialized(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test polling and Submit share one session exchange."""
+    session_key_generator = BlockingSessionKeyGenerator()
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch(POLLING_INTERVAL_PATH, 0),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        polling_task = get_session_key_polling_task()
+        assert await hass.async_add_executor_job(
+            session_key_generator.exchange_started.wait, 1
+        )
+
+        submit_task = hass.async_create_task(
+            hass.config_entries.flow.async_configure(result["flow_id"])
+        )
+        session_key_generator.exchange_release.set()
+
+        await polling_task
+        submit_result = await submit_task
+        await hass.async_block_till_done()
+
+    assert session_key_generator.exchange_calls == 1
+    assert submit_result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+    hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_flow_rejects_session_for_different_user(
