@@ -58,7 +58,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mvg_api() -> Generator[AsyncMock]:
+def mvg_api() -> Generator[dict[str, AsyncMock]]:
     """Mock the mvg.MvgApi calls used by the config flow and sensor."""
     with (
         patch(

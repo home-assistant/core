@@ -76,18 +76,32 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the legacy YAML configuration as config entries."""
+    stations = config[CONF_NEXT_DEPARTURE]
     results = [
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=nextdeparture
         )
-        for nextdeparture in config[CONF_NEXT_DEPARTURE]
+        for nextdeparture in stations
     ]
 
-    if all(
-        result["type"] is not FlowResultType.ABORT
-        or result["reason"] == "already_configured"
-        for result in results
-    ):
+    all_imported = True
+    for nextdeparture, result in zip(stations, results, strict=True):
+        if (
+            result["type"] is FlowResultType.ABORT
+            and result["reason"] != "already_configured"
+        ):
+            all_imported = False
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}_{nextdeparture[CONF_STATION]}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+                translation_placeholders={"station": nextdeparture[CONF_STATION]},
+            )
+
+    if all_imported:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -208,7 +222,7 @@ class MVGSensor(SensorEntity):
         """Return the next departure time."""
         if not self._departures:
             return None
-        return self._departures[0].get("time_in_mins")
+        return int(self._departures[0]["time_in_mins"])
 
     @property
     @override

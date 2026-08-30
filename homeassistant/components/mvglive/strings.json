@@ -31,6 +31,14 @@
     "deprecated_yaml": {
       "description": "MVG stations configured in `configuration.yaml` have been imported automatically as config entries. You can now remove the `sensor: - platform: mvglive` block from `configuration.yaml`.",
       "title": "The MVG YAML configuration is deprecated"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring the MVG station \"{station}\" using YAML is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the MVG API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the station up via the UI.",
+      "title": "The MVG YAML configuration for \"{station}\" could not be imported"
+    },
+    "deprecated_yaml_import_issue_invalid_station": {
+      "description": "Configuring the MVG station \"{station}\" using YAML is deprecated.\n\nWhile importing your configuration, the station could not be found. Please remove the existing YAML configuration and set the station up via the UI.",
+      "title": "The MVG YAML configuration for \"{station}\" could not be imported"
     }
   },
   "options": {
