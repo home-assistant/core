@@ -141,15 +141,20 @@ class GoogleConfig(AbstractConfig):
             )
         )
 
-        if self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION:
-            self._migrate_legacy_settings()
+        legacy_exposure_config = (
+            self._store.expose_settings_version < EXPOSE_SETTINGS_VERSION
+        )
+
+        self._migrate_legacy_settings(legacy_exposure_config=legacy_exposure_config)
+
+        if legacy_exposure_config:
             await self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
 
         await super()._async_on_start(hass)
 
-    def _migrate_legacy_settings(self) -> None:
+    def _migrate_legacy_settings(self, *, legacy_exposure_config: bool) -> None:
         """Migrate should_expose/name/aliases computed from YAML to the shared store."""
-        if CONF_EXPOSED_DOMAINS not in self._config:
+        if legacy_exposure_config and CONF_EXPOSED_DOMAINS not in self._config:
             self.hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(
                 DOMAIN,
                 self._config.get(CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT),
@@ -162,7 +167,9 @@ class GoogleConfig(AbstractConfig):
             *self.entity_config,
         }
         for entity_id in entity_ids:
-            self._migrate_legacy_entity(entity_id, skip_defaults=False)
+            self._migrate_legacy_entity(
+                entity_id, skip_defaults=not legacy_exposure_config
+            )
 
     @callback
     def _async_state_added_filter(self, data: EventStateChangedData) -> bool:

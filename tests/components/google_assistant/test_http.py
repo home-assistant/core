@@ -494,6 +494,39 @@ async def test_migrate_expose_settings(
     assert google_config.should_expose(light_entry.entity_id) is False
 
 
+async def test_legacy_config_rescanned_on_later_startup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity added to legacy config later is picked up on the next startup."""
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    # switch isn't in exposed_domains yet, so migration leaves it untouched.
+    assert async_get_entity_settings(hass, entry.entity_id) == {}
+
+    # The user adds the entity via the deprecated entity_config key and
+    # restarts; a new GoogleConfig reuses the same, already-migrated store.
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {entry.entity_id: {"expose": True}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(entry.entity_id) is True
+
+
 async def test_migrate_legacy_entity_skips_non_exposed_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
