@@ -192,6 +192,88 @@ async def test_ssdp_discovery_exist(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_ssdp_duplicate_via_mac_updates_host(hass: HomeAssistant) -> None:
+    """Test SSDP discovery with different host updates existing entry via MAC.
+
+    After migration to MAC-based unique_id, SSDP discovery uses UDN for flow
+    deduplication (ATTR_UPNP_UDN) while persistent unique_id is MAC.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Same device discovered on a new IP - UDN identical, host different.
+    ssdp_new_host = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://bravia-host2:52323/dmr.xml",
+        upnp={
+            ATTR_UPNP_UDN: "uuid:1234",
+            ATTR_UPNP_FRIENDLY_NAME: "Living TV",
+            ATTR_UPNP_MODEL_NAME: "KE-55XH9096",
+            "X_ScalarWebAPI_DeviceInfo": {
+                "X_ScalarWebAPI_ServiceList": {
+                    "X_ScalarWebAPI_ServiceType": [
+                        "guide",
+                        "system",
+                        "audio",
+                        "avContent",
+                        "videoScreen",
+                    ],
+                },
+            },
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp_new_host,
+    )
+    # UDN/host check does not abort (host differs, UDN vs MAC mismatch),
+    # so flow proceeds to confirm/authorize.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "authorize"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USE_PSK: False, CONF_USE_SSL: False}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pin"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        # Host is updated to the newly discovered IP via MAC duplicate check
+        assert config_entry.data[CONF_HOST] == "bravia-host2"
+
+
 async def test_user_invalid_host(hass: HomeAssistant) -> None:
     """Test that errors are shown when the host is invalid."""
     result = await hass.config_entries.flow.async_init(

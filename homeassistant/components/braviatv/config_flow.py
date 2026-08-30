@@ -88,7 +88,9 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.device_config[CONF_HOST]}
+        )
 
         return self.async_create_entry(
             title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
