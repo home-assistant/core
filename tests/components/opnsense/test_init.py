@@ -19,9 +19,13 @@ from homeassistant.components.opnsense.const import (
     CONF_TRACKER_INTERFACES,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.setup import async_setup_component
+
+from .const import CONFIG_DATA_IMPORT
 
 from tests.common import MockConfigEntry
 
@@ -86,3 +90,31 @@ async def test_setup_entry_tracker_interface_not_found(
         "interface": "NOPE",
         "known": "WAN, LAN",
     }
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_async_setup_yaml_import_creates_flow(hass: HomeAssistant) -> None:
+    """Test YAML setup starts an import config flow."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG_DATA_IMPORT})
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_IMPORT
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_coordinator_raises_config_entry_error_on_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+) -> None:
+    """Test coordinator wraps configuration errors as ConfigEntryError."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    mock_opnsense_client.get_arp_table.side_effect = OPNsenseInvalidAuth("bad auth")
+
+    with pytest.raises(ConfigEntryError, match="Error with OPNsense configuration"):
+        await coordinator._async_update_data()

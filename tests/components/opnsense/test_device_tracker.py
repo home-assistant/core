@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components import device_tracker
 from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.components.opnsense.device_tracker import OPNsenseDeviceTrackerEntity
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -174,3 +175,35 @@ async def test_device_tracker_coordinator_update_failure(
     assert hass.states.get(tracked_entity.entity_id).state == STATE_UNAVAILABLE
 
     assert mock_opnsense_client.get_arp_table.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_device_tracker_missing_device_data_and_empty_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+) -> None:
+    """Test tracker property fallbacks for missing device and empty IP."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+
+    missing_entity = OPNsenseDeviceTrackerEntity(coordinator, "00:00:00:00:00:00")
+    assert missing_entity.device_data is None
+
+    mock_opnsense_client.get_arp_table.return_value = [
+        {
+            "expires": "2026-06-01T10:00:00+00:00",
+            "hostname": "Desktop",
+            "intf": "igb1",
+            "intf_description": "LAN",
+            "ip": "",
+            "mac": "ff:ff:ff:ff:ff:fe",
+            "manufacturer": "OEM",
+        }
+    ]
+    await coordinator.async_refresh()
+
+    empty_ip_entity = OPNsenseDeviceTrackerEntity(coordinator, "ff:ff:ff:ff:ff:fe")
+    assert empty_ip_entity.ip_address is None

@@ -1,7 +1,7 @@
 """Tests for the OPNsense sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
@@ -173,6 +173,77 @@ async def test_interface_sensor_casts_non_string_values(
     assert state.state == "12"
 
 
+async def test_interface_sensor_with_missing_value_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test missing interface value is exposed as unknown."""
+    mock_opnsense_client.get_arp_table.return_value = [
+        {
+            "expires": "2026-06-01T10:00:00+00:00",
+            "hostname": "Desktop",
+            "intf": "igb1",
+            "ip": "192.168.0.167",
+            "mac": "ff:ff:ff:ff:ff:fe",
+            "manufacturer": "OEM",
+        }
+    ]
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    interface_entity = next(
+        entity
+        for entity in sensor_entities
+        if entity.unique_id == "ff:ff:ff:ff:ff:fe_interface"
+    )
+
+    state = hass.states.get(interface_entity.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_interface_sensor_with_empty_value_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test empty interface value is exposed as unknown."""
+    mock_opnsense_client.get_arp_table.return_value = [
+        {
+            "expires": "2026-06-01T10:00:00+00:00",
+            "hostname": "Desktop",
+            "intf": "igb1",
+            "intf_description": "",
+            "ip": "192.168.0.167",
+            "mac": "ff:ff:ff:ff:ff:fe",
+            "manufacturer": "OEM",
+        }
+    ]
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    interface_entity = next(
+        entity
+        for entity in sensor_entities
+        if entity.unique_id == "ff:ff:ff:ff:ff:fe_interface"
+    )
+
+    state = hass.states.get(interface_entity.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
 @pytest.mark.usefixtures("mock_opnsense_client")
 async def test_native_value_is_none_when_sensor_unavailable(
     hass: HomeAssistant,
@@ -238,3 +309,29 @@ async def test_expires_sensor_returns_timestamp_for_int_value(
     assert dt_util.parse_datetime(state.state) == dt_util.utcnow() + timedelta(
         seconds=120
     )
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_native_value_is_none_when_device_data_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test native_value is None if device data cannot be retrieved."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    description = next(
+        sensor_description
+        for sensor_description in SENSOR_DESCRIPTIONS
+        if sensor_description.key == "interface"
+    )
+    coordinator = mock_config_entry.runtime_data.coordinator
+    entity = OPNsenseSensorEntity(coordinator, "ff:ff:ff:ff:ff:fe", description)
+
+    with patch.object(
+        OPNsenseSensorEntity,
+        "device_data",
+        new_callable=PropertyMock,
+        return_value=None,
+    ):
+        assert entity.native_value is None
