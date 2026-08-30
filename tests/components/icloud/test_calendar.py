@@ -315,8 +315,13 @@ async def test_unknown_event_timezone_falls_back(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     calendars: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that a malformed timezone does not break the whole fetch."""
+    """Test that a malformed timezone falls back to Home Assistant's own.
+
+    The event has to survive the fetch rather than be dropped, and its
+    wall-clock time is read in the default timezone.
+    """
     calendars.get_events.return_value = [
         _event(
             "ev1",
@@ -329,4 +334,15 @@ async def test_unknown_event_timezone_falls_back(
 
     await _setup(hass, config_entry)
 
-    assert hass.states.get(ENTITY_ID) is not None
+    events = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        "get_events",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "start_date_time": datetime(2024, 4, 30),
+            "end_date_time": datetime(2024, 5, 3),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert events == snapshot
