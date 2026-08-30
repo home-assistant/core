@@ -209,9 +209,9 @@ async def test_number_command_failure(
     assert state.state == "16"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_lcd_brightness_set_value(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -233,9 +233,9 @@ async def test_lcd_brightness_set_value(
     assert state.state == "75"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_lcd_brightness_unknown_without_reported_value(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -250,9 +250,9 @@ async def test_lcd_brightness_unknown_without_reported_value(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_lcd_brightness_command_failure(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:

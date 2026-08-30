@@ -60,9 +60,9 @@ async def test_sensor_state(
     mock_besen_client.async_start.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_updates_from_client(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -131,9 +131,9 @@ async def test_sensor_unknown_value(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_enum_sensors_unknown_for_unsupported_values(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
