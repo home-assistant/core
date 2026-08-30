@@ -2917,7 +2917,7 @@ pyzbar==0.1.9
 pyzerproc==0.4.8
 
 # homeassistant.components.zonneplan
-pyzonneplan==0.1.1
+pyzonneplan==0.1.2
 
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
