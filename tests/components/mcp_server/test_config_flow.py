@@ -193,7 +193,7 @@ async def test_options_flow_errors(
 
 
 async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
-    """Test the options flow on a disabled entry that has not migrated yet."""
+    """Test the options flow on a disabled config entry that has not migrated."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},

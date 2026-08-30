@@ -27,8 +27,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) 
     """Migrate a config entry."""
     if entry.version == 1 and entry.minor_version == 1:
         # 1.1 -> 1.2: Endpoints served before this option existed stay open.
-        # A disabled entry migrates only once enabled, so keep the choice the
-        # options flow may have saved in the meantime.
+        # A disabled config entry migrates only once enabled, so keep the
+        # choice the options flow may have saved in the meantime.
         hass.config_entries.async_update_entry(
             entry,
             data={CONF_REQUIRE_ADMIN: False, **entry.data},
