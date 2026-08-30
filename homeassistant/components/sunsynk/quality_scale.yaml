@@ -53,8 +53,8 @@ rules:
   devices: done
   diagnostics: todo
   discovery:
-    status: done
-    comment: DHCP. The data logger of the inverter has the hostname e-linter.
+    status: exempt
+    comment: no mDNS and DHCP is a generic device.
   discovery-update-info:
     status: exempt
     comment: The integration connects to the cloud. It does not store a local address.

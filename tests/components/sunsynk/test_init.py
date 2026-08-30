@@ -28,50 +28,35 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("method", "exception", "result"),
+    [
+        ("get_inverters", SunsynkConnectionError, ConfigEntryState.SETUP_RETRY),
+        ("get_inverters", SunsynkAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (
+            "get_inverter_realtime_grid",
+            SunsynkConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            "get_inverter_realtime_grid",
+            SunsynkAuthenticationError,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+    ],
+)
 async def test_setup_connection_error(
     hass: HomeAssistant,
     mock_sunsynk_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    method: str,
+    exception: Exception,
+    result: ConfigEntryState,
 ) -> None:
     """Test the config entry retries when the API cannot be reached."""
-    mock_sunsynk_client.get_inverters.side_effect = SunsynkConnectionError
+    getattr(mock_sunsynk_client, method).side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_auth_error(
-    hass: HomeAssistant,
-    mock_sunsynk_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the config entry fails to set up when the password is not valid."""
-    mock_sunsynk_client.get_inverters.side_effect = SunsynkAuthenticationError
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_realtime_connection_error(
-    hass: HomeAssistant,
-    mock_sunsynk_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the config entry retries when inverter data cannot be fetched."""
-    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = SunsynkConnectionError
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_realtime_auth_error(
-    hass: HomeAssistant,
-    mock_sunsynk_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the config entry fails when inverter data cannot be authenticated."""
-    mock_sunsynk_client.get_inverter_realtime_grid.side_effect = (
-        SunsynkAuthenticationError
-    )
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is result
 
 
 @pytest.mark.usefixtures("mock_sunsynk_client")

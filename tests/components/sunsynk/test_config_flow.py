@@ -6,7 +6,7 @@ import pytest
 from sunsynk.exceptions import SunsynkAuthenticationError, SunsynkConnectionError
 
 from homeassistant.components.sunsynk.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -95,36 +95,3 @@ async def test_user_flow_errors(
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_sunsynk_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test a data logger found by DHCP starts the user flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == USER_ID
-
-
-@pytest.mark.usefixtures("mock_sunsynk_client")
-async def test_dhcp_discovery_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test DHCP discovery aborts when the account is already configured."""
-    mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
