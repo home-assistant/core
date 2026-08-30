@@ -37,8 +37,6 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._search_task = None
 
             if search_task is not None:
-                search_task.cancel()
-
                 with contextlib.suppress(asyncio.CancelledError):
                     await search_task
 
