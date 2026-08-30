@@ -1,6 +1,6 @@
 """Test the Hive config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from apyhiveapi.helper import hive_exceptions
 
@@ -72,6 +72,52 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_user_flow_uppercase_username_normalized_for_auth(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow normalizes uppercase username for Hive auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    uppercase_username = USERNAME.upper()
+
+    with (
+        patch("homeassistant.components.hive.config_flow.Auth") as mock_auth,
+        patch(
+            "homeassistant.components.hive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        mock_auth.return_value.login = AsyncMock(
+            return_value={
+                "ChallengeName": "SUCCESS",
+                "AuthenticationResult": {
+                    "RefreshToken": "mock-refresh-token",
+                    "AccessToken": "mock-access-token",
+                },
+            }
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: uppercase_username, CONF_PASSWORD: PASSWORD},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == uppercase_username
+    assert mock_auth.call_args.kwargs["username"] == uppercase_username.lower()
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert (
+        hass.config_entries.async_entries(DOMAIN)[0].unique_id
+        == uppercase_username.lower()
+    )
 
 
 async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
@@ -734,7 +780,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
-            CONF_USERNAME: USERNAME,
+            CONF_USERNAME: USERNAME.upper(),
             CONF_PASSWORD: PASSWORD,
         },
     )
