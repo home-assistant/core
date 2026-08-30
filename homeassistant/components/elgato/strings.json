@@ -36,6 +36,15 @@
     }
   },
   "entity": {
+    "select": {
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "restore_last": "Restore last state",
+          "use_defaults": "Use defaults"
+        }
+      }
+    },
     "sensor": {
       "charge_power": {
         "name": "Charging power"

@@ -10,8 +10,13 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from solaredged import SolarEdgeConnectionError
 
-from homeassistant.components.solaredge_modbus.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.solaredge_modbus.const import (
+    DOMAIN,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -37,6 +42,9 @@ INVERTER_REGISTER = 40069
 
 # The register the probe counts meters by.
 METER_MODEL_REGISTER = 40188
+
+# An address inside the pooled storage and export control read.
+SITE_CONTROL_REGISTER = 57348
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -501,6 +509,47 @@ async def test_another_inverter_on_the_address_fails_the_refresh(
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
     state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_silent_control_block_leaves_the_others_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Storage and export controls share one read; power control has its own."""
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ServerDeviceFailureError())
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.solaredge_se10000h_backup_reserve")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("number.solaredge_se10000h_active_power_limit")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_settings_failure_does_not_block_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Readings carry the entry even when the control blocks stay silent."""
+    with patch(
+        "homeassistant.components.solaredge_modbus.SolarEdge.async_update_settings",
+        side_effect=SolarEdgeConnectionError("timed out"),
+    ):
+        await _setup(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(POWER_ENTITY) is not None
+
+    state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
