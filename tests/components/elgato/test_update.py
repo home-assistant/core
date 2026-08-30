@@ -303,6 +303,87 @@ async def test_catalog_refresh_during_an_install(
     assert mock_elgato.update_firmware.call_count == 1
 
 
+async def test_download_does_not_hold_the_device(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    mock_firmware_catalog: MagicMock,
+) -> None:
+    """Test fetching the image leaves the device free.
+
+    Downloading talks to Elgato. If it held the device lock, a slow or
+    unreachable Elgato would park every light command behind it for the
+    length of their timeout.
+    """
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    locked_while_downloading = None
+    locked_while_uploading = None
+
+    async def download(board_type: int) -> FirmwareImage:
+        nonlocal locked_while_downloading
+        locked_while_downloading = coordinator.device_lock.locked()
+        return FirmwareImage(
+            board_type=board_type,
+            build_number=222,
+            version="1.0.3",
+            data=b"\x00" * 8192,
+        )
+
+    async def install(image: FirmwareImage, **kwargs: Any) -> None:
+        nonlocal locked_while_uploading
+        locked_while_uploading = coordinator.device_lock.locked()
+
+    mock_firmware_catalog.download.side_effect = download
+    mock_elgato.update_firmware.side_effect = install
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert locked_while_downloading is False
+    assert locked_while_uploading is True
+
+
+async def test_device_page_follows_the_firmware(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_elgato: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device page shows the firmware after an install.
+
+    DeviceInfo is read when an entity is added and not again, so the version
+    someone reads right after installing would otherwise be the old one.
+    """
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "CN11A1A00001"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+    )
+    assert device is not None
+    assert device.sw_version == "1.0.3 (192)"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_elgato.info.return_value.firmware_build_number = 222
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "CN11A1A00001"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+    )
+    assert device is not None
+    assert device.sw_version == "1.0.3 (222)"
+
+
 async def test_install_error(
     hass: HomeAssistant,
     mock_elgato: MagicMock,

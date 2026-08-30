@@ -19,6 +19,7 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -136,7 +137,6 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
             return None
         return catalog.get(self.coordinator.data.info.hardware_board_type)
 
-    @elgato_device_action
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -156,19 +156,11 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
+            # Downloading talks to Elgato, so it happens without the device
+            # lock. Holding it would park every light command behind a
+            # request to someone else's servers, for their timeout.
             image = await self._download()
-            await self.coordinator.client.update_firmware(
-                image, on_progress=self._handle_progress
-            )
-        except ElgatoFirmwareError as err:
-            # A device turns firmware away for reasons someone can act on:
-            # too little battery left, an image for another model. Say which.
-            self._installing_finished()
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="firmware_install_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            await self._upload(image)
         except Exception:
             self._installing_finished()
             raise
@@ -181,6 +173,22 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         self._installing_timeout = async_call_later(
             self.hass, REBOOT_TIMEOUT, self._installing_timed_out
         )
+
+    @elgato_device_action
+    async def _upload(self, image: FirmwareImage) -> None:
+        """Hand the firmware to the device, which has it to itself."""
+        try:
+            await self.coordinator.client.update_firmware(
+                image, on_progress=self._handle_progress
+            )
+        except ElgatoFirmwareError as err:
+            # A device turns firmware away for reasons someone can act on:
+            # too little battery left, an image for another model. Say which.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def _download(self) -> FirmwareImage:
         """Fetch the firmware image from Elgato.
@@ -210,15 +218,35 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Notice the device coming back on its new firmware."""
-        if (
-            self._installing_build is not None
-            and self.coordinator.last_update_success
-            and self.coordinator.data.info.firmware_build_number
-            >= self._installing_build
-        ):
-            self._installing_finished()
+        if self.coordinator.last_update_success:
+            self._sync_device_firmware()
+
+            if (
+                self._installing_build is not None
+                and self.coordinator.data.info.firmware_build_number
+                >= self._installing_build
+            ):
+                self._installing_finished()
 
         super()._handle_coordinator_update()
+
+    @callback
+    def _sync_device_firmware(self) -> None:
+        """Tell the device registry what the device is running now.
+
+        DeviceInfo is read when an entity is added and not again, so without
+        this the device page keeps the firmware it had at setup. Which is the
+        version someone reads right after installing a new one.
+        """
+        info = self.coordinator.data.info
+        version = f"{info.firmware_version} ({info.firmware_build_number})"
+
+        registry = dr.async_get(self.hass)
+        device = registry.async_get_device_by_identifier(
+            (DOMAIN, info.serial_number), self.coordinator.config_entry.entry_id
+        )
+        if device is not None and device.sw_version != version:
+            registry.async_update_device(device.id, sw_version=version)
 
     @callback
     def _installing_finished(self) -> None:
