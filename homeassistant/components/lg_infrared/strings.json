@@ -236,6 +236,17 @@
         }
       }
     },
+    "select": {
+      "energy_limit": {
+        "name": "Energy limit",
+        "state": {
+          "40": "40%",
+          "60": "60%",
+          "80": "80%",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "switch": {
       "auto_clean": {
         "name": "Auto clean"
