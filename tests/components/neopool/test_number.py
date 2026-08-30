@@ -84,12 +84,7 @@ async def test_simple_number_writes_register_after_debounce(
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Setting a numeric value dispatches to the correct lib high-level API.
-
-    Covers the ``async_set_setpoint`` path used by every number entity,
-    including SMART_TEMP_HIGH/LOW which route through
-    ``SetpointKind.SMART_TEMP_HIGH/LOW`` since lib 4.1.0.
-    """
+    """Setting a numeric value dispatches to the correct high-level API."""
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
     )
