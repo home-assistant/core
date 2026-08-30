@@ -48,7 +48,7 @@ class Switch(ZHAEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        return self.entity_data.entity.is_on
+        return self._zha_state.is_on
 
     @convert_zha_error_to_ha_error()
     @override

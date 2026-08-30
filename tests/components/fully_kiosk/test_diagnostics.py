@@ -24,7 +24,9 @@ async def test_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test Fully Kiosk diagnostics."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "abcdef-123456")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abcdef-123456"), init_integration.entry_id
+    )
 
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, init_integration, device

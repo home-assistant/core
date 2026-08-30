@@ -17,7 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -119,7 +119,7 @@ def create_devices(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: MyUplinkConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: MyUplinkConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove myuplink config entry from a device."""
 

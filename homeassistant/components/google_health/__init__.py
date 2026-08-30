@@ -1,6 +1,8 @@
 """The Google Health integration."""
 
+import asyncio
 from dataclasses import dataclass
+from typing import Any
 
 from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
@@ -9,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -18,7 +20,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import api
 from .const import DOMAIN
-from .coordinator import GoogleHealthActivityCoordinator, GoogleHealthBodyCoordinator
+from .coordinator import (
+    GoogleHealthActivityCoordinator,
+    GoogleHealthBodyCoordinator,
+    GoogleHealthDataUpdateCoordinator,
+    GoogleHealthDeviceCoordinator,
+    GoogleHealthNutritionCoordinator,
+    GoogleHealthSleepCoordinator,
+)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -29,6 +38,9 @@ class GoogleHealthData:
 
     activity_coordinator: GoogleHealthActivityCoordinator | None = None
     body_coordinator: GoogleHealthBodyCoordinator | None = None
+    device_coordinator: GoogleHealthDeviceCoordinator | None = None
+    nutrition_coordinator: GoogleHealthNutritionCoordinator | None = None
+    sleep_coordinator: GoogleHealthSleepCoordinator | None = None
 
 
 type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
@@ -61,19 +73,57 @@ async def async_setup_entry(
 
     api_client = GoogleHealthApi(auth)
 
+    coordinators: list[GoogleHealthDataUpdateCoordinator[Any]] = []
+
     activity_coordinator = None
     if all(scope in scopes for scope in api_client.steps.required_read_scopes):
         activity_coordinator = GoogleHealthActivityCoordinator(hass, entry, api_client)
-        await activity_coordinator.async_config_entry_first_refresh()
+        coordinators.append(activity_coordinator)
 
     body_coordinator = None
     if all(scope in scopes for scope in api_client.weight.required_read_scopes):
         body_coordinator = GoogleHealthBodyCoordinator(hass, entry, api_client)
-        await body_coordinator.async_config_entry_first_refresh()
+        coordinators.append(body_coordinator)
+
+    sleep_coordinator = None
+    if all(scope in scopes for scope in api_client.sleep.required_read_scopes):
+        sleep_coordinator = GoogleHealthSleepCoordinator(hass, entry, api_client)
+        coordinators.append(sleep_coordinator)
+
+    nutrition_coordinator = None
+    if all(scope in scopes for scope in api_client.hydration_log.required_read_scopes):
+        nutrition_coordinator = GoogleHealthNutritionCoordinator(
+            hass, entry, api_client
+        )
+        coordinators.append(nutrition_coordinator)
+
+    if coordinators:
+        await asyncio.gather(
+            *(coord.async_config_entry_first_refresh() for coord in coordinators)
+        )
+
+    device_coordinator = None
+    if all(scope in scopes for scope in api_client.paired_devices.required_read_scopes):
+        device_coordinator = GoogleHealthDeviceCoordinator(hass, entry, api_client)
+        await device_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GoogleHealthData(
         activity_coordinator=activity_coordinator,
         body_coordinator=body_coordinator,
+        device_coordinator=device_coordinator,
+        nutrition_coordinator=nutrition_coordinator,
+        sleep_coordinator=sleep_coordinator,
+    )
+
+    # Register the account device up front so the per-device sensors can resolve
+    # it as their via_device parent even when only the device scope is granted
+    # (the account-level sensors that would otherwise create it are gated on
+    # different scopes).
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Google",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

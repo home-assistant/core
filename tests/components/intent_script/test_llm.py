@@ -66,17 +66,17 @@ async def test_intent_scripts_exposed(hass: HomeAssistant) -> None:
     """Test intent scripts are exposed as LLM tools with slugified names."""
     names = await _tool_names(hass)
     # The user-provided "Tell a joke" name is slugified into a valid tool name.
-    assert "Tell_a_joke" in names
-    assert "LightAction" in names
+    assert "intent_script__Tell_a_joke" in names
+    assert "intent_script__LightAction" in names
 
 
 async def test_intent_script_platform_filtered(hass: HomeAssistant) -> None:
     """Test a platform-restricted intent script requires an exposed entity."""
     async_expose_entity(hass, "conversation", LIGHT_ENTITY_ID, False)
     names = await _tool_names(hass)
-    assert "LightAction" not in names
+    assert "intent_script__LightAction" not in names
     # Unrestricted intent scripts stay exposed.
-    assert "Tell_a_joke" in names
+    assert "intent_script__Tell_a_joke" in names
 
 
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:

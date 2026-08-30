@@ -3,7 +3,7 @@
 import logging
 from numbers import Number
 import re
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -18,9 +18,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .config import HassioUpdateParametersDict
+from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -31,7 +30,6 @@ from .const import (
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -59,10 +57,6 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
-
-# Endpoint that reloads the add-on store. Afterwards the add-on update
-# entities must be refreshed so they don't report stale update information.
-STORE_RELOAD_ENDPOINT = "/store/reload"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -164,15 +158,6 @@ async def websocket_supervisor_api(
         # sensitive information and the frontend does not require it for ingress.
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
-        # Await so the frontend only sees the reload finish once the add-on
-        # update entities reflect the reloaded store.
-        if (
-            command == STORE_RELOAD_ENDPOINT
-            and msg[ATTR_METHOD] == "post"
-            and (coordinator := hass.data.get(ADDONS_COORDINATOR))
-        ):
-            await coordinator.async_refresh_after_store_reload()
-
         connection.send_result(msg[WS_ID], data)
 
 
@@ -239,9 +224,7 @@ def websocket_update_config_info(
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
+    connection.send_result(msg["id"], async_get_update_options(hass))
 
 
 @callback
@@ -260,10 +243,23 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
+    entry = async_get_hassio_entry(hass)
+    if entry is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Hassio config entry is not available",
+        )
+        return
+
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **async_get_update_options(hass, entry),
+            **changes,
+        },
     )
     connection.send_result(msg["id"])

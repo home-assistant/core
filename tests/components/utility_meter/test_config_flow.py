@@ -373,9 +373,9 @@ async def test_change_device_source(
 
     await hass.async_block_till_done()
 
-    input_sensor_entity_id_1 = "sensor.test_source1"
-    input_sensor_entity_id_2 = "sensor.test_source2"
-    input_sensor_entity_id_3 = "sensor.test_source3"
+    input_sensor_entity_id_1 = source_entity_1.entity_id
+    input_sensor_entity_id_2 = source_entity_2.entity_id
+    input_sensor_entity_id_3 = source_entity_3.entity_id
 
     # Test the existence of configured source entities
     assert entity_registry.async_get(input_sensor_entity_id_1) is not None

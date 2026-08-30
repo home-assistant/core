@@ -35,9 +35,12 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.v1.v1_containers import StatusV2
+from roborock.device_features import RoborockDockFeatures
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
+from roborock.devices.traits.common import DpsDataConverter
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
@@ -59,7 +62,11 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
 from roborock.map.b01_q10_map_parser import Q10Room
-from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
+from roborock.roborock_message import (
+    RoborockDataProtocol,
+    RoborockDyadDataProtocol,
+    RoborockZeoProtocol,
+)
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -254,6 +261,13 @@ def create_b01_q10_trait() -> Mock:
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
         Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
     ]
+    q10_trait.map.as_dict = Mock(
+        return_value={"rooms": [room.as_dict() for room in q10_trait.map.rooms]}
+    )
+    # Mirror Q10PropertiesApi.as_dict, which only serializes RoborockBase traits.
+    q10_trait.as_dict = Mock(
+        return_value={"status": status.as_dict(), "map": q10_trait.map.as_dict()}
+    )
     return q10_trait
 
 
@@ -321,6 +335,20 @@ def make_mock_trait(
             set_trait_attributes(trait, dataclass_template)
 
     trait.refresh = AsyncMock(side_effect=refresh)
+    return trait
+
+
+def make_mock_status_trait() -> AsyncMock:
+    """Create a mock status trait that also accepts pushed DPS updates."""
+    trait = make_mock_trait(trait_spec=StatusTrait, dataclass_template=STATUS)
+    notify = attach_update_listeners(trait)
+    converter = DpsDataConverter.from_dataclass(StatusV2)
+
+    def update_from_dps(decoded_dps: dict[RoborockDataProtocol, Any]) -> None:
+        if converter.update_from_dps(trait, decoded_dps):
+            notify()
+
+    trait.update_from_dps = Mock(side_effect=update_from_dps)
     return trait
 
 
@@ -417,6 +445,8 @@ def make_home_trait(
     home_trait.home_map_info = home_map_info
     home_trait.current_map_data = home_map_info[current_map]
     home_trait.home_map_content = home_map_content
+    notify = attach_update_listeners(home_trait)
+    home_trait.refresh.side_effect = notify
     return home_trait
 
 
@@ -428,20 +458,20 @@ def make_device_features() -> Mock:
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
+    device_features.dock_features = RoborockDockFeatures.from_dock_type(
+        STATUS.dock_type
+    )
     return device_features
 
 
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
-    v1_properties.status = make_mock_trait(
-        trait_spec=StatusTrait,
-        dataclass_template=STATUS,
-    )
+    v1_properties.status = make_mock_status_trait()
     v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
-    _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
+    _mop_route_mapping = {m.code: m.display_name for m in CleanRoutes}
     v1_properties.status.fan_speed_options = list(VacuumModes)
     v1_properties.status.fan_speed_mapping = _fan_speed_mapping
     v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)

@@ -8,7 +8,30 @@ from elgato import ElgatoConnectionError, ElgatoError
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+from .coordinator import ElgatoData
 from .entity import ElgatoEntity
+
+# Elgato lights that can do color reach less far at either end.
+COLOR_TEMPERATURE_RANGE = (2900, 6993)  # 344 - 143 mireds
+COLOR_TEMPERATURE_RANGE_COLOR = (3500, 6500)  # 285 - 153 mireds
+
+COLOR_CAPABLE_PRODUCTS = ("Elgato Light Strip", "Elgato Light Strip Pro")
+
+
+def supports_color(data: ElgatoData) -> bool:
+    """Return if an Elgato Light does more than white."""
+    return bool(
+        data.info.product_name in COLOR_CAPABLE_PRODUCTS
+        or data.settings.power_on_hue
+        or data.state.hue is not None
+    )
+
+
+def color_temperature_range(data: ElgatoData) -> tuple[int, int]:
+    """Return the color temperature range in Kelvin a device supports."""
+    if supports_color(data):
+        return COLOR_TEMPERATURE_RANGE_COLOR
+    return COLOR_TEMPERATURE_RANGE
 
 
 def elgato_exception_handler[_ElgatoEntityT: ElgatoEntity, **_P](
