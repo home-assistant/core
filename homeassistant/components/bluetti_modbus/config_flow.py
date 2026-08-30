@@ -83,8 +83,12 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             errors, serial = await self._async_validate(data)
             if not errors:
                 if serial is not None:
-                    # Catches the same device already added under a
-                    # different link (moved to a new address, for example).
+                    # Not defensive/just-in-case: EP2000 genuinely has no
+                    # d_serial field in bluetti-modbus-lib's register map
+                    # (only Balco260 does), so serial is None for every
+                    # EP2000 entry, not just a hypothetical case. Catches the
+                    # same device already added under a different link
+                    # (moved to a new address, for example).
                     await self.async_set_unique_id(serial)
                     self._abort_if_unique_id_configured()
                 # Always checked too: this exact link claimed by some other
@@ -102,44 +106,6 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER, errors=errors
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of how the device is reached.
-
-        The device may move to another address or device ID, but it must
-        stay the same device: where the entry was identified by serial
-        number, a reconfigure probe that returns a different one (or none at
-        all) is rejected rather than silently adopted.
-        """
-        errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            data = _normalized(user_input)
-            errors, serial = await self._async_validate(data)
-            if not errors:
-                if entry.unique_id is not None and serial != entry.unique_id:
-                    return self.async_abort(reason="wrong_device")
-                # Always checked too: this exact link claimed by some other
-                # entry, whether or not either side has a serial number.
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: data[CONF_HOST],
-                        CONF_PORT: data[CONF_PORT],
-                        CONF_UNIT_ID: data[CONF_UNIT_ID],
-                    }
-                )
-                return self.async_update_reload_and_abort(entry, data_updates=data)
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER, user_input or entry.data
-            ),
-            errors=errors,
         )
 
     async def _async_validate(
