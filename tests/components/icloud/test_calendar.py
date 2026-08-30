@@ -178,6 +178,60 @@ async def test_all_day_event_end_is_exclusive(
     assert events == snapshot
 
 
+async def test_get_events_filters_to_the_requested_window(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendars: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that events outside the requested range are dropped.
+
+    pyicloud sends both bounds as plain dates, so iCloud answers a one-hour
+    request with everything on the boundary days.
+    """
+    calendars.get_events.return_value = [
+        _event(
+            "ev1",
+            "Before",
+            datetime(2024, 5, 1, 8, 0),
+            datetime(2024, 5, 1, 9, 0),
+        ),
+        _event(
+            "ev2",
+            "Overlapping the start",
+            datetime(2024, 5, 1, 9, 30),
+            datetime(2024, 5, 1, 10, 30),
+        ),
+        _event(
+            "ev3",
+            "Spanning the window",
+            datetime(2024, 5, 1, 7, 0),
+            datetime(2024, 5, 1, 20, 0),
+        ),
+        _event(
+            "ev4",
+            "After",
+            datetime(2024, 5, 1, 14, 0),
+            datetime(2024, 5, 1, 15, 0),
+        ),
+    ]
+
+    await _setup(hass, config_entry)
+
+    events = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        "get_events",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "start_date_time": datetime(2024, 5, 1, 10, 0),
+            "end_date_time": datetime(2024, 5, 1, 11, 0),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert events == snapshot
+
+
 async def test_new_calendar_added_on_later_poll(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

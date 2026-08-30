@@ -76,11 +76,23 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
         wanted = set(guids) if guids is not None else None
         result: dict[str, list[CalendarEvent]] = {guid: [] for guid in (wanted or ())}
 
+        # pyicloud sends both bounds as plain dates, so iCloud answers with the
+        # whole of each boundary day whatever times were asked for. Keep only
+        # the events that really overlap the window.
+        window_start = localize(start)
+        window_end = localize(end)
+
         for event in service.get_events(from_dt=start, to_dt=end, as_objs=True):
             if wanted is not None and event.pguid not in wanted:
                 continue
-            if (parsed := _as_calendar_event(event)) is not None:
-                result.setdefault(event.pguid, []).append(parsed)
+            if (parsed := _as_calendar_event(event)) is None:
+                continue
+            if (
+                localize(parsed.start) >= window_end
+                or localize(parsed.end) <= window_start
+            ):
+                continue
+            result.setdefault(event.pguid, []).append(parsed)
 
         for events in result.values():
             events.sort(key=lambda event: localize(event.start))
