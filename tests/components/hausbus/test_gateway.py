@@ -71,15 +71,18 @@ async def test_register_channel_ignores_duplicates(
     """A channel discovered twice is only dispatched once."""
     gateway._platform_ready = True
     channel = _make_channel(1)
-    device_info = DeviceInfo(identifiers={(DOMAIN, "1")})
 
     received: list[tuple] = []
     async_dispatcher_connect(
         hass, NEW_CHANNEL_ADDED, lambda *args: received.append(args)
     )
 
-    gateway._register_channel(channel, device_info)
-    gateway._register_channel(channel, device_info)
+    gateway.newDeviceDetected(
+        1, "Controller", _make_module_id(), MagicMock(), [channel]
+    )
+    gateway.newDeviceDetected(
+        1, "Controller", _make_module_id(), MagicMock(), [channel]
+    )
     await hass.async_block_till_done()
 
     assert len(received) == 1

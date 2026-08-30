@@ -62,10 +62,7 @@ async def _send_event(hass: HomeAssistant, data: object) -> None:
 async def cover_channel(hass: HomeAssistant, mock_home_server: MagicMock) -> MagicMock:
     """Set up a config entry and add one cover through real channel discovery.
 
-    Returns the fake hardware channel backing the created entity, so tests
-    can assert on the commands it received. The entity itself is only ever
-    reached afterwards through its entity_id, cover services, and state -
-    the same surface production code and users interact with.
+    Returns the fake hardware channel backing the created entity.
     """
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
