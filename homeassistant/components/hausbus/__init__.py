@@ -61,21 +61,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
         with contextlib.suppress(Exception):
             await gateway.discovery_task
 
-    # Stop delivering newly discovered devices before unloading the cover
-    # platform below. pyhausbus's DeviceWorker thread can still be
-    # processing in-flight search replies after searchDevices() (and
-    # discovery_task above) return, and the cover platform's
-    # NEW_CHANNEL_ADDED dispatcher listener - registered via
-    # config_entry.async_on_unload() - is not disconnected until after
-    # this whole function has returned successfully (Home Assistant only
-    # runs those callbacks once component.async_unload_entry() reports
-    # success). A newDeviceDetected() callback landing while
-    # async_unload_platforms() is still running could therefore still
-    # reach async_add_entities() on a platform that is mid-teardown,
-    # leaving an entity behind that outlives the unload. Removing the
-    # device listener first closes that window; it is restored if the
-    # platform unload fails, so the gateway keeps discovering devices
-    # normally for as long as it keeps running.
+    # Stop device discovery before unloading platforms so entities cannot be
+    # added while the cover platform is being torn down.
     gateway.home_server.removeBusDeviceListener(gateway)
     try:
         unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
