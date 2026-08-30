@@ -1311,13 +1311,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:fan-alert',
+    'original_icon': None,
     'original_name': 'Ventilation',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'diagnostic_status',
+    'translation_key': 'diagnostic_ventilation',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1_ventilation_diagnostic',
     'unit_of_measurement': None,
   })
@@ -1326,14 +1326,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Ventilation',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fan-alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_ventilation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Ok',
+    'state': 'ok',
   })
 # ---
 # name: test_sensor_entities_state[sensor.living_ventilation_state-entry]

@@ -186,8 +186,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             rssi_wifi = lan_info.rssi_wifi
 
         if not self._initial_diagnostics_loaded:
-            # Diagnostics entities are created during setup, so the initial
-            # diagnostics payload must be present before the entry can load.
+            # The first successful response defines the stable diagnostics entity set.
+            # Some models legitimately report no diagnostic subsystems.
             try:
                 diagnostic_info = await self.client.async_get_diagnostics_info()
             except DucoConnectionError as err:
@@ -202,11 +202,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 ) from err
 
             diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
-            if not diagnostic_subsystems:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="api_error",
-                )
             self._initial_diagnostics_loaded = True
         else:
             # After setup, diagnostics only back existing box-linked sensors, so

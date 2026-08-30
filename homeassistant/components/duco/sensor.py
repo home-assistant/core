@@ -230,25 +230,40 @@ BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
     ),
 )
 
-DIAGNOSTIC_ICON_BY_COMPONENT: dict[str, str] = {
-    "Filter": "mdi:air-filter",
-    "SunCtrl": "mdi:blinds-horizontal-closed",
-    "VentCool": "mdi:home-thermometer-outline",
-    "Ventilation": "mdi:fan-alert",
+DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription] = {
+    "Filter": DucoDiagnosticSensorEntityDescription(
+        key="filter",
+        component="Filter",
+        translation_key="diagnostic_filter",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "SunCtrl": DucoDiagnosticSensorEntityDescription(
+        key="sun_control",
+        component="SunCtrl",
+        translation_key="diagnostic_sun_control",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "VentCool": DucoDiagnosticSensorEntityDescription(
+        key="ventilation_cooling",
+        component="VentCool",
+        translation_key="diagnostic_ventilation_cooling",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "Ventilation": DucoDiagnosticSensorEntityDescription(
+        key="ventilation",
+        component="Ventilation",
+        translation_key="diagnostic_ventilation",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
-DIAGNOSTIC_NAME_BY_COMPONENT: dict[str, str] = {
-    "Filter": "Filter",
-    "SunCtrl": "Sun control",
-    "VentCool": "Ventilation cooling",
-    "Ventilation": "Ventilation",
-}
-
-DIAGNOSTIC_ENABLED_BY_DEFAULT: dict[str, bool] = {
-    "Ventilation": True,
-    "Filter": False,
-    "VentCool": False,
-    "SunCtrl": False,
+DIAGNOSTIC_STATUS_TRANSLATION_KEYS: dict[str, str] = {
+    "Disable": "disabled",
+    "Error": "error",
+    "Ok": "ok",
 }
 
 
@@ -259,13 +274,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
-    box_node = next(
-        (
-            node
-            for node in coordinator.data.nodes.values()
-            if node.general.node_type == NodeType.BOX
-        ),
-        None,
+    initial_diagnostic_components = tuple(
+        diagnostic.component for diagnostic in coordinator.data.diagnostic_subsystems
     )
 
     # Track the node IDs for which node entities have already been created, so
@@ -277,7 +287,7 @@ async def async_setup_entry(
     known_box_sensors: set[tuple[int, str]] = set()
 
     @callback
-    def _async_add_new_entities(*, initial_setup: bool = False) -> None:
+    def _async_add_new_entities() -> None:
         """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
@@ -329,6 +339,13 @@ async def async_setup_entry(
                     for description in SENSOR_DESCRIPTIONS
                     if node.general.node_type in description.node_types
                 )
+                if node.general.node_type == NodeType.BOX:
+                    # The initial response defines the entity set, but the BOX node
+                    # itself can be absent from a transiently incomplete node list.
+                    new_entities.extend(
+                        DucoDiagnosticSensorEntity(coordinator, node, component)
+                        for component in initial_diagnostic_components
+                    )
 
             if node.general.node_type != NodeType.BOX:
                 continue
@@ -345,19 +362,10 @@ async def async_setup_entry(
                 known_box_sensors.add(description_key)
                 new_entities.append(DucoBoxSensorEntity(coordinator, node, description))
 
-        if initial_setup and box_node is not None:
-            # Duco diagnostics belong to the box itself and the reported
-            # subsystem set is expected to stay stable for a given device, so
-            # create those entities once during setup and only refresh their
-            # state through the coordinator.
-            new_entities.extend(
-                DucoDiagnosticSensorEntity(coordinator, box_node, diagnostic.component)
-                for diagnostic in coordinator.data.diagnostic_subsystems
-            )
         if new_entities:
             async_add_entities(new_entities)
 
-    _async_add_new_entities(initial_setup=True)
+    _async_add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
@@ -423,29 +431,27 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
         component: str,
     ) -> None:
         """Initialize the diagnostic sensor entity."""
-        self.entity_description = DucoDiagnosticSensorEntityDescription(
-            key=slugify(component),
-            component=component,
-            translation_key="diagnostic_status",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=DIAGNOSTIC_ENABLED_BY_DEFAULT.get(
-                component, False
-            ),
-            icon=DIAGNOSTIC_ICON_BY_COMPONENT.get(component),
-        )
+        if (description := DIAGNOSTIC_SENSOR_DESCRIPTIONS.get(component)) is None:
+            description = DucoDiagnosticSensorEntityDescription(
+                key=slugify(component),
+                component=component,
+                translation_key="diagnostic_status",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=False,
+            )
+            self._attr_translation_placeholders = {"component": component}
+        self.entity_description = description
         super().__init__(coordinator, node)
-        self._attr_translation_placeholders = {
-            "component": DIAGNOSTIC_NAME_BY_COMPONENT.get(component, component)
-        }
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{slugify(component)}_diagnostic"
 
     @property
     @override
     def native_value(self) -> str | None:
-        """Return the raw diagnostic status string from the API."""
-        # Keep the raw Duco string so future firmware states remain visible
-        # without requiring a Home Assistant integration update first.
+        """Return the diagnostic status."""
         for diagnostic in self.coordinator.data.diagnostic_subsystems:
             if diagnostic.component == self.entity_description.component:
-                return diagnostic.status
+                # Unknown values stay visible until translations can be added.
+                return DIAGNOSTIC_STATUS_TRANSLATION_KEYS.get(
+                    diagnostic.status, diagnostic.status
+                )
         return None

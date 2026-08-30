@@ -23,9 +23,15 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    icon,
+    translation,
+)
 
 from . import setup_platform_integration
 
@@ -235,6 +241,7 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test diagnostics sensors are created once from the setup diagnostics data."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
@@ -242,7 +249,7 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
         diagnostic_subsystems=(
             DiagComponent(component="Ventilation", status="Error"),
             DiagComponent(component="Filter", status="Ok"),
-            DiagComponent(component="VentCool", status="Ok"),
+            DiagComponent(component="VentCool", status="Disable"),
             DiagComponent(component="SunCtrl", status="Ok"),
         )
     )
@@ -250,14 +257,44 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.living_ventilation") is not None
-    assert hass.states.get("sensor.living_ventilation").state == "Error"
-    assert hass.states.get("sensor.living_filter") is not None
-    assert hass.states.get("sensor.living_filter").state == "Ok"
-    assert hass.states.get("sensor.living_ventilation_cooling") is not None
-    assert hass.states.get("sensor.living_ventilation_cooling").state == "Ok"
-    assert hass.states.get("sensor.living_sun_control") is not None
-    assert hass.states.get("sensor.living_sun_control").state == "Ok"
+    expected_entities = {
+        "sensor.living_filter": ("ok", "OK", "diagnostic_filter"),
+        "sensor.living_sun_control": ("ok", "OK", "diagnostic_sun_control"),
+        "sensor.living_ventilation": (
+            "error",
+            "Error",
+            "diagnostic_ventilation",
+        ),
+        "sensor.living_ventilation_cooling": (
+            "disabled",
+            "Disabled",
+            "diagnostic_ventilation_cooling",
+        ),
+    }
+    icons = await icon.async_get_icons(hass, "entity", integrations=[DOMAIN])
+    for entity_id, (
+        expected_state,
+        expected_translated_state,
+        translation_key,
+    ) in expected_entities.items():
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.translation_key == translation_key
+        assert (
+            translation.async_translate_state(
+                hass,
+                state.state,
+                Platform.SENSOR,
+                DOMAIN,
+                translation_key,
+                None,
+            )
+            == expected_translated_state
+        )
+        assert icons[DOMAIN][Platform.SENSOR][translation_key] is not None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -297,7 +334,36 @@ async def test_diagnostic_subsystem_sensors_not_created_without_data(
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.living_ventilation") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_diagnostic_subsystem_sensors_wait_for_box_node(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test initial diagnostics entities are added when the BOX node reappears."""
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_sensor_nodes if node.node_id != BOX_NODE_ID
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.living_ventilation") is None
+
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation")
+    assert state is not None
+    assert state.state == "ok"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -317,7 +383,7 @@ async def test_diagnostic_subsystem_sensor_state_becomes_unknown_when_missing(
 
     state = hass.states.get("sensor.living_ventilation")
     assert state is not None
-    assert state.state == "Ok"
+    assert state.state == "ok"
 
     mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo()
 
@@ -347,7 +413,7 @@ async def test_diagnostic_subsystem_sensor_keeps_previous_state_on_refresh_error
 
     state = hass.states.get("sensor.living_ventilation")
     assert state is not None
-    assert state.state == "Ok"
+    assert state.state == "ok"
 
     mock_duco_client.async_get_diagnostics_info.side_effect = DucoError("diag error")
 
@@ -357,7 +423,7 @@ async def test_diagnostic_subsystem_sensor_keeps_previous_state_on_refresh_error
 
     state = hass.states.get("sensor.living_ventilation")
     assert state is not None
-    assert state.state == "Ok"
+    assert state.state == "ok"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
