@@ -1801,8 +1801,8 @@ async def test_calendar_background_color(
 async def test_http_api_event_status(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_events_list_items,
-    component_setup,
+    mock_events_list_items: ApiResult,
+    component_setup: ComponentSetup,
     event_status: dict[str, str],
     expected_status: str,
 ) -> None:
