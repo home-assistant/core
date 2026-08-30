@@ -502,11 +502,6 @@
       "waiting_ends": {
         "name": "Waiting ends"
       }
-    },
-    "switch": {
-      "remote_switch": {
-        "name": "Remote switch"
-      }
     }
   },
   "exceptions": {

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_pv_entities[switch.4_4_ktlx_g3_remote_switch-entry]
+# name: test_pv_entities[switch.4_4_ktlx_g3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.4_4_ktlx_g3_remote_switch',
+    'entity_id': 'switch.4_4_ktlx_g3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,28 +21,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Remote switch',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Remote switch',
+    'original_name': None,
     'platform': 'sofar',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'remote_switch',
+    'translation_key': None,
     'unique_id': 'SS2ES104N5S445_remote_switch_on_off',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_pv_entities[switch.4_4_ktlx_g3_remote_switch-state]
+# name: test_pv_entities[switch.4_4_ktlx_g3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '4.4 KTLX-G3 Remote switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '4.4 KTLX-G3',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.4_4_ktlx_g3_remote_switch',
+    'entity_id': 'switch.4_4_ktlx_g3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -28,7 +28,8 @@ SWITCH_DESCRIPTIONS: tuple[SofarSwitchEntityDescription, ...] = (
     SofarSwitchEntityDescription(
         key="remote_switch_on_off",
         component="remote",
-        translation_key="remote_switch",
+        # The inverter's own on/off, so it carries the device's name.
+        name=None,
         write_fn=lambda device, value: device.remote.write(
             "remote_switch_on_off",
             RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF,
