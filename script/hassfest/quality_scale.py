@@ -118,7 +118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aemet",
     "aftership",
     "agent_dvr",
-    "airly",
     "airq",
     "airthings",
     "airthings_ble",
