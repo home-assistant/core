@@ -12,6 +12,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["elgato==6.1.0"],
+  "requirements": ["elgato==6.1.1"],
   "zeroconf": ["_elg._tcp.local."]
 }
