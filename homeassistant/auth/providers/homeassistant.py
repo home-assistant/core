@@ -84,13 +84,6 @@ class Data:
         )
         self._data: dict[str, list[dict[str, str]]] | None = None
 
-    @callback
-    def normalize_username(
-        self, username: str, *, force_normalize: bool = False
-    ) -> str:
-        """Normalize a username based on the mode."""
-        return username.strip().casefold()
-
     async def async_load(self) -> None:
         """Load stored data."""
         if (data := await self._store.async_load()) is None:
@@ -109,13 +102,13 @@ class Data:
 
         Raises InvalidAuth if auth invalid.
         """
-        username = self.normalize_username(username)
+        username = username.strip().casefold()
         dummy = b"$2b$12$CiuFGszHx9eNHxPuQcwBWez4CwDTOcLTX5CbOpV6gef2nYuXkY7BO"
         found = None
 
         # Compare all users to avoid timing attacks.
         for user in self.users:
-            if self.normalize_username(user["username"]) == username:
+            if user["username"].strip().casefold() == username:
                 found = user
 
         if found is None:
@@ -160,11 +153,11 @@ class Data:
     @callback
     def async_remove_auth(self, username: str) -> None:
         """Remove authentication."""
-        username = self.normalize_username(username)
+        username = username.strip().casefold()
 
         index = None
         for i, user in enumerate(self.users):
-            if self.normalize_username(user["username"]) == username:
+            if user["username"].strip().casefold() == username:
                 index = i
                 break
 
@@ -178,10 +171,10 @@ class Data:
 
         Raises InvalidUser if user cannot be found.
         """
-        username = self.normalize_username(username)
+        username = username.strip().casefold()
 
         for user in self.users:
-            if self.normalize_username(user["username"]) == username:
+            if user["username"].strip().casefold() == username:
                 user["password"] = self.hash_password(new_password, True).decode()
                 break
         else:
@@ -193,9 +186,7 @@ class Data:
 
         Raises InvalidUsername if the new username is invalid.
         """
-        normalized_username = self.normalize_username(
-            new_username, force_normalize=True
-        )
+        normalized_username = new_username.strip().casefold()
         if normalized_username != new_username:
             raise InvalidUsername(
                 translation_key="username_not_normalized",
@@ -203,7 +194,7 @@ class Data:
             )
 
         if any(
-            self.normalize_username(user["username"]) == normalized_username
+            user["username"].strip().casefold() == normalized_username
             for user in self.users
         ):
             raise InvalidUsername(
@@ -218,11 +209,11 @@ class Data:
         Raises InvalidUser if user cannot be found.
         Raises InvalidUsername if the new username is invalid.
         """
-        username = self.normalize_username(username)
+        username = username.strip().casefold()
         self._validate_new_username(new_username)
 
         for user in self.users:
-            if self.normalize_username(user["username"]) == username:
+            if user["username"].strip().casefold() == username:
                 user["username"] = new_username
                 assert self._data is not None
                 break
@@ -325,11 +316,10 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        norm_username = self.data.normalize_username
-        username = norm_username(flow_result["username"])
+        username = flow_result["username"].strip().casefold()
 
         for credential in await self.async_credentials():
-            if norm_username(credential.data["username"]) == username:
+            if credential.data["username"].strip().casefold() == username:
                 return credential
 
         # Create new credentials.
