@@ -209,7 +209,7 @@ async def test_user_flow_already_configured(
 async def test_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """The device can be reconfigured to a new port."""
+    """The device can be reconfigured to a new device ID."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
