@@ -34,31 +34,8 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     coordinator = entry.runtime_data
-    mower_id: str | None = None
     for identifier in device.identifiers:
-        if identifier[0] != DOMAIN:
-            continue
-
-        device_id = identifier[1]
-
-        # Parent device: identifier is the mower ID.
-        if device_id in coordinator.data:
-            mower_id = device_id
+        if identifier[0] == DOMAIN:
+            mower_id = identifier[1].split("_", 1)[0]
             break
-
-        # Work-area child device: identifier is <mower_id>_<area_id>.
-        for candidate_mower_id in coordinator.data:
-            if device_id.startswith(f"{candidate_mower_id}_"):
-                mower_id = candidate_mower_id
-                break
-
-        if mower_id is not None:
-            break
-
-    if mower_id is None:
-        return {}
-
-    return async_redact_data(
-        coordinator.data[mower_id].to_dict(),
-        TO_REDACT,
-    )
+    return async_redact_data(coordinator.data[mower_id].to_dict(), TO_REDACT)
