@@ -1,53 +1,104 @@
 """Support for LaCrosse sensor components."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 import probatio
 import pylacrosse
-from serial import SerialException
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICE,
+    CONF_FRIENDLY_NAME,
     CONF_ID,
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
+    CONF_UNIQUE_ID,
     PERCENTAGE,
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from . import LaCrosseConfigEntry
+from .const import (
+    CONF_BAUD,
+    CONF_DATARATE,
+    CONF_EXPIRE_AFTER,
+    CONF_FREQUENCY,
+    CONF_JEELINK_LED,
+    CONF_TOGGLE_INTERVAL,
+    CONF_TOGGLE_MASK,
+    DEFAULT_BAUD,
+    DEFAULT_EXPIRE_AFTER,
+    DOMAIN,
+    TYPES,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BAUD = "baud"
-CONF_DATARATE = "datarate"
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_FREQUENCY = "frequency"
-CONF_JEELINK_LED = "led"
-CONF_TOGGLE_INTERVAL = "toggle_interval"
-CONF_TOGGLE_MASK = "toggle_mask"
 
-DEFAULT_DEVICE = "/dev/ttyUSB0"
-DEFAULT_BAUD = 57600
-DEFAULT_EXPIRE_AFTER = 300
+@dataclass(frozen=True, kw_only=True)
+class LaCrosseSensorDescription(SensorEntityDescription):
+    """Class describing a LaCrosse sensor entity."""
 
-TYPES = ["battery", "humidity", "temperature"]
+    value_fn: Callable[[pylacrosse.LaCrosseSensor | None], float | int | str | None]
+
+
+def _battery_value(sensor: pylacrosse.LaCrosseSensor | None) -> str | None:
+    """Return the battery state."""
+    if sensor is None or sensor.low_battery is None:
+        return None
+    if sensor.low_battery:
+        return "low"
+    if sensor.new_battery:
+        return "new"
+    return "ok"
+
+
+SENSOR_TYPES: Final[dict[str, LaCrosseSensorDescription]] = {
+    "temperature": LaCrosseSensorDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda sensor: sensor.temperature if sensor else None,
+    ),
+    "humidity": LaCrosseSensorDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda sensor: sensor.humidity if sensor else None,
+    ),
+    "battery": LaCrosseSensorDescription(
+        key="battery",
+        translation_key="battery",
+        value_fn=_battery_value,
+    ),
+}
+
 
 SENSOR_SCHEMA = probatio.Schema(
     {
@@ -63,13 +114,30 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         probatio.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
         probatio.Optional(CONF_DATARATE): cv.positive_int,
-        probatio.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+        probatio.Optional(CONF_DEVICE, default="/dev/ttyUSB0"): cv.string,
         probatio.Optional(CONF_FREQUENCY): cv.positive_int,
         probatio.Optional(CONF_JEELINK_LED): cv.boolean,
         probatio.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
         probatio.Optional(CONF_TOGGLE_MASK): cv.positive_int,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LaCrosseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LaCrosse sensors from a config entry."""
+    for subentry in entry.subentries.values():
+        _add_sensors(
+            hass,
+            entry.runtime_data,
+            {**entry.data, **subentry.data},
+            lambda entities, subentry_id=subentry.subentry_id: async_add_entities(
+                entities, config_subentry_id=subentry_id
+            ),
+        )
 
 
 def setup_platform(
@@ -79,52 +147,58 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the LaCrosse sensors."""
-    usb_device: str = config[CONF_DEVICE]
-    baud: int = config[CONF_BAUD]
-    expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+    hass.add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    _LOGGER.debug("%s %s", usb_device, baud)
 
-    try:
-        lacrosse = pylacrosse.LaCrosse(usb_device, baud)
-        lacrosse.open()
-    except SerialException as exc:
-        _LOGGER.warning("Unable to open serial port: %s", exc)
-        return
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
-
-    if CONF_JEELINK_LED in config:
-        lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
-    if CONF_FREQUENCY in config:
-        lacrosse.set_frequency(config.get(CONF_FREQUENCY))
-    if CONF_DATARATE in config:
-        lacrosse.set_datarate(config.get(CONF_DATARATE))
-    if CONF_TOGGLE_INTERVAL in config:
-        lacrosse.set_toggle_interval(config.get(CONF_TOGGLE_INTERVAL))
-    if CONF_TOGGLE_MASK in config:
-        lacrosse.set_toggle_mask(config.get(CONF_TOGGLE_MASK))
-
-    lacrosse.start_scan()
-
+def _add_sensors(
+    hass: HomeAssistant,
+    lacrosse: pylacrosse.LaCrosse,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+) -> None:
+    """Create entities for the configured LaCrosse sensors."""
     sensors: list[LaCrosseSensor] = []
     for device, device_config in config[CONF_SENSORS].items():
         _LOGGER.debug("%s %s", device, device_config)
 
         typ: str = device_config[CONF_TYPE]
-        sensor_class = TYPE_CLASSES[typ]
-        name: str = device_config.get(CONF_NAME, device)
+        description = SENSOR_TYPES[typ]
+        expire_after: int | None = device_config.get(
+            CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER
+        )
 
         sensors.append(
-            sensor_class(hass, lacrosse, device, name, expire_after, device_config)
+            LaCrosseSensor(
+                hass,
+                lacrosse,
+                config[CONF_DEVICE],
+                device,
+                expire_after,
+                device_config,
+                description,
+            )
         )
 
     add_entities(sensors)
 
 
+def sensor_device_name(config: ConfigType) -> str:
+    """Return the configured or default sensor device name."""
+    if isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str):
+        return friendly_name
+    return f"LaCrosse sensor {config[CONF_ID]}"
+
+
 class LaCrosseSensor(SensorEntity):
     """Implementation of a Lacrosse sensor."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    entity_description: LaCrosseSensorDescription
     _temperature: float | None = None
     _humidity: int | None = None
     _low_battery: bool | None = None
@@ -134,10 +208,11 @@ class LaCrosseSensor(SensorEntity):
         self,
         hass: HomeAssistant,
         lacrosse: pylacrosse.LaCrosse,
+        receiver_device: str,
         device_id: str,
-        name: str,
         expire_after: int | None,
         config: ConfigType,
+        description: LaCrosseSensorDescription,
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
@@ -145,13 +220,34 @@ class LaCrosseSensor(SensorEntity):
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._config = config
+        self.entity_description = description
         self._expire_after = expire_after
+        self._lacrosse = lacrosse
+        self._sensor_data: pylacrosse.LaCrosseSensor | None = None
         self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._attr_name = name
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID, device_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
+            manufacturer="LaCrosse",
+            model=f"Sensor ID {config[CONF_ID]}",
+            name=sensor_device_name(config),
+        )
 
-        lacrosse.register_callback(
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register the receiver callback when added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._lacrosse.register_callback(
             int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the expiration trigger when removed from Home Assistant."""
+        if self._expiration_trigger:
+            self._expiration_trigger()
+            self._expiration_trigger = None
+        await super().async_will_remove_from_hass()
 
     @property
     @override
@@ -162,10 +258,21 @@ class LaCrosseSensor(SensorEntity):
             "new_battery": self._new_battery,
         }
 
+    @property
+    @override
+    def native_value(self) -> float | int | str | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._sensor_data)
+
     def _callback_lacrosse(
         self, lacrosse_sensor: pylacrosse.LaCrosseSensor, user_data: None
     ) -> None:
-        """Handle a function that is called from pylacrosse with new values."""
+        """Handle a pylacrosse callback, which runs in a worker thread."""
+        self.hass.loop.call_soon_threadsafe(self._async_handle_update, lacrosse_sensor)
+
+    @callback
+    def _async_handle_update(self, lacrosse_sensor: pylacrosse.LaCrosseSensor) -> None:
+        """Update state and expiration in the event loop."""
         if self._expire_after is not None and self._expire_after > 0:
             # Reset old trigger
             if self._expiration_trigger:
@@ -183,68 +290,24 @@ class LaCrosseSensor(SensorEntity):
         self._humidity = lacrosse_sensor.humidity
         self._low_battery = lacrosse_sensor.low_battery
         self._new_battery = lacrosse_sensor.new_battery
+        self._sensor_data = lacrosse_sensor
+        self.async_write_ha_state()
 
     @callback
     def value_is_expired(self, *_: datetime) -> None:
         """Triggered when value is expired."""
         self._expiration_trigger = None
+        self._sensor_data = None
         self.async_write_ha_state()
 
-
-class LaCrosseTemperature(LaCrosseSensor):
-    """Implementation of a Lacrosse temperature sensor."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
     @property
     @override
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self._temperature
-
-
-class LaCrosseHumidity(LaCrosseSensor):
-    """Implementation of a Lacrosse humidity sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        return self._humidity
-
-
-class LaCrosseBattery(LaCrosseSensor):
-    """Implementation of a Lacrosse battery sensor."""
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        if self._low_battery is None:
-            return None
-        if self._low_battery is True:
-            return "low"
-        return "ok"
-
-    @property
-    @override
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend."""
-        if self._low_battery is None:
+        if self.entity_description.key != "battery":
+            return None
+        if self._sensor_data is None or self._sensor_data.low_battery is None:
             return "mdi:battery-unknown"
-        if self._low_battery is True:
+        if self._sensor_data.low_battery:
             return "mdi:battery-alert"
         return "mdi:battery"
-
-
-TYPE_CLASSES: dict[str, type[LaCrosseSensor]] = {
-    "temperature": LaCrosseTemperature,
-    "humidity": LaCrosseHumidity,
-    "battery": LaCrosseBattery,
-}
