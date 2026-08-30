@@ -731,7 +731,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(devices) == 0:
                 error = "invalid_device_ip"
             elif entry.data[CONF_DEVICE_ID] not in devices:
-                error = "ip_address_mismatch"
+                error = "invalid_device_id_for_ip"
             else:
                 data = {**entry.data, CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                 if await self.hass.async_add_executor_job(

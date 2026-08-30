@@ -2125,7 +2125,7 @@ async def test_reconfigure_flow_wrong_device_id_discovery(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
-        assert result["errors"].get("base") == "ip_address_mismatch"
+        assert result["errors"].get("base") == "invalid_device_id_for_ip"
         mock_discovery.assert_called_once()
         assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
 
