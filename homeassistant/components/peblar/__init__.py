@@ -97,9 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         version_coordinator=version_coordinator,
     )
 
-    # Follow the charging session as it changes, rather than waiting for
-    # the next poll to notice. The poll stays where it is: this only asks
-    # it to catch up early.
     listener = PeblarSessionListener(hass, entry, peblar, meter_coordinator)
     entry.async_create_background_task(
         hass, listener.async_run(), name=f"Peblar {entry.title} event stream"

@@ -31,10 +31,11 @@ class PeblarSessionListener:
         self._entry = entry
         self._peblar = peblar
         self._coordinator = coordinator
+        self._retry = EVENT_STREAM_RETRY_MINIMUM
 
     async def async_run(self) -> None:
         """Keep a subscription up for as long as the entry is loaded."""
-        retry = EVENT_STREAM_RETRY_MINIMUM
+        self._retry = EVENT_STREAM_RETRY_MINIMUM
 
         while True:
             try:
@@ -43,19 +44,21 @@ class PeblarSessionListener:
                 LOGGER.debug(
                     "Peblar event stream for %s stopped: %s", self._entry.title, error
                 )
-            else:
-                # The charger closed the stream on us rather than failing,
-                # so start over from the shortest wait.
-                retry = EVENT_STREAM_RETRY_MINIMUM
 
-            await asyncio.sleep(retry.total_seconds())
-            retry = min(retry * 2, EVENT_STREAM_RETRY_MAXIMUM)
+            await asyncio.sleep(self._retry.total_seconds())
+            self._retry = min(self._retry * 2, EVENT_STREAM_RETRY_MAXIMUM)
 
     async def _async_listen(self) -> None:
         """Open the stream and stay on it until it closes."""
         websocket = self._peblar.websocket()
         try:
             await websocket.connect()
+
+            # A charger that was unreachable at startup can leave the wait
+            # at its longest. Reaching it at all settles that, so a drop
+            # hours later is not held against whatever went before.
+            self._retry = EVENT_STREAM_RETRY_MINIMUM
+
             await websocket.subscribe_session_status(self._handle_session_status)
             await websocket.listen()
         finally:
