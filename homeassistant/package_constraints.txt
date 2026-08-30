@@ -52,7 +52,7 @@ orjson==3.12.0
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
-probatio==0.11.3
+probatio==0.11.4
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.13.0
@@ -156,7 +156,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.32.0
+protobuf==6.33.6
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
