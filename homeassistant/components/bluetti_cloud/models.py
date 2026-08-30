@@ -132,13 +132,11 @@ class BluettiState:
 class BluettiDevice:
     """Represents a single Bluetti device.
 
-    Holds its own state list and refresh/unbind logic separately from
-    BluettiDeviceCoordinator, which is the more usual place for a single
-    device's central state in Home Assistant - merging the two was raised in
-    review. Not done here: BluettiData builds every device from the cloud's
-    product list before hass/entry/api_client exist (see bind_runtime's own
-    docstring), so the split follows a real construction-order constraint,
-    not just an established pattern this file happens to still be using.
+    Holds its own state list and refresh/unbind logic, separately from
+    BluettiDeviceCoordinator: BluettiData builds every device from the
+    cloud's product list before hass/entry/api_client exist (see
+    bind_runtime's own docstring), so this object has to exist and carry
+    state before a coordinator could.
     """
 
     def __init__(
