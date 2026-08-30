@@ -126,9 +126,9 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
             device_data = self.device_data
             if device_data is not None:
                 if hostname := device_data.get("hostname"):
-                    self._attr_device_info["default_name"] = str(hostname)
+                    self._attr_device_info["name"] = str(hostname)
                 if manufacturer := device_data.get("manufacturer"):
-                    self._attr_device_info["default_manufacturer"] = str(manufacturer)
+                    self._attr_device_info["manufacturer"] = str(manufacturer)
 
     @property
     @override
