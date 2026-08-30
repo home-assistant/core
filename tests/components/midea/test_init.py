@@ -2,17 +2,29 @@
 
 from unittest.mock import patch
 
-from midealocal.const import DeviceType
+from midealocal.const import DeviceType, ProtocolVersion
 
 from homeassistant.components.midea.const import CONF_SN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_MAC
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_TOKEN,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import DummyDevice
 from .const import (
+    CONF_KEY,
+    CONF_SUBTYPE,
     ENTRY_DATA,
     TEST_DEVICE_ID,
     TEST_IP_ADDRESS,
