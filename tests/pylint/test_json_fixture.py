@@ -109,3 +109,17 @@ def test_not_flagged_outside_test_module(
 
     with assert_no_messages(linter):
         walk_checker(linter, json_fixture_checker, root_node)
+
+
+def test_not_flagged_in_tests_common(
+    linter: UnittestLinter,
+    json_fixture_checker: HassJsonFixtureChecker,
+) -> None:
+    """Test that the fixture helper definitions in tests.common are ignored."""
+    root_node = astroid.parse(
+        "value = json_loads_object(load_fixture('data.json'))",
+        "tests.common",
+    )
+
+    with assert_no_messages(linter):
+        walk_checker(linter, json_fixture_checker, root_node)

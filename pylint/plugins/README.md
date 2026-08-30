@@ -958,7 +958,8 @@ does not force `usb` to be set up.
 
 Detects tests that load a fixture and then parse it as JSON, instead of
 using the dedicated JSON fixture helpers from `tests.common`. Only runs on
-test modules.
+test modules. `tests.common` itself is exempt, since it defines the JSON
+fixture helpers, which legitimately parse a loaded fixture.
 
 ### `W7435`: `home-assistant-json-fixture`
 
