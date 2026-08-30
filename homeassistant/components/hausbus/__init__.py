@@ -57,36 +57,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Unload a config entry."""
     gateway = entry.runtime_data
-    # Only deregister the gateway's pyhausbus listeners once the platforms
-    # have actually unloaded. pyhausbus removes listeners via list.remove(),
-    # which raises if called twice, so deregistering unconditionally here
-    # would break a retry after a failed platform unload.
     if gateway.discovery_task is not None:
         with contextlib.suppress(Exception):
             await gateway.discovery_task
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        gateway.home_server.removeBusEventListener(gateway)
-        gateway.home_server.removeBusDeviceListener(gateway)
+    # Stop delivering newly discovered devices before unloading the cover
+    # platform below. pyhausbus's DeviceWorker thread can still be
+    # processing in-flight search replies after searchDevices() (and
+    # discovery_task above) return, and the cover platform's
+    # NEW_CHANNEL_ADDED dispatcher listener - registered via
+    # config_entry.async_on_unload() - is not disconnected until after
+    # this whole function has returned successfully (Home Assistant only
+    # runs those callbacks once component.async_unload_entry() reports
+    # success). A newDeviceDetected() callback landing while
+    # async_unload_platforms() is still running could therefore still
+    # reach async_add_entities() on a platform that is mid-teardown,
+    # leaving an entity behind that outlives the unload. Removing the
+    # device listener first closes that window; it is restored if the
+    # platform unload fails, so the gateway keeps discovering devices
+    # normally for as long as it keeps running.
+    gateway.home_server.removeBusDeviceListener(gateway)
+    try:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    except BaseException:
+        gateway.home_server.addBusDeviceListener(gateway)
+        raise
+    if not unload_ok:
+        gateway.home_server.addBusDeviceListener(gateway)
+        return unload_ok
 
-        # HomeServer is a process-wide singleton that an in-progress config
-        # flow can also be holding a reference to (see
-        # gateway.async_acquire_home_server), so release our reference
-        # rather than shutting it down unconditionally here - it is only
-        # actually shut down once nothing else still needs it. Otherwise
-        # its UDP listener and worker/collector threads would keep running
-        # indefinitely after unload.
-        #
-        # This can raise RuntimeError if a worker/collector thread was too
-        # slow to stop (see gateway.async_release_home_server) - by design,
-        # so that failure is surfaced rather than reported as a successful
-        # unload, rather than silently leaving a stray thread running. HA
-        # core marks the resulting FAILED_UNLOAD state as non-recoverable
-        # (see ConfigEntryState in homeassistant/config_entries.py):
-        # async_unload()/async_setup()/async_remove() all refuse to touch
-        # the entry again afterwards, so this function is never re-entered
-        # for the same entry - the only way out is restarting Home
-        # Assistant, which starts a fresh process with a fresh gateway and
-        # HomeServer, not a second call here.
-        await async_release_home_server(hass, gateway.home_server)
+    gateway.home_server.removeBusEventListener(gateway)
+
+    # HomeServer is a process-wide singleton that an in-progress config
+    # flow can also be holding a reference to (see
+    # gateway.async_acquire_home_server), so release our reference
+    # rather than shutting it down unconditionally here - it is only
+    # actually shut down once nothing else still needs it. Otherwise
+    # its UDP listener and worker/collector threads would keep running
+    # indefinitely after unload.
+    #
+    # This can raise RuntimeError if a worker/collector thread was too
+    # slow to stop (see gateway.async_release_home_server) - by design,
+    # so that failure is surfaced rather than reported as a successful
+    # unload, rather than silently leaving a stray thread running. HA
+    # core marks the resulting FAILED_UNLOAD state as non-recoverable
+    # (see ConfigEntryState in homeassistant/config_entries.py):
+    # async_unload()/async_setup()/async_remove() all refuse to touch
+    # the entry again afterwards, so this function is never re-entered
+    # for the same entry - the only way out is restarting Home
+    # Assistant, which starts a fresh process with a fresh gateway and
+    # HomeServer, not a second call here.
+    await async_release_home_server(hass, gateway.home_server)
     return unload_ok
