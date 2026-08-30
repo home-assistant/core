@@ -8,7 +8,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_cert": "Invalid certificate",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -183,6 +182,15 @@
         "starttls": "STARTTLS",
         "tls": "SSL/TLS"
       }
+    },
+    "priority": {
+      "options": {
+        "high": "High",
+        "highest": "Highest",
+        "low": "Low",
+        "lowest": "Lowest",
+        "normal": "Normal"
+      }
     }
   },
   "services": {
@@ -200,6 +208,10 @@
         "message": {
           "description": "The plain text message body of the email notification.",
           "name": "Message"
+        },
+        "priority": {
+          "description": "Priority of the email notification. Support for this setting varies between email clients.",
+          "name": "Priority"
         },
         "title": {
           "description": "Subject for your email notification.",
