@@ -5,9 +5,7 @@ Read-only. Nothing in this integration writes to a device.
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
 from .coordinator import CoolbotConfigEntry, CoolbotCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -38,28 +36,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> 
     if unloaded:
         await entry.runtime_data.async_shutdown()
     return unloaded
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: CoolbotConfigEntry, device_entry: dr.AnyDeviceEntry
-) -> bool:
-    """Allow deleting a device that the account no longer reports.
-
-    Devices are enumerated from the account profile, so one that still appears
-    there would just be recreated; only genuinely gone devices may be removed.
-    """
-    coordinator = entry.runtime_data
-    identifiers = {
-        identifier
-        for domain, identifier in device_entry.identifiers
-        if domain == DOMAIN
-    }
-    if any(identifier in coordinator.data for identifier in identifiers):
-        return False
-
-    # The entities are deleted along with the device, so drop the record of
-    # them; if this cooler is added to the account again, its entities have to
-    # be created afresh.
-    for identifier in identifiers:
-        coordinator.forget_device(identifier)
-    return True

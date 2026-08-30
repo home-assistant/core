@@ -61,11 +61,11 @@ rules:
       both causes of a device becoming unavailable: readings going stale, and
       the device dropping out of the account profile.
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery:
     status: exempt
     comment: |
@@ -82,23 +82,19 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: |
-      No situations a repair issue could fix; auth problems raise reauth.
-  stale-devices:
-    status: done
-    comment: |
-      Devices missing from a refresh go unavailable rather than being deleted;
-      async_remove_config_entry_device allows removing genuinely gone devices.
+      No situations a repair issue could fix.
+  stale-devices: todo
   # Platinum
   async-dependency: done
   inject-websession: done

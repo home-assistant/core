@@ -21,7 +21,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -44,10 +44,6 @@ class CoolbotSensorDescription(SensorEntityDescription):
     """Describes one CoolBot sensor."""
 
     value_fn: Callable[[CoolbotDevice], float | str | None]
-    #: True for values that are settings rather than measurements. These stay
-    #: readable even when the device stops reporting, because a set point does not
-    #: go stale the way a temperature does.
-    is_setting: bool = False
 
 
 # Temperatures are ALWAYS Fahrenheit on the wire. The app's F/C toggle is a local
@@ -78,7 +74,6 @@ SENSORS: tuple[CoolbotSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         suggested_display_precision=0,
-        is_setting=True,
         value_fn=lambda device: device.set_point_f,
     ),
     CoolbotSensorDescription(
@@ -105,35 +100,17 @@ async def async_setup_entry(
     entry: CoolbotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create one set of sensors per real CoolBot on the account.
-
-    Also watches every refresh for coolers added to the account later, so a new
-    CoolBot appears without a reload.
-    """
+    """Create one set of sensors per real CoolBot on the account."""
     coordinator = entry.runtime_data
-    known = coordinator.known_devices
-
-    @callback
-    def _add_new_devices() -> None:
-        new = [
-            device
-            for unique_id, device in coordinator.data.items()
-            # Empty device slots are skipped entirely. The cloud serves stale pin
-            # values for unused slots, so creating entities for them would publish
-            # a believable temperature for hardware that does not exist.
-            if device.is_provisioned and unique_id not in known
-        ]
-        if not new:
-            return
-        known.update(device.unique_id for device in new)
-        async_add_entities(
-            CoolbotSensor(coordinator, device, description)
-            for device in new
-            for description in SENSORS
-        )
-
-    _add_new_devices()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_devices))
+    async_add_entities(
+        CoolbotSensor(coordinator, device, description)
+        for device in coordinator.data.values()
+        # Empty device slots are skipped entirely. The cloud serves stale pin
+        # values for unused slots, so creating entities for them would publish
+        # a believable temperature for hardware that does not exist.
+        if device.is_provisioned
+        for description in SENSORS
+    )
 
 
 class CoolbotSensor(CoordinatorEntity[CoolbotCoordinator], SensorEntity):
@@ -171,27 +148,21 @@ class CoolbotSensor(CoordinatorEntity[CoolbotCoordinator], SensorEntity):
             }
 
     @property
-    def _device(self) -> CoolbotDevice | None:
-        return self.coordinator.data.get(self._device_id)
+    def _device(self) -> CoolbotDevice:
+        return self.coordinator.data[self._device_id]
 
     @property
     @override
     def available(self) -> bool:
         """Whether the reading can be trusted right now."""
-        device = self._device
-        if not self.coordinator.last_update_success or device is None:
-            return False
-        # A set point is configuration: it remains meaningful while the cooler is
-        # offline, whereas a temperature that has stopped updating is misleading.
-        if self.entity_description.is_setting:
-            return device.is_provisioned
-        return device_is_fresh(device)
+        return (
+            super().available
+            and self._device_id in self.coordinator.data
+            and device_is_fresh(self._device)
+        )
 
     @property
     @override
     def native_value(self) -> float | str | None:
         """Return the current reading."""
-        device = self._device
-        if device is None:
-            return None
-        return self.entity_description.value_fn(device)
+        return self.entity_description.value_fn(self._device)

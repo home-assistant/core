@@ -19,4 +19,4 @@ STALE_AFTER_SECONDS: Final = 120
 #: removed from the account. The profile is otherwise only read on connect, and
 #: it is a whole-account document, so this is far longer than the update
 #: interval.
-PROFILE_REFRESH_INTERVAL: Final = timedelta(minutes=5)
+PROFILE_REFRESH_INTERVAL: Final = timedelta(minutes=15)

@@ -54,10 +54,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: absent until a device first reports. The name is kept so a device
         #: that drops out of the profile can still be named in a log line.
         self._reporting: dict[str, tuple[str, bool]] = {}
-        #: Devices that already have entities, so each refresh only adds coolers
-        #: that are new. Held here rather than in the platform so a removal can
-        #: clear it.
-        self.known_devices: set[str] = set()
         #: Name and hardware details last written to the device registry, per
         #: unique id, so an unchanged refresh does not touch the registry at all.
         self._device_details: dict[str, tuple[str, str, str | None, str | None]] = {}
@@ -98,7 +94,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 # Nothing else holds this client yet, and its socket is already
                 # open, so every way of leaving without it has to close it here
                 # — cancellation included.
-                await _async_close_client(client)
+                await client.async_close()
 
         # Connecting reads the profile, so the clock starts here.
         self._profile_read_at = dt_util.utcnow()
@@ -119,8 +115,8 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             devices = await self._client.async_get_devices(wait_for_live=False)
             await self._client.async_ping()
         except CoolbotAuthError as err:
-            # Refreshes stop until reauth completes; the socket must not be
-            # left open for that whole time.
+            # Refreshes stop until the credentials are fixed; the socket must
+            # not be left open for that whole time.
             await self._async_shutdown_client()
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -189,7 +185,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         along so a cooler renamed in the account is renamed here too; a name
         the user chose in Home Assistant still wins over it.
         """
-        registry: dr.DeviceRegistry | None = None
+        registry = dr.async_get(self.hass)
         for unique_id, device in data.items():
             details = (
                 device.name,
@@ -199,8 +195,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             )
             if self._device_details.get(unique_id) == details:
                 continue
-            if registry is None:
-                registry = dr.async_get(self.hass)
             entry = registry.async_get_device_by_identifier(
                 (DOMAIN, unique_id), self.config_entry.entry_id
             )
@@ -262,17 +256,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 "%s has stopped reporting; its readings are marked unavailable", name
             )
 
-    def forget_device(self, unique_id: str) -> None:
-        """Forget a device that Home Assistant has removed.
-
-        Its entities go with it, so the same cooler returning to the account
-        has to have them created again rather than being filtered out as one
-        that already has them.
-        """
-        self.known_devices.discard(unique_id)
-        self._reporting.pop(unique_id, None)
-        self._device_details.pop(unique_id, None)
-
     @override
     async def async_shutdown(self) -> None:
         """Stop refreshing and close the socket."""
@@ -282,15 +265,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
     async def _async_shutdown_client(self) -> None:
         if self._client is not None:
             client, self._client = self._client, None
-            await _async_close_client(client)
-
-
-async def _async_close_client(client: CoolbotClient) -> None:
-    """Close a client without letting a failed close mask the real problem."""
-    try:
-        await client.async_close()
-    except Exception:
-        _LOGGER.debug("Error while closing the socket", exc_info=True)
+            # async_close is guaranteed by the library not to raise, so a
+            # failed close cannot mask whatever prompted the shutdown.
+            await client.async_close()
 
 
 def device_model(device: CoolbotDevice) -> str:

@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock
 
 from pycoolbot import CoolbotAuthError, CoolbotError
 
-from homeassistant.components.coolbot import async_remove_config_entry_device
 from homeassistant.components.coolbot.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -83,37 +82,19 @@ async def test_setup_succeeds_for_an_account_with_no_devices(
     assert mock_config_entry.runtime_data.data == {}
 
 
-async def test_the_last_cooler_can_be_deleted_once_the_account_drops_it(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Removal is refused while reported, and allowed once it is gone."""
-    assert await setup_integration(hass, mock_config_entry)
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert not await async_remove_config_entry_device(hass, mock_config_entry, device)
-
-    mock_client.async_get_devices.return_value = []
-    await _tick(hass)
-
-    assert await async_remove_config_entry_device(hass, mock_config_entry, device)
-
-
-async def test_setup_starts_reauth_on_bad_credentials(
+async def test_setup_fails_as_an_auth_error_on_bad_credentials(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Rejected credentials at setup prompt for reauth instead of retrying."""
+    """Rejected credentials fail setup as an auth error instead of retrying.
+
+    ConfigEntryAuthFailed marks the entry SETUP_ERROR rather than scheduling
+    retries; the reauth flow that would let the user fix the password in place
+    arrives in a follow-up PR.
+    """
     mock_client.async_connect.side_effect = CoolbotAuthError("rejected")
 
     assert not await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
 
 
 async def test_hardware_details_that_replay_late_reach_the_registry(
@@ -173,68 +154,3 @@ async def test_a_rename_in_the_account_reaches_the_registry(
     )
     assert device is not None
     assert device.name == "Flower cooler"
-
-
-async def test_a_deleted_cooler_returning_gets_its_entities_back(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Deleting a cooler and adding it again recreates its entities.
-
-    Home Assistant deletes the entities along with the device, so a record of
-    which coolers already have entities has to forget the deleted one, or the
-    same cooler returning is filtered out and stays entity-less until a reload.
-    """
-    assert await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("sensor.walk_in_cooler_room_temperature") is not None
-
-    mock_client.async_get_devices.return_value = []
-    await _tick(hass)
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert await async_remove_config_entry_device(hass, mock_config_entry, device)
-    device_registry.async_remove_device(device.id)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.walk_in_cooler_room_temperature") is None
-
-    mock_client.async_get_devices.return_value = [make_device()]
-    await _tick(hass)
-
-    assert hass.states.get("sensor.walk_in_cooler_room_temperature") is not None
-
-
-async def test_removing_a_device_the_account_still_reports_is_refused(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A device the account still reports would just be recreated."""
-    assert await setup_integration(hass, mock_config_entry)
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "coolbot_aabbccddeeff"), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert not await async_remove_config_entry_device(hass, mock_config_entry, device)
-
-
-async def test_removing_a_vanished_device_is_allowed(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A device the account no longer reports may be deleted."""
-    assert await setup_integration(hass, mock_config_entry)
-
-    orphan = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "coolbot_gone")},
-    )
-    assert await async_remove_config_entry_device(hass, mock_config_entry, orphan)

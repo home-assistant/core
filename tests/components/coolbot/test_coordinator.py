@@ -76,13 +76,14 @@ async def test_failed_refresh_marks_data_stale_then_recovers(
     assert mock_config_entry.runtime_data.last_update_success
 
 
-async def test_auth_failure_during_refresh_starts_reauth(
+async def test_auth_failure_during_refresh_closes_the_socket(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Credentials failing mid-flight prompt the user rather than looping.
+    """Credentials failing mid-flight stop the refreshes and drop the socket.
 
-    Refreshes stop until reauth completes, so the socket is closed rather than
-    left open for however long that takes.
+    Nothing useful can happen until the password is fixed, so the socket must
+    not be left open for however long that takes. No reauth flow starts yet;
+    that arrives in a follow-up PR.
     """
     assert await setup_integration(hass, mock_config_entry)
     mock_client.async_close.reset_mock()
@@ -90,8 +91,8 @@ async def test_auth_failure_during_refresh_starts_reauth(
     mock_client.async_get_devices.side_effect = CoolbotAuthError("expired")
     await _tick(hass)
 
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
+    assert not mock_config_entry.runtime_data.last_update_success
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     mock_client.async_close.assert_awaited()
 
 
@@ -185,18 +186,16 @@ async def test_a_device_waits_for_its_mac_identity(
     """A provisioned device whose MAC pin has not replayed yet is held back.
 
     Its unique_id would be a dash/slot fallback that changes once the MAC
-    arrives, which would duplicate the device. It appears on a later refresh
-    under its stable identity instead.
+    arrives, which would duplicate the device. No entities are created for it,
+    so no believable readings are published under a throwaway identity.
     """
     mock_client.async_get_devices.return_value = [
         make_device(unique_id="coolbot_10_0", mac_address=None)
     ]
     assert await setup_integration(hass, mock_config_entry)
-    assert not mock_config_entry.runtime_data.data
 
-    mock_client.async_get_devices.return_value = [make_device()]
-    await _tick(hass)
-    assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
+    assert not mock_config_entry.runtime_data.data
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature") is None
 
 
 async def test_startup_replay_is_not_logged_as_an_outage(

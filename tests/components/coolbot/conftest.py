@@ -33,7 +33,7 @@ def make_device(
         "mac_address": "AA:BB:CC:DD:EE:FF",
         "is_provisioned": True,
         "available": True,
-        "hardware_status": "Cooling",
+        "hardware_status": "OK",
         "set_point_f": 40.0,
         "room_temp_f": 38.5,
         "fins_temp_f": 30.2,

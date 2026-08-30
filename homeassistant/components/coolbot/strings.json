@@ -1,10 +1,7 @@
 {
   "config": {
     "abort": {
-      "account_mismatch": "This entry belongs to a different CoolBot account. Add a new entry for the other account instead.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,26 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "The current password of your CoolBot Pro account."
-        },
-        "description": "The stored password for {email} no longer works. Enter the current one."
-      },
-      "reconfigure": {
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "Must be the same account this entry was created with.",
-          "password": "The current password of your CoolBot Pro account."
-        },
-        "description": "Update the stored credentials for this CoolBot Pro account."
-      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
