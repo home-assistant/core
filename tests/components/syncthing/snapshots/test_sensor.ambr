@@ -503,7 +503,7 @@
       'max_request_kib': 0,
       'max_send_kbps': 0,
       'name': 'Test Device',
-      'paused': False,
+      'paused': True,
       'remote_gui_port': 0,
       'skip_introduction_removals': False,
       'state': 'paused',

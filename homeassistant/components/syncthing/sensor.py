@@ -403,6 +403,7 @@ class DeviceSensor(SensorEntity):
             """Handle device connected event."""
             if self._state:
                 self._state = self._filter_state(event["data"])
+                self._state["paused"] = False
                 self._state["state"] = "connected"
                 self.async_write_ha_state()
 
@@ -433,6 +434,7 @@ class DeviceSensor(SensorEntity):
         def handle_device_paused(event: dict[str, Any]) -> None:
             """Handle device paused event."""
             if self._state:
+                self._state["paused"] = True
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
 
@@ -448,6 +450,7 @@ class DeviceSensor(SensorEntity):
         def handle_device_resumed(event: dict[str, Any]) -> None:
             """Handle device resumed event."""
             if self._state:
+                self._state["paused"] = False
                 self._state["state"] = "disconnected"
                 self.async_write_ha_state()
 
@@ -526,7 +529,7 @@ class DeviceSensor(SensorEntity):
                 last_data = data
                 state = "connected"
             elif event_type == "DeviceDisconnected":
-                last_data = data
+                last_data = {**last_data, **data}
                 if state != "paused":
                     state = "disconnected"
             elif event_type == "DevicePaused":
