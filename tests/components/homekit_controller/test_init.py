@@ -102,20 +102,19 @@ async def test_device_remove_devices(
         hass, get_next_aid(), create_alive_service
     )
     config_entry = helper.config_entry
-    entry_id = config_entry.entry_id
 
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_device_entry.id, entry_id)
+    response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 

@@ -42,7 +42,9 @@ async def async_validate_trigger_config(
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    if (device_entry := dev_reg.async_get(device_id)) is None:
+    if (
+        device_entry := dev_reg.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     for entry in entries:
@@ -65,7 +67,9 @@ async def async_attach_trigger(
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    if (device_entry := dev_reg.async_get(device_id)) is None:
+    if (
+        device_entry := dev_reg.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     entry: HueConfigEntry | None = next(
@@ -101,7 +105,9 @@ async def async_get_triggers(
         return []
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    if (device_entry := dev_reg.async_get(device_id)) is None:
+    if (
+        device_entry := dev_reg.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Iterate all config entries for this device

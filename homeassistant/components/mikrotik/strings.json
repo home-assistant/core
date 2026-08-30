@@ -61,14 +61,29 @@
       }
     },
     "sensor": {
+      "board_temperature": {
+        "name": "Board temperature {index}"
+      },
       "cpu_load": {
         "name": "CPU usage"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       },
       "disk_usage": {
         "name": "Disk usage"
       },
       "memory_usage": {
         "name": "Memory usage"
+      },
+      "poe_out_consumption": {
+        "name": "PoE (out) consumption"
+      },
+      "psu_current": {
+        "name": "PSU {index} current"
+      },
+      "psu_voltage": {
+        "name": "PSU {index} voltage"
       }
     },
     "switch": {

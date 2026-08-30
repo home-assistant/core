@@ -26,7 +26,7 @@ class PlayerData:
 
     steamid: str
     communityvisibilitystate: int
-    profilestate: int
+    profilestate: int | None = None
     personaname: str
     commentpermission: int | None = None
     profileurl: str
@@ -34,7 +34,7 @@ class PlayerData:
     avatarmedium: str
     avatarfull: str
     avatarhash: str
-    lastlogoff: int
+    lastlogoff: int | None = None
     personastate: int
     realname: str | None = None
     primaryclanid: str | None = None
@@ -46,6 +46,8 @@ class PlayerData:
     gameextrainfo: str | None = None
     gameid: str | None = None
     lobbysteamid: str | None = None
+    gameserverip: str | None = None
+    gameserversteamid: str | None = None
     level: int | None = None
 
 

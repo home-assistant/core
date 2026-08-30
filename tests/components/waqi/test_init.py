@@ -263,7 +263,7 @@ async def test_migration_from_v1_disabled(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device_1 = attr.evolve(device_1, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device_1.id] = device_1
+    device_registry._devices[device_1.id] = device_1
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -284,7 +284,7 @@ async def test_migration_from_v1_disabled(
     # API; clear the flag directly to simulate existing storage with a stale
     # enabled device.
     device_2 = attr.evolve(device_2, disabled_by=None)
-    device_registry.devices[device_2.id] = device_2
+    device_registry._devices[device_2.id] = device_2
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,

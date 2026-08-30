@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from watergate_local_api import WatergateApiException
+
 from homeassistant.components.valve import ValveState
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -79,3 +81,30 @@ async def test_handle_webhook(
     await hass.async_block_till_done()  # Ensure the webhook is processed
 
     assert hass.states.get(entity_id).state == ValveState.OPEN
+
+
+async def test_coordinator_fetches_auto_shut_off(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Coordinator stores auto-shut-off state fetched from the client."""
+    await init_integration(hass, mock_entry)
+
+    mock_watergate_client.async_get_auto_shut_off.assert_called_once()
+    assert mock_entry.runtime_data.data.auto_shut_off.enabled is True
+
+
+async def test_setup_retry_when_device_unavailable(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Setup is retried when a device read fails during the first refresh."""
+    mock_watergate_client.async_get_device_state.side_effect = WatergateApiException(
+        "boom"
+    )
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY

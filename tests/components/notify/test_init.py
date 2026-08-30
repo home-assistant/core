@@ -131,9 +131,7 @@ async def test_send_message_service(
             notify.SERVICE_SEND_MESSAGE,
             {"entity_id": "notify.test", notify.ATTR_MESSAGE: None},
         )
-    assert (
-        str(exc.value) == "string value is None for dictionary value @ data['message']"
-    )
+    assert str(exc.value) == "string value is None at 'message'"
     entity.send_message_mock_calls.assert_not_called()
 
     # Test schema: No message fails
@@ -141,7 +139,7 @@ async def test_send_message_service(
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
         )
-    assert str(exc.value) == "required key not provided @ data['message']"
+    assert str(exc.value) == "required key not provided at 'message'"
     entity.send_message_mock_calls.assert_not_called()
 
     # Test unloading the entry succeeds

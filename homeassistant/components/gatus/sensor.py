@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from datetime import datetime, timedelta
+from typing import override
 
-from gatus_api import Result
+from gatus_api import EndpointStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,7 +27,20 @@ PARALLEL_UPDATES = 0
 class GatusSensorEntityDescription(SensorEntityDescription):
     """Class describing Gatus sensor entities."""
 
-    value_fn: Callable[[Result], float | int | str | None]
+    value_fn: Callable[
+        [GatusDataUpdateCoordinator, EndpointStatus],
+        datetime | float | int | str | None,
+    ]
+
+
+DNS_RCODE_MAP = {
+    "NOERROR": "no_error",
+    "FORMERR": "format_error",
+    "SERVFAIL": "server_failure",
+    "NXDOMAIN": "non_existent_domain",
+    "NOTIMP": "not_implemented",
+    "REFUSED": "refused",
+}
 
 
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
@@ -36,9 +50,55 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda result: (
-            round(result.duration / 1_000_000, 2)
-            if result.duration is not None
+        value_fn=lambda coordinator, endpoint: (
+            round(endpoint.results[-1].duration / 1_000_000, 2)
+            if endpoint.results and endpoint.results[-1].duration is not None
+            else None
+        ),
+    ),
+    GatusSensorEntityDescription(
+        key="status_code",
+        translation_key="status_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator, endpoint: (
+            endpoint.results[-1].status if endpoint.results else None
+        ),
+    ),
+    GatusSensorEntityDescription(
+        key="last_event",
+        translation_key="last_event",
+        device_class=SensorDeviceClass.ENUM,
+        options=["start", "healthy", "unhealthy", "resolved"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator, endpoint: (
+            endpoint.events[-1].type.lower() if endpoint.events else None
+        ),
+    ),
+    GatusSensorEntityDescription(
+        key="certificate_expiration",
+        translation_key="certificate_expiration",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator, endpoint: (
+            coordinator.last_update_time
+            + timedelta(
+                seconds=endpoint.results[-1].certificate_expiration // 1_000_000_000
+            )
+            if endpoint.results
+            and endpoint.results[-1].certificate_expiration is not None
+            else None
+        ),
+    ),
+    GatusSensorEntityDescription(
+        key="dns_rcode",
+        translation_key="dns_rcode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator, endpoint: (
+            DNS_RCODE_MAP.get(
+                endpoint.results[-1].dns_rcode,
+                endpoint.results[-1].dns_rcode.lower(),
+            )
+            if endpoint.results and endpoint.results[-1].dns_rcode is not None
             else None
         ),
     ),
@@ -55,8 +115,19 @@ async def async_setup_entry(
 
     async_add_entities(
         GatusEndpointSensor(coordinator, entry, endpoint_key, description)
-        for endpoint_key in coordinator.data
+        for endpoint_key, endpoint in coordinator.data.items()
         for description in SENSOR_TYPES
+        if (
+            description.key != "certificate_expiration"
+            or (
+                endpoint.results
+                and endpoint.results[-1].certificate_expiration is not None
+            )
+        )
+        and (
+            description.key != "dns_rcode"
+            or (endpoint.results and endpoint.results[-1].dns_rcode is not None)
+        )
     )
 
 
@@ -75,13 +146,11 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry, endpoint_key)
         self.entity_description = description
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}_{description.key}"
 
     @property
     @override
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> datetime | float | int | str | None:
         """Return the state of the sensor."""
-        if TYPE_CHECKING:
-            assert self.latest_result is not None
-
-        return self.entity_description.value_fn(self.latest_result)
+        return self.entity_description.value_fn(self.coordinator, self.endpoint_data)
