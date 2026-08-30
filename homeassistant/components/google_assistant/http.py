@@ -11,6 +11,7 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
+from homeassistant.components.homeassistant.const import DATA_EXPOSED_ENTITIES
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_entity_settings,
@@ -121,6 +122,12 @@ class GoogleConfig(AbstractConfig):
                 self.hass, DOMAIN, self.async_schedule_google_sync_all
             )
         )
+
+        self.async_enable_local_sdk()
+
+    @override
+    async def _async_on_start(self, hass: HomeAssistant) -> None:
+        """Migrate legacy settings before the initial sync."""
         self._on_deinitialize.append(
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
@@ -133,10 +140,16 @@ class GoogleConfig(AbstractConfig):
             self._migrate_legacy_settings()
             await self._store.async_set_expose_settings_version(EXPOSE_SETTINGS_VERSION)
 
-        self.async_enable_local_sdk()
+        await super()._async_on_start(hass)
 
     def _migrate_legacy_settings(self) -> None:
         """Migrate should_expose/name/aliases computed from YAML to the shared store."""
+        if CONF_EXPOSED_DOMAINS not in self._config:
+            self.hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(
+                DOMAIN,
+                self._config.get(CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT),
+            )
+
         entity_registry = er.async_get(self.hass)
         entity_ids = {
             *entity_registry.entities,
@@ -144,7 +157,7 @@ class GoogleConfig(AbstractConfig):
             *self.entity_config,
         }
         for entity_id in entity_ids:
-            self._migrate_legacy_entity(entity_id, initial=True)
+            self._migrate_legacy_entity(entity_id, skip_defaults=False)
 
     @callback
     def _async_state_added_filter(self, data: EventStateChangedData) -> bool:
@@ -155,7 +168,7 @@ class GoogleConfig(AbstractConfig):
     def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
         """Migrate legacy settings and sync a newly appeared state."""
         entity_id = event.data["entity_id"]
-        self._migrate_legacy_entity(entity_id, initial=False)
+        self._migrate_legacy_entity(entity_id, skip_defaults=False)
         if self.should_expose(entity_id):
             self.async_schedule_google_sync_all()
 
@@ -231,25 +244,13 @@ class GoogleConfig(AbstractConfig):
         """Return if entity should be exposed."""
         return async_should_expose(self.hass, DOMAIN, entity_id)
 
-    def _should_expose_legacy(self, entity_id: str, *, respect_defaults: bool) -> bool:
-        """Return if entity should be exposed, based on YAML configuration.
-
-        For initial migrations, we use the legacy default for the exposed domains.
-        For the continuous migrations, we only apply that default if the user still
-        has one of the two deprecated keys configured, so removing both stops this
-        from applying to newly discovered entities.
-        """
-        apply_default = (
-            respect_defaults
-            or CONF_EXPOSE_BY_DEFAULT in self._config
-            or CONF_EXPOSED_DOMAINS in self._config
-        )
+    def _should_expose_by_default_legacy(self, entity_id: str) -> bool:
+        """Return if entity is exposed by the legacy expose_by_default/exposed_domains default."""
         expose_by_default = self._config.get(
-            CONF_EXPOSE_BY_DEFAULT,
-            DEFAULT_EXPOSE_BY_DEFAULT if apply_default else False,
+            CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT
         )
         exposed_domains = self._config.get(
-            CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS if apply_default else []
+            CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS
         )
 
         entity_registry = er.async_get(self.hass)
@@ -262,24 +263,15 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
-        explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
-
         domain_exposed_by_default = (
             expose_by_default and split_entity_id(entity_id)[0] in exposed_domains
         )
 
         # Expose an entity by default if the entity's domain is exposed by default
         # and the entity is not a config or diagnostic entity
-        entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
+        return domain_exposed_by_default and not auxiliary_entity
 
-        # Expose an entity if the entity's is exposed by default and
-        # the configuration doesn't explicitly exclude it from being
-        # exposed, or if the entity is explicitly exposed
-        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
-
-        return bool(is_default_exposed or explicit_expose)
-
-    def _migrate_legacy_entity(self, entity_id: str, *, initial: bool) -> None:
+    def _migrate_legacy_entity(self, entity_id: str, *, skip_defaults: bool) -> None:
         """Migrate should_expose/name/aliases computed from YAML."""
         try:
             settings = async_get_entity_settings(self.hass, entity_id)
@@ -288,17 +280,28 @@ class GoogleConfig(AbstractConfig):
         if DOMAIN in settings:
             return
 
-        if not self._should_expose_legacy(entity_id, respect_defaults=initial):
-            return
+        entity_config = self.entity_config.get(entity_id, {})
+        expose = entity_config.get(CONF_EXPOSE)
 
-        async_expose_entity(self.hass, DOMAIN, entity_id, True)
+        if expose is None:
+            if (
+                skip_defaults
+                and CONF_EXPOSE_BY_DEFAULT not in self._config
+                and CONF_EXPOSED_DOMAINS not in self._config
+            ):
+                return
+
+            expose = self._should_expose_by_default_legacy(entity_id)
+            if not expose:
+                return
+
+        async_expose_entity(self.hass, DOMAIN, entity_id, expose)
 
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(entity_id)
         if registry_entry is None:
             return
 
-        entity_config = self.entity_config.get(entity_id, {})
         registry_aliases = list(registry_entry.aliases)
         if name := entity_config.get(CONF_NAME):
             registry_aliases.append(name)

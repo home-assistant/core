@@ -644,7 +644,7 @@ async def test_new_entity_exposed_via_expose_new_triggers_sync(
 async def test_new_entity_without_legacy_config_defers_to_expose_new(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a new entity isn't auto-exposed by legacy defaults once YAML keys are gone."""
+    """Test a new entity relies on expose_new once legacy YAML keys are gone."""
     config = GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234"})
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
@@ -655,8 +655,49 @@ async def test_new_entity_without_legacy_config_defers_to_expose_new(
     hass.states.async_set(entry.entity_id, "on")
     await hass.async_block_till_done()
 
-    # switch is in the legacy default domain set, but legacy defaults
-    # should not apply since neither key is configured.
+    # Neither deprecated key is configured, so expose_new was seeded from
+    # the historical default during migration, and the switch is exposed
+    # through that shared fallback rather than the legacy per-entity check.
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_migrate_legacy_entity_respects_explicit_exclude(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity explicitly excluded via entity_config stays excluded."""
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "entity_config": {entry.entity_id: {"expose": False}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    # expose_new was seeded True (neither deprecated key configured), but
+    # the entity's explicit exclude must still be respected.
+    assert google_config.should_expose(entry.entity_id) is False
+
+
+async def test_migrate_seeds_expose_new_from_explicit_expose_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test expose_by_default: false alone isn't overridden by the historical default."""
+    config = GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "expose_by_default": False})
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    await hass.async_block_till_done()
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.async_get_expose_new_entities(DOMAIN) is False
     assert google_config.should_expose(entry.entity_id) is False
 
 

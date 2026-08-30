@@ -99,11 +99,13 @@ class AbstractConfig(ABC):
         if not self.enabled:
             return
 
-        async def sync_google(_):
-            """Sync entities to Google."""
-            await self.async_sync_entities_all()
+        self._on_deinitialize.append(
+            start.async_at_started(self.hass, self._async_on_start)
+        )
 
-        self._on_deinitialize.append(start.async_at_started(self.hass, sync_google))
+    async def _async_on_start(self, hass: HomeAssistant) -> None:
+        """Sync entities to Google once Home Assistant has started."""
+        await self.async_sync_entities_all()
 
     @callback
     def async_deinitialize(self) -> None:
