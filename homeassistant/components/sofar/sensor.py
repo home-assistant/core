@@ -7,6 +7,7 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.enums import SystemState
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -142,6 +143,9 @@ class SofarSensor(SofarEntity, SensorEntity):
 class SofarCountdownSensor(SofarSensor):
     """Defines a Sofar countdown, published as the moment it runs out."""
 
+    # A positive register alone doesn't mean the countdown is active.
+    _ACTIVE_STATES = (SystemState.WAITING, SystemState.CHECKING)
+
     def __init__(
         self,
         runtime_data: SofarRuntimeData,
@@ -156,7 +160,11 @@ class SofarCountdownSensor(SofarSensor):
     def native_value(self) -> datetime | None:
         component = getattr(self.coordinator.device, self.entity_description.component)
         seconds = getattr(component, self.entity_description.key)
-        if not isinstance(seconds, int) or seconds <= 0:
+        if (
+            not isinstance(seconds, int)
+            or seconds <= 0
+            or component.system_state not in self._ACTIVE_STATES
+        ):
             # A restart must not land inside the finished countdown's slack.
             self._deadline = _deadline_filter()
             return None
@@ -432,12 +440,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SofarSensorDescription(
-        key="serial_number",
-        component="identity",
-        translation_key="serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(

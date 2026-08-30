@@ -20,7 +20,7 @@ from homeassistant.components.sofar.sensor import (
     SofarSensorDescription,
     SofarTotalSensor,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -54,9 +54,14 @@ async def test_all_entities(
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    with (
+        patch("homeassistant.components.sofar.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: connection.for_unit(
+                unit_id
+            ),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -98,13 +103,13 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 73, 23, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 72, 22, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            139,
-            46,
+            138,
+            45,
             id="hybrid",
         ),
     ],
@@ -132,7 +137,11 @@ async def test_enabled_by_default_partition(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entries = [
+        e
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if e.domain == SENSOR_DOMAIN
+    ]
     # Literal counts: an accidental flip has to be acknowledged here.
     assert len(entries) == created
     assert len([e for e in entries if e.disabled_by is None]) == enabled
@@ -155,15 +164,30 @@ async def test_enabled_by_default_partition(
 async def test_settings_backed_sensor_created_and_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test a settings-polled component reaches the sensor platform."""
-    serial_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_serial_number"
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
     )
-    assert serial_id is not None
-    assert (state := hass.states.get(serial_id)) is not None
-    assert state.state == MOCK_SERIAL
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    rtc_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_HYBRID_SERIAL}_sync_rtc_result"
+    )
+    assert rtc_id is not None
+    assert (state := hass.states.get(rtc_id)) is not None
+    assert state.state == "successful"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -402,6 +426,7 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
     """Test a countdown ticking with the clock keeps one deadline."""
     mock_config_entry.add_to_hass(hass)
     unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 0  # Waiting
     unit.holding[0x0417] = 300
 
     with patch(
@@ -436,6 +461,34 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
     assert hass.states.get(entity_id).state != deadline
 
 
+async def test_countdown_ignores_a_stale_register_while_grid_connected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a positive register is ignored once the inverter is connected."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 2  # Grid connected
+    unit.holding[0x0417] = 60  # Left over from the last startup wait
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
 async def test_countdown_restarting_after_idle_gets_a_new_deadline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -446,6 +499,7 @@ async def test_countdown_restarting_after_idle_gets_a_new_deadline(
     """Test a finished countdown's deadline is not reused by the next one."""
     mock_config_entry.add_to_hass(hass)
     unit = mock_connection.for_unit(1)
+    unit.holding[0x0404] = 0  # Waiting
     unit.holding[0x0417] = 10
 
     with patch(

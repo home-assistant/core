@@ -13,6 +13,23 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+TEST_LLM_API_ID = "test-api"
+
+
+class MockLLMAPI(llm.API):
+    """Test LLM API that does not expose any tools."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return a test API instance."""
+        return llm.APIInstance(
+            api=self,
+            api_prompt="Test prompt",
+            llm_context=llm_context,
+            tools=[],
+        )
+
 
 @pytest.fixture(autouse=True)
 async def ensure_homeassistant_loaded(hass: HomeAssistant) -> None:

@@ -50,6 +50,12 @@
     "oauth2_helper_refresh_transient": {
       "message": "Temporary error refreshing credentials for {domain}, try again later"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth2_unknown_implementation": {
+      "message": "The configured authentication method is no longer available, re-authentication required"
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },

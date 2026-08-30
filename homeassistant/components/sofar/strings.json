@@ -32,6 +32,37 @@
     }
   },
   "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
     "sensor": {
       "active_power_load_sys": {
         "name": "Active power load system"
@@ -398,9 +429,6 @@
       },
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
-      },
-      "serial_number": {
-        "name": "Serial number"
       },
       "solar_generation_today": {
         "name": "Solar generation today"
