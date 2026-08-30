@@ -18,6 +18,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -60,8 +62,8 @@ PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
-        sensor.ATTR_LAST_RESET,
-        sensor.ATTR_STATE_CLASS,
+        SensorEntityStateAttribute.LAST_RESET,
+        SensorEntityCapabilityAttribute.STATE_CLASS,
     }
 )
 

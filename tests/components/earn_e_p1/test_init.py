@@ -2,13 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_SERIAL, trigger_callback
+from .conftest import DOMAIN, MOCK_MAC, MOCK_SERIAL, trigger_callback
 
 from tests.common import MockConfigEntry
 
@@ -68,9 +70,32 @@ async def test_device_info(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot
+
+
+@pytest.mark.parametrize("mock_config_entry", [{CONF_MAC: MOCK_MAC}], indirect=True)
+async def test_device_info_with_mac(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test MAC is added to device connections when stored in entry data."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
 
 
 async def test_device_registry_not_updated_on_identical_callback(
@@ -86,14 +111,18 @@ async def test_device_registry_not_updated_on_identical_callback(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     first_modified = device.modified_at
 
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.modified_at == first_modified
 
@@ -111,13 +140,17 @@ async def test_device_registry_updated_on_sw_version_change(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "1.0.0"
 
     trigger_callback(mock_listener, sw_version="2.0.0")
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2.0.0"

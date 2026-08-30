@@ -219,7 +219,7 @@ async def test_set_operation_bad_attr_and_state(
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
     assert (
         "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry',"
-        " 'fan_only' for dictionary value @ data['hvac_mode']" in str(excinfo.value)
+        " 'fan_only' at 'hvac_mode'" in str(excinfo.value)
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
@@ -485,9 +485,7 @@ async def test_set_fan_mode_bad_attr(
     assert state.attributes.get("fan_mode") == "low"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_fan_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert "string value is None for dictionary value @ data['fan_mode']" in str(
-        excinfo.value
-    )
+    assert "string value is None at 'fan_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("fan_mode") == "low"
 
@@ -582,19 +580,14 @@ async def test_set_swing_mode_bad_attr(
     assert state.attributes.get("swing_mode") == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_swing_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert "string value is None for dictionary value @ data['swing_mode']" in str(
-        excinfo.value
-    )
+    assert "string value is None at 'swing_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
 
     assert state.attributes.get("swing_horizontal_mode") == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_swing_horizontal_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert (
-        "string value is None for dictionary value @ data['swing_horizontal_mode']"
-        in str(excinfo.value)
-    )
+    assert "string value is None at 'swing_horizontal_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_horizontal_mode") == "off"
 

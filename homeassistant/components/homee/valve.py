@@ -29,13 +29,14 @@ VALVE_DESCRIPTIONS = {
 
 
 async def add_valve_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee valve entities."""
     async_add_entities(
-        HomeeValve(attribute, config_entry, VALVE_DESCRIPTIONS[attribute.type])
+        HomeeValve(hass, attribute, config_entry, VALVE_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if attribute.type in VALVE_DESCRIPTIONS
@@ -49,7 +50,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the valve component."""
 
-    await setup_homee_platform(add_valve_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_valve_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeValve(HomeeEntity, ValveEntity):
@@ -59,12 +62,13 @@ class HomeeValve(HomeeEntity, ValveEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: ValveEntityDescription,
     ) -> None:
         """Initialize a Homee valve entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         self._attr_translation_key = description.key
 

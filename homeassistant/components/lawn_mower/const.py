@@ -1,6 +1,7 @@
 """Constants for the lawn mower integration."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
 
 class LawnMowerActivity(StrEnum):
@@ -30,7 +31,7 @@ class LawnMowerEntityFeature(IntFlag):
     DOCK = 4
 
 
-DOMAIN = "lawn_mower"
+DOMAIN: Final = "lawn_mower"
 
 SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"

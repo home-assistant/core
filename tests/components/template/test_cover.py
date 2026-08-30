@@ -9,8 +9,10 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
+from homeassistant.components.template.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -35,6 +37,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1193,6 +1199,21 @@ async def test_flow_preview(
             CoverState.OPEN,
         ),
         (
+            # Missing Key
+            CoverState.OPEN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "current_cover_position": 0,
@@ -1271,3 +1292,144 @@ async def test_restore_state(
     assert state.state == final_state
     assert state.attributes["current_position"] == 75
     assert state.attributes["current_tilt_position"] == 75
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_COVER, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_COVER, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_COVER, style, {"state": "{{ 'open' }}", **COVER_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: CoverEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        0,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_COVER,
+        style,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: CoverEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        1,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_COVER.entity_id}: {attribute}"
+    assert error in caplog.text
