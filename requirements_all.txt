@@ -914,7 +914,7 @@ electrickiwi-api==0.9.14
 elevenlabs==2.51.0
 
 # homeassistant.components.elgato
-elgato==5.1.2
+elgato==6.0.0
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.15
