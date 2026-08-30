@@ -6,12 +6,17 @@ import json
 from typing import Any
 
 from aiomodernforms.const import COMMAND_QUERY_STATIC_DATA
+from yarl import URL
 
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    async_load_json_object_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
@@ -111,6 +116,55 @@ async def init_integration(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:DD:EE:FF"},
         unique_id="AA:BB:CC:DD:EE:FF",
+    )
+
+    entry.add_to_hass(hass)
+
+    if not skip_setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
+
+
+async def modern_forms_gen4_call_mock(
+    hass: HomeAssistant, method: str, url: URL, data: dict[str, Any]
+) -> AiohttpClientMockResponse:
+    """Route Gen4 /device and /fixture requests to their fixtures."""
+    fixture = (
+        "device_gen4.json" if url.path.endswith("/device") else "fixture_gen4.json"
+    )
+    return AiohttpClientMockResponse(
+        method=method,
+        url=url,
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
+    )
+
+
+async def init_integration_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    skip_setup: bool = False,
+    mock_type: Callable[
+        [HomeAssistant, str, URL, dict[str, Any]],
+        Coroutine[Any, Any, AiohttpClientMockResponse],
+    ] = modern_forms_gen4_call_mock,
+) -> MockConfigEntry:
+    """Set up the Modern Forms integration against a mock Gen4 device."""
+    aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=404)
+    aioclient_mock.post(
+        "http://192.168.1.123:80/device",
+        side_effect=partial(mock_type, hass),
+    )
+    aioclient_mock.post(
+        "http://192.168.1.123:80/fixture",
+        side_effect=partial(mock_type, hass),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:00:11:22"},
+        unique_id="AA:BB:CC:00:11:22",
     )
 
     entry.add_to_hass(hass)
