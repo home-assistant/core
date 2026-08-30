@@ -2851,7 +2851,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==1.1.1
+pytrafikverket==2.0.0
 
 # homeassistant.components.v2c
 pytrydan==1.0.5
