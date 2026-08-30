@@ -251,6 +251,37 @@ async def test_async_check_token_expiry_refreshes_without_reloading(
     mock_reload.assert_not_awaited()
 
 
+async def test_async_check_token_expiry_updates_the_bound_clients(
+    hass: HomeAssistant,
+) -> None:
+    """A successful refresh hands the new token to the live product/stomp clients.
+
+    Regression test: ProductClient and StompClient each capture their
+    access token once at construction and never re-read entry.data, so a
+    proactive refresh that only persisted the new token to storage (not
+    reloading the entry, by design - see the test above) left the
+    already-running clients on the stale token until a future reload
+    happened to reconstruct them.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"last_token_refresh": 0.0})
+    entry.add_to_hass(hass)
+    session = MagicMock()
+    session.token = {"expires_at": time.time() + 100}
+    session.implementation.async_refresh_token = AsyncMock(
+        return_value={"access_token": "new"}
+    )
+    refresher = AuthTokenRefresh(hass, entry, session)
+    product_client = MagicMock()
+    stomp_client = MagicMock()
+    refresher.bind_clients(product_client, stomp_client)
+
+    await refresher.async_check_token_expiry()
+    await hass.async_block_till_done()
+
+    product_client.update_access_token.assert_called_once_with("new")
+    stomp_client.update_access_token.assert_called_once_with("new")
+
+
 async def test_async_check_token_expiry_starts_reauth_on_invalid_refresh_token(
     hass: HomeAssistant,
 ) -> None:

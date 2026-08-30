@@ -5,7 +5,7 @@ import logging
 import time
 from typing import Any, override
 
-from pybluetti import ProductClient, UserProduct
+from pybluetti import ProductClient, StompClient, UserProduct
 
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -83,6 +83,12 @@ class AuthTokenRefresh:
         self.hass = hass
         self.entry = entry
         self.oAuth2Session = oauth_session
+        # Set via bind_clients() once product_client/stomp_client exist -
+        # both are constructed after this object (see __init__.py), since
+        # this object must be listening for an auth-expired signal before
+        # either client's first request, not after.
+        self._product_client: ProductClient | None = None
+        self._stomp_client: StompClient | None = None
         self._unsub_next_check: CALLBACK_TYPE | None = None
         unsub = async_dispatcher_connect(
             hass, token_expired_signal(entry.entry_id), self.on_token_expired_event
@@ -94,6 +100,18 @@ class AuthTokenRefresh:
         # time, which would otherwise grow unbounded over the entry's
         # lifetime.
         entry.async_on_unload(self._cancel_next_check)
+
+    def bind_clients(
+        self, product_client: ProductClient, stomp_client: StompClient
+    ) -> None:
+        """Attach the clients a successful proactive refresh should update.
+
+        Called once both exist (see __init__.py's setup order) - a refresh
+        landing before this runs simply has nothing to update yet, the same
+        as it would on any setup that hasn't reached this point.
+        """
+        self._product_client = product_client
+        self._stomp_client = stomp_client
 
     def on_token_expired_event(self) -> None:
         """Start reauth when the API reports the token has expired."""
@@ -181,8 +199,8 @@ class AuthTokenRefresh:
                     # listener - a proactive background refresh updating the
                     # stored token must not reload the entry (that would
                     # tear down every device's coordinator and the
-                    # websocket just to swap in a token the running
-                    # product_client/stomp_client don't even re-read).
+                    # websocket just to swap in a token update_access_token
+                    # below already hands the running clients directly).
                     self.hass.config_entries.async_update_entry(
                         self.entry,
                         data={
@@ -191,6 +209,11 @@ class AuthTokenRefresh:
                             "last_token_refresh": last_refresh,
                         },
                     )
+                    new_access_token = new_token["access_token"]
+                    if self._product_client is not None:
+                        self._product_client.update_access_token(new_access_token)
+                    if self._stomp_client is not None:
+                        self._stomp_client.update_access_token(new_access_token)
                     __LOGGER__.info("refresh token ok")
             except OAuth2TokenRequestReauthError:
                 # Non-recoverable: the refresh token itself is invalid or

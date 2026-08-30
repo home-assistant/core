@@ -5,7 +5,7 @@ import time
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybluetti import UserProduct
+from pybluetti import UnifyResponse, UserProduct
 
 from homeassistant.components.bluetti_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -57,6 +57,9 @@ async def test_async_setup_entry_with_no_devices(hass: HomeAssistant) -> None:
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response([])
@@ -112,6 +115,9 @@ async def test_async_setup_entry_recovers_missing_default_credential(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response([])
@@ -163,6 +169,61 @@ async def test_async_setup_entry_classifies_reauth_error_as_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_auth_expired_during_initial_product_fetch_starts_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """An auth-expired signal fired during the very first product fetch still starts reauth.
+
+    Regression test: AuthTokenRefresh (which registers the dispatcher
+    listener for the auth-expired signal) used to be constructed only
+    after get_user_products() had already succeeded - an auth-expired
+    callback fired during that very first call had no listener yet and
+    was silently dropped, leaving the entry stuck retrying via
+    ConfigEntryNotReady instead of starting reauth.
+    """
+    entry = _entry(hass)
+
+    with (
+        patch(
+            "homeassistant.components.bluetti_cloud.async_get_clientsession",
+            MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch(
+            "homeassistant.components.bluetti_cloud.ProductClient"
+        ) as mock_product_cls,
+        patch.object(entry, "async_start_reauth_if_available") as mock_start_reauth,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+
+        async def fail_with_auth_expired(*args, **kwargs):
+            # Mirrors what pybluetti's real Bluetti._request() does on a
+            # msgCode 805 response: invoke on_auth_expired, then surface
+            # the failure to the caller - get_user_products() itself
+            # doesn't raise on a rejected envelope, it returns is_ok()=False.
+            mock_product_cls.call_args.kwargs["on_auth_expired"]()
+            return SimpleNamespace(data=None, is_ok=lambda: False)
+
+        mock_product_cls.return_value.get_user_products = AsyncMock(
+            side_effect=fail_with_auth_expired
+        )
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_start_reauth.assert_called_once_with(hass)
+
+
 async def test_setup_fetches_products_fresh_not_from_a_stored_cache(
     hass: HomeAssistant,
 ) -> None:
@@ -192,11 +253,17 @@ async def test_setup_fetches_products_fresh_not_from_a_stored_cache(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
                 [UserProduct(sn="SN1", name="Device", stateList=[], online="1")]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -208,6 +275,145 @@ async def test_setup_fetches_products_fresh_not_from_a_stored_cache(
     mock_product_cls.return_value.get_user_products.assert_awaited_once()
     assert entry.data["device_sns"] == ["SN1"]
     assert [d.device_id for d in entry.runtime_data.bluetti_devices.devices] == ["SN1"]
+
+
+async def test_reconciliation_binds_only_a_newly_seen_device(
+    hass: HomeAssistant,
+) -> None:
+    """A device added on the cloud side since the last setup gets bound.
+
+    Regression test: setup used to persist the refreshed device_sns
+    fingerprint without ever calling bind_devices() for a serial that
+    wasn't there last time, so a device added after the entry's initial
+    setup could be polled over REST but never receive WebSocket push
+    updates (never bound). Only the newly-seen serial is bound, not the
+    one already known.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "tok", "expires_at": time.time() + 10000},
+            "device_sns": ["SN1"],
+        },
+    )
+    entry.add_to_hass(hass)
+    status_data = {
+        "SN1": MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[]),
+        "SN2": MagicMock(sn="SN2", isBindByCurUser="1", online="1", stateList=[]),
+    }
+
+    async def fake_get_device_status(sn):
+        return MagicMock(data=[status_data[sn]])
+
+    with (
+        patch(
+            "homeassistant.components.bluetti_cloud.async_get_clientsession",
+            MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti_cloud.StompClient") as mock_stomp_cls,
+        patch(
+            "homeassistant.components.bluetti_cloud.ProductClient"
+        ) as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_product_cls.return_value.get_user_products = AsyncMock(
+            return_value=_products_response(
+                [
+                    UserProduct(sn="SN1", name="Device 1", stateList=[], online="1"),
+                    UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
+                ]
+            )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
+        )
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            side_effect=fake_get_device_status
+        )
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_product_cls.return_value.bind_devices.assert_awaited_once_with(
+        {"bindSnList": ["SN2"]}
+    )
+    assert entry.data["device_sns"] == ["SN1", "SN2"]
+
+
+async def test_reconciliation_bind_failure_is_logged_not_fatal(
+    hass: HomeAssistant,
+) -> None:
+    """A newly-seen device that fails to bind must not fail the whole setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "tok", "expires_at": time.time() + 10000},
+            "device_sns": [],
+        },
+    )
+    entry.add_to_hass(hass)
+    status_data = MagicMock(sn="SN1", isBindByCurUser="1", online="1", stateList=[])
+
+    with (
+        patch(
+            "homeassistant.components.bluetti_cloud.async_get_clientsession",
+            MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            AsyncMock(return_value=MagicMock()),
+        ),
+        patch(
+            "homeassistant.components.bluetti_cloud.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_session_cls,
+        patch("homeassistant.components.bluetti_cloud.StompClient") as mock_stomp_cls,
+        patch(
+            "homeassistant.components.bluetti_cloud.ProductClient"
+        ) as mock_product_cls,
+    ):
+        mock_session_cls.return_value.token = {
+            "access_token": "tok",
+            "expires_at": time.time() + 10000,
+        }
+        mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
+        mock_stomp_cls.return_value.connect = AsyncMock()
+        mock_product_cls.return_value.get_user_products = AsyncMock(
+            return_value=_products_response(
+                [UserProduct(sn="SN1", name="Device", stateList=[], online="1")]
+            )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=1)
+        )
+        mock_product_cls.return_value.get_device_status = AsyncMock(
+            return_value=MagicMock(data=[status_data])
+        )
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_product_cls.return_value.bind_devices.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_get_user_products_failure_retries_setup(hass: HomeAssistant) -> None:
@@ -235,6 +441,9 @@ async def test_get_user_products_failure_retries_setup(hass: HomeAssistant) -> N
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_product_cls.return_value.get_user_products = AsyncMock(
             side_effect=RuntimeError("boom")
         )
@@ -277,6 +486,9 @@ async def test_get_user_products_rejected_envelope_retries_setup(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=SimpleNamespace(data=None, is_ok=lambda: False)
         )
@@ -331,12 +543,18 @@ async def test_setup_succeeds_and_rest_coordinator_runs_when_websocket_unavailab
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock(side_effect=_never_connects)
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
                 [UserProduct(sn="SN1", name="Device", stateList=[], online="1")]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -380,11 +598,17 @@ async def test_async_setup_entry_with_a_device(hass: HomeAssistant) -> None:
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
                 [UserProduct(sn="SN1", name="Device", stateList=[], online="1")]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             return_value=MagicMock(data=[status_data])
@@ -438,6 +662,9 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
@@ -446,6 +673,9 @@ async def test_async_setup_entry_with_multiple_devices_refreshes_concurrently(
                     UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
                 ]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status
@@ -504,6 +734,9 @@ async def test_one_device_failing_first_refresh_does_not_block_the_others(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
@@ -512,6 +745,9 @@ async def test_one_device_failing_first_refresh_does_not_block_the_others(
                     UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
                 ]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status
@@ -571,6 +807,9 @@ async def test_shared_auth_failure_during_first_refresh_fails_the_whole_entry(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
@@ -580,6 +819,9 @@ async def test_shared_auth_failure_during_first_refresh_fails_the_whole_entry(
                     UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
                 ]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status
@@ -640,6 +882,9 @@ async def test_device_unbound_during_first_refresh_is_not_set_up(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
@@ -648,6 +893,9 @@ async def test_device_unbound_during_first_refresh_is_not_set_up(
                     UserProduct(sn="SN2", name="Device 2", stateList=[], online="1"),
                 ]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status
@@ -710,6 +958,9 @@ async def test_unloading_the_entry_disconnects_the_websocket(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
@@ -766,12 +1017,18 @@ async def test_a_failed_setup_still_disconnects_the_websocket(
             "expires_at": time.time() + 10000,
         }
         mock_session_cls.return_value.async_ensure_token_valid = AsyncMock()
+        mock_session_cls.return_value.implementation.async_refresh_token = AsyncMock(
+            return_value={"access_token": "tok", "expires_at": time.time() + 10000}
+        )
         mock_stomp_cls.return_value.connect = AsyncMock()
         mock_stomp_cls.return_value.disconnect = AsyncMock()
         mock_product_cls.return_value.get_user_products = AsyncMock(
             return_value=_products_response(
                 [UserProduct(sn="SN1", name="Device", stateList=[], online="1")]
             )
+        )
+        mock_product_cls.return_value.bind_devices = AsyncMock(
+            return_value=UnifyResponse(msgId="1", msgCode=0)
         )
         mock_product_cls.return_value.get_device_status = AsyncMock(
             side_effect=fake_get_device_status

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pybluetti import ProductClient, StompClient
+from pybluetti import ProductClient, StompClient, UnifyResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -67,6 +67,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
             hass, entry, implementation
         )
 
+        # Constructed as soon as oauth_session exists, before the first
+        # request that could report the token as expired (get_user_products
+        # below): AuthTokenRefresh's __init__ is what registers the
+        # dispatcher listener for `signal`, so an auth-expired callback
+        # firing any earlier than this would be lost - reauth would never
+        # start, and setup would just keep retrying via ConfigEntryNotReady.
+        auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
+
         # pybluetti's clients take a fixed access token at construction, not
         # a live session, so it must be fresh before extracting it below.
         await oauth_session.async_ensure_token_valid()
@@ -99,18 +107,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
             translation_placeholders={"error": str(err)},
         ) from err
 
-    auth_token_refresh = AuthTokenRefresh(hass, entry, oauth_session)
     all_products = products.data or []
     bluetti_devices = BluettiData(hass, all_products)
 
     # Refreshed on every setup, purely as a fingerprint for the reauth
     # "is this still the same account" safety check in config_flow.py - not
     # a selection list, every product above is always bound and added.
+    stored_device_sns = entry.data.get("device_sns")
     device_sns = [p.sn for p in all_products]
-    if entry.data.get("device_sns") != device_sns:
+    newly_seen_sns = [sn for sn in device_sns if sn not in (stored_device_sns or [])]
+    if newly_seen_sns:
+        # A device added on the cloud side since the last setup (or never
+        # bound at all, e.g. right after account creation) must be bound
+        # before it's polled, the same as the initial/reconfigure flows
+        # already do - otherwise it can be read here but never receive
+        # WebSocket push updates.
+        bind_result = await product_client.bind_devices({"bindSnList": newly_seen_sns})
+        if not (isinstance(bind_result, UnifyResponse) and bind_result.msgCode == 0):
+            __LOGGER__.warning(
+                "Failed to bind newly-seen device(s) %s: %s",
+                newly_seen_sns,
+                bind_result,
+            )
+    if stored_device_sns != device_sns:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "device_sns": device_sns}
         )
+
+    # Every device is wired up (bind_runtime + coordinator) before the
+    # websocket connects below - a message can only arrive once connect()'s
+    # background task actually establishes a connection, but binding this
+    # first closes the window entirely rather than relying on that being
+    # slow enough: web_socket_message_handler looks up device.coordinator,
+    # which does not exist until this loop runs.
+    coordinators: dict[str, BluettiDeviceCoordinator] = {}
+    for device in bluetti_devices.devices:
+        device.bind_runtime(product_client, hass, entry)
+        coordinators[device.device_id] = BluettiDeviceCoordinator(hass, entry, device)
 
     # Register WebSocket
     stomp_client = StompClient(
@@ -120,6 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
         bluetti_devices.web_socket_message_handler,
         on_auth_expired=lambda: async_dispatcher_send(hass, signal),
     )
+    # So a proactive token refresh can hand its new token to both already-
+    # constructed clients directly, instead of leaving them on the token
+    # they were built with until a reload recreates them.
+    auth_token_refresh.bind_clients(product_client, stomp_client)
+
     # Registered before connect() starts, so a setup retry still disconnects it.
     entry.async_on_unload(stomp_client.disconnect)
     # connect() retries forever internally instead of raising (see
@@ -127,11 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
     entry.async_create_background_task(
         hass, stomp_client.connect(), f"{DOMAIN}_websocket_connect_{entry.entry_id}"
     )
-
-    coordinators: dict[str, BluettiDeviceCoordinator] = {}
-    for device in bluetti_devices.devices:
-        device.bind_runtime(product_client, hass, entry)
-        coordinators[device.device_id] = BluettiDeviceCoordinator(hass, entry, device)
 
     # Assigned before the first refresh below, not after: a device already
     # unbound in the cloud triggers _handle_unbind() during that refresh,
@@ -190,9 +223,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: BluettiConfigEntry) -> bool:
     """Unload a config entry."""
-    # No explicit cleanup here: the websocket disconnects via the
-    # async_on_unload callback registered in async_setup_entry, and each
-    # coordinator's async_shutdown is registered via config_entry=entry.
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 

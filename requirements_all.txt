@@ -2102,7 +2102,7 @@ pyblackbird==0.6
 pyblu==2.0.8
 
 # homeassistant.components.bluetti_cloud
-pybluetti==0.1.1
+pybluetti==0.1.2
 
 # homeassistant.components.neato
 pybotvac==0.0.29
