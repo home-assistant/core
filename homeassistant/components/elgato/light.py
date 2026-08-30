@@ -15,7 +15,7 @@ from homeassistant.util import color as color_util
 
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import color_temperature_range, elgato_exception_handler, supports_color
+from .helpers import color_temperature_range, elgato_device_action, supports_color
 
 PARALLEL_UPDATES = 1
 
@@ -87,14 +87,13 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         """Return the state of the light."""
         return self.coordinator.data.state.on
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.client.light(on=False)
-        await self.coordinator.async_refresh()
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -135,9 +134,8 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             saturation=saturation,
             temperature=temperature,
         )
-        await self.coordinator.async_refresh()
 
-    @elgato_exception_handler
+    @elgato_device_action
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         await self.coordinator.client.identify()
