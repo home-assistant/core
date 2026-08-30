@@ -6,7 +6,15 @@ from functools import partial
 import logging
 from typing import Any, override
 
-from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, User, WSError
+from pylast import (
+    LastFMNetwork,
+    MalformedResponseError,
+    NetworkError,
+    PyLastError,
+    SessionKeyGenerator,
+    User,
+    WSError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -34,6 +42,8 @@ from .const import (
     DOMAIN,
     ERROR_CODE_LOGIN_REQUIRED,
     ERROR_CODE_TOKEN_UNAUTHORIZED,
+    ERROR_CODES_INVALID_AUTH,
+    ERROR_CODES_RETRYABLE,
     MAX_POLLING_ATTEMPTS,
     POLLING_INTERVAL,
 )
@@ -138,7 +148,11 @@ def get_session_key(
         return session_key_generator.get_web_auth_session_key_username(auth_url)
     except PyLastError as error:
         ws_error = get_lastfm_error(error)
-        if ws_error is not None and ws_error.status == ERROR_CODE_TOKEN_UNAUTHORIZED:
+        if (
+            ws_error is not None
+            and str(ws_error.status)
+            in {ERROR_CODE_TOKEN_UNAUTHORIZED, *ERROR_CODES_RETRYABLE}
+        ) or isinstance(error, (MalformedResponseError, NetworkError)):
             return None
         raise
 
@@ -202,12 +216,31 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_API_KEY],
                 self.data[CONF_API_SECRET],
             )
-        except WSError:
-            return "invalid_auth"
+        except MalformedResponseError, NetworkError:
+            return "cannot_connect"
+        except WSError as error:
+            status = str(error.status)
+            if status in ERROR_CODES_RETRYABLE:
+                return "cannot_connect"
+            if status in ERROR_CODES_INVALID_AUTH:
+                return "invalid_auth"
+            return "unknown"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
         return None
+
+    async def _async_start_reauth(self) -> ConfigFlowResult:
+        """Start reauthentication or show a retryable connection error."""
+        if (error := await self._async_start_web_auth()) == "cannot_connect":
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+                errors={"base": error},
+            )
+        if error is not None:
+            return self.async_abort(reason="auth_failed")
+        return await self.async_step_auth_url()
 
     @override
     async def async_step_user(
@@ -251,9 +284,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_API_SECRET: options[CONF_API_SECRET],
             CONF_MAIN_USER: options[CONF_MAIN_USER],
         }
-        if await self._async_start_web_auth() is not None:
-            return self.async_abort(reason="auth_failed")
-        return await self.async_step_auth_url()
+        return await self._async_start_reauth()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry starting Last.fm reauthentication."""
+        return await self._async_start_reauth()
 
     async def async_step_auth_url(
         self, user_input: dict[str, Any] | None = None
@@ -261,8 +298,10 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Wait for the user to authorize the application on Last.fm."""
         if not self._session_key_error and CONF_SESSION_KEY not in self.data:
             if self._polling_task is None:
-                self._polling_task = self.hass.async_create_task(
-                    self._async_poll_for_session_key()
+                self._polling_task = self.hass.async_create_background_task(
+                    self._async_poll_for_session_key(),
+                    "Polling Last.fm authorization",
+                    eager_start=False,
                 )
             else:
                 # The user continued manually before authorization was detected
@@ -329,12 +368,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await asyncio.sleep(POLLING_INTERVAL)
                 session = await self._async_get_session_key()
                 if self._session_key_error:
+                    self._polling_task = None
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_configure(self.flow_id)
                     )
                     return
                 if session is not None:
                     self._set_session(session)
+                    self._polling_task = None
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_configure(self.flow_id)
                     )

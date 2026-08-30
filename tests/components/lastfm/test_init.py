@@ -18,7 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, API_SECRET, SESSION_KEY, MockSessionKeyGenerator, MockUser
+from . import (
+    API_KEY,
+    API_SECRET,
+    SESSION_KEY,
+    MockSessionKeyGenerator,
+    MockUser,
+    get_session_key_polling_task,
+)
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -132,12 +139,13 @@ async def test_invalid_session_key_starts_reauth(
                 )
             ),
         ),
-        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 0),
-        patch("homeassistant.components.lastfm.config_flow.MAX_POLLING_ATTEMPTS", 1),
+        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
+        polling_task = get_session_key_polling_task()
         await hass.async_block_till_done()
 
+    assert not polling_task.done()
     assert authenticated_config_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
@@ -145,3 +153,5 @@ async def test_invalid_session_key_starts_reauth(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
     hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+    await hass.async_block_till_done()
+    assert polling_task.cancelled()

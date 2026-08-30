@@ -1,5 +1,6 @@
 """The tests for lastfm."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -171,3 +172,13 @@ def patch_user(user: MockUser) -> MockUser:
 def patch_setup_entry() -> bool:
     """Patch interface."""
     return patch("homeassistant.components.lastfm.async_setup_entry", return_value=True)
+
+
+def get_session_key_polling_task() -> asyncio.Task[None]:
+    """Return the active session key polling task."""
+    return next(
+        task
+        for task in asyncio.all_tasks()
+        if task.get_coro().__qualname__
+        == "LastFmConfigFlowHandler._async_poll_for_session_key"
+    )

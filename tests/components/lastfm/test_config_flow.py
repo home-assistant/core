@@ -1,9 +1,8 @@
 """Test Lastfm config flow."""
 
-import asyncio
 from unittest.mock import MagicMock, call, patch
 
-from pylast import WSError
+from pylast import MalformedResponseError, NetworkError, WSError
 import pytest
 
 from homeassistant.components.lastfm.const import (
@@ -35,6 +34,7 @@ from . import (
     USERNAME_2,
     MockSessionKeyGenerator,
     MockUser,
+    get_session_key_polling_task,
     patch_setup_entry,
 )
 from .conftest import ComponentSetup
@@ -103,6 +103,7 @@ async def test_full_user_flow_with_session_key(
         assert result["step_id"] == "auth_url"
         assert result["url"] == AUTH_URL
 
+        await get_session_key_polling_task()
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -166,11 +167,13 @@ async def test_flow_restarts_polling_after_timeout(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await get_session_key_polling_task()
         await hass.async_block_till_done()
 
         session_key_generator.session_key_error = None
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await get_session_key_polling_task()
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -202,6 +205,7 @@ async def test_flow_session_key_error(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await get_session_key_polling_task()
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -311,6 +315,36 @@ async def test_reauth_flow_start_error(
     assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
 
 
+async def test_reauth_flow_start_retry(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying a transient web authentication start failure."""
+    session_key_generator = MockSessionKeyGenerator(
+        web_auth_url_error=WSError("network", "16", "Service unavailable")
+    )
+    authenticated_config_entry.add_to_hass(hass)
+    with (
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        session_key_generator.web_auth_url_error = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    polling_task = get_session_key_polling_task()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+    assert polling_task.cancelled()
+
+
 async def test_flow_abort_cancels_session_key_polling(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
@@ -324,12 +358,7 @@ async def test_flow_abort_cancels_session_key_polling(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = next(
-            task
-            for task in asyncio.all_tasks()
-            if task.get_coro().__qualname__
-            == "LastFmConfigFlowHandler._async_poll_for_session_key"
-        )
+        polling_task = get_session_key_polling_task()
 
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
@@ -344,11 +373,14 @@ async def test_flow_abort_cancels_session_key_polling(
         (
             WSError(
                 "network",
-                "status",
+                "10",
                 "Invalid API key - You must be granted a valid key by last.fm",
             ),
             "invalid_auth",
         ),
+        (WSError("network", "16", "Service unavailable"), "cannot_connect"),
+        (NetworkError("network", Exception()), "cannot_connect"),
+        (WSError("network", "2", "Invalid service"), "unknown"),
         (Exception(), "unknown"),
     ],
 )
@@ -400,14 +432,35 @@ async def test_flow_web_auth_fails(
         assert result["title"] == DEFAULT_NAME
 
 
+@pytest.mark.parametrize(
+    "session_key_error",
+    [
+        pytest.param(
+            WSError("network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized Token"),
+            id="pending_authorization",
+        ),
+        pytest.param(
+            WSError("network", "16", "Service unavailable"),
+            id="temporarily_unavailable",
+        ),
+        pytest.param(
+            NetworkError("network", Exception()),
+            id="network_error",
+        ),
+        pytest.param(
+            MalformedResponseError("network", Exception()),
+            id="malformed_response",
+        ),
+    ],
+)
 async def test_flow_waits_for_authorization(
-    hass: HomeAssistant, default_user: MockUser
+    hass: HomeAssistant,
+    default_user: MockUser,
+    session_key_error: Exception,
 ) -> None:
     """Test the flow waits until the Last.fm authorization is granted."""
     mock_session_key_generator = MockSessionKeyGenerator(
-        session_key_error=WSError(
-            "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized Token"
-        )
+        session_key_error=session_key_error
     )
     with (
         patch("pylast.User", return_value=default_user),
