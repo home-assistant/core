@@ -7,8 +7,11 @@ the ``solaredged`` library.
 """
 
 from collections.abc import Set as AbstractSet
+from datetime import datetime
+from functools import partial
 from typing import TYPE_CHECKING
 
+from modbus_connection import ModbusUnit
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
 
 from homeassistant.components.modbus import async_get_unit
@@ -20,8 +23,10 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTACHMENT_SCAN_INTERVAL,
     CONF_UNIT_ID,
     DOMAIN,
     LOGGER,
@@ -157,7 +162,63 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # What is wired to the inverter is read while setting up, so a meter or
+    # battery added or removed later needs the entry to load again to be seen.
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            partial(_async_reload_when_attachments_change, hass, entry, unit),
+            ATTACHMENT_SCAN_INTERVAL,
+        )
+    )
+
     return True
+
+
+async def _async_reload_when_attachments_change(
+    hass: HomeAssistant,
+    entry: SolarEdgeModbusConfigEntry,
+    unit: ModbusUnit,
+    _now: datetime,
+) -> None:
+    """Reload the entry when the hardware wired to the inverter changed.
+
+    Probing again is what tells a meter or battery apart from one that was
+    never there, and the entry is built around what that probe found, so the
+    honest way to pick up a change is to load it again. This is rare hardware
+    work, usually done with the power off, which is why looking now and then
+    and reloading is enough.
+    """
+    try:
+        probed = await SolarEdge.async_probe(unit)
+    except SolarEdgeError as err:
+        # Nothing to conclude from a probe that did not finish; the coordinators
+        # report an inverter that stopped answering.
+        LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
+        return
+
+    solaredge = entry.runtime_data.solaredge
+    for name, found, known in (
+        (SUBSYSTEM_METERS, len(probed.meters), len(solaredge.meters)),
+        (SUBSYSTEM_BATTERIES, len(probed.batteries), len(solaredge.batteries)),
+    ):
+        if found == known:
+            continue
+        # A block that stayed silent is taken for absent, which is not the same
+        # as the inverter saying it is gone, and reloading on that would drop a
+        # device over one timeout.
+        if found < known and name in probed.unresponsive_blocks:
+            continue
+
+        LOGGER.info(
+            "%s: %s went from %s to %s, reloading to pick that up",
+            entry.title,
+            name,
+            known,
+            found,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
 
 def _async_remove_stale_devices(

@@ -19,6 +19,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.solaredge_modbus.const import (
+    ATTACHMENT_SCAN_INTERVAL,
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
@@ -618,6 +619,147 @@ async def test_concurrent_control_writes_keep_both_changes(
     state = hass.states.get(EXTERNAL_PRODUCTION_ENTITY)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def _tick_attachment_check(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Let the check for changed hardware run, and any reload it starts."""
+    freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_meter_added_later_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter wired to a running installation appears without being asked.
+
+    What is attached is read while the entry is set up, so the entry loads
+    again once a probe finds something that was not there before.
+    """
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, IllegalDataAddressError())
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    # The meter is wired in and answers from now on.
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, None)
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_battery_removed_later_is_dropped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery taken out of a running installation stops being a device."""
+    await _setup(hass, mock_config_entry)
+
+    battery = (DOMAIN, f"{SERIAL_NUMBER}_battery_{BATTERY_SERIAL_NUMBERS[0]}")
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            battery, mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_silent_attachment_does_not_trigger_a_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter that did not answer the probe is not a meter that was removed.
+
+    Silence is taken for absence while probing, so reloading on it would drop a
+    device, and its history, over a single timeout.
+    """
+    await _setup(hass, mock_config_entry)
+
+    meter = (DOMAIN, f"{SERIAL_NUMBER}_meter_{METER_SERIAL_NUMBER}")
+    mock_modbus_unit.fail_read(METER_MODEL_REGISTER, ModbusTimeoutError("timed out"))
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            meter, mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_unchanged_attachments_leave_the_entry_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Nothing changed means nothing happens, however often it is checked."""
+    await _setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.readings
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # A reload would have built new coordinators.
+    assert mock_config_entry.runtime_data.readings is coordinator
+
+
+async def test_a_dead_probe_leaves_the_entry_where_it_is(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An inverter that stops answering says nothing about what is wired to it.
+
+    The coordinators already report an inverter gone quiet; reloading on top of
+    that would only take the entry down with it.
+    """
+    await _setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.readings
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.readings is coordinator
 
 
 async def test_setup_retry_when_device_unresponsive(
