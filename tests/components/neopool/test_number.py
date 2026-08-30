@@ -521,6 +521,8 @@ async def test_no_write_when_settled_value_unchanged(
 
     Stepping away and back to the device's value must not burn an EEPROM cycle:
     the settled raw value equals the coordinator's, so the write is skipped.
+    An off-step request that rounds to the same register must also drop the
+    optimistic state back to the device reading instead of lingering.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
@@ -535,6 +537,16 @@ async def test_no_write_when_settled_value_unchanged(
 
     await _set_value(hass, ph1_entity_id, 8.0)
     await _set_value(hass, ph1_entity_id, 7.5)
+    await _flush(hass, freezer)
+
+    mock_neopool_client.async_set_setpoint.assert_not_awaited()
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 7.5
+
+    # Off-step request rounding to the same register: no write, and the UI must
+    # snap back from the optimistic 7.504 to the device value.
+    await _set_value(hass, ph1_entity_id, 7.504)
     await _flush(hass, freezer)
 
     mock_neopool_client.async_set_setpoint.assert_not_awaited()

@@ -348,6 +348,8 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         if (current := self._decode_raw()) is not None and (
             round(current * desc.scale) == raw
         ):
+            # Drop the optimistic value back to the register reading.
+            self.async_write_ha_state()
             return
         try:
             if desc.setpoint is not None:
