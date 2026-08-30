@@ -22,17 +22,13 @@ async def test_user_flow_creates_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "wait_for_device"
 
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"]
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Haus-Bus"
     assert result["data"] == {}
@@ -65,9 +61,7 @@ async def test_user_flow_search_timeout_then_retry(
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"]
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "search_timeout"
@@ -84,9 +78,7 @@ async def test_user_flow_search_timeout_then_retry(
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"]
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -114,9 +106,7 @@ async def test_user_flow_os_error_shows_search_timeout(
 
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"]
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"

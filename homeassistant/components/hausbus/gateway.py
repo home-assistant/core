@@ -1,6 +1,7 @@
 """Representation of a Haus-Bus gateway."""
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING
 from weakref import WeakKeyDictionary
@@ -58,17 +59,12 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
         try:
             home_server = await asyncio.shield(home_server_job)
         except asyncio.CancelledError:
-          try:
-            await home_server_job
-          except Exception:
-            pass
+            with contextlib.suppress(Exception):
+                await home_server_job
 
-          _release_cancelled_home_server(
-            hass,
-            home_server_job,
-          )
-          raise
-       
+            _release_cancelled_home_server(hass, home_server_job)
+            raise
+
         _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
         return home_server
 

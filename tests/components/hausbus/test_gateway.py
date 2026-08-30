@@ -1,6 +1,8 @@
 """Test the Haus-Bus gateway."""
 
-from unittest.mock import MagicMock
+import asyncio
+import threading
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -218,3 +220,58 @@ async def test_release_home_server_survives_shutdown_runtime_error(
     await async_release_home_server(hass, home_server)
 
     mock_home_server.shutdown.assert_called_once()
+
+
+async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
+    hass: HomeAssistant,
+) -> None:
+    """A HomeServer must be shut down even if constructed after cancellation.
+
+    A HomeServer that finishes constructing after its acquirer was
+    cancelled must still be shut down, instead of leaking its socket and
+    worker threads, as long as nothing else has since acquired it.
+    Regression test for the recovery path in async_acquire_home_server()'s
+    except asyncio.CancelledError branch and
+    _async_shutdown_unreferenced_home_server().
+    """
+    construction_started = threading.Event()
+    release_construction = threading.Event()
+    home_server = MagicMock()
+
+    def _slow_construct() -> MagicMock:
+        construction_started.set()
+        assert release_construction.wait(timeout=5), "test did not release in time"
+        return home_server
+
+    # `new=` rather than `side_effect=`: hass's test-mode
+    # async_add_executor_job() special-cases a Mock target and runs it
+    # inline instead of on a worker thread, which would make it impossible
+    # to ever observe (or cancel into) an in-flight construction. Patching
+    # in a plain function instead makes it take the real executor path.
+    with patch(
+        "homeassistant.components.hausbus.gateway.HomeServer",
+        new=_slow_construct,
+    ):
+        acquire_task = hass.async_create_task(async_acquire_home_server(hass))
+
+        # Wait until the executor-backed constructor call has actually
+        # started, so cancelling below lands while it is still running -
+        # not before hass.async_add_executor_job() has even scheduled it.
+        await hass.async_add_executor_job(construction_started.wait, 5)
+
+        # async_acquire_home_server()'s except-CancelledError branch itself
+        # awaits home_server_job (to know whether it needs cleaning up)
+        # before re-raising, so it will not actually finish until the
+        # executor job does - release it right after cancelling, not after
+        # awaiting the task below.
+        acquire_task.cancel()
+        release_construction.set()
+
+        with pytest.raises(asyncio.CancelledError):
+            await acquire_task
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Nothing else ever acquired a reference to it, so the HomeServer that
+    # finished constructing after cancellation must not be left running.
+    home_server.shutdown.assert_called_once()

@@ -105,7 +105,9 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_wait_for_device()
 
-        return self.async_show_form(step_id="search_timeout")
+        return self.async_show_form(
+            step_id="search_timeout", errors={"base": "cannot_connect"}
+        )
 
     async def async_step_search_complete(
         self, user_input: dict[str, Any] | None = None
