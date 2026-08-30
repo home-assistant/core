@@ -80,10 +80,9 @@ rules:
   async-dependency:
     status: todo
     comment: >-
-      The command path is native aiohttp, but Firestore reads and the
-      real-time listener run the synchronous google-cloud-firestore client
-      in a thread. AsyncDocumentReference.on_snapshot raises
-      NotImplementedError upstream, so the push subscription cannot be
-      native async today.
+      Commands and Firestore reads are native async, but the real-time
+      listener runs the synchronous google-cloud-firestore client in a
+      thread: AsyncDocumentReference.on_snapshot raises NotImplementedError
+      upstream, so the push subscription cannot be native async today.
   inject-websession: done
   strict-typing: done
