@@ -176,7 +176,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         # A device that never comes back on the new firmware would otherwise
         # leave this saying it is installing for good.
         self._installing_timeout = async_call_later(
-            self.hass, REBOOT_TIMEOUT, self._installing_finished
+            self.hass, REBOOT_TIMEOUT, self._installing_timed_out
         )
 
     async def _download(self) -> FirmwareImage:
@@ -218,13 +218,24 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         super()._handle_coordinator_update()
 
     @callback
-    def _installing_finished(self, _now: datetime | None = None) -> None:
+    def _installing_finished(self) -> None:
         """Stop reporting an install, however it ended."""
         self._installing_build = None
         self._attr_update_percentage = None
         if self._installing_timeout is not None:
             self._installing_timeout()
             self._installing_timeout = None
+
+    @callback
+    def _installing_timed_out(self, _now: datetime) -> None:
+        """Give up on a device that never came back.
+
+        This entity changed its own mind, so it publishes that itself rather
+        than waiting for a coordinator update to come along and do it.
+        """
+        self._installing_timeout = None
+        self._installing_finished()
+        self.async_write_ha_state()
 
     @callback
     def _handle_progress(self, sent: int, total: int) -> None:

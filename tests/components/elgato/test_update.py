@@ -216,6 +216,61 @@ async def test_install_that_never_comes_back(
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
+async def test_install_on_a_device_that_stays_away(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device that takes the firmware and never answers again.
+
+    It does not sit there claiming to install. An entity whose device is
+    gone is unavailable, and that is what it says.
+    """
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_elgato.state.side_effect = ElgatoConnectionError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_a_second_install_is_turned_away(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test two installs at once do not both reach the device."""
+
+    async def slow(image: FirmwareImage, **kwargs: Any) -> None:
+        """Take long enough for the second call to arrive."""
+        await asyncio.sleep(0)
+
+    mock_elgato.update_firmware.side_effect = slow
+
+    results = await asyncio.gather(
+        *[
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: ENTITY_ID},
+                blocking=True,
+            )
+            for _ in range(2)
+        ],
+        return_exceptions=True,
+    )
+
+    assert sum(isinstance(result, HomeAssistantError) for result in results) == 1
+    assert mock_elgato.update_firmware.call_count == 1
+
+
 async def test_install_error(
     hass: HomeAssistant,
     mock_elgato: MagicMock,
