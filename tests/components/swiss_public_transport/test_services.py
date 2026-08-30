@@ -67,8 +67,8 @@ async def test_service_call_fetch_connections_success(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = await async_load_json_array_fixture(
-            hass, "connections.json", DOMAIN
+        mock().connections = (
+            await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
         )[0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2]
 
         await setup_integration(hass, config_entry)

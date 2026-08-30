@@ -92,8 +92,8 @@ async def test_fetching_data(
     assert hass.states.get("sensor.zurich_bern_line").state == "T10"
 
     # Set new data and verify it
-    mock_opendata_client.connections = await async_load_json_array_fixture(
-        hass, "connections.json", DOMAIN
+    mock_opendata_client.connections = (
+        await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
     )[3:6]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)
@@ -112,8 +112,8 @@ async def test_fetching_data(
 
     # Recover and fetch new data again
     mock_opendata_client.async_get_data.side_effect = None
-    mock_opendata_client.connections = await async_load_json_array_fixture(
-        hass, "connections.json", DOMAIN
+    mock_opendata_client.connections = (
+        await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
     )[6:9]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)
