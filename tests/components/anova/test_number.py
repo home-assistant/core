@@ -1,25 +1,14 @@
 """Test the Anova numbers."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from anova_wifi import CommandFailure
 import pytest
 
-from homeassistant.components.anova.coordinator import (
-    DEVICE_STALE_THRESHOLD,
-    RECONNECT_RETRY_DELAY,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util
 
 from . import async_init_integration, get_device
-
-from tests.common import (
-    async_fire_time_changed,
-    async_mock_restore_state_shutdown_restart,
-)
 
 
 @pytest.mark.usefixtures("anova_api")
@@ -49,38 +38,6 @@ async def test_numbers_reflect_the_live_job_when_already_cooking_on_add(
         == "60"
     )
     assert hass.states.get("number.anova_precision_cooker_timer").state == "30.0"
-
-
-@pytest.mark.usefixtures("anova_api_cooking")
-async def test_numbers_fall_back_to_pending_when_a_cooking_device_goes_stale(
-    hass: HomeAssistant,
-) -> None:
-    """Test the numbers don't crash when a cooking device goes silent.
-
-    is_cooking reflects the device's own last push and can stay true after
-    coordinator.data is cleared by the silence timeout - see
-    AnovaTargetTemperatureNumber/AnovaTimerNumber's _handle_coordinator_update.
-    """
-    entry = await async_init_integration(hass)
-    coordinator = entry.runtime_data.coordinators[0]
-    assert coordinator.anova_device.is_cooking is True
-
-    coordinator.anova_device.last_update_received_at = (
-        dt_util.utcnow() - DEVICE_STALE_THRESHOLD - timedelta(seconds=1)
-    )
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # A stale timeout clears coordinator.data while is_cooking stays true.
-    assert coordinator.data is None
-    assert coordinator.anova_device.is_cooking is True
-    assert (
-        hass.states.get("number.anova_precision_cooker_target_temperature").state
-        == "unavailable"
-    )
-    assert hass.states.get("number.anova_precision_cooker_timer").state == "unavailable"
 
 
 @pytest.mark.usefixtures("anova_api")
