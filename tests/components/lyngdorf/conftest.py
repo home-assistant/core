@@ -115,8 +115,13 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.max_volume = 0.0
     receiver.room_perfect_position = "Focus 1"
     receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+    receiver.room_perfect_positions = ["Global", "Focus 1"]
     receiver.voicing = "Neutral"
     receiver.available_voicings = ["Neutral", "Music", "Movie"]
+    receiver.voicings = ["Neutral", "Music", "Movie"]
+    # Sync on the pinned library: they return None rather than a coroutine.
+    receiver.set_voicing.return_value = None
+    receiver.set_room_perfect_position.return_value = None
     receiver.lipsync = None
     receiver.lipsync_range = NumericRange(0, 500, 1)
     for _t in ("bass", "treble"):
