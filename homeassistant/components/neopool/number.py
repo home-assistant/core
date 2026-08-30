@@ -288,6 +288,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
         self._write_unsub: CALLBACK_TYPE | None = None
         self._pending_value: float | None = None
+        self._removing = False
 
     def _decode_raw(self) -> float | None:
         """Decode the current coordinator-data value for this entity."""
@@ -309,6 +310,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel a pending write when removed."""
+        self._removing = True
         self._cancel_pending_write()
         await super().async_will_remove_from_hass()
 
@@ -350,8 +352,8 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         try:
             if desc.setpoint is not None:
                 await client.async_set_setpoint(desc.setpoint, raw)
-                # Merge the decoded value; native_value reads it back verbatim.
-                overrides = {self._data_key: pending}
+                # Merge the quantized value the device stored, not the raw input.
+                overrides = {self._data_key: raw / desc.scale}
             elif desc.masked_flag is not None:
                 # Serialize the read-modify-write against sibling writes.
                 async with self.coordinator.masked_write_lock:
@@ -363,6 +365,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         except (NeoPoolError, OSError, TimeoutError) as err:
             # Background write: log and drop; the next poll restores state.
             _LOGGER.warning("Failed to write %s: %s", self.entity_description.key, err)
+            return
+        if self._removing:
+            # Removed mid-write: the client may be closing, leave the coordinator alone.
             return
         self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
         self.coordinator.request_refresh_with_followup()

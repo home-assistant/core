@@ -565,6 +565,48 @@ async def test_pending_write_dropped_on_remove(
     mock_neopool_client.async_set_setpoint.assert_not_awaited()
 
 
+async def test_inflight_write_skips_coordinator_on_remove(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A write already in flight when the entity is removed skips the coordinator.
+
+    The scheduled call can only be cancelled before it fires. Once the write is
+    inside a library call and the entity is removed, it must not merge into or
+    refresh the coordinator whose client is being torn down.
+    """
+    in_write = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _blocking_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        in_write.set()
+        await release.wait()
+        return {"MBF_PAR_PH1": value}
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_setpoint)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    await _set_value(hass, ph1_entity_id, 7.5)
+
+    # Let the timer fire and the write enter the library call, then block there.
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    with patch.object(
+        mock_config_entry_number.runtime_data, "async_set_updated_data"
+    ) as mock_update:
+        await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once()
+    mock_update.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_neopool_client")
 async def test_all_entities(
     hass: HomeAssistant,
