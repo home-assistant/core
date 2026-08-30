@@ -120,7 +120,8 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, mac_address)}
+            connections={(CONNECTION_NETWORK_MAC, mac_address)},
+            name=mac_address,
         )
         if self.available:
             device_data = self.device_data
