@@ -151,7 +151,10 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=_options_schema(
-                llm_apis, current, self.config_entry.data[CONF_REQUIRE_ADMIN]
+                llm_apis,
+                current,
+                # A disabled entry has not migrated yet
+                self.config_entry.data.get(CONF_REQUIRE_ADMIN, False),
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,

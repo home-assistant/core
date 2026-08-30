@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mcp_server.const import CONF_REQUIRE_ADMIN, DOMAIN
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -189,3 +190,30 @@ async def test_options_flow_errors(
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
     }
+
+
+async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
+    """Test the options flow on a disabled entry that has not migrated yet."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},
+        minor_version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: False,
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST], CONF_REQUIRE_ADMIN: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data[CONF_REQUIRE_ADMIN] is True
