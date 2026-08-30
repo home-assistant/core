@@ -124,9 +124,13 @@ AC_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     LgIrButtonEntityDescription(
         key="eco", translation_key="eco", command_code=LGACCode.ECO
     ),
-    # A separate boost from JET, offered on LG India units.
+    # A separate boost from JET, only offered on LG India units, so it is
+    # disabled by default.
     LgIrButtonEntityDescription(
-        key="viraat", translation_key="viraat", command_code=LGACCode.VIRAAT
+        key="viraat",
+        translation_key="viraat",
+        command_code=LGACCode.VIRAAT,
+        entity_registry_enabled_default=False,
     ),
     LgIrButtonEntityDescription(
         key="ai_convertible",

@@ -153,18 +153,19 @@ async def test_ac_button_press_sends_correct_code(
 
 
 @pytest.mark.parametrize("device_type", [LGDeviceType.AC])
+@pytest.mark.parametrize("key", ["swing_v_toggle", "viraat"])
 @pytest.mark.usefixtures("init_integration")
-async def test_swing_v_toggle_disabled_by_default(
+async def test_ac_buttons_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    key: str,
 ) -> None:
-    """Test the legacy vertical-swing toggle is registered but disabled by default."""
+    """Test the buttons only some units support are registered but disabled."""
     entity_id = entity_registry.async_get_entity_id(
-        BUTTON_DOMAIN, "lg_infrared", f"{mock_config_entry.entry_id}_swing_v_toggle"
+        BUTTON_DOMAIN, "lg_infrared", f"{mock_config_entry.entry_id}_{key}"
     )
     assert entity_id is not None
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    assert entry.unique_id.endswith("_swing_v_toggle")
