@@ -3,7 +3,7 @@
 from typing import Final
 
 from aiohttp import CookieJar
-from pybravia import BraviaClient, BraviaError
+from pybravia import BraviaClient
 
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import ATTR_MAC, CONF_USE_SSL
+from .const import CONF_USE_SSL
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 
 PLATFORMS: Final[list[Platform]] = [
@@ -30,21 +30,11 @@ async def async_migrate_entry(
         return True
 
     if config_entry.version == 1:
-        host = config_entry.data[CONF_HOST]
-        mac = config_entry.data[CONF_MAC]
-        ssl = config_entry.data.get(CONF_USE_SSL, False)
-
-        session = async_create_clientsession(
-            hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
-        )
-        client = BraviaClient(host, mac, session=session, ssl=ssl)
-
-        try:
-            system_info = await client.get_system_info()
-        except BraviaError:
+        mac = config_entry.data.get(CONF_MAC)
+        if not mac:
             return False
 
-        new_unique_id = dr.format_mac(system_info[ATTR_MAC])
+        new_unique_id = dr.format_mac(mac)
 
         old_unique_id = config_entry.unique_id or ""
 

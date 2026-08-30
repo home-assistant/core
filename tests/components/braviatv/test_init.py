@@ -9,32 +9,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
-BRAVIA_SYSTEM_INFO = {
-    "product": "TV",
-    "region": "XEU",
-    "language": "pol",
-    "model": "TV-Model",
-    "serial": "serial_number",
-    "macAddr": "AA:BB:CC:DD:EE:FF",
-    "name": "BRAVIA",
-    "generation": "5.2.0",
-    "area": "POL",
-    "cid": "very_unique_string",
-}
-
-EMPTY_CID_SYSTEM_INFO = {
-    "product": "TV",
-    "region": "XEU",
-    "language": "pol",
-    "model": "TV-Model",
-    "serial": "2283811",
-    "macAddr": "AA:BB:CC:DD:EE:FF",
-    "name": "BRAVIA",
-    "generation": "5.2.0",
-    "area": "POL",
-    "cid": "",
-}
-
 
 async def test_migrate_entry_from_cid_to_mac(
     hass: HomeAssistant,
@@ -72,8 +46,6 @@ async def test_migrate_entry_from_cid_to_mac(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "very_unique_string")},
     )
-
-    mock_bravia_client.get_system_info.return_value = BRAVIA_SYSTEM_INFO
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -128,8 +100,6 @@ async def test_migrate_entry_with_empty_cid_to_mac(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "")},
     )
-
-    mock_bravia_client.get_system_info.return_value = EMPTY_CID_SYSTEM_INFO
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
