@@ -10,13 +10,14 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.sofar.const import DEFAULT_NAME, DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 # A recognized prefix with no model in sofar-modbus's own table.
 _UNMODELED_SERIAL = "SA1XXES100XX"
@@ -202,3 +203,110 @@ async def test_user_step_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+_NEW_USER_INPUT = {**MOCK_USER_INPUT, CONF_HOST: "192.168.1.200"}
+
+
+async def test_reconfigure_updates_the_entry(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure updates the entry and reloads it."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_conn = MockModbusConnection()
+    seed_pv_inverter(mock_conn.for_unit(1))
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == _NEW_USER_INPUT
+
+
+async def test_reconfigure_rejects_a_different_serial(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts if the inverter's serial doesn't match."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_conn = MockModbusConnection()
+    seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == MOCK_USER_INPUT
+
+
+@pytest.mark.parametrize(
+    ("seed", "expected_error", "expected_placeholders"),
+    [
+        pytest.param(
+            _seed_unreachable,
+            "cannot_connect",
+            {"error": "stuck"},
+            id="cannot_connect",
+        ),
+        pytest.param(
+            _seed_unrecognized,
+            "unrecognized_inverter",
+            {},
+            id="unrecognized_inverter",
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    seed: Callable[[MockModbusUnit], None],
+    expected_error: str,
+    expected_placeholders: dict[str, str],
+) -> None:
+    """Test the reconfigure step reports the right error and recovers."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_conn = MockModbusConnection()
+    seed(mock_conn.for_unit(1))
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
+    assert entry.data == MOCK_USER_INPUT
+    # The retry starts from what was typed, not from the stored entry.
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == _NEW_USER_INPUT[CONF_HOST]
+    )
+
+    working_conn = MockModbusConnection()
+    seed_pv_inverter(working_conn.for_unit(1))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == _NEW_USER_INPUT
