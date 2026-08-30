@@ -690,8 +690,8 @@ async def test_calendar_initial_color_none(
     ],
 )
 async def test_calendar_initial_color_precedence(
-    description_color: str | None | object,
-    attr_color: str | None | object,
+    description_color: str | object | None,
+    attr_color: str | object | None,
     expected_color: str | None,
 ) -> None:
     """Test that _attr_initial_color takes precedence over entity_description."""
@@ -703,8 +703,8 @@ async def test_calendar_initial_color_precedence(
 
         def __init__(
             self,
-            description_color: str | None | object,
-            attr_color: str | None | object,
+            description_color: str | object | None,
+            attr_color: str | object | None,
         ) -> None:
             """Initialize entity."""
             self._attr_name = "Test"

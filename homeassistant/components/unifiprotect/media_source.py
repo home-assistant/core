@@ -82,11 +82,14 @@ EVENT_NAME_MAP = {
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
+    # Public-only entries carry no private bootstrap and the public API has
+    # no event media; include only full-access entries.
     return ProtectMediaSource(
         hass,
         {
             entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
             for entry in async_get_ufp_entries(hass)
+            if not entry.runtime_data.api.is_public_only
         },
     )
 
@@ -598,21 +601,23 @@ class ProtectMediaSource(MediaSource):
         if not build_children:
             return source
 
-        if data.api.bootstrap.recording_start is not None:
-            recording_start = data.api.bootstrap.recording_start.date()
-        start = max(recording_start, start)
-
-        recording_end = dt_util.now().date()
-
-        end = start.replace(day=monthrange(start.year, start.month)[1])
-        end = min(recording_end, end)
+        # The requested month bounds the days offered: recording may have
+        # started partway into it, and it cannot reach past today. Keep those
+        # bounds off `start` so every child stays within the month asked for.
+        end = min(
+            dt_util.now().date(),
+            start.replace(day=monthrange(start.year, start.month)[1]),
+        )
+        day = start
+        if (recording_start := data.api.bootstrap.recording_start) is not None:
+            day = max(dt_util.as_local(recording_start).date(), day)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
-        while start <= end:
+        while day <= end:
             children.append(
-                self._build_days(data, camera_id, event_type, start, is_all=False)
+                self._build_days(data, camera_id, event_type, day, is_all=False)
             )
-            start = start + timedelta(hours=24)
+            day = day + timedelta(days=1)
 
         camera: Camera | None = None
         if camera_id != "all":

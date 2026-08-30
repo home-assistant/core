@@ -24,6 +24,9 @@
       "hibernate": {
         "default": "mdi:power-sleep"
       },
+      "pause": {
+        "default": "mdi:pause"
+      },
       "reset": {
         "default": "mdi:restart"
       },

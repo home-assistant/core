@@ -87,7 +87,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         except BleakError:
             LOGGER.debug("Failed to connect to device", exc_info=True)
             return {"base": "cannot_connect"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             LOGGER.debug("Unknown error", exc_info=True)
             return {"base": "unknown"}
         return {}

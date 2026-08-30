@@ -35,7 +35,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_WEBHOOK_ID: "webhook_id"})
     entry.add_to_hass(hass)
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create(  # pylint: disable=home-assistant-tests-registry-fixtures
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, DEVICE_ID)},
     )

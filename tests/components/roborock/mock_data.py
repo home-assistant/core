@@ -12,7 +12,6 @@ from roborock.data import (
     HomeDataScene,
     MultiMapsList,
     NetworkInfo,
-    S7Status,
     UserData,
     ValleyElectricityTimer,
     WorkStatusMapping,
@@ -23,6 +22,7 @@ from roborock.data.b01_q10.b01_q10_code_mappings import (
     YXWaterLevel,
 )
 from roborock.data.b01_q10.b01_q10_containers import Q10Status
+from roborock.data.v1.v1_containers import StatusV2
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
 from vacuum_map_parser_roborock.map_data_parser import MapData
@@ -1472,7 +1472,7 @@ VALLEY_ELECTRICITY_TIMER = ValleyElectricityTimer.from_dict(
     }
 )
 
-STATUS = S7Status.from_dict(
+STATUS = StatusV2.from_dict(
     {
         "msg_ver": 2,
         "msg_seq": 458,
@@ -1505,9 +1505,10 @@ STATUS = S7Status.from_dict(
         "adbumper_status": [0, 0, 0],
         "water_shortage_status": 0,
         "clean_fluid_status": 0,
-        "dock_type": 3,
+        "dock_type": 21,
         "dust_collection_status": 0,
         "auto_dust_collection": 1,
+        "dry_status": 0,
         "avoid_count": 19,
         "mop_mode": 300,
         "debug_mode": 0,

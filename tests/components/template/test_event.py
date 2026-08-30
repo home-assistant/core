@@ -1,5 +1,7 @@
 """The tests for the Template event platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -11,6 +13,8 @@ from homeassistant.components.template.coordinator import TriggerUpdateCoordinat
 from homeassistant.components.template.event import (
     CONF_EVENT_TYPE,
     CONF_EVENT_TYPES,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
     TriggerEventEntity,
 )
 from homeassistant.const import (
@@ -31,6 +35,7 @@ from .conftest import (
     RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -194,7 +199,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("event.my_template")
+    template_entity = entity_registry.async_get("event.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -267,19 +272,22 @@ async def test_event_type_template_updates(
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "single")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    single_triggered = state.state
     assert state.attributes["event_type"] == "single"
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    # Each event advances the timestamp; events within the same millisecond are
+    # bumped so every one stays a distinct state change.
+    double_triggered = state.state
+    assert double_triggered > single_triggered
     assert state.attributes["event_type"] == "double"
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "hold")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    assert state.state > double_triggered
     assert state.attributes["event_type"] == "hold"
 
 
@@ -413,7 +421,7 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    first_triggered = state.state
     assert state.attributes["event_type"] == "single"
     assert state.attributes["event_types"] == ["single", "double", "hold"]
 
@@ -423,7 +431,9 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    # A second event fired, so its timestamp strictly increases (events within
+    # the same millisecond are bumped so each stays a distinct state change).
+    assert state.state > first_triggered
     assert state.attributes["event_type"] == "double"
     assert state.attributes["event_types"] == ["double", "hold"]
 
@@ -693,3 +703,52 @@ async def test_flow_preview(
     assert state["state"] == TEST_FROZEN_STATE
     assert state["attributes"]["event_type"] == "single"
     assert state["attributes"]["event_types"] == ["single", "double", "hold"]
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_EVENT,
+        style,
+        TEST_EVENT_CONFIG,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(EventEntityCapabilityAttribute, EventEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_EVENT,
+        style,
+        1,
+        {
+            **TEST_EVENT_CONFIG,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_EVENT.entity_id}: {attribute}"
+    assert error in caplog.text

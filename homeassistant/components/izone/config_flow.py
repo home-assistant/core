@@ -1,16 +1,19 @@
 """Config flow for izone."""
 
+import asyncio
 from collections.abc import Iterable
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
 import pizone
+from pizone.discovery import SCAN_TIMEOUT
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -28,6 +31,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
 
+# Wait after IASD for ASPort replies (matches pizone discover_all wait).
+USER_SCAN_WAIT_SECONDS = SCAN_TIMEOUT
+
+
+@dataclass(frozen=True, slots=True)
+class _ShelfCandidate:
+    """An in-progress discovery/HomeKit flow on the Discovered shelf."""
+
+    uid: str
+    host: str
+    flow_id: str
+
 
 def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
     """Return a stable controller UID for deduplicating in-progress flows."""
@@ -42,8 +57,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    _user_discovered_controllers: list[pizone.Controller] | None = None
     _discovered_controller_ip: str | None = None
+    _user_discovery_task: asyncio.Task[None] | None = None
+    _user_discovery_failed: bool = False
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
@@ -73,7 +89,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
 
         try:
-            await izone_discovery.async_start_discovery_service(self.hass)
+            await izone_discovery.async_ensure_discovery(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery from import", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -87,101 +103,110 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """User-started flow: offer configuration choices for discovered controllers.
+        """User-started flow: search the LAN, then offer discovered controllers."""
+        return await self.async_step_discover()
 
-        Discovery is started if not yet running, then a fresh discovery cycle is triggered
-        and this step waits briefly for replies. The pizone library's built-in coalescing
-        avoids redundant broadcasts when discovery was just started.
-
-        While this interactive flow is active, runtime integration discovery remains
-        blocked by ``_async_blocks_runtime_integration_discovery`` to avoid UI races.
-        """
-
-        if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(reason="already_in_progress")
-
+    async def _async_run_user_discovery(self) -> None:
+        """Scan and wait for the progress step (no unique_id work here)."""
+        self._user_discovery_failed = False
         try:
-            controllers = await izone_discovery.async_discover_controllers(
-                self.hass, refresh=True
-            )
+            await izone_discovery.async_scan(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
-            return self.async_abort(reason="discovery_failed")
-        if not controllers:
-            _LOGGER.debug("No controllers found")
-            return self.async_abort(reason="no_devices_found")
+            self._user_discovery_failed = True
+            return
+        # Sleep is the ASPort reply window; the event loop processes datagrams
+        # and eager discovery-flow inits during it (no post-sleep drain).
+        await asyncio.sleep(USER_SCAN_WAIT_SECONDS)
 
-        self._user_discovered_controllers = self._async_get_unconfigured_controllers(
-            controllers
-        )
-        if not self._user_discovered_controllers:
-            return self.async_abort(reason="already_configured")
-        if len(self._user_discovered_controllers) > 1:
-            return await self.async_step_select_controller()
-
-        sole = self._user_discovered_controllers[0]
-        await self.async_set_unique_id(sole.device_uid)
-        self._discovered_controller_ip = sole.device_ip
-        return await self.async_step_confirm()
-
-    async def async_step_select_controller(
-        self, user_input: dict[str, Any] | None = None
+    async def async_step_discover(
+        self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose one unconfigured controller after broadcast discovery."""
-        if not self._user_discovered_controllers:
-            return self.async_abort(reason="no_devices_found")
+        """Broadcast discovery with a progress UI, then continue to discovery_done."""
+        if not self._user_discovery_task:
+            self._user_discovery_task = self.hass.async_create_task(
+                self._async_run_user_discovery()
+            )
+            # Always leave progress first; the task may already be done (eager).
+            return self.async_show_progress(
+                step_id="discover",
+                progress_action="discover",
+                progress_task=self._user_discovery_task,
+            )
 
-        by_uid = {
-            controller.device_uid: controller
-            for controller in self._user_discovered_controllers
-        }
+        if not self._user_discovery_task.done():
+            return self.async_show_progress(
+                step_id="discover",
+                progress_action="discover",
+                progress_task=self._user_discovery_task,
+            )
+
+        self._user_discovery_task = None
+        return self.async_show_progress_done(next_step_id="discovery_done")
+
+    async def async_step_discovery_done(
+        self, _user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """After Search scan: abort, hand off the sole shelf flow, or choose."""
+        if self._user_discovery_failed:
+            return self.async_abort(reason="discovery_failed")
+
+        candidates = self._async_user_candidates()
+        if not candidates:
+            _LOGGER.debug("No controllers found on the Discovered shelf")
+            return self.async_abort(reason="no_devices_found")
+        if len(candidates) == 1:
+            return self.async_abort(
+                reason="continue_setup",
+                next_flow=(FlowType.CONFIG_FLOW, candidates[0].flow_id),
+            )
+
         selection_schema = vol.Schema(
             {
                 vol.Required(
                     SELECTED_CONTROLLER_UID,
-                    default=self._user_discovered_controllers[0].device_uid,
+                    default=candidates[0].uid,
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             SelectOptionDict(
-                                value=controller.device_uid,
-                                label=(
-                                    f"{controller.device_uid} ({controller.device_ip})"
-                                ),
+                                value=candidate.uid,
+                                label=f"{candidate.uid} ({candidate.host})",
                             )
-                            for controller in self._user_discovered_controllers
+                            for candidate in candidates
                         ],
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 )
             }
         )
-
-        if user_input is not None:
-            selected_uid = user_input[SELECTED_CONTROLLER_UID]
-            if (primary := by_uid.get(selected_uid)) is None:
-                return self.async_abort(reason="no_devices_found")
-
-            for ctrl in self._user_discovered_controllers:
-                if ctrl.device_uid == primary.device_uid:
-                    continue
-                # Using integration_discovery lets HA's deduplication guard prevent stacking
-                # flows for UIDs already in progress or already configured.
-                self._async_schedule_integration_discovery_flow(
-                    ctrl.device_uid,
-                    ctrl.device_ip,
-                )
-            return await self._async_create_controller_entry(primary)
-
         controllers_lines = "\n".join(
-            f"- {controller.device_uid} ({controller.device_ip})"
-            for controller in self._user_discovered_controllers
+            f"- {candidate.uid} ({candidate.host})" for candidate in candidates
         )
         return self.async_show_form(
             step_id="select_controller",
             data_schema=selection_schema,
             description_placeholders={"controllers": controllers_lines},
         )
+
+    async def async_step_select_controller(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Hand off to the shelf confirm for the selected controller UID."""
+        if user_input is None:
+            return await self.async_step_discovery_done()
+        selected_uid = user_input[SELECTED_CONTROLLER_UID]
+        by_uid = {
+            candidate.uid: candidate for candidate in self._async_user_candidates()
+        }
+        if (selected := by_uid.get(selected_uid)) is not None:
+            return self.async_abort(
+                reason="continue_setup",
+                next_flow=(FlowType.CONFIG_FLOW, selected.flow_id),
+            )
+        if selected_uid in self._async_current_ids(include_ignore=True):
+            return self.async_abort(reason="already_configured")
+        return self.async_abort(reason="no_devices_found")
 
     @override
     async def async_step_homekit(
@@ -206,25 +231,26 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # A HomeKit advertisement implies a specific UID is on the LAN.  Wait for it.
         try:
-            controllers = await izone_discovery.async_discover_controllers(
-                self.hass,
-                refresh=True,
-                wait_for_uid=device_uid,
-            )
+            endpoints = await izone_discovery.async_discover_all_endpoints(self.hass)
+            endpoint = endpoints.get(device_uid)
+            if endpoint is None:
+                endpoint = await izone_discovery.async_discover_endpoint(
+                    self.hass, device_uid
+                )
+                if endpoint is None:
+                    return self.async_abort(reason="no_devices_found")
+                endpoints = {**endpoints, endpoint.uid: endpoint}
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
-        controller = controllers.get(device_uid)
-        if controller is None:
-            return self.async_abort(reason="no_devices_found")
 
-        self._discovered_controller_ip = controller.device_ip
+        self._discovered_controller_ip = endpoint.host
 
         # Re-check after awaiting discovery to catch mid-flight configuration.
         self._abort_if_unique_id_configured()
 
-        self._async_fan_out_discovered_controllers(
-            controllers.values(),
+        self._async_fan_out_discovered_endpoints(
+            endpoints.values(),
             selected_uid=device_uid,
         )
 
@@ -249,49 +275,56 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm adding a controller found via HomeKit or manual host."""
+        """Confirm adding a controller found via HomeKit or discovery."""
+        controller_uid = self.unique_id
+        host = self._discovered_controller_ip
+        assert isinstance(controller_uid, str)
+        assert controller_uid
+        assert host is not None
+
         if user_input is None:
-            controller_uid = self.unique_id
-            host = self._discovered_controller_ip
-            assert isinstance(controller_uid, str)
-            assert controller_uid
-            assert host is not None
-            host_str = str(host)
             self.context["title_placeholders"] = {
                 "name": self._entry_title(controller_uid),
+                "host": str(host),
             }
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
                     "controller_uid": controller_uid,
-                    "host": host_str,
+                    "host": str(host),
                 },
             )
 
-        try:
-            controllers = await izone_discovery.async_discover_controllers(self.hass)
-        except OSError:
-            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
-            return self.async_abort(reason="discovery_failed")
-        if not controllers:
-            _LOGGER.debug("No controllers found")
-            return self.async_abort(reason="no_devices_found")
-
-        uid = self.unique_id
-        assert isinstance(uid, str)
-
-        controller = controllers.get(uid)
-        if controller is None:
-            _LOGGER.debug(
-                "Discovered controller UID %s was not found during confirmation",
-                uid,
-            )
-            return self.async_abort(reason="no_devices_found")
         return await self._async_create_controller_entry(
-            controller,
+            pizone.ControllerEndpoint(uid=controller_uid, host=str(host))
         )
 
     # -- Private helpers
+
+    @callback
+    def _async_user_candidates(self) -> list[_ShelfCandidate]:
+        """Return Discovered-shelf flows (integration discovery and HomeKit)."""
+        candidates: list[_ShelfCandidate] = []
+        for flow in self.hass.config_entries.flow.async_progress_by_handler(
+            DOMAIN, include_uninitialized=True
+        ):
+            if flow["flow_id"] == self.flow_id:
+                continue
+            context = flow["context"]
+            if context.get("source") not in (
+                config_entries.SOURCE_INTEGRATION_DISCOVERY,
+                config_entries.SOURCE_HOMEKIT,
+            ):
+                continue
+            uid = context.get("unique_id")
+            placeholders = context.get("title_placeholders")
+            host = placeholders.get("host") if placeholders is not None else None
+            if not isinstance(uid, str) or not isinstance(host, str):
+                continue
+            candidates.append(
+                _ShelfCandidate(uid=uid, host=host, flow_id=flow["flow_id"])
+            )
+        return sorted(candidates, key=lambda candidate: (candidate.uid, candidate.host))
 
     @callback
     def _async_schedule_integration_discovery_flow(
@@ -299,7 +332,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         uid: str,
         host: str,
     ) -> None:
-        """Queue integration discovery (import fan-out or manual discovery pick)."""
+        """Queue integration discovery (import fan-out or HomeKit sibling)."""
         discovery_flow.async_create_flow(
             self.hass,
             DOMAIN,
@@ -315,54 +348,22 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Standard config entry title for a controller UID."""
         return f"iZone {device_uid}"
 
-    @staticmethod
-    def _filter_yaml_exclude(
-        hass: HomeAssistant, controllers: dict[str, pizone.Controller]
-    ) -> dict[str, pizone.Controller]:
-        """Remove UIDs listed in deprecated YAML ``exclude``."""
-        excluded = izone_discovery.yaml_excluded_uids(hass)
-        if not excluded:
-            return controllers
-        return {
-            uid: ctrl
-            for uid, ctrl in controllers.items()
-            if ctrl.device_uid not in excluded
-        }
-
-    @callback
-    def _async_get_unconfigured_controllers(
-        self, controllers: dict[str, pizone.Controller]
-    ) -> list[pizone.Controller]:
-        """Return sorted unconfigured controllers for the interactive user flow."""
-        controllers = self._filter_yaml_exclude(self.hass, controllers)
-        # include_ignore=True ensures controllers whose entries have been explicitly
-        # ignored by the user (SOURCE_IGNORE) are not re-offered as configurable.
-        configured_uids = self._async_current_ids(include_ignore=True)
-        return sorted(
-            (
-                controller
-                for controller in controllers.values()
-                if controller.device_uid not in configured_uids
-            ),
-            key=lambda controller: (controller.device_uid, controller.device_ip),
-        )
-
     async def _async_create_controller_entry(
         self,
-        controller: pizone.Controller,
+        endpoint: pizone.ControllerEndpoint,
     ) -> ConfigFlowResult:
-        """Create the config entry for a chosen :class:`pizone.Controller` instance."""
-        await self.async_set_unique_id(controller.device_uid)
+        """Create the config entry for a chosen discovered endpoint."""
+        await self.async_set_unique_id(endpoint.uid)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=self._entry_title(controller.device_uid),
-            data={CONF_HOST: controller.device_ip},
+            title=self._entry_title(endpoint.uid),
+            data={CONF_HOST: endpoint.host},
         )
 
     @callback
-    def _async_fan_out_discovered_controllers(
+    def _async_fan_out_discovered_endpoints(
         self,
-        controllers: Iterable[pizone.Controller],
+        endpoints: Iterable[pizone.ControllerEndpoint],
         *,
         selected_uid: str,
     ) -> None:
@@ -372,15 +373,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             flow["context"].get("unique_id")
             for flow in self._async_in_progress(include_uninitialized=True)
         }
-        for candidate in controllers:
-            if candidate.device_uid == selected_uid:
+        for candidate in endpoints:
+            if candidate.uid == selected_uid:
                 continue
-            if (
-                candidate.device_uid in current_ids
-                or candidate.device_uid in in_progress_ids
-            ):
+            if candidate.uid in current_ids or candidate.uid in in_progress_ids:
                 continue
             self._async_schedule_integration_discovery_flow(
-                candidate.device_uid,
-                candidate.device_ip,
+                candidate.uid,
+                candidate.host,
             )
