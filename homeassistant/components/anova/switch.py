@@ -40,10 +40,9 @@ class AnovaCookSwitch(AnovaEntity, SwitchEntity):
     """Starts or stops a cook.
 
     Turning on starts a cook using the target temperature and timer the
-    coordinator currently holds - seeded from the device's own state, and
-    adjustable via the Anova number entities. The switch stays available
-    while a cook is running even if the pending values have not been seeded
-    yet, so a running cook can always be stopped.
+    coordinator currently holds - seeded from the device's own state. The
+    switch stays available while a cook is running even if those values have
+    not been seeded yet, so a running cook can always be stopped.
     """
 
     def __init__(self, coordinator: AnovaCoordinator) -> None:
