@@ -9,6 +9,9 @@
       }
     },
     "number": {
+      "ac_power_limit": {
+        "default": "mdi:speedometer-slow"
+      },
       "battery_charge_power_limit": {
         "default": "mdi:battery-arrow-up"
       },
@@ -17,9 +20,6 @@
       },
       "battery_minimum_reserve": {
         "default": "mdi:battery-lock"
-      },
-      "power_limit": {
-        "default": "mdi:speedometer-slow"
       }
     },
     "sensor": {
@@ -73,6 +73,20 @@
       },
       "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
+      }
+    },
+    "switch": {
+      "ac_power_limit_enabled": {
+        "default": "mdi:speedometer-slow"
+      },
+      "battery_charge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_grid_charging": {
+        "default": "mdi:transmission-tower-import"
       }
     }
   }

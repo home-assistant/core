@@ -117,17 +117,18 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-@pytest.mark.usefixtures("mock_receiver")
 async def test_no_zone_b_entity_for_model_without_zone_b(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no Zone B media player entity is created for a model without Zone B."""
     mock_config_entry.add_to_hass(hass)
+    mock_receiver.zone_b = None
 
     with patch(
-        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        "homeassistant.components.lyngdorf.lookup_model",
         return_value=LyngdorfModel.TDAI_3400,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -483,6 +484,20 @@ async def test_no_streaming_features_on_model_without_streamer(
         not state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.PAUSE
     )
     assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_position_before_the_streamer_reports_one(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test an attached player that has not yet reported a position."""
+    playing_receiver.position_ms = None
+    notify_receiver_update(playing_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
 
 
 @pytest.mark.usefixtures("init_integration")

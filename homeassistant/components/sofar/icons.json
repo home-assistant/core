@@ -1,18 +1,14 @@
 {
   "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "rtc_sync": {
+        "default": "mdi:home-clock"
+      }
+    },
     "sensor": {
-      "bat_config_address_1": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_address_2": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_address_3": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_address_4": {
-        "default": "mdi:battery-check-outline"
-      },
       "bat_config_capacity": {
         "default": "mdi:battery-check-outline"
       },
@@ -25,41 +21,14 @@
       "bat_config_eps_buffer": {
         "default": "mdi:battery-check-outline"
       },
-      "bat_config_id": {
-        "default": "mdi:battery-check-outline"
-      },
       "bat_config_tempco": {
         "default": "mdi:battery-check-outline"
-      },
-      "battery_state_of_health_1": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_2": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_3": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_4": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_5": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_6": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_7": {
-        "default": "mdi:battery-heart"
-      },
-      "battery_state_of_health_8": {
-        "default": "mdi:battery-heart"
       },
       "battery_state_of_health_total": {
         "default": "mdi:battery-heart"
       },
-      "rtc": {
-        "default": "mdi:clock"
+      "state_of_health": {
+        "default": "mdi:battery-heart"
       }
     }
   }
