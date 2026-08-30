@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for Elgato."""
 
+import asyncio
 from dataclasses import dataclass
 from typing import override
 
@@ -63,6 +64,10 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
             entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
         )
+        # A firmware install gets the device to itself. It stops answering
+        # while it erases a flash slot, and enough traffic during that window
+        # takes its HTTP server down with it and restarts the light.
+        self.device_lock = asyncio.Lock()
         super().__init__(
             hass,
             LOGGER,
@@ -75,15 +80,16 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
     async def _async_update_data(self) -> ElgatoData:
         """Fetch data from the Elgato device."""
         try:
-            if self.has_battery is None:
-                self.has_battery = await self.client.has_battery()
+            async with self.device_lock:
+                if self.has_battery is None:
+                    self.has_battery = await self.client.has_battery()
 
-            return ElgatoData(
-                battery=await self.client.battery() if self.has_battery else None,
-                info=await self.client.info(),
-                settings=await self.client.settings(),
-                state=await self.client.state(),
-            )
+                return ElgatoData(
+                    battery=await self.client.battery() if self.has_battery else None,
+                    info=await self.client.info(),
+                    settings=await self.client.settings(),
+                    state=await self.client.state(),
+                )
         except ElgatoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

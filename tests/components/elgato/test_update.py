@@ -1,6 +1,8 @@
 """Tests for the Elgato update platform."""
 
+import asyncio
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock
 
 from elgato import (
@@ -12,6 +14,7 @@ from elgato import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_UPDATE_PERCENTAGE,
@@ -231,13 +234,8 @@ async def test_download_failure_leaves_the_light_alone(
 ) -> None:
     """Test Elgato failing to hand over the image.
 
-    Fetching the firmware happens off the local network. A failure there says
-    nothing about the light, which has to keep working, and the device must
-    never be sent an image that was not fetched.
-
-    Not being able to reach Elgato does say something about this entity, so
-    it goes unavailable. An image that arrives but does not verify does not:
-    Elgato answered, it just answered with something unusable.
+    Only reaching Elgato says anything about this entity; an image that
+    arrives and fails to verify means Elgato answered, just badly.
     """
     mock_firmware_catalog.download.side_effect = side_effect
 
@@ -256,3 +254,61 @@ async def test_download_failure_leaves_the_light_alone(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert (state.state != STATE_UNAVAILABLE) is still_reachable
+
+
+async def test_install_rejected_by_the_device(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test a device turning the firmware away for a reason worth reading."""
+    mock_elgato.update_firmware.side_effect = ElgatoFirmwareError(
+        "Battery is at 11%, connect the device to power before updating its firmware"
+    )
+
+    with pytest.raises(HomeAssistantError, match="Battery is at 11%"):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+
+async def test_install_keeps_the_device_to_itself(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test a poll cannot land in the middle of an install.
+
+    A device stops answering while it erases a flash slot, and enough traffic
+    during that window takes its HTTP server down and restarts the light.
+    """
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.device
+    refresh: asyncio.Task[None] | None = None
+    polls_during_install = 0
+
+    async def install(image: FirmwareImage, **kwargs: Any) -> None:
+        """Ask for a refresh while the device is busy taking firmware."""
+        nonlocal refresh, polls_during_install
+        before = mock_elgato.state.call_count
+        refresh = hass.async_create_task(coordinator.async_refresh())
+        for _ in range(5):
+            await asyncio.sleep(0)
+        polls_during_install = mock_elgato.state.call_count - before
+
+    mock_elgato.update_firmware.side_effect = install
+    polls_before = mock_elgato.state.call_count
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert refresh is not None
+    await refresh
+
+    assert polls_during_install == 0
+    # And it is not blocked forever; the poll lands once the install is done.
+    assert mock_elgato.state.call_count > polls_before

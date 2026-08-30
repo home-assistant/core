@@ -2,7 +2,12 @@
 
 from typing import Any, override
 
-from elgato import ElgatoConnectionError, ElgatoError, FirmwareImage
+from elgato import (
+    ElgatoConnectionError,
+    ElgatoError,
+    ElgatoFirmwareError,
+    FirmwareImage,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -103,9 +108,19 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
 
         try:
             image = await self._download()
-            await self.coordinator.client.update_firmware(
-                image, on_progress=self._handle_progress
-            )
+            # Nothing else talks to the device until this is done.
+            async with self.coordinator.device_lock:
+                await self.coordinator.client.update_firmware(
+                    image, on_progress=self._handle_progress
+                )
+        except ElgatoFirmwareError as err:
+            # A device turns firmware away for reasons someone can act on:
+            # too little battery left, an image for another model. Say which.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         finally:
             self._attr_in_progress = False
             self._attr_update_percentage = None
