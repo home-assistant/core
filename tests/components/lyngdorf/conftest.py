@@ -151,7 +151,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.can_shuffle = False
     receiver.available_repeat_modes = frozenset()
 
-    receiver.lipsync = _FloatControl(50, NumericRange(0, 500, 1))
+    receiver.lipsync = _FloatControl(50.0, NumericRange(0, 500, 1))
     receiver.lipsync_range = NumericRange(0, 500, 1)
     receiver.trims = {
         Trim.BASS: _control(3.0, NumericRange(-12.0, 12.0, 0.1)),
