@@ -99,6 +99,20 @@ async def test_install(
 ) -> None:
     """Test installing the firmware Elgato ships."""
     reported: list[int | None] = []
+    in_progress_while_downloading = None
+
+    async def download(board_type: int) -> FirmwareImage:
+        """Stand in for fetching the image off Elgato's servers."""
+        nonlocal in_progress_while_downloading
+        in_progress_while_downloading = hass.states.get(ENTITY_ID).attributes[
+            ATTR_IN_PROGRESS
+        ]
+        return FirmwareImage(
+            board_type=board_type,
+            build_number=222,
+            version="1.0.3",
+            data=b"\x00" * 8192,
+        )
 
     async def install(
         image: FirmwareImage,
@@ -113,6 +127,7 @@ async def test_install(
                 hass.states.get(ENTITY_ID).attributes[ATTR_UPDATE_PERCENTAGE]
             )
 
+    mock_firmware_catalog.download.side_effect = download
     mock_elgato.update_firmware.side_effect = install
 
     await hass.services.async_call(
@@ -121,6 +136,10 @@ async def test_install(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+
+    # Fetching the image is part of the install, so the entity says so
+    # before it starts rather than after.
+    assert in_progress_while_downloading is True
 
     mock_firmware_catalog.download.assert_called_once_with(53)
     mock_elgato.update_firmware.assert_called_once()

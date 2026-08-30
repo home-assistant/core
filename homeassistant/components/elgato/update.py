@@ -90,13 +90,15 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the firmware Elgato ships for this device."""
-        image = await self.firmware.catalog.download(self.firmware.board_type)
-
+        # Before the download, not after: fetching the image is part of the
+        # install, and until this says so a second call walks straight past
+        # the guard that is meant to stop it.
         self._attr_in_progress = True
-        self._attr_update_percentage = 0
+        self._attr_update_percentage = None
         self.async_write_ha_state()
 
         try:
+            image = await self.firmware.catalog.download(self.firmware.board_type)
             await self.coordinator.client.update_firmware(
                 image, on_progress=self._handle_progress
             )

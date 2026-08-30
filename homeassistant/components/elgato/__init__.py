@@ -40,12 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElgatoConfigEntry) -> bo
     firmware = ElgatoFirmwareCoordinator(
         hass, entry, coordinator.data.info.hardware_board_type
     )
-    # Not a first refresh: a light on the local network has no business
-    # failing to set up because Elgato's servers are having a day.
-    await firmware.async_refresh()
 
     entry.runtime_data = ElgatoCoordinators(device=coordinator, firmware=firmware)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Elgato's servers are not on the local network, and a request to them
+    # can sit there for its full timeout. A light on your own network has no
+    # business waiting on that, so nothing here does: the update entity fills
+    # itself in once the answer arrives.
+    entry.async_create_background_task(
+        hass, firmware.async_refresh(), f"{DOMAIN}_firmware_refresh"
+    )
 
     return True
 
