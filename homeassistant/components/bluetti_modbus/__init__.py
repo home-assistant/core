@@ -60,11 +60,20 @@ async def async_setup_entry(
     coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
 
-    # Built once here: every entity hangs on the same device.
+    # Built once here: every entity hangs on the same device. Firmware
+    # versions are read from the same first-refresh values already used for
+    # entities below, not a separate read - see bluetti_modbus_device_info's
+    # own docstring for why they land on sw_version instead of a sensor.
+    arm_version = device.values.get("d_ver_arm")
+    dsp_version = device.values.get("d_ver_dsp")
+    sw_version = None
+    if arm_version is not None or dsp_version is not None:
+        sw_version = f"ARM {arm_version}, DSP {dsp_version}"
+
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
         device_info=bluetti_modbus_device_info(
-            entry.entry_id, device_type, entry.unique_id
+            entry.entry_id, device_type, entry.unique_id, sw_version
         ),
     )
     dr.async_get(hass).async_get_or_create(

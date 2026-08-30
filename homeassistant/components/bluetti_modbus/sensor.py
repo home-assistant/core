@@ -1,6 +1,7 @@
 """Sensor platform for the BLUETTI Modbus integration."""
 
 from enum import Enum
+from functools import lru_cache
 import re
 from typing import cast, override
 
@@ -22,8 +23,6 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
 
-PARALLEL_UPDATES = 0
-
 # Fields without a physical unit that currently belong on the sensor platform
 # are exposed as diagnostics. Fault and warning fields remain excluded until
 # their bitmaps can be represented as binary sensors.
@@ -33,8 +32,6 @@ _DIAGNOSTIC_FIELDS = frozenset(
         "d_inverter_type",
         "d_num_inverters",
         "d_num_battery_packs",
-        "d_ver_arm",
-        "d_ver_dsp",
         "b_cell_count",
         "b_cycle_count",
         "b_ntc_count",
@@ -42,11 +39,12 @@ _DIAGNOSTIC_FIELDS = frozenset(
     }
 )
 
-# Exposed as DeviceInfo.serial_number (see entity.py) instead of a sensor -
-# a serial number is device identity, not a measurement. Still read every
-# poll, unlike EXCLUDED_FIELDS in const.py: the coordinator's own per-poll
-# identity check (coordinator.py) depends on it.
-_ENTITY_EXCLUDED_FIELDS = frozenset({"d_serial"})
+# Exposed as DeviceInfo instead of a sensor - device identity/metadata, not a
+# measurement. Still read every poll, unlike EXCLUDED_FIELDS in const.py:
+# d_serial feeds the coordinator's own per-poll identity check
+# (coordinator.py), and the firmware fields are read at the same first
+# refresh __init__.py already builds DeviceInfo.sw_version from.
+_ENTITY_EXCLUDED_FIELDS = frozenset({"d_serial", "d_ver_arm", "d_ver_dsp"})
 
 # Lifetime counters. HA's own TOTAL_INCREASING handling covers an occasional
 # drop as a meter reset; this integration does not additionally clamp or
@@ -81,6 +79,17 @@ def _slug(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
+@lru_cache
+def _enum_value_map(enum_cls: type[Enum]) -> dict[Enum, str]:
+    """Return a member -> state slug lookup, built once per enum type.
+
+    Cached rather than recomputed on every poll: the transform itself only
+    needs to run once per enum type (here, at most a handful of member
+    counts to look through), not once per entity per refresh.
+    """
+    return {member: _slug(member.name) for member in enum_cls}
+
+
 def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescription:
     """Build an entity description for one register field."""
     if (
@@ -92,7 +101,7 @@ def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescriptio
             key=name,
             translation_key=name,
             device_class=SensorDeviceClass.ENUM,
-            options=[_slug(member.name) for member in field.convert],
+            options=list(_enum_value_map(field.convert).values()),
             entity_category=EntityCategory.DIAGNOSTIC
             if name in _DIAGNOSTIC_FIELDS
             else None,
@@ -130,6 +139,11 @@ def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescriptio
     )
 
 
+# Entities only read from the coordinator and never poll or call the API
+# themselves, so there is no need to limit concurrent updates.
+PARALLEL_UPDATES = 0
+
+
 class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     """Defines a BLUETTI Modbus sensor."""
 
@@ -146,12 +160,13 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
         """Return the field's most recently read value.
 
         An enum-typed field decodes to an Enum member, not a plain value -
-        translated to its stable state slug here rather than exposing the
-        library's own repr.
+        translated to its stable state slug here (via the same lookup its
+        entity description's options list was built from) rather than
+        exposing the library's own repr.
         """
         value = self.coordinator.device.values.get(self._field_name)
         if isinstance(value, Enum):
-            return _slug(value.name)
+            return _enum_value_map(type(value))[value]
         return cast(StateType, value)
 
 
