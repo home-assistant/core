@@ -73,10 +73,7 @@ async def test_numbers_fall_back_to_pending_when_a_cooking_device_goes_stale(
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Going stale marks the entities unavailable (AnovaEntity.available), but
-    # must not crash _handle_coordinator_update along the way - previously
-    # an assert here raised, since is_cooking can stay true after
-    # coordinator.data is cleared by the silence timeout.
+    # A stale timeout clears coordinator.data while is_cooking stays true.
     assert coordinator.data is None
     assert coordinator.anova_device.is_cooking is True
     assert (

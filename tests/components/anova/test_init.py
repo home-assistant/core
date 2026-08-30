@@ -97,7 +97,7 @@ async def test_websocket_reconnects_on_disconnect(
     for coordinator in entry.runtime_data.coordinators:
         device = new_ws_handler.devices.get(coordinator.device_unique_id)
         assert device is not None
-        assert device.update_listener == coordinator._handle_device_update
+        assert coordinator.anova_device is device
 
 
 async def test_websocket_reconnects_after_auth_expiry(
@@ -339,9 +339,6 @@ async def test_websocket_reconnect_retries_after_transient_failure(
     assert len(attempts) == 2
     new_ws_handler = entry.runtime_data.api.websocket_handler
     assert new_ws_handler is not ws_handler
-
-    assert len(attempts) == 2
-    assert entry.runtime_data.api.websocket_handler is not ws_handler
 
 
 async def test_migration_removing_devices_in_config_entry(

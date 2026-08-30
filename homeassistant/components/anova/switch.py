@@ -54,17 +54,30 @@ class AnovaCookSwitch(AnovaEntity, SwitchEntity):
         """Return true if a cook is currently running."""
         return self.coordinator.anova_device.is_cooking
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the cook switch is available."""
+        return (
+            super().available
+            and self.coordinator.pending_target_temperature is not None
+            and self.coordinator.pending_cook_time_seconds is not None
+        )
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start a cook."""
-        # Guaranteed set once the entity is available - both are seeded
-        # alongside coordinator.data (see AnovaCoordinator._handle_device_update).
-        assert self.coordinator.pending_target_temperature is not None
-        assert self.coordinator.pending_cook_time_seconds is not None
+        target_temperature = self.coordinator.pending_target_temperature
+        cook_time_seconds = self.coordinator.pending_cook_time_seconds
+        if target_temperature is None or cook_time_seconds is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="start_cook_unavailable",
+            )
         try:
             await self.coordinator.anova_device.start_cook(
-                self.coordinator.pending_target_temperature,
-                self.coordinator.pending_cook_time_seconds,
+                target_temperature,
+                cook_time_seconds,
                 "C",
             )
         except (CommandFailure, WebsocketFailure) as ex:

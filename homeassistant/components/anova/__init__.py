@@ -67,6 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        for coordinator in entry.runtime_data.coordinators:
+            await coordinator.async_shutdown()
         ws_handler = entry.runtime_data.api.websocket_handler
         if ws_handler is not None and ws_handler._message_listener is not None:  # noqa: SLF001
             ws_handler._message_listener.cancel()  # noqa: SLF001
