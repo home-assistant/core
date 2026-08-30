@@ -11,7 +11,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ElgatoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.device
     return {
         "info": coordinator.data.info.to_dict(),
         "state": coordinator.data.state.to_dict(),

@@ -8,6 +8,8 @@ from elgato import (
     Elgato,
     ElgatoConnectionError,
     ElgatoError,
+    FirmwareCatalog,
+    FirmwareVersion,
     Info,
     Settings,
     State,
@@ -19,9 +21,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, FIRMWARE_SCAN_INTERVAL, LOGGER, SCAN_INTERVAL
 
-type ElgatoConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
+type ElgatoConfigEntry = ConfigEntry[ElgatoCoordinators]
+
+
+@dataclass
+class ElgatoCoordinators:
+    """The coordinators backing an Elgato Light.
+
+    The device is polled on the network, the firmware catalog lives on
+    Elgato's servers, and the two have nothing to do with each other. Keeping
+    them apart means Elgato being unreachable costs the update entity and
+    nothing else.
+    """
+
+    device: ElgatoDataUpdateCoordinator
+    firmware: ElgatoFirmwareCoordinator
 
 
 @dataclass
@@ -78,3 +94,48 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",
             ) from err
+
+
+class ElgatoFirmwareCoordinator(DataUpdateCoordinator[FirmwareVersion | None]):
+    """Class to manage fetching the firmware Elgato ships for a device."""
+
+    config_entry: ElgatoConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ElgatoConfigEntry,
+        board_type: int,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.config_entry = entry
+        self.catalog = FirmwareCatalog(session=async_get_clientsession(hass))
+        # A device does not change what board it is, so this is safe to keep.
+        self.board_type = board_type
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_firmware_{entry.data[CONF_HOST]}",
+            update_interval=FIRMWARE_SCAN_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> FirmwareVersion | None:
+        """Fetch the firmware Elgato currently ships for this board."""
+        try:
+            versions = await self.catalog.versions(refresh=True)
+        except ElgatoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except ElgatoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err
+
+        # Elgato ships nothing for a board it does not know, which leaves the
+        # update entity with nothing to compare against rather than an error.
+        return versions.get(self.board_type)
