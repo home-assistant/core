@@ -1334,3 +1334,34 @@ async def test_pair_step_second_lookup_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert result["errors"] == {"base": expected_error}
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize(
+    ("patch_target", "error"),
+    [
+        pytest.param(
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+            OSError,
+            id="key_fetch_oserror",
+        ),
+        pytest.param(
+            "homeassistant.components.teslemetry.config_flow.Path.read_bytes",
+            ValueError,
+            id="key_read_valueerror",
+        ),
+    ],
+)
+async def test_rsa_key_load_failure_aborts(
+    hass: HomeAssistant,
+    patch_target: str,
+    error: type[Exception],
+) -> None:
+    """A failure loading the integration's RSA key aborts site preparation."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with patch(patch_target, side_effect=error):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
