@@ -168,9 +168,12 @@ def _as_calendar_event(event: EventObject) -> CalendarEvent | None:
         if end_value <= start_value:
             end_value = start_value + timedelta(days=1)
     else:
+        # The wire format is a naive wall-clock time; only a `datetime` from a
+        # future pyicloud can already carry a zone, and replacing it would
+        # move the event to a different instant.
         zone = _event_timezone(event)
-        start_value = start.replace(tzinfo=zone)
-        end_value = end.replace(tzinfo=zone)
+        start_value = start if start.tzinfo else start.replace(tzinfo=zone)
+        end_value = end if end.tzinfo else end.replace(tzinfo=zone)
         if end_value <= start_value:
             end_value = start_value + timedelta(minutes=30)
 

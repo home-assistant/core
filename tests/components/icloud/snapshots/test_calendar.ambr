@@ -12,6 +12,24 @@
     }),
   })
 # ---
+# name: test_datetime_dates_are_accepted
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-01T11:00:00+02:00',
+          'start': '2024-05-01T10:00:00+02:00',
+          'summary': 'Naive',
+        }),
+        dict({
+          'end': '2024-05-01T11:00:00+00:00',
+          'start': '2024-05-01T10:00:00+00:00',
+          'summary': 'Aware',
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_entities[calendar.test_icloud_account_personal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

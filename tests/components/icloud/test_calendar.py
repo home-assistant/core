@@ -260,6 +260,57 @@ async def test_event_uses_its_own_timezone(
     assert events == snapshot
 
 
+async def test_datetime_dates_are_accepted(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendars: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that real datetimes are accepted alongside the wire format.
+
+    pyicloud annotates `EventObject` as holding `datetime` but passes Apple's
+    wire format through unchanged, so both forms are handled. A naive datetime
+    is a wall-clock time in the event's own timezone, while an aware one
+    already names its instant and must keep it.
+    """
+    naive = _event(
+        "ev1",
+        "Naive",
+        datetime(2024, 5, 1, 10, 0),
+        datetime(2024, 5, 1, 11, 0),
+        tz="Europe/Rome",
+    )
+    naive.local_start_date = datetime(2024, 5, 1, 10, 0)
+    naive.local_end_date = datetime(2024, 5, 1, 11, 0)
+
+    aware = _event(
+        "ev2",
+        "Aware",
+        datetime(2024, 5, 1, 10, 0),
+        datetime(2024, 5, 1, 11, 0),
+        tz="Europe/Rome",
+    )
+    aware.local_start_date = datetime(2024, 5, 1, 10, 0, tzinfo=dt_util.UTC)
+    aware.local_end_date = datetime(2024, 5, 1, 11, 0, tzinfo=dt_util.UTC)
+
+    calendars.get_events.return_value = [naive, aware]
+
+    await _setup(hass, config_entry)
+
+    events = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        "get_events",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "start_date_time": datetime(2024, 4, 30),
+            "end_date_time": datetime(2024, 5, 3),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert events == snapshot
+
+
 async def test_unknown_event_timezone_falls_back(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
