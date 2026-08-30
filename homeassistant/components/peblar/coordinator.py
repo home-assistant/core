@@ -129,6 +129,7 @@ class PeblarVersionDataUpdateCoordinator(
     ) -> None:
         """Initialize the coordinator."""
         self.peblar = peblar
+        self._reboot_watcher: _RebootWatcher | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -136,6 +137,7 @@ class PeblarVersionDataUpdateCoordinator(
             name=f"Peblar {entry.title} version",
             update_interval=timedelta(hours=2),
         )
+        entry.async_on_unload(self.async_stop_reboot_watcher)
 
     @_coordinator_exception_handler
     @override
@@ -159,8 +161,23 @@ class PeblarVersionDataUpdateCoordinator(
         Without this a charger that just updated keeps offering the update
         it already took, until the two hourly version poll comes round.
         """
+        # Only ever one at a time: the update component refuses an install
+        # while the entity reports one in progress, which it does for as
+        # long as a watcher is running.
         self.install_in_progress = True
-        _RebootWatcher(self).async_start()
+        self._reboot_watcher = _RebootWatcher(self)
+        self._reboot_watcher.async_start()
+
+    @callback
+    def async_stop_reboot_watcher(self) -> None:
+        """Stop waiting on a reboot, if anything is still waiting on one."""
+        if (watcher := self._reboot_watcher) is None:
+            return
+
+        # Dropped first, so a watcher stopping itself cannot come back
+        # round here and stop itself again.
+        self._reboot_watcher = None
+        watcher.async_stop()
 
 
 class _RebootWatcher:
@@ -189,7 +206,6 @@ class _RebootWatcher:
         )
         self._start_deadline = dt_util.utcnow() + UPDATE_REBOOT_START_TIMEOUT
         self._async_set_deadline(UPDATE_REBOOT_START_TIMEOUT)
-        self._entry.async_on_unload(self._async_stop)
 
     @callback
     def _async_set_deadline(self, timeout: timedelta) -> None:
@@ -204,10 +220,10 @@ class _RebootWatcher:
     def _handle_deadline(self, _now: datetime) -> None:
         """Stop watching a charger that never did what was asked."""
         self._unsubscribe_timer = None
-        self._async_stop()
+        self._coordinator.async_stop_reboot_watcher()
 
     @callback
-    def _async_stop(self) -> None:
+    def async_stop(self) -> None:
         """Stop watching, however it ended."""
         if self._unsubscribe_listener is not None:
             self._unsubscribe_listener()
@@ -247,7 +263,7 @@ class _RebootWatcher:
             )
             return
 
-        self._async_stop()
+        self._coordinator.async_stop_reboot_watcher()
         self._entry.async_create_task(
             self._coordinator.hass,
             self._coordinator.async_request_refresh(),

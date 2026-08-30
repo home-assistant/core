@@ -128,6 +128,74 @@ async def test_install_firmware_refuses_while_customization_is_pending(
     mock_peblar.update.assert_not_called()
 
 
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_install_firmware_asks_the_charger_for_fresh_versions(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test a customization published since the last poll still blocks firmware.
+
+    Versions are polled once every two hours, and the charger answers from
+    its own cache unless told not to, so the refusal would be decided on an
+    answer that predates the very package it is meant to catch.
+    """
+    mock_peblar.current_versions.return_value = PeblarVersions.from_dict(
+        {"Customization": "Peblar-1.9", "Firmware": "1.6.1+1+WL-1"}
+    )
+    mock_peblar.available_versions.return_value = PeblarVersions.from_dict(
+        {"Customization": "Peblar-1.9", "Firmware": "1.6.2+1+WL-1"}
+    )
+    await hass.config_entries.async_reload(
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    await hass.async_block_till_done()
+
+    # Peblar publishes a customization package right after that poll.
+    mock_peblar.available_versions.return_value = PeblarVersions.from_dict(
+        {"Customization": "Peblar-2.0", "Firmware": "1.6.2+1+WL-1"}
+    )
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "customization_update_first"
+    mock_peblar.available_versions.assert_called_with(use_cache=False)
+    mock_peblar.update.assert_not_called()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.UPDATE], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_install_firmware_after_the_customization_landed(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test the fresh answer counts the other way round too.
+
+    The customization was installed on the charger since the last poll, so
+    there is nothing left to wait for and the firmware may go ahead.
+    """
+    await _async_offer_both_updates(hass, mock_peblar)
+
+    mock_peblar.current_versions.return_value = PeblarVersions.from_dict(
+        {"Customization": "Peblar-1.9", "Firmware": "1.6.1+1+WL-1"}
+    )
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+        blocking=True,
+    )
+
+    mock_peblar.update.assert_called_once_with(package_type=PackageType.FIRMWARE)
+
+
 async def _async_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
