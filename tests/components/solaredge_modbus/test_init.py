@@ -1,5 +1,6 @@
 """Tests for the SolarEdge Modbus config-entry setup."""
 
+import asyncio
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,13 +13,24 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from solaredged import SolarEdgeConnectionError
 
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.solaredge_modbus.const import (
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -45,6 +57,9 @@ METER_MODEL_REGISTER = 40188
 
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
+
+EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
+EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -552,6 +567,57 @@ async def test_settings_failure_does_not_block_setup(
     state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_concurrent_control_writes_keep_both_changes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Two writes to the same control register do not clobber each other.
+
+    The export mode and its flags live in one register, which the library
+    changes by taking its cached value, flipping bits and writing it back.
+    Select and switch have separate parallel-update semaphores, so without
+    serialization the second write undoes the first.
+    """
+    await _setup(hass, mock_config_entry)
+
+    write_register = mock_modbus_unit.write_register
+
+    async def write_register_slowly(address: int, value: int) -> None:
+        """Write with a suspension point, which a real link has and a mock lacks."""
+        await asyncio.sleep(0)
+        await write_register(address, value)
+
+    mock_modbus_unit.write_register = write_register_slowly
+
+    await asyncio.gather(
+        hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                ATTR_OPTION: "production_control",
+            },
+            blocking=True,
+        ),
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            blocking=True,
+        ),
+    )
+
+    state = hass.states.get(EXPORT_LIMITATION_ENTITY)
+    assert state is not None
+    assert state.state == "production_control"
+
+    state = hass.states.get(EXTERNAL_PRODUCTION_ENTITY)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_setup_retry_when_device_unresponsive(
