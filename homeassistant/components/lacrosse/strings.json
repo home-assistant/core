@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "sensor_already_configured": "This sensor is already configured."
+    },
+    "step": {
+      "add_sensor": {
+        "menu_options": {
+          "finish": "Finish setup",
+          "sensor": "Add another sensor"
+        }
+      },
+      "sensor": {
+        "data": {
+          "expire_after": "Mark unavailable after (seconds)",
+          "friendly_name": "Name",
+          "id": "Sensor ID",
+          "type": "Sensor type"
+        }
+      },
+      "user": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
+        }
+      }
+    }
+  }
+}

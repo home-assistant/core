@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 import pylacrosse
-from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,39 +14,43 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from . import LaCrosseConfigEntry
+from .const import (
+    CONF_BAUD,
+    CONF_DATARATE,
+    CONF_EXPIRE_AFTER,
+    CONF_FREQUENCY,
+    CONF_JEELINK_LED,
+    CONF_TOGGLE_INTERVAL,
+    CONF_TOGGLE_MASK,
+    DEFAULT_BAUD,
+    DEFAULT_DEVICE,
+    DOMAIN,
+    TYPES,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_BAUD = "baud"
-CONF_DATARATE = "datarate"
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_FREQUENCY = "frequency"
-CONF_JEELINK_LED = "led"
-CONF_TOGGLE_INTERVAL = "toggle_interval"
-CONF_TOGGLE_MASK = "toggle_mask"
-
-DEFAULT_DEVICE = "/dev/ttyUSB0"
-DEFAULT_BAUD = 57600
-DEFAULT_EXPIRE_AFTER = 300
-
-TYPES = ["battery", "humidity", "temperature"]
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -72,6 +75,15 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LaCrosseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LaCrosse sensors from a config entry."""
+    _add_sensors(hass, entry.runtime_data, dict(entry.data), async_add_entities)
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -79,34 +91,20 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the LaCrosse sensors."""
-    usb_device: str = config[CONF_DEVICE]
-    baud: int = config[CONF_BAUD]
-    expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+    hass.add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    _LOGGER.debug("%s %s", usb_device, baud)
 
-    try:
-        lacrosse = pylacrosse.LaCrosse(usb_device, baud)
-        lacrosse.open()
-    except SerialException as exc:
-        _LOGGER.warning("Unable to open serial port: %s", exc)
-        return
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
-
-    if CONF_JEELINK_LED in config:
-        lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
-    if CONF_FREQUENCY in config:
-        lacrosse.set_frequency(config.get(CONF_FREQUENCY))
-    if CONF_DATARATE in config:
-        lacrosse.set_datarate(config.get(CONF_DATARATE))
-    if CONF_TOGGLE_INTERVAL in config:
-        lacrosse.set_toggle_interval(config.get(CONF_TOGGLE_INTERVAL))
-    if CONF_TOGGLE_MASK in config:
-        lacrosse.set_toggle_mask(config.get(CONF_TOGGLE_MASK))
-
-    lacrosse.start_scan()
-
+def _add_sensors(
+    hass: HomeAssistant,
+    lacrosse: pylacrosse.LaCrosse,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+) -> None:
+    """Create entities for the configured LaCrosse sensors."""
     sensors: list[LaCrosseSensor] = []
     for device, device_config in config[CONF_SENSORS].items():
         _LOGGER.debug("%s %s", device, device_config)
@@ -114,6 +112,7 @@ def setup_platform(
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
         name: str = device_config.get(CONF_NAME, device)
+        expire_after: int | None = device_config.get(CONF_EXPIRE_AFTER)
 
         sensors.append(
             sensor_class(hass, lacrosse, device, name, expire_after, device_config)
