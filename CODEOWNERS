@@ -752,6 +752,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hegel/ @boazca
 /homeassistant/components/helty/ @ebaschiera
 /tests/components/helty/ @ebaschiera
+/homeassistant/components/helty_cloud/ @ebaschiera
+/tests/components/helty_cloud/ @ebaschiera
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
