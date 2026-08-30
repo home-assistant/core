@@ -1,6 +1,7 @@
 """Common fixtures for the Model Context Protocol Server tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -52,15 +53,22 @@ def llm_hass_api_fixture() -> list[str]:
     return [llm.LLM_API_ASSIST]
 
 
+@pytest.fixture(name="entry_data")
+def entry_data_fixture() -> dict[str, Any]:
+    """Fixture for config entry data on top of the selected LLM APIs."""
+    return {}
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(
-    hass: HomeAssistant, llm_hass_api: str | list[str]
+    hass: HomeAssistant, llm_hass_api: str | list[str], entry_data: dict[str, Any]
 ) -> MockConfigEntry:
     """Fixture to load the integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_LLM_HASS_API: llm_hass_api,
+            **entry_data,
         },
     )
     config_entry.add_to_hass(hass)
