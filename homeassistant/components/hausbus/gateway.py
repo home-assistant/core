@@ -226,23 +226,7 @@ class HausbusGateway(IBusDataListener):
             self._pending_channels.append((channel, device_info))
 
     def pause_channel_dispatch(self) -> None:
-        """Buffer newly discovered channels instead of dispatching them.
-
-        Used while unloading. removeBusDeviceListener() only removes this
-        gateway from pyhausbus's own listener list - it does not
-        retroactively stop a newDeviceDetected() call already in flight on
-        pyhausbus's DeviceWorker thread, or one already queued onto the
-        event loop via call_soon_threadsafe(), from still reaching
-        _register_channel() while async_unload_platforms() runs. This is
-        called with no `await` before it, so - the event loop being
-        single-threaded - any such call can only actually run after this
-        has already taken effect: it is guaranteed to see _platform_ready
-        already False and buffer instead of dispatching, rather than
-        calling async_add_entities() on a platform that might be
-        mid-teardown. Call async_flush_pending_channels() to undo this and
-        deliver anything buffered meanwhile, e.g. if the unload attempt
-        this was guarding turns out to fail.
-        """
+        """Buffer newly discovered channels while the platform is unloading."""
         self._platform_ready = False
 
     async def async_flush_pending_channels(self) -> None:
