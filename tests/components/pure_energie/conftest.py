@@ -1,7 +1,6 @@
 """Fixtures for Pure Energie integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from gridnet import Device as GridNetDevice, SmartBridge
@@ -11,7 +10,7 @@ from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -42,7 +41,7 @@ def mock_pure_energie_config_flow() -> Generator[MagicMock]:
     ) as pure_energie_mock:
         pure_energie = pure_energie_mock.return_value
         pure_energie.device.return_value = GridNetDevice.from_dict(
-            json.loads(load_fixture("device.json", DOMAIN))
+            load_json_object_fixture("device.json", DOMAIN)
         )
         yield pure_energie
 
@@ -56,12 +55,12 @@ def mock_pure_energie():
         pure_energie = pure_energie_mock.return_value
         pure_energie.smartbridge = AsyncMock(
             return_value=SmartBridge.from_dict(
-                json.loads(load_fixture("pure_energie/smartbridge.json"))
+                load_json_object_fixture("pure_energie/smartbridge.json")
             )
         )
         pure_energie.device = AsyncMock(
             return_value=GridNetDevice.from_dict(
-                json.loads(load_fixture("pure_energie/device.json"))
+                load_json_object_fixture("pure_energie/device.json")
             )
         )
         yield pure_energie_mock
