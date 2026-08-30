@@ -13,6 +13,11 @@
         "default": "mdi:power-settings"
       }
     },
+    "sensor": {
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    },
     "switch": {
       "bypass": {
         "default": "mdi:battery-off-outline"
