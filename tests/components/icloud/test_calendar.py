@@ -1,6 +1,6 @@
 """Tests for the iCloud calendar platform."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,7 +8,7 @@ from pyicloud.exceptions import PyiCloudException
 import pytest
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.icloud.calendar import SCAN_INTERVAL
+from homeassistant.components.icloud.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -184,7 +184,7 @@ async def test_new_calendar_added_on_later_poll(
         _calendar("cal1", "Personal"),
         _calendar("cal2", "Work"),
     ]
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
