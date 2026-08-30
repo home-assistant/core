@@ -34,9 +34,10 @@ MAX_RECONNECT_BACKOFF = timedelta(minutes=15)
 # confirmed against the developer docs and by observing a real device unplug
 # live (no EVENT_APC_WIFI_REMOVED, no message of any kind, ever arrives). The
 # official app faces the same gap and also falls back to a silence timeout.
-# Observed push cadence is ~2s continuously whether idle or cooking, so this
-# is a large safety margin (~150x) against false positives, and spans several
-# of this coordinator's own RECONNECT_RETRY_DELAY poll cycles.
+# Push cadence verified live on a Precision Cooker Pro (2026-08-30): 57
+# pushes over 120s idle, median gap 2.07s, max gap 2.7s, so this is a large
+# safety margin (~100x+) against false positives, and spans several of this
+# coordinator's own RECONNECT_RETRY_DELAY poll cycles.
 DEVICE_STALE_THRESHOLD = timedelta(minutes=5)
 
 
