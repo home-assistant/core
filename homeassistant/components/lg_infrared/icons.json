@@ -88,6 +88,14 @@
       "up": {
         "default": "mdi:arrow-up"
       }
+    },
+    "switch": {
+      "auto_clean": {
+        "default": "mdi:broom"
+      },
+      "ion_generator": {
+        "default": "mdi:air-purifier"
+      }
     }
   }
 }

@@ -210,6 +210,14 @@
           }
         }
       }
+    },
+    "switch": {
+      "auto_clean": {
+        "name": "Auto clean"
+      },
+      "ion_generator": {
+        "name": "Ion generator"
+      }
     }
   },
   "selector": {
