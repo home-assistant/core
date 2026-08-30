@@ -123,8 +123,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         try:
             return await self.firmware.catalog.download(self.firmware.board_type)
         except ElgatoConnectionError as err:
-            self.firmware.last_update_success = False
-            self.firmware.async_update_listeners()
+            self.firmware.async_set_update_error(err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",

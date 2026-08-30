@@ -207,10 +207,10 @@ async def test_elgato_unreachable(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "message"),
+    ("side_effect", "message", "still_reachable"),
     [
-        (ElgatoConnectionError, "An error occurred while communicating"),
-        (ElgatoFirmwareError, "An unknown error occurred while communicating"),
+        (ElgatoConnectionError, "An error occurred while communicating", False),
+        (ElgatoFirmwareError, "An unknown error occurred while communicating", True),
     ],
 )
 async def test_download_failure_leaves_the_light_alone(
@@ -219,12 +219,17 @@ async def test_download_failure_leaves_the_light_alone(
     mock_firmware_catalog: MagicMock,
     side_effect: type[Exception],
     message: str,
+    still_reachable: bool,
 ) -> None:
     """Test Elgato failing to hand over the image.
 
     Fetching the firmware happens off the local network. A failure there says
     nothing about the light, which has to keep working, and the device must
     never be sent an image that was not fetched.
+
+    Not being able to reach Elgato does say something about this entity, so
+    it goes unavailable. An image that arrives but does not verify does not:
+    Elgato answered, it just answered with something unusable.
     """
     mock_firmware_catalog.download.side_effect = side_effect
 
@@ -240,3 +245,6 @@ async def test_download_failure_leaves_the_light_alone(
 
     assert (light := hass.states.get("light.frenck"))
     assert light.state != STATE_UNAVAILABLE
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert (state.state != STATE_UNAVAILABLE) is still_reachable
