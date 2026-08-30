@@ -850,11 +850,9 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
         expected_start = datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
         expected_end = datetime(2026, 9, 1, 22, 0, 0, tzinfo=UTC)
 
-        # If 08:00 local is incorrectly treated as 08:00 UTC the assertion fails.
         assert call_args.schedule.start == expected_start
         assert call_args.schedule.end == expected_end
 
-        # Verify the serialized dict in get_codes output carries the same instants.
         code = Mock()
         code.name = "temp_user"
         code.code = "1234"
