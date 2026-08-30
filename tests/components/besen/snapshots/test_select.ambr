@@ -1,0 +1,131 @@
+# serializer version: 1
+# name: test_select_state[select.garage_language-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'english',
+        'italian',
+        'german',
+        'french',
+        'spanish',
+        'hebrew',
+        'polish',
+        'chinese',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garage_language',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Language',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Language',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'language',
+    'unique_id': 'AA:BB_language',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_state[select.garage_language-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Language',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'english',
+        'italian',
+        'german',
+        'french',
+        'spanish',
+        'hebrew',
+        'polish',
+        'chinese',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garage_language',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'english',
+  })
+# ---
+# name: test_select_state[select.garage_temperature_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garage_temperature_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature unit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature unit',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_unit',
+    'unique_id': 'AA:BB_temperature_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_state[select.garage_temperature_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Temperature unit',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garage_temperature_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'celsius',
+  })
+# ---

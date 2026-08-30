@@ -95,6 +95,21 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
 
         await self._async_run_command(self.client.async_set_charge_amps(amps))
 
+    async def async_set_lcd_brightness(self, brightness: int) -> None:
+        """Set the LCD brightness."""
+
+        await self._async_run_command(self.client.async_set_lcd_brightness(brightness))
+
+    async def async_set_language(self, language: str) -> None:
+        """Set the charger language."""
+
+        await self._async_run_command(self.client.async_set_language(language))
+
+    async def async_set_temperature_unit(self, unit: str) -> None:
+        """Set the charger temperature unit."""
+
+        await self._async_run_command(self.client.async_set_temperature_unit(unit))
+
     async def _async_run_command(self, command: Awaitable[None]) -> None:
         """Run a charger command and translate command failures."""
 

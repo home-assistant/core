@@ -51,6 +51,9 @@ def charger_state(
     *,
     charger_status: bool | None = True,
     charge_amps: int | None = 16,
+    lcd_brightness: int | None = 50,
+    language: str | None = "English",
+    temperature_unit: str | None = "Celsius",
     output_max_amps: int | None = 32,
     available: bool = True,
     authenticated: bool = True,
@@ -72,6 +75,9 @@ def charger_state(
         ),
         config=ChargerConfig(
             charge_amps=charge_amps,
+            lcd_brightness=lcd_brightness,
+            language=language,
+            temperature_unit=temperature_unit,
             device_name="Garage",
             rssi=-55,
         ),
@@ -80,6 +86,12 @@ def charger_state(
             if charge is not None
             else ChargeStatus(
                 charger_status=charger_status,
+                error_details="No Error",
+                charging_status="Start",
+                charging_status_description="EV is connected, please press start",
+                plug_state="Connected Locked",
+                output_state="Charging",
+                current_state="Charging",
                 power=3500,
                 total_energy=12.3,
                 session_energy=1.2,
@@ -108,6 +120,9 @@ def _configure_client_mock(client: Mock) -> None:
     client.async_start_charging = AsyncMock()
     client.async_stop_charging = AsyncMock()
     client.async_set_charge_amps = AsyncMock()
+    client.async_set_lcd_brightness = AsyncMock()
+    client.async_set_language = AsyncMock()
+    client.async_set_temperature_unit = AsyncMock()
     client.add_listener.return_value = Mock()
 
 
@@ -168,9 +183,21 @@ def mock_besen_client() -> Generator[Mock]:
         async def async_set_charge_amps(amps: int) -> None:
             publish_besen_state(client, charger_state(charge_amps=amps))
 
+        async def async_set_lcd_brightness(brightness: int) -> None:
+            publish_besen_state(client, charger_state(lcd_brightness=brightness))
+
+        async def async_set_language(language: str) -> None:
+            publish_besen_state(client, charger_state(language=language))
+
+        async def async_set_temperature_unit(unit: str) -> None:
+            publish_besen_state(client, charger_state(temperature_unit=unit))
+
         client.async_start_charging.side_effect = async_start_charging
         client.async_stop_charging.side_effect = async_stop_charging
         client.async_set_charge_amps.side_effect = async_set_charge_amps
+        client.async_set_lcd_brightness.side_effect = async_set_lcd_brightness
+        client.async_set_language.side_effect = async_set_language
+        client.async_set_temperature_unit.side_effect = async_set_temperature_unit
         yield client
 
 

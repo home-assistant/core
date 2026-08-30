@@ -30,9 +30,11 @@ from .conftest import charger_state, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID = "number.garage_charging_current"
+CHARGING_CURRENT_ENTITY_ID = "number.garage_charging_current"
+LCD_BRIGHTNESS_ENTITY_ID = "number.garage_lcd_brightness"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -60,7 +62,7 @@ async def test_number_updates_from_client(
     publish_besen_state(mock_besen_client, charger_state(charge_amps=20))
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == "20"
 
@@ -75,10 +77,10 @@ async def test_number_updates_on_refresh(
     await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
 
     mock_besen_client.state = charger_state(charge_amps=20)
-    await async_update_entity(hass, ENTITY_ID)
+    await async_update_entity(hass, CHARGING_CURRENT_ENTITY_ID)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == "20"
 
@@ -107,7 +109,7 @@ async def test_number_unavailable_from_client_state(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -123,7 +125,7 @@ async def test_number_unknown_without_reported_current(
 
     await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -151,7 +153,7 @@ async def test_number_maximum(
 
     await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_MAX] == expected_max
 
@@ -168,13 +170,13 @@ async def test_number_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 20},
+        {ATTR_ENTITY_ID: CHARGING_CURRENT_ENTITY_ID, ATTR_VALUE: 20},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     mock_besen_client.async_set_charge_amps.assert_awaited_once_with(20)
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == "20"
 
@@ -196,12 +198,82 @@ async def test_number_command_failure(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 20},
+            {ATTR_ENTITY_ID: CHARGING_CURRENT_ENTITY_ID, ATTR_VALUE: 20},
             blocking=True,
         )
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "command_failed"
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(CHARGING_CURRENT_ENTITY_ID)
     assert state is not None
     assert state.state == "16"
+
+
+async def test_lcd_brightness_set_value(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+) -> None:
+    """Test setting the LCD brightness calls the client and updates state."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: LCD_BRIGHTNESS_ENTITY_ID, ATTR_VALUE: 75},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_besen_client.async_set_lcd_brightness.assert_awaited_once_with(75)
+    state = hass.states.get(LCD_BRIGHTNESS_ENTITY_ID)
+    assert state is not None
+    assert state.state == "75"
+
+
+async def test_lcd_brightness_unknown_without_reported_value(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+) -> None:
+    """Test LCD brightness is unknown before the charger reports it."""
+
+    mock_besen_client.state = charger_state(lcd_brightness=None)
+
+    await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    state = hass.states.get(LCD_BRIGHTNESS_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_lcd_brightness_command_failure(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+) -> None:
+    """Test LCD brightness command failures are translated."""
+
+    mock_besen_client.async_set_lcd_brightness = AsyncMock(
+        side_effect=CommandFailed("failed")
+    )
+
+    await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: LCD_BRIGHTNESS_ENTITY_ID, ATTR_VALUE: 75},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "command_failed"
+    state = hass.states.get(LCD_BRIGHTNESS_ENTITY_ID)
+    assert state is not None
+    assert state.state == "50"
