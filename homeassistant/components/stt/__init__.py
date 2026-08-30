@@ -291,7 +291,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await stt_provider.async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(4096)
             )
         else:
             # Check format
@@ -300,7 +300,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await provider_entity.internal_async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(4096)
             )
 
         # Return result
