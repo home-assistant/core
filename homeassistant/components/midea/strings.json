@@ -86,7 +86,7 @@
         "data_description": {
           "ip_address": "[%key:component::midea::config::step::manually::data_description::ip_address%]"
         },
-        "title": "Set your device new IP address"
+        "title": "Set your device's new IP address"
       },
       "search": {
         "data": {

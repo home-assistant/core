@@ -719,7 +719,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Midea reconfigure step to allow to reconfigure a config entry."""
+        """Allow reconfiguration of a Midea config entry."""
         entry = self._get_reconfigure_entry()
         error = None
         if user_input is not None:
@@ -748,7 +748,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                         subtype=data[CONF_SUBTYPE],
                     )
                 ):
-                    return self.async_update_and_abort(
+                    return self.async_update_reload_and_abort(
                         entry,
                         data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
                     )
@@ -759,7 +759,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_IP_ADDRESS,
-                        default=entry.data.get(CONF_IP_ADDRESS),
+                        default=(user_input or entry.data)[CONF_IP_ADDRESS],
                     ): str
                 }
             ),
