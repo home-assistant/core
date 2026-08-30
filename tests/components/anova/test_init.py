@@ -1,5 +1,7 @@
 """Test init for Anova."""
 
+import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
@@ -109,6 +111,71 @@ async def test_websocket_reconnects_on_disconnect(
         device = new_ws_handler.devices.get(coordinator.device_unique_id)
         assert device is not None
         assert coordinator.anova_device is device
+
+
+async def test_websocket_reconnect_reloads_entry_when_new_device_appears(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test a reconnect that discovers an unset-up device triggers a reload."""
+    entry = await async_init_integration(hass)
+    ws_handler = entry.runtime_data.api.websocket_handler
+    assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
+
+    original_side_effect = entry.runtime_data.api.create_websocket.side_effect
+    new_device_id = "anova_id_2"
+
+    async def create_websocket_with_new_device() -> None:
+        await original_side_effect()
+        entry.runtime_data.api.websocket_handler.devices[new_device_id] = APCWifiDevice(
+            cooker_id=new_device_id,
+            type="a5",
+            paired_at="2023-08-12T02:33:20.917716Z",
+            name="Anova Precision Cooker",
+        )
+
+    entry.runtime_data.api.create_websocket.side_effect = (
+        create_websocket_with_new_device
+    )
+    reload_mock = AsyncMock()
+    with patch.object(hass.config_entries, "async_reload", reload_mock):
+        ws_handler.simulate_disconnect()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    reload_mock.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_websocket_listener_exception_is_consumed_and_triggers_reconnect(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test a message listener that ends in an exception still reconnects.
+
+    The done callback must fetch the task exception so anova_wifi listener
+    errors are logged instead of surfacing as an unhandled task exception.
+    """
+    entry = await async_init_integration(hass)
+    ws_handler = entry.runtime_data.api.websocket_handler
+    assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
+
+    initial_call_count = entry.runtime_data.api.create_websocket.call_count
+    original_listener = ws_handler._message_listener
+
+    async def failing_listener() -> None:
+        raise WebsocketFailure("transport died")
+
+    ws_handler._message_listener = asyncio.create_task(failing_listener())
+    entry.runtime_data.coordinators[0].async_start_disconnect_listener()
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.api.create_websocket.call_count == initial_call_count + 1
+
+    original_listener.cancel()
+    with suppress(asyncio.CancelledError):
+        await original_listener
 
 
 async def test_coordinator_replays_cached_device_state_at_attach(
@@ -264,6 +331,7 @@ async def test_reconnect_backoff_skips_retries_until_elapsed(
         == attempts_after_first_failure
     )
     assert entry.runtime_data.next_reconnect_attempt == next_attempt
+    assert entry.runtime_data.coordinators[0].data is None
 
     # Once the backoff window elapses and the connection recovers, retry
     # succeeds and the backoff resets to the base delay for the next outage.

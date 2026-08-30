@@ -121,6 +121,11 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
                 return
             if self.config_entry.state is not ConfigEntryState.LOADED:
                 return
+            if exception := task.exception():
+                _LOGGER.debug(
+                    "Anova websocket message listener ended with an error: %s",
+                    exception,
+                )
             self.config_entry.async_create_background_task(
                 self.hass,
                 self.async_request_refresh(),
@@ -157,6 +162,8 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
             next_attempt = self.config_entry.runtime_data.next_reconnect_attempt
             if next_attempt is None or dt_util.utcnow() >= next_attempt:
                 await self._async_reconnect()
+            else:
+                return None
 
         return self._data_if_fresh()
 
@@ -209,5 +216,21 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
                 device.set_update_listener(coordinator._handle_device_update)  # noqa: SLF001
                 if (last_update := device.last_update) is not None:
                     coordinator._handle_device_update(last_update)  # noqa: SLF001
+
+        # Devices paired after setup stay invisible until a reload: anova-wifi
+        # never reports WIFI_ADDED mid-session and coordinators are only
+        # created when the entry is set up, so reload once a reconnect turns up
+        # a cooker id no coordinator is wired to.
+        coordinator_ids = {
+            coordinator.device_unique_id
+            for coordinator in self.config_entry.runtime_data.coordinators
+        }
+        if new_device_ids := set(ws_handler.devices) - coordinator_ids:
+            _LOGGER.info("New Anova devices discovered: %s", sorted(new_device_ids))
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.hass.config_entries.async_reload(self.config_entry.entry_id),
+                "anova_reload_for_new_devices",
+            )
 
         self.async_start_disconnect_listener()
