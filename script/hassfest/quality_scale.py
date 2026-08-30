@@ -497,7 +497,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kraken",
     "kulersky",
     "kwb",
-    "lacrosse",
     "lacrosse_view",
     "landisgyr_heat_meter",
     "lannouncer",
