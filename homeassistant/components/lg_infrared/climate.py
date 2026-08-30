@@ -86,7 +86,7 @@ SWING_MIDDLE_LOW = "middle_low"
 SWING_MIDDLE_HIGH = "middle_high"
 SWING_HIGH = "high"
 SWING_HIGHEST = "highest"
-SWING_ON = "swing"
+SWING_OSCILLATE = "swing"
 
 SWING_LEFT = "left"
 SWING_MIDDLE_LEFT = "middle_left"
@@ -108,7 +108,7 @@ _HA_SWING_TO_LIB: dict[str, LGACCode] = {
     SWING_MIDDLE_LOW: LGACCode.SWING_V_MIDDLE_LOW,
     SWING_LOW: LGACCode.SWING_V_LOW,
     SWING_LOWEST: LGACCode.SWING_V_LOWEST,
-    SWING_ON: LGACCode.SWING_V_SWING,
+    SWING_OSCILLATE: LGACCode.SWING_V_SWING,
 }
 _LIB_SWING_TO_HA: dict[LGACCode, str] = {v: k for k, v in _HA_SWING_TO_LIB.items()}
 
@@ -121,7 +121,7 @@ _HA_SWING_H_TO_LIB: dict[str, LGACCode] = {
     SWING_RIGHT: LGACCode.SWING_H_RIGHT,
     SWING_LEFT_HALF: LGACCode.SWING_H_MIDDLE_TO_LEFT,
     SWING_RIGHT_HALF: LGACCode.SWING_H_MIDDLE_TO_RIGHT,
-    SWING_ON: LGACCode.SWING_H_SWING,
+    SWING_OSCILLATE: LGACCode.SWING_H_SWING,
 }
 _LIB_SWING_H_TO_HA: dict[LGACCode, str] = {v: k for k, v in _HA_SWING_H_TO_LIB.items()}
 
