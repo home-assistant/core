@@ -7,8 +7,11 @@ the ``solaredged`` library.
 """
 
 from collections.abc import Set as AbstractSet
+from datetime import datetime
+from functools import partial
 from typing import TYPE_CHECKING
 
+from modbus_connection import ModbusUnit
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
 
 from homeassistant.components.modbus import async_get_unit
@@ -20,8 +23,10 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTACHMENT_SCAN_INTERVAL,
     CONF_UNIT_ID,
     DOMAIN,
     LOGGER,
@@ -45,6 +50,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -139,6 +145,7 @@ async def async_setup_entry(
         settings=settings,
         device_info=device_info,
         inverter_device_id=inverter.id,
+        attachments=_attachment_identities(solaredge),
     )
 
     if silent := solaredge.unresponsive_blocks & {
@@ -156,7 +163,83 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # What is wired to the inverter is read while setting up, so a meter or
+    # battery added or removed later needs the entry to load again to be seen.
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            partial(_async_reload_when_attachments_change, hass, entry, unit),
+            ATTACHMENT_SCAN_INTERVAL,
+        )
+    )
+
     return True
+
+
+def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
+    """Return what the meters and batteries attached right now are known by."""
+    return frozenset(
+        [
+            *(
+                f"meter_{attachment_identity(meter, index)}"
+                for index, meter in enumerate(solaredge.meters, 1)
+            ),
+            *(
+                f"battery_{attachment_identity(battery, index)}"
+                for index, battery in enumerate(solaredge.batteries, 1)
+            ),
+        ]
+    )
+
+
+async def _async_reload_when_attachments_change(
+    hass: HomeAssistant,
+    entry: SolarEdgeModbusConfigEntry,
+    unit: ModbusUnit,
+    _now: datetime,
+) -> None:
+    """Reload the entry when the hardware wired to the inverter changed."""
+    solaredge = entry.runtime_data.solaredge
+
+    # Swapping one meter for another leaves the count alone, but the polls have
+    # been reading the new one's serial number since it was wired in.
+    if _attachment_identities(solaredge) != entry.runtime_data.attachments:
+        LOGGER.info(
+            "%s: what is attached changed, reloading to pick that up",
+            entry.title,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
+
+    try:
+        probed = await SolarEdge.async_probe(unit)
+    except SolarEdgeError as err:
+        # Nothing to conclude from a probe that did not finish; the coordinators
+        # report an inverter that stopped answering.
+        LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
+        return
+
+    for name, found, known in (
+        (SUBSYSTEM_METERS, len(probed.meters), len(solaredge.meters)),
+        (SUBSYSTEM_BATTERIES, len(probed.batteries), len(solaredge.batteries)),
+    ):
+        if found == known:
+            continue
+        # A block that stayed silent is taken for absent, which is not the same
+        # as the inverter saying it is gone, and reloading on that would drop a
+        # device over one timeout.
+        if found < known and name in probed.unresponsive_blocks:
+            continue
+
+        LOGGER.info(
+            "%s: %s went from %s to %s, reloading to pick that up",
+            entry.title,
+            name,
+            known,
+            found,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
 
 def _async_remove_stale_devices(

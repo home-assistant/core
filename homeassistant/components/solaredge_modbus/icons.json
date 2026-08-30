@@ -61,6 +61,14 @@
       "state_of_health": {
         "default": "mdi:battery-heart-variant"
       }
+    },
+    "switch": {
+      "external_production": {
+        "default": "mdi:solar-power-variant"
+      },
+      "negative_site_limit": {
+        "default": "mdi:transmission-tower-import"
+      }
     }
   }
 }
