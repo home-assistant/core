@@ -1,10 +1,16 @@
 """Test schlage lock."""
 
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyschlage.code import AccessCode
+from pyschlage.code import (
+    AccessCode,
+    MultiRecurringSchedule,
+    RecurringSchedule,
+    TemporarySchedule,
+)
 from pyschlage.exceptions import Error as SchlageError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +24,7 @@ from homeassistant.components.schlage.const import (
     SERVICE_GET_CODES,
     UPDATE_INTERVAL,
 )
+from homeassistant.components.schlage.lock import SchlageLockEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -429,9 +436,13 @@ async def test_get_codes_service(
     code1 = Mock()
     code1.name = "user1"
     code1.code = "1234"
+    code1.access_code_id = "ac_001"
+    code1.schedule = None
     code2 = Mock()
     code2.name = "user2"
     code2.code = "5678"
+    code2.access_code_id = "ac_002"
+    code2.schedule = None
     mock_lock.access_codes = {"1": code1, "2": code2}
 
     response = await hass.services.async_call(
@@ -447,8 +458,18 @@ async def test_get_codes_service(
 
     assert response == {
         "lock.vault_door": {
-            "1": {"name": "user1", "code": "1234"},
-            "2": {"name": "user2", "code": "5678"},
+            "1": {
+                "name": "user1",
+                "code": "1234",
+                "access_code_id": "ac_001",
+                "schedule": None,
+            },
+            "2": {
+                "name": "user2",
+                "code": "5678",
+                "access_code_id": "ac_002",
+                "schedule": None,
+            },
         }
     }
 
@@ -615,3 +636,297 @@ async def test_get_codes_service_refresh_error(
             return_response=True,
         )
     assert exc_info.value.translation_key == "schlage_refresh_failed"
+
+
+async def test_add_code_service_temporary_pin(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service with temporary PIN (both start and end)."""
+
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    start = datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC)
+    end = datetime(2025, 1, 1, 18, 0, 0, tzinfo=UTC)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "temp_user",
+            "code": "1234",
+            "notify_on_use": True,
+            "start_datetime": start.isoformat(),
+            "end_datetime": end.isoformat(),
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "temp_user"
+    assert call_args.code == "1234"
+    assert isinstance(call_args.schedule, TemporarySchedule)
+    assert call_args.schedule.start == start
+    assert call_args.schedule.end == end
+
+
+async def test_add_code_service_start_without_end(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects start without end."""
+
+    mock_lock.access_codes = {}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Both start and end datetimes must be provided",
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_temporary_dates_required"
+
+
+async def test_add_code_service_end_without_start(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects end without start."""
+
+    mock_lock.access_codes = {}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Both start and end datetimes must be provided",
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                "end_datetime": datetime(2025, 1, 1, 18, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_temporary_dates_required"
+
+
+async def test_add_code_service_start_after_end(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects start after end."""
+
+    mock_lock.access_codes = {}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Start datetime must be before end datetime",
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                "start_datetime": datetime(
+                    2025, 1, 1, 18, 0, 0, tzinfo=UTC
+                ).isoformat(),
+                "end_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_start_after_end"
+
+
+async def test_add_code_service_start_equals_end(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects start equal to end."""
+
+    mock_lock.access_codes = {}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Start datetime must be before end datetime",
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+                "end_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_start_after_end"
+
+
+async def test_add_code_service_temporary_pin_utc_normalization(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service normalizes naive datetimes to UTC."""
+
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    # Provide naive datetimes (cv.datetime returns naive datetimes)
+    start_naive = datetime(2025, 1, 1, 8, 0, 0)
+    end_naive = datetime(2025, 1, 1, 18, 0, 0)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "temp_user",
+            "code": "1234",
+            "start_datetime": start_naive.isoformat(),
+            "end_datetime": end_naive.isoformat(),
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert call_args.schedule is not None
+    # The schedule should have timezone-aware UTC datetimes
+    assert call_args.schedule.start.tzinfo is not None
+    assert call_args.schedule.end.tzinfo is not None
+
+
+async def test_get_codes_service_with_access_code_id_and_schedule(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test get_codes returns access_code_id and schedule."""
+
+    code1 = Mock()
+    code1.name = "user1"
+    code1.code = "1234"
+    code1.access_code_id = "ac_001"
+    code1.schedule = TemporarySchedule(
+        start=datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC),
+        end=datetime(2025, 1, 1, 18, 0, 0, tzinfo=UTC),
+    )
+    code2 = Mock()
+    code2.name = "user2"
+    code2.code = "5678"
+    code2.access_code_id = "ac_002"
+    code2.schedule = None
+    mock_lock.access_codes = {"1": code1, "2": code2}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert response == {
+        "lock.vault_door": {
+            "1": {
+                "name": "user1",
+                "code": "1234",
+                "access_code_id": "ac_001",
+                "schedule": {
+                    "type": "temporary",
+                    "start_datetime": "2025-01-01T08:00:00+00:00",
+                    "end_datetime": "2025-01-01T18:00:00+00:00",
+                },
+            },
+            "2": {
+                "name": "user2",
+                "code": "5678",
+                "access_code_id": "ac_002",
+                "schedule": None,
+            },
+        }
+    }
+
+
+async def test_serialize_schedule_none(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test _serialize_schedule returns None for permanent code."""
+
+    result = SchlageLockEntity._serialize_schedule(None)
+    assert result is None
+
+
+async def test_serialize_schedule_recurring(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test _serialize_schedule for RecurringSchedule."""
+
+    schedule = RecurringSchedule()
+    result = SchlageLockEntity._serialize_schedule(schedule)
+    assert result is not None
+    assert result["type"] == "recurring"
+    assert "raw" in result
+
+
+async def test_serialize_schedule_multi_recurring(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test _serialize_schedule for MultiRecurringSchedule."""
+
+    schedule = MultiRecurringSchedule(schedule1=RecurringSchedule(), schedule2=None)
+    result = SchlageLockEntity._serialize_schedule(schedule)
+    assert result is not None
+    assert result["type"] == "multi_recurring"
+    assert "raw" in result
+
+
+async def test_serialize_schedule_temporary(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test _serialize_schedule for TemporarySchedule."""
+
+    schedule = TemporarySchedule(
+        start=datetime(2025, 6, 15, 10, 0, 0, tzinfo=UTC),
+        end=datetime(2025, 6, 15, 22, 0, 0, tzinfo=UTC),
+    )
+    result = SchlageLockEntity._serialize_schedule(schedule)
+    assert result is not None
+    assert result["type"] == "temporary"
+    assert result["start_datetime"] == "2025-06-15T10:00:00+00:00"
+    assert result["end_datetime"] == "2025-06-15T22:00:00+00:00"
