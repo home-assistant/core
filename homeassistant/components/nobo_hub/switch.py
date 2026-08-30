@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NoboHubConfigEntry
-from .const import ATTR_OVERRIDE_ALLOWED, ATTR_SERIAL, DOMAIN
+from .const import ATTR_OVERRIDE_ALLOWED, DOMAIN
 from .entity import NoboBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -40,7 +40,8 @@ async def async_setup_entry(
         new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
         known_zones.update(new_zones)
         async_add_entities(
-            NoboDisableGlobalOverrideSwitch(zone_id, hub) for zone_id in new_zones
+            NoboDisableGlobalOverrideSwitch(hass, zone_id, hub, config_entry.entry_id)
+            for zone_id in new_zones
         )
 
     _add_switches(hub)
@@ -59,16 +60,19 @@ class NoboDisableGlobalOverrideSwitch(NoboBaseEntity, SwitchEntity):
     _attr_translation_key = "disable_global_override"
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, zone_id: str, hub: nobo) -> None:
+    def __init__(
+        self, hass: HomeAssistant, zone_id: str, hub: nobo, entry_id: str
+    ) -> None:
         """Initialize the disable-global-override switch."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:disable_global_override"
+        zone_name = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=hub.zones[zone_id][ATTR_NAME],
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            suggested_area=hub.zones[zone_id][ATTR_NAME],
+            name=zone_name,
+            via_device_id=self._hub_device_id,
+            suggested_area=zone_name,
         )
         self._read_state()
 
