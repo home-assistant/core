@@ -35,6 +35,18 @@
       "current_electricity_price": {
         "name": "Current electricity price"
       },
+      "electricity_price_low_today_end_time": {
+        "name": "Electricity price low today end time"
+      },
+      "electricity_price_low_today_start_time": {
+        "name": "Electricity price low today start time"
+      },
+      "electricity_price_low_tomorrow_end_time": {
+        "name": "Electricity price low tomorrow end time"
+      },
+      "electricity_price_low_tomorrow_start_time": {
+        "name": "Electricity price low tomorrow start time"
+      },
       "electricity_prices_tomorrow_status": {
         "name": "Electricity prices tomorrow status",
         "state": {

@@ -4,6 +4,18 @@
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
+      "electricity_price_low_today_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "electricity_price_low_today_start_time": {
+        "default": "mdi:clock-start"
+      },
+      "electricity_price_low_tomorrow_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "electricity_price_low_tomorrow_start_time": {
+        "default": "mdi:clock-start"
+      },
       "electricity_prices_tomorrow_status": {
         "default": "mdi:calendar-clock",
         "state": {

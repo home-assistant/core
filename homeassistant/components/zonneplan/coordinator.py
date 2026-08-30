@@ -1,6 +1,5 @@
 """Coordinator for Zonneplan."""
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -35,8 +34,8 @@ class ZonneplanData:
     """Data fetched by the Zonneplan coordinator."""
 
     account: Account
-    electricity_prices: ConsumerPrices
-    gas_prices: ConsumerPrices
+    electricity_prices: ConsumerPrices | None = None
+    gas_prices: ConsumerPrices | None = None
 
 
 class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
@@ -61,11 +60,28 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
     async def _async_update_data(self) -> ZonneplanData:
         """Fetch data from the Zonneplan API."""
         try:
-            account, electricity_prices, gas_prices = await asyncio.gather(
-                self.zonneplan.async_get_account(),
-                self.zonneplan.async_get_consumer_prices(PriceChart.ELECTRICITY_HOURLY),
-                self.zonneplan.async_get_consumer_prices(PriceChart.GAS_DAILY),
-            )
+            account = await self.zonneplan.async_get_account()
+            electricity_prices: ConsumerPrices | None = None
+            gas_prices: ConsumerPrices | None = None
+
+            # Depending per contract, fetch the associated consumer prices
+            for connection in account.connections:
+                if (
+                    "electricity" in connection.market_segment
+                    if connection.market_segment is not None
+                    else False
+                ):
+                    electricity_prices = await self.zonneplan.async_get_consumer_prices(
+                        PriceChart.ELECTRICITY_HOURLY
+                    )
+                if (
+                    "gas" in connection.market_segment
+                    if connection.market_segment is not None
+                    else False
+                ):
+                    gas_prices = await self.zonneplan.async_get_consumer_prices(
+                        PriceChart.GAS_DAILY
+                    )
         except ZonneplanAuthenticationError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

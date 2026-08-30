@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import override
 
 from aiozoneinfo import get_time_zone
@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,9 @@ def _extreme_price_for_day(
 ) -> PricePoint | None:
     prices = [
         point
-        for point in coordinator.data.electricity_prices.prices
+        for electricity_prices in (coordinator.data.electricity_prices,)
+        if electricity_prices is not None
+        for point in electricity_prices.prices
         if point.start_date.astimezone(ZONNEPLAN_TIMEZONE).date() == day
     ]
 
@@ -55,7 +58,9 @@ def _price_block_for_day(
     prices = sorted(
         (
             point
-            for point in coordinator.data.electricity_prices.prices
+            for electricity_prices in (coordinator.data.electricity_prices,)
+            if electricity_prices is not None
+            for point in electricity_prices.prices
             if point.start_date.astimezone(ZONNEPLAN_TIMEZONE).date() == day
         ),
         key=lambda point: point.start_date,
@@ -80,25 +85,12 @@ def _price_block_for_day(
     return prices[start], prices[end]
 
 
-def _price_attrs(
-    coordinator: ZonneplanCoordinator, day: date, *, lowest: bool
-) -> dict[str, str] | None:
-    block = _price_block_for_day(coordinator, day, lowest=lowest)
-    if block is None:
-        return None
-    block_start, block_end = block
-    return {
-        "start": dt_util.as_local(block_start.start_date).isoformat(),
-        "end": dt_util.as_local(block_end.end_date).isoformat(),
-    }
-
-
 @dataclass(frozen=True, kw_only=True)
 class ZonneplanPriceSensorEntityDescription(SensorEntityDescription):
     """Describes a Zonneplan price sensor."""
 
-    value_fn: Callable[[ZonneplanCoordinator], float | str | None]
-    attrs_fn: Callable[[ZonneplanCoordinator], dict[str, str] | None]
+    value_fn: Callable[[ZonneplanCoordinator], float | str | datetime | None]
+    supported_fn: Callable[[ZonneplanCoordinator], bool] | None = None
 
 
 ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
@@ -114,7 +106,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
                 point := next(
                     (
                         point
-                        for point in coordinator.data.electricity_prices.prices
+                        for electricity_prices in (coordinator.data.electricity_prices,)
+                        if electricity_prices is not None
+                        for point in electricity_prices.prices
                         if point.start_date <= dt_util.utcnow() < point.end_date
                     ),
                     None,
@@ -122,7 +116,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda _: None,
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="lowest_electricity_price_today",
@@ -139,9 +133,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda coordinator: _price_attrs(
-            coordinator, dt_util.now(ZONNEPLAN_TIMEZONE).date(), lowest=True
-        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="highest_electricity_price_today",
@@ -158,9 +150,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda coordinator: _price_attrs(
-            coordinator, dt_util.now(ZONNEPLAN_TIMEZONE).date(), lowest=False
-        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="lowest_electricity_price_tomorrow",
@@ -179,11 +169,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda coordinator: _price_attrs(
-            coordinator,
-            dt_util.now(ZONNEPLAN_TIMEZONE).date() + timedelta(days=1),
-            lowest=True,
-        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="highest_electricity_price_tomorrow",
@@ -202,11 +188,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda coordinator: _price_attrs(
-            coordinator,
-            dt_util.now(ZONNEPLAN_TIMEZONE).date() + timedelta(days=1),
-            lowest=False,
-        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="electricity_prices_tomorrow_status",
@@ -218,11 +200,13 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             if any(
                 point.start_date.astimezone(ZONNEPLAN_TIMEZONE).date()
                 == dt_util.now(ZONNEPLAN_TIMEZONE).date() + timedelta(days=1)
-                for point in coordinator.data.electricity_prices.prices
+                for electricity_prices in (coordinator.data.electricity_prices,)
+                if electricity_prices is not None
+                for point in electricity_prices.prices
             )
             else "incoming"
         ),
-        attrs_fn=lambda _: None,
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="gas_price_today",
@@ -236,7 +220,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
                 point := next(
                     (
                         point
-                        for point in coordinator.data.gas_prices.prices
+                        for gas_prices in (coordinator.data.gas_prices,)
+                        if gas_prices is not None
+                        for point in gas_prices.prices
                         if point.start_date.astimezone(ZONNEPLAN_TIMEZONE).date()
                         == dt_util.now(ZONNEPLAN_TIMEZONE).date()
                     ),
@@ -245,7 +231,71 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             )
             else None
         ),
-        attrs_fn=lambda _: None,
+        supported_fn=lambda coordinator: bool(coordinator.data.gas_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="electricity_price_low_today_start_time",
+        translation_key="electricity_price_low_today_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coordinator: (
+            dt_util.as_local(block[0].start_date)
+            if (
+                block := _price_block_for_day(
+                    coordinator, dt_util.now(ZONNEPLAN_TIMEZONE).date(), lowest=True
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="electricity_price_low_today_end_time",
+        translation_key="electricity_price_low_today_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coordinator: (
+            dt_util.as_local(block[1].end_date)
+            if (
+                block := _price_block_for_day(
+                    coordinator, dt_util.now(ZONNEPLAN_TIMEZONE).date(), lowest=True
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="electricity_price_low_tomorrow_start_time",
+        translation_key="electricity_price_low_tomorrow_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coordinator: (
+            dt_util.as_local(block[0].start_date)
+            if (
+                block := _price_block_for_day(
+                    coordinator,
+                    dt_util.now(ZONNEPLAN_TIMEZONE).date() + timedelta(days=1),
+                    lowest=True,
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="electricity_price_low_tomorrow_end_time",
+        translation_key="electricity_price_low_tomorrow_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coordinator: (
+            dt_util.as_local(block[1].end_date)
+            if (
+                block := _price_block_for_day(
+                    coordinator,
+                    dt_util.now(ZONNEPLAN_TIMEZONE).date() + timedelta(days=1),
+                    lowest=True,
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
 )
 
@@ -271,12 +321,6 @@ class ZonneplanPriceSensor(ZonneplanEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> StateType | datetime:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the extra state attributes."""
-        return self.entity_description.attrs_fn(self.coordinator)

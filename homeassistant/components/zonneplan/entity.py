@@ -1,7 +1,5 @@
 """Base entity for Zonneplan."""
 
-from typing import override
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,9 +27,3 @@ class ZonneplanEntity(CoordinatorEntity[ZonneplanCoordinator]):
             name="Zonneplan",
             entry_type=DeviceEntryType.SERVICE,
         )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the entity is available."""
-        return super().available and self.coordinator.data is not None
