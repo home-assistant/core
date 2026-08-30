@@ -9,13 +9,7 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_BAUDRATE,
-    CONF_UNIT,
-    DEFAULT_MESSAGE_SPACING,
-    DEFAULT_PORT,
-    TYPE_SERIAL,
-)
+from .const import CONF_BAUDRATE, CONF_UNIT, DEFAULT_PORT, TYPE_SERIAL
 from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -45,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
     unit = async_get_unit(
         hass, entry, create_modbus_params(entry.data), entry.data[CONF_UNIT]
     )
-    unit.set_message_spacing(DEFAULT_MESSAGE_SPACING)
     coordinator = FlexitDataCoordinator(hass, entry, unit)
 
     await coordinator.async_config_entry_first_refresh()
