@@ -54,9 +54,15 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
             CONF_DEVICE_NAME: "device_name",
         },
@@ -71,9 +77,18 @@ async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None
 async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_DEVICE_TYPE: PlaatoDeviceType.Keg, CONF_DEVICE_NAME: "device_name"},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+            CONF_DEVICE_NAME: "device_name",
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
