@@ -18,7 +18,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_GRID_POWER = "sensor.garage_inverter_grid_power"
-ENTITY_ID_GRID_POWER_2 = "sensor.2938475610_grid_power"
+ENTITY_ID_GRID_POWER_2 = "sensor.inverter_2938475610_grid_power"
 
 
 @pytest.mark.usefixtures("mock_sunsynk_client", "entity_registry_enabled_by_default")
@@ -117,7 +117,7 @@ async def test_no_battery(
     assert inverter is not None
     assert battery is not None
     assert battery.via_device_id == inverter.id
-    assert hass.states.get("sensor.battery_state_of_charge").state == "20.0"
+    assert hass.states.get("sensor.battery_1029384756_state_of_charge").state == "20.0"
 
     assert (
         device_registry.async_get_device_by_identifier(
@@ -125,4 +125,4 @@ async def test_no_battery(
         )
         is None
     )
-    assert hass.states.get("sensor.battery_state_of_charge_2") is None
+    assert hass.states.get("sensor.battery_2938475610_state_of_charge") is None

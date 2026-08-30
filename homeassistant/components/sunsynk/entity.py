@@ -13,9 +13,12 @@ from .coordinator import SunsynkDataUpdateCoordinator
 
 def inverter_device_info(inverter: Inverter) -> DeviceInfo:
     """Return the device info of an inverter."""
+    name = f"Inverter {inverter.sn}"
+    if inverter.alias and inverter.alias != inverter.sn:
+        name = inverter.alias
     return DeviceInfo(
         identifiers={(DOMAIN, inverter.sn)},
-        name=inverter.alias or inverter.sn,
+        name=name,
         manufacturer="Sunsynk",
         model=inverter.model or None,
         serial_number=inverter.sn,
@@ -57,7 +60,7 @@ class SunsynkBatteryEntity(CoordinatorEntity[SunsynkDataUpdateCoordinator]):
         self._attr_unique_id = f"{serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{serial_number}_battery")},
-            name="Battery",
+            name=f"Battery {serial_number}",
             manufacturer="Sunsynk",
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
