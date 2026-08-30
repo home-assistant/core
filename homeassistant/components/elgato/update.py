@@ -161,7 +161,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
             # request to someone else's servers, for their timeout.
             image = await self._download()
             await self._upload(image)
-        except Exception:
+        except BaseException:
             self._installing_finished()
             raise
         finally:
