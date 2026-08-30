@@ -56,6 +56,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from .coordinator import IcloudCalendarCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +98,11 @@ class IcloudAccount:
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
+
+        # Built in async_setup_entry, before the platforms are forwarded, so a
+        # first-refresh failure can raise ConfigEntryNotReady where Home
+        # Assistant will retry it.
+        self.calendar_coordinator: IcloudCalendarCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 

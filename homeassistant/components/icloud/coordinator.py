@@ -1,7 +1,7 @@
 """Coordinator for iCloud Calendars."""
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 import logging
 from typing import Any, override
 
@@ -61,7 +61,11 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
         if (api := self.account.api) is None:
             raise UpdateFailed("iCloud account is not authenticated")
 
-        wanted = set(guids) if guids else None
+        # An explicit empty list means no calendars, not every calendar.
+        if guids is not None and not guids:
+            return {}
+
+        wanted = set(guids) if guids is not None else None
         result: dict[str, list[CalendarEvent]] = {guid: [] for guid in (wanted or ())}
 
         for event in api.calendar.get_events(from_dt=start, to_dt=end, as_objs=True):
@@ -118,8 +122,26 @@ def _parse_apple_date(value: Any) -> datetime | None:
             _, year, month, day, hour, minute = value[:6]
             return datetime(int(year), int(month), int(day), int(hour), int(minute))
         except TypeError, ValueError:
-            _LOGGER.debug("Unparseable calendar date: %r", value)
+            _LOGGER.debug("Unparsable calendar date: %r", value)
     return None
+
+
+def _event_timezone(event: Any) -> tzinfo:
+    """Return the timezone an event's wall-clock times are expressed in.
+
+    iCloud reports naive local times alongside a `tz` field. "Floating" means
+    the event has no zone of its own and should follow the viewer, so fall
+    back to Home Assistant's timezone in that case.
+    """
+    name = getattr(event, "tz", None)
+    if isinstance(name, str) and name and name != "Floating":
+        try:
+            if (zone := dt_util.get_time_zone(name)) is not None:
+                return zone
+        except ValueError:
+            # get_time_zone rejects malformed keys rather than returning None.
+            _LOGGER.debug("Unknown calendar event timezone: %r", name)
+    return dt_util.get_default_time_zone()
 
 
 def _as_calendar_event(event: Any) -> CalendarEvent | None:
@@ -145,8 +167,9 @@ def _as_calendar_event(event: Any) -> CalendarEvent | None:
         if end_value <= start_value:
             end_value = start_value + timedelta(days=1)
     else:
-        start_value = dt_util.as_local(start)
-        end_value = dt_util.as_local(end)
+        zone = _event_timezone(event)
+        start_value = start.replace(tzinfo=zone)
+        end_value = end.replace(tzinfo=zone)
         if end_value <= start_value:
             end_value = start_value + timedelta(minutes=30)
 

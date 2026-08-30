@@ -24,15 +24,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iCloud calendars."""
-    coordinator = IcloudCalendarCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = entry.runtime_data.calendar_coordinator
+    assert coordinator is not None
 
     known: set[str] = set()
 
     @callback
     def _add_new_calendars() -> None:
         """Add entities for calendars that appeared since the last poll."""
-        if not (new := set(coordinator.data) - known):
+        if not (new := set(coordinator.data or {}) - known):
             return
         known.update(new)
         async_add_entities(
@@ -72,13 +72,13 @@ class IcloudCalendarEntity(
     @override
     def available(self) -> bool:
         """Return True if the calendar still exists in iCloud."""
-        return super().available and self._guid in self.coordinator.data
+        return super().available and self._guid in (self.coordinator.data or {})
 
     @property
     @override
     def name(self) -> str | None:
         """Return the name of the calendar."""
-        if (calendar := self.coordinator.data.get(self._guid)) is not None:
+        if (calendar := (self.coordinator.data or {}).get(self._guid)) is not None:
             return calendar.name
         return None
 
@@ -86,7 +86,7 @@ class IcloudCalendarEntity(
     @override
     def event(self) -> CalendarEvent | None:
         """Return the event in progress, or the next one to start."""
-        if (calendar := self.coordinator.data.get(self._guid)) is None:
+        if (calendar := (self.coordinator.data or {}).get(self._guid)) is None:
             return None
 
         now = dt_util.now()

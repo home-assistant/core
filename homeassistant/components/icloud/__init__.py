@@ -18,6 +18,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .coordinator import IcloudCalendarCoordinator
 from .media_source import async_setup_mediasource, async_setup_photo_cache
 from .services import async_setup_services
 
@@ -61,6 +62,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     entry.runtime_data = account
 
     await hass.async_add_executor_job(account.setup)
+
+    # Built here rather than in the platform: a forwarded platform that raises
+    # ConfigEntryNotReady is logged and dropped rather than retried. This
+    # refresh deliberately does not raise, because an account that fails to
+    # authenticate still loads and starts a reauth flow, and a calendar outage
+    # should not take device tracking down with it. Calendars appear on a
+    # later refresh through the coordinator listener.
+    account.calendar_coordinator = IcloudCalendarCoordinator(hass, entry)
+    await account.calendar_coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_photo_cache(hass, account)

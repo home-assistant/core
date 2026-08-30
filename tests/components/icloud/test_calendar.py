@@ -41,6 +41,7 @@ def _event(
     pguid: str = "cal1",
     all_day: bool = False,
     location: str = "",
+    tz: str = "Floating",
 ) -> MagicMock:
     """Build a mock pyicloud event."""
     event = MagicMock()
@@ -49,6 +50,7 @@ def _event(
     event.title = title
     event.all_day = all_day
     event.location = location
+    event.tz = tz
     event.local_start_date = _apple_date(start)
     event.local_end_date = _apple_date(end)
     event.start_date = event.local_start_date
@@ -212,3 +214,64 @@ async def test_get_events_error_raises(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_event_uses_its_own_timezone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendars: MagicMock,
+) -> None:
+    """Test that an event in another timezone keeps its own instant.
+
+    iCloud reports naive wall-clock times alongside a `tz` field, so assuming
+    Home Assistant's timezone would place the event at the wrong instant.
+    """
+    calendars.get_events.return_value = [
+        _event(
+            "ev1",
+            "Meeting",
+            datetime(2024, 5, 1, 10, 0),
+            datetime(2024, 5, 1, 11, 0),
+            tz="Europe/Rome",
+        )
+    ]
+
+    await _setup(hass, config_entry)
+
+    events = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        "get_events",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "start_date_time": datetime(2024, 4, 30),
+            "end_date_time": datetime(2024, 5, 3),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    start = dt_util.parse_datetime(events[ENTITY_ID]["events"][0]["start"])
+    assert start is not None
+    assert start == datetime(
+        2024, 5, 1, 10, 0, tzinfo=dt_util.get_time_zone("Europe/Rome")
+    )
+
+
+async def test_unknown_event_timezone_falls_back(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendars: MagicMock,
+) -> None:
+    """Test that a malformed timezone does not break the whole fetch."""
+    calendars.get_events.return_value = [
+        _event(
+            "ev1",
+            "Meeting",
+            datetime(2024, 5, 1, 10, 0),
+            datetime(2024, 5, 1, 11, 0),
+            tz="Not/AZone",
+        )
+    ]
+
+    await _setup(hass, config_entry)
+
+    assert hass.states.get(ENTITY_ID) is not None
