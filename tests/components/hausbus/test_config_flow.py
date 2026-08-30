@@ -1,5 +1,7 @@
 """Test the Haus-Bus config flow."""
 
+import asyncio
+import threading
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.hausbus.const import DOMAIN
@@ -128,19 +130,24 @@ async def test_single_instance_allowed(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_flow_removal_cancels_active_search_task(
+async def test_flow_removal_waits_for_active_search_before_releasing(
     hass: HomeAssistant,
     mock_home_server: MagicMock,
 ) -> None:
-    """Test aborting a flow cancels an active search task.
+    """Aborting a flow waits for its in-flight search before releasing the HomeServer.
 
-    Goes through the flow manager's public async_abort() rather than
-    calling the flow's async_remove() hook directly, so this also covers
-    the manager's own progress-task cancellation (async_cancel_progress_task())
-    - not just this integration's private cleanup logic.
+    searchDevices() must be a real function, not a MagicMock: hass's
+    test-mode executor job runner special-cases Mock targets and runs them
+    inline, leaving nothing still running to cancel into.
     """
+    search_started = threading.Event()
+    release_search = threading.Event()
 
-    mock_home_server.is_any_device_found.return_value = False
+    def _slow_search_devices() -> None:
+        search_started.set()
+        assert release_search.wait(timeout=5), "test did not release in time"
+
+    mock_home_server.searchDevices = _slow_search_devices
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -155,17 +162,20 @@ async def test_flow_removal_cancels_active_search_task(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "wait_for_device"
 
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-
-    search_task = flow._search_task
-
-    assert search_task is not None
-    assert not search_task.done()
+    # Wait until searchDevices() has actually started on the executor, so
+    # aborting below lands while it is genuinely still running.
+    await hass.async_add_executor_job(search_started.wait, 5)
 
     hass.config_entries.flow.async_abort(result["flow_id"])
 
-    await hass.async_block_till_done()
+    # The removal's cleanup awaits the cancelled search task, which cannot
+    # actually finish until the still-running searchDevices() call
+    # returns - so the HomeServer must not be released yet.
+    await asyncio.sleep(0.1)
+    mock_home_server.shutdown.assert_not_called()
 
-    assert flow._search_task is None
-    assert search_task.cancelled()
-    assert flow.home_server is None
+    release_search.set()
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_home_server.shutdown.assert_called_once()

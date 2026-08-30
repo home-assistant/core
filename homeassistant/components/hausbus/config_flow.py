@@ -36,16 +36,24 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             search_task = self._search_task
             self._search_task = None
 
-            if search_task is not None:
-                with contextlib.suppress(asyncio.CancelledError):
-                    await search_task
+            try:
+                if search_task is not None:
+                    search_task.cancel()
 
-            if self.home_server is not None:
-                await async_release_home_server(
-                    self.hass,
-                    self.home_server,
-                )
-                self.home_server = None
+                    # Whatever this raises - our own cancellation, or a
+                    # search failure (OSError/TimeoutError) that completed
+                    # the task independently at the same moment - must not
+                    # skip releasing home_server below, or its singleton's
+                    # socket and worker threads would leak.
+                    with contextlib.suppress(Exception, asyncio.CancelledError):
+                        await search_task
+            finally:
+                if self.home_server is not None:
+                    await async_release_home_server(
+                        self.hass,
+                        self.home_server,
+                    )
+                    self.home_server = None
 
         self.hass.async_create_task(_cleanup())
 
@@ -121,7 +129,19 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.home_server is not None
 
-        await self.hass.async_add_executor_job(self.home_server.searchDevices)
+        search_job = self.hass.async_add_executor_job(self.home_server.searchDevices)
+        try:
+            await asyncio.shield(search_job)
+        except asyncio.CancelledError:
+            # Cancelling this coroutine does not cancel search_job - it
+            # keeps running on its executor thread regardless. Wait for it
+            # here so a caller that awaits this task (such as async_remove()
+            # cleaning up on flow removal) can rely on the search having
+            # actually finished, and not still be using self.home_server,
+            # before releasing it.
+            with contextlib.suppress(Exception):
+                await search_job
+            raise
 
         await asyncio.wait_for(
             self._check_device_found(),
