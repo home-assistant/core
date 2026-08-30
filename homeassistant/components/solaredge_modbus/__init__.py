@@ -40,7 +40,12 @@ from .coordinator import (
 from .entity import attachment_identity, inverter_device_info
 from .helpers import create_modbus_params
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(
