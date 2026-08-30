@@ -32,6 +32,7 @@ class BlockedTemplateAttributes:
         *,
         attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None,
         device_class: bool = False,
+        allowed_attributes: tuple[StrEnum | str, ...] | None = None,
     ) -> None:
         """Initialize."""
         blocked_attributes: set[str]
@@ -41,6 +42,9 @@ class BlockedTemplateAttributes:
             blocked_attributes = set(chain(*attributes))
         else:
             blocked_attributes = set(attributes)
+
+        if allowed_attributes:
+            blocked_attributes -= set(allowed_attributes)
 
         if device_class:
             blocked_attributes.add("device_class")

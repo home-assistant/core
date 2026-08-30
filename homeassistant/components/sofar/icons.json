@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "rtc_sync": {
+        "default": "mdi:home-clock"
+      }
+    },
     "sensor": {
       "bat_config_capacity": {
         "default": "mdi:battery-check-outline"
