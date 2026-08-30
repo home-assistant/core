@@ -701,47 +701,11 @@
       }
     },
     "water_heater": {
-      "water_heater": {
-        "state": {
-          "dual": "Dual",
-          "energy_save": "Energy save",
-          "smart": "Smart",
-          "standard": "Standard",
-          "vacation": "Vacation"
-        },
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "dual": "[%key:component::midea::entity::water_heater::water_heater::state::dual%]",
-              "energy_save": "[%key:component::midea::entity::water_heater::water_heater::state::energy_save%]",
-              "smart": "[%key:component::midea::entity::water_heater::water_heater::state::smart%]",
-              "standard": "[%key:component::midea::entity::water_heater::water_heater::state::standard%]",
-              "vacation": "[%key:component::midea::entity::water_heater::water_heater::state::vacation%]"
-            }
-          }
-        }
-      },
       "water_heater_bathing": {
         "name": "Bathing water heater"
       },
       "water_heater_heating": {
-        "name": "Heating water heater",
-        "state": {
-          "home": "Home",
-          "normal": "Normal",
-          "out": "Out",
-          "sleep": "Sleep"
-        },
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "home": "[%key:component::midea::entity::water_heater::water_heater_heating::state::home%]",
-              "normal": "[%key:component::midea::entity::water_heater::water_heater_heating::state::normal%]",
-              "out": "[%key:component::midea::entity::water_heater::water_heater_heating::state::out%]",
-              "sleep": "[%key:component::midea::entity::water_heater::water_heater_heating::state::sleep%]"
-            }
-          }
-        }
+        "name": "Heating water heater"
       }
     }
   },
