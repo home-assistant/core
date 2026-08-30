@@ -350,8 +350,12 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         try:
             await future
         except asyncio.CancelledError:
-            # Removed while waiting: nothing to report, exit cleanly.
-            return
+            if self._removing:
+                # Removed while waiting: nothing to report, exit cleanly.
+                return
+            # This service task was cancelled, not the batch: re-raise so the
+            # shared future stays intact for the other coalesced callers.
+            raise
 
     async def _async_flush(self, _now: datetime) -> None:
         """Write the settled value, resolving the awaited coalesce future."""

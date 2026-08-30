@@ -771,6 +771,41 @@ async def test_pending_write_dropped_on_remove(
     mock_neopool_client.async_set_setpoint.assert_not_awaited()
 
 
+async def test_external_cancel_propagates_and_still_writes(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Cancelling one awaiting caller re-raises but leaves the queued write.
+
+    Cancelling a single service task (not an entity removal) must propagate the
+    cancellation to that caller without resolving the shared coalesce future,
+    so the debounced write still fires on the next tick.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    victim = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    await _let_park(hass)
+
+    # Cancel only this caller's task; cancellation must propagate to it.
+    victim.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await victim
+
+    # The batch is untouched: the queued write still fires on the next tick.
+    await _flush(hass, freezer)
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.PH_MAX, 750
+    )
+
+
 async def test_inflight_write_skips_coordinator_on_remove(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
