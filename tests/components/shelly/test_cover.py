@@ -24,6 +24,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -116,6 +117,7 @@ async def test_block_device_update(
     state = hass.states.get("cover.test_name")
     assert state
     assert state.state == CoverState.OPEN
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
 
 @pytest.mark.parametrize(
@@ -149,6 +151,9 @@ async def test_block_device_roller_without_positioning(
     assert (state := hass.states.get("cover.test_name"))
     assert state.state == expected_state
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    # Stopping mid travel leaves the direction saying more than it knows, so
+    # both buttons stay available
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
 async def test_block_device_roller_without_positioning_stopped(

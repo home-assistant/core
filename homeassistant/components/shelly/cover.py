@@ -123,6 +123,9 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         self._positioning: bool = self.coordinator.device.settings["rollers"][0][
             "positioning"
         ]
+        # Without positioning the direction it last travelled in is all there is,
+        # and that says nothing about where it stopped
+        self._attr_assumed_state = not self._positioning
         if self._positioning:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
