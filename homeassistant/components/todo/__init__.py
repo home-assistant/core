@@ -34,6 +34,8 @@ from .const import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_PARENT,
+    ATTR_PARENT_UID,
     ATTR_RENAME,
     ATTR_STATUS,
     DATA_COMPONENT,
@@ -86,6 +88,12 @@ TODO_ITEM_FIELDS = [
         validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_PARENT,
+        validation=vol.Any(cv.string, None),
+        todo_item_field=ATTR_PARENT_UID,
+        required_feature=TodoListEntityFeature.SET_PARENT_ON_ITEM,
     ),
 ]
 
@@ -227,6 +235,13 @@ class TodoItem:
 
     completed: datetime.datetime | None = None
     """The date and time that a to-do item was marked completed."""
+
+    parent_uid: str | None = None
+    """The uid of the To-do item this item is a subtask of.
+
+    A subtask may not have subtasks of its own, so an item with a `parent_uid`
+    is always at the second and last level of the hierarchy.
+    """
 
 
 _TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
@@ -467,6 +482,64 @@ def _find_by_uid_or_summary(
     return None
 
 
+def _resolve_parent_uid(
+    entity: TodoListEntity, parent: str | None, uid: str | None
+) -> str | None:
+    """Resolve the parent of a To-do item to a uid, rejecting invalid hierarchies.
+
+    Subtasks are limited to a single level, so neither the parent nor the item
+    being reparented may already be part of a parent/subtask relationship.
+    """
+    if parent is None:
+        return None
+
+    found = _find_by_uid_or_summary(parent, entity.todo_items)
+    if not found or not found.uid:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_not_found",
+            translation_placeholders={"parent": parent},
+        )
+    if found.uid == uid:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_is_self",
+            translation_placeholders={"parent": parent},
+        )
+    if found.parent_uid is not None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_is_subtask",
+            translation_placeholders={"parent": parent},
+        )
+    if uid is not None and any(
+        item.parent_uid == uid for item in entity.todo_items or ()
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="item_has_subtasks",
+            translation_placeholders={"parent": parent},
+        )
+    return found.uid
+
+
+def _todo_item_fields(
+    entity: TodoListEntity, call: ServiceCall, uid: str | None = None
+) -> dict[str, Any]:
+    """Map the To-do item fields of a service call onto TodoItem fields."""
+    fields = {
+        desc.todo_item_field: call.data[desc.service_field]
+        for desc in TODO_ITEM_FIELDS
+        if desc.service_field in call.data
+    }
+    if ATTR_PARENT in call.data:
+        # The parent is named by uid or summary, but stored as a uid.
+        fields[ATTR_PARENT_UID] = _resolve_parent_uid(
+            entity, call.data[ATTR_PARENT], uid
+        )
+    return fields
+
+
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
     _validate_supported_features(entity.supported_features, call.data)
@@ -474,11 +547,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
         item=TodoItem(
             summary=call.data["item"],
             status=TodoItemStatus.NEEDS_ACTION,
-            **{
-                desc.todo_item_field: call.data[desc.service_field]
-                for desc in TODO_ITEM_FIELDS
-                if desc.service_field in call.data
-            },
+            **_todo_item_fields(entity, call),
         )
     )
 
@@ -504,13 +573,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
         updated_data["summary"] = summary
     if status := call.data.get("status"):
         updated_data["status"] = status
-    updated_data.update(
-        {
-            desc.todo_item_field: call.data[desc.service_field]
-            for desc in TODO_ITEM_FIELDS
-            if desc.service_field in call.data
-        }
-    )
+    updated_data.update(_todo_item_fields(entity, call, found.uid))
     await entity.async_update_todo_item(item=TodoItem(**updated_data))
 
 

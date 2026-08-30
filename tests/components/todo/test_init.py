@@ -14,6 +14,7 @@ from homeassistant.components.todo import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_PARENT,
     ATTR_RENAME,
     ATTR_STATUS,
     DOMAIN,
@@ -738,6 +739,218 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
     assert item == expected_update
 
 
+def _hierarchy_items() -> list[TodoItem]:
+    """Return item #2 as a subtask of item #1, plus a standalone item #3."""
+    return [
+        TodoItem(uid="1", summary="Item #1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(
+            uid="2",
+            summary="Item #2",
+            status=TodoItemStatus.NEEDS_ACTION,
+            parent_uid="1",
+        ),
+        TodoItem(uid="3", summary="Item #3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+
+
+@pytest.mark.parametrize(
+    "parent",
+    ["3", "Item #3"],
+    ids=["by_uid", "by_summary"],
+)
+async def test_add_todo_item_service_with_parent(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    parent: str,
+) -> None:
+    """Test adding a subtask to a To-do list."""
+
+    assert test_entity._attr_supported_features is not None
+    test_entity._attr_supported_features |= TodoListEntityFeature.SET_PARENT_ON_ITEM
+    test_entity._attr_todo_items = _hierarchy_items()
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "New item", ATTR_PARENT: parent},
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_create_todo_item.call_args
+    assert args
+    assert args.kwargs.get("item") == TodoItem(
+        summary="New item",
+        status=TodoItemStatus.NEEDS_ACTION,
+        parent_uid="3",
+    )
+
+
+@pytest.mark.parametrize(
+    ("item", "parent", "expected_parent_uid"),
+    [
+        ("3", "1", "1"),
+        ("Item #3", "Item #1", "1"),
+        ("2", None, None),
+    ],
+    ids=["by_uid", "by_summary", "clear_parent"],
+)
+async def test_update_todo_item_service_with_parent(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    item: str,
+    parent: str | None,
+    expected_parent_uid: str | None,
+) -> None:
+    """Test moving an item under a parent, and back out again."""
+
+    assert test_entity._attr_supported_features is not None
+    test_entity._attr_supported_features |= TodoListEntityFeature.SET_PARENT_ON_ITEM
+    test_entity._attr_todo_items = _hierarchy_items()
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item, ATTR_PARENT: parent},
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    updated = args.kwargs.get("item")
+    assert updated
+    assert updated.parent_uid == expected_parent_uid
+
+
+async def test_update_todo_item_service_keeps_parent(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test that an update that omits the parent leaves the item a subtask."""
+
+    test_entity._attr_todo_items = _hierarchy_items()
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "2", ATTR_RENAME: "Updated item"},
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    assert args.kwargs.get("item") == TodoItem(
+        uid="2",
+        summary="Updated item",
+        status=TodoItemStatus.NEEDS_ACTION,
+        parent_uid="1",
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (TodoServices.ADD_ITEM, {ATTR_ITEM: "New item", ATTR_PARENT: "1"}),
+        (TodoServices.UPDATE_ITEM, {ATTR_ITEM: "3", ATTR_PARENT: "1"}),
+    ],
+    ids=["add_item", "update_item"],
+)
+async def test_set_parent_not_supported(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test setting a parent on an entity that does not support subtasks."""
+
+    test_entity._attr_todo_items = _hierarchy_items()
+    await create_mock_platform(hass, [test_entity])
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Entity does not support setting field: parent",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={ATTR_ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_error"),
+    [
+        (
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "New item", ATTR_PARENT: "Unknown"},
+            "Unable to find the parent to-do list item: Unknown",
+        ),
+        (
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "3", ATTR_PARENT: "Unknown"},
+            "Unable to find the parent to-do list item: Unknown",
+        ),
+        (
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "1", ATTR_PARENT: "1"},
+            "Unable to make a to-do list item a subtask of itself: 1",
+        ),
+        (
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "New item", ATTR_PARENT: "2"},
+            "Unable to add a subtask to a to-do list item that is itself a subtask: 2",
+        ),
+        (
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "3", ATTR_PARENT: "2"},
+            "Unable to add a subtask to a to-do list item that is itself a subtask: 2",
+        ),
+        (
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "1", ATTR_PARENT: "3"},
+            "Unable to make a to-do list item that has subtasks of its own a subtask of: 3",
+        ),
+    ],
+    ids=[
+        "add_parent_not_found",
+        "update_parent_not_found",
+        "parent_is_self",
+        "add_parent_is_subtask",
+        "update_parent_is_subtask",
+        "item_has_subtasks",
+    ],
+)
+async def test_set_parent_invalid_hierarchy(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    service: str,
+    service_data: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test the parent/subtask hierarchy is validated to a single level."""
+
+    assert test_entity._attr_supported_features is not None
+    test_entity._attr_supported_features |= TodoListEntityFeature.SET_PARENT_ON_ITEM
+    test_entity._attr_todo_items = _hierarchy_items()
+    await create_mock_platform(hass, [test_entity])
+
+    with pytest.raises(ServiceValidationError, match=expected_error):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={ATTR_ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
+
+
 async def test_remove_todo_item_service_by_id(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
@@ -1093,6 +1306,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "parent_uid": None,
             },
             {
                 "summary": "Item #2",
@@ -1101,6 +1315,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
+                "parent_uid": None,
             },
         ]
     }
@@ -1121,6 +1336,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "parent_uid": None,
             },
             {
                 "summary": "Item #2",
@@ -1129,6 +1345,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
+                "parent_uid": None,
             },
             {
                 "summary": "Item #3",
@@ -1137,6 +1354,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "parent_uid": None,
             },
         ]
     }
@@ -1255,6 +1473,7 @@ def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
             {"due": f"2023-11-17T17:00:00{TEST_OFFSET}"},
         ),
         ({"description": "Some description"}, {"description": "Some description"}),
+        ({"parent_uid": "2"}, {"parent_uid": "2"}),
     ],
 )
 async def test_list_todo_items_extended_fields(

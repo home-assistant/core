@@ -39,8 +39,20 @@
     }
   },
   "exceptions": {
+    "item_has_subtasks": {
+      "message": "Unable to make a to-do list item that has subtasks of its own a subtask of: {parent}"
+    },
     "item_not_found": {
       "message": "Unable to find to-do list item: {item}"
+    },
+    "parent_is_self": {
+      "message": "Unable to make a to-do list item a subtask of itself: {parent}"
+    },
+    "parent_is_subtask": {
+      "message": "Unable to add a subtask to a to-do list item that is itself a subtask: {parent}"
+    },
+    "parent_not_found": {
+      "message": "Unable to find the parent to-do list item: {parent}"
     },
     "update_field_not_supported": {
       "message": "Entity does not support setting field: {service_field}"
@@ -73,6 +85,10 @@
         "item": {
           "description": "The name that represents the to-do item.",
           "name": "Item name"
+        },
+        "parent": {
+          "description": "The name or UID of the to-do item to add this item under as a subtask. Subtasks cannot have subtasks of their own.",
+          "name": "Parent item"
         }
       },
       "name": "Add to-do list item"
@@ -119,6 +135,10 @@
         "item": {
           "description": "The name/summary of the to-do item. If you have items with duplicate names, you can reference specific ones using their UID instead.",
           "name": "Item name or UID"
+        },
+        "parent": {
+          "description": "The name or UID of the to-do item to move this item under as a subtask. Leave empty to turn a subtask back into a top-level item.",
+          "name": "[%key:component::todo::services::add_item::fields::parent::name%]"
         },
         "rename": {
           "description": "The new name for the to-do item",
