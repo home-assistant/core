@@ -81,11 +81,11 @@ async def test_dali_line_status_value_update(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Lunatone sensor value update."""
     line_id = 0
-    entity_id = f"sensor.dali_line_{line_id}_status"
 
     line_statuses = iter((LineStatus.NO_POWER, LineStatus.OK))
 
@@ -97,6 +97,14 @@ async def test_dali_line_status_value_update(
     mock_lunatone_info.async_update.side_effect = fake_update
 
     await setup_integration(hass, mock_config_entry)
+
+    # Look up the entity_id from the registry by unique_id
+    unique_id = f"{mock_config_entry.unique_id}-line{line_id}-status"
+    entity_entry = entity_registry.async_get_entity_id(
+        Platform.SENSOR, "lunatone", unique_id
+    )
+    assert entity_entry is not None
+    entity_id = entity_entry
 
     entity = hass.states.get(entity_id)
     assert entity
