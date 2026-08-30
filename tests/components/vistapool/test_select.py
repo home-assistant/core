@@ -157,6 +157,42 @@ async def test_select_option_writes_index(
     )
 
 
+@pytest.mark.parametrize(
+    ("raw_value", "expected_option"),
+    [
+        pytest.param(0, "slow", id="slow"),
+        pytest.param(1, "medium", id="medium"),
+        pytest.param(2, "high", id="high"),
+    ],
+)
+async def test_filtration_timer_speed_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    raw_value: int,
+    expected_option: str,
+) -> None:
+    """Test every timer speed maps onto its option.
+
+    The timer speeds are three-state like the manual pump speed, so high
+    has to survive the library's value coercion; slow and medium would
+    still map correctly even if the value were read as a boolean.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"version": 1},
+        "filtration": {"timerVel1": raw_value},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("select.my_pool_filtration_timer_speed_1").state
+        == expected_option
+    )
+
+
 async def test_select_option_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
