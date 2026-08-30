@@ -56,9 +56,15 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
@@ -120,9 +126,15 @@ async def test_user_flow_no_results(hass: HomeAssistant) -> None:
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
@@ -150,9 +162,15 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
     ):
         # step: user
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
@@ -172,9 +190,15 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     ):
         # step: user
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
@@ -201,9 +225,15 @@ async def test_user_flow_station(hass: HomeAssistant) -> None:
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
@@ -235,9 +265,15 @@ async def test_user_flow_station_select(hass: HomeAssistant) -> None:
         ),
     ):
         result_user = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result_user["type"] is FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        result_user = await hass.config_entries.flow.async_configure(
+            result_user["flow_id"],
+            user_input={
                 CONF_HOST: "api-test.geofox.de",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
