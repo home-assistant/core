@@ -4,7 +4,16 @@ from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
-from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound, WebsocketFailure
+from anova_wifi import (
+    AnovaApi,
+    APCUpdate,
+    APCUpdateBinary,
+    APCUpdateSensor,
+    APCWifiDevice,
+    InvalidLogin,
+    NoDevicesFound,
+    WebsocketFailure,
+)
 from anova_wifi.exceptions import LoginUnreachable
 import pytest
 
@@ -12,6 +21,8 @@ from homeassistant.components.anova.const import DOMAIN
 from homeassistant.components.anova.coordinator import (
     DEVICE_STALE_THRESHOLD,
     RECONNECT_RETRY_DELAY,
+    AnovaCoordinator,
+    AnovaData,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
@@ -19,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import async_init_integration, create_entry
-from .conftest import MockedAnovaWebsocketHandler
+from .conftest import DUMMY_ID, MockedAnovaWebsocketHandler
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -98,6 +109,38 @@ async def test_websocket_reconnects_on_disconnect(
         device = new_ws_handler.devices.get(coordinator.device_unique_id)
         assert device is not None
         assert coordinator.anova_device is device
+
+
+async def test_coordinator_replays_cached_device_state_at_attach(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test a state pushed before attach is replayed onto the coordinator."""
+    entry = create_entry(hass)
+    entry.runtime_data = AnovaData(api_jwt="jwt", coordinators=[], api=anova_api)
+
+    device = APCWifiDevice(
+        cooker_id=DUMMY_ID,
+        type="a5",
+        paired_at="2023-08-12T02:33:20.917716Z",
+        name="Anova Precision Cooker",
+    )
+    update = APCUpdate(
+        sensor=APCUpdateSensor(
+            cook_time=3600,
+            target_temperature=55.5,
+            cook_time_remaining=3600,
+            firmware_version="2.2.0",
+        ),
+        binary_sensor=APCUpdateBinary(cooking=True),
+    )
+    device.last_update = update
+
+    coordinator = AnovaCoordinator(hass, entry, device)
+
+    assert coordinator.data == update
+    assert coordinator.pending_target_temperature == update.sensor.target_temperature
+    assert coordinator.pending_cook_time_seconds == update.sensor.cook_time
 
 
 async def test_websocket_reconnects_after_auth_expiry(

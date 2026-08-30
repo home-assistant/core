@@ -96,6 +96,8 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
         self.pending_target_temperature: float | None = None
         self.pending_cook_time_seconds: int | None = None
         self.anova_device.set_update_listener(self._handle_device_update)
+        if (last_update := anova_device.last_update) is not None:
+            self._handle_device_update(last_update)
 
     def _handle_device_update(self, update: APCUpdate) -> None:
         """Seed the pending target temperature/timer on first data, then propagate."""
@@ -204,5 +206,7 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
             if device is not None:
                 coordinator.anova_device = device
                 device.set_update_listener(coordinator._handle_device_update)  # noqa: SLF001
+                if (last_update := device.last_update) is not None:
+                    coordinator._handle_device_update(last_update)  # noqa: SLF001
 
         self.async_start_disconnect_listener()
