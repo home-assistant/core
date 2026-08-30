@@ -30,11 +30,10 @@ OFFSET = "!!"
 def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | None:
     """Return the rfc5545 STATUS of a VEVENT, if a calendar entity reports it.
 
-    Anything outside the supported set is dropped rather than passed on, which
-    covers both the cancelled status a calendar entity does not report and the
-    iana-tokens and x-names that rfc5545 also permits here: reporting no status
-    at all is closer to the truth than reporting one the consumer cannot
-    interpret.
+    Anything outside the supported set is dropped rather than passed on: the
+    iana-tokens and x-names rfc5545 also permits here cannot be interpreted by
+    a consumer, so reporting no status is closer to the truth. Cancelled events
+    never reach this, they are filtered out before an event is built.
     """
     if (value := get_attr_value(vevent, "status")) is None:
         return None
@@ -43,6 +42,17 @@ def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | 
     except ValueError:
         _LOGGER.debug("Ignoring unsupported event status %s", value)
         return None
+
+
+def _is_cancelled(vevent: caldav.CalendarObjectResource) -> bool:
+    """Return whether a VEVENT has been called off.
+
+    rfc5545 keeps a cancelled event in the calendar rather than deleting it, so
+    a calendar has to be read to find out. A calendar entity does not return
+    such events.
+    """
+    value = get_attr_value(vevent, "status")
+    return value is not None and value.lower() == "cancelled"
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -94,6 +104,8 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 continue
             vevent = event.vobject_instance.vevent
             if not self.is_matching(vevent, self.search):
+                continue
+            if _is_cancelled(vevent):
                 continue
             event_list.append(
                 CalendarEvent(
@@ -187,6 +199,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     self.is_matching(vevent, self.search)
                     and (not self.is_all_day(vevent) or self.include_all_day)
                     and not self.is_over(vevent)
+                    and not _is_cancelled(vevent)
                 )
             ),
             None,
