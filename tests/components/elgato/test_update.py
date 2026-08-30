@@ -17,6 +17,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.elgato import ELGATO_KEY
 from homeassistant.components.elgato.const import (
     DOMAIN,
     FIRMWARE_SCAN_INTERVAL,
@@ -268,6 +269,37 @@ async def test_a_second_install_is_turned_away(
     )
 
     assert sum(isinstance(result, HomeAssistantError) for result in results) == 1
+    assert mock_elgato.update_firmware.call_count == 1
+
+
+async def test_catalog_refresh_during_an_install(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    mock_firmware_catalog: MagicMock,
+) -> None:
+    """Test the catalog refreshing while an install is running.
+
+    What Elgato ships says nothing about whether this device is done, so a
+    refresh in the middle must not report the install as finished.
+    """
+
+    async def install(image: FirmwareImage, **kwargs: Any) -> None:
+        """Let Elgato publish something while the device is busy."""
+        await hass.data[ELGATO_KEY].async_refresh()
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get(ENTITY_ID))
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    mock_elgato.update_firmware.side_effect = install
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
     assert mock_elgato.update_firmware.call_count == 1
 
 

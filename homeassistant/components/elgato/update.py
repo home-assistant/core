@@ -57,6 +57,9 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
     """
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    # Whether an install is running, and which build it is waiting to see.
+    # They are not the same thing: the download has no target build yet.
+    _installing: bool = False
     _installing_build: int | None = None
     _installing_timeout: CALLBACK_TYPE | None = None
     _attr_entity_category = EntityCategory.CONFIG
@@ -80,7 +83,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         """Follow the firmware coordinator as well as the device one."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.firmware.async_add_listener(self._handle_coordinator_update)
+            self.firmware.async_add_listener(self.async_write_ha_state)
         )
         # Otherwise the reboot timer outlives the entity it belongs to.
         self.async_on_remove(self._installing_finished)
@@ -112,7 +115,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool:
         """Return if an install is still going on."""
-        return self._installing_build is not None
+        return self._installing
 
     @property
     @override
@@ -148,7 +151,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         # Before the download, not after: fetching the image is part of the
         # install, and until this says so a second call walks straight past
         # the guard that is meant to stop it.
-        self._installing_build = -1
+        self._installing = True
         self._attr_update_percentage = None
         self.async_write_ha_state()
 
@@ -220,6 +223,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
     @callback
     def _installing_finished(self) -> None:
         """Stop reporting an install, however it ended."""
+        self._installing = False
         self._installing_build = None
         self._attr_update_percentage = None
         if self._installing_timeout is not None:
