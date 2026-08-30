@@ -57,6 +57,8 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
         data[CONF_MODEL],
         data[CONF_SUBTYPE],
         "",
+        data.get(CONF_MAC, None),
+        data.get(CONF_SN, None),
     )
 
 

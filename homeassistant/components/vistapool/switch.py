@@ -5,7 +5,11 @@ from typing import Any, override
 
 from aioaquarite import AquariteError
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -113,6 +117,8 @@ async def async_setup_entry(
 
 class VistapoolSwitch(VistapoolEntity, SwitchEntity):
     """Generic Vistapool switch driven by an entity description."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     entity_description: VistapoolSwitchEntityDescription
 

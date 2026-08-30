@@ -11,6 +11,8 @@ from lyngdorf import (
     LyngdorfReceiver,
     NumericControl,
     NumericRange,
+    Player,
+    Remote,
     RemoteKey,
     Trim,
     ZoneB,
@@ -69,6 +71,8 @@ class _FloatControl(float):
         control = super().__new__(cls, value)
         control.value = value
         control.range = value_range
+        control.up = AsyncMock()
+        control.down = AsyncMock()
         control.set = AsyncMock()
         return control
 
@@ -104,15 +108,22 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
             RemoteKey.DIGIT_0,
         }
     )
+    remote = MagicMock(spec=Remote)
+    remote.keys = receiver.available_remote_keys
+    receiver.remote = remote
 
     # Diagnostics reports the whole receiver, so every property it reads
     # needs a value here; an unset one is a mock the response cannot encode.
     receiver.model = LyngdorfModel.MP_60
-    receiver.max_volume = 0.0
     receiver.room_perfect_position = "Focus 1"
     receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+    receiver.room_perfect_positions = ["Global", "Focus 1"]
     receiver.voicing = "Neutral"
     receiver.available_voicings = ["Neutral", "Music", "Movie"]
+    receiver.voicings = ["Neutral", "Music", "Movie"]
+    # Sync on the pinned library: they return None rather than a coroutine.
+    receiver.set_voicing.return_value = None
+    receiver.set_room_perfect_position.return_value = None
     receiver.lipsync = None
     receiver.lipsync_range = NumericRange(0, 500, 1)
     for _t in ("bass", "treble"):
@@ -126,7 +137,10 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
 
     receiver.power_on = False
-    receiver.volume = -40.0
+    receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.muted = False
+    receiver.sources = []
+    receiver.sound_modes = []
     receiver.mute_enabled = False
     receiver.source = None
     receiver.available_sources = []
@@ -139,15 +153,16 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.video_input = "hdmi"
     receiver.streaming_source = "AirPlay"
     receiver.available_audio_inputs = ["optical", "aux"]
+    receiver.audio_inputs = ["optical", "aux"]
     receiver.available_video_inputs = ["hdmi"]
+    receiver.video_inputs = ["hdmi"]
     receiver.available_stream_types = ["AirPlay", "DLNA"]
+    receiver.stream_types = ["AirPlay", "DLNA"]
 
     receiver.now_playing = None
     receiver.has_position = False
     receiver.position_ms = None
     receiver.position_updated_at = None
-    receiver.shuffle = None
-    receiver.repeat = None
     receiver.can_shuffle = False
     receiver.available_repeat_modes = frozenset()
 
@@ -178,6 +193,10 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_source = None
     receiver.zone_b_available_sources = []
     receiver.zone_b_audio_input = "aux"
+    zone_b = MagicMock(spec=ZoneB)
+    zone_b.audio_input = "aux"
+    zone_b.streaming_source = "DLNA"
+    receiver.zone_b = zone_b
     receiver.zone_b_streaming_source = "DLNA"
 
     receiver.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
@@ -189,6 +208,15 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.stream_types = ["AirPlay", "DLNA"]
     receiver.room_perfect_positions = ["Global", "Focus 1"]
     receiver.voicings = ["Neutral", "Music", "Movie"]
+    player = MagicMock(spec=Player)
+    player.now_playing = None
+    player.position_ms = None
+    player.position_updated_at = None
+    player.shuffle = None
+    player.repeat = None
+    player.can_shuffle = False
+    player.repeat_modes = frozenset()
+    receiver.player = player
 
     zone_b = MagicMock(spec=ZoneB)
     zone_b.power_on = False
@@ -196,6 +224,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     zone_b.source = None
     zone_b.audio_input = "aux"
     zone_b.streaming_source = "DLNA"
+    zone_b.sources = []
     zone_b.volume = _FloatControl(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.zone_b = zone_b
 
@@ -237,7 +266,7 @@ def notify_receiver_update(receiver: MagicMock) -> None:
 
 def notify_position_jump(receiver: MagicMock, position_ms: int | None) -> None:
     """Fire every position jump callback the entities registered."""
-    for call in receiver.register_position_jump_callback.call_args_list:
+    for call in receiver.player.on_position_jump.call_args_list:
         call.args[0](position_ms)
 
 
