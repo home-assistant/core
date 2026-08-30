@@ -4566,23 +4566,10 @@ async def test_async_get_device_deprecated(
     ],
 )
 @pytest.mark.parametrize(
-    ("integration_frame_path", "expectation", "expected_log"),
+    ("built_in", "expectation"),
     [
-        pytest.param(
-            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
-        ),
-        pytest.param(
-            "homeassistant/components/test_integration",
-            pytest.raises(RuntimeError),
-            1,
-            id="core integration",
-        ),
-        pytest.param(
-            "custom_components/test_integration",
-            nullcontext(),
-            1,
-            id="custom integration",
-        ),
+        pytest.param(True, pytest.raises(RuntimeError), id="core integration"),
+        pytest.param(False, nullcontext(), id="custom integration"),
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
@@ -4593,14 +4580,18 @@ async def test_async_get_or_create_deprecated_parameters(
     parameter: str,
     value: Any,
     advice: str,
+    built_in: bool,
     expectation: AbstractContextManager,
-    expected_log: int,
 ) -> None:
     """Test passing deprecated parameters to async_get_or_create.
 
-    They log for custom integrations and raise for core and core integrations.
+    They log for custom integrations and raise for core integrations. The report is
+    attributed to the config entry which owns the device, not to the caller on the
+    stack: `mock_integration_frame` puts a core integration on the stack here, and a
+    custom integration's config entry must still only log.
     """
-    config_entry = MockConfigEntry()
+    mock_integration(hass, MockModule("test_integration"), built_in=built_in)
+    config_entry = MockConfigEntry(domain="test_integration")
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
@@ -4617,7 +4608,56 @@ async def test_async_get_or_create_deprecated_parameters(
             **{parameter: value},
         )
 
-    assert caplog.text.count(what) == expected_log
+    assert caplog.text.count(what) == 1
+
+
+@pytest.mark.parametrize(
+    ("built_in", "expectation"),
+    [
+        pytest.param(True, pytest.raises(RuntimeError), id="core integration"),
+        pytest.param(False, nullcontext(), id="custom integration"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_get_or_create_deprecated_parameters_without_integration_frame(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    expectation: AbstractContextManager,
+) -> None:
+    """Test the deprecation report when no integration frame is on the stack.
+
+    Device info reaches the registry from `entity_platform`, so the integration which
+    set `via_device` is not on the stack when entities are added from a task. The
+    report must still be attributed to it, instead of falling back to `core_behavior`
+    and raising at a custom integration.
+    """
+    mock_integration(hass, MockModule("test_integration"), built_in=built_in)
+    config_entry = MockConfigEntry(domain="test_integration")
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
+    )
+
+    what = (
+        "calls `device_registry.async_get_or_create` with a deprecated "
+        "`via_device` parameter; use `via_device_id` instead"
+    )
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        patch.object(
+            frame, "get_integration_frame", side_effect=frame.MissingIntegrationFrame
+        ),
+        expectation,
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("some_domain", "some_id")},
+            via_device=("some_domain", "via_id"),
+        )
+
+    assert caplog.text.count(what) == 1
 
 
 @pytest.mark.parametrize(
