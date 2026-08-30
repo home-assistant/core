@@ -263,7 +263,7 @@ async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
         # Wait until the executor-backed constructor call has actually
         # started, so cancelling below lands while it is still running -
         # not before hass.async_add_executor_job() has even scheduled it.
-        await hass.async_add_executor_job(construction_started.wait, 5)
+        assert await hass.async_add_executor_job(construction_started.wait, 5)
 
         # async_acquire_home_server()'s except-CancelledError branch itself
         # awaits home_server_job (to know whether it needs cleaning up)
