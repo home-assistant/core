@@ -53,13 +53,15 @@ class PeblarSessionListener:
         websocket = self._peblar.websocket()
         try:
             await websocket.connect()
+            await websocket.subscribe_session_status(self._handle_session_status)
 
             # A charger that was unreachable at startup can leave the wait
-            # at its longest. Reaching it at all settles that, so a drop
-            # hours later is not held against whatever went before.
+            # at its longest. A subscription that landed settles that, so a
+            # drop hours later is not held against whatever went before.
+            # Taking the socket without ever getting this far is not a
+            # working stream, and keeps backing off.
             self._retry = EVENT_STREAM_RETRY_MINIMUM
 
-            await websocket.subscribe_session_status(self._handle_session_status)
             await websocket.listen()
         finally:
             await websocket.disconnect()

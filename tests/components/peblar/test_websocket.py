@@ -86,6 +86,41 @@ async def test_the_wait_backs_off_and_settles_once_the_charger_answers(
     assert waits[:3] == [5, 10, 5]
 
 
+async def test_a_subscription_that_never_lands_keeps_backing_off(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test taking the socket is not the same as having a stream.
+
+    A charger that accepts the connection but never completes the
+    subscription would otherwise be retried every five seconds forever.
+    """
+    websocket = mock_peblar.websocket.return_value
+    subscriptions = 0
+
+    async def _refuse_twice(_callback: object) -> None:
+        nonlocal subscriptions
+        subscriptions += 1
+        if subscriptions <= 2:
+            raise PeblarConnectionError("Not listening")
+
+    websocket.subscribe_session_status.side_effect = _refuse_twice
+
+    waits: list[float] = []
+
+    async def _record(delay: float) -> None:
+        waits.append(delay)
+
+    with patch("homeassistant.components.peblar.websocket.asyncio.sleep", _record):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The socket opened every time, so a reset on that alone would have
+    # left both waits at five seconds.
+    assert waits[:2] == [5, 10]
+
+
 async def test_the_stream_is_closed_when_the_entry_unloads(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
