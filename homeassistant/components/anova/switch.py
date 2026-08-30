@@ -24,10 +24,14 @@ async def async_setup_entry(
     """Set up Anova switch entities."""
     anova_data = entry.runtime_data
 
+    # anova-wifi 2.0.0 reports a3 temperatures in the device's display unit
+    # and never publishes a cook time, so a cook started from those values
+    # would be wrong; only expose a3 devices once Lash-L/anova_wifi#84 ships.
     async_add_entities(
         AnovaCookSwitch(coordinator)
         for coordinator in anova_data.coordinators
-        if {Capability.START_COOK, Capability.STOP_COOK}
+        if coordinator.anova_device.type != "a3"
+        and {Capability.START_COOK, Capability.STOP_COOK}
         <= coordinator.anova_device.supported_capabilities
     )
 
@@ -37,7 +41,9 @@ class AnovaCookSwitch(AnovaEntity, SwitchEntity):
 
     Turning on starts a cook using the target temperature and timer the
     coordinator currently holds - seeded from the device's own state, and
-    adjustable via the Anova number entities.
+    adjustable via the Anova number entities. The switch stays available
+    while a cook is running even if the pending values have not been seeded
+    yet, so a running cook can always be stopped.
     """
 
     def __init__(self, coordinator: AnovaCoordinator) -> None:
@@ -58,10 +64,12 @@ class AnovaCookSwitch(AnovaEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return if the cook switch is available."""
-        return (
-            super().available
-            and self.coordinator.pending_target_temperature is not None
-            and self.coordinator.pending_cook_time_seconds is not None
+        return super().available and (
+            self.coordinator.anova_device.is_cooking
+            or (
+                self.coordinator.pending_target_temperature is not None
+                and self.coordinator.pending_cook_time_seconds is not None
+            )
         )
 
     @override

@@ -32,9 +32,50 @@ async def test_no_switch_for_unsupported_device_type(hass: HomeAssistant) -> Non
     assert hass.states.async_all("switch") == []
 
 
+@pytest.mark.usefixtures("anova_api_a3")
+async def test_no_switch_for_a3_device(hass: HomeAssistant) -> None:
+    """Test no switch entity is created for an a3 device."""
+    await async_init_integration(hass)
+    assert hass.states.async_all("switch") == []
+
+
+@pytest.mark.usefixtures("anova_api")
+async def test_switch_unavailable_until_pending_values_are_seeded(
+    hass: HomeAssistant,
+) -> None:
+    """Test the cook switch is unavailable until the pending values are seeded."""
+    entry = await async_init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[0]
+    coordinator.pending_target_temperature = None
+    coordinator.pending_cook_time_seconds = None
+    coordinator.async_set_updated_data(coordinator.data)
+
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "unavailable"
+
+    coordinator.pending_target_temperature = 54.72
+    coordinator.pending_cook_time_seconds = 0
+    coordinator.async_set_updated_data(coordinator.data)
+
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "off"
+
+
+@pytest.mark.usefixtures("anova_api_cooking")
+async def test_switch_available_while_cooking_before_pending_values_are_seeded(
+    hass: HomeAssistant,
+) -> None:
+    """Test the cook switch stays available while cooking even before seeding."""
+    entry = await async_init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[0]
+    coordinator.pending_target_temperature = None
+    coordinator.pending_cook_time_seconds = None
+    coordinator.async_set_updated_data(coordinator.data)
+
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "on"
+
+
 @pytest.mark.usefixtures("anova_api")
 async def test_turn_on_starts_a_cook_with_pending_values(hass: HomeAssistant) -> None:
-    """Test turning the switch on starts a cook using the number entities' values."""
+    """Test turning the switch on starts a cook using the coordinator's pending values."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
     device.start_cook = AsyncMock()
