@@ -73,7 +73,6 @@ async def async_get_config_entry_diagnostics(
         "model": receiver.model.name,
         "power_on": receiver.power_on,
         "volume": volume.value if volume is not None else None,
-        "max_volume": receiver.max_volume,
         "mute_enabled": receiver.muted,
         "source": receiver.source,
         "available_sources": receiver.sources,

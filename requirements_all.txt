@@ -1156,7 +1156,7 @@ goodwe==0.4.10
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.29.0
+google-cloud-pubsub==2.39.2
 
 # homeassistant.components.google_cloud
 google-cloud-speech==2.40.0
@@ -1443,6 +1443,9 @@ jsonpath-python==1.1.6
 
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
+
+# homeassistant.components.kaco_modbus
+kaco-modbus==1.1.0
 
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
@@ -2023,7 +2026,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.3
+pyHik==0.4.4
 
 # homeassistant.components.homee
 pyHomee==1.4.4
