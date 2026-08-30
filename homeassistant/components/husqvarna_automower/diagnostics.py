@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
@@ -30,7 +30,9 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: AutomowerConfigEntry, device: DeviceEntry
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    device: AnyDeviceEntry,  # pylint: disable=home-assistant-argument-type
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     coordinator = entry.runtime_data
