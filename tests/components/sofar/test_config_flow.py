@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 # A recognized prefix with no model in sofar-modbus's own table.
 _UNMODELED_SERIAL = "SA1XXES100XX"
@@ -293,6 +293,11 @@ async def test_reconfigure_errors(
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == expected_placeholders
     assert entry.data == MOCK_USER_INPUT
+    # The retry starts from what was typed, not from the stored entry.
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == _NEW_USER_INPUT[CONF_HOST]
+    )
 
     working_conn = MockModbusConnection()
     seed_pv_inverter(working_conn.for_unit(1))

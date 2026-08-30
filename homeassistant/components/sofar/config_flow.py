@@ -127,7 +127,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, reconfigure_entry.data
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
             ),
             errors=errors,
             description_placeholders=description_placeholders,
