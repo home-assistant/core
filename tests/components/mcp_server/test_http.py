@@ -19,11 +19,7 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server.const import (
-    CONF_REQUIRE_ADMIN,
-    DOMAIN,
-    STATELESS_LLM_API,
-)
+from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
     SSE_API,
@@ -742,13 +738,10 @@ async def test_streamable_api_id_unknown(
 
 
 @pytest.mark.parametrize(
-    ("entry_data", "expected_status"),
+    ("require_admin", "expected_status"),
     [
-        pytest.param({}, HTTPStatus.OK, id="unset"),
-        pytest.param({CONF_REQUIRE_ADMIN: False}, HTTPStatus.OK, id="not_required"),
-        pytest.param(
-            {CONF_REQUIRE_ADMIN: True}, HTTPStatus.UNAUTHORIZED, id="required"
-        ),
+        pytest.param(False, HTTPStatus.OK, id="not_required"),
+        pytest.param(True, HTTPStatus.UNAUTHORIZED, id="required"),
     ],
 )
 async def test_require_admin_option(
@@ -769,7 +762,7 @@ async def test_require_admin_option(
     assert response.status == expected_status
 
 
-@pytest.mark.parametrize("entry_data", [{CONF_REQUIRE_ADMIN: True}])
+@pytest.mark.parametrize("require_admin", [True])
 async def test_require_admin_blocks_sse_endpoints(
     hass: HomeAssistant,
     setup_integration: None,
@@ -786,7 +779,7 @@ async def test_require_admin_blocks_sse_endpoints(
     assert response.status == HTTPStatus.UNAUTHORIZED
 
 
-@pytest.mark.parametrize("entry_data", [{CONF_REQUIRE_ADMIN: True}])
+@pytest.mark.parametrize("require_admin", [True])
 async def test_require_admin_allows_admin(
     hass: HomeAssistant,
     setup_integration: None,

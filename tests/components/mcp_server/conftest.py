@@ -1,12 +1,11 @@
 """Common fixtures for the Model Context Protocol Server tests."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mcp_server.const import DOMAIN
+from homeassistant.components.mcp_server.const import CONF_REQUIRE_ADMIN, DOMAIN
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -53,23 +52,24 @@ def llm_hass_api_fixture() -> list[str]:
     return [llm.LLM_API_ASSIST]
 
 
-@pytest.fixture(name="entry_data")
-def entry_data_fixture() -> dict[str, Any]:
-    """Fixture for config entry data on top of the selected LLM APIs."""
-    return {}
+@pytest.fixture(name="require_admin")
+def require_admin_fixture() -> bool:
+    """Fixture for the config entry require admin option."""
+    return False
 
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry(
-    hass: HomeAssistant, llm_hass_api: str | list[str], entry_data: dict[str, Any]
+    hass: HomeAssistant, llm_hass_api: str | list[str], require_admin: bool
 ) -> MockConfigEntry:
     """Fixture to load the integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_LLM_HASS_API: llm_hass_api,
-            **entry_data,
+            CONF_REQUIRE_ADMIN: require_admin,
         },
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     return config_entry

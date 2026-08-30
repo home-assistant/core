@@ -43,6 +43,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Assist"
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["minor_version"] == 2
     assert result["data"] == {
         CONF_LLM_HASS_API: ["assist"],
         CONF_REQUIRE_ADMIN: True,

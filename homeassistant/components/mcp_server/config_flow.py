@@ -84,6 +84,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -150,7 +151,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=_options_schema(
-                llm_apis, current, self.config_entry.data.get(CONF_REQUIRE_ADMIN, False)
+                llm_apis, current, self.config_entry.data[CONF_REQUIRE_ADMIN]
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,

@@ -94,11 +94,8 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
 
 
 def _validate_admin(request: web.Request, entry: MCPServerConfigEntry) -> None:
-    """Verify the user may use the endpoints serving the configured LLM APIs.
-
-    Entries created before this option existed do not require an admin user.
-    """
-    if entry.data.get(CONF_REQUIRE_ADMIN, False) and not request["hass_user"].is_admin:
+    """Verify the user may use the endpoints serving the configured LLM APIs."""
+    if entry.data[CONF_REQUIRE_ADMIN] and not request["hass_user"].is_admin:
         raise Unauthorized
 
 
