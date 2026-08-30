@@ -15,6 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     BASE_DATA,
+    ENTRY_DATA,
     TEST_DEVICE_ID,
     TEST_KEY,
     TEST_MAC_ADDRESS,
@@ -165,6 +166,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_entry:
         yield mock_entry
+
+
+@pytest.fixture
+def config_entry() -> MockConfigEntry:
+    """Return a mock config entry fixture."""
+    return MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, minor_version=2)
 
 
 @pytest.fixture

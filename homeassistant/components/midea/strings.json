@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "device_auth_failed": "Could not connect with the provided configuration",
@@ -77,6 +78,15 @@
           "type": "The type of your Midea appliance"
         },
         "title": "Configure manually"
+      },
+      "reconfigure": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::midea::config::step::manually::data_description::ip_address%]"
+        },
+        "title": "Set your device new IP address"
       },
       "search": {
         "data": {

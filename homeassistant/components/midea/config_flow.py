@@ -716,6 +716,56 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_create_midea_entry(user_input)
         return self._show_manually_form(user_input, error)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Midea reconfigure step to allow to reconfigure a config entry."""
+        entry = self._get_reconfigure_entry()
+        error = None
+        if user_input is not None:
+            devices = await self.hass.async_add_executor_job(
+                lambda: discover(
+                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
+                ),
+            )
+            if len(devices) == 0:
+                error = "invalid_device_ip"
+            elif entry.data[CONF_DEVICE_ID] not in devices:
+                error = "ip_address_mismatch"
+            else:
+                data = {**entry.data, CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+                if await self.hass.async_add_executor_job(
+                    partial(
+                        _select_and_connect,
+                        device_id=data[CONF_DEVICE_ID],
+                        device_type=data[CONF_TYPE],
+                        ip_address=user_input[CONF_IP_ADDRESS],
+                        port=data[CONF_PORT],
+                        token=data[CONF_TOKEN],
+                        key=data[CONF_KEY],
+                        device_protocol=data[CONF_PROTOCOL],
+                        model=data[CONF_MODEL],
+                        subtype=data[CONF_SUBTYPE],
+                    )
+                ):
+                    return self.async_update_and_abort(
+                        entry,
+                        data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
+                    )
+                error = "device_auth_failed"
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_IP_ADDRESS,
+                        default=entry.data.get(CONF_IP_ADDRESS),
+                    ): str
+                }
+            ),
+            errors={"base": error} if error else None,
+        )
+
     def _show_manually_form(
         self,
         user_input: dict[str, Any] | None,

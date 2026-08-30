@@ -2031,3 +2031,136 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_method"
     assert result["errors"] == {"base": "preset_login_failed"}
+
+
+async def test_reconfigure_flow_form(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow default form."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.discover",
+            return_value=DISCOVERY_RESULT,
+        ) as mock_discovery,
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+        ) as mock_device_selector,
+    ):
+        mock_device = MagicMock()
+        mock_device.connect.return_value = True
+        mock_device_selector.return_value = mock_device
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "8.8.8.8"},
+        )
+
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == "8.8.8.8"
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert config_entry.data[CONF_IP_ADDRESS] == "8.8.8.8"
+
+        assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reconfigure_flow_no_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with no discovery in the new IP."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value={},
+    ) as mock_discovery:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"].get("base") == "invalid_device_ip"
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
+
+
+async def test_reconfigure_flow_wrong_device_id_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with no discovery in the new IP."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value={
+            123: {
+                **BASE_DATA,
+                CONF_TYPE: TEST_TYPE,
+                CONF_MAC: TEST_MAC_ADDRESS,
+                CONF_SN: TEST_SERIAL_NUMBER,
+            }
+        },
+    ) as mock_discovery:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"].get("base") == "ip_address_mismatch"
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow cannot connect to the new IP."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.discover",
+            return_value=DISCOVERY_RESULT,
+        ) as mock_discovery,
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+        ) as mock_device_selector,
+    ):
+        mock_device = MagicMock()
+        mock_device.connect.return_value = False
+        mock_device_selector.return_value = mock_device
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: TEST_IP_ADDRESS},
+        )
+
+        mock_device_selector.assert_called_once()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"].get("base") == "device_auth_failed"
+        mock_discovery.assert_called_once()
+        assert mock_discovery.call_args.kwargs["ip_address"] == TEST_IP_ADDRESS

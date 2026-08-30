@@ -1,6 +1,6 @@
 """Constants for Midea tests."""
 
-from midealocal.const import ProtocolVersion
+from midealocal.const import DeviceType, ProtocolVersion
 
 from homeassistant.components.midea.const import CONF_KEY, CONF_SN, CONF_SUBTYPE
 from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_MODEL,
+    CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_TOKEN,
@@ -50,4 +51,17 @@ EXTENDED_DATA = {
     CONF_SUBTYPE: TEST_SUBTYPE,
     CONF_TOKEN: TEST_TOKEN,
     CONF_KEY: TEST_KEY,
+}
+
+ENTRY_DATA = {
+    CONF_DEVICE_ID: TEST_DEVICE_ID,
+    CONF_NAME: "m",
+    CONF_TYPE: DeviceType.AC,
+    CONF_IP_ADDRESS: "1.1.1.1",
+    CONF_PORT: 6444,
+    CONF_MODEL: "m",
+    CONF_PROTOCOL: ProtocolVersion.V2,
+    CONF_TOKEN: "",
+    CONF_KEY: "",
+    CONF_SUBTYPE: 0,
 }
