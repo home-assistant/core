@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import CONF_ENCRYPTION, CONF_ENTRY, CONF_OLD_RECIPIENT, CONF_SERVER, DOMAIN
 from .services import async_setup_services
@@ -73,7 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
         timeout=entry.options.get(CONF_TIMEOUT),
         use_tls=entry.data[CONF_ENCRYPTION] == "tls",
         start_tls=entry.data[CONF_ENCRYPTION] == "starttls",
-        validate_certs=entry.data[CONF_VERIFY_SSL],
+        tls_context=(
+            get_default_context()
+            if entry.data[CONF_VERIFY_SSL]
+            else get_default_no_verify_context()
+        ),
     )
     try:
         async with client:

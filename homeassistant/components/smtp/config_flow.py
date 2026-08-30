@@ -44,6 +44,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from . import SmtpConfigEntry
 from .const import (
@@ -312,7 +313,11 @@ async def validate_input(
             timeout=options.get(CONF_TIMEOUT),
             use_tls=user_input[CONF_ENCRYPTION] == "tls",
             start_tls=user_input[CONF_ENCRYPTION] == "starttls",
-            validate_certs=user_input[CONF_VERIFY_SSL],
+            tls_context=(
+                get_default_context()
+                if user_input[CONF_VERIFY_SSL]
+                else get_default_no_verify_context()
+            ),
         ):
             pass
     except SMTPTimeoutError:

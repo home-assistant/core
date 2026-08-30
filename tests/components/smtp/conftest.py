@@ -94,6 +94,22 @@ def mock_randrange() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="get_default_context")
+def mock_get_default_context() -> Generator[None]:
+    """Mock get_default_context."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.get_default_context"
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smtp.get_default_context",
+            new=mock_client,
+        ),
+    ):
+        yield mock_client
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock smtp configuration entry."""
