@@ -87,7 +87,7 @@ async def test_async_setup_entry_update(
     )
 
     assert dummy_entity in entity_registry.entities.values()
-    assert dummy_device in device_registry.devices.values()
+    assert dummy_device in device_registry.devices
 
 
 @pytest.mark.parametrize(

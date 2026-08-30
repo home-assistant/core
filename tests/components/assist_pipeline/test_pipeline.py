@@ -1991,7 +1991,7 @@ async def test_acknowledge(
         device_registry.async_update_device(light_device.id, area_id=area_2.id)
 
         _reset()
-        await _run("turn on light 2")
+        await _run("turn on Mock Title light 2")
 
         # Acknowledgment sound should be not played (different device area)
         text_to_speech.assert_called_once()

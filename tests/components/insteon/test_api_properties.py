@@ -1,6 +1,5 @@
 """Test the Insteon properties APIs."""
 
-import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -157,7 +156,6 @@ async def test_get_read_only_properties(
         msg = await ws_client.receive_json()
         assert msg["success"]
         assert len(msg["result"]["properties"]) == 15
-    await asyncio.sleep(1)
 
 
 async def test_get_unknown_properties(

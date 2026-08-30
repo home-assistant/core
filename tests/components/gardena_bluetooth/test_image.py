@@ -154,9 +154,44 @@ async def test_image_without_contour(
     state = hass.states.get("image.mock_title_contour_4")
     assert state
     assert state.state == "unknown"
+    assert "entity_picture" not in state.attributes
 
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.mock_title_contour_4")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@pytest.mark.usefixtures("mock_contours")
+async def test_contour_cleared_after_being_present(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_read_char_raw: dict[str, bytes | Exception],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Test a contour that is taught and then cleared goes back to unknown."""
+    await setup_entry(
+        hass, platforms=[Platform.IMAGE], service_info=AQUA_CONTOUR_SERVICE_INFO
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != "unknown"
+    assert "entity_picture" in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.OK
+
+    mock_read_char_raw[AquaContourContours.contour_points_1.unique_id] = b""
+    for _ in range(SEGMENTED_SCAN_COUNT):
+        await scan_step()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "unknown"
+    assert "entity_picture" not in state.attributes
+
+    resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 

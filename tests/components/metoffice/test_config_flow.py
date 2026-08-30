@@ -9,7 +9,7 @@ import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -86,9 +86,19 @@ async def test_form_already_configured(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=METOFFICE_CONFIG_WAVERTREE,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+            CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
