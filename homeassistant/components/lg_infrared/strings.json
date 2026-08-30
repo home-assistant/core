@@ -47,11 +47,23 @@
   },
   "entity": {
     "button": {
+      "ai_convertible": {
+        "name": "AI mode"
+      },
+      "audio": {
+        "name": "Beep"
+      },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
       },
+      "diagnose": {
+        "name": "Diagnose"
+      },
       "down": {
         "name": "[%key:common::entity::button::down::name%]"
+      },
+      "eco": {
+        "name": "Eco"
       },
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
@@ -80,8 +92,14 @@
       "input": {
         "name": "[%key:common::entity::button::input::name%]"
       },
+      "jet": {
+        "name": "Jet"
+      },
       "left": {
         "name": "[%key:common::entity::button::left::name%]"
+      },
+      "light": {
+        "name": "Light"
       },
       "menu": {
         "name": "[%key:common::entity::button::menu::name%]"
@@ -131,8 +149,17 @@
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
       },
+      "swing_v_toggle": {
+        "name": "Vertical swing toggle"
+      },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
+      },
+      "viraat": {
+        "name": "Viraat"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
       }
     },
     "climate": {
