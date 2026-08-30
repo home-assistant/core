@@ -56,7 +56,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from .coordinator import IcloudCalendarCoordinator
+    from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +101,7 @@ class IcloudAccount:
 
         # Built in async_setup_entry, before the platforms are forwarded.
         self.calendar_coordinator: IcloudCalendarCoordinator | None = None
+        self.reminders_coordinator: IcloudRemindersCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 
