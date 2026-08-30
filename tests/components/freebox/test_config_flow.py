@@ -172,10 +172,13 @@ async def test_on_link_failed_forgets_registration_on_invalid_token(
 ) -> None:
     """Test that an invalid app token clears the stored registration."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
 
     error = AuthorizationError(
         'Starting session failed (APIResponse: {"success": false, '
@@ -208,10 +211,13 @@ async def test_on_link_failed_keeps_registration_on_other_authorization_error(
     registration must be left untouched for them.
     """
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
 
     with (
         patch(

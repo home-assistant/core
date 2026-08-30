@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import pytest
 
+from homeassistant.components.freebox.const import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.freebox.router import (
     async_forget_registration,
     get_hosts_list_if_supported,
@@ -14,6 +15,7 @@ from homeassistant.components.freebox.router import (
     is_json,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .const import (
@@ -31,6 +33,16 @@ def mock_path():
     which stubs out Path for the config flow / setup tests in this package.
     """
     return
+
+
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Use a temporary config directory so the app token file is isolated.
+
+    This lets async_forget_registration's own Store lookup be exercised
+    for real, instead of mocking Store to point at a test-controlled path.
+    """
+    return hass_tmp_config_dir
 
 
 async def test_is_json() -> None:
@@ -120,17 +132,18 @@ def test_is_invalid_token_error(error: AuthorizationError, expected: bool) -> No
     assert is_invalid_token_error(error) is expected
 
 
-async def test_async_forget_registration(hass: HomeAssistant, tmp_path: Path) -> None:
+async def test_async_forget_registration(hass: HomeAssistant) -> None:
     """async_forget_registration must remove the stored app token, if any."""
-    with patch("homeassistant.components.freebox.router.Store") as mock_store:
-        mock_store.return_value.path = str(tmp_path)
+    token_file = (
+        Path(Store(hass, STORAGE_VERSION, STORAGE_KEY).path)
+        / f"{slugify(MOCK_HOST)}.conf"
+    )
+    token_file.parent.mkdir(parents=True, exist_ok=True)
+    token_file.write_text('{"app_token": "stale"}')
+    assert token_file.exists()
 
-        token_file = tmp_path / f"{slugify(MOCK_HOST)}.conf"
-        token_file.write_text('{"app_token": "stale"}')
-        assert token_file.exists()
+    await async_forget_registration(hass, MOCK_HOST)
+    assert not token_file.exists()
 
-        await async_forget_registration(hass, MOCK_HOST)
-        assert not token_file.exists()
-
-        # Calling again with no stored file left must not raise.
-        await async_forget_registration(hass, MOCK_HOST)
+    # Calling again with no stored file left must not raise.
+    await async_forget_registration(hass, MOCK_HOST)
