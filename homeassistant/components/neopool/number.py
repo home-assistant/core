@@ -1,9 +1,9 @@
 """Number platform for the NeoPool integration."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 from typing import Any, override
 
 from neopool_modbus.capabilities import (
@@ -32,16 +32,18 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import CONF_USE_COVER_SENSOR
+from .const import CONF_USE_COVER_SENSOR, DOMAIN
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-PARALLEL_UPDATES = 1
+# The platform coalesces rapid writes per entity via a debounce timer and
+# serializes the shared masked register with masked_write_lock, so a platform
+# semaphore would add nothing but latency between independent UI interactions.
+PARALLEL_UPDATES = 0
 
 # Wait for the stepper to settle so only the final value hits the device's EEPROM.
 WRITE_DELAY = timedelta(seconds=3)
@@ -288,6 +290,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
         self._write_unsub: CALLBACK_TYPE | None = None
         self._pending_value: float | None = None
+        self._write_future: asyncio.Future[None] | None = None
         self._removing = False
 
     def _decode_raw(self) -> float | None:
@@ -312,6 +315,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         """Cancel a pending write when removed."""
         self._removing = True
         self._cancel_pending_write()
+        if self._write_future is not None and not self._write_future.done():
+            # Wake any awaiting callers; they treat cancellation as a clean exit.
+            self._write_future.cancel()
         await super().async_will_remove_from_hass()
 
     @callback
@@ -323,56 +329,84 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        """Set the native value of the number entity."""
+        """Set the native value of the number entity.
+
+        The write is debounced so a rapid stepper settles into a single EEPROM
+        cycle. Every caller in the same debounce window awaits one shared future
+        that the coalesced write resolves, so a blocking service call still sees
+        the write's outcome and surfaces any device error.
+        """
         self._pending_value = value
         # Show the pending value optimistically. Write happens once the stepper
         # settles; restart the timer so it fires after the last click, not the
         # first, sparing the device a flash cycle per intermediate step.
         self.async_write_ha_state()
         self._cancel_pending_write()
-        self._write_unsub = async_call_later(
-            self.hass, WRITE_DELAY, self._async_write_pending
-        )
-
-    async def _async_write_pending(self, _now: datetime) -> None:
-        """Write the pending value via the appropriate lib high-level API."""
-        self._write_unsub = None
-        if (pending := self._pending_value) is None:  # pragma: no cover
-            # Defensive: the timer only fires after a value is queued.
-            return
-        self._pending_value = None
-        client = self.coordinator.client
-        desc = self.entity_description
-        raw = round(pending * desc.scale)
-        # No EEPROM cycle if the settled value already matches the device.
-        if (current := self._decode_raw()) is not None and (
-            round(current * desc.scale) == raw
-        ):
-            # Drop the optimistic value back to the register reading.
-            self.async_write_ha_state()
-            return
+        if self._write_future is None or self._write_future.done():
+            self._write_future = self.hass.loop.create_future()
+        future = self._write_future
+        self._write_unsub = async_call_later(self.hass, WRITE_DELAY, self._async_flush)
         try:
-            if desc.setpoint is not None:
-                await client.async_set_setpoint(desc.setpoint, raw)
-                # Merge the quantized value the device stored, not the raw input.
-                overrides = {self._data_key: raw / desc.scale}
-            elif desc.masked_flag is not None:
-                # Serialize the read-modify-write against sibling writes.
-                async with self.coordinator.masked_write_lock:
-                    overrides = await client.async_set_masked_register(
-                        desc.masked_flag, raw
-                    )
-            else:  # pragma: no cover - description validated upstream
+            await future
+        except asyncio.CancelledError:
+            # Removed while waiting: nothing to report, exit cleanly.
+            return
+
+    async def _async_flush(self, _now: datetime) -> None:
+        """Write the settled value, resolving the awaited coalesce future."""
+        self._write_unsub = None
+        future = self._write_future
+        try:
+            if (pending := self._pending_value) is None:  # pragma: no cover
+                # Defensive: the timer only fires after a value is queued.
                 return
-        except (NeoPoolError, OSError, TimeoutError) as err:
-            # Background write: log and drop; the next poll restores state.
-            _LOGGER.warning("Failed to write %s: %s", self.entity_description.key, err)
-            return
-        if self._removing:
-            # Removed mid-write: the client may be closing, leave the coordinator alone.
-            return
-        self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
-        self.coordinator.request_refresh_with_followup()
+            self._pending_value = None
+            client = self.coordinator.client
+            desc = self.entity_description
+            raw = round(pending * desc.scale)
+            # No EEPROM cycle if the settled value already matches the device.
+            if (current := self._decode_raw()) is not None and (
+                round(current * desc.scale) == raw
+            ):
+                # Drop the optimistic value back to the register reading.
+                self.async_write_ha_state()
+                return
+            try:
+                if desc.setpoint is not None:
+                    await client.async_set_setpoint(desc.setpoint, raw)
+                    # Merge the quantized value the device stored, not the raw input.
+                    overrides = {self._data_key: raw / desc.scale}
+                elif desc.masked_flag is not None:
+                    # Serialize the read-modify-write against sibling writes.
+                    async with self.coordinator.masked_write_lock:
+                        overrides = await client.async_set_masked_register(
+                            desc.masked_flag, raw
+                        )
+                else:  # pragma: no cover - description validated upstream
+                    return
+            except (NeoPoolError, OSError, TimeoutError) as err:
+                # Roll the optimistic value back to the register reading and
+                # report the failure to the awaiting caller.
+                self.async_write_ha_state()
+                if future is not None and not future.done():
+                    future.set_exception(
+                        HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="modbus_communication_error",
+                            translation_placeholders={"error": str(err)},
+                        )
+                    )
+                return
+            if self._removing:
+                # Removed mid-write: the client may be closing, leave the coordinator alone.
+                return
+            self.coordinator.async_set_updated_data(
+                {**self.coordinator.data, **overrides}
+            )
+            self.coordinator.request_refresh_with_followup()
+        finally:
+            if future is not None and not future.done():
+                future.set_result(None)
 
     @property
     @override
