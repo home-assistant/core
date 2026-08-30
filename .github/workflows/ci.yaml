@@ -722,21 +722,15 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ fromJson(needs.info.outputs.python_versions)[0] }}
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version: ${{ fromJson(needs.info.outputs.python_versions)[0] }}
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
         uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
         with:
