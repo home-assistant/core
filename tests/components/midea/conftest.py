@@ -174,6 +174,7 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
     def _create(device: DummyDevice) -> MockConfigEntry:
         return MockConfigEntry(
             domain=DOMAIN,
+            minor_version=2,
             data={
                 **BASE_DATA,
                 CONF_TYPE: device.device_type,
