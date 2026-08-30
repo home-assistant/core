@@ -76,7 +76,9 @@ class HassJsonFixtureChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Visit a module definition."""
-        self._in_test_module = is_test_module(node.name)
+        # ``tests.common`` defines the JSON fixture helpers themselves, which
+        # legitimately parse a loaded fixture.
+        self._in_test_module = is_test_module(node.name) and node.name != "tests.common"
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check for JSON parsing of a loaded fixture."""
