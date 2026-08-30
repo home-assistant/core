@@ -139,15 +139,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         data: dict[str, CoolbotDevice] = {}
         for device in devices:
             if device.is_provisioned and not device.mac_address:
-                # This device cannot be named yet: its MAC has never replayed,
-                # or the client dropped the cached one when a replay timed out,
-                # because the slot may hold replacement hardware by then.
-                # Its unique_id would be a dash/slot fallback that changes once
-                # the MAC arrives, duplicating the device — and republishing
-                # the slot's previous occupant instead would restore an
-                # identity the client just refused to vouch for. Held back;
-                # a device it displaced goes unavailable rather than being
-                # carried as if it were still on the account.
+                # The MAC is the stable identity behind unique_id; publishing
+                # under the dash/slot fallback would duplicate the device once
+                # it arrives, and the client left it unset precisely because
+                # the slot cannot be vouched for yet.
                 _LOGGER.debug(
                     "Holding back %s until its MAC address arrives", device.name
                 )
