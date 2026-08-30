@@ -117,17 +117,22 @@ class GoogleConfig(AbstractConfig):
 
         await super().async_initialize()
 
+        self.async_enable_local_sdk()
+
+    @override
+    async def _async_on_start(self, hass: HomeAssistant) -> None:
+        """Register listeners and migrate legacy settings before the initial sync."""
         self._on_deinitialize.append(
             async_listen_entity_updates(
                 self.hass, DOMAIN, self.async_schedule_google_sync_all
             )
         )
-
-        self.async_enable_local_sdk()
-
-    @override
-    async def _async_on_start(self, hass: HomeAssistant) -> None:
-        """Migrate legacy settings before the initial sync."""
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_entity_registry_updated,
+            )
+        )
         self._on_deinitialize.append(
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
@@ -168,9 +173,26 @@ class GoogleConfig(AbstractConfig):
     def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
         """Migrate legacy settings and sync a newly appeared state."""
         entity_id = event.data["entity_id"]
-        self._migrate_legacy_entity(entity_id, skip_defaults=False)
-        if self.should_expose(entity_id):
-            self.async_schedule_google_sync_all()
+        self._migrate_legacy_entity(entity_id, skip_defaults=True)
+        if not self.should_expose(entity_id):
+            return
+
+        self.async_schedule_google_sync_all()
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Schedule a sync when a describing attribute of an exposed entity changes."""
+        if event.data["action"] != "update" or not (
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            return
+
+        if not self.should_expose(event.data["entity_id"]):
+            return
+
+        self.async_schedule_google_sync_all()
 
     @property
     @override

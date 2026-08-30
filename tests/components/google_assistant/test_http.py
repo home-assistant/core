@@ -729,6 +729,47 @@ async def test_expose_update_triggers_sync(
     mock_sync.assert_called_once_with("mock-user-id")
 
 
+@pytest.mark.parametrize(
+    ("update_kwargs", "expect_sync"),
+    [
+        pytest.param({"aliases": ["Kitchen Light"]}, True, id="aliases_changed"),
+        pytest.param({"icon": "mdi:lightbulb"}, False, id="unrelated_field_changed"),
+    ],
+)
+async def test_registry_update_triggers_sync_only_for_aliases(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    update_kwargs: dict[str, Any],
+    expect_sync: bool,
+) -> None:
+    """Test only alias changes on an exposed entity schedule a Google sync."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # The entity was already exposed by the initial YAML-based migration.
+    assert config.should_expose(entry.entity_id) is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entity_registry.async_update_entity(entry.entity_id, **update_kwargs)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    if expect_sync:
+        mock_sync.assert_called_once_with("mock-user-id")
+    else:
+        mock_sync.assert_not_called()
+
+
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
