@@ -27,6 +27,7 @@ from .coordinator import (
     PeblarVersionDataUpdateCoordinator,
 )
 from .services import async_setup_services
+from .websocket import PeblarSessionListener
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -94,6 +95,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         system_information=system_information,
         user_configuration_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
+    )
+
+    # Follow the charging session as it changes, rather than waiting for
+    # the next poll to notice. The poll stays where it is: this only asks
+    # it to catch up early.
+    listener = PeblarSessionListener(hass, entry, peblar, meter_coordinator)
+    entry.async_create_background_task(
+        hass, listener.async_run(), name=f"Peblar {entry.title} event stream"
     )
 
     # Forward the setup to the platforms

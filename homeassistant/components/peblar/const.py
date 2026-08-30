@@ -1,5 +1,6 @@
 """Constants for the Peblar integration."""
 
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -9,6 +10,13 @@ DOMAIN: Final = "peblar"
 
 CONF_EVCC_ID: Final = "evcc_id"
 CONF_UID: Final = "uid"
+
+# How long to wait before opening the event stream again after it fell
+# over, doubling up to the maximum. The stream only makes the poll
+# quicker, so there is no hurry and no point hammering a charger that is
+# switched off.
+EVENT_STREAM_RETRY_MINIMUM: Final = timedelta(seconds=5)
+EVENT_STREAM_RETRY_MAXIMUM: Final = timedelta(minutes=5)
 
 LOGGER = logging.getLogger(__package__)
 
