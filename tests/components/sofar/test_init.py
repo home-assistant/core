@@ -443,6 +443,45 @@ async def test_only_wired_battery_packs_become_devices(
     assert entity_registry.async_get(total_id).device_id == inverter.id
 
 
+async def test_total_survives_a_torn_first_poll_after_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reload's first poll is protected by the pre-reload total."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    unit.holding[0x068A] = 0
+    unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_load_consumption_total"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "1000.0"
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # A torn read on the reload's first poll, inside the 1% dip band.
+        unit.holding[0x068B] = 9995
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "1000.0"
+
+
 async def test_battery_pack_appears_once_its_block_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
