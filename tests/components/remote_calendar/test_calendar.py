@@ -213,6 +213,60 @@ async def test_api_date_event(
     assert len(events) == 1
 
 
+CANCELLED_EVENT_ICS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:Festival International de Jazz de Montreal
+    LOCATION:Montreal
+    DTSTART:20070628
+    DTEND:20070709
+    STATUS:CANCELLED
+    END:VEVENT
+    END:VCALENDAR
+    """
+)
+
+
+@respx.mock
+async def test_cancelled_event_is_not_returned(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+) -> None:
+    """Test that an event called off is not returned by the API."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_EVENT_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    events = await get_events("2007-06-28T00:00:00Z", "2007-07-10T00:00:00Z")
+
+    assert events == []
+
+
+@pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
+@respx.mock
+async def test_cancelled_event_does_not_turn_the_entity_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an event called off is not picked up as the current event.
+
+    The event would be active at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_EVENT_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
 @pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
 @respx.mock
 async def test_active_event(
