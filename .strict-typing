@@ -330,6 +330,7 @@ homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
+homeassistant.components.kaco_modbus.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*

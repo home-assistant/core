@@ -1441,6 +1441,9 @@ jsonpath-python==1.1.6
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
 
+# homeassistant.components.kaco_modbus
+kaco-modbus==1.1.0
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
 
