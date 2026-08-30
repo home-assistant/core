@@ -5,10 +5,13 @@ from unittest.mock import AsyncMock
 from anova_wifi import CommandFailure
 import pytest
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import async_init_integration, get_device
+
+from tests.common import async_mock_restore_state_shutdown_restart
 
 
 @pytest.mark.usefixtures("anova_api")
@@ -63,16 +66,13 @@ async def test_pending_value_survives_restart_while_device_is_unavailable(
         blocking=True,
     )
 
-    coordinator.anova_device.last_update_received_at = (
-        dt_util.utcnow() - DEVICE_STALE_THRESHOLD - timedelta(seconds=1)
+    hass.states.async_set(
+        "number.anova_precision_cooker_target_temperature", STATE_UNAVAILABLE
     )
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     assert (
         hass.states.get("number.anova_precision_cooker_target_temperature").state
-        == "unavailable"
+        == STATE_UNAVAILABLE
     )
 
     await async_mock_restore_state_shutdown_restart(hass)
