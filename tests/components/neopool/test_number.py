@@ -581,6 +581,60 @@ async def test_coalesced_callers_all_receive_same_outcome(
         assert results == [None, None, None]
 
 
+async def test_write_queued_during_flush_gets_its_own_outcome(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A set_value arriving mid-flush writes on its own, not the in-flight batch.
+
+    While the first flush is awaiting device I/O, a new set_value must not reuse
+    the in-flight future: it would return the first write's outcome and its own
+    value would never reach the device. Each batch gets its own future and its
+    own serialized write.
+    """
+    in_write = asyncio.Event()
+    release = asyncio.Event()
+    seen: list[int] = []
+
+    async def _gated_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        seen.append(value)
+        if len(seen) == 1:
+            in_write.set()
+            await release.wait()
+        return {"MBF_PAR_PH1": value}
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_gated_setpoint)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+    seen.clear()
+
+    # First write enters the library call and blocks there.
+    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # A second value arrives while the first write is still in flight.
+    second = _set_value_nowait(hass, ph1_entity_id, 8.0)
+    await _let_park(hass)
+
+    # Release the first write, then flush the second batch.
+    release.set()
+    await first
+    await _flush(hass, freezer)
+    await second
+
+    # Two distinct writes ran, each with its own value.
+    assert seen == [700, 800]
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 8.0
+
+
 async def test_repeated_set_value_writes_only_latest(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
