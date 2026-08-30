@@ -735,3 +735,62 @@ async def test_streamable_api_id_unknown(
     )
     assert response.status == HTTPStatus.NOT_FOUND
     assert "Unknown LLM API" in await response.text()
+
+
+@pytest.mark.parametrize(
+    ("require_admin", "expected_status"),
+    [
+        pytest.param(False, HTTPStatus.OK, id="not_required"),
+        pytest.param(True, HTTPStatus.UNAUTHORIZED, id="required"),
+    ],
+)
+async def test_require_admin_option(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test the require admin option applied to a non-admin user."""
+    client = await hass_client(hass_read_only_access_token)
+
+    response = await client.post(
+        STREAMABLE_API,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == expected_status
+
+
+@pytest.mark.parametrize("require_admin", [True])
+async def test_require_admin_blocks_sse_endpoints(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the require admin option applied to the SSE endpoints."""
+    client = await hass_client(hass_read_only_access_token)
+
+    response = await client.get(SSE_API)
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+    response = await client.post(MESSAGES_API.format(session_id="session-id"))
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize("require_admin", [True])
+async def test_require_admin_allows_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an admin user may use the endpoint that requires an admin."""
+    client = await hass_client()
+
+    response = await client.post(
+        STREAMABLE_API,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK

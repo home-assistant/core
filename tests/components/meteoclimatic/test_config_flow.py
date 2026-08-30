@@ -48,13 +48,6 @@ async def test_user(hass: HomeAssistant, client) -> None:
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_CODE: TEST_STATION_CODE},
