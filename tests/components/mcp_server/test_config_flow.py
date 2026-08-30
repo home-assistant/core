@@ -111,6 +111,15 @@ async def test_options_flow_legacy_single_api(
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"]({}) == {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]}
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data == {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]}
+
 
 async def test_options_flow_keeps_custom_title(
     hass: HomeAssistant, config_entry: MockConfigEntry
@@ -148,3 +157,12 @@ async def test_options_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_LLM_HASS_API: "llm_api_required"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data == {CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]}
