@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from elgato import ElgatoConnectionError, ElgatoError, FirmwareImage
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -9,8 +11,10 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ElgatoConfigEntry, ElgatoCoordinators
 from .entity import ElgatoEntity
 from .helpers import elgato_exception_handler
@@ -98,7 +102,7 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
-            image = await self.firmware.catalog.download(self.firmware.board_type)
+            image = await self._download()
             await self.coordinator.client.update_firmware(
                 image, on_progress=self._handle_progress
             )
@@ -106,6 +110,30 @@ class ElgatoUpdateEntity(ElgatoEntity, UpdateEntity):
             self._attr_in_progress = False
             self._attr_update_percentage = None
             self.async_write_ha_state()
+
+    async def _download(self) -> FirmwareImage:
+        """Fetch the firmware image from Elgato.
+
+        This is the half of the install that happens off the local network,
+        and it reports on the coordinator that covers it. Letting the handler
+        around async_install see these would mark the device coordinator
+        failed, taking the light and everything on it offline over a problem
+        that is entirely at Elgato's end.
+        """
+        try:
+            return await self.firmware.catalog.download(self.firmware.board_type)
+        except ElgatoConnectionError as err:
+            self.firmware.last_update_success = False
+            self.firmware.async_update_listeners()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except ElgatoError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err
 
     @callback
     def _handle_progress(self, sent: int, total: int) -> None:

@@ -3,7 +3,12 @@
 from collections.abc import Callable
 from unittest.mock import MagicMock
 
-from elgato import ElgatoConnectionError, ElgatoError, FirmwareImage
+from elgato import (
+    ElgatoConnectionError,
+    ElgatoError,
+    ElgatoFirmwareError,
+    FirmwareImage,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -196,6 +201,42 @@ async def test_elgato_unreachable(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+
+    assert (light := hass.states.get("light.frenck"))
+    assert light.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        (ElgatoConnectionError, "An error occurred while communicating"),
+        (ElgatoFirmwareError, "An unknown error occurred while communicating"),
+    ],
+)
+async def test_download_failure_leaves_the_light_alone(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    mock_firmware_catalog: MagicMock,
+    side_effect: type[Exception],
+    message: str,
+) -> None:
+    """Test Elgato failing to hand over the image.
+
+    Fetching the firmware happens off the local network. A failure there says
+    nothing about the light, which has to keep working, and the device must
+    never be sent an image that was not fetched.
+    """
+    mock_firmware_catalog.download.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError, match=message):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_elgato.update_firmware.assert_not_called()
 
     assert (light := hass.states.get("light.frenck"))
     assert light.state != STATE_UNAVAILABLE
