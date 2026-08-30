@@ -41,7 +41,7 @@ async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     aiosmtplib: AsyncMock,
-    get_default_context: MagicMock,
+    client_context: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -86,7 +86,7 @@ async def test_form(
         timeout=60,
         use_tls=False,
         start_tls=True,
-        tls_context=get_default_context(),
+        tls_context=client_context(),
     )
 
 
@@ -238,7 +238,7 @@ async def test_form_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aiosmtplib: AsyncMock,
-    get_default_context: MagicMock,
+    client_context: MagicMock,
 ) -> None:
     """Test reconfigure flow."""
 
@@ -279,7 +279,7 @@ async def test_form_reconfigure(
         timeout=1312,
         use_tls=False,
         start_tls=True,
-        tls_context=get_default_context(),
+        tls_context=client_context(),
     )
 
 
@@ -392,7 +392,7 @@ async def test_form_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aiosmtplib: AsyncMock,
-    get_default_context: MagicMock,
+    client_context: MagicMock,
 ) -> None:
     """Test reauth flow."""
 
@@ -430,7 +430,7 @@ async def test_form_reauth(
         timeout=1312,
         use_tls=False,
         start_tls=True,
-        tls_context=get_default_context(),
+        tls_context=client_context(),
     )
 
 

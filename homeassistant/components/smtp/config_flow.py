@@ -44,7 +44,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
+from homeassistant.util.ssl import client_context, client_context_no_verify
 
 from . import SmtpConfigEntry
 from .const import (
@@ -314,9 +314,9 @@ async def validate_input(
             use_tls=user_input[CONF_ENCRYPTION] == "tls",
             start_tls=user_input[CONF_ENCRYPTION] == "starttls",
             tls_context=(
-                get_default_context()
+                client_context()
                 if user_input[CONF_VERIFY_SSL]
-                else get_default_no_verify_context()
+                else client_context_no_verify()
             ),
         ):
             pass
