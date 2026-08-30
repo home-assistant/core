@@ -1,6 +1,7 @@
 """Fixtures for Zamg integration tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 import json
 from unittest.mock import MagicMock, patch
 
@@ -78,6 +79,32 @@ def mock_zamg_coordinator() -> Generator[MagicMock]:
     ) as zamg_mock:
         zamg = zamg_mock.return_value
         zamg.update.return_value = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        zamg.get_forecast.side_effect = [
+            {
+                "t2m": 15.0,
+                "rain": 0.0,
+                "wind_speed": 5.0,
+                "rh2m": 45.0,
+                "tcc": 10.0,
+            },
+            {
+                "timestamps": ["2026-01-01T13:00:00"],
+                "features": [
+                    {
+                        "properties": {
+                            "parameters": {
+                                "t2m": {"data": [15.0]},
+                                "rain": {"data": [0.0]},
+                                "wind_speed": {"data": [5.0]},
+                                "rh2m": {"data": [45.0]},
+                                "tcc": {"data": [10.0]},
+                            }
+                        }
+                    }
+                ],
+            },
+        ]
+        zamg.last_update = datetime(2026, 1, 1, tzinfo=UTC)
         zamg.zamg_stations.return_value = {
             TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
             "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),

@@ -47,6 +47,8 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
                 self.zamg.set_parameters(self.api_fields)
             self.zamg.request_timeout = 60.0
             device = await self.zamg.update()
+            nowcast = await self.zamg.get_forecast(current_only=True)
+            forecast = await self.zamg.get_forecast(current_only=False)
         except ZamgNoDataError as error:
             raise UpdateFailed("No response from API") from error
         except ZamgError as error:
@@ -54,4 +56,6 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         self.data = device
         self.data["last_update"] = self.zamg.last_update
         self.data["Name"] = self.zamg.get_station_name
+        self.data["nowcast"] = nowcast
+        self.data["forecast"] = forecast
         return device
