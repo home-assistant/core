@@ -29,13 +29,6 @@ from .const import (
 )
 from .entity import device_name
 
-# Named rather than written inline in the except clause below: the pinned
-# ruff-format build in this repo's own CI rewrites a bare `except (X, Y):`
-# tuple into `except X, Y:`, which is invalid Python 2 syntax - confirmed
-# reproducible on a minimal, unrelated file, and independently on the actual
-# "Run prek checks" CI job for this PR. A named tuple sidesteps it.
-_PROBE_TRANSIENT_ERRORS = (ModbusError, TimeoutError)
-
 STEP_USER = vol.Schema(
     {
         vol.Required(CONF_HOST): TextSelector(),
@@ -178,7 +171,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             # deterministic conflict, not a transient connection failure, so
             # tell the user to fix it rather than to retry.
             return {"base": "link_settings_in_use"}, None
-        except _PROBE_TRANSIENT_ERRORS:
+        except ModbusError, TimeoutError:
             # TimeoutError: async_update_with_retry()'s own internal budget
             # (see its docstring) can expire without ever raising a
             # ModbusError - a slow device, not a protocol-level failure, but
