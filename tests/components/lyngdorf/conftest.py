@@ -119,7 +119,6 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.set_voicing.return_value = None
     receiver.set_room_perfect_position.return_value = None
     receiver.lipsync = None
-    receiver.lipsync_range = NumericRange(0, 500, 1)
     for _t in ("bass", "treble"):
         setattr(receiver, f"trim_{_t}", None)
         setattr(receiver, f"trim_{_t}_range", NumericRange(-12.0, 12.0, 0.1))
@@ -161,7 +160,6 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.available_repeat_modes = frozenset()
 
     receiver.lipsync = _control(50.0, NumericRange(0, 500, 1))
-    receiver.lipsync_range = NumericRange(0, 500, 1)
     receiver.trims = {
         Trim.BASS: _control(3.0, NumericRange(-12.0, 12.0, 0.1)),
         Trim.TREBLE: _control(0.0, NumericRange(-12.0, 12.0, 0.1)),
