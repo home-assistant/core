@@ -234,6 +234,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
+/tests/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /homeassistant/components/blink/ @fronzbot

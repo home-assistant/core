@@ -3,7 +3,8 @@
 DOMAIN = "bizkaibus"
 
 CONF_STOP_ID = "stop_id"
-LINE_ID = "line_id"
+CONF_LINE_IDS = "line_ids"
+CONF_LINES = "lines"
 
 SCAN_INTERVAL = 30
 

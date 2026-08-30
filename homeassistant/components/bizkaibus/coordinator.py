@@ -1,10 +1,9 @@
 """Bizkaibus Coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusArrivalTime
 
@@ -32,6 +31,8 @@ class ArrivalData:
 class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     """Bizkaibus Update Coordinator class."""
 
+    config_entry: BizkaibusConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -40,15 +41,16 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     ) -> None:
         """Initialize the data service."""
         self.api = api
-        self.config_entry = config_entry
         self.friendly_name = config_entry.data[CONF_STOP_ID]
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+        self.config_entry = config_entry
 
     def __arrival_time(
         self, arrivalTime: BizkaibusArrivalTime | None
@@ -59,6 +61,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         start_datetime = dt_util.parse_datetime(arrivalTime.GetUTC())
         return start_datetime.astimezone() if start_datetime else None
 
+    @override
     async def _async_update_data(self) -> list[ArrivalData]:
         """Async update wrapper."""
         timetable = await self.api.GetTimetable()
@@ -77,13 +80,13 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
             )
             next_arrival = self.__arrival_time(arrival.nextArrival)
 
-            arrivalData = ArrivalData(
+            arrival_data = ArrivalData(
                 nearest_arrival=nearest_arrival,
                 bus_id=arrival.line.id,
                 next_arrival=next_arrival,
                 bus_name=arrival.line.route,
             )
 
-            arrivals.append(arrivalData)
+            arrivals.append(arrival_data)
 
         return arrivals

@@ -8,15 +8,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_STOP_ID, LINE_ID
+from .const import CONF_LINES, CONF_STOP_ID
 from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Optional(LINE_ID): cv.string,
-    }
+    {vol.Required(CONF_STOP_ID): cv.string, vol.Optional(CONF_LINES): cv.string}
 )
 
 

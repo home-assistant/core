@@ -1,17 +1,51 @@
 {
+  "config": {
+    "flow_title": "Adding Bizkaibus integration",
+    "step": {
+      "import": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "description": "Import a stop to monitor.",
+        "title": "Import stop"
+      },
+      "lines": {
+        "data": {
+          "line_ids": "Bus lines",
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "description": "Choose the bus lines to monitor for this stop.",
+        "title": "Select lines"
+      },
+      "reconfigure": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "description": "Update the stop identifier.",
+        "title": "Reconfigure stop"
+      },
+      "user": {
+        "data": {
+          "stop_id": "Stop identifier (4 digits)"
+        },
+        "description": "Enter the stop identifier you want to monitor.",
+        "title": "Configure stop"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "bus_id": {
         "name": "Id"
+      },
+      "bus_name": {
+        "name": "Name"
       },
       "nearest_arrival": {
         "name": "Arrival"
       },
       "next_arrival": {
         "name": "Next arrival"
-      },
-      "bus_name": {
-        "name": "Name"
       }
     }
   }
