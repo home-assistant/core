@@ -6,7 +6,13 @@ from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusUnit
 import pytest
 
-from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
+from homeassistant.components.flexit.const import (
+    CONF_BAUDRATE,
+    CONF_UNIT,
+    DEFAULT_BAUDRATE,
+    DOMAIN,
+    TYPE_TCP,
+)
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
@@ -126,6 +132,10 @@ async def test_full_flow_serial(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "serial"
     assert result["errors"] == {}
+    baudrate_marker = next(
+        key for key in result["data_schema"].schema if str(key) == CONF_BAUDRATE
+    )
+    assert baudrate_marker.default() == DEFAULT_BAUDRATE == 9600
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

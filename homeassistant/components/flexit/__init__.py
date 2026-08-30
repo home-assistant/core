@@ -18,7 +18,11 @@ from .const import (
 )
 from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.CLIMATE]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
 
 
 def create_modbus_params(

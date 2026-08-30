@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.flexit.climate import async_setup_platform
 from homeassistant.components.flexit.const import DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -91,7 +91,10 @@ async def test_climate_entity(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity setup and state."""
-    await _setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.flexit._PLATFORMS", [Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -99,12 +102,34 @@ async def test_climate_entity(
         ("flexit", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
-    assert device_entry.configuration_url is None
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
+
+
+async def test_device_configuration_url_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup removes an obsolete configuration URL."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("flexit", mock_config_entry.entry_id)},
+        configuration_url="http://1.1.1.1",
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("flexit", mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.configuration_url is None
 
 
 async def test_climate_entity_state(
