@@ -89,17 +89,7 @@ async def test_unload_restores_device_listener_if_platform_unload_fails(
 async def test_unload_buffers_channel_discovered_during_platform_unload(
     hass: HomeAssistant, mock_home_server: MagicMock
 ) -> None:
-    """A channel discovered while async_unload_platforms() runs is not dispatched.
-
-    Simulates the race where a newDeviceDetected() callback reaches
-    _register_channel() after removeBusDeviceListener() has been called
-    but while the platform unload is still in progress - i.e. before the
-    cover platform's NEW_CHANNEL_ADDED listener has actually been
-    disconnected (that only happens once async_unload_entry() has
-    returned successfully). Without gateway.pause_channel_dispatch()
-    gating this, dispatching here could reach async_add_entities() on a
-    platform that is mid-teardown and leave an entity behind.
-    """
+    """Test that channels discovered during platform unload are buffered."""
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

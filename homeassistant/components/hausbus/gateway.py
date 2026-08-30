@@ -199,7 +199,8 @@ class HausbusGateway(IBusDataListener):
             + str(module_id.getMajorRelease())
             + " "
             + str(module_id.getMinorRelease()),
-            hw_version=module_id.getName(),
+            # name of moduleId reports hw version with leading $MOD$
+            hw_version=module_id.getName().removeprefix("$MOD$ "),
         )
 
         for channel in channels:

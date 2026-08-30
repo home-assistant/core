@@ -66,22 +66,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     # processing in-flight search replies after searchDevices() (and
     # discovery_task above) return, and the cover platform's
     # NEW_CHANNEL_ADDED dispatcher listener - registered via
-    # config_entry.async_on_unload() - is not disconnected until after
-    # this whole function has returned successfully (Home Assistant only
-    # runs those callbacks once component.async_unload_entry() reports
-    # success). A newDeviceDetected() callback landing while
-    # async_unload_platforms() is still running could therefore still
-    # reach async_add_entities() on a platform that is mid-teardown,
-    # leaving an entity behind that outlives the unload.
-    #
-    # removeBusDeviceListener() alone only closes that window for devices
-    # pyhausbus has not started telling us about yet - it cannot recall a
-    # newDeviceDetected() call already in flight or already queued onto
-    # the event loop. gateway.pause_channel_dispatch() closes it
-    # completely instead, by gating dispatch inside the gateway itself
-    # (see its docstring). Both are undone if the platform unload fails,
-    # so the gateway keeps discovering devices normally for as long as it
-    # keeps running.
     gateway.pause_channel_dispatch()
     gateway.home_server.removeBusDeviceListener(gateway)
     try:

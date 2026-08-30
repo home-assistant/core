@@ -231,15 +231,7 @@ async def test_release_home_server_surfaces_shutdown_runtime_error(
 async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
     hass: HomeAssistant,
 ) -> None:
-    """A HomeServer must be shut down even if constructed after cancellation.
-
-    A HomeServer that finishes constructing after its acquirer was
-    cancelled must still be shut down, instead of leaking its socket and
-    worker threads, as long as nothing else has since acquired it.
-    Regression test for the recovery path in async_acquire_home_server()'s
-    except asyncio.CancelledError branch and
-    _async_shutdown_unreferenced_home_server().
-    """
+    """Test cleanup when HomeServer construction completes after cancellation."""
     construction_started = threading.Event()
     release_construction = threading.Event()
     home_server = MagicMock()
