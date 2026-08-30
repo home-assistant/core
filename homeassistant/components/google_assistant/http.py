@@ -165,9 +165,8 @@ class GoogleConfig(AbstractConfig):
         ):
             return
 
-        if (
-            event.data["action"] != "remove"
-            and not self.should_expose(event.data["entity_id"])
+        if event.data["action"] != "remove" and not self.should_expose(
+            event.data["entity_id"]
         ):
             return
 
