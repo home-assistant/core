@@ -132,7 +132,13 @@ async def test_flow_removal_cancels_active_search_task(
     hass: HomeAssistant,
     mock_home_server: MagicMock,
 ) -> None:
-    """Test removing a flow cancels an active search task."""
+    """Test aborting a flow cancels an active search task.
+
+    Goes through the flow manager's public async_abort() rather than
+    calling the flow's async_remove() hook directly, so this also covers
+    the manager's own progress-task cancellation (async_cancel_progress_task())
+    - not just this integration's private cleanup logic.
+    """
 
     mock_home_server.is_any_device_found.return_value = False
 
@@ -156,7 +162,7 @@ async def test_flow_removal_cancels_active_search_task(
     assert search_task is not None
     assert not search_task.done()
 
-    flow.async_remove()
+    hass.config_entries.flow.async_abort(result["flow_id"])
 
     await hass.async_block_till_done()
 

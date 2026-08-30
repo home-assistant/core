@@ -45,8 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     # Start device discovery in the background: it is a best-effort UDP
     # broadcast that may find devices at any time, not only at startup, so
     # setup does not block on it. The task is stored on the gateway so
-    # async_unload_entry can cancel and await it before tearing down the
-    # HomeServer singleton.
+    # async_unload_entry can await it before tearing down the HomeServer
+    # singleton; if it is still running by then, the config entry
+    # framework cancels it once async_unload_entry returns.
     gateway.discovery_task = entry.async_create_background_task(
         hass, gateway.start_discovery(), "Haus-Bus discovery"
     )

@@ -85,17 +85,13 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self._search_task
 
-        except (TimeoutError, OSError):
-            return self.async_show_progress_done(
-                next_step_id="search_timeout"
-            )
+        except TimeoutError, OSError:
+            return self.async_show_progress_done(next_step_id="search_timeout")
 
         finally:
             self._search_task = None
 
-        return self.async_show_progress_done(
-            next_step_id="search_complete"
-        )
+        return self.async_show_progress_done(next_step_id="search_complete")
 
     async def async_step_search_timeout(
         self, user_input: dict[str, Any] | None = None
@@ -123,15 +119,11 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Search for devices and wait until at least one is found."""
 
         if self.home_server is None:
-            self.home_server = await async_acquire_home_server(
-                self.hass
-            )
+            self.home_server = await async_acquire_home_server(self.hass)
 
         assert self.home_server is not None
 
-        await self.hass.async_add_executor_job(
-            self.home_server.searchDevices
-        )
+        await self.hass.async_add_executor_job(self.home_server.searchDevices)
 
         await asyncio.wait_for(
             self._check_device_found(),
