@@ -21,6 +21,7 @@ pytestmark = [
         "sensor.frenck_charging_current",
         "sensor.frenck_charging_power",
         "sensor.frenck_charging_voltage",
+        "sensor.frenck_wi_fi_signal",
     ],
 )
 async def test_sensors(
@@ -50,6 +51,7 @@ async def test_sensors(
         "sensor.frenck_charging_current",
         "sensor.frenck_charging_power",
         "sensor.frenck_charging_voltage",
+        "sensor.frenck_wi_fi_signal",
     ],
 )
 async def test_disabled_by_default_sensors(

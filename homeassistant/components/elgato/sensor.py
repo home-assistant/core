@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -96,6 +97,17 @@ SENSORS = [
         suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
         has_fn=lambda x: x.battery is not None,
         value_fn=lambda x: x.battery.input_charge_voltage if x.battery else None,
+    ),
+    ElgatoSensorEntityDescription(
+        key="wifi_signal",
+        translation_key="wifi_signal",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        has_fn=lambda x: x.info.wifi is not None,
+        value_fn=lambda x: x.info.wifi.rssi if x.info.wifi else None,
     ),
 ]
 
