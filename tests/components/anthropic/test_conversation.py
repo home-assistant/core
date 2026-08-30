@@ -1,6 +1,7 @@
 """Tests for the Anthropic integration."""
 
 import datetime
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,7 +14,11 @@ from anthropic.types import (
     DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
+    MessageDeltaUsage,
     PlainTextSource,
+    RawMessageDeltaEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -28,6 +33,7 @@ from anthropic.types import (
     WebSearchResultBlock,
     WebSearchToolResultError,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
 )
@@ -56,9 +62,15 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
 )
-from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.components.anthropic.entity import (
+    CitationDetails,
+    ContentDetails,
+    _convert_content,
+)
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -125,7 +137,9 @@ async def test_device(
 ) -> None:
     """Test device parameters."""
     subentry = next(iter(mock_config_entry.subentries.values()))
-    device = device_registry.async_get_device({(DOMAIN, subentry.subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device.name == "Claude conversation"
@@ -253,6 +267,71 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    trace.async_clear_traces()
+
+    async def mock_stream(**kwargs: Any):
+        """Stream a single response carrying distinct cache read and creation usage."""
+        yield RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model=kwargs["model"],
+                usage=Usage(
+                    input_tokens=100,
+                    output_tokens=0,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                ),
+            ),
+        )
+        for event in create_content_block(0, ["ok"]):
+            yield event
+        yield RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=10),
+        )
+        yield RawMessageStopEvent(type="message_stop")
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        side_effect=mock_stream,
+    ):
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    trace_obj = next(iter(trace.async_get_traces()))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        event["data"]["stats"]
+        for event in events
+        if event.get("event_type") == "agent_detail"
+        and event.get("data", {}).get("stats")
+    )
+    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
+    # cache_creation_input_tokens (20); only the read count should surface as cached.
+    assert stats == {
+        "input_tokens": 100,
+        "cached_input_tokens": 80,
+        "output_tokens": 10,
+    }
+
+
 async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -319,7 +398,7 @@ async def test_prompt_caching_automatic(
     assert isinstance(system, str)
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -356,7 +435,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -416,7 +495,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -436,7 +515,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -847,7 +926,7 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -879,7 +958,7 @@ async def test_extended_thinking_tool_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -1706,9 +1785,9 @@ async def test_tool_search(
     } in tools
     for tool in tools:
         if tool["name"] in (
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "tool_search_tool_bm25",
         ):
             assert "defer_loading" not in tool
@@ -2392,3 +2471,103 @@ async def test_history_conversion(
         )
 
         assert mock_create_stream.mock_calls[0][2]["messages"] == snapshot
+
+
+async def test_history_conversion_skips_whitespace_content(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test that whitespace-only chat log content is not sent to the API.
+
+    The API rejects text content blocks that contain only whitespace, and a
+    single such entry in a reused chat session would fail every following turn.
+    """
+    conversation_id = "conversation_id"
+    mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.content = [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="\n"
+            ),
+            conversation.chat_log.UserContent(" "),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="Round."
+            ),
+        ]
+
+        await conversation.async_converse(
+            hass,
+            "Are you sure?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert mock_create_stream.mock_calls[0][2]["messages"] == [
+        {"role": "user", "content": "What shape is a donut?"},
+        {"role": "assistant", "content": "Round."},
+        {"role": "user", "content": "Are you sure?"},
+        {"role": "assistant", "content": "Yes, I am sure!"},
+    ]
+
+
+def test_convert_content_whitespace_with_attachments() -> None:
+    """Test conversion of whitespace-only user content carrying attachments.
+
+    Attachments are only appended to the last message afterwards, so an empty
+    user message is only created when the content is the last entry; earlier
+    whitespace-only entries are dropped even if they carry attachments.
+    """
+    attachment = conversation.chat_log.Attachment(
+        media_content_id="media-source://media/doorbell_snapshot.jpg",
+        mime_type="image/jpg",
+        path=Path("doorbell_snapshot.jpg"),
+    )
+
+    # Not the last entry: dropped, surrounding user messages are combined
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+            conversation.chat_log.UserContent("What do you see?"),
+        ]
+    )
+    assert messages == [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Take a look"},
+                {"type": "text", "text": "What do you see?"},
+            ],
+        },
+    ]
+
+    # Last entry preceded by a user message: no text block is added, the
+    # attachments are appended to the preceding message afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": "Take a look"},
+    ]
+
+    # Last entry with no preceding user message: an empty message is created
+    # for the attachments to be appended to afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": []},
+    ]

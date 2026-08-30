@@ -16,12 +16,20 @@ from .coordinator import (
     mikrotik_config_entry_errors,
 )
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 
 def _call_api(data: dict[str, Any]) -> Api:
     """Call the Mikrotik API."""
-    with mikrotik_config_entry_errors():
+    with mikrotik_config_entry_errors(during_setup=True):
         api: Api = get_api(data)
         return api
 
@@ -38,17 +46,17 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(DOMAIN, coordinator.serial_num)},
+        identifiers={(DOMAIN, coordinator.serial_num)},
         manufacturer=ATTR_MANUFACTURER,
         model=coordinator.model,
         name=coordinator.hostname,
         sw_version=coordinator.firmware,
     )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -57,4 +65,9 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+    return unload_ok

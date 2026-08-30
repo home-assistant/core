@@ -37,6 +37,10 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 USER vscode
 
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
+# Force "uv run" to use the configured virtual environment for all commands
+# avoid using uv run --active for every command
+# '.venv' is no longer created
+ENV UV_PROJECT_ENVIRONMENT=$VIRTUAL_ENV
 RUN --mount=type=bind,source=.python-version,target=.python-version \
     uv python install \
     && uv venv $VIRTUAL_ENV

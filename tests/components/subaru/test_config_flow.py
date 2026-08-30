@@ -349,7 +349,7 @@ async def test_pin_form_success(hass: HomeAssistant, pin_form) -> None:
 
 
 async def test_pin_form_incorrect_pin(hass: HomeAssistant, pin_form) -> None:
-    """Test we handle invalid pin."""
+    """Test we handle invalid pin, and that the flow can still be completed afterward."""
     with (
         patch(
             MOCK_API_TEST_PIN,
@@ -367,6 +367,16 @@ async def test_pin_form_incorrect_pin(hass: HomeAssistant, pin_form) -> None:
     assert len(mock_update_saved_pin.mock_calls) == 1
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "incorrect_pin"}
+
+    with (
+        patch(MOCK_API_TEST_PIN, return_value=True),
+        patch(MOCK_API_UPDATE_SAVED_PIN, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: TEST_PIN}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_option_flow_form(options_form) -> None:
@@ -454,7 +464,8 @@ async def pin_form(
 @pytest.fixture
 async def options_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return options form for Subaru config flow."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=None)
     entry.add_to_hass(hass)
-    await async_setup_component(hass, DOMAIN, {})
+    with patch(ASYNC_SETUP_ENTRY, return_value=True):
+        await async_setup_component(hass, DOMAIN, {})
     return await hass.config_entries.options.async_init(entry.entry_id)

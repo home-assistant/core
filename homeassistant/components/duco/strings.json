@@ -73,6 +73,12 @@
       }
     },
     "sensor": {
+      "exhaust_air_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
       "filter_remaining": {
         "name": "Filter remaining"
       },
@@ -81,6 +87,12 @@
       },
       "iaq_rh": {
         "name": "Humidity air quality index"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "supply_air_temperature": {
+        "name": "Supply air temperature"
       },
       "target_flow_level": {
         "name": "Target flow level"

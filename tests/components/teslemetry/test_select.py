@@ -1,7 +1,8 @@
 """Test the Teslemetry select platform."""
 
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,15 +16,22 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
-from homeassistant.components.teslemetry.select import LEVEL, LOW, MEDIUM, OFF
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, METADATA, SITE_INFO, VEHICLE_DATA_ALT
+from .const import (
+    COMMAND_ERRORS,
+    COMMAND_OK,
+    METADATA,
+    METADATA_LEGACY,
+    SITE_INFO,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -348,6 +356,79 @@ async def test_select_streaming(
     assert hass.states.get("select.test_steering_wheel_heater").state == "off"
 
 
+async def _drive_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    value: int,
+) -> None:
+    """Push a steering wheel level through the polling path."""
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["steering_wheel_heat_level"] = value
+    mock_vehicle_data.return_value = data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+
+
+async def _drive_streaming(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    value: int,
+) -> None:
+    """Push a steering wheel level through the streaming path."""
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.HVAC_STEERING_WHEEL_HEAT_LEVEL: value},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("metadata", "driver"),
+    [
+        pytest.param(METADATA_LEGACY, _drive_polling, id="polling"),
+        pytest.param(METADATA, _drive_streaming, id="streaming"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(2, HIGH, id="level_2_clamped"),
+        pytest.param(3, HIGH, id="level_3_clamped"),
+    ],
+)
+async def test_steering_wheel_heat_levels(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_metadata: AsyncMock,
+    mock_add_listener: AsyncMock,
+    metadata: dict,
+    driver: Callable[
+        [HomeAssistant, FrozenDateTimeFactory, AsyncMock, AsyncMock, int],
+        Awaitable[None],
+    ],
+    value: int,
+    expected: str,
+) -> None:
+    """A level beyond the last modeled option clamps to that option, high."""
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    await driver(hass, freezer, mock_vehicle_data, mock_add_listener, value)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_steering_wheel_heater")
+    assert state.state == expected
+
+
 async def test_export_rule_restore(
     hass: HomeAssistant,
     mock_site_info: AsyncMock,
@@ -450,8 +531,8 @@ async def test_export_rule_restore(
 )
 async def test_export_rule_update_attrs_logic(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
+    mock_energy_info_stream: MagicMock,
     previous_data: dict,
     new_data: str | None,
     expected_state: str,
@@ -465,14 +546,12 @@ async def test_export_rule_update_attrs_logic(
     # Set up platform
     await setup_platform(hass, [Platform.SELECT])
 
-    # Change the state
-    test_site_info = deepcopy(SITE_INFO)
-    test_site_info["response"]["components"].update(new_data)
-    mock_site_info.side_effect = lambda: test_site_info
-
-    # Coordinator refresh
-    freezer.tick(ENERGY_INFO_INTERVAL)
-    async_fire_time_changed(hass)
+    # Change the state via a streamed site_info event, driven through the
+    # callback the integration registered with the library.
+    streamed_site_info = deepcopy(SITE_INFO["response"])
+    streamed_site_info.pop("tariff_content_v2", None)
+    streamed_site_info["components"].update(new_data)
+    mock_energy_info_stream.send(streamed_site_info)
     await hass.async_block_till_done()
 
     # Check the final state matches expected

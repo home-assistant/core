@@ -45,9 +45,13 @@ async def test_entry_setup_unload(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    assert hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
 
 
 @pytest.mark.parametrize(
@@ -142,7 +146,6 @@ async def test_import(
 @pytest.mark.usefixtures("smtp")
 async def test_import_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test yaml import aborts if already configured."""
@@ -192,7 +195,6 @@ async def test_import_already_configured(
 
     await hass.async_block_till_done()
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert issue_registry.async_get_issue(

@@ -49,6 +49,7 @@ from .const import (
     CONF_UNIT_SYSTEM,
     CONF_URL,
     CONF_USERNAME,
+    DEFAULT_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
@@ -538,8 +539,6 @@ class Config:
 
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
-        from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
-
         self.hass = hass
 
         self.latitude: float = 0
@@ -858,9 +857,6 @@ class Config:
             old_data: dict[str, Any],
         ) -> dict[str, Any]:
             """Migrate to the new version."""
-
-            from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
-
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
                 # In 1.2, we remove support for "imperial", replaced by "us_customary"

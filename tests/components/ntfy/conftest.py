@@ -45,8 +45,7 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.generate_token.return_value = AccountTokenResponse(
-            token="token",
-            last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+            token="token", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
         )
         client.version.return_value = Version.from_json(
             load_fixture("version.json", DOMAIN)

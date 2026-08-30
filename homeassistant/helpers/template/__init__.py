@@ -74,6 +74,7 @@ from .states import (
     StateAttrTranslated,
     StateTranslated,
     TemplateState as TemplateState,
+    TemplateStateBase,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
 )
 
@@ -238,8 +239,31 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-@lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _parse_result(render_result: str) -> Any:
+    """Parse a rendered result.
+
+    Continuously changing numeric results, like sensor values, produce
+    a new string on every render and would always miss the eval cache,
+    paying for a full literal_eval. Convert them directly instead.
+    Anything the fast path cannot convert falls through to the cached
+    path, which handles the edge cases ("", ".", "+") identically.
+    """
+    if _IS_NUMERIC.match(render_result):
+        if "." in render_result:
+            try:
+                return float(render_result)
+            except ValueError:
+                pass
+        else:
+            try:
+                return int(render_result)
+            except ValueError:
+                pass
+    return _cached_parse_result(render_result)
+
+
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
     # lru_cache does not memoize raised exceptions. The most common template
     # results, plain string states such as "on", "off" or "unavailable", are
@@ -499,7 +523,7 @@ class Template:
         if not self.hass:
             raise RuntimeError(f"hass not set while rendering {self}")
 
-        if render_info_cv.get() is not None:
+        if (in_flight := render_info_cv.get()) is not None and in_flight.collecting:
             raise RuntimeError(
                 f"RenderInfo already set while rendering {self}, "
                 "this usually indicates the template is being rendered "
@@ -519,6 +543,7 @@ class Template:
         except TemplateError as ex:
             render_info.exception = ex
         finally:
+            render_info.collecting = False
             render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001
@@ -817,7 +842,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
-            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
+            obj,
+            (
+                AllStates,
+                DomainStates,
+                TemplateStateBase,
+                LoopContext,
+                AsyncLoopContext,
+            ),
         ):
             return attr[0] != "_"
 

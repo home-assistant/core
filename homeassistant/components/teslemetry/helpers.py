@@ -81,10 +81,12 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
 
 @callback
 def async_update_device_sw_version(
-    hass: HomeAssistant, identifier: str, sw_version: str
+    hass: HomeAssistant, identifier: str, config_entry_id: str, sw_version: str
 ) -> None:
     """Update the software version in the device registry."""
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, identifier)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, identifier), config_entry_id
+    ):
         if device.sw_version != sw_version:
             dev_reg.async_update_device(device.id, sw_version=sw_version)

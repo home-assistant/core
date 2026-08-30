@@ -103,8 +103,8 @@ from anthropic.types.web_fetch_tool_result_block import (
 from anthropic.types.web_fetch_tool_result_block_param import (
     Content as WebFetchToolResultBlockParamContentParam,
 )
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -150,7 +150,7 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
@@ -233,8 +233,9 @@ def _convert_content(  # noqa: C901
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
     container_id: str | None = None
+    contents = list(chat_content)
 
-    for content in chat_content:
+    for index, content in enumerate(contents):
         if isinstance(content, conversation.ToolResultContent):
             external_tool = True
             if content.tool_name == "web_search":
@@ -322,14 +323,26 @@ def _convert_content(  # noqa: C901
             else:
                 messages[-1]["content"].append(tool_result_block)  # type: ignore[attr-defined]
         elif isinstance(content, conversation.UserContent):
+            has_text = bool(content.content.strip())
+            # Attachments are only appended to the last message afterwards, so
+            # an empty message is only useful for attachments if it is last
+            has_attachments = bool(content.attachments) and index == len(contents) - 1
+            if not has_text and not has_attachments:
+                # The API rejects whitespace-only text blocks and empty
+                # messages, so drop content that carries neither text nor
+                # usable attachments
+                continue
             # Combine consequent user messages
             if not messages or messages[-1]["role"] != "user":
                 messages.append(
                     MessageParam(
                         role="user",
-                        content=content.content,
+                        content=content.content if has_text else [],
                     )
                 )
+            elif not has_text:
+                # Attachments are appended to the last user message later
+                continue
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
                     TextBlockParam(type="text", text=messages[-1]["content"]),
@@ -375,7 +388,7 @@ def _convert_content(  # noqa: C901
                 ):
                     container_id = content.native.container.id
 
-            if content.content:
+            if content.content and content.content.strip():
                 current_index = 0
                 for detail in (
                     content.native.citation_details
@@ -455,7 +468,11 @@ def _convert_content(  # noqa: C901
                     ]
                 )
 
-            if (
+            if not messages[-1]["content"]:
+                # Drop assistant messages that ended up without any content
+                # (e.g. whitespace-only text): the API rejects empty messages
+                messages.pop()
+            elif (
                 isinstance(messages[-1]["content"], list)
                 and len(messages[-1]["content"]) == 1
                 and messages[-1]["content"][0]["type"] == "text"
@@ -870,7 +887,7 @@ class AnthropicDeltaStream:
         cached_input_tokens = 0
         if input_usage:
             input_tokens = input_usage.input_tokens
-            cached_input_tokens = input_usage.cache_creation_input_tokens or 0
+            cached_input_tokens = input_usage.cache_read_input_tokens or 0
         output_tokens = response_usage.output_tokens
         return {
             "stats": {
@@ -916,9 +933,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
         preloaded_tools = [
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "code_execution",
             "web_search",
             "web_fetch",
@@ -1092,7 +1109,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ] = JSONOutputFormatParam(
                     type="json_schema",
                     schema={
-                        **convert(
+                        **to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
@@ -1140,7 +1157,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ToolParam(
                         name=structure_name,
                         description="Use this tool to reply to the user",
-                        input_schema=convert(
+                        input_schema=to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api

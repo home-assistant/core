@@ -1084,10 +1084,18 @@ async def test_get_trigger_platform_registers_triggers(
 # Trigger keys the sun integration registers besides the legacy ``sun`` trigger.
 # These tests mock sun/triggers.yaml, so the modern triggers have no description.
 _MODERN_SUN_TRIGGERS = (
+    "sun.blue_hour_ended",
+    "sun.blue_hour_started",
     "sun.dawn",
     "sun.dusk",
     "sun.elevation_changed",
     "sun.elevation_crossed_threshold",
+    "sun.golden_hour_ended",
+    "sun.golden_hour_started",
+    "sun.midnight_sun_ended",
+    "sun.midnight_sun_started",
+    "sun.polar_night_ended",
+    "sun.polar_night_started",
     "sun.solar_midnight",
     "sun.solar_noon",
     "sun.sunrise",
@@ -1347,7 +1355,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
@@ -5897,6 +5905,23 @@ def mock_test_modern_trigger(hass: HomeAssistant) -> None:
             id="calendar",
         ),
         pytest.param(
+            {"platform": "time", "at": "05:00:00"},
+            [],
+            id="time-plain",
+        ),
+        pytest.param(
+            {
+                "platform": "time",
+                "at": [
+                    "05:00:00",
+                    "input_datetime.alarm",
+                    {"entity_id": "sensor.next_alarm", "offset": "-00:05:00"},
+                ],
+            },
+            ["input_datetime.alarm", "sensor.next_alarm"],
+            id="time-entities",
+        ),
+        pytest.param(
             {
                 "platform": "zone",
                 "options": {
@@ -6000,6 +6025,54 @@ async def test_async_extract_entities(
 ) -> None:
     """Test extracting entities from various trigger config shapes."""
     [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "light.kitchen",
+                "type": "turned_on",
+            },
+            ["light.kitchen"],
+            id="resolved-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "1234567890abcdef1234567890abcdef",
+                "type": "turned_on",
+            },
+            [],
+            id="unresolved-registry-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "sensor",
+                "type": "battery_level",
+            },
+            [],
+            id="no-entity-id",
+        ),
+    ],
+)
+def test_async_extract_entities_device_trigger(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from device trigger configs.
+
+    Validation resolves the entity registry id to an entity id; extraction
+    ignores unresolved registry ids.
+    """
     assert trigger.async_extract_entities(trigger_conf) == expected
 
 

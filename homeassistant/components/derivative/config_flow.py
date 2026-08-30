@@ -8,12 +8,7 @@ import voluptuous as vol
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
-    CONF_SOURCE,
-    UnitOfTime,
-)
+from homeassistant.const import CONF_NAME, CONF_SOURCE, EntityStateAttribute, UnitOfTime
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -59,13 +54,16 @@ def entity_selector_compatible(
     """Return an entity selector which compatible entities."""
     current = handler.hass.states.get(handler.options[CONF_SOURCE])
     unit_of_measurement = (
-        current.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if current else None
+        current.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        if current
+        else None
     )
 
     entities = [
         ent.entity_id
         for ent in handler.hass.states.async_all(ALLOWED_DOMAINS)
-        if ent.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
+        if ent.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        == unit_of_measurement
         and ent.domain in ALLOWED_DOMAINS
     ]
 

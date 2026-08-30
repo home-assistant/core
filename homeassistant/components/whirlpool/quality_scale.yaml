@@ -74,9 +74,7 @@ rules:
     comment: |
       Time remaining sensor still has hardcoded icon.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: No known use cases for repair issues or flows, yet
+  repair-issues: done
   stale-devices: todo
 
   # Platinum
