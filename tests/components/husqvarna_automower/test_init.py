@@ -419,6 +419,7 @@ async def test_add_and_remove_work_area(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test adding a work area in runtime."""
@@ -439,6 +440,10 @@ async def test_add_and_remove_work_area(
     current_entites_start = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
+    child_devices_start = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_start == 3
     await hass.async_block_till_done()
 
     assert mock_automower_client.register_data_callback.called
@@ -487,6 +492,10 @@ async def test_add_and_remove_work_area(
     current_entites_after_addition = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
+    child_devices_after_addition = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_after_addition == 4
     assert (
         current_entites_after_addition
         == current_entites_start
@@ -523,6 +532,10 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+    child_devices_after_deletion = len(
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert child_devices_after_deletion == 2
 
 
 async def test_dynamic_polling(
