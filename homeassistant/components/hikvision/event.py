@@ -150,12 +150,18 @@ class HikvisionEvent(HikvisionEntity, EventEntity):
 
     def _update_callback(self, msg: str) -> None:
         """Handle an update from pyhik's event stream thread."""
-        self.hass.loop.call_soon_threadsafe(self._async_handle_update)
+        # Read the state on the callback thread: a trip that has already ended
+        # by the time the event loop runs would otherwise be read as inactive
+        # by both handlers and never fire.
+        self.hass.loop.call_soon_threadsafe(
+            self._async_handle_update, self._get_sensor_attributes()
+        )
 
     @callback
-    def _async_handle_update(self) -> None:
+    def _async_handle_update(
+        self, attributes: tuple[bool, Any, Any, Any, str | None]
+    ) -> None:
         """Trigger an event when the underlying event has turned on."""
-        attributes = self._get_sensor_attributes()
         is_on = attributes[0]
         if is_on and not self._is_on:
             self._trigger_event(event_type_for_target(attributes[4]))

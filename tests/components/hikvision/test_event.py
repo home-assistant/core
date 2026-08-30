@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
 )
 from homeassistant.const import (
@@ -66,7 +67,7 @@ async def test_events_created(
     """Test an event entity is created for each smart event."""
     await setup_integration(hass, mock_config_entry)
 
-    assert set(hass.states.async_entity_ids(Platform.EVENT)) == {
+    assert set(hass.states.async_entity_ids(EVENT_DOMAIN)) == {
         MOTION_ENTITY_ID,
         LINE_CROSSING_ENTITY_ID,
     }
@@ -97,7 +98,7 @@ async def test_events_not_created_for_non_smart_events(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.async_entity_ids(Platform.EVENT) == [MOTION_ENTITY_ID]
+    assert hass.states.async_entity_ids(EVENT_DOMAIN) == [MOTION_ENTITY_ID]
 
 
 async def test_events_no_sensors(
@@ -110,7 +111,7 @@ async def test_events_no_sensors(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.async_entity_ids(Platform.EVENT) == []
+    assert hass.states.async_entity_ids(EVENT_DOMAIN) == []
 
 
 @pytest.mark.parametrize(
@@ -237,6 +238,27 @@ async def test_event_unavailable_when_stream_disconnected(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_event_fires_for_a_trip_that_ends_before_the_loop_runs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test a trip is not lost when it ends before the event loop catches up."""
+    await setup_integration(hass, mock_config_entry)
+    callbacks = get_callbacks(mock_hikcamera)
+
+    # Both callbacks land on pyhik's thread before the loop runs either of them.
+    set_event_state(mock_hikcamera, True, "human")
+    callbacks[MOTION_CALLBACK_ID]("motion detected")
+    set_event_state(mock_hikcamera, False, None)
+    callbacks[MOTION_CALLBACK_ID]("motion cleared")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MOTION_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_EVENT_TYPE] == "human"
+
+
 @pytest.mark.parametrize("amount_of_channels", [2])
 async def test_event_duplicate_channels_deduplicated(
     hass: HomeAssistant,
@@ -258,7 +280,7 @@ async def test_event_duplicate_channels_deduplicated(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_entity_ids(Platform.EVENT)) == 2
+    assert len(hass.states.async_entity_ids(EVENT_DOMAIN)) == 2
 
     unique_ids = {
         entry.unique_id
