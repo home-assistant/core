@@ -564,6 +564,47 @@ async def test_reconfigure_token_accepts_partial_device_overlap(
     assert updated.data["device_sns"] == ["SN0"]
 
 
+async def test_reconfigure_token_accepts_all_devices_unbound(
+    hass: HomeAssistant,
+) -> None:
+    """Reauthenticating an account that has since lost every device must still succeed.
+
+    Regression test: known_sns and not (known_sns & reauthed_sns) evaluates
+    to True whenever the account now has zero products (reauthed_sns is
+    empty, so the intersection is always empty), which incorrectly aborted
+    as wrong_account instead of reconciling to the empty list - exactly the
+    "all previously-bound devices unbound server-side" recovery scenario
+    this check's own comment says must be allowed through.
+    """
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ACCOUNT_UNIQUE_ID,
+        title=f"{INTEGRATION_NAME} Power Integration",
+        data={
+            "auth_implementation": "bluetti_cloud",
+            "token": {"access_token": "old"},
+            "device_sns": ["SN0", "SN1"],
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = _make_flow(hass)
+    flow.context = {"source": SOURCE_RECONFIGURE, "entry_id": existing_entry.entry_id}
+    patcher, _mock_client_cls = _mock_product_client([])
+
+    try:
+        result = await flow.async_step_select_devices()
+    finally:
+        patcher.stop()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated.data["token"] == {"access_token": "tok", "expires_at": 9999999999}
+    assert updated.data["device_sns"] == []
+
+
 async def test_reconfigure_token_with_zero_devices_on_account_still_succeeds(
     hass: HomeAssistant,
 ) -> None:

@@ -97,7 +97,7 @@ class BluettiConfigFlow(OAuth2FlowHandler, domain=DOMAIN):
             # server-side) can still reauth to reconcile that.
             reauthed_sns = {prod.sn for prod in all_products}
             known_sns = set(cur_entry.data.get("device_sns", []))
-            if known_sns and not (known_sns & reauthed_sns):
+            if known_sns and reauthed_sns and not (known_sns & reauthed_sns):
                 __LOGGER__.error(
                     "Reconfigure token: authenticated account shares none of "
                     "%s previously-bound device(s) - refusing to update the "
