@@ -14,11 +14,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -336,19 +334,19 @@ async def test_midea_water_heater_default_state(
         pytest.param(
             _cd_device(),
             [
+                SERVICE_TURN_OFF,
+                SERVICE_TURN_ON,
                 SERVICE_SET_TEMPERATURE,
-                SERVICE_SET_OPERATION_MODE,
-                SERVICE_SET_OPERATION_MODE,
             ],
             [
+                {},
+                {},
                 {ATTR_TEMPERATURE: 50.0},
-                {ATTR_OPERATION_MODE: "standard"},
-                {ATTR_OPERATION_MODE: "none"},
             ],
             [
+                [("set_attribute", CDAttributes.power, False)],
+                [("set_attribute", CDAttributes.power, True)],
                 [("set_attribute", CDAttributes.target_temperature, 50.0)],
-                [("set_attribute", CDAttributes.mode, "standard")],
-                [("set_attribute", CDAttributes.mode, "none")],
             ],
             "water_heater",
             id="cd",
@@ -399,7 +397,6 @@ async def test_midea_water_heater_default_state(
                 SERVICE_TURN_OFF,
                 SERVICE_TURN_ON,
                 SERVICE_SET_TEMPERATURE,
-                SERVICE_SET_OPERATION_MODE,
                 SERVICE_SET_AWAY_MODE,
                 SERVICE_SET_AWAY_MODE,
             ],
@@ -407,7 +404,6 @@ async def test_midea_water_heater_default_state(
                 {},
                 {},
                 {ATTR_TEMPERATURE: 50.0},
-                {ATTR_OPERATION_MODE: "home"},
                 {ATTR_AWAY_MODE: True},
                 {ATTR_AWAY_MODE: False},
             ],
@@ -420,9 +416,6 @@ async def test_midea_water_heater_default_state(
                 ],
                 [
                     ("set_attribute", E6Attributes.heating_temperature, 50.0),
-                ],
-                [
-                    ("set_attribute", E6Attributes.heating_modes, "home"),
                 ],
                 [
                     ("set_attribute", E6Attributes.heating_modes, "out"),
