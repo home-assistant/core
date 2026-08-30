@@ -2306,6 +2306,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version=version,
+                integration_domain=config_entry.domain,
             )
         if (
             config_subentry_id is not UNDEFINED
