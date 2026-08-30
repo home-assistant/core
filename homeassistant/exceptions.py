@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator, Sequence
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from aiohttp import ClientError, ClientResponse, ClientResponseError, RequestInfo
 from multidict import MultiMapping
 
 from .util.event_type import EventType
@@ -260,13 +260,10 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
     map it. Catch it explicitly to handle it differently.
     """
 
-    # A request that never got a response has none, unlike in aiohttp.
-    request_info: RequestInfo | None  # type: ignore[assignment]
-
     def __init__(
         self,
         *,
-        request_info: RequestInfo | None = None,
+        request_info: RequestInfo,
         history: tuple[ClientResponse, ...] = (),
         status: int = 0,
         message: str = "OAuth 2.0 token refresh failed",
@@ -276,7 +273,7 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
         """Initialize OAuth2RefreshTokenFailed."""
         ClientResponseError.__init__(
             self,
-            request_info=request_info,  # type: ignore[arg-type]
+            request_info=request_info,
             history=history,
             status=status,
             message=message,
@@ -289,12 +286,18 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
         self.translation_placeholders = {"domain": domain}
         self.generate_message = True
 
-    @override
-    def __str__(self) -> str:
-        """Return a readable error, also when the request got no response."""
-        if self.request_info is None:
-            return self.message
-        return super().__str__()
+
+class OAuth2TokenRequestConnectionError(ClientError, ConfigEntryNotReady):
+    """Recoverable error to indicate the token request never got a response."""
+
+    def __init__(self, *, domain: str) -> None:
+        """Initialize OAuth2TokenRequestConnectionError."""
+        ConfigEntryNotReady.__init__(self)
+        self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
 
 
 class OAuth2TokenRequestTransientError(OAuth2TokenRequestError, ConfigEntryNotReady):

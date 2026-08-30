@@ -24,6 +24,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -1152,7 +1153,7 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
         caplog.at_level(logging.DEBUG),
-        pytest.raises(OAuth2TokenRequestTransientError) as err,
+        pytest.raises(OAuth2TokenRequestConnectionError) as err,
     ):
         await session.async_ensure_token_valid()
 
@@ -1160,9 +1161,6 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     assert isinstance(err.value, ConfigEntryNotReady)
     assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert err.value.translation_key == "oauth2_helper_refresh_transient"
-    # No response means no request info, so str() has to stay usable for logging.
-    assert err.value.request_info is None
-    assert str(err.value) == "OAuth 2.0 token refresh failed"
     assert f"Token request for {TEST_DOMAIN} got no response" in caplog.text
     assert str(raised) in caplog.text
 
@@ -1172,7 +1170,7 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     [
         pytest.param(
             ClientPayloadError("Disconnected"),
-            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestConnectionError,
             id="payload_error",
         ),
         pytest.param(
@@ -1261,7 +1259,7 @@ async def test_oauth_session_refresh_body_error_is_mapped(
         ),
         pytest.param(
             ClientError("Cannot connect"),
-            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestConnectionError,
             ConfigEntryNotReady,
             id="connection_error",
         ),

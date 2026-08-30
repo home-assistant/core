@@ -30,6 +30,7 @@ from homeassistant import config_entries
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
     ImplementationUnavailableError,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -110,7 +111,7 @@ def _raise_mapped_token_error(err: ClientError, domain: str) -> NoReturn:
     if not isinstance(err, ClientResponseError):
         # Nothing was received, so there is no status to tell the causes apart.
         _LOGGER.debug("Token request for %s got no response: %s", domain, err)
-        raise OAuth2TokenRequestTransientError(domain=domain) from err
+        raise OAuth2TokenRequestConnectionError(domain=domain) from err
 
     kwargs: dict[str, Any] = {
         "request_info": err.request_info,
@@ -198,7 +199,7 @@ class AbstractOAuth2Implementation(ABC):
         """Refresh a token and update expires info."""
         try:
             new_token = await self._async_refresh_token(token)
-        except OAuth2TokenRequestError:
+        except OAuth2TokenRequestError, OAuth2TokenRequestConnectionError:
             raise
         except ClientError as err:
             # Implementations that issue their own token request may not map their

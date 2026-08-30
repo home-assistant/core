@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -316,7 +317,7 @@ async def test_refresh_token_connection_error(hass: HomeAssistant) -> None:
             "hass_nabucasa.account_link.async_fetch_access_token",
             side_effect=ClientError("Cannot connect"),
         ),
-        pytest.raises(OAuth2TokenRequestTransientError) as exc_info,
+        pytest.raises(OAuth2TokenRequestConnectionError) as exc_info,
     ):
         await impl.async_refresh_token(
             {"refresh_token": "mock-refresh", "access_token": "mock-access"}
