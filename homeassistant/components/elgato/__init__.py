@@ -36,8 +36,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """
     async_setup_services(hass)
 
-    hass.data[ELGATO_KEY] = ElgatoFirmwareCoordinator(hass)
-    await hass.data[ELGATO_KEY].async_request_refresh()
+    coordinator = ElgatoFirmwareCoordinator(hass)
+    hass.data[ELGATO_KEY] = coordinator
+
+    # Elgato's servers are not on the local network and a request to them can
+    # sit there for its full timeout, so nothing waits on this. The update
+    # entities fill themselves in once the answer arrives.
+    hass.async_create_background_task(
+        coordinator.async_refresh(), f"{DOMAIN}_firmware_refresh"
+    )
 
     return True
 

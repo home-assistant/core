@@ -45,7 +45,6 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
 
     def __init__(self, hass: HomeAssistant, entry: ElgatoConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.config_entry = entry
         self.client = Elgato(
             entry.data[CONF_HOST],
             session=async_get_clientsession(hass),

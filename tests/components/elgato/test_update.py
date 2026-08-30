@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -12,11 +13,21 @@ from elgato import (
     FirmwareImage,
     FirmwareVersion,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elgato import ELGATO_KEY
-from homeassistant.components.elgato.const import DOMAIN
+from homeassistant.components.elgato.const import (
+    DOMAIN,
+    FIRMWARE_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
+from homeassistant.components.elgato.update import REBOOT_TIMEOUT
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_UPDATE_PERCENTAGE,
@@ -27,6 +38,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_MAC,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,8 +47,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "update.frenck_firmware"
 
@@ -68,6 +81,7 @@ async def test_update(
 async def test_up_to_date(
     hass: HomeAssistant,
     mock_firmware_catalog: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a device already running what Elgato ships.
 
@@ -77,7 +91,8 @@ async def test_up_to_date(
     mock_firmware_catalog.versions.return_value = {
         53: FirmwareVersion(board_type=53, build_number=192, version="1.0.3")
     }
-    await hass.data[ELGATO_KEY].async_refresh()
+    freezer.tick(FIRMWARE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -87,6 +102,7 @@ async def test_up_to_date(
 async def test_elgato_ships_nothing_for_this_board(
     hass: HomeAssistant,
     mock_firmware_catalog: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a board Elgato publishes no firmware for.
 
@@ -94,7 +110,8 @@ async def test_elgato_ships_nothing_for_this_board(
     with no opinion.
     """
     mock_firmware_catalog.versions.return_value = {}
-    await hass.data[ELGATO_KEY].async_refresh()
+    freezer.tick(FIRMWARE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -105,6 +122,7 @@ async def test_install(
     hass: HomeAssistant,
     mock_elgato: MagicMock,
     mock_firmware_catalog: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test installing the firmware Elgato ships."""
     reported: list[int | None] = []
@@ -154,10 +172,48 @@ async def test_install(
     mock_elgato.update_firmware.assert_called_once()
     assert reported == [50, 100]
 
-    # Whatever happened, the entity does not stay stuck mid-install.
+    # Still installing: the device took the firmware and is restarting.
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    # It comes back on the build it was given.
+    mock_elgato.info.return_value.firmware_build_number = 222
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert state.state == STATE_OFF
+
+
+async def test_install_that_never_comes_back(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device that takes the firmware and never reports it.
+
+    Without a way out, the entity would sit there saying it is installing
+    for as long as Home Assistant runs.
+    """
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    freezer.tick(timedelta(seconds=REBOOT_TIMEOUT + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 async def test_install_error(
@@ -189,6 +245,7 @@ async def test_install_error(
 async def test_elgato_unreachable(
     hass: HomeAssistant,
     mock_firmware_catalog: MagicMock,
+    freezer: FrozenDateTimeFactory,
     side_effect: type[Exception],
 ) -> None:
     """Test Elgato's servers being unreachable.
@@ -198,7 +255,8 @@ async def test_elgato_unreachable(
     other entities carry on.
     """
     mock_firmware_catalog.versions.side_effect = side_effect
-    await hass.data[ELGATO_KEY].async_refresh()
+    freezer.tick(FIRMWARE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -313,6 +371,72 @@ async def test_install_keeps_the_device_to_itself(
     assert mock_elgato.state.call_count > polls_before
 
 
+async def test_manual_update_check(
+    hass: HomeAssistant,
+    mock_firmware_catalog: MagicMock,
+) -> None:
+    """Test asking for an update check reaches Elgato.
+
+    The device coordinator knows what the light runs; only the catalog knows
+    what Elgato ships, and that is the half being asked about.
+    """
+    await async_setup_component(hass, HA_DOMAIN, {})
+    checks_before = mock_firmware_catalog.versions.call_count
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert mock_firmware_catalog.versions.call_count > checks_before
+
+
+async def test_install_keeps_the_device_from_everyone(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test a light command cannot land in the middle of an install either.
+
+    Polling is not the only thing that talks to the device; every button,
+    switch and light action does too.
+    """
+    turn_on: asyncio.Task[None] | None = None
+    commands_during_install = 0
+
+    async def install(image: FirmwareImage, **kwargs: Any) -> None:
+        """Ask the light to turn on while the device is taking firmware."""
+        nonlocal turn_on, commands_during_install
+        before = mock_elgato.light.call_count
+        turn_on = hass.async_create_task(
+            hass.services.async_call(
+                LIGHT_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "light.frenck"},
+                blocking=True,
+            )
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+        commands_during_install = mock_elgato.light.call_count - before
+
+    mock_elgato.update_firmware.side_effect = install
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert turn_on is not None
+    await turn_on
+
+    assert commands_during_install == 0
+    assert mock_elgato.light.call_count == 1
+
+
 async def test_one_catalog_for_every_device(
     hass: HomeAssistant,
     mock_firmware_catalog: MagicMock,
@@ -336,4 +460,3 @@ async def test_one_catalog_for_every_device(
     await hass.async_block_till_done()
 
     assert mock_firmware_catalog.versions.call_count == calls_for_one_device
-    assert hass.data[ELGATO_KEY] is not None
