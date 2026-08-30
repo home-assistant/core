@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine
 from functools import partial
-import json
 from typing import Any
 
 from aiomodernforms.const import COMMAND_QUERY_STATIC_DATA
@@ -12,11 +11,7 @@ from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_fixture,
-    async_load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
@@ -31,7 +26,7 @@ async def modern_forms_call_mock(
     return AiohttpClientMockResponse(
         method=method,
         url=url,
-        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     )
 
 
@@ -46,7 +41,7 @@ async def modern_forms_no_light_call_mock(
     return AiohttpClientMockResponse(
         method=method,
         url=url,
-        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     )
 
 
@@ -61,7 +56,7 @@ async def modern_forms_timers_set_mock(
     return AiohttpClientMockResponse(
         method=method,
         url=url,
-        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     )
 
 
@@ -76,7 +71,7 @@ async def modern_forms_breeze_call_mock(
     return AiohttpClientMockResponse(
         method=method,
         url=url,
-        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     )
 
 
@@ -91,7 +86,7 @@ async def modern_forms_breeze_active_call_mock(
     return AiohttpClientMockResponse(
         method=method,
         url=url,
-        json=json.loads(await async_load_fixture(hass, fixture, DOMAIN)),
+        json=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     )
 
 
