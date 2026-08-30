@@ -138,7 +138,7 @@ Every check has a code following the
 | `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
 | `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
-| `W7434` | [`home-assistant-json-fixture`](#w7434-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
+| `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 
 
 ## `home_assistant_logger` checker
@@ -960,7 +960,7 @@ Detects tests that load a fixture and then parse it as JSON, instead of
 using the dedicated JSON fixture helpers from `tests.common`. Only runs on
 test modules.
 
-### `W7434`: `home-assistant-json-fixture`
+### `W7435`: `home-assistant-json-fixture`
 
 A fixture loader (`load_fixture`, `load_fixture_bytes`, or
 `async_load_fixture`) is wrapped in a JSON-parsing call (`json.loads`,

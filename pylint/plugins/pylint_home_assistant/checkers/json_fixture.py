@@ -6,16 +6,17 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_test_module
 
-# JSON-parsing calls that should not wrap a fixture loader.
+# JSON-parsing helpers imported as bare names (from homeassistant.util.json).
 _JSON_PARSE_NAMES = frozenset(
     {
-        "loads",
-        "load",
         "json_loads",
         "json_loads_array",
         "json_loads_object",
     }
 )
+
+# Attribute-form JSON parsers, only when called on the ``json`` module.
+_JSON_PARSE_ATTRS = frozenset({"loads", "load"})
 
 # Fixture loaders whose result is a raw string/bytes.
 _FIXTURE_LOADER_NAMES = frozenset(
@@ -31,7 +32,11 @@ def _is_json_parse_call(node: nodes.Call) -> bool:
     """Return True if the call parses JSON."""
     func = node.func
     if isinstance(func, nodes.Attribute):
-        return func.attrname in _JSON_PARSE_NAMES
+        return (
+            func.attrname in _JSON_PARSE_ATTRS
+            and isinstance(func.expr, nodes.Name)
+            and func.expr.name == "json"
+        )
     if isinstance(func, nodes.Name):
         return func.name in _JSON_PARSE_NAMES
     return False
@@ -57,7 +62,7 @@ class HassJsonFixtureChecker(BaseChecker):
     name = "home_assistant_json_fixture"
     priority = -1
     msgs = {
-        "W7434": (
+        "W7435": (
             "Use a JSON fixture helper (e.g. load_json_object_fixture) instead of "
             "parsing a loaded fixture",
             "home-assistant-json-fixture",
