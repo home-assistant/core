@@ -64,9 +64,7 @@ _FIELD_OVERRIDES: dict[str, _FieldOverride] = {
     # platform are exposed as diagnostics. Fault and warning fields remain
     # excluded entirely (see EXCLUDED_FIELDS in const.py) until their
     # bitmaps can be represented as binary sensors.
-    "d_inverter_status": _DIAGNOSTIC,
     "d_inverter_type": _DIAGNOSTIC,
-    "d_num_inverters": _DIAGNOSTIC,
     "d_num_battery_packs": _DIAGNOSTIC,
     "b_cell_count": _DIAGNOSTIC,
     "b_cycle_count": _DIAGNOSTIC,
