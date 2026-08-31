@@ -70,9 +70,6 @@
       "conductivity_pump_active": {
         "name": "Conductivity pump active"
       },
-      "device_time_out_of_sync": {
-        "name": "Device time sync"
-      },
       "filtration_pump": {
         "name": "Filtration"
       },

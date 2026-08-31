@@ -34,7 +34,6 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
-from .helpers import is_device_time_out_of_sync
 
 PARALLEL_UPDATES = 0
 
@@ -54,13 +53,6 @@ def _gpio_ok(gpio_key: str) -> _SupportedFn:
     return lambda data: gpio_key not in data or is_valid_relay_gpio(data[gpio_key] or 0)
 
 
-def _device_time_drift(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
-    """Compute whether the device clock is out of sync with HA."""
-    if data.get("MBF_PAR_TIME") is None:
-        return None
-    return is_device_time_out_of_sync(data, hass)
-
-
 def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
     """Invert the raw cover state for the OPENING device class.
 
@@ -75,14 +67,6 @@ def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
 
 
 BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
-    "Device Time Out Of Sync": NeoPoolBinarySensorEntityDescription(
-        key="Device Time Out Of Sync",
-        translation_key="device_time_out_of_sync",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_device_time_drift,
-    ),
-    # Relay states
     "pH Acid Pump": NeoPoolBinarySensorEntityDescription(
         key="pH Acid Pump",
         translation_key="ph_acid_pump",
