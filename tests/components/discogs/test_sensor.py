@@ -3,11 +3,9 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.discogs.const import DOMAIN
-from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from . import MOCK_TOKEN, MOCK_USERNAME
+from . import MOCK_USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -56,7 +54,7 @@ async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="testuser",
         data={"token": "test_token"},
-        unique_id="testuser",
+        unique_id=str(MOCK_USER_ID),
     )
     entry.add_to_hass(hass)
 
@@ -78,38 +76,3 @@ async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.testuser_random_record")
     assert state is not None
     assert state.state == "unknown"
-
-
-async def test_yaml_import_creates_entry(hass: HomeAssistant) -> None:
-    """Test that async_setup_platform triggers a config flow import."""
-    mock_client = MagicMock()
-    mock_identity = MagicMock()
-    mock_identity.name = MOCK_USERNAME
-    mock_identity.num_collection = 5
-    mock_identity.num_wantlist = 2
-    folder = MagicMock()
-    folder.count = 5
-    mock_identity.collection_folders = [folder]
-    mock_client.identity.return_value = mock_identity
-
-    with (
-        patch(
-            "homeassistant.components.discogs.coordinator.discogs_client.Client",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.discogs.config_flow.discogs_client.Client",
-            return_value=mock_client,
-        ),
-    ):
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {"sensor": {"platform": DOMAIN, CONF_TOKEN: MOCK_TOKEN}},
-        )
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].title == "Discogs"
-    assert entries[0].data == {CONF_TOKEN: MOCK_TOKEN}

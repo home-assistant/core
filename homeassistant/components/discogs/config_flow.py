@@ -1,6 +1,5 @@
 """Config flow for Discogs."""
 
-from collections.abc import Mapping
 from typing import Any, override
 
 import discogs_client
@@ -30,11 +29,11 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            username, errors = await self.hass.async_add_executor_job(
+            user_id, username, errors = await self.hass.async_add_executor_job(
                 _validate_token, user_input[CONF_TOKEN]
             )
             if not errors:
-                await self.async_set_unique_id(username)
+                await self.async_set_unique_id(str(user_id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=username,
@@ -48,55 +47,28 @@ class DiscogsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
-        username, errors = await self.hass.async_add_executor_job(
+        user_id, username, errors = await self.hass.async_add_executor_job(
             _validate_token, import_data[CONF_TOKEN]
         )
         if errors:
             return self.async_abort(reason=errors["base"])
-        await self.async_set_unique_id(username)
+        await self.async_set_unique_id(str(user_id))
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=import_data.get("name") or username,
             data={CONF_TOKEN: import_data[CONF_TOKEN]},
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication confirmation."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            username, errors = await self.hass.async_add_executor_job(
-                _validate_token, user_input[CONF_TOKEN]
-            )
-            if not errors:
-                if username != self._get_reauth_entry().unique_id:
-                    errors["base"] = "wrong_account"
-                else:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
-                        data={CONF_TOKEN: user_input[CONF_TOKEN]},
-                    )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=CONFIG_SCHEMA,
-            errors=errors,
-        )
-
-
-def _validate_token(token: str) -> tuple[str, dict[str, str]]:
-    """Validate the token and return the username."""
+def _validate_token(token: str) -> tuple[int | None, str, dict[str, str]]:
+    """Validate the token and return the user ID, username, and errors."""
     errors: dict[str, str] = {}
+    user_id = None
     username = ""
     try:
         client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
         identity = client.identity()
+        user_id = identity.id
         username = identity.name
     except discogs_client.exceptions.HTTPError as err:
         if err.status_code == 401:
@@ -108,4 +80,4 @@ def _validate_token(token: str) -> tuple[str, dict[str, str]]:
     except Exception:  # noqa: BLE001
         LOGGER.exception("Unexpected error validating Discogs token")
         errors["base"] = "unknown"
-    return username, errors
+    return user_id, username, errors

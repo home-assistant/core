@@ -12,7 +12,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_TOKEN, MOCK_USERNAME
+from . import MOCK_TOKEN, MOCK_USER_ID, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry
 async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
     mock_client = MagicMock()
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with (
@@ -43,6 +44,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_USERNAME
         assert result["data"] == {CONF_TOKEN: MOCK_TOKEN}
+        assert result["result"].unique_id == str(MOCK_USER_ID)
 
 
 async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
@@ -115,6 +117,7 @@ async def test_flow_errors_then_success(
         assert result["errors"]["base"] == message
 
     mock_client.identity.side_effect = None
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with (
@@ -131,81 +134,18 @@ async def test_flow_errors_then_success(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test reauthentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_USERNAME,
-        data={CONF_TOKEN: "old_token"},
-        unique_id=MOCK_USERNAME,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    mock_client = MagicMock()
-    mock_client.identity.return_value.name = MOCK_USERNAME
-
-    with (
-        patch(
-            "homeassistant.components.discogs.config_flow.discogs_client.Client",
-            return_value=mock_client,
-        ),
-        patch("homeassistant.components.discogs.async_setup_entry", return_value=True),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_TOKEN: "new_token"},
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
-
-    assert entry.data[CONF_TOKEN] == "new_token"
-
-
-async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
-    """Test reauthentication flow with token belonging to a different account."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_USERNAME,
-        data={CONF_TOKEN: "old_token"},
-        unique_id=MOCK_USERNAME,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    mock_client = MagicMock()
-    mock_client.identity.return_value.name = "different_user"
-
-    with patch(
-        "homeassistant.components.discogs.config_flow.discogs_client.Client",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_TOKEN: "wrong_account_token"},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"]["base"] == "wrong_account"
-
-
 async def test_flow_already_configured(hass: HomeAssistant) -> None:
     """Test flow aborts when account is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_USERNAME,
         data={CONF_TOKEN: MOCK_TOKEN},
-        unique_id=MOCK_USERNAME,
+        unique_id=str(MOCK_USER_ID),
     )
     entry.add_to_hass(hass)
 
     mock_client = MagicMock()
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with patch(
@@ -224,6 +164,7 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test YAML import creates a config entry."""
     mock_client = MagicMock()
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with (
@@ -241,11 +182,13 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_USERNAME
         assert result["data"] == {CONF_TOKEN: MOCK_TOKEN}
+        assert result["result"].unique_id == str(MOCK_USER_ID)
 
 
 async def test_import_flow_with_name(hass: HomeAssistant) -> None:
     """Test YAML import preserves custom name as entry title."""
     mock_client = MagicMock()
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with (
@@ -271,11 +214,12 @@ async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title=MOCK_USERNAME,
         data={CONF_TOKEN: MOCK_TOKEN},
-        unique_id=MOCK_USERNAME,
+        unique_id=str(MOCK_USER_ID),
     )
     entry.add_to_hass(hass)
 
     mock_client = MagicMock()
+    mock_client.identity.return_value.id = MOCK_USER_ID
     mock_client.identity.return_value.name = MOCK_USERNAME
 
     with patch(

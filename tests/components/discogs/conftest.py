@@ -9,7 +9,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_TOKEN, MOCK_USERNAME
+from . import MOCK_TOKEN, MOCK_USER_ID, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +21,7 @@ def config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=MOCK_USERNAME,
         data={CONF_TOKEN: MOCK_TOKEN},
-        unique_id=MOCK_USERNAME,
+        unique_id=str(MOCK_USER_ID),
     )
 
 
@@ -42,6 +42,7 @@ def mock_discogs_data() -> dict:
 def mock_identity(mock_discogs_data: dict) -> MagicMock:
     """Return a mock Discogs identity."""
     identity = MagicMock()
+    identity.id = MOCK_USER_ID
     identity.name = MOCK_USERNAME
     identity.num_collection = 42
     identity.num_wantlist = 10

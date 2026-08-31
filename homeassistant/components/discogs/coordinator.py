@@ -10,7 +10,6 @@ import discogs_client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -55,8 +54,6 @@ class DiscogsDataUpdateCoordinator(DataUpdateCoordinator[DiscogsData]):
         try:
             return await self.hass.async_add_executor_job(self._fetch_data)
         except discogs_client.exceptions.HTTPError as err:
-            if err.status_code == 401:
-                raise ConfigEntryAuthFailed("Token is no longer valid") from err
             raise UpdateFailed(f"Error communicating with Discogs: {err}") from err
 
     def _fetch_data(self) -> DiscogsData:
