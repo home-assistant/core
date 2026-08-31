@@ -36,7 +36,7 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
         "calls `modbus.get_hub`, which is deprecated in favour of "
         "`modbus.async_get_unit`. Collect the connection details in your own "
         "config flow and ask for a unit on them",
-        breaks_in_ha_version="2027.9",
+        breaks_in_ha_version="2027.10",
         core_behavior=ReportBehavior.IGNORE,
         core_integration_behavior=ReportBehavior.IGNORE,
         custom_integration_behavior=ReportBehavior.LOG,
