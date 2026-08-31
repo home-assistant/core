@@ -1,22 +1,100 @@
 """Config flow for Gree."""
 
+import logging
+from typing import Any
+
 from greeclimate.discovery import Discovery
+from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
+import voluptuous as vol
 
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN
+from .coordinator import async_create_and_bind_device
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    gree_discovery = Discovery(DISCOVERY_TIMEOUT)
-    bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
-    devices = await gree_discovery.scan(
-        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=bcast_addr
-    )
-    return len(devices) > 0
+MANUAL_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_IP_ADDRESS): str,
+    }
+)
 
 
-config_entry_flow.register_discovery_flow(DOMAIN, "Gree Climate", _async_has_devices)
+class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Gree Climate."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["scan", "manual"],
+        )
+
+    async def async_step_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle network scan step."""
+        # DOMAIN as unique ID limits discovery to one entry; manual entries use MAC/IP.
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        gree_discovery = Discovery(DISCOVERY_TIMEOUT)
+        bcast_addr = list(await async_get_ipv4_broadcast_addresses(self.hass))
+        devices = await gree_discovery.scan(
+            wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=bcast_addr
+        )
+        if not devices:
+            return self.async_abort(reason="no_devices_found")
+
+        return self.async_create_entry(title="Gree Climate", data={})
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual IP entry step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            ip_address = user_input[CONF_IP_ADDRESS]
+
+            if not is_ipv4_address(ip_address):
+                errors["ip_address"] = "invalid_host"
+            else:
+                try:
+                    device = await async_create_and_bind_device(ip_address)
+                except (DeviceNotBoundError, DeviceTimeoutError) as err:
+                    _LOGGER.debug(
+                        "Failed to connect to Gree device at %s: %s", ip_address, err
+                    )
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception(
+                        "Unexpected error connecting to Gree device at %s", ip_address
+                    )
+                    errors["base"] = "unknown"
+                else:
+                    mac = device.device_info.mac
+                    unique_id = mac or ip_address
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+
+                    title = device.device_info.name or ip_address
+                    return self.async_create_entry(
+                        title=title,
+                        data={CONF_IP_ADDRESS: ip_address},
+                    )
+
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=MANUAL_SCHEMA,
+            errors=errors,
+        )
