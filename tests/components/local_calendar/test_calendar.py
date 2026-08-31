@@ -1294,3 +1294,47 @@ async def test_cancelled_event_does_not_turn_the_entity_on(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == STATE_OFF
+
+
+CANCELLED_OCCURRENCE_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261003
+DTEND;VALUE=DATE:20261004
+RECURRENCE-ID;VALUE=DATE:20261003
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [CANCELLED_OCCURRENCE_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_occurrence_of_a_series_is_not_returned(
+    get_events: GetEventsFn,
+) -> None:
+    """Test that only the cancelled occurrence of a recurring series is dropped.
+
+    The filtering has to happen after the series is expanded: dropping the
+    cancelled VEVENT before expansion would remove the override, and the RRULE
+    would then produce that day as an ordinary event again.
+    """
+    events = await get_events("2026-10-01T00:00:00", "2026-10-08T00:00:00")
+
+    assert [event["start"] for event in events] == [
+        {"date": "2026-10-02"},
+        {"date": "2026-10-04"},
+        {"date": "2026-10-05"},
+        {"date": "2026-10-06"},
+    ]
