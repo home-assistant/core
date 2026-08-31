@@ -3,7 +3,13 @@
 from typing import override
 
 from aiohttp import ClientError
-from pywillow import WillowAuthError, WillowClient, WillowDevice, WillowProfile
+from pywillow import (
+    WillowApiError,
+    WillowAuthError,
+    WillowClient,
+    WillowDevice,
+    WillowProfile,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -50,7 +56,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
             self.profile = await self.client.get_profile()
         except WillowAuthError as err:
             raise ConfigEntryAuthFailed from err
-        except ClientError as err:
+        except (ClientError, WillowApiError) as err:
             raise UpdateFailed(f"Unable to fetch Willow profile: {err}") from err
 
     @override
@@ -62,7 +68,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
             devices = await self.client.get_devices()
         except WillowAuthError as err:
             raise ConfigEntryAuthFailed from err
-        except ClientError as err:
+        except (ClientError, WillowApiError) as err:
             raise UpdateFailed(f"Unable to fetch Willow data: {err}") from err
 
         return {device["sensor_id"]: device for device in devices}

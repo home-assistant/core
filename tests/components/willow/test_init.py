@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pywillow import WillowAuthError
+from pywillow import WillowApiError, WillowAuthError
 
 from homeassistant.components.willow.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -82,6 +82,7 @@ async def test_setup_retries_when_implementation_missing(
     [
         pytest.param(WillowAuthError, id="auth_error"),
         pytest.param(TimeoutError("boom"), id="api_error"),
+        pytest.param(WillowApiError("boom"), id="willow_api_error"),
     ],
 )
 async def test_poll_failure_marks_entities_unavailable(
