@@ -155,8 +155,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         - api_instance is None if validation failed
         - error_string is None if validation succeeded
         """
-        if not self._host:
-            return None, "missing_data"
+        assert self._host is not None
 
         try:
             api = create_device_api_instance(
