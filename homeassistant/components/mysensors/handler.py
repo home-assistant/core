@@ -11,10 +11,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
-from .entity import get_mysensors_devices
 from .helpers import (
     discover_mysensors_node,
     discover_mysensors_platform,
+    get_discovered_dev_ids,
     validate_set_msg,
 )
 
@@ -95,10 +95,10 @@ def _handle_child_update(
     # Update all platforms for the device via dispatcher.
     # Add/update entity for validated children.
     for platform, dev_ids in validated.items():
-        devices = get_mysensors_devices(hass, platform)
+        discovered_dev_ids = get_discovered_dev_ids(hass, platform)
         new_dev_ids: list[DevId] = []
         for dev_id in dev_ids:
-            if dev_id in devices:
+            if dev_id in discovered_dev_ids:
                 signals.append(CHILD_CALLBACK.format(*dev_id))
             else:
                 new_dev_ids.append(dev_id)
