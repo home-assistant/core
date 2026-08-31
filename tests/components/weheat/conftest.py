@@ -130,6 +130,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.current_control_method = (
         HeatPump.ControlMethod.SMART_OPEN_THERM
     )
+    mock_heat_pump_instance.cooling_state = HeatPump.CoolingState.ACTIVE
     mock_heat_pump_instance.cooling_pause_reason = (
         HeatPump.CoolingPauseReason.WATER_TEMPERATURE_BELOW_SETPOINT
     )

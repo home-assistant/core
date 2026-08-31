@@ -222,6 +222,21 @@ SENSORS = [
         ),
     ),
     WeHeatSensorEntityDescription(
+        translation_key="cooling_state",
+        key="cooling_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        raw_field="cooling_start_conditions",
+        options=[state.name.lower() for state in HeatPump.CoolingState],
+        value_fn=(
+            lambda status: (
+                status.cooling_state.name.lower()
+                if status.cooling_state is not None
+                else None
+            )
+        ),
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="cooling_pause_reason",
         key="cooling_pause_reason",
         raw_field="cooling_pause_reason",

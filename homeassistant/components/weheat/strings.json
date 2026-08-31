@@ -114,6 +114,19 @@
           "water_temperature_below_setpoint": "Water temperature below setpoint"
         }
       },
+      "cooling_state": {
+        "name": "Cooling state",
+        "state": {
+          "active": "Cooling",
+          "idle": "Idle",
+          "pausing": "Pausing",
+          "standby": "[%key:common::state::standby%]",
+          "standby_run_cp": "Standby, pump running",
+          "starting": "Starting",
+          "stopping": "Stopping",
+          "water_check": "Checking water temperature"
+        }
+      },
       "cooling_stop_reason": {
         "name": "Cooling stop reason",
         "state": {
@@ -200,6 +213,7 @@
           "manual_control": "Manual control",
           "self_test": "Self-test",
           "standby": "[%key:common::state::standby%]",
+          "updating": "Updating",
           "water_check": "Checking water temperature"
         }
       },
