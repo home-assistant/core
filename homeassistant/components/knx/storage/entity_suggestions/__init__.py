@@ -6,11 +6,14 @@ from homeassistant.core import HomeAssistant
 
 from .base import SuggestionProvider
 from .const import EntitySuggestion, EntitySuggestionsResult, SuggestionFilter
+from .functional_blocks import FunctionalBlockSuggestionProvider
 
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
-SUGGESTION_PROVIDERS: list[type[SuggestionProvider]] = []
+SUGGESTION_PROVIDERS: list[type[SuggestionProvider]] = [
+    FunctionalBlockSuggestionProvider,
+]
 
 
 def _matches(suggestion: EntitySuggestion, suggestion_filter: SuggestionFilter) -> bool:
