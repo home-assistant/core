@@ -1,3 +1,5 @@
 """Wake word constants."""
 
-DOMAIN = "wake_word"
+from typing import Final
+
+DOMAIN: Final = "wake_word"

@@ -9,7 +9,7 @@ from google.protobuf import duration_pb2
 from google.type import localized_text_pb2
 import pytest
 
-from homeassistant.components.google_travel_time.const import DOMAIN
+from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -22,6 +22,7 @@ async def mock_config_fixture(
     """Mock a Google Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title=DEFAULT_NAME,
         data=data,
         options=options,
         entry_id="test",

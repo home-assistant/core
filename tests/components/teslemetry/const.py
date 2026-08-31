@@ -13,10 +13,16 @@ WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
+PRODUCTS_CYBERTRUCK = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]["car_type"] = "cybertruck"
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
+VEHICLE_DATA_NONE = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_NONE["response"]["vehicle_state"]["ft"] = None
+VEHICLE_DATA_NONE["response"]["vehicle_state"]["rt"] = None
+VEHICLE_DATA_NONE["response"]["charge_state"]["charge_port_door_open"] = None
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
@@ -139,3 +145,27 @@ METADATA_NOSCOPE = {
         }
     },
 }
+
+# Energy-only account: no accessible vehicle, one accessible energy site.
+METADATA_ENERGY = {
+    "uid": UNIQUE_ID,
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {},
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
+}
+PRODUCTS_ENERGY = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_ENERGY["response"] = [
+    product for product in PRODUCTS_ENERGY["response"] if "energy_site_id" in product
+]

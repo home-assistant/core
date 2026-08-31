@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import ViCareEntity
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors, get_device_serial
+from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ SERVICE_SET_VICARE_MODE = "set_vicare_mode"
 SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
+VICARE_MODE_COOLING = "cooling"
 VICARE_MODE_HEATING = "heating"
 VICARE_MODE_HEATINGCOOLING = "heatingCooling"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -64,6 +65,7 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
     VICARE_MODE_HEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_HEATING: HVACMode.AUTO,
+    VICARE_MODE_COOLING: HVACMode.COOL,
     VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
 }
 
@@ -80,7 +82,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
             circuit,

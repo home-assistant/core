@@ -506,7 +506,7 @@ async def test_vacuum_no_issue_on_transient_empty_segments(
     set_node_attribute(matter_node, 1, 336, 0, [])
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_reg.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
@@ -542,7 +542,7 @@ async def test_vacuum_raise_segments_changed_issue(
     set_node_attribute(matter_node, 1, 97, 4, 0x02)
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_reg.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )

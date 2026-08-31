@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
@@ -62,6 +63,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -82,7 +84,7 @@ DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
 
-DOMAIN = "number"
+DOMAIN: Final = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -373,6 +375,14 @@ class NumberDeviceClass(StrEnum):
     - `inH₂O`
     """
 
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement: UnitOfRadiationConcentration
+    - SI / metric: `Bq/m³`
+    - USCS / imperial: `pCi/L`
+    """
+
     REACTIVE_ENERGY = "reactive_energy"
     """Reactive energy.
 
@@ -587,6 +597,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.RADON: set(UnitOfRadiationConcentration),
     NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {
@@ -652,6 +663,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.PRECIPITATION: DistanceConverter,
     NumberDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     NumberDeviceClass.PRESSURE: PressureConverter,
+    NumberDeviceClass.RADON: RadiationConcentrationConverter,
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     NumberDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,

@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -252,7 +253,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 if measurement_attr == "entity_id":
                     measurement = state.entity_id
                 elif measurement_attr == "domain__device_class":
-                    device_class = state.attributes.get("device_class")
+                    device_class = state.attributes.get(
+                        EntityStateAttribute.DEVICE_CLASS
+                    )
                     if device_class is None:
                         # This entity doesn't have a device_class set, use only domain
                         measurement = state.domain

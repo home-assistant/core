@@ -7,6 +7,7 @@
         'capabilities': list([
           'AUDIO_PLAYER',
           'MICROPHONE',
+          'ALEXA_DEVICE_REBOOT',
         ]),
         'communication_settings': dict({
           'announcements': 'ON',
@@ -83,6 +84,7 @@
         'capabilities': list([
           'AUDIO_PLAYER',
           'MICROPHONE',
+          'ALEXA_DEVICE_REBOOT',
         ]),
         'communication_settings': dict({
           'announcements': 'ON',
@@ -159,6 +161,7 @@
         'capabilities': list([
           'AUDIO_PLAYER',
           'MICROPHONE',
+          'ALEXA_DEVICE_REBOOT',
         ]),
         'communication_settings': dict({
           'announcements': 'ON',

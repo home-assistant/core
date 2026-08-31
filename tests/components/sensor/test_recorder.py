@@ -144,6 +144,20 @@ def disable_mariadb_issue() -> None:
         yield
 
 
+@pytest.fixture(autouse=True)
+def disable_deprecated_database_version_issue() -> None:
+    """Disable creating issues about deprecated database versions."""
+    with (
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
+        ),
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_not_supported_lts"
+        ),
+    ):
+        yield
+
+
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
@@ -2807,6 +2821,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
         ("weight", "oz", 30),
     ],
 )
+@pytest.mark.timeout(25)
 async def test_compile_hourly_statistics_unavailable(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -5307,7 +5322,7 @@ async def async_record_states(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5315,7 +5330,7 @@ async def async_record_states(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
     ],
 )
@@ -5546,7 +5561,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5554,7 +5569,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -6739,11 +6754,12 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     ],
 )
 async def test_clean_up_repairs(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)
     client = await hass_ws_client()
 
     # Create some issues

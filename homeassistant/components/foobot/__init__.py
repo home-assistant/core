@@ -1,1 +1,1 @@
-"""The foobot component."""
+"""The Foobot integration."""
