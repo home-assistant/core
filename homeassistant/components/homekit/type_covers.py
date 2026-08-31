@@ -348,7 +348,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         if state == CoverState.OPENING:
             if target_position < current_position:
                 self.char_target_position.set_value(100)
-        elif target_position > current_position:
+        elif state == CoverState.CLOSING and target_position > current_position:
             self.char_target_position.set_value(0)
 
     @callback
