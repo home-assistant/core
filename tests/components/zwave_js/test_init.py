@@ -25,6 +25,7 @@ from zwave_js_server.model.version import VersionInfo
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
+from homeassistant.components.zwave_js.switch import ZWaveSwitch
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -538,7 +539,7 @@ async def test_new_entity_on_value_added(
     """Test we create a new entity if a value is added after the fact."""
     node: Node = multisensor_6
 
-    # Add a value on a random endpoint so we can be sure we should get a new entity
+    # Add a value for a property that doesn't exist yet on this node.
     event = Event(
         type="value added",
         data={
@@ -548,15 +549,16 @@ async def test_new_entity_on_value_added(
             "args": {
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
-                "endpoint": 10,
-                "property": "Ultraviolet",
-                "propertyName": "Ultraviolet",
+                "endpoint": 0,
+                "property": "Power",
+                "propertyName": "Power",
                 "metadata": {
                     "type": "number",
                     "readable": True,
                     "writeable": False,
-                    "label": "Ultraviolet",
-                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                    "label": "Power",
+                    "unit": "W",
+                    "ccSpecific": {"sensorType": 4, "scale": 0},
                 },
                 "value": 0,
             },
@@ -564,7 +566,7 @@ async def test_new_entity_on_value_added(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
+    assert hass.states.get("sensor.multisensor_6_power") is not None
 
 
 async def test_on_node_added_ready(
@@ -1005,7 +1007,9 @@ async def test_null_name(
 ) -> None:
     """Test that node without a name gets a generic node name."""
     node = null_name_check
-    assert hass.states.get(f"switch.node_{node.node_id}")
+    # The switches live on endpoint child devices, but the node-level entities still
+    # reflect the generic node name.
+    assert hass.states.get(f"sensor.node_{node.node_id}_node_status")
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
@@ -1629,6 +1633,199 @@ async def test_node_removed(
     assert not device_registry.async_get(old_device.id)
     # Assert value_updates_disc_info has been cleaned up
     assert node.node_id not in node_events.value_updates_disc_info
+
+
+async def test_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that colliding endpoint values are split into endpoint child devices."""
+    node = vision_security_zl7432
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+
+    # The relays on endpoints 1 and 2 collide, so each gets its own child device.
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
+    assert isinstance(endpoint_1_device, dr.ChildDeviceEntry)
+    assert endpoint_1_device.parent_device_id == node_device.id
+    assert endpoint_1_device.name == "Endpoint 1"
+
+    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert endpoint_2_device
+    assert isinstance(endpoint_2_device, dr.ChildDeviceEntry)
+    assert endpoint_2_device.parent_device_id == node_device.id
+    assert endpoint_2_device.name == "Endpoint 2"
+
+    # Both child devices appear in the parent's children list.
+    children = dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert {child.id for child in children} == {
+        endpoint_1_device.id,
+        endpoint_2_device.id,
+    }
+
+    # Each relay lives on its endpoint child device, not on the node device.
+    entity_1 = entity_registry.async_get("switch.endpoint_1")
+    assert entity_1
+    assert entity_1.device_id == endpoint_1_device.id
+    entity_2 = entity_registry.async_get("switch.endpoint_2")
+    assert entity_2
+    assert entity_2.device_id == endpoint_2_device.id
+
+    # Removing the node cascades and removes the child devices along with the node device.
+    client.driver.controller.emit("node removed", {"node": node, "reason": 0})
+    await hass.async_block_till_done()
+    assert device_registry.async_get(node_device.id) is None
+    assert device_registry.async_get(endpoint_1_device.id) is None
+    assert device_registry.async_get(endpoint_2_device.id) is None
+
+
+async def test_endpoint_child_device_pruned_on_reinterview(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    vision_security_zl7432_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test stale endpoint child devices are pruned and surviving entities move to parent.
+
+    When endpoint 2's values disappear on re-interview, endpoint 1 no longer collides so
+    both child devices are pruned. The endpoint 1 switch entity must end up on the parent
+    node device while preserving its entity registry entry (entity_id, any customizations).
+    """
+    node = vision_security_zl7432
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
+    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert endpoint_2_device
+
+    # The endpoint 1 switch entity lives on the endpoint 1 child device before re-interview.
+    endpoint_1_switch = entity_registry.async_get("switch.endpoint_1")
+    assert endpoint_1_switch
+    assert endpoint_1_switch.device_id == endpoint_1_device.id
+
+    # Re-interview the node without any values on endpoint 2.
+    new_state = deepcopy(vision_security_zl7432_state)
+    new_state["values"] = [
+        value for value in new_state["values"] if value["endpoint"] != 2
+    ]
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Both child devices are removed since endpoint 1 no longer collides.
+    assert device_registry.async_get(endpoint_1_device.id) is None
+    assert device_registry.async_get(endpoint_2_device.id) is None
+    # Endpoint 1's switch entity was moved to the parent node device before the child
+    # device was removed, preserving the registry entry (same entity_id).
+    endpoint_1_switch = entity_registry.async_get("switch.endpoint_1")
+    assert endpoint_1_switch is not None
+    assert endpoint_1_switch.device_id == node_device.id
+    # The live state is still present — the ready handler re-discovered the value on the
+    # parent node device.
+    assert hass.states.get("switch.endpoint_1") is not None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
+async def test_child_device_entity_metadata_rediscovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that entities on endpoint child devices are re-created after rediscovery.
+
+    The P1 bug: discovered_value_ids was keyed by the child device id instead of the
+    node device id, so the discard in _async_remove_and_rediscover was a no-op and
+    async_on_value_added early-returned, leaving the entity gone until reload.
+    """
+    node = vision_security_zl7432
+
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
+
+    # switch.endpoint_1 lives on the endpoint 1 child device.
+    switch_entry = entity_registry.async_get("switch.endpoint_1")
+    assert switch_entry is not None
+    assert switch_entry.device_id == endpoint_1_device.id
+    assert hass.states.get("switch.endpoint_1") is not None
+
+    # Trigger metadata-based rediscovery for the endpoint 1 currentValue.
+    # ZWaveSwitch.should_rediscover_on_metadata_update normally returns False; patch
+    # it to True so the rediscovery path is exercised without needing a real metadata
+    # change that qualifies.
+    with patch.object(
+        ZWaveSwitch, "should_rediscover_on_metadata_update", return_value=True
+    ):
+        node.receive_event(
+            Event(
+                "metadata updated",
+                {
+                    "source": "node",
+                    "event": "metadata updated",
+                    "nodeId": node.node_id,
+                    "args": {
+                        "commandClassName": "Switch Binary",
+                        "commandClass": 37,
+                        "endpoint": 1,
+                        "property": "currentValue",
+                        "propertyName": "currentValue",
+                        "metadata": {
+                            "type": "boolean",
+                            "readable": True,
+                            "writeable": False,
+                            "label": "Current value",
+                            "stateful": True,
+                            "secret": False,
+                        },
+                    },
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+    # The entity must be re-created on the same child device (not gone until reload).
+    assert hass.states.get("switch.endpoint_1") is not None
+    new_entry = entity_registry.async_get("switch.endpoint_1")
+    assert new_entry is not None
+    assert new_entry.device_id == endpoint_1_device.id
 
 
 async def test_replace_same_node(

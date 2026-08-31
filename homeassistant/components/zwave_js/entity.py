@@ -6,6 +6,7 @@ from typing import Any, override
 
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     SetValueResult,
@@ -15,7 +16,8 @@ from zwave_js_server.model.value import (
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
@@ -34,6 +36,7 @@ from .helpers import (
     get_device_info,
     get_unique_id,
     get_valueless_base_unique_id,
+    value_requires_endpoint_device,
 )
 from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
@@ -72,8 +75,9 @@ class ZWaveBaseEntity(Entity):
         self.driver = driver
         self.info = info
         self._primary_value_removed = False
+        primary_value = info.primary_value
         # entities requiring additional values, can add extra ids to this list
-        self.watched_value_ids = {self.info.primary_value.value_id}
+        self.watched_value_ids = {primary_value.value_id}
 
         if self.info.additional_value_ids_to_watch:
             self.watched_value_ids = self.watched_value_ids.union(
@@ -89,12 +93,29 @@ class ZWaveBaseEntity(Entity):
             if (entity_category := info.entity_category) is not None:
                 self._attr_entity_category = entity_category
         self._attr_name = self.generate_name()
-        self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
+        self._attr_unique_id = get_unique_id(driver, primary_value.value_id)
         self._attr_assumed_state = self.info.assumed_state
-        # device is precreated in main handler
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, self.info.node)},
+        # The node device is precreated in the main handler. Endpoint child devices
+        # are created on demand via the device_info property for values that would
+        # otherwise produce ambiguous duplicate entities across endpoints.
+        self._endpoint_device: Endpoint | None = None
+        if (
+            endpoint_idx := primary_value.endpoint
+        ) is not None and value_requires_endpoint_device(info.node, primary_value):
+            self._endpoint_device = info.node.endpoints[endpoint_idx]
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:  # pylint: disable=home-assistant-return-type
+        """Return device info for this entity."""
+        if (endpoint := self._endpoint_device) is None:
+            return DeviceInfo(identifiers={get_device_id(self.driver, self.info.node)})
+        parent_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        return get_device_info(self.driver, self.info.node, endpoint, parent_device_id)
 
     @callback
     def on_value_update(self) -> None:
@@ -221,21 +242,6 @@ class ZWaveBaseEntity(Entity):
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
 
-        # Only append endpoint to name if there are equivalent values on a lower
-        # endpoint
-        if primary_value.endpoint is not None and any(
-            get_value_id_str(
-                self.info.node,
-                primary_value.command_class,
-                primary_value.property_,
-                endpoint=endpoint_idx,
-                property_key=primary_value.property_key,
-            )
-            in self.info.node.values
-            for endpoint_idx in range(primary_value.endpoint)
-        ):
-            name += f" ({primary_value.endpoint})"
-
         return name.strip()
 
     @property
@@ -354,11 +360,14 @@ class ZWaveBaseEntity(Entity):
         # Remove entity first so the unique_id is freed up
         await self.async_remove()
 
-        # Now clear from discovered_value_ids and trigger re-discovery
-        # using the existing discovery info dict
-        controller_events.discovered_value_ids[self.device_entry.id].discard(
-            value.value_id
+        # discovered_value_ids is keyed by the node device id, not the child device id.
+        node_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        assert node_device_id is not None
+        controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id

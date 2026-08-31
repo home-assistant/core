@@ -546,7 +546,7 @@ async def test_inovelli_lzw36(
     """Test an LZW36."""
     node = inovelli_lzw36
     node_id = 19
-    entity_id = "fan.family_room_combo_2"
+    entity_id = "fan.endpoint_2"
 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""

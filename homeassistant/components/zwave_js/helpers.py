@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import aiohttp
 import voluptuous as vol
@@ -20,6 +20,7 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
@@ -43,7 +44,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
@@ -238,9 +239,45 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+def get_device_id(
+    driver: Driver, node: ZwaveNode, endpoint: int | None = None
+) -> tuple[str, str]:
+    """Get device registry identifier for Z-Wave node.
+
+    When an endpoint is given (and not the root endpoint 0), the identifier
+    refers to the endpoint child device of the node. Endpoint 0 and ``None`` both
+    map to the main node device.
+    """
+    device_id = (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+    if endpoint:
+        return (device_id[0], f"{device_id[1]}-{endpoint}")
+    return device_id
+
+
+def value_requires_endpoint_device(node: ZwaveNode, value: ZwaveValue) -> bool:
+    """Return whether a value's entity should live on its own endpoint device.
+
+    Values on the root endpoint always belong to the main node device. A value on
+    a non-root endpoint is placed on an endpoint child device when an equivalent
+    value (same command class, property and property key) also exists on another
+    endpoint. In that case every non-root endpoint instance gets its own
+    child device, since keeping them on the node device would produce ambiguous
+    duplicate entities.
+    """
+    if not value.endpoint:
+        return False
+    return any(
+        endpoint_idx != value.endpoint
+        and get_value_id_str(
+            node,
+            value.command_class,
+            value.property_,
+            endpoint=endpoint_idx,
+            property_key=value.property_key,
+        )
+        in node.values
+        for endpoint_idx in node.endpoints
+    )
 
 
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
@@ -256,7 +293,7 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
 
 
 def get_home_and_node_id_from_device_entry(
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
 ) -> tuple[str, int] | None:
     """Get home ID and node ID for Z-Wave device registry entry.
 
@@ -273,6 +310,8 @@ def get_home_and_node_id_from_device_entry(
     if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
+    # A third segment, if present, is the endpoint index of a child device and is
+    # intentionally ignored here so that child devices resolve to their node.
     return (id_[0], int(id_[1]))
 
 
@@ -287,7 +326,7 @@ def async_get_node_from_device_id(
     if not dev_reg:
         dev_reg = dr.async_get(hass)
 
-    if not (device_entry := dev_reg.async_get(device_id, include_child_devices=False)):
+    if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
@@ -504,7 +543,9 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
-def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+def _zwave_js_config_entry(
+    hass: HomeAssistant, device: dr.AnyDeviceEntry
+) -> str | None:
     """Find zwave_js config entry from a device."""
     for entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(entry_id)
@@ -525,7 +566,7 @@ def async_get_node_status_sensor_entity_id(
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    if not (device := dev_reg.async_get(device_id, include_child_devices=False)):
+    if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
     if not (entry_id := _zwave_js_config_entry(hass, device)):
@@ -598,15 +639,45 @@ def get_value_state_schema(
     )
 
 
-def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
-    """Get DeviceInfo for node."""
-    return DeviceInfo(
-        identifiers={get_device_id(driver, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location or None,
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+) -> DeviceInfo: ...
+
+
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint: Endpoint,
+    parent_device_id: str,
+) -> ChildDeviceInfo: ...
+
+
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint: Endpoint | None = None,
+    parent_device_id: str | None = None,
+) -> DeviceInfo | ChildDeviceInfo:
+    """Get DeviceInfo for a node or one of its endpoint child devices."""
+    node_name = node.name or node.device_config.description or f"Node {node.node_id}"
+    if endpoint is None or endpoint.index == 0:
+        return DeviceInfo(
+            identifiers={get_device_id(driver, node)},
+            sw_version=node.firmware_version,
+            name=node_name,
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location or None,
+        )
+
+    assert parent_device_id is not None
+    return ChildDeviceInfo(
+        identifiers={get_device_id(driver, node, endpoint.index)},
+        name=endpoint.endpoint_label or f"Endpoint {endpoint.index}",
+        parent_device_id=parent_device_id,
     )
 
 

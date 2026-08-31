@@ -1,11 +1,12 @@
 """Test the Z-Wave JS helpers module."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import (
@@ -13,7 +14,10 @@ from homeassistant.components.zwave_js.helpers import (
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
     format_home_id_for_display,
+    get_device_id,
+    get_home_and_node_id_from_device_entry,
     get_value_state_schema,
+    value_requires_endpoint_device,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -166,6 +170,80 @@ async def test_async_get_provisioning_entry_from_device_id(
     ):
         result = await async_get_provisioning_entry_from_device_id(hass, device.id)
         assert result == provisioning_entry
+
+
+async def test_get_device_id_with_endpoint(
+    client: MagicMock, vision_security_zl7432: Node
+) -> None:
+    """Test get_device_id with an endpoint argument."""
+    driver = client.driver
+    node = vision_security_zl7432
+    home_id = driver.controller.home_id
+
+    node_device_id = get_device_id(driver, node)
+    assert node_device_id == (DOMAIN, f"{home_id}-{node.node_id}")
+
+    # Endpoint 0 and None map to the node device.
+    assert get_device_id(driver, node, 0) == node_device_id
+    assert get_device_id(driver, node, None) == node_device_id
+
+    # A non-root endpoint maps to a child device identifier.
+    assert get_device_id(driver, node, 2) == (
+        DOMAIN,
+        f"{home_id}-{node.node_id}-2",
+    )
+
+
+async def test_value_requires_endpoint_device(
+    client: MagicMock, vision_security_zl7432: Node
+) -> None:
+    """Test value_requires_endpoint_device collision detection."""
+    node = vision_security_zl7432
+
+    # Root-endpoint values always stay on the node device.
+    root_value = node.values[f"{node.node_id}-114-0-manufacturerId"]
+    assert not value_requires_endpoint_device(node, root_value)
+
+    # Both non-root endpoints collide with each other and get their own child device.
+    endpoint_1_value = node.values[f"{node.node_id}-37-1-currentValue"]
+    assert value_requires_endpoint_device(node, endpoint_1_value)
+    endpoint_2_value = node.values[f"{node.node_id}-37-2-currentValue"]
+    assert value_requires_endpoint_device(node, endpoint_2_value)
+
+
+async def test_get_home_and_node_id_from_device_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get_home_and_node_id_from_device_entry with node and endpoint identifiers."""
+    driver = client.driver
+    home_id = driver.controller.home_id
+
+    # 2-segment node identifier resolves to (home_id, node_id).
+    node_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7")},
+    )
+    result = get_home_and_node_id_from_device_entry(node_device)
+    assert result == (str(home_id), 7)
+
+    # 3-segment endpoint identifier resolves to the same (home_id, node_id); the
+    # endpoint segment is ignored so services targeting a child device resolve to the
+    # node.
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7-2")},
+    )
+    assert get_home_and_node_id_from_device_entry(endpoint_device) == (str(home_id), 7)
+
+    # A provision_ identifier resolves to None.
+    provision_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{home_id}-7")},
+    )
+    assert get_home_and_node_id_from_device_entry(provision_device) is None
 
 
 def test_format_home_id_for_display() -> None:
