@@ -58,6 +58,11 @@ CACHE_MAX_BYTES: Final = 32 * 1024 * 1024
 MAX_FETCH_BYTES: Final = 8 * 1024 * 1024
 MAX_DECOMPRESSED_BYTES: Final = 32 * 1024 * 1024
 
+# Bounds both in-flight body memory (this many concurrent fetches, each capped
+# at MAX_FETCH_BYTES) and how many parallel requests reach the volunteer-run OSM
+# servers at once.
+MAX_CONCURRENT_FETCHES: Final = 16
+
 # MapLibre overzooms above the source maxzoom, so nothing legitimate asks for a
 # vector tile past z14.
 VECTOR_MAX_ZOOM: Final = 14

@@ -216,3 +216,30 @@ async def test_asset_ttl_overrides_the_fallback(
     await hass.async_block_till_done()
 
     assert await cache.async_get("key", 10 * TTL, fetch) == Asset(b"second", None, TTL)
+
+
+async def test_concurrent_fetches_are_bounded(hass: HomeAssistant) -> None:
+    """Test that only so many upstream fetches run at once."""
+    with patch(f"{_CACHE}.MAX_CONCURRENT_FETCHES", 2):
+        cache = MapTilesCache(hass)
+    started = 0
+    release = asyncio.Event()
+
+    async def fetch() -> Asset:
+        nonlocal started
+        started += 1
+        await release.wait()
+        return Asset(b"tile", None)
+
+    tasks = [
+        asyncio.create_task(cache.async_get(key, TTL, fetch))
+        for key in ("a", "b", "c", "d", "e")
+    ]
+    # Let every task run up to the semaphore; only two get past it to fetch().
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert started == 2
+
+    release.set()
+    assert await asyncio.gather(*tasks) == [Asset(b"tile", None)] * 5
+    assert started == 5

@@ -9,7 +9,7 @@ from typing import Any, Final
 
 from homeassistant.core import HomeAssistant
 
-from .const import CACHE_MAX_BYTES, DOMAIN
+from .const import CACHE_MAX_BYTES, DOMAIN, MAX_CONCURRENT_FETCHES
 
 # Approximate bookkeeping cost of one entry (key, tuple, Asset, timestamp and
 # dict slot), charged so tiny bodies cannot grow the entry count without bound.
@@ -51,6 +51,7 @@ class MapTilesCache:
         self._entries: OrderedDict[str, tuple[Asset, float]] = OrderedDict()
         self._size = 0
         self._fetches: dict[str, asyncio.Task[Asset | None]] = {}
+        self._fetch_semaphore = asyncio.Semaphore(MAX_CONCURRENT_FETCHES)
 
     async def async_get(self, key: str, ttl: int, fetch: FetchCallback) -> Asset | None:
         """Return the entry for key, fetching or refreshing it as needed.
@@ -101,6 +102,10 @@ class MapTilesCache:
         self, key: str, fetch: FetchCallback
     ) -> Asset | None:
         """Fetch key upstream and store what comes back."""
-        if (asset := await fetch()) is not None:
+        # Bounds parallel upstream requests and the in-flight body memory they
+        # hold; the store afterwards is synchronous and needs no slot.
+        async with self._fetch_semaphore:
+            asset = await fetch()
+        if asset is not None:
             self._store(key, asset)
         return asset
