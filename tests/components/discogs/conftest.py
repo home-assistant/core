@@ -75,7 +75,7 @@ async def setup_integration(
     """Set up the Discogs integration for testing."""
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.discogs.coordinator.discogs_client.Client",
+        "homeassistant.components.discogs.sensor.discogs_client.Client",
         return_value=mock_client,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

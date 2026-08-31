@@ -1,7 +1,10 @@
 """Sensor platform for Discogs."""
 
+from datetime import timedelta
+import random
 from typing import Any, override
 
+import discogs_client
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -9,10 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -20,16 +25,16 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import DiscogsConfigEntry, DiscogsData, DiscogsDataUpdateCoordinator
 
 ATTR_IDENTITY = "identity"
 
 ICON_RECORD = "mdi:album"
 ICON_PLAYER = "mdi:record-player"
 UNIT_RECORDS = "records"
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -115,17 +120,20 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: DiscogsConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Discogs sensor from a config entry."""
-    coordinator = entry.runtime_data
+    client = await hass.async_add_executor_job(
+        discogs_client.Client, SERVER_SOFTWARE, None, entry.data[CONF_TOKEN]
+    )
     async_add_entities(
-        DiscogsSensor(coordinator, description) for description in SENSOR_TYPES
+        (DiscogsSensor(entry, client, description) for description in SENSOR_TYPES),
+        True,
     )
 
 
-class DiscogsSensor(CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntity):
+class DiscogsSensor(SensorEntity):
     """Representation of a Discogs sensor."""
 
     _attr_attribution = "Data provided by Discogs"
@@ -133,43 +141,76 @@ class DiscogsSensor(CoordinatorEntity[DiscogsDataUpdateCoordinator], SensorEntit
 
     def __init__(
         self,
-        coordinator: DiscogsDataUpdateCoordinator,
+        entry: ConfigEntry,
+        client: discogs_client.Client,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._client = client
+        self._attrs: dict[str, Any] = {}
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.discogs.com",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=coordinator.config_entry.title,
+            name=entry.title,
         )
-
-    @property
-    def _data(self) -> DiscogsData:
-        """Return coordinator data."""
-        return self.coordinator.data
-
-    @property
-    @override
-    def native_value(self) -> str | int | None:
-        """Return the state of the sensor."""
-        if self.entity_description.key == "collection":
-            return self._data.collection_count
-        if self.entity_description.key == "wantlist":
-            return self._data.wantlist_count
-        return self._data.random_record
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
-        if self.entity_description.key == "random_record" and self._data.random_record:
+        if self.entity_description.key == "random_record" and self._attrs:
             return {
-                ATTR_IDENTITY: self._data.username,
-                **(self._data.random_record_attrs or {}),
+                ATTR_IDENTITY: self._attrs.get("username"),
+                "cat_no": self._attrs.get("cat_no"),
+                "cover_image": self._attrs.get("cover_image"),
+                "format": self._attrs.get("format"),
+                "label": self._attrs.get("label"),
+                "released": self._attrs.get("released"),
             }
-        return {ATTR_IDENTITY: self._data.username}
+        return {ATTR_IDENTITY: self._attrs.get("username")}
+
+    def update(self) -> None:
+        """Fetch data from Discogs."""
+        identity = self._client.identity()
+        self._attrs["username"] = identity.name
+
+        if self.entity_description.key == "collection":
+            self._attr_native_value = identity.num_collection
+        elif self.entity_description.key == "wantlist":
+            self._attr_native_value = identity.num_wantlist
+        else:
+            self._attr_native_value = self._get_random_record(identity)
+
+    def _get_random_record(self, identity: Any) -> str | None:
+        """Get a random record from the user's collection."""
+        folders = identity.collection_folders
+        if folders and folders[0].count > 0:
+            collection = folders[0]
+            random_index = random.randrange(collection.count)
+            release = collection.releases[random_index].release
+            data = release.data
+            artists = data.get("artists", [])
+            artist_name = artists[0]["name"] if artists else "Unknown"
+            labels = data.get("labels", [])
+            formats = data.get("formats", [])
+            fmt_entry = formats[0] if formats else {}
+            fmt_descriptions = fmt_entry.get("descriptions", [])
+            self._attrs.update(
+                {
+                    "cat_no": labels[0]["catno"] if labels else None,
+                    "cover_image": data.get("cover_image"),
+                    "format": (
+                        f"{fmt_entry.get('name', '')} ({fmt_descriptions[0]})"
+                        if fmt_descriptions
+                        else fmt_entry.get("name")
+                    ),
+                    "label": labels[0]["name"] if labels else None,
+                    "released": data.get("year"),
+                }
+            )
+            return f"{artist_name} - {data.get('title', 'Unknown')}"
+        return None

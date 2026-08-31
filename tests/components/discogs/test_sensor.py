@@ -59,7 +59,7 @@ async def test_sensors_empty_collection(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.discogs.coordinator.discogs_client.Client",
+        "homeassistant.components.discogs.sensor.discogs_client.Client",
         return_value=mock_client,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
