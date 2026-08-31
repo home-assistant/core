@@ -366,8 +366,14 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         # start a fresh future and its own flush, not reuse or resolve this one.
         future = self._write_future
         self._write_future = None
+        # Snapshot the queued value for this batch. Leave _pending_value in
+        # place: a later set_value may already have replaced it, and it backs
+        # the optimistic native_value the UI shows until this write commits.
         pending = self._pending_value
-        self._pending_value = None
+        # Only a run that reaches the end reports success; any earlier exit
+        # (device error, cancel, an unexpected raise) resolves the future
+        # itself or leaves it for the finally to fail, never a false success.
+        resolved = False
         try:
             if pending is None:  # pragma: no cover
                 # Defensive: the timer only fires after a value is queued.
@@ -382,8 +388,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 if (current := self._decode_raw()) is not None and (
                     round(current * desc.scale) == raw
                 ):
-                    # Drop the optimistic value back to the register reading.
-                    self.async_write_ha_state()
+                    # Settled value already on the device: no write, but the
+                    # caller succeeded. Drop the optimistic value back to the
+                    # register reading and resolve the batch.
+                    self._clear_pending_if_current(pending)
+                    if future is not None and not future.done():
+                        future.set_result(None)
+                    resolved = True
                     return
                 try:
                     if desc.setpoint is not None:
@@ -401,26 +412,74 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 except (NeoPoolError, OSError, TimeoutError) as err:
                     # Roll the optimistic value back to the register reading and
                     # report the failure to the awaiting caller.
-                    self.async_write_ha_state()
-                    if future is not None and not future.done():
-                        future.set_exception(
-                            HomeAssistantError(
-                                translation_domain=DOMAIN,
-                                translation_key="modbus_communication_error",
-                                translation_placeholders={"error": str(err)},
-                            )
-                        )
+                    self._report_write_failure(future, pending, err)
+                    resolved = True
+                    return
+                except Exception as err:  # noqa: BLE001
+                    # An unexpected write error must still reach the blocking
+                    # caller as a failure, never resolve as a silent success.
+                    self._report_write_failure(future, pending, err)
+                    resolved = True
                     return
                 if self._removing:
-                    # Removed mid-write: the client may be closing, leave the coordinator alone.
+                    # Removed mid-write: the client may be closing, leave the
+                    # coordinator alone. The caller treats cancellation as a
+                    # clean exit, so release its future that way; _write_future
+                    # is already detached, so removal cannot cancel it for us.
+                    if future is not None and not future.done():
+                        future.cancel()
+                    resolved = True
                     return
-                self.coordinator.async_set_updated_data(
-                    {**self.coordinator.data, **overrides}
-                )
-                self.coordinator.request_refresh_with_followup()
+                try:
+                    self._clear_pending_if_current(pending)
+                    self.coordinator.async_set_updated_data(
+                        {**self.coordinator.data, **overrides}
+                    )
+                    self.coordinator.request_refresh_with_followup()
+                except Exception as err:  # noqa: BLE001
+                    # A merge/refresh error after the device write must reach the
+                    # caller as a failure, not fall through to a success result.
+                    self._report_write_failure(future, pending, err)
+                    resolved = True
+                    return
+                if future is not None and not future.done():
+                    future.set_result(None)
+                resolved = True
         finally:
-            if future is not None and not future.done():
-                future.set_result(None)
+            # A bare cancel of this flush task leaves resolved False: fail the
+            # batch rather than letting a blocking caller read a false success.
+            if not resolved and future is not None and not future.done():
+                future.cancel()  # pragma: no cover - task cancel is non-deterministic
+
+    @callback
+    def _report_write_failure(
+        self,
+        future: asyncio.Future[None] | None,
+        batch_value: float,
+        err: Exception,
+    ) -> None:
+        """Roll the optimistic value back and fail the awaiting caller."""
+        self._clear_pending_if_current(batch_value)
+        if future is not None and not future.done():
+            future.set_exception(
+                HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="modbus_communication_error",
+                    translation_placeholders={"error": str(err)},
+                )
+            )
+
+    @callback
+    def _clear_pending_if_current(self, batch_value: float) -> None:
+        """Drop the optimistic value unless a newer write already replaced it.
+
+        A later set_value during this batch's device I/O leaves its own value in
+        _pending_value; clearing it then would flash the stale register reading
+        until that newer write commits, so only this batch's value is cleared.
+        """
+        if self._pending_value == batch_value:
+            self._pending_value = None
+        self.async_write_ha_state()
 
     @property
     @override

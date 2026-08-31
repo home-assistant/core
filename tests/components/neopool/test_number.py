@@ -256,12 +256,7 @@ async def test_heating_setpoint_writes_via_high_level_api(
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Writing the heating setpoint delegates to async_set_setpoint(HEATING).
-
-    Since lib v4 the number entity no longer talks to ``async_set_temp_setpoint``;
-    the high-level ``async_set_setpoint`` API owns the write and returns the
-    optimistic-update dict the coordinator merges in.
-    """
+    """Writing the heating setpoint delegates to async_set_setpoint(HEATING)."""
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_HEATING_TEMP": 28}
     )
@@ -629,6 +624,122 @@ async def test_write_queued_during_flush_gets_its_own_outcome(
     await second
 
     # Two distinct writes ran, each with its own value.
+    assert seen == [700, 800]
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 8.0
+
+
+async def test_unexpected_write_error_reaches_caller(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unexpected write error still fails the blocking caller.
+
+    A raise outside the device-error set must not resolve the coalesce future as
+    a success: the caller would otherwise see a successful service call while the
+    value never reached the device. The failure surfaces as HomeAssistantError.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=ValueError("boom"))
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+
+    task = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    await _flush(hass, freezer)
+    with pytest.raises(HomeAssistantError) as err:
+        await task
+
+    assert err.value.translation_key == "modbus_communication_error"
+
+
+async def test_post_write_merge_failure_reaches_caller(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A raise after a successful device write still fails the caller.
+
+    The device write succeeds, but merging the result into the coordinator
+    raises. The flush must not fall through to a success result: the failure
+    surfaces to the blocking caller as HomeAssistantError.
+    """
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    task = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    with patch.object(
+        mock_config_entry_number.runtime_data,
+        "async_set_updated_data",
+        side_effect=RuntimeError("merge boom"),
+    ):
+        await _flush(hass, freezer)
+        with pytest.raises(HomeAssistantError) as err:
+            await task
+
+    assert err.value.translation_key == "modbus_communication_error"
+
+
+async def test_optimistic_value_survives_overlapping_flush(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A newer optimistic value is not clobbered by an in-flight older write.
+
+    The first flush holds the write lock while its device call blocks. A second
+    debounce elapses and queues a newer value. When the first write commits, it
+    must keep showing the newer optimistic value, not republish its own older
+    value for the duration of the second write.
+    """
+    release = asyncio.Event()
+    in_write = asyncio.Event()
+    seen: list[int] = []
+
+    async def _gated_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        seen.append(value)
+        if len(seen) == 1:
+            in_write.set()
+            await release.wait()
+        return {"MBF_PAR_PH1": value}
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_gated_setpoint)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    mock_neopool_client.async_set_setpoint.reset_mock()
+    seen.clear()
+
+    # First write enters the library call and blocks there.
+    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # A newer value arrives while the first write is still in flight.
+    second = _set_value_nowait(hass, ph1_entity_id, 8.0)
+    await _let_park(hass)
+
+    # Release the first write; it commits its older value to the coordinator but
+    # must keep showing the newer optimistic value rather than republishing 7.0.
+    release.set()
+    await first
+    state = hass.states.get(ph1_entity_id)
+    assert state is not None
+    assert float(state.state) == 8.0
+
+    # The second write then runs and confirms the newer value on the device.
+    await _flush(hass, freezer)
+    await second
     assert seen == [700, 800]
     state = hass.states.get(ph1_entity_id)
     assert state is not None
