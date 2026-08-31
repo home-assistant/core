@@ -56,9 +56,6 @@
       "apparent_current": {
         "name": "Apparent Current"
       },
-      "battery_level": {
-        "name": "Battery Level"
-      },
       "device_role": {
         "name": "Device Role",
         "state": {
@@ -81,9 +78,6 @@
       "energy_to_grid": {
         "name": "Energy - To grid"
       },
-      "power": {
-        "name": "Power"
-      },
       "power_from_grid": {
         "name": "Power - From grid"
       },
@@ -101,18 +95,6 @@
       },
       "rssi_ble": {
         "name": "Signal strength (Bluetooth)"
-      },
-      "total_energy": {
-        "name": "Total Energy"
-      },
-      "total_water_consumption": {
-        "name": "Total Water Consumption"
-      },
-      "volts": {
-        "name": "Volts"
-      },
-      "water_flow_rate": {
-        "name": "Water Flow Rate"
       }
     }
   },

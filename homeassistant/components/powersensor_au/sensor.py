@@ -123,7 +123,6 @@ class PowersensorVirtualHouseholdSensorEntityDescription(SensorEntityDescription
 SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="battery_level",
-        translation_key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -134,7 +133,6 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -145,7 +143,6 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="total_energy",
-        translation_key="total_energy",
         device_class=SensorDeviceClass.ENERGY,
         # TOTAL (not TOTAL_INCREASING) is intentional: magnetic sensors do net
         # metering, so the cumulative joule value can decrease (e.g. a solar
@@ -183,7 +180,6 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="water_flow_rate",
-        translation_key="water_flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -194,7 +190,6 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="total_water_consumption",
-        translation_key="total_water_consumption",
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -208,7 +203,6 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
 PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -218,7 +212,6 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="volts",
-        translation_key="volts",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -262,7 +255,6 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     ),
     PowersensorSensorEntityDescription(
         key="total_energy",
-        translation_key="total_energy",
         device_class=SensorDeviceClass.ENERGY,
         # TOTAL_INCREASING (not TOTAL) is intentional: smart plugs measure
         # load-side consumption only.  Unlike the magnetic sensors,
