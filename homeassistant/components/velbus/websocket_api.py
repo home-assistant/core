@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from functools import wraps
 import inspect
-from typing import TYPE_CHECKING, Any, Final, overload
+from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import velbus_frontend as velbus_panel
 from velbusaio.exceptions import VelbusConfigError
@@ -27,6 +27,7 @@ from .data import VelbusConfigEntry
 if TYPE_CHECKING:
     from velbusaio.channels import Channel
     from velbusaio.controller import Velbus
+    from velbusaio.module import Module
 
 URL_BASE: Final = "/velbus_static"
 DATA_STATIC_REGISTERED: Final = "static_registered"
@@ -206,14 +207,15 @@ def provide_velbus(
 def _device_id_for_module(
     hass: HomeAssistant, entry: VelbusConfigEntry, address: int
 ) -> str | None:
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, str(address))})
-    if device is None or entry.entry_id not in device.config_entries:
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, str(address)), entry.entry_id
+    )
+    if device is None:
         return None
     return device.id
 
 
-def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channel:
+def _get_module(controller: Velbus, address: int) -> Module:
     module = controller.get_module(address)
     if module is None:
         raise ServiceValidationError(
@@ -221,6 +223,11 @@ def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channe
             translation_key="module_not_found",
             translation_placeholders={"address": str(address)},
         )
+    return module
+
+
+def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channel:
+    module = _get_module(controller, address)
     relay = module.get_channels().get(channel)
     if relay is None or not hasattr(relay, "get_action_table"):
         raise ServiceValidationError(
@@ -231,7 +238,7 @@ def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channe
                 "channel": str(channel),
             },
         )
-    return relay
+    return cast(Channel, relay)
 
 
 @websocket_api.require_admin
@@ -442,13 +449,15 @@ async def ws_get_channel_actions(
     msg: dict[str, Any],
 ) -> None:
     """Read the action table for a relay channel."""
+    channel = msg[CONF_CHANNEL]
     try:
-        relay = _get_relay_channel(controller, msg[CONF_ADDRESS], msg[CONF_CHANNEL])
+        module = _get_module(controller, msg[CONF_ADDRESS])
+        _get_relay_channel(controller, msg[CONF_ADDRESS], channel)
     except ServiceValidationError as err:
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(err))
         return
 
-    table = relay.get_action_table()
+    table = module.get_action_table(channel)
     if table is None:
         connection.send_error(
             msg["id"],
