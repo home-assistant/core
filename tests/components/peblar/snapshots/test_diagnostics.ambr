@@ -62,7 +62,7 @@
       'HwHasLte': False,
       'HwHasMeter': True,
       'HwHasMeterDisplay': True,
-      'HwHasPlc': False,
+      'HwHasPlc': True,
       'HwHasRfid': True,
       'HwHasRs485': True,
       'HwHasShutter': False,

@@ -229,9 +229,24 @@ async def test_migrate_entry_drops_empty_mac_connection(
         patch(
             "homeassistant.components.midea.device_selector",
             return_value=DummyDevice(DeviceType.AC),
-        ),
+        ) as device_selector,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        device_selector.assert_called_once_with(
+            entry.data[CONF_NAME],
+            entry.data[CONF_DEVICE_ID],
+            entry.data[CONF_TYPE],
+            TEST_IP_ADDRESS,
+            entry.data[CONF_PORT],
+            entry.data[CONF_TOKEN],
+            entry.data[CONF_KEY],
+            ProtocolVersion(entry.data[CONF_PROTOCOL]),
+            entry.data[CONF_MODEL],
+            entry.data[CONF_SUBTYPE],
+            "",
+            entry.data.get(CONF_MAC, None),
+            entry.data.get(CONF_SN, None),
+        )
 
     assert entry.state is ConfigEntryState.LOADED
     device_entry = device_registry.async_get_device_by_identifier(
@@ -250,9 +265,24 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
         patch(
             "homeassistant.components.midea.device_selector",
             return_value=DummyDevice(DeviceType.AC),
-        ),
+        ) as device_selector,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        device_selector.assert_called_once_with(
+            entry.data[CONF_NAME],
+            entry.data[CONF_DEVICE_ID],
+            entry.data[CONF_TYPE],
+            TEST_IP_ADDRESS,
+            entry.data[CONF_PORT],
+            entry.data[CONF_TOKEN],
+            entry.data[CONF_KEY],
+            ProtocolVersion(entry.data[CONF_PROTOCOL]),
+            entry.data[CONF_MODEL],
+            entry.data[CONF_SUBTYPE],
+            "",
+            None,
+            None,
+        )
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 2

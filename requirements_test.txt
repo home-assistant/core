@@ -22,7 +22,7 @@ pydantic==2.13.4
 PyGithub==2.9.1
 pylint==4.0.7
 pylint-per-file-ignores==3.2.1
-pipdeptree==2.26.1
+pipdeptree==4.2.2
 pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1
 pytest-cov==7.1.0
