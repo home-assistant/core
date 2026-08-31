@@ -7,11 +7,13 @@ import pytest
 
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_OUTGOING_CONNECTION,
+    CONF_NOISE_PSK,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MockESPHomeDeviceType
 
@@ -23,7 +25,12 @@ MAC = "11:22:33:44:55:aa"
 def _make_entry(*, options: dict | None) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: "bOFFzzvfpg5DB94DuBGLXD/hMnhpDKgP9UQyBulwWVU=",
+        },
         options=options or {},
         unique_id=MAC,
     )
@@ -137,3 +144,42 @@ async def test_outgoing_connection_listener_unavailable(
 
     assert entry.state is ConfigEntryState.LOADED
     mock_server.register.assert_not_called()
+
+
+async def test_option_flow_toggle_hidden_without_support(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """The option only shows once stored or once the device reports support."""
+    entry = _make_entry(options=None)
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_ALLOW_OUTGOING_CONNECTION not in result["data_schema"].schema
+
+
+async def test_option_flow_toggle_shown_when_supported(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """A device reporting support surfaces the toggle in the options flow."""
+    entry = _make_entry(options=None)
+    entry.add_to_hass(hass)
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={"api_outgoing_connection_supported": True},
+    )
+    await hass.async_block_till_done()
+
+    # Auto-enable stored the option, so the toggle stays visible
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_ALLOW_OUTGOING_CONNECTION in result["data_schema"].schema

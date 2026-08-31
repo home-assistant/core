@@ -591,6 +591,9 @@ class ESPHomeManager:
         if (
             self._outgoing_unregister is not None
             or not outgoing_connection_enabled(entry)
+            # Never route a dial-in for an entry that cannot verify the
+            # device by key
+            or not entry.data.get(CONF_NOISE_PSK)
             or not (mac := entry.unique_id)
             or ":" not in mac
         ):
@@ -720,9 +723,6 @@ class ESPHomeManager:
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
             )
 
-        if device_info.api_outgoing_connection_supported:
-            await self._async_on_outgoing_capable_device()
-
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
         entry_data.async_on_connect(hass, device_info, api_version)
@@ -791,6 +791,11 @@ class ESPHomeManager:
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
+
+        # Last: the auto-enable path may schedule a reload of this entry,
+        # which must not race the setup work above
+        if device_info.api_outgoing_connection_supported:
+            await self._async_on_outgoing_capable_device()
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""
