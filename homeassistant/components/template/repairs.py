@@ -25,8 +25,6 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the first step of the fix flow."""
-        # The flow manager passes {"issue_id": ...} as user_input to this step;
-        # delegate so the form step can tell rendering from an (empty) submission
         return await self.async_step_select_device()
 
     async def async_step_select_device(
