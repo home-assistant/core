@@ -41,6 +41,8 @@ ACTIVE_POWER_LIMIT_REGISTER = 0x1106
 PASSIVE_TIMEOUT_REGISTER = 0x1184
 PASSIVE_TIMEOUT_ACTION_REGISTER = 0x1185
 PASSIVE_GRID_POWER_REGISTER = 0x1187
+PASSIVE_BATTERY_POWER_MIN_REGISTER = 0x1189
+PASSIVE_BATTERY_POWER_MAX_REGISTER = 0x118B
 
 
 async def _setup_hybrid(
@@ -151,6 +153,10 @@ async def test_set_passive_mode_power(hass: HomeAssistant) -> None:
     # Each setpoint is a signed 32-bit value over two registers.
     assert holding[PASSIVE_GRID_POWER_REGISTER] == 0
     assert holding[PASSIVE_GRID_POWER_REGISTER + 1] == 1000
+    assert holding[PASSIVE_BATTERY_POWER_MIN_REGISTER] == 0xFFFF
+    assert holding[PASSIVE_BATTERY_POWER_MIN_REGISTER + 1] == 63536
+    assert holding[PASSIVE_BATTERY_POWER_MAX_REGISTER] == 0
+    assert holding[PASSIVE_BATTERY_POWER_MAX_REGISTER + 1] == 2000
 
 
 @pytest.mark.parametrize(
