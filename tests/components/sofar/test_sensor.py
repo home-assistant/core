@@ -99,111 +99,16 @@ async def test_sensor_entities_created_and_state(
     assert state.state == "grid_connected"
 
 
-async def test_fault_sensor_reports_no_fault_at_zero(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test an all-zero fault register reports no fault."""
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_1"
-    )
-    assert entity_id is not None
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == "no_fault"
-    assert state.attributes["active_faults"] == []
-
-
-@pytest.mark.parametrize(
-    ("register", "value", "fault_key", "expected_state", "expected_active_faults"),
-    [
-        pytest.param(
-            0x0405,
-            0b11,  # ID001_GRID_OVER_VOLTAGE | ID002_GRID_UNDERVOLTAGE
-            "fault_1",
-            "id001",
-            ["id001", "id002"],
-            id="lowest_bit_is_the_state",
-        ),
-        pytest.param(
-            0x0410,
-            0xFFFF,
-            "fault_12",
-            "id177",
-            [f"id{n}" for n in range(177, 193)],
-            id="fully_set_register_still_reports_a_state",
-        ),
-    ],
-)
-async def test_fault_sensor_reports_active_faults(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-    register: int,
-    value: int,
-    fault_key: str,
-    expected_state: str,
-    expected_active_faults: list[str],
-) -> None:
-    """Test the lowest set bit is the state, with all active faults listed."""
-    unit = mock_connection.for_unit(1)
-    unit.holding[register] = value
-
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{fault_key}"
-    )
-    assert entity_id is not None
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == expected_state
-    assert state.attributes["active_faults"] == expected_active_faults
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_fault_sensor_ignores_reserved_registers(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a reserved register (no fault bits defined) gets no dead sensor."""
-    for number in (20, 21, 24, 25):
-        assert (
-            entity_registry.async_get_entity_id(
-                SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_{number}"
-            )
-            is None
-        )
-    # Their non-reserved neighbors do exist, so fault sensors aren't just
-    # failing wholesale.
-    for number in (19, 22, 23, 26):
-        entity_id = entity_registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_{number}"
-        )
-        assert entity_id is not None
-        assert (state := hass.states.get(entity_id)) is not None
-        assert state.state == "no_fault"
-
-
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 97, 33, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 71, 21, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            163,
-            56,
+            137,
+            44,
             id="hybrid",
         ),
     ],

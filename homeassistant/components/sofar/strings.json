@@ -46,6 +46,59 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault_ac_output": {
+        "name": "AC output fault"
+      },
+      "fault_arc_fault": {
+        "name": "Arc fault (AFCI)"
+      },
+      "fault_battery": {
+        "name": "Battery fault"
+      },
+      "fault_battery_pack": {
+        "name": "Battery pack communication fault"
+      },
+      "fault_combiner_box": {
+        "name": "Combiner box fault"
+      },
+      "fault_communication": {
+        "name": "Communication fault"
+      },
+      "fault_dc_bus": {
+        "name": "DC bus fault"
+      },
+      "fault_derating": {
+        "name": "Derating"
+      },
+      "fault_fan": {
+        "name": "Fan fault"
+      },
+      "fault_grid": {
+        "name": "Grid fault"
+      },
+      "fault_input_fuse": {
+        "name": "Input fuse open"
+      },
+      "fault_insulation": {
+        "name": "Insulation fault"
+      },
+      "fault_internal": {
+        "name": "Internal fault"
+      },
+      "fault_pv": {
+        "name": "PV fault"
+      },
+      "fault_shutdown": {
+        "name": "Shutdown"
+      },
+      "fault_string_fuse": {
+        "name": "String fuse open"
+      },
+      "fault_thermal": {
+        "name": "Thermal fault"
+      }
+    },
     "button": {
       "iv_curve_scan": {
         "name": "IV curve scan"
@@ -263,517 +316,6 @@
       },
       "export_energy_total": {
         "name": "Export energy total"
-      },
-      "fault_1": {
-        "name": "Fault 1",
-        "state": {
-          "id001": "Grid over voltage",
-          "id002": "Grid undervoltage",
-          "id003": "Grid overfrequency",
-          "id004": "Grid underfrequency",
-          "id005": "Leakage current faults",
-          "id006": "High penetration error",
-          "id007": "Low penetration error",
-          "id008": "Islanding error",
-          "id009": "Grid instantaneous value overvoltage 1",
-          "id010": "Grid instantaneous value overvoltage 2",
-          "id011": "Grid line voltage error",
-          "id012": "Inverter voltage error",
-          "id013": "Anti backflow overload",
-          "id014": "Grid voltage unbalance",
-          "id015": "Inverter transient overvoltage",
-          "id016": "Sudden grid phase change",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_10": {
-        "name": "Fault 10",
-        "state": {
-          "id145": "USB fault",
-          "id146": "Wi-Fi fault",
-          "id147": "Bluetooth fault",
-          "id148": "RTC clock fault",
-          "id149": "Communication board EEPROM error",
-          "id150": "Communication board flash error",
-          "id151": "The battery is partially disconnected",
-          "id152": "Safety version error",
-          "id153": "SCI error DC",
-          "id154": "SCI error AC",
-          "id155": "SCI error fuse",
-          "id156": "Software version inconsistency",
-          "id157": "Lithium battery 1 communication failure",
-          "id158": "Lithium battery 2 communication failure",
-          "id159": "Lithium battery 3 communication failure",
-          "id160": "Lithium battery 4 communication failure",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_11": {
-        "name": "Fault 11",
-        "state": {
-          "id161": "Forced shutdown",
-          "id162": "Remote shutdown",
-          "id163": "DRMS0 shutdown",
-          "id164": "Power station communication failure shutdown",
-          "id169": "Fan 1 failure",
-          "id170": "Fan 2 fault",
-          "id171": "Fan 3 fault",
-          "id172": "Fan 4 fault",
-          "id173": "Fan 5 fault",
-          "id174": "Fan 6 fault",
-          "id175": "Fan 7 fault",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_12": {
-        "name": "Fault 12",
-        "state": {
-          "id177": "BMS over voltage protection",
-          "id178": "BMS undervoltage protection",
-          "id179": "BMS high temperature protection",
-          "id180": "BMS low temperature protection",
-          "id181": "BMS overcurrent protection",
-          "id182": "BMS short circuit protection",
-          "id183": "BMS version inconsistency",
-          "id184": "BMS CAN version inconsistency",
-          "id185": "BMS CAN version too low",
-          "id186": "Battery discharge over temperature protection",
-          "id187": "Battery discharge low temperature protection",
-          "id188": "Battery charging over temperature protection",
-          "id189": "Arc device communication failure",
-          "id190": "Battery charging low temperature protection",
-          "id191": "PID repair failure",
-          "id192": "PLC module heartbeat lost",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_13": {
-        "name": "Fault 13",
-        "state": {
-          "id193": "String fuse open 1 1",
-          "id194": "String fuse open 1 2",
-          "id195": "String fuse open circuit 2 1",
-          "id196": "String fuse open 2 2",
-          "id197": "String fuse open 3 1",
-          "id198": "String fuse open 3 2",
-          "id199": "String fuse open circuit 4 1",
-          "id200": "String fuse open 4 2",
-          "id201": "String fuse open circuit 5 1",
-          "id202": "String fuse open circuit 5 2",
-          "id203": "String fuse open circuit 6 1",
-          "id204": "String fuse open 6 2",
-          "id205": "String fuse open circuit 7 1",
-          "id206": "String fuse open 7 2",
-          "id207": "String fuse open 8 1",
-          "id208": "String fuse open 8 2",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_14": {
-        "name": "Fault 14",
-        "state": {
-          "id209": "String fuse open circuit 9 1",
-          "id210": "String fuse open circuit 9 2",
-          "id211": "String fuse open circuit 10 1",
-          "id212": "String fuse open circuit 10 2",
-          "id213": "String fuse open circuit 11 1",
-          "id214": "String fuse open circuit 11 2",
-          "id215": "String fuse open circuit 12 1",
-          "id216": "String fuse open circuit 12 2",
-          "id217": "String fuse open circuit 13 1",
-          "id218": "String fuse open circuit 13 2",
-          "id219": "String fuse open circuit 14 1",
-          "id220": "String fuse open circuit 14 2",
-          "id221": "String fuse open circuit 15 1",
-          "id222": "String fuse open circuit 15 2",
-          "id223": "String fuse open circuit 16 1",
-          "id224": "String fuse open 16 2",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_15": {
-        "name": "Fault 15",
-        "state": {
-          "id225": "Input fuse open 0",
-          "id226": "Input fuse open 1",
-          "id227": "Input fuse open 2",
-          "id228": "Input fuse open 3",
-          "id229": "Input fuse open 4",
-          "id230": "Input fuse open 5",
-          "id231": "Input fuse open circuit 6",
-          "id232": "Input fuse open circuit 7",
-          "id233": "Input fuse open circuit 8",
-          "id234": "Input fuse open circuit 9",
-          "id235": "Input fuse open circuit 10",
-          "id236": "Input fuse open circuit 11",
-          "id237": "Input fuse open circuit 12",
-          "id238": "Input fuse open circuit 13",
-          "id239": "Input fuse open circuit 14",
-          "id240": "Input fuse open circuit 15",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_16": {
-        "name": "Fault 16",
-        "state": {
-          "id241": "Combiner OV gp 1",
-          "id242": "Combiner OV gp 2",
-          "id243": "Combiner OV gp 3",
-          "id244": "Combiner OV gp 4",
-          "id245": "Combiner OV gp 5",
-          "id246": "Combiner OV gp 6",
-          "id247": "Combiner OV gp 7",
-          "id248": "Combiner OV gp 8",
-          "id249": "Combiner OV gp 9",
-          "id250": "Combiner OV gp 10",
-          "id251": "Combiner OV gp 11",
-          "id252": "Combiner OV gp 12",
-          "id253": "Combiner OV gp 13",
-          "id254": "Combiner OV gp 14",
-          "id255": "Combiner OV gp 15",
-          "id256": "Combiner OV gp 16",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_17": {
-        "name": "Fault 17",
-        "state": {
-          "id257": "Combiner UV gp 1",
-          "id258": "Combiner UV gp 2",
-          "id259": "Combiner UV gp 3",
-          "id260": "Combiner UV gp 4",
-          "id261": "Combiner UV gp 5",
-          "id262": "Combiner UV gp 6",
-          "id263": "Combiner UV gp 7",
-          "id264": "Combiner UV gp 8",
-          "id265": "Combiner UV gp 9",
-          "id266": "Combiner UV gp 10",
-          "id267": "Combiner UV gp 11",
-          "id268": "Combiner UV gp 12",
-          "id269": "Combiner UV gp 13",
-          "id270": "Combiner UV gp 14",
-          "id271": "Combiner UV gp 15",
-          "id272": "Combiner UV gp 16",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_18": {
-        "name": "Fault 18",
-        "state": {
-          "id273": "Combiner OC 1",
-          "id274": "Combiner OC 2",
-          "id275": "Combiner OC 3",
-          "id276": "Combiner OC 4",
-          "id277": "Combiner OC 5",
-          "id278": "Combiner OC 6",
-          "id279": "Combiner OC 7",
-          "id280": "Combiner OC 8",
-          "id281": "Combiner OC 9",
-          "id282": "Combiner OC 10",
-          "id283": "Combiner OC 11",
-          "id284": "Combiner OC 12",
-          "id285": "Combiner OC 13",
-          "id286": "Combiner OC 14",
-          "id287": "Combiner OC 15",
-          "id288": "Combiner OC 16",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_19": {
-        "name": "Fault 19",
-        "state": {
-          "id289": "Combiner OC 17",
-          "id290": "Combiner OC 18",
-          "id291": "Combiner OC 19",
-          "id292": "Combiner OC 20",
-          "id293": "Combiner OC 21",
-          "id294": "Combiner OC 22",
-          "id295": "Combiner OC 23",
-          "id296": "Combiner OC 24",
-          "id297": "Combiner OC 25",
-          "id298": "Combiner OC 26",
-          "id299": "Combiner OC 27",
-          "id300": "Combiner OC 28",
-          "id301": "Combiner OC 29",
-          "id302": "Combiner OC 30",
-          "id303": "Combiner OC 31",
-          "id304": "Combiner OC 32",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_2": {
-        "name": "Fault 2",
-        "state": {
-          "id017": "Grid current sampling error",
-          "id018": "DCI sampling error AC",
-          "id019": "Network voltage sampling error DC",
-          "id020": "Network voltage sampling error AC",
-          "id021": "GFCI sampling error DC",
-          "id022": "GFCI sampling error AC",
-          "id023": "DCV sampling error",
-          "id024": "Input current sampling error",
-          "id025": "DCI sampling error DC",
-          "id026": "Branch current sampling error",
-          "id027": "PV low impedance to ground",
-          "id028": "PID abnormal output",
-          "id029": "Leakage current consistency error",
-          "id030": "Net voltage consistency error",
-          "id031": "DCI consistency error",
-          "id032": "Neutral ground fault",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_22": {
-        "name": "Fault 22",
-        "state": {
-          "id337": "Combiner reflux fault 1",
-          "id338": "Combiner reflux fault 2",
-          "id339": "Combiner reflux fault 3",
-          "id340": "Combiner reflux fault 4",
-          "id341": "Combiner reflux fault 5",
-          "id342": "Combiner reflux fault 6",
-          "id343": "Combiner reflux fault 7",
-          "id344": "Combiner reflux fault 8",
-          "id345": "Combiner reflux fault 9",
-          "id346": "Combiner reflux fault 10",
-          "id347": "Combiner reflux fault 11",
-          "id348": "Combiner reflux fault 12",
-          "id349": "Combiner reflux fault 13",
-          "id350": "Combiner reflux fault 14",
-          "id351": "Combiner reflux fault 15",
-          "id352": "Combiner reflux fault 16",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_23": {
-        "name": "Fault 23",
-        "state": {
-          "id353": "Combiner reflux fault 17",
-          "id354": "Combiner reflux fault 18",
-          "id355": "Combiner reflux fault 19",
-          "id356": "Combiner reflux fault 20",
-          "id357": "Combiner reflux fault 21",
-          "id358": "Combiner reflux fault 22",
-          "id359": "Combiner reflux fault 23",
-          "id360": "Combiner reflux fault 24",
-          "id361": "Combiner reflux fault 25",
-          "id362": "Combiner reflux fault 26",
-          "id363": "Combiner reflux fault 27",
-          "id364": "Combiner reflux fault 28",
-          "id365": "Combiner reflux fault 29",
-          "id366": "Combiner reflux fault 30",
-          "id367": "Combiner reflux fault 31",
-          "id368": "Combiner reflux fault 32",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_26": {
-        "name": "Fault 26",
-        "state": {
-          "id401": "AFCI 0",
-          "id402": "AFCI 1",
-          "id403": "AFCI 2",
-          "id404": "AFCI 3",
-          "id405": "AFCI 4",
-          "id406": "AFCI 5",
-          "id407": "AFCI 6",
-          "id408": "AFCI 7",
-          "id409": "AFCI 8",
-          "id410": "AFCI 9",
-          "id411": "AFCI 10",
-          "id412": "AFCI 11",
-          "id413": "AFCI 12",
-          "id414": "AFCI 13",
-          "id415": "AFCI 14",
-          "id416": "AFCI 15",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_27": {
-        "name": "Fault 27",
-        "state": {
-          "id417": "AFCI 16",
-          "id418": "AFCI 17",
-          "id419": "AFCI 18",
-          "id420": "AFCI 19",
-          "id421": "AFCI 20",
-          "id422": "AFCI 21",
-          "id423": "AFCI 22",
-          "id424": "AFCI 23",
-          "id425": "AFCI 24",
-          "id426": "AFCI 25",
-          "id427": "AFCI 26",
-          "id428": "AFCI 27",
-          "id429": "AFCI 28",
-          "id430": "AFCI 29",
-          "id431": "AFCI 30",
-          "id432": "AFCI 31",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_28": {
-        "name": "Fault 28",
-        "state": {
-          "id441": "Modify OVP",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_29": {
-        "name": "Fault 29",
-        "state": {
-          "id449": "The ground zero voltage is too high",
-          "id450": "PV branch software overcurrent disabled by default",
-          "id451": "N line open circuit fault",
-          "id452": "Grid frequency change protection",
-          "id453": "Phase loss failure",
-          "id464": "Disable",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_3": {
-        "name": "Fault 3",
-        "state": {
-          "id033": "SPI communication error DC",
-          "id034": "SPI communication error AC",
-          "id035": "Chip error DC",
-          "id036": "Chip error AC",
-          "id037": "Auxiliary power error",
-          "id038": "Inverter soft start failure",
-          "id039": "Arc shutdown protection",
-          "id040": "Weak light detection failure",
-          "id041": "Relay detection failure",
-          "id042": "Low insulation impedance",
-          "id043": "Grounding error",
-          "id044": "Wrong input mode setting",
-          "id045": "CT error",
-          "id046": "Input reversal error",
-          "id047": "Parallel error",
-          "id048": "Serial number error",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_30": {
-        "name": "Fault 30",
-        "state": {
-          "id465": "DCDC fault",
-          "id466": "BCU fault",
-          "id467": "BMU fault",
-          "id480": "Disable",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_4": {
-        "name": "Fault 4",
-        "state": {
-          "id049": "Battery temperature protection",
-          "id050": "Heatsink 1 temperature protection",
-          "id051": "Heater 2 temperature protection",
-          "id052": "Heater 3 temperature protection",
-          "id053": "Heatsink 4 temperature protection",
-          "id054": "Radiator 5 temperature protection",
-          "id055": "Radiator 6 temperature protection",
-          "id057": "Ambient temperature 1 protection",
-          "id058": "Ambient temperature 2 protection",
-          "id059": "Module 1 temperature protection",
-          "id060": "Module 2 temperature protection",
-          "id061": "Module 3 temperature protection",
-          "id062": "Module temperature difference too large",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_5": {
-        "name": "Fault 5",
-        "state": {
-          "id065": "Busbar RMS unbalance",
-          "id066": "Busbar instantaneous value unbalance",
-          "id067": "Busbar undervoltage during grid connection",
-          "id068": "Busbar low voltage",
-          "id069": "PV overvoltage",
-          "id070": "Battery over voltage",
-          "id071": "Llcbus overvoltage protection",
-          "id072": "Busbar RMS software overvoltage",
-          "id073": "Busbar transient software overvoltage",
-          "id074": "Fly span capacitor overvoltage protection",
-          "id075": "Fly span capacitor under voltage protection",
-          "id076": "PV undervoltage",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_6": {
-        "name": "Fault 6",
-        "state": {
-          "id081": "Battery overcurrent software protection",
-          "id082": "DCI overcurrent protection",
-          "id083": "Output transient current protection",
-          "id084": "BCKBST software overcurrent",
-          "id085": "Inverter RMS current protection",
-          "id086": "PV transient software overcurrent",
-          "id087": "PV parallel uneven current",
-          "id088": "Output current unbalance",
-          "id089": "PV software overcurrent protection",
-          "id090": "Balanced circuit overcurrent protection",
-          "id091": "Resonance protection",
-          "id092": "Software wave by wave current limit protection",
-          "id093": "PV branch software overcurrent enabled by default",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_7": {
-        "name": "Fault 7",
-        "state": {
-          "id097": "LLC busbar hardware overvoltage",
-          "id098": "Inverter bus hardware overvoltage",
-          "id099": "BCKBST hardware overcurrent",
-          "id100": "Battery hardware overcurrent",
-          "id102": "PV hardware overcurrent",
-          "id103": "AC output hardware overcurrent",
-          "id104": "Hardware differential overcurrent",
-          "id105": "Meter communication error",
-          "id106": "Serial number model error",
-          "id107": "Hardware version mismatch",
-          "id110": "Overload protection 1",
-          "id111": "Overload protection 2",
-          "id112": "Overload protection 3",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_8": {
-        "name": "Fault 8",
-        "state": {
-          "id113": "Over temperature load shedding",
-          "id114": "Frequency down load",
-          "id115": "Frequency loading",
-          "id116": "Voltage down load",
-          "id117": "Voltage loading",
-          "id118": "Low temperature load shedding",
-          "id121": "Lightning protection fault DC",
-          "id122": "Lightning protection AC",
-          "id124": "Battery lockout protection",
-          "id125": "Battery low voltage shutdown",
-          "no_fault": "No fault"
-        }
-      },
-      "fault_9": {
-        "name": "Fault 9",
-        "state": {
-          "id129": "AC hardware overcurrent fault",
-          "id130": "Bus overvoltage fault",
-          "id131": "Bus hardware over voltage fault",
-          "id132": "PV uneven flow fault",
-          "id133": "EPS battery overcurrent fault",
-          "id134": "Output transient overcurrent fault",
-          "id135": "AC current unbalance fault",
-          "id136": "Inverter soft start failure fault",
-          "id137": "Input mode setting fault",
-          "id138": "Input overcurrent fault",
-          "id139": "Input hardware overcurrent fault",
-          "id140": "Relay permanent failure",
-          "id141": "Bus unbalance fault",
-          "id142": "Lightning protection fault DC",
-          "id143": "Lightning protection fault AC",
-          "id144": "Grid relay fault",
-          "no_fault": "No fault"
-        }
       },
       "grid_frequency": {
         "name": "Grid frequency"
