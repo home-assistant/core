@@ -9,7 +9,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmartyplants import Sensor, SmartyPlantsConnectionError
+from pysmartyplants import Sensor, SmartyPlantsAuthError, SmartyPlantsConnectionError
 import pytest
 
 from homeassistant.components.smartyplants.const import (
@@ -113,6 +113,7 @@ async def test_entities_are_created_from_the_first_poll(hass: HomeAssistant) -> 
     assert hass.states.get("sensor.monstera_temperature").state == "22.5"
     assert hass.states.get("sensor.monstera_humidity").state == "55"
     assert hass.states.get("sensor.monstera_soil_moisture").state == "41"
+    assert hass.states.get("sensor.monstera_illuminance").state == "1200"
     assert hass.states.get("sensor.monstera_light_quality").state == "78"
     assert hass.states.get("sensor.monstera_health_score").state == "82"
     assert hass.states.get("sensor.monstera_fertilise_in").state == "21"
@@ -168,6 +169,41 @@ async def test_connection_failure_marks_entities_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
+
+
+async def test_rejected_key_marks_entities_unavailable(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A revoked API key is reported as a failed update.
+
+    There is no re-authentication flow yet, so the user is told the update
+    failed rather than being prompted for a new key.
+    """
+    _, client = await _setup(hass)
+
+    client.async_get_sensors.side_effect = SmartyPlantsAuthError("nope")
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
+
+
+async def test_entry_without_a_webhook_id_only_polls(hass: HomeAssistant) -> None:
+    """An entry set up before the push step still works, on polling alone."""
+    data = {key: value for key, value in ENTRY_DATA.items() if key != CONF_WEBHOOK_ID}
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id="test")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.smartyplants.SmartyPlantsClient", autospec=True
+    ) as mock:
+        mock.return_value.async_get_sensors = AsyncMock(return_value=[_sensor()])
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
 
 
 async def test_missing_readings_report_unknown(hass: HomeAssistant) -> None:
