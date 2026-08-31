@@ -88,6 +88,7 @@
         'Redox measurement module detected': True,
         'filtration_mode': 'manual',
         'filtration_speed_state': 'off',
+        'pH Acid Pump': False,
         'pH acid pump active': False,
         'pH control module': True,
         'pH measurement active': True,
