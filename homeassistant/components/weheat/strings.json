@@ -122,7 +122,7 @@
         "state": {
           "contact_blocked": "Blocked by external contact",
           "demand": "No cooling demand",
-          "heat_pump_control": "Blocked by heat pump control",
+          "heat_pump_control": "Paused for another function",
           "none": "Not paused",
           "outside_colder_than_water_temperature": "Outside colder than water",
           "outside_temperature_too_low": "Outside temperature too low",
@@ -151,7 +151,7 @@
           "control_method": "Stopped by control method",
           "cooling_control": "Stopped by cooling control",
           "dtc": "Stopped by diagnostics",
-          "heat_pump_control": "Stopped by heat pump control",
+          "heat_pump_control": "Stopped for another function",
           "no_indoor_unit_communication": "No indoor unit communication",
           "none": "Not stopped",
           "thermostat_disabled": "Thermostat disabled"
