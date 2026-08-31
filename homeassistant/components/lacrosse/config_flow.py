@@ -20,7 +20,8 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -31,6 +32,7 @@ from .const import (
     CONF_FREQUENCY,
     CONF_HUMIDITY,
     CONF_JEELINK_LED,
+    CONF_NEW_ID,
     CONF_TEMPERATURE,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
@@ -118,10 +120,69 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add more sensors to an existing receiver."""
+        """Offer the reconfiguration options of an existing receiver."""
         self._data = dict(self._get_reconfigure_entry().data)
         self._sensors = dict(self._data.pop(CONF_SENSORS, {}))
-        return await self.async_step_sensor()
+        return self.async_show_menu(
+            step_id="reconfigure", menu_options=["sensor", "change_id"]
+        )
+
+    async def async_step_change_id(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the ID of a sensor, which changes after a battery replacement."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            old_id = int(user_input[CONF_ID])
+            new_id = user_input[CONF_NEW_ID]
+
+            if any(
+                sensor[CONF_ID] == new_id
+                for sensor in self._sensors.values()
+                if sensor[CONF_ID] != old_id
+            ):
+                errors["base"] = "sensor_already_configured"
+            else:
+                sensors: dict[str, dict[str, Any]] = {}
+                for key, sensor in self._sensors.items():
+                    if sensor[CONF_ID] != old_id:
+                        sensors[key] = sensor
+                        continue
+                    sensors[f"{new_id}_{sensor[CONF_TYPE]}"] = {
+                        **sensor,
+                        CONF_ID: new_id,
+                    }
+                self._sensors = sensors
+                self._async_update_device_identifiers(old_id, new_id)
+                return await self.async_step_finish()
+
+        sensor_ids = sorted(
+            {str(sensor[CONF_ID]) for sensor in self._sensors.values()}, key=int
+        )
+        return self.async_show_form(
+            step_id="change_id",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ID): SelectSelector(
+                        SelectSelectorConfig(options=sensor_ids)
+                    ),
+                    vol.Required(CONF_NEW_ID): cv.positive_int,
+                }
+            ),
+            errors=errors or None,
+        )
+
+    def _async_update_device_identifiers(self, old_id: int, new_id: int) -> None:
+        """Move the device of a sensor to its new ID to keep its customizations."""
+        receiver = self._data[CONF_DEVICE]
+        device_registry = dr.async_get(self.hass)
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{receiver}_{old_id}"), self._get_reconfigure_entry().entry_id
+        ):
+            device_registry.async_update_device(
+                device.id, new_identifiers={(DOMAIN, f"{receiver}_{new_id}")}
+            )
 
     async def async_step_sensor(
         self, user_input: dict[str, Any] | None = None

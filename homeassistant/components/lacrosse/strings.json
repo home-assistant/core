@@ -15,6 +15,22 @@
           "sensor": "Add another sensor"
         }
       },
+      "change_id": {
+        "data": {
+          "id": "Sensor ID",
+          "new_id": "New sensor ID"
+        },
+        "data_description": {
+          "id": "The sensor whose ID has changed.",
+          "new_id": "The ID the sensor reports now, for example after a battery replacement."
+        }
+      },
+      "reconfigure": {
+        "menu_options": {
+          "change_id": "Change the ID of a sensor",
+          "sensor": "Add another sensor"
+        }
+      },
       "sensor": {
         "data": {
           "battery": "Reports battery state",
