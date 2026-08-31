@@ -154,8 +154,6 @@ async def test_work_area_sensor_creation(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test the work area sensor depending on mower pattern."""
-    await setup_integration(hass, mock_config_entry)
-
     values[TEST_MOWER_ID].work_area_names.append("new systematic work area")
     values[TEST_MOWER_ID].work_area_dict.update({1: "new systematic work area"})
     values[TEST_MOWER_ID].work_areas.update(
@@ -170,6 +168,7 @@ async def test_work_area_sensor_creation(
         }
     )
     mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
