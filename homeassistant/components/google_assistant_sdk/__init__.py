@@ -3,7 +3,7 @@
 from typing import override
 
 from aiohttp import ClientError
-from gassist_text import TextAssistant
+from gassist_text import TextAssistantAsync
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
@@ -100,7 +100,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
-        self.assistant: TextAssistant | None = None
+        self.assistant: TextAssistantAsync | None = None
         self.session: OAuth2Session | None = None
         self.language: str | None = None
 
@@ -109,6 +109,12 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORTED_LANGUAGE_CODES
+
+    async def _async_close_assistant(self) -> None:
+        """Close the assistant, releasing its gRPC channel."""
+        if self.assistant:
+            await self.assistant.close()
+            self.assistant = None
 
     @override
     async def async_process(
@@ -122,7 +128,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             self.session = session
         if not session.valid_token:
             await session.async_ensure_token_valid()
-            self.assistant = None
+            await self._async_close_assistant()
 
         language = best_matching_language_code(
             self.hass,
@@ -131,13 +137,12 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         )
 
         if not self.assistant or language != self.language:
+            await self._async_close_assistant()
             credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
             self.language = language
-            self.assistant = TextAssistant(credentials, self.language)
+            self.assistant = TextAssistantAsync(credentials, self.language)
 
-        resp = await self.hass.async_add_executor_job(
-            self.assistant.assist, user_input.text
-        )
+        resp = await self.assistant.assist(user_input.text)
         text_response = resp[0] or "<empty response>"
 
         intent_response = intent.IntentResponse(language=language)

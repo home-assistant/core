@@ -1097,7 +1097,7 @@ gTTS==2.5.4
 gardena-bluetooth==2.10.1
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.14
+gassist-text==0.1.0
 
 # homeassistant.components.gatus
 gatus-api==1.2.0

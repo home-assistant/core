@@ -164,7 +164,7 @@ async def test_send_text_command(
     expected_language_code: str,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call send_text_command calls TextAssistant."""
+    """Test service call send_text_command calls TextAssistantAsync."""
     await setup_integration()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -174,7 +174,7 @@ async def test_send_text_command(
 
     command = "turn on home assistant unsupported device"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync"
     ) as mock_text_assistant:
         await hass.services.async_call(
             DOMAIN,
@@ -186,7 +186,7 @@ async def test_send_text_command(
         ExpectedCredentials(), expected_language_code, audio_out=False
     )
     # pylint:disable-next=unnecessary-dunder-call
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
+    mock_text_assistant.assert_has_calls([call().__aenter__().assist(command)])
 
 
 async def test_send_text_commands(
@@ -194,7 +194,7 @@ async def test_send_text_commands(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call send_text_command calls TextAssistant."""
+    """Test service call send_text_command calls TextAssistantAsync."""
     await setup_integration()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -204,7 +204,7 @@ async def test_send_text_commands(
     command1_response = "what's the PIN?"
     command2_response = "opened the garage door"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         side_effect=[
             (command1_response, None, None),
             (command2_response, None, None),
@@ -278,7 +278,7 @@ async def test_send_text_command_grpc_error(
     command = "turn on home assistant unsupported device"
     with (
         patch(
-            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
             side_effect=RpcError(),
         ) as mock_assist_call,
         pytest.raises(HomeAssistantError),
@@ -308,7 +308,7 @@ async def test_send_text_command_media_player(
     audio_response1 = b"joke1 audio response bytes"
     audio_response2 = b"joke2 audio response bytes"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         side_effect=[
             ("joke1 text", None, audio_response1),
             ("joke2 text", None, audio_response2),
@@ -399,7 +399,8 @@ async def test_conversation_agent(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
@@ -432,7 +433,8 @@ async def test_conversation_agent_refresh_token(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
@@ -481,7 +483,8 @@ async def test_conversation_agent_language_changed(
     text1 = "tell me a joke"
     text2 = "cuéntame un chiste"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
