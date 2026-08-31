@@ -927,6 +927,7 @@ FLOWS = {
         "zimi",
         "zinvolt",
         "zodiac",
+        "zonneplan",
         "zwave_js",
         "zwave_me",
     ],
