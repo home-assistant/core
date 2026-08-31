@@ -783,8 +783,6 @@ async def _async_handle_entity_calls(
         try:
             return await coro
         except ConfigEntryAuthFailed:
-            # Handled per entity, since only the first exception raised by a
-            # multi entity call is re-raised to the caller.
             if (platform := entity.platform) is not None and (
                 entry := platform.config_entry
             ) is not None:
