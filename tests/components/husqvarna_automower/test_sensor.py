@@ -10,13 +10,15 @@ from aioautomower.model import (
     MowerModes,
     MowerStates,
     RestrictedReasons,
+    WorkArea,
+    WorkAreaType,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -144,6 +146,68 @@ async def test_work_area_sensor(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_work_area_sensor_creation(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test the work area sensor depending on mower pattern."""
+    values[TEST_MOWER_ID].work_area_names.append("new systematic work area")
+    values[TEST_MOWER_ID].work_area_dict.update({1: "new systematic work area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {
+            1: WorkArea(
+                name="new systematic work area",
+                cutting_height=12,
+                enabled=True,
+                type=WorkAreaType.SYSTEMATIC,
+                use_global_cutting_height=False,
+            )
+        }
+    )
+    mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_systematic_work_area_progress"
+    )
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_systematic_work_area_last_time_completed"
+    )
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    values[TEST_MOWER_ID].work_area_names.append("new random work area")
+    values[TEST_MOWER_ID].work_area_dict.update({2: "new random work area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {
+            2: WorkArea(
+                name="new random work area",
+                cutting_height=12,
+                enabled=True,
+                type=WorkAreaType.RANDOM,
+                use_global_cutting_height=False,
+            )
+        }
+    )
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.garden_test_mower_1_new_random_work_area_progress")
+    assert state is None
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_random_work_area_last_time_completed"
+    )
+    assert state is None
 
 
 async def test_restricted_reason_sensor(
