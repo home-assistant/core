@@ -551,16 +551,14 @@ async def test_conversation_agent_serializes_requests(
             ),
         )
 
-    in_flight = 0
-    for event in events:
-        if event.startswith("start"):
-            in_flight += 1
-            assert in_flight == 1, f"overlapping requests: {events}"
-        elif event.startswith("end"):
-            in_flight -= 1
-        else:
-            assert in_flight == 0, f"closed while a request was in flight: {events}"
-    assert events.count("close") == 1
+    # Whichever request runs first creates the assistant, and the other one
+    # changes the language, so it replaces and closes that one. Either order is
+    # valid, but a request has to finish before the next one starts, and the
+    # close has to land between them rather than during a request.
+    assert events in (
+        ["start one", "end one", "close", "start two", "end two"],
+        ["start two", "end two", "close", "start one", "end one"],
+    )
 
 
 async def test_conversation_agent_closed_on_unload(
