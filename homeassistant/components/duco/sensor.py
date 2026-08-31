@@ -260,12 +260,6 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
     ),
 }
 
-DIAGNOSTIC_STATUS_TRANSLATION_KEYS: dict[str, str] = {
-    "Disable": "disabled",
-    "Error": "error",
-    "Ok": "ok",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -450,7 +444,5 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
         for diagnostic in self.coordinator.data.diagnostic_subsystems:
             if diagnostic.component == self.entity_description.component:
                 # Unknown values stay visible until translations can be added.
-                return DIAGNOSTIC_STATUS_TRANSLATION_KEYS.get(
-                    diagnostic.status, diagnostic.status
-                )
+                return diagnostic.status or diagnostic.raw_status
         return None
