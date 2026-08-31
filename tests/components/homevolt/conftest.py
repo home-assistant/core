@@ -81,13 +81,27 @@ def mock_homevolt_client() -> Generator[MagicMock]:
 
         # Load schedule data from fixture
         client.current_schedule = load_json_object_fixture("schedule.json", DOMAIN)
+        schedule_entry = client.current_schedule["schedule"][0]
+        schedule_params = schedule_entry["params"]
+        client.schedule = {
+            "mode": schedule_entry["type"],
+            "setpoint": schedule_params["setpoint"],
+            "max_charge": schedule_params["max_charge"],
+            "max_discharge": schedule_params["max_discharge"],
+            "min_soc": schedule_entry["min"],
+            "max_soc": schedule_entry["max"],
+            "grid_import_limit": schedule_params["import_limit"],
+            "grid_export_limit": schedule_params["export_limit"],
+        }
+        client.schedule_mode = schedule_entry["type"]
 
         # Switch (local mode) support
-        client.local_mode_enabled = False
+        client.local_mode_enabled = client.current_schedule["local_mode"]
+        client.battery_parameters_writable = False
         client.enable_local_mode = AsyncMock()
         client.disable_local_mode = AsyncMock()
-        # SELECT platform - ability to change schedule type
-        client.set_schedule_type = AsyncMock()
+        client.set_battery_mode = AsyncMock()
+        client.set_battery_parameters = AsyncMock()
 
         yield client
 
