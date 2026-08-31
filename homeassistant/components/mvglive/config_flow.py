@@ -14,6 +14,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
 )
 
 from .const import (
@@ -39,17 +41,6 @@ ALL_PRODUCTS = [product.value[0] for product in TransportType.all()]
 MAX_STATION_MATCHES = 25
 
 
-def _csv_to_list(value: str) -> list[str]:
-    """Convert a comma-separated string to a list, matching the legacy YAML behavior."""
-    items = [item.strip() for item in value.split(",")]
-    return items or [""]
-
-
-def _list_to_csv(value: list[str] | None) -> str:
-    """Convert a list back to a comma-separated string for form pre-fill."""
-    return ", ".join(value) if value else ""
-
-
 class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MVG."""
 
@@ -58,7 +49,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._matches: dict[str, dict[str, Any]] = {}
-        self._products: list[str] | None = None
+        self._products: list[str] = []
 
     @override
     async def async_step_user(
@@ -85,7 +76,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_station"
                 else:
                     self._matches = {station["id"]: station for station in matches}
-                    self._products = user_input.get(CONF_PRODUCTS) or None
+                    self._products = user_input[CONF_PRODUCTS]
                     return await self.async_step_select()
 
         schema = vol.Schema(
@@ -191,9 +182,9 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             options = {
-                CONF_DESTINATIONS: _csv_to_list(user_input[CONF_DESTINATIONS]),
-                CONF_LINES: _csv_to_list(user_input[CONF_LINES]),
-                CONF_PRODUCTS: user_input.get(CONF_PRODUCTS) or None,
+                CONF_DESTINATIONS: user_input[CONF_DESTINATIONS] or [""],
+                CONF_LINES: user_input[CONF_LINES] or [""],
+                CONF_PRODUCTS: user_input[CONF_PRODUCTS],
                 CONF_TIMEOFFSET: user_input[CONF_TIMEOFFSET],
                 CONF_NUMBER: user_input[CONF_NUMBER],
             }
@@ -204,14 +195,12 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_DESTINATIONS,
-                    default=_list_to_csv(
-                        current.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS)
-                    ),
-                ): str,
+                    default=current.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS),
+                ): TextSelector(TextSelectorConfig(multiple=True)),
                 vol.Optional(
                     CONF_LINES,
-                    default=_list_to_csv(current.get(CONF_LINES, DEFAULT_LINES)),
-                ): str,
+                    default=current.get(CONF_LINES, DEFAULT_LINES),
+                ): TextSelector(TextSelectorConfig(multiple=True)),
                 vol.Optional(
                     CONF_PRODUCTS,
                     default=current.get(CONF_PRODUCTS) or [],

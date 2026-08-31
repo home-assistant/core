@@ -45,8 +45,8 @@
     "step": {
       "init": {
         "data": {
-          "destinations": "Destinations (comma-separated)",
-          "lines": "Lines (comma-separated)",
+          "destinations": "Destinations",
+          "lines": "Lines",
           "number": "Number of departures",
           "products": "Modes of transport",
           "timeoffset": "Time offset (minutes)"

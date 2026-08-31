@@ -294,8 +294,8 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_DESTINATIONS: "Feldmoching, Messestadt Ost",
-            CONF_LINES: "U2, U8",
+            CONF_DESTINATIONS: ["Feldmoching", "Messestadt Ost"],
+            CONF_LINES: ["U2", "U8"],
             CONF_TIMEOFFSET: 5,
             CONF_NUMBER: 3,
         },
@@ -306,7 +306,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     assert result["data"] == {
         CONF_DESTINATIONS: ["Feldmoching", "Messestadt Ost"],
         CONF_LINES: ["U2", "U8"],
-        CONF_PRODUCTS: None,
+        CONF_PRODUCTS: [],
         CONF_TIMEOFFSET: 5,
         CONF_NUMBER: 3,
     }
