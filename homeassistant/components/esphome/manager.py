@@ -21,7 +21,6 @@ from aioesphomeapi import (
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
-    OutgoingConnectionServer,
     ReconnectLogic,
     RequiresEncryptionAPIError,
     SupportsResponseType,
@@ -43,7 +42,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGGING_CHANGED,
     Platform,
 )
@@ -70,7 +68,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
     json as json_helper,
-    singleton,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -93,7 +90,6 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
-    DEFAULT_ALLOW_OUTGOING_CONNECTION,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
@@ -108,6 +104,10 @@ from .encryption_key_storage import async_get_encryption_key_storage
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+from .outgoing_connection import (
+    async_register_outgoing_target,
+    outgoing_connection_enabled,
+)
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
@@ -130,25 +130,8 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        outgoing_connection_target=entry.options.get(
-            CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
-        ),
+        outgoing_connection_target=outgoing_connection_enabled(entry),
     )
-
-
-@singleton.singleton("esphome_outgoing_connection_server")
-async def _async_get_outgoing_connection_server(
-    hass: HomeAssistant,
-) -> OutgoingConnectionServer:
-    """Get the process-wide listener for device-initiated connections."""
-    server = OutgoingConnectionServer()
-    await server.start()
-
-    async def _async_stop(event: Event) -> None:
-        await server.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
-    return server
 
 
 if TYPE_CHECKING:
@@ -245,6 +228,7 @@ class ESPHomeManager:
         "_cancel_subscribe_logs",
         "_dashboard_key_sync_warned",
         "_log_level",
+        "_outgoing_unregister",
         "cli",
         "device_id",
         "domain_data",
@@ -281,6 +265,7 @@ class ESPHomeManager:
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
         self._dashboard_key_sync_warned = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
+        self._outgoing_unregister: CALLBACK_TYPE | None = None
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -600,6 +585,47 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
+    async def _async_register_outgoing_target(self) -> None:
+        """Register this entry's MAC with the shared dial-in listener."""
+        entry = self.entry
+        if (
+            self._outgoing_unregister is not None
+            or not outgoing_connection_enabled(entry)
+            or not (mac := entry.unique_id)
+            or ":" not in mac
+        ):
+            # Entries that predate MAC unique ids register later, from
+            # _on_connect, once the device reported its MAC
+            return
+        reconnect_logic = self.reconnect_logic
+        assert reconnect_logic is not None, "Reconnect logic must be set"
+        if (
+            unregister := await async_register_outgoing_target(
+                self.hass, mac, reconnect_logic
+            )
+        ) is not None:
+            self._outgoing_unregister = unregister
+            self.entry_data.cleanup_callbacks.append(unregister)
+
+    async def _async_on_outgoing_capable_device(self) -> None:
+        """Handle a connected device that supports outgoing connections."""
+        entry = self.entry
+        if CONF_ALLOW_OUTGOING_CONNECTION not in entry.options:
+            # First supported device seen: turn the option on and remember;
+            # it stays discoverable and reversible in the entry options. The
+            # reload picks up the hello flag and registers the listener.
+            _LOGGER.debug(
+                "%s: Device supports outgoing connections; enabling", self.host
+            )
+            self.hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, CONF_ALLOW_OUTGOING_CONNECTION: True},
+            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return
+        # Covers entries whose unique id only just became the device MAC
+        await self._async_register_outgoing_target()
+
     async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
@@ -693,6 +719,9 @@ class ESPHomeManager:
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
             )
+
+        if device_info.api_outgoing_connection_supported:
+            await self._async_on_outgoing_capable_device()
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
@@ -1163,21 +1192,9 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        if entry.options.get(
-            CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
-        ) and (mac := entry.unique_id):
-            # The device may open the TCP connection to us when it cannot be
-            # reached; a dial-in for this MAC is handed to the reconnect logic
-            try:
-                server = await _async_get_outgoing_connection_server(hass)
-            except OSError as err:
-                _LOGGER.warning(
-                    "%s: Cannot listen for outgoing connections: %s", self.host, err
-                )
-            else:
-                entry_data.cleanup_callbacks.append(
-                    server.register(mac, reconnect_logic)
-                )
+        # The device may open the TCP connection to us when it cannot be
+        # reached; a dial-in for this MAC is handed to the reconnect logic
+        await self._async_register_outgoing_target()
 
         infos, services = await entry_data.async_load_from_store(
             restore_states=bool(entry.unique_id)

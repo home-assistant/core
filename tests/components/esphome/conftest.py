@@ -195,6 +195,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
         mock_client.timezone = timezone
+        mock_client.outgoing_connection_target = outgoing_connection_target
         return mock_client
 
     mock_client.side_effect = mock_constructor
