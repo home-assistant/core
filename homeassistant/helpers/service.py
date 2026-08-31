@@ -769,11 +769,6 @@ async def _resolve_entity_service_call_entities(
     return entities
 
 
-@callback
-def _async_start_reauth_for_entity(hass: HomeAssistant, entity: Entity) -> None:
-    """Start a reauth flow for the config entry owning an entity."""
-
-
 async def _async_handle_entity_calls(
     entity_calls: list[tuple[Entity, Coroutine[Any, Any, ServiceResponse]]],
     *,
