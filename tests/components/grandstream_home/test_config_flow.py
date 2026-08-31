@@ -69,21 +69,8 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert entry.unique_id == format_mac("00:0B:82:12:34:56")
 
 
-@pytest.mark.parametrize(
-    ("login_side_effect", "expected_error"),
-    [
-        pytest.param(
-            OSError("Connection refused"), "cannot_connect", id="cannot_connect"
-        ),
-        pytest.param((False, "invalid_auth"), "invalid_auth", id="invalid_auth"),
-    ],
-)
-async def test_user_auth_error(
-    hass: HomeAssistant,
-    login_side_effect: Exception | tuple,
-    expected_error: str,
-) -> None:
-    """Test user flow when connection fails or auth is invalid."""
+async def test_user_cannot_connect(hass: HomeAssistant) -> None:
+    """Test user flow when connection fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -96,35 +83,74 @@ async def test_user_auth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
-    if isinstance(login_side_effect, OSError):
-        with patch(
-            "homeassistant.components.grandstream_home.config_flow.attempt_login",
-            side_effect=login_side_effect,
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    CONF_PASSWORD: "password",
-                    CONF_PORT: "443",
-                    CONF_VERIFY_SSL: False,
-                },
-            )
-    else:
-        with patch(
-            "homeassistant.components.grandstream_home.config_flow.attempt_login",
-            return_value=login_side_effect,
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    CONF_PASSWORD: "password",
-                    CONF_PORT: "443",
-                    CONF_VERIFY_SSL: False,
-                },
-            )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.attempt_login",
+        side_effect=OSError("Connection refused"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "password",
+                CONF_PORT: "443",
+                CONF_VERIFY_SSL: False,
+            },
+        )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
+    assert result["errors"]["base"] == "cannot_connect"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password",
+            CONF_PORT: "443",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_invalid_auth(hass: HomeAssistant) -> None:
+    """Test user flow when auth is invalid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.attempt_login",
+        return_value=(False, "invalid_auth"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "password",
+                CONF_PORT: "443",
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password",
+            CONF_PORT: "443",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
@@ -236,6 +262,17 @@ async def test_user_device_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password",
+            CONF_PORT: "443",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
