@@ -1117,7 +1117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.neopool_ph_flow_detection_control-entry]
