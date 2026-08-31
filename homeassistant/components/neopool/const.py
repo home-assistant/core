@@ -18,7 +18,9 @@ FOLLOW_UP_REFRESH_DELAY = 2.0  # seconds  (delay before a 2nd refresh for IO ent
 DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
 
-# Options-flow keys.
+CONF_UNIT_ID = "unit_id"
+CONF_MODBUS_FRAMER = "modbus_framer"
+
 CONF_USE_LIGHT = "use_light"
 CONF_USE_COVER_SENSOR = "use_cover_sensor"
 CONF_USE_AUX1 = "use_aux1"

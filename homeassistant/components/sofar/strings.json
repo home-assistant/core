@@ -1,13 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please reconfigure the same inverter you originally set up."
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
       "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "[%key:component::sofar::config::step::user::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::user::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::user::data_description::unit_id%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -32,6 +46,37 @@
     }
   },
   "entity": {
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
     "sensor": {
       "active_power_load_sys": {
         "name": "Active power load system"
@@ -467,9 +512,6 @@
       },
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
-      },
-      "waiting_ends": {
-        "name": "Waiting ends"
       }
     }
   },
