@@ -114,15 +114,42 @@ async def test_fault_sensor_reports_no_fault_at_zero(
     assert state.attributes["active_faults"] == []
 
 
-async def test_fault_sensor_reports_the_first_active_fault(
+@pytest.mark.parametrize(
+    ("register", "value", "fault_key", "expected_state", "expected_active_faults"),
+    [
+        pytest.param(
+            0x0405,
+            0b11,  # ID001_GRID_OVER_VOLTAGE | ID002_GRID_UNDERVOLTAGE
+            "fault_1",
+            "id001",
+            ["id001", "id002"],
+            id="lowest_bit_is_the_state",
+        ),
+        pytest.param(
+            # Joining every name here would exceed the 255-char state limit.
+            0x0410,
+            0xFFFF,
+            "fault_12",
+            "id177",
+            [f"id{n}" for n in range(177, 193)],
+            id="fully_set_register_still_reports_a_state",
+        ),
+    ],
+)
+async def test_fault_sensor_reports_active_faults(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
+    register: int,
+    value: int,
+    fault_key: str,
+    expected_state: str,
+    expected_active_faults: list[str],
 ) -> None:
-    """Test the lowest set bit is the state and the rest an attribute."""
+    """Test the lowest set bit is the state, with all active faults listed."""
     unit = mock_connection.for_unit(1)
-    unit.holding[0x0405] = 0b11  # ID001_GRID_OVER_VOLTAGE | ID002_GRID_UNDERVOLTAGE
+    unit.holding[register] = value
 
     with patch(
         "homeassistant.components.sofar.async_get_unit",
@@ -135,42 +162,12 @@ async def test_fault_sensor_reports_the_first_active_fault(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_1"
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{fault_key}"
     )
     assert entity_id is not None
     assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == "id001"
-    assert state.attributes["active_faults"] == ["id001", "id002"]
-
-
-async def test_fault_sensor_state_survives_every_bit_set(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a fully set register still reports a state, not unknown."""
-    unit = mock_connection.for_unit(1)
-    # Joining every name here would exceed the 255-char state limit.
-    unit.holding[0x0410] = 0xFFFF
-
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_12"
-    )
-    assert entity_id is not None
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == "id177"
-    assert len(state.attributes["active_faults"]) == 16
+    assert state.state == expected_state
+    assert state.attributes["active_faults"] == expected_active_faults
 
 
 async def test_fault_sensor_ignores_reserved_registers(
