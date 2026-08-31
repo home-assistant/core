@@ -4,7 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
-from pyzonneplan import Token, ZonneplanConnectionError, ZonneplanTimeoutError
+from pyzonneplan import (
+    Token,
+    ZonneplanAuthenticationError,
+    ZonneplanConnectionError,
+    ZonneplanTimeoutError,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
@@ -17,6 +22,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "exception",
     [
+        ZonneplanAuthenticationError("bad token"),
         ZonneplanTimeoutError("timed out"),
         ZonneplanConnectionError("boom"),
     ],
