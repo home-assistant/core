@@ -119,6 +119,7 @@ class ExposedEntities:
         """Initialize."""
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
+        self._locked_entities: dict[str, set[str]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -144,6 +145,32 @@ class ExposedEntities:
         self._listeners.setdefault(assistant, []).append(listener)
 
         return unsubscribe
+
+    @callback
+    def async_set_entity_locked(
+        self, assistant: str, entity_id: str, locked: bool
+    ) -> None:
+        """Mark whether an entity's exposure is controlled outside the UI.
+
+        A locked entity's exposure is kept in sync with an external source,
+        such as YAML configuration, so changes made through the UI or the
+        websocket API are temporary and will be reverted.
+        """
+        locked_entities = self._locked_entities.setdefault(assistant, set())
+        if locked:
+            locked_entities.add(entity_id)
+        else:
+            locked_entities.discard(entity_id)
+
+    @callback
+    def async_is_entity_locked(self, assistant: str, entity_id: str) -> bool:
+        """Return True if an entity's exposure is locked for an assistant."""
+        return entity_id in self._locked_entities.get(assistant, ())
+
+    @callback
+    def async_get_locked_entities(self, assistant: str) -> set[str]:
+        """Return the entity_ids whose exposure is locked for an assistant."""
+        return self._locked_entities.get(assistant, set())
 
     @callback
     def async_set_assistant_option(
@@ -412,6 +439,18 @@ def ws_expose_entity(
 ) -> None:
     """Expose an entity to an assistant."""
     entity_ids: list[str] = msg["entity_ids"]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    for entity_id in entity_ids:
+        for assistant in msg["assistants"]:
+            if exposed_entities.async_is_entity_locked(assistant, entity_id):
+                connection.send_error(
+                    msg["id"],
+                    websocket_api.ERR_NOT_ALLOWED,
+                    f"{entity_id} exposure to {assistant} is controlled outside "
+                    "the UI and cannot be changed here",
+                )
+                return
 
     for entity_id in entity_ids:
         for assistant in msg["assistants"]:
@@ -431,6 +470,7 @@ def ws_list_exposed_entities(
 ) -> None:
     """List entities which are exposed to assistants."""
     result: dict[str, Any] = {}
+    locked_result: dict[str, Any] = {}
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     entity_registry = er.async_get(hass)
@@ -444,7 +484,14 @@ def ws_list_exposed_entities(
         if not exposed_to:
             continue
         result[entity_id] = exposed_to
-    connection.send_result(msg["id"], {"exposed_entities": result})
+
+    for assistant in KNOWN_ASSISTANTS:
+        for entity_id in exposed_entities.async_get_locked_entities(assistant):
+            locked_result.setdefault(entity_id, {})[assistant] = True
+
+    connection.send_result(
+        msg["id"], {"exposed_entities": result, "locked_entities": locked_result}
+    )
 
 
 @callback
@@ -489,6 +536,22 @@ def async_listen_entity_updates(
     """Listen for updates to entity expose settings."""
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_listen_entity_updates(assistant, listener)
+
+
+@callback
+def async_set_entity_locked(
+    hass: HomeAssistant, assistant: str, entity_id: str, locked: bool
+) -> None:
+    """Mark whether an entity's exposure is controlled outside the UI."""
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_entity_locked(assistant, entity_id, locked)
+
+
+@callback
+def async_is_entity_locked(hass: HomeAssistant, assistant: str, entity_id: str) -> bool:
+    """Return True if an entity's exposure is locked for an assistant."""
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    return exposed_entities.async_is_entity_locked(assistant, entity_id)
 
 
 @callback

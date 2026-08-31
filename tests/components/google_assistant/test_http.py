@@ -30,6 +30,7 @@ from homeassistant.components.homeassistant.const import DATA_EXPOSED_ENTITIES
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_entity_settings,
+    async_is_entity_locked,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
@@ -408,31 +409,36 @@ async def test_should_expose_uses_exposed_entities_store(
     assert google_config.should_expose(entry.entity_id) is True
 
 
-async def test_should_expose_reconciles_yaml_domain_exposure(
+async def test_should_expose_applies_yaml_domain_exposure(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test should_expose exposes an entity matched by expose_by_default/exposed_domains."""
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     config = GOOGLE_ASSISTANT_SCHEMA(
         {"project_id": "1234", "exposed_domains": ["light"]}
     )
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
 
-    # Nothing is written until should_expose is actually queried.
-    assert async_get_entity_settings(hass, entry.entity_id) == {}
+    # Reconciled eagerly against YAML once Home Assistant has started.
+    assert (
+        async_get_entity_settings(hass, entry.entity_id)[DOMAIN]["should_expose"]
+        is True
+    )
     assert google_config.should_expose(entry.entity_id) is True
 
 
-async def test_should_expose_reconciles_yaml_explicit_exclude(
+async def test_should_expose_applies_yaml_explicit_exclude(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test an explicit entity_config exclude wins over a matching domain default."""
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -446,13 +452,14 @@ async def test_should_expose_reconciles_yaml_explicit_exclude(
     assert google_config.should_expose(entry.entity_id) is False
 
 
-async def test_should_expose_reconciles_yaml_explicit_include(
+async def test_should_expose_applies_yaml_explicit_include(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test an explicit entity_config include applies even outside exposed_domains."""
     entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", suggested_object_id="ac"
     )
+    hass.states.async_set(entry.entity_id, "on")
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -482,15 +489,17 @@ async def test_should_expose_defers_to_ui_when_yaml_has_no_opinion(
     # Not written by YAML reconciliation; falls through to (and is cached
     # by) the shared store's own generic fallback.
     assert google_config.should_expose(entry.entity_id) is False
+    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is False
 
 
-async def test_ui_exposure_change_is_reverted_on_next_should_expose(
+async def test_should_expose_locks_yaml_matched_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a UI change to a YAML-matched entity is reverted on the next query."""
+    """Test a YAML-matched entity is locked against exposure changes from the UI."""
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     config = GOOGLE_ASSISTANT_SCHEMA(
         {"project_id": "1234", "exposed_domains": ["light"]}
     )
@@ -498,17 +507,7 @@ async def test_ui_exposure_change_is_reverted_on_next_should_expose(
     await google_config.async_initialize()
 
     assert google_config.should_expose(entry.entity_id) is True
-
-    # The user unexposes it via the UI...
-    async_expose_entity(hass, DOMAIN, entry.entity_id, False)
-    assert (
-        async_get_entity_settings(hass, entry.entity_id)[DOMAIN]["should_expose"]
-        is False
-    )
-
-    # ...but the change doesn't survive the next should_expose query, e.g.
-    # from an incoming request from Google.
-    assert google_config.should_expose(entry.entity_id) is True
+    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is True
 
 
 async def test_ui_exposure_change_persists_when_yaml_has_no_opinion(
@@ -547,6 +546,7 @@ async def test_new_entity_matching_yaml_domain_triggers_sync(
         entry = entity_registry.async_get_or_create(
             "light", "test", "unique", suggested_object_id="kitchen"
         )
+        hass.states.async_set(entry.entity_id, "on")
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
@@ -572,9 +572,10 @@ async def test_new_entity_exposed_via_expose_new_triggers_sync(
         patch.object(google_config, "async_sync_entities") as mock_sync,
         patch.object(helpers, "SYNC_DELAY", 0),
     ):
-        entity_registry.async_get_or_create(
+        entry = entity_registry.async_get_or_create(
             "light", "test", "unique", suggested_object_id="kitchen"
         )
+        hass.states.async_set(entry.entity_id, "on")
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
@@ -590,11 +591,12 @@ async def test_expose_update_triggers_sync(
     await config.async_initialize()
     await config.async_connect_agent_user("mock-user-id")
 
-    # "light" is exposed by default; the entity is reconciled as soon as
-    # it's registered, since the listener is already active.
+    # "light" is exposed by default; its YAML exposure is applied as soon
+    # as its state is added, since the listener is already active.
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     assert config.should_expose(entry.entity_id) is True
 
     with (
@@ -631,11 +633,12 @@ async def test_registry_update_triggers_sync_only_for_aliases(
     await config.async_initialize()
     await config.async_connect_agent_user("mock-user-id")
 
-    # "light" is exposed by default; the entity is reconciled as soon as
-    # it's registered, since the listener is already active.
+    # "light" is exposed by default; its YAML exposure is applied as soon
+    # as its state is added, since the listener is already active.
     entry = entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
+    hass.states.async_set(entry.entity_id, "on")
     assert config.should_expose(entry.entity_id) is True
 
     with (

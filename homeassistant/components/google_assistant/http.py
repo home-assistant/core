@@ -14,13 +14,22 @@ from homeassistant.components import webhook
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_listen_entity_updates,
+    async_set_entity_locked,
     async_should_expose,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -49,7 +58,6 @@ from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
-# Registry attributes that affect whether an entity is exposed by default.
 EXPOSURE_ATTRIBUTES = {"entity_category", "hidden_by"}
 
 
@@ -117,32 +125,48 @@ class GoogleConfig(AbstractConfig):
                 self._async_entity_registry_updated,
             )
         )
+        self._on_deinitialize.append(
+            async_track_state_added_domain(
+                self.hass, MATCH_ALL, self._async_state_added
+            )
+        )
+        for state in self.hass.states.async_all():
+            self._async_update_legacy_exposure(state.entity_id)
 
         self.async_enable_local_sdk()
+
+    @callback
+    def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
+        """Push YAML exposure for a newly added entity and schedule a sync."""
+        entity_id = event.data["entity_id"]
+        self._async_update_legacy_exposure(entity_id)
+        if self.should_expose(entity_id):
+            self.async_schedule_google_sync_all()
 
     @callback
     def _async_entity_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
-        """Schedule a sync for a new or changed entity that should be exposed."""
+        """Schedule a sync for an updated or removed entity."""
         entity_id = event.data["entity_id"]
-        action = event.data["action"]
-        exposure_changed = False
 
-        if event.data["action"] == "update":
-            changes = set(event.data["changes"])
-            if not changes & (er.ENTITY_DESCRIBING_ATTRIBUTES | EXPOSURE_ATTRIBUTES):
-                return
-            exposure_changed = bool(changes & EXPOSURE_ATTRIBUTES)
-
-        if (
-            action != "remove"
-            and not exposure_changed
-            and not self.should_expose(entity_id)
-        ):
+        if event.data["action"] == "remove":
+            self.async_schedule_google_sync_all()
             return
 
-        self.async_schedule_google_sync_all()
+        if event.data["action"] != "update":
+            return
+
+        changes = set(event.data["changes"])
+        if not changes & (er.ENTITY_DESCRIBING_ATTRIBUTES | EXPOSURE_ATTRIBUTES):
+            return
+
+        exposure_changed = bool(changes & EXPOSURE_ATTRIBUTES)
+        if exposure_changed:
+            self._async_update_legacy_exposure(entity_id)
+
+        if exposure_changed or self.should_expose(entity_id):
+            self.async_schedule_google_sync_all()
 
     @property
     @override
@@ -214,7 +238,6 @@ class GoogleConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
-        self._async_reconcile_yaml_exposure(entity_id)
         return async_should_expose(self.hass, DOMAIN, entity_id)
 
     def _should_expose_by_default(
@@ -239,15 +262,16 @@ class GoogleConfig(AbstractConfig):
         return result
 
     @callback
-    def _async_reconcile_yaml_exposure(self, entity_id: str) -> None:
-        """Align one entity's shared exposure setting with YAML configuration.
+    def _async_update_legacy_exposure(self, entity_id: str) -> None:
+        """Push the entity's YAML-configured exposure into the shared store.
 
-        Called on every should_expose(), so a UI change to an entity YAML
-        has an opinion on only lasts until the next such call.
+        Also locks the entity, so websocket updates to its exposure setting
+        are rejected as long as YAML has an opinion on it.
         """
         explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
         if explicit_expose is not None:
             async_expose_entity(self.hass, DOMAIN, entity_id, explicit_expose)
+            async_set_entity_locked(self.hass, DOMAIN, entity_id, True)
             return
 
         entity_registry = er.async_get(self.hass)
@@ -260,7 +284,11 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
-        if self._should_expose_by_default(entity_id, auxiliary_entity=auxiliary_entity):
+        should_expose_by_default = self._should_expose_by_default(
+            entity_id, auxiliary_entity=auxiliary_entity
+        )
+        async_set_entity_locked(self.hass, DOMAIN, entity_id, should_expose_by_default)
+        if should_expose_by_default:
             async_expose_entity(self.hass, DOMAIN, entity_id, True)
 
     @override
