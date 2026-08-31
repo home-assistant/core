@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from bleak import BleakError
-from pyflic_ble import FlicProtocolError, PushTwistMode
+from pyflic_ble import FlicProtocolError, FlicState, PushTwistMode
 from pyflic_ble.const import TWIST_MODE_SLOT_CHANGING
 
 from homeassistant.components.number import (
@@ -92,6 +92,7 @@ class FlicTwistNumberEntity(FlicButtonEntity, RestoreNumber):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_mode = NumberMode.SLIDER
     _attr_native_value: float = 0
+    _pending_restore: float | None = None
 
     def __init__(
         self, data: FlicButtonData, description: FlicTwistNumberEntityDescription
@@ -108,20 +109,41 @@ class FlicTwistNumberEntity(FlicButtonEntity, RestoreNumber):
 
         # The device takes its rotation position from the host, and the library
         # only carries it for the lifetime of a connection, so a restart has to
-        # hand it back.
+        # hand it back. The button is usually still out of range at this point,
+        # so the write waits for the session to come up.
         if (
             last_data := await self.async_get_last_number_data()
         ) is not None and last_data.native_value:
             self._attr_native_value = last_data.native_value
+            self._pending_restore = last_data.native_value
             if self._client.state.connected:
-                try:
-                    await self._async_send_position(last_data.native_value)
-                except HomeAssistantError as err:
-                    _LOGGER.debug("Could not restore %s: %s", self.entity_id, err)
+                await self._async_restore_position()
 
         self.async_on_remove(
             self._client.register_rotate_event_callback(self._handle_rotate_event)
         )
+
+    @callback
+    @override
+    def _handle_state_update(self, state: FlicState) -> None:
+        """Hand the restored position back once the session is established."""
+        super()._handle_state_update(state)
+
+        if state.connected and self._pending_restore is not None:
+            self.hass.async_create_task(
+                self._async_restore_position(), eager_start=False
+            )
+
+    async def _async_restore_position(self) -> None:
+        """Write the restored position to the device, once."""
+        value, self._pending_restore = self._pending_restore, None
+        if value is None:
+            return
+
+        try:
+            await self._async_send_position(value)
+        except HomeAssistantError as err:
+            _LOGGER.debug("Could not restore %s: %s", self.entity_id, err)
 
     @callback
     def _handle_rotate_event(self, event_type: str, event_data: dict[str, Any]) -> None:

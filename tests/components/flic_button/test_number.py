@@ -220,3 +220,43 @@ async def test_restore_keeps_position_when_device_rejects_it(
     await setup_twist(hass, mock_config_entry, PushTwistMode.DEFAULT)
 
     assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "40.0"
+
+
+@pytest.mark.usefixtures(
+    "mock_no_ble_device_from_address", "mock_bluetooth_register_callback"
+)
+@pytest.mark.parametrize("device_type", [DeviceType.TWIST])
+async def test_position_restored_when_device_connects_later(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a position restored while offline is sent once the session comes up."""
+    mock_restore_cache_with_extra_data(
+        hass, (_restore(TWIST_POSITION_ENTITY_ID, 40.0),)
+    )
+    mock_flic_client.state.connected = False
+
+    await setup_twist(hass, mock_config_entry, PushTwistMode.DEFAULT)
+
+    mock_flic_client.async_send_update_twist_position.assert_not_awaited()
+
+    state_callbacks = [
+        call.args[0] for call in mock_flic_client.register_state_callback.call_args_list
+    ]
+    mock_flic_client.state.connected = True
+    for cb in state_callbacks:
+        cb(mock_flic_client.state)
+    # A second notification before the first write lands must not queue another
+    for cb in state_callbacks:
+        cb(mock_flic_client.state)
+    await hass.async_block_till_done()
+
+    mock_flic_client.async_send_update_twist_position.assert_awaited_once_with(0, 40.0)
+
+    # A later reconnect must not overwrite what the library already resumed
+    for cb in state_callbacks:
+        cb(mock_flic_client.state)
+    await hass.async_block_till_done()
+
+    mock_flic_client.async_send_update_twist_position.assert_awaited_once_with(0, 40.0)
