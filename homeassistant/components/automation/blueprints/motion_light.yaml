@@ -2,7 +2,7 @@ blueprint:
   name: Motion-activated Light (with Direct Empty-Room Off)
   description: Turns on light when motion detected. Also turns off light after a delay if manually turned on when no motion is present.
   domain: automation
-  source_url: https://github.com/rarunkarthik/home-assistant-core/edit/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  source_url: https://github.com/rarunkarthik/home-assistant-core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
   author: Arun Karthik Ravishankar
   input:
     motion_entity:
