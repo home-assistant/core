@@ -72,7 +72,7 @@ class RepairsFlowManager(
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
         if context is None or "issue_id" not in context:
-            raise KeyError("issue_id was not set in context or data")
+            raise KeyError("issue_id was not set in context")
         issue_id = context["issue_id"]
 
         issue_registry = ir.async_get(self.hass)

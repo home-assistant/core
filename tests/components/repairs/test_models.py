@@ -22,6 +22,8 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.issue_registry as ir
 
+from .test_issue_handler import MockFixFlowContext
+
 from tests.common import (
     AsyncMock,
     Mock,
@@ -44,6 +46,8 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         issue_id: str,
         data: dict[str, str | int | float | None] | None,
     ) -> RepairsFlow:
+        if issue_id == "context_issue":
+            return MockFixFlowContext()
         return MockFixFlowNextFlow()
 
     mock_platform(
@@ -176,3 +180,34 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
 
     assert next_flow_type is flow_type
     assert mock_entry == flow["result"]
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        ["fake_integration"],
+    ],
+)
+async def test_issue_id_setter_getter(hass: HomeAssistant) -> None:
+    """Test RepairFlow issue_id getter/setter with switch to context."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="context_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    result = await repairs.async_init(
+        "fake_integration", context={"issue_id": "context_issue"}
+    )
+
+    assert result["type"] == "form"
+    result = repairs.async_get(result["flow_id"])
+    assert result["context"] == {"issue_id": "context_issue"}
