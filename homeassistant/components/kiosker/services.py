@@ -14,15 +14,10 @@ from kiosker import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    selector,
-)
+from homeassistant.helpers import config_validation as cv, selector, service
 
 from .const import (
     ATTR_BACKGROUND,
@@ -38,7 +33,7 @@ from .const import (
     ATTR_VISIBLE,
     DOMAIN,
 )
-from .coordinator import KioskerDataUpdateCoordinator
+from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
 NAVIGATE_URL_SCHEMA = vol.Schema(
     {
@@ -106,14 +101,10 @@ async def _get_coordinator(
     call: ServiceCall,
 ) -> KioskerDataUpdateCoordinator:
     """Get the coordinator for the targeted device."""
-    device_id: str = call.data[ATTR_DEVICE_ID]
-    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        call.hass, device_id, domain=DOMAIN
+    config_entry: KioskerConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
-    if config_entry is None:
-        raise ServiceValidationError(f"No {DOMAIN} devices found in targeted selection")
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise HomeAssistantError(f"{config_entry.title} is not loaded")
     return config_entry.runtime_data
 
 

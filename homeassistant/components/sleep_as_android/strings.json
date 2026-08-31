@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "reconfigure_successful": "**Reconfiguration was successful**\n\nIn Sleep as Android go to *Settings → Services → Automation → Webhooks* and update the webhook with the following URL:\n\n`{webhook_url}`",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },

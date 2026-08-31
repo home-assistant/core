@@ -240,7 +240,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PRUNE_IMAGES,
@@ -249,7 +249,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
@@ -264,7 +264,9 @@ async def test_service_validation_errors(
         config_entry_id=other_entry.entry_id,
         identifiers={("well_no_portainer_for_sure", "some_identifier")},
     )
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(
+        ServiceValidationError, match=f"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,

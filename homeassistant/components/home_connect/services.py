@@ -20,7 +20,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -167,26 +167,10 @@ SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
 async def _get_client_and_ha_id(
     hass: HomeAssistant, device_id: str
 ) -> tuple[HomeConnectClient, str]:
-    config_entry: HomeConnectConfigEntry | None
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=DOMAIN
+    config_entry: HomeConnectConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id
     )
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_entry_not_found",
-            translation_placeholders={
-                "device_id": device_id,
-            },
-        )
-    if config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={
-                "device_id": device_id,
-            },
-        )
 
     ha_id = next(
         (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),

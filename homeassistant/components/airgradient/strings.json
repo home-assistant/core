@@ -44,11 +44,21 @@
       }
     },
     "select": {
+      "back_led_brightness": {
+        "name": "Back LED brightness",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "mid": "Medium",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "co2_automatic_baseline_calibration": {
         "name": "CO2 automatic baseline duration",
         "state": {
           "0": "[%key:common::state::off%]",
           "1": "1 day",
+          "7": "7 days",
           "8": "8 days",
           "30": "30 days",
           "90": "90 days",
@@ -76,6 +86,23 @@
           "f": "Fahrenheit"
         }
       },
+      "front_led_brightness": {
+        "name": "Front LED brightness",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "mid": "Medium",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "gps_mode": {
+        "name": "GPS mode",
+        "state": {
+          "always": "Always",
+          "off": "[%key:common::state::off%]",
+          "tracking": "Tracking"
+        }
+      },
       "led_bar_mode": {
         "name": "LED bar mode",
         "state": {
@@ -94,6 +121,14 @@
           "720": "720 hours"
         }
       },
+      "touch_led_intensity": {
+        "name": "Touch LED intensity",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "voc_index_learning_time_offset": {
         "name": "VOC index learning offset",
         "state": {
@@ -106,6 +141,15 @@
       }
     },
     "sensor": {
+      "battery_percentage": {
+        "name": "Battery percentage"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "charge_voltage": {
+        "name": "Input voltage"
+      },
       "co2_automatic_baseline_calibration_days": {
         "name": "Carbon dioxide automatic baseline calibration"
       },
@@ -146,6 +190,21 @@
       "pm003_count": {
         "name": "PM0.3"
       },
+      "pm005_count": {
+        "name": "PM0.5 particle count"
+      },
+      "pm01_count": {
+        "name": "PM1 particle count"
+      },
+      "pm02_count": {
+        "name": "PM2.5 particle count"
+      },
+      "pm10_count": {
+        "name": "PM10 particle count"
+      },
+      "pm50_count": {
+        "name": "PM5 particle count"
+      },
       "raw_nitrogen": {
         "name": "Raw NOx"
       },
@@ -163,17 +222,32 @@
       }
     },
     "switch": {
+      "buzzer_enabled": {
+        "name": "Buzzer"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
       "post_data_to_airgradient": {
         "name": "Post data to Airgradient"
       }
     }
   },
   "exceptions": {
+    "busy_error": {
+      "message": "The Airgradient device is busy. Retry the operation later: {error}"
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the Airgradient device: {error}"
     },
+    "forbidden_error": {
+      "message": "The Airgradient device currently rejects local changes: {error}"
+    },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Airgradient device: {error}"
+    },
+    "unsupported_error": {
+      "message": "The Airgradient device does not support this operation: {error}"
     },
     "update_error": {
       "message": "An error occurred while communicating with the Airgradient device: {error}"
