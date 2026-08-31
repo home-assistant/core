@@ -222,6 +222,7 @@ async def test_parent_device_exists(
         (DOMAIN, MOCK_ENTRY_ID), mock_config_entry.entry_id
     )
     assert device_entry == snapshot(name="parent-device")
+    mock_satel.read_panel_info.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
