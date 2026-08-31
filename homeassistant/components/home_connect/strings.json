@@ -32,16 +32,6 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "scopes": {
-        "data": {
-          "images_scope": "Images scope"
-        },
-        "data_description": {
-          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
-        },
-        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
-        "title": "Scopes"
       }
     }
   },
@@ -150,14 +140,6 @@
             }
           }
         }
-      }
-    },
-    "image": {
-      "door_right_camera": {
-        "name": "Door right camera"
-      },
-      "interior_right_camera": {
-        "name": "Interior right camera"
       }
     },
     "light": {
@@ -1600,9 +1582,6 @@
     },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
-    },
-    "fetch_image_error": {
-      "message": "Error obtaining image from the API: {error}"
     },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"

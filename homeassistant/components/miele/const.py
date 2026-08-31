@@ -466,6 +466,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     table_linen = 33
     outerwear = 37
     pillows = 39
+    towels = 44
     cool_air = 45  # washer-dryer
     warm_air = 46  # washer-dryer
     rinse_out_lint = 48  # washer-dryer
