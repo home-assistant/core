@@ -431,10 +431,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     resolved = True
                     return
                 try:
-                    self._clear_pending_if_current(pending)
+                    # Merge the device result first, then drop the optimistic
+                    # value: clearing it before the merge would briefly surface
+                    # the stale register reading and emit a rollback state event.
                     self.coordinator.async_set_updated_data(
                         {**self.coordinator.data, **overrides}
                     )
+                    self._clear_pending_if_current(pending)
                     self.coordinator.request_refresh_with_followup()
                 except Exception as err:  # noqa: BLE001
                     # A merge/refresh error after the device write must reach the
