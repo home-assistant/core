@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, LOGGER
+from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
@@ -119,7 +119,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
                 device = new_device
                 connected = await hass.async_add_executor_job(_connect, device)
         if not connected:
-            raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_connect",
+                translation_placeholders={"device_id": str(device_id)},
+            )
 
     # The library's reconnect loop keeps retrying with a growing backoff
     # (up to 600s) without checking for a stop request while sleeping, so
