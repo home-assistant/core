@@ -98,16 +98,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
                 translation_key="cannot_connect",
             ) from err
 
-        self._async_persist_token()
-
-        return ZonneplanData(
-            account=account,
-            electricity_prices=electricity_prices,
-            gas_prices=gas_prices,
-        )
-
-    def _async_persist_token(self) -> None:
-        """Persist a rotated refresh token to the config entry."""
         if TYPE_CHECKING:
             assert self.zonneplan.token is not None
 
@@ -117,3 +107,9 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
                 self.config_entry,
                 data={**self.config_entry.data, CONF_TOKEN: token},
             )
+
+        return ZonneplanData(
+            account=account,
+            electricity_prices=electricity_prices,
+            gas_prices=gas_prices,
+        )
