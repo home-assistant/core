@@ -1235,7 +1235,7 @@ h2==4.3.0
 ha-ffmpeg==3.2.2
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.2.1
+ha-iotawattpy==0.3.0
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.5
