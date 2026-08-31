@@ -402,7 +402,6 @@ async def test_cct_light_reflects_active_color_mode(
     """Test reporting the active color mode for an RGB+CCT segment."""
     device = mock_wled.update.return_value
 
-    # A color is active on the segment (RGB non-zero) -> report RGBW and expose it
     device.state.segments[0].color = Color(primary=(255, 0, 0, 0))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
