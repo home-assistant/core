@@ -1,11 +1,11 @@
 """Support for Sofar sensors."""
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import IntEnum, IntFlag
 import re
-from typing import cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from sofar_modbus.modern import enums
 from sofar_modbus.modern.device import SofarInverter
@@ -44,9 +44,16 @@ _NO_FAULT = "no_fault"
 
 def _fault_option(member: IntFlag) -> str:
     """The vendor fault ID a flag member is keyed by."""
-    match = _FAULT_ID.match(member.name or "")
+    if TYPE_CHECKING:
+        assert member.name is not None
+    match = _FAULT_ID.match(member.name)
     assert match is not None
     return match.group(1).lower()
+
+
+def _fault_members(flags: Iterable[IntFlag]) -> list[IntFlag]:
+    """Every member, lowest bit value first, regardless of declaration order."""
+    return sorted(flags, key=lambda m: m.value)
 
 
 async def async_setup_entry(
@@ -133,7 +140,9 @@ class SofarSensor(SofarEntity, SensorEntity):
             return value.name.lower()
         # Only the first fault fits one state; the rest are an attribute.
         if isinstance(value, IntFlag):
-            return next((_fault_option(member) for member in value), _NO_FAULT)
+            return next(
+                (_fault_option(member) for member in _fault_members(value)), _NO_FAULT
+            )
         return cast(str | int | float | date | None, value)
 
     @property
@@ -144,7 +153,9 @@ class SofarSensor(SofarEntity, SensorEntity):
         value = getattr(component, self.entity_description.key)
         if not isinstance(value, IntFlag):
             return None
-        return {"active_faults": [_fault_option(member) for member in value]}
+        return {
+            "active_faults": [_fault_option(member) for member in _fault_members(value)]
+        }
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -336,7 +347,10 @@ def _fault_sensors() -> tuple[SofarSensorDescription, ...]:
             device_class=SensorDeviceClass.ENUM,
             options=[
                 _NO_FAULT,
-                *(_fault_option(member) for member in getattr(enums, f"Fault{n}")),
+                *(
+                    _fault_option(member)
+                    for member in _fault_members(getattr(enums, f"Fault{n}"))
+                ),
             ],
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=n <= 12,
