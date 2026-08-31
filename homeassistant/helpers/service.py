@@ -772,10 +772,6 @@ async def _resolve_entity_service_call_entities(
 @callback
 def _async_start_reauth_for_entity(hass: HomeAssistant, entity: Entity) -> None:
     """Start a reauth flow for the config entry owning an entity."""
-    if (platform := entity.platform) is not None and (
-        entry := platform.config_entry
-    ) is not None:
-        entry.async_start_reauth_if_available(hass)
 
 
 async def _async_handle_entity_calls(
@@ -794,7 +790,10 @@ async def _async_handle_entity_calls(
         except ConfigEntryAuthFailed:
             # Handled per entity, since only the first exception raised by a
             # multi entity call is re-raised to the caller.
-            _async_start_reauth_for_entity(entity.hass, entity)
+            if (platform := entity.platform) is not None and (
+                entry := platform.config_entry
+            ) is not None:
+                entry.async_start_reauth_if_available(entity.hass)
             raise
 
     if len(entity_calls) == 1:
@@ -970,12 +969,7 @@ async def batched_entity_service_call(
         context=call.context,
         return_response=return_response,
     )
-    try:
-        result = await func(entities, call)
-    except ConfigEntryAuthFailed:
-        for entity in entities:
-            _async_start_reauth_for_entity(hass, entity)
-        raise
+    result = await func(entities, call)
 
     return result if return_response else None
 

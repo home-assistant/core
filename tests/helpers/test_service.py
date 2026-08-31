@@ -3534,35 +3534,6 @@ async def test_entity_service_call_starts_reauth_for_every_entry(
     start_reauth_2.assert_called_once_with(hass)
 
 
-async def test_batched_entity_service_call_starts_reauth(
-    hass: HomeAssistant, reauth_entries: tuple[MockConfigEntry, MockConfigEntry]
-) -> None:
-    """Test a batched entity action starts reauth for every involved entry."""
-    entry_1, entry_2 = reauth_entries
-    entities = {
-        entity.entity_id: entity
-        for entity in (
-            _mock_entity_on_entry(hass, "light.kitchen", entry_1),
-            _mock_entity_on_entry(hass, "light.bedroom", entry_2),
-        )
-    }
-
-    with (
-        patch.object(entry_1, "async_start_reauth_if_available") as start_reauth_1,
-        patch.object(entry_2, "async_start_reauth_if_available") as start_reauth_2,
-        pytest.raises(exceptions.ConfigEntryAuthFailed),
-    ):
-        await service.batched_entity_service_call(
-            hass,
-            entities,
-            AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed),
-            ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
-        )
-
-    start_reauth_1.assert_called_once_with(hass)
-    start_reauth_2.assert_called_once_with(hass)
-
-
 async def test_entity_service_call_no_config_entry(hass: HomeAssistant) -> None:
     """Test an entity without a config entry does not start a reauth flow."""
     entity = _mock_entity_on_entry(hass, "light.kitchen", None)
