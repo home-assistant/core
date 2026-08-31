@@ -8,6 +8,7 @@ from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
+import threading
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -15,7 +16,7 @@ from aiohttp import ClientError
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
-from soco.core import SoCo
+from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -70,6 +71,13 @@ CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
 DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
+SHUTDOWN_TIMEOUT = 10
+
+
+def _get_soco_uid(soco: SoCo) -> str:
+    """Get SoCo uid as a typed helper for executor jobs."""
+    return soco.uid
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -114,6 +122,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
+    _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
+    soco_reset()
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
@@ -153,6 +163,8 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    soco_reset()
+    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
     return unload_ok
 
 
@@ -176,10 +188,28 @@ class SonosDiscoveryManager:
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
+        self._stop_event = threading.Event()
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
+        self._stop_event.set()
+        # Stop the event listener first so new topology events cannot schedule
+        # additional async_add_speakers runs while shutdown is waiting for
+        # creation_lock to drain existing work.
         await self._async_stop_event_listener()
+        # Wait for any in-flight _add_speakers executor job to finish before
+        # tearing down speakers and the event listener. Every async_add_speakers
+        # call holds creation_lock for its entire duration (including blocking
+        # network IO), so acquiring it here serializes cleanup after creation.
+        # Bound the wait so shutdown stays responsive under poor network conditions.
+        try:
+            async with asyncio.timeout(SHUTDOWN_TIMEOUT):
+                async with self.creation_lock:
+                    pass
+        except TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for in-flight speaker discovery to complete"
+            )
         self._stop_manual_heartbeat()
 
     def is_device_invisible(self, ip_address: str) -> bool:
@@ -260,8 +290,11 @@ class SonosDiscoveryManager:
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
-                if zone.uid not in self.data.discovered:
-                    zones_to_add.add(zone)
+                if zone.uid in self.data.discovered or self.is_device_disabled(
+                    zone.uid
+                ):
+                    continue
+                zones_to_add.add(zone)
 
             if not zones_to_add:
                 return
@@ -389,6 +422,13 @@ class SonosDiscoveryManager:
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
+                if self._stop_event.is_set():
+                    # Entry was unloaded during IO; skip adding this speaker.
+                    _LOGGER.debug(
+                        "Config entry unloaded while adding speakers speaker %s, skipping",
+                        soco.uid,
+                    )
+                    return
                 self._add_speaker(soco, sub)
 
         async with self.creation_lock:
@@ -400,6 +440,12 @@ class SonosDiscoveryManager:
         """Create and set up a new SonosSpeaker instance."""
         try:
             speaker_info = soco.get_speaker_info(True, timeout=7)
+            if self._stop_event.is_set():
+                # Entry was unloaded during IO; skip adding this speaker.
+                _LOGGER.debug(
+                    "Config entry unloaded while adding speaker %s, skipping", soco.uid
+                )
+                return
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
@@ -491,9 +537,11 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-            if not known_speaker:
+            if known_speaker:
+                uid = known_speaker.uid
+            else:
                 try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                    uid = await self.hass.async_add_executor_job(_get_soco_uid, soco)
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -505,6 +553,14 @@ class SonosDiscoveryManager:
                 ) as ex:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
                     continue
+
+            if self.is_device_disabled(uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    uid,
+                )
+                continue
+            if not known_speaker:
                 try:
                     await self._async_handle_discovery_message(
                         uid,
@@ -536,6 +592,16 @@ class SonosDiscoveryManager:
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
         )
 
+    def is_device_disabled(self, uid: str) -> bool:
+        """Check if the Sonos device is disabled in the device registry."""
+        if not (
+            device := dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, uid), self.entry.entry_id
+            )
+        ):
+            return False
+        return device.disabled
+
     async def _async_handle_discovery_message(
         self,
         uid: str,
@@ -544,6 +610,10 @@ class SonosDiscoveryManager:
         boot_seqnum: int | None = None,
     ) -> None:
         """Handle discovered player creation and activity."""
+        if self.is_device_disabled(uid):
+            _LOGGER.debug("Skipping %s for disabled Sonos device: %s", source, uid)
+            return
+
         async with self.discovery_lock:
             if not self.data.discovered:
                 # Initial discovery, attempt to add all visible zones
@@ -670,7 +740,7 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
     known_devices = config_entry.runtime_data.discovered.keys()

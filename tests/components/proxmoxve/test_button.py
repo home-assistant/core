@@ -1,5 +1,6 @@
 """Tests for the ProxmoxVE button platform."""
 
+import re
 from unittest.mock import MagicMock, patch
 
 from proxmoxer import AuthenticationError
@@ -11,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import AUDIT_PERMISSIONS, setup_integration
@@ -112,7 +113,7 @@ async def test_node_all_actions_buttons(
         ("button.vm_web_start", 100, "start"),
         ("button.vm_web_stop", 100, "stop"),
         ("button.vm_web_restart", 100, "reboot"),
-        ("button.vm_web_hibernate", 100, "hibernate"),
+        ("button.vm_web_suspend", 100, "suspend"),
         ("button.vm_web_reset", 100, "reset"),
         ("button.vm_web_shut_down", 100, "shutdown"),
     ],
@@ -142,48 +143,42 @@ async def test_vm_buttons(
     assert len(method_mock.mock_calls) == pre_calls + 1
 
 
-async def test_vm_snapshot_button(
+@pytest.mark.parametrize(
+    ("entity_id", "vmid", "guest_resource"),
+    [
+        pytest.param("button.vm_web_create_snapshot", 100, "qemu", id="vm"),
+        pytest.param("button.ct_nginx_create_snapshot", 200, "lxc", id="container"),
+    ],
+)
+async def test_snapshot_button(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    vmid: int,
+    guest_resource: str,
 ) -> None:
-    """Test pressing a ProxmoxVE VM snapshot button triggers the correct API call."""
+    """Test a ProxmoxVE snapshot button triggers the correct API call."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_proxmox_client._node_mock.qemu(100)
-    method_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
+    node = mock_proxmox_client.nodes("pve1")
+    method_mock = getattr(node, guest_resource)(vmid).snapshot.post
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.vm_web_create_snapshot"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     assert len(method_mock.mock_calls) == pre_calls + 1
 
-
-async def test_container_snapshot_button(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test ProxmoxVE container snapshot button API call."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_proxmox_client._node_mock.lxc(200)
-    method_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
-    pre_calls = len(method_mock.mock_calls)
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.ct_nginx_create_snapshot"},
-        blocking=True,
-    )
-
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    # Proxmox validates the name as a `pve-configid` of at most 40 characters:
+    # two or more, starting with a letter, then only [A-Za-z0-9_-]
+    name = method_mock.call_args.kwargs["name"]
+    assert len(name) <= 40
+    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", name)
 
 
 @pytest.mark.parametrize(
@@ -268,9 +263,9 @@ async def test_node_buttons_exceptions(
             SSLError("ssl error"),
         ),
         (
-            "button.vm_web_hibernate",
+            "button.vm_web_suspend",
             100,
-            "hibernate",
+            "suspend",
             ConnectTimeout("timeout"),
         ),
         (
@@ -362,61 +357,19 @@ async def test_container_buttons_exceptions(
         )
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "translation_key"),
-    [
-        ("button.pve1_shut_down", "no_permission_node_power"),
-        ("button.pve1_start_all", "no_permission_vm_lxc_power"),
-        ("button.ct_nginx_start", "no_permission_vm_lxc_power"),
-        ("button.vm_web_start", "no_permission_vm_lxc_power"),
-        ("button.vm_web_create_snapshot", "no_permission_snapshot"),
-    ],
-)
-async def test_node_buttons_permission_denied_for_auditor_role(
+async def test_buttons_only_allowed_buttons(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    translation_key: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that buttons are raising accordingly for Auditor permissions."""
+    """Test that ProxmoxVE button is not generated when not allowed."""
     mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
 
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == translation_key
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
-
-@pytest.mark.parametrize(
-    ("entity_id", "translation_key"),
-    [
-        ("button.vm_db_start", "no_permission_vm_lxc_power"),
-        ("button.vm_db_create_snapshot", "no_permission_snapshot"),
-    ],
-)
-async def test_vm_buttons_denied_for_specific_vm(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    translation_key: str,
-) -> None:
-    """Test that button only works on actual permissions."""
-    await setup_integration(hass, mock_config_entry)
-    mock_proxmox_client._node_mock.qemu(101)
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == translation_key
+    assert all(not entry.entity_id.startswith("button.") for entry in entries)

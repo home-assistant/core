@@ -28,8 +28,8 @@ async def test_sensor(
 
     # Check devices
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{APP_ID}_{DEVICE_ID}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{APP_ID}_{DEVICE_ID}"), mock_config_entry.entry_id
         ).name
         == DEVICE_ID
     )

@@ -28,6 +28,11 @@
     }
   },
   "entity": {
+    "button": {
+      "silence": {
+        "name": "Silence alarm"
+      }
+    },
     "event": {
       "event": {
         "name": "Event",
@@ -69,6 +74,9 @@
       },
       "temperature_target": {
         "name": "Target temperature"
+      },
+      "timer": {
+        "name": "Timer"
       }
     },
     "select": {

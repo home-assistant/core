@@ -11,7 +11,11 @@ from nextcloudmonitor import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 
 from .const import DEFAULT_VERIFY_SSL, DOMAIN
@@ -46,8 +50,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
 
-    @override
-    async def async_step_user(
+    async def async_step_config(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -62,15 +65,36 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             except NextcloudMonitorConnectionError, NextcloudMonitorRequestError:
                 errors["base"] = "connection_error"
             else:
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title=user_input[CONF_URL],
                     data=user_input,
                 )
 
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA_USER, user_input)
+        data = user_input
+        if self.source == SOURCE_RECONFIGURE:
+            data = data or dict(self._get_reconfigure_entry().data)
+
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA_USER, data)
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="config", data_schema=data_schema, errors=errors
         )
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        return await self.async_step_config(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfigure flow initialized by the user."""
+        return await self.async_step_config(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

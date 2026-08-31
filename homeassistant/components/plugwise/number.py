@@ -30,14 +30,14 @@ class PlugwiseNumberEntityDescription(NumberEntityDescription):
 
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
-        key="maximum_boiler_temperature",
+        key="boiler_temperature",
         translation_key="maximum_boiler_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     PlugwiseNumberEntityDescription(
-        key="max_dhw_temperature",
+        key="dhw_temperature",
         translation_key="max_dhw_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -94,7 +94,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
-        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_unique_id = f"{device_id}-{description.translation_key}"
         self.device_id = device_id
         self.entity_description = description
 

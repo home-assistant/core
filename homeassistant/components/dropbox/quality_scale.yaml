@@ -52,7 +52,9 @@ rules:
     status: exempt
     comment: Integration does not have any entities.
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable:
+    status: exempt
+    comment: Integration does not have any entities.
   parallel-updates:
     status: exempt
     comment: Integration does not make any entity updates.
@@ -78,12 +80,12 @@ rules:
   docs-examples:
     status: exempt
     comment: Integration only provides backup functionality.
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: Integration does not support any devices.
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -100,11 +102,11 @@ rules:
   entity-translations:
     status: exempt
     comment: Integration does not have any entities.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Integration does not have any entities.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not have any repairs.

@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -24,6 +24,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputBooleanEntityStateAttribute
 
 DOMAIN = "input_boolean"
 
@@ -146,7 +148,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputBooleanEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -190,7 +192,7 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self.editable}
+        return {InputBooleanEntityStateAttribute.EDITABLE: self.editable}
 
     @override
     async def async_added_to_hass(self) -> None:

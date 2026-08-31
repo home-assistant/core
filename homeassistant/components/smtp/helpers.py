@@ -5,12 +5,15 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
+import mimetypes
 import os
 from pathlib import Path
 import smtplib
 import socket
 import ssl
 
+from homeassistant.components import camera, image, tts
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -192,3 +195,38 @@ def _build_html_msg(
         if attachment:
             msg.attach(attachment)
     return msg
+
+
+async def _resolve_media(
+    hass: HomeAssistant, media_source: dict[str, str]
+) -> tuple[bytes, str | None, str | None]:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return snapshot.content, snapshot.content_type, None
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image.async_get_image(hass, entity_id)
+        return img.content, img.content_type, None
+
+    if media_content_id.startswith("media-source://tts/"):
+        ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
+        return audio, mimetypes.types_map.get("." + ext), None
+
+    media = await async_resolve_media(hass, media_source["media_content_id"], None)
+
+    if media.path is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="media_source_not_supported",
+            translation_placeholders={"media_content_id": media_content_id},
+        )
+
+    return (
+        await hass.async_add_executor_job(media.path.read_bytes),
+        media.mime_type,
+        media.path.name,
+    )

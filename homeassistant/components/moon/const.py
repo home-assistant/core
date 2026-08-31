@@ -8,3 +8,5 @@ DOMAIN: Final = "moon"
 PLATFORMS: Final = [Platform.SENSOR]
 
 DEFAULT_NAME: Final = "Moon"
+
+CONF_PHASE: Final = "phase"

@@ -6,8 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
@@ -19,12 +19,11 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
@@ -272,7 +271,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         ] = bool
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
 
             if user_input[CONF_RECOMMENDED]:
@@ -295,7 +294,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 ):
                     self.options.pop(CONF_LLM_HASS_API)
                 if not errors:
-                    return await self.async_step_advanced()
+                    return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -305,10 +304,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors or None,
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -357,7 +356,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),
@@ -569,8 +568,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "user",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
@@ -578,7 +577,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **convert(location_schema),
+                            **to_openapi(location_schema),
                             "additionalProperties": False,
                         },
                     }

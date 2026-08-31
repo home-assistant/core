@@ -222,18 +222,18 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(conn)
             try:
                 device_info = client.device.information()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get device.information", exc_info=True)
                 try:
                     device_info = client.device.basic_information()
-                except Exception:  # noqa: BLE001
+                except Exception:
                     _LOGGER.debug(
                         "Could not get device.basic_information", exc_info=True
                     )
                     device_info = {}
             try:
                 wlan_settings = client.wlan.multi_basic_settings()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
                 wlan_settings = {}
             return device_info, wlan_settings
@@ -245,11 +245,14 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         assert conn
 
+        def _get_info_and_disconnect() -> tuple[dict, dict]:
+            result = get_device_info(conn)
+            self._disconnect(conn)
+            return result
+
         info, wlan_settings = await self.hass.async_add_executor_job(
-            get_device_info, conn
+            _get_info_and_disconnect
         )
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {

@@ -15,11 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -48,11 +44,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -69,7 +68,7 @@ from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
-    CONF_ADVANCED,
+    CONF_ADDITIONAL,
     CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
@@ -118,7 +117,7 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_HEADERS): ObjectSelector(),
@@ -147,23 +146,14 @@ SENSOR_SETTINGS = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
                     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
                     vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="device_class",
-                            sort=True,
-                        )
+                    vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                        DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     vol.Optional(CONF_STATE_CLASS): SelectSelector(
                         SelectSelectorConfig(
@@ -200,7 +190,7 @@ async def validate_rest_setup(
 ) -> dict[str, Any]:
     """Validate rest setup."""
     config = deepcopy(user_input)
-    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_ADDITIONAL, {}))
     config.update(config.pop(CONF_AUTH, {}))
     rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
@@ -217,7 +207,7 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback

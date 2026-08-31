@@ -184,9 +184,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self,
         label_id: str,
         *,
-        color: str | None | UndefinedType = UNDEFINED,
-        description: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        color: str | UndefinedType | None = UNDEFINED,
+        description: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> LabelEntry:
         """Update name of label."""
@@ -269,6 +269,17 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 def async_get(hass: HomeAssistant) -> LabelRegistry:
     """Get label registry."""
     return LabelRegistry(hass)
+
+
+@callback
+def async_get_missing_label_ids(
+    hass: HomeAssistant, label_ids: Iterable[str]
+) -> set[str]:
+    """Return the label ids which are missing from the label registry."""
+    registry = async_get(hass)
+    return {
+        label_id for label_id in label_ids if registry.async_get_label(label_id) is None
+    }
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
