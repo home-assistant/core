@@ -470,9 +470,6 @@
       },
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
-      },
-      "waiting_ends": {
-        "name": "Waiting ends"
       }
     }
   },

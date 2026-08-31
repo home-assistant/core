@@ -27,6 +27,16 @@ from .sensor import SENSOR_DESCRIPTIONS
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
+    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
+    )
+    if entity_id is not None:
+        registry.async_remove(entity_id)
+
+
 def _async_seed_high_water_marks(
     hass: HomeAssistant, serial: str, device: SofarInverter
 ) -> None:
@@ -55,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     """Set up Sofar Inverter Modbus from a config entry."""
     serial = entry.unique_id
     assert serial is not None
+    _async_remove_stale_waiting_time(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(

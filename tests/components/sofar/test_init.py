@@ -81,6 +81,33 @@ async def test_setup_and_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_setup_removes_the_stale_waiting_time_entity(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an upgrade drops the removed waiting-time entity too."""
+    mock_config_entry.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL}_waiting_time",
+        config_entry=mock_config_entry,
+    )
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(entry.entity_id) is None
+
+
 async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     hass: HomeAssistant,
 ) -> None:
