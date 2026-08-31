@@ -185,10 +185,10 @@ async def test_work_area_sensor_creation(
     assert state.state == STATE_UNKNOWN
 
     values[TEST_MOWER_ID].work_area_names.append("new random work area")
-    values[TEST_MOWER_ID].work_area_dict.update({1: "new random work area"})
+    values[TEST_MOWER_ID].work_area_dict.update({2: "new random work area"})
     values[TEST_MOWER_ID].work_areas.update(
         {
-            1: WorkArea(
+            2: WorkArea(
                 name="new random work area",
                 cutting_height=12,
                 enabled=True,
