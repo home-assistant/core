@@ -3,6 +3,7 @@
 from datetime import timedelta
 import gzip
 from http import HTTPStatus
+import math
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -279,6 +280,10 @@ async def test_tilejson_maxzoom_is_clamped(
         pytest.param(
             {"json": {**UPSTREAM_TILEJSON, "maxzoom": None}},
             id="maxzoom not numeric",
+        ),
+        pytest.param(
+            {"json": {**UPSTREAM_TILEJSON, "minzoom": math.inf}},
+            id="minzoom not finite",
         ),
     ],
 )

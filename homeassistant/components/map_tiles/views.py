@@ -290,9 +290,10 @@ class MapTilesTileJsonView(_MapTilesView):
     async def _async_fetch(self, url: str) -> Asset | None:
         """Fetch the upstream TileJSON and republish it as ours.
 
-        The zoom range and attribution are taken from upstream rather than
-        hardcoded; the advertised tile endpoint is replaced with this proxy's
-        own path, which is pinned (the vector fetch URL does not follow it).
+        The zoom range is taken from upstream (clamped to what we serve); the
+        attribution and the advertised tile endpoint are replaced with this
+        proxy's own. The tile endpoint is pinned, so the vector fetch URL does
+        not follow the upstream template.
         """
         if (asset := await super()._async_fetch(url)) is None:
             return None
@@ -318,8 +319,8 @@ class MapTilesTileJsonView(_MapTilesView):
             maxzoom = min(
                 int(tilejson.get("maxzoom", VECTOR_MAX_ZOOM)), VECTOR_MAX_ZOOM
             )
-        except TypeError, ValueError:
-            _LOGGER.error("Upstream TileJSON zoom range is not numeric")
+        except TypeError, ValueError, OverflowError:
+            _LOGGER.error("Upstream TileJSON zoom range is not a finite number")
             return None
 
         # The only body built locally, so the only one this integration gzips.
