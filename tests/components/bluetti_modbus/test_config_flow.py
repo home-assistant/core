@@ -151,6 +151,9 @@ async def test_user_flow_already_configured(
 ) -> None:
     """Setting up the same host, port and unit id twice aborts."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="another-device"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
