@@ -124,7 +124,8 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data = dict(self._get_reconfigure_entry().data)
         self._sensors = dict(self._data.pop(CONF_SENSORS, {}))
         return self.async_show_menu(
-            step_id="reconfigure", menu_options=["sensor", "change_id"]
+            step_id="reconfigure",
+            menu_options=["sensor", "change_id", "remove_sensor"],
         )
 
     async def async_step_change_id(
@@ -183,6 +184,43 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             device_registry.async_update_device(
                 device.id, new_identifiers={(DOMAIN, f"{receiver}_{new_id}")}
             )
+
+    def _async_remove_device(self, sensor_id: int) -> None:
+        """Remove the device registry entry of a removed sensor."""
+        receiver = self._data[CONF_DEVICE]
+        device_registry = dr.async_get(self.hass)
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{receiver}_{sensor_id}"), self._get_reconfigure_entry().entry_id
+        ):
+            device_registry.async_remove_device(device.id)
+
+    async def async_step_remove_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Remove a sensor and its device from the receiver."""
+        if user_input is not None:
+            sensor_id = int(user_input[CONF_ID])
+            self._sensors = {
+                key: sensor
+                for key, sensor in self._sensors.items()
+                if sensor[CONF_ID] != sensor_id
+            }
+            self._async_remove_device(sensor_id)
+            return await self.async_step_finish()
+
+        sensor_ids = sorted(
+            {str(sensor[CONF_ID]) for sensor in self._sensors.values()}, key=int
+        )
+        return self.async_show_form(
+            step_id="remove_sensor",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ID): SelectSelector(
+                        SelectSelectorConfig(options=sensor_ids)
+                    ),
+                }
+            ),
+        )
 
     async def async_step_sensor(
         self, user_input: dict[str, Any] | None = None

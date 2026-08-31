@@ -28,7 +28,16 @@
       "reconfigure": {
         "menu_options": {
           "change_id": "Change the ID of a sensor",
+          "remove_sensor": "Remove a sensor",
           "sensor": "Add another sensor"
+        }
+      },
+      "remove_sensor": {
+        "data": {
+          "id": "Sensor ID"
+        },
+        "data_description": {
+          "id": "The sensor to remove, along with its device."
         }
       },
       "sensor": {
