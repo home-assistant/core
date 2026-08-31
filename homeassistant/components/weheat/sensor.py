@@ -49,8 +49,9 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
     value_fn: Callable[[HeatPump], StateType | datetime]
-    # Codes the library cannot name decode to None, so probe the raw log field to
-    # tell "not reported by this heat pump" apart from "reported but not recognised".
+    # A raw log field that value_fn reads, whose presence decides whether the heat
+    # pump supports this sensor. Needed where value_fn can return None for a value
+    # the heat pump does report, such as a code the library cannot name.
     raw_field: str | None = None
 
 
@@ -225,7 +226,6 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="last_cooling_time",
         key="last_cooling_time",
-        raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda status: status.last_cooling_time,
     ),
@@ -256,7 +256,7 @@ SENSORS = [
         translation_key="cooling_state",
         key="cooling_state",
         device_class=SensorDeviceClass.ENUM,
-        raw_field="cooling_start_conditions",
+        raw_field="cooling_pause_reason",
         options=[
             *(state.name.lower() for state in HeatPump.CoolingState),
             "paused",
@@ -298,7 +298,6 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="cooling_available_from",
         key="cooling_available_from",
-        raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda status: status.cooling_available_from,
     ),
