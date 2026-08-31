@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from mysensors import BaseSyncGateway
 from mysensors.sensor import Sensor
+import pytest
 
 from homeassistant.components.mysensors import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -59,6 +60,32 @@ async def test_load_unload(
 
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("door_sensor")
+async def test_reload(
+    hass: HomeAssistant,
+    transport: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test reloading the MySensors config entry recreates entities."""
+    config_entry = integration
+
+    entity_id = "binary_sensor.door_sensor_1_1"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert transport.return_value.disconnect.call_count == 1
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_remove_config_entry_device(
