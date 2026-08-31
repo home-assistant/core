@@ -286,8 +286,8 @@ class LunatoneLineBroadcastLight(
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return not all(
-            device.data.line == self._broadcast.line and not device.is_on
+        return any(
+            device.data.line == self._broadcast.line and device.is_on
             for device in self.coordinator.data.values()
         )
 

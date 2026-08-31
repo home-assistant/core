@@ -189,6 +189,15 @@ def build_device_data_list() -> list[DeviceData]:
             address=4,
             line=0,
         ),
+        DeviceData(
+            id=6,
+            name="Device 5",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(switchable=Status[bool](status=False)),
+            address=0,
+            line=1,
+        ),
     ]
 
 
