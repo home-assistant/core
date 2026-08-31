@@ -51,7 +51,7 @@ class RepairsFlow(
         if "issue_id" in self.context:
             return self.context["issue_id"]
         # Avoid breaking changes in legacy custom integrations that may access
-        # this propertyprior to the flow manager running async_create_flow
+        # this property prior to the flow manager applying the context in async_create_flow.
         return self._issue_id
 
     @issue_id.setter
@@ -59,7 +59,7 @@ class RepairsFlow(
         """Allow legacy implementations to set issue_id.
 
         Setter is retained to avoid breaking changes in custom integrations that may set issue_id in a RepairFlow
-        prior to the flow manager applying the context (self.issue_id will be a valid value).
+        prior to the flow manager applying the context.
         """
         self._issue_id = issue_id
 
