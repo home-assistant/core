@@ -86,10 +86,12 @@ async def test_binary_sensors(
     assert sensor.attributes["device_class"] == "motion"
 
     # test entertainment room active sensor
-    sensor = hass.states.get("binary_sensor.philips_hue_entertainmentroom_1")
+    sensor = hass.states.get(
+        "binary_sensor.philips_hue_entertainment_area_entertainmentroom_1"
+    )
     assert sensor is not None
     assert sensor.state == "off"
-    assert sensor.name == "Philips hue Entertainmentroom 1"
+    assert sensor.name == "Philips hue Entertainment area Entertainmentroom 1"
     assert sensor.attributes["device_class"] == "running"
 
     # test contact sensor
@@ -242,6 +244,46 @@ async def test_grouped_motion_sensor(
     await hass.async_block_till_done()
     sensor = hass.states.get("binary_sensor.sensor_group_motion")
     assert sensor.state == "unknown"
+
+
+async def test_entertainment_active_sensor(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test HueEntertainmentActiveSensor functionality."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
+
+    test_entity_id = "binary_sensor.philips_hue_entertainment_area_entertainmentroom_1"
+    sensor = hass.states.get(test_entity_id)
+    assert sensor is not None
+    assert sensor.state == "off"
+
+    # test the sensor turns on once the entertainment area becomes active
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
+            "type": "entertainment_configuration",
+            "status": "active",
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(test_entity_id).state == "on"
+
+    # test the name follows a rename of the entertainment area in the Hue app
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
+            "type": "entertainment_configuration",
+            "metadata": {"name": "Entertainmentroom 2"},
+        },
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(test_entity_id).name
+        == "Philips hue Entertainment area Entertainmentroom 2"
+    )
 
 
 async def test_motion_aware_sensor(

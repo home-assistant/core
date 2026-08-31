@@ -27,6 +27,12 @@ from .models import MatterDiscoverySchema
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
 
+# Cover state is derived from both the operational status and the current
+# position, which some devices report as separate attribute updates shortly
+# after each other (e.g. stopped before the final position). Debounce state
+# writes to avoid writing intermittent states.
+STATE_WRITE_DEBOUNCE_COOLDOWN = 0.1
+
 # map Matter window cover types to HA device class
 TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
@@ -69,6 +75,7 @@ class MatterCoverEntityDescription(CoverEntityDescription, MatterEntityDescripti
 class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
+    _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
     entity_description: MatterCoverEntityDescription
 
     @property

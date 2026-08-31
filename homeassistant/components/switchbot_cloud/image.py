@@ -1,6 +1,5 @@
 """Support for the Switchbot Image."""
 
-import datetime
 from typing import override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
@@ -9,6 +8,7 @@ from switchbot_api.utils import get_file_stream_from_cloud
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
@@ -60,7 +60,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        self._attr_image_last_updated = datetime.datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        self._attr_image_last_updated = dt_util.utcnow()
         self._attr_image_url = self.coordinator.data.get("imageUrl")
 
 

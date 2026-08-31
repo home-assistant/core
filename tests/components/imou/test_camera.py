@@ -126,13 +126,13 @@ async def test_no_camera_without_channel(
 async def test_camera_stream_source(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
     camera_key: str,
     expected_resolution: str,
 ) -> None:
     """Fetching stream source calls the vendor library with the entity resolution."""
-    init_integration.async_get_device_stream.return_value = TEST_STREAM_URL
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
 
     entity_id = _camera_entity_id(
         entity_registry, mock_config_entry, camera_key=camera_key
@@ -140,8 +140,8 @@ async def test_camera_stream_source(
     stream_source = await async_get_stream_source(hass, entity_id)
 
     assert stream_source == TEST_STREAM_URL
-    init_integration.async_get_device_stream.assert_awaited_once()
-    call = init_integration.async_get_device_stream.await_args
+    mock_imou_ha_device_manager.async_get_device_stream.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_get_device_stream.await_args
     assert call is not None
     assert call.args[1] == expected_resolution
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
@@ -165,18 +165,18 @@ async def test_camera_stream_source(
 async def test_camera_image(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Still image fetch calls the vendor library with the configured wait time."""
-    init_integration.async_get_device_image.return_value = TEST_IMAGE_BYTES
+    mock_imou_ha_device_manager.async_get_device_image.return_value = TEST_IMAGE_BYTES
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     image = await async_get_image(hass, entity_id)
 
     assert image.content == TEST_IMAGE_BYTES
-    init_integration.async_get_device_image.assert_awaited_once()
-    call = init_integration.async_get_device_image.await_args
+    mock_imou_ha_device_manager.async_get_device_image.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_get_device_image.await_args
     assert call is not None
     assert call.args[1] == PYIMOUAPI_SNAPSHOT_WAIT_SECONDS
 
@@ -286,17 +286,54 @@ async def test_camera_state(
 async def test_camera_stream_source_propagates_api_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Imou API errors from stream fetch surface to the caller."""
-    init_integration.async_get_device_stream.side_effect = ImouException(
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = ImouException(
         "stream failure"
     )
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="stream failure"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get the live stream URL from Imou: stream failure",
+    ):
         await async_get_stream_source(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_image_propagates_api_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Imou API errors from snapshot fetch surface to the caller."""
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = ImouException(
+        "image failure"
+    )
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get a snapshot from Imou: image failure",
+    ):
+        await async_get_image(hass, entity_id)
 
 
 @pytest.mark.parametrize(

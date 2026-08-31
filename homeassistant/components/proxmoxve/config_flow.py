@@ -161,8 +161,8 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         nodes_data.append(
             {
                 CONF_NODE: node["node"],
-                CONF_VMS: [vm["vmid"] for vm in vms],
-                CONF_CONTAINERS: [container["vmid"] for container in containers],
+                CONF_VMS: [int(vm["vmid"]) for vm in vms],
+                CONF_CONTAINERS: [int(container["vmid"]) for container in containers],
             }
         )
 
