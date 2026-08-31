@@ -49,7 +49,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch_config_flow_connectivity(USER_HOST):
@@ -60,7 +60,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: USER_HOST,
@@ -85,7 +85,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch_config_flow_connectivity(USER_HOST):
@@ -96,7 +96,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: USER_HOST,
@@ -106,7 +106,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_user_form_discovery_timeout(hass: HomeAssistant) -> None:
-    """Test user form error when no UDP message is received in time."""
+    """Test user form error when no UDP message is received in time and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -121,8 +121,24 @@ async def test_user_form_discovery_timeout(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
+
+    with patch_config_flow_connectivity(USER_HOST):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MODEL_NAME
+    assert result["data"] == {
+        CONF_HOST: USER_HOST,
+        CONF_PORT: DEFAULT_PORT,
+    }
+    assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
 async def test_user_form_duplicate(
@@ -143,35 +159,12 @@ async def test_user_form_duplicate(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
-    """Test that zeroconf discovery shows confirmation form and creates entry."""
-    with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: ZEROCONF_HOST,
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert result["result"].unique_id == TEST_DEVICE_MAC
-
-
 async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery abort on port bind failure and recovery."""
+    """Test zeroconf discovery abort on port bind failure."""
     with patch_config_flow_connectivity(
         ZEROCONF_HOST, port_bind_side_effect=OSError("UDP port is unavailable")
     ):
@@ -181,29 +174,8 @@ async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
             data=ZEROCONF_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
-
-    with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: ZEROCONF_HOST,
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
 async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
@@ -217,7 +189,7 @@ async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
             data=ZEROCONF_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "timeout_connect"
 
 
@@ -233,7 +205,7 @@ async def test_zeroconf_duplicate(
         data=ZEROCONF_DISCOVERY,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -260,7 +232,7 @@ async def test_zeroconf_none_port_uses_default(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
 
@@ -279,7 +251,7 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: ipv6_host,
@@ -307,7 +279,7 @@ async def test_user_form_duplicate_host(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -327,7 +299,7 @@ async def test_user_form_keeps_hostname(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == hostname
 
@@ -347,7 +319,7 @@ async def test_user_form_normalize_bracketed_ipv6(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == ipv6_host
 
@@ -375,7 +347,7 @@ async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Custom Hub"
 
 
@@ -402,7 +374,7 @@ async def test_zeroconf_empty_name_uses_default(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
 
 
