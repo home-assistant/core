@@ -11,7 +11,7 @@ from pyzonneplan import (
     ZonneplanTimeoutError,
 )
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -22,7 +22,6 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "exception",
     [
-        ZonneplanAuthenticationError("bad token"),
         ZonneplanTimeoutError("timed out"),
         ZonneplanConnectionError("boom"),
     ],
@@ -41,6 +40,28 @@ async def test_setup_entry_update_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_auth_failed_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test an authentication error starts a reauthentication flow."""
+    mock_zonneplan_client.async_get_account.side_effect = ZonneplanAuthenticationError(
+        "bad token"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_setup_entry_persists_rotated_token(
