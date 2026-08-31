@@ -211,7 +211,6 @@ SENSORS = [
         key="last_cooling_time",
         raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.last_cooling_time,
     ),
     WeHeatSensorEntityDescription(
@@ -233,7 +232,6 @@ SENSORS = [
         translation_key="cooling_blocked_by",
         key="cooling_blocked_by",
         device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
         raw_field="cooling_start_conditions",
         options=["none", *HeatPump.COOLING_START_CONDITION_BITS],
         value_fn=_cooling_blocked_by,
@@ -242,7 +240,6 @@ SENSORS = [
         translation_key="cooling_state",
         key="cooling_state",
         device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
         raw_field="cooling_start_conditions",
         options=[state.name.lower() for state in HeatPump.CoolingState],
         value_fn=(
@@ -288,7 +285,6 @@ SENSORS = [
         key="cooling_available_from",
         raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.cooling_available_from,
     ),
 ]
