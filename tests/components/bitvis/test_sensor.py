@@ -7,9 +7,12 @@ from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import find_listener_callback, setup_integration
 from .conftest import TEST_DEVICE_MAC
@@ -101,21 +104,6 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_diagnostic_entities_created_at_setup(
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that diagnostic sensors are created at setup."""
-    unique_ids = {
-        entry.unique_id
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-    }
-    assert unique_ids == DIAGNOSTIC_UNIQUE_IDS
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_entities_added_when_fields_become_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -192,3 +180,118 @@ async def test_sensors_become_available_with_data(
     assert state is not None
     assert state.state != "unavailable"
     assert float(state.state) == pytest.approx(2.0)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_diagnostic_sensors_update_with_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    patch_shared_listener: MagicMock,
+) -> None:
+    """Test that diagnostic sensors update when a diagnostic payload arrives."""
+    payload = powerhub_pb2.Payload()
+    payload.diagnostic.uptime_s = 999
+    payload.diagnostic.wifi_rssi_dbm = -70
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic),
+        ("192.168.1.100", 1234),
+    )
+    await hass.async_block_till_done()
+
+    wifi_entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{TEST_DEVICE_MAC}_wifi_rssi",
+    )
+    assert wifi_entity_id is not None
+    wifi_state = hass.states.get(wifi_entity_id)
+    assert wifi_state is not None
+    assert wifi_state.state != "unavailable"
+    assert float(wifi_state.state) == pytest.approx(-70)
+
+    uptime_entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{TEST_DEVICE_MAC}_uptime",
+    )
+    assert uptime_entity_id is not None
+    uptime_state = hass.states.get(uptime_entity_id)
+    assert uptime_state is not None
+    assert uptime_state.state != "unavailable"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_info_updated_from_diagnostic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    patch_shared_listener: MagicMock,
+) -> None:
+    """Test that device info is updated from a diagnostic payload."""
+    payload = powerhub_pb2.Payload()
+    payload.diagnostic.uptime_s = 10
+    payload.diagnostic.device_info.model_name = "PowerHub Gen2"
+    payload.diagnostic.device_info.sw_version = "1.2.3"
+    payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic),
+        ("192.168.1.100", 1234),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{TEST_DEVICE_MAC}_wifi_rssi",
+    )
+    assert entity_id is not None
+    entity = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
+    assert entity is not None
+    assert entity.device_info is not None
+    assert entity.device_info["model"] == "PowerHub Gen2"
+    assert entity.device_info["sw_version"] == "1.2.3"
+    assert (CONNECTION_NETWORK_MAC, TEST_DEVICE_MAC) in entity.device_info[
+        "connections"
+    ]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_info_cleared_when_absent_in_diagnostic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    patch_shared_listener: MagicMock,
+) -> None:
+    """Test that device info is cleared when absent in a later diagnostic."""
+    payload = powerhub_pb2.Payload()
+    payload.diagnostic.uptime_s = 10
+    payload.diagnostic.device_info.model_name = "PowerHub"
+    payload.diagnostic.device_info.sw_version = "1.0"
+    payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic),
+        ("192.168.1.100", 1234),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{TEST_DEVICE_MAC}_wifi_rssi",
+    )
+    assert entity_id is not None
+    entity = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
+    assert entity is not None
+    assert entity.device_info is not None
+    assert entity.device_info["model"] == "PowerHub"
+    assert entity.device_info["sw_version"] == "1.0"
+
+    payload2 = powerhub_pb2.Payload()
+    payload2.diagnostic.uptime_s = 20
+    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+        PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload2.diagnostic),
+        ("192.168.1.100", 1234),
+    )
+    await hass.async_block_till_done()
+
+    assert entity.device_info["model"] == MODEL_NAME
+    assert entity.device_info.get("sw_version") is None
+    assert not entity.device_info.get("connections")
