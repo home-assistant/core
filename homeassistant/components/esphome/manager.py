@@ -84,7 +84,6 @@ from homeassistant.util.json import json_loads_object
 from .bluetooth import async_connect_scanner
 from .const import (
     CLIENT_INFO,
-    CONF_ALLOW_OUTGOING_CONNECTION,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
@@ -104,10 +103,7 @@ from .encryption_key_storage import async_get_encryption_key_storage
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
-from .outgoing_connection import (
-    async_register_outgoing_target,
-    outgoing_connection_enabled,
-)
+from .outgoing_connection import async_register_outgoing_target
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
@@ -130,12 +126,10 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        # The zero-PSK provisioning client must never claim to be a
-        # dial-back target: its transport authenticates nobody
+        # Always a dial-back target on a key-verified transport; the zero-PSK
+        # provisioning client authenticates nobody so it never claims the flag
         outgoing_connection_target=(
-            noise_psk is not None
-            and noise_psk != ZERO_NOISE_PSK
-            and outgoing_connection_enabled(entry)
+            noise_psk is not None and noise_psk != ZERO_NOISE_PSK
         ),
     )
 
@@ -594,16 +588,14 @@ class ESPHomeManager:
     async def _async_register_outgoing_target(self) -> None:
         """Register this entry's MAC with the shared dial-in listener."""
         entry = self.entry
-        # outgoing_connection_enabled requires a stored key, so a dial-in is
-        # never routed for an entry that cannot verify the device
+        # A dial-in is only routed for an entry that can verify the device by
+        # key; entries predating MAC unique ids register from _on_connect
         if (
             self._outgoing_unregister is not None
-            or not outgoing_connection_enabled(entry)
+            or not entry.data.get(CONF_NOISE_PSK)
             or not (mac := entry.unique_id)
             or ":" not in mac
         ):
-            # Entries that predate MAC unique ids register later, from
-            # _on_connect, once the device reported its MAC
             return
         reconnect_logic = self.reconnect_logic
         assert reconnect_logic is not None, "Reconnect logic must be set"
@@ -614,29 +606,6 @@ class ESPHomeManager:
         ) is not None:
             self._outgoing_unregister = unregister
             self.entry_data.cleanup_callbacks.append(unregister)
-
-    async def _async_on_outgoing_capable_device(self) -> None:
-        """Handle a connected device that supports outgoing connections."""
-        entry = self.entry
-        if not entry.data.get(CONF_NOISE_PSK):
-            # A keyless entry cannot use the feature; leave the sentinel
-            # unset so it can still auto enable once the entry has a key
-            return
-        if CONF_ALLOW_OUTGOING_CONNECTION not in entry.options:
-            # First supported device seen: turn the option on and remember;
-            # it stays discoverable and reversible in the entry options. The
-            # reload picks up the hello flag and registers the listener.
-            _LOGGER.debug(
-                "%s: Device supports outgoing connections; enabling", self.host
-            )
-            self.hass.config_entries.async_update_entry(
-                entry,
-                options={**entry.options, CONF_ALLOW_OUTGOING_CONNECTION: True},
-            )
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
-            return
-        # Covers entries whose unique id only just became the device MAC
-        await self._async_register_outgoing_target()
 
     async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -801,10 +770,8 @@ class ESPHomeManager:
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
 
-        # Last: the auto-enable path may schedule a reload of this entry,
-        # which must not race the setup work above
-        if device_info.api_outgoing_connection_supported:
-            await self._async_on_outgoing_capable_device()
+        # Covers entries whose unique id only just became the device MAC
+        await self._async_register_outgoing_target()
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""

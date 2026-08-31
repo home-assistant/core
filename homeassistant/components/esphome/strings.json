@@ -209,13 +209,11 @@
     "step": {
       "init": {
         "data": {
-          "allow_outgoing_connection": "Allow the device to connect to Home Assistant.",
           "allow_service_calls": "Allow the device to perform Home Assistant actions.",
           "bluetooth_scanning_mode": "Bluetooth scanning mode",
           "subscribe_logs": "Subscribe to logs from the device."
         },
         "data_description": {
-          "allow_outgoing_connection": "When enabled, Home Assistant listens for connections the device opens itself. The device remembers this Home Assistant instance and dials it when Home Assistant cannot reach the device, for example after network changes. Turned on automatically the first time the device reports support; disable it here to opt out.",
           "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions or send events. Only enable this if you trust the device.",
           "bluetooth_scanning_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly.",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."

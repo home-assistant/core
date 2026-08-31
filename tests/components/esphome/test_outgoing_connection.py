@@ -5,15 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioesphomeapi import APIClient
 import pytest
 
-from homeassistant.components.esphome.const import (
-    CONF_ALLOW_OUTGOING_CONNECTION,
-    CONF_NOISE_PSK,
-    DOMAIN,
-)
+from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MockESPHomeDeviceType
 
@@ -24,19 +19,13 @@ MAC = "11:22:33:44:55:aa"
 
 def _make_entry(
     *,
-    options: dict | None,
     noise_psk: str | None = "bOFFzzvfpg5DB94DuBGLXD/hMnhpDKgP9UQyBulwWVU=",
     unique_id: str = MAC,
 ) -> MockConfigEntry:
     data = {CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""}
     if noise_psk is not None:
         data[CONF_NOISE_PSK] = noise_psk
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data=data,
-        options=options or {},
-        unique_id=unique_id,
-    )
+    return MockConfigEntry(domain=DOMAIN, data=data, unique_id=unique_id)
 
 
 @pytest.fixture
@@ -59,8 +48,8 @@ async def test_outgoing_connection_registration(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """Enabling the option registers the device MAC with the shared listener."""
-    entry = _make_entry(options={CONF_ALLOW_OUTGOING_CONNECTION: True})
+    """An encrypted entry always registers with the shared listener."""
+    entry = _make_entry()
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
@@ -78,14 +67,14 @@ async def test_outgoing_connection_registration(
     unregister.assert_called()
 
 
-async def test_outgoing_connection_disabled(
+async def test_outgoing_connection_requires_noise_psk(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """An explicitly disabled entry registers nothing and does not set the flag."""
-    entry = _make_entry(options={CONF_ALLOW_OUTGOING_CONNECTION: False})
+    """A keyless entry never registers or sets the dial-back flag."""
+    entry = _make_entry(noise_psk=None)
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
@@ -94,42 +83,21 @@ async def test_outgoing_connection_disabled(
     assert mock_client.outgoing_connection_target is False
 
 
-async def test_outgoing_connection_auto_enables_on_supported_device(
+async def test_outgoing_connection_registers_after_unique_id_migration(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """The option turns on and sticks when a device first advertises support."""
-    entry = _make_entry(options=None)
-    entry.add_to_hass(hass)
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entry=entry,
-        device_info={"api_outgoing_connection_supported": True},
-    )
-    await hass.async_block_till_done()
-
-    assert entry.options[CONF_ALLOW_OUTGOING_CONNECTION] is True
-    # The scheduled reload re-created the client with the flag and registered
-    assert mock_client.outgoing_connection_target is True
-    assert mock_server.register.call_count == 1
-
-
-async def test_outgoing_connection_not_auto_enabled_without_support(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """A device without the capability leaves the option untouched."""
-    entry = _make_entry(options=None)
+    """A legacy unique id registers once the first connect migrates it."""
+    entry = _make_entry(unique_id="legacy-name")
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
 
-    assert CONF_ALLOW_OUTGOING_CONNECTION not in entry.options
-    mock_server.register.assert_not_called()
+    assert entry.unique_id == MAC
+    assert mock_server.register.call_count == 1
+    assert mock_server.register.call_args.args[0] == MAC
 
 
 async def test_outgoing_connection_listener_unavailable(
@@ -140,7 +108,7 @@ async def test_outgoing_connection_listener_unavailable(
 ) -> None:
     """Setup continues when the listener port cannot be bound."""
     mock_server.start.side_effect = OSError("address in use")
-    entry = _make_entry(options={CONF_ALLOW_OUTGOING_CONNECTION: True})
+    entry = _make_entry()
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
@@ -149,105 +117,24 @@ async def test_outgoing_connection_listener_unavailable(
     mock_server.register.assert_not_called()
 
 
-async def test_option_flow_toggle_hidden_without_support(
+async def test_outgoing_connection_shared_listener(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
 ) -> None:
-    """The option only shows once stored or once the device reports support."""
-    entry = _make_entry(options=None)
+    """Two entries share one listener; each registers its own MAC."""
+    entry = _make_entry()
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert CONF_ALLOW_OUTGOING_CONNECTION not in result["data_schema"].schema
-
-
-async def test_option_flow_toggle_shown_when_supported(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """A device reporting support surfaces the toggle in the options flow."""
-    entry = _make_entry(options=None)
-    entry.add_to_hass(hass)
+    entry2 = _make_entry(unique_id="aa:bb:cc:dd:ee:01")
+    entry2.add_to_hass(hass)
     await mock_esphome_device(
         mock_client=mock_client,
-        entry=entry,
-        device_info={"api_outgoing_connection_supported": True},
+        entry=entry2,
+        device_info={"mac_address": "AA:BB:CC:DD:EE:01", "name": "test2"},
     )
     await hass.async_block_till_done()
 
-    # Auto-enable stored the option, so the toggle stays visible
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert CONF_ALLOW_OUTGOING_CONNECTION in result["data_schema"].schema
-
-
-async def test_outgoing_connection_requires_noise_psk(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """A keyless entry never registers, sets the flag, or burns the sentinel."""
-    entry = _make_entry(options={CONF_ALLOW_OUTGOING_CONNECTION: True}, noise_psk=None)
-    entry.add_to_hass(hass)
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entry=entry,
-        device_info={"api_outgoing_connection_supported": True},
-    )
-    await hass.async_block_till_done()
-
-    mock_server.register.assert_not_called()
-    assert mock_client.outgoing_connection_target is False
-
-
-async def test_outgoing_connection_no_auto_enable_without_psk(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """Test a keyless entry keeps its sentinel but still shows the toggle."""
-    entry = _make_entry(options=None, noise_psk=None)
-    entry.add_to_hass(hass)
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entry=entry,
-        device_info={"api_outgoing_connection_supported": True},
-    )
-    await hass.async_block_till_done()
-
-    assert CONF_ALLOW_OUTGOING_CONNECTION not in entry.options
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert CONF_ALLOW_OUTGOING_CONNECTION in result["data_schema"].schema
-
-
-async def test_outgoing_connection_registers_after_unique_id_migration(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """A legacy unique id registers once the first connect migrates it."""
-    entry = _make_entry(
-        options={CONF_ALLOW_OUTGOING_CONNECTION: True}, unique_id="legacy-name"
-    )
-    entry.add_to_hass(hass)
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entry=entry,
-        device_info={"api_outgoing_connection_supported": True},
-    )
-    await hass.async_block_till_done()
-
-    assert entry.unique_id == MAC
-    assert mock_server.register.call_count == 1
-    assert mock_server.register.call_args.args[0] == MAC
+    mock_server.start.assert_awaited_once()
+    assert mock_server.register.call_count == 2

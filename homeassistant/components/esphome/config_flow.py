@@ -55,13 +55,11 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import json_loads_object
 
 from .const import (
-    CONF_ALLOW_OUTGOING_CONNECTION,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
-    DEFAULT_ALLOW_OUTGOING_CONNECTION,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_BLUETOOTH_SCANNING_MODE,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
@@ -1030,16 +1028,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 default=options.get(CONF_SUBSCRIBE_LOGS, False),
             ): bool,
         }
-        if _entry_supports_outgoing_connection(self.config_entry):
-            schema[
-                vol.Required(
-                    CONF_ALLOW_OUTGOING_CONNECTION,
-                    default=options.get(
-                        CONF_ALLOW_OUTGOING_CONNECTION,
-                        DEFAULT_ALLOW_OUTGOING_CONNECTION,
-                    ),
-                )
-            ] = bool
         if _entry_has_bluetooth_scanner(self.config_entry):
             schema[
                 vol.Required(
@@ -1050,23 +1038,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 )
             ] = _BLUETOOTH_SCANNING_MODE_SELECTOR
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
-
-
-@callback
-def _entry_supports_outgoing_connection(entry: ESPHomeConfigEntry) -> bool:
-    """Return True if the entry stored the option or the device reports support.
-
-    An unrelated options save must not store a value for a device that never
-    reported support: a stored value would defeat the automatic enable, whose
-    sentinel is the key being absent.
-    """
-    if CONF_ALLOW_OUTGOING_CONNECTION in entry.options:
-        return True
-    return bool(
-        entry.state is ConfigEntryState.LOADED
-        and (device_info := entry.runtime_data.device_info)
-        and device_info.api_outgoing_connection_supported
-    )
 
 
 @callback
