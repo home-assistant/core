@@ -126,7 +126,6 @@ async def test_fault_sensor_reports_no_fault_at_zero(
             id="lowest_bit_is_the_state",
         ),
         pytest.param(
-            # Joining every name here would exceed the 255-char state limit.
             0x0410,
             0xFFFF,
             "fault_12",
@@ -173,7 +172,7 @@ async def test_fault_sensor_reports_active_faults(
 async def test_fault_sensor_ignores_reserved_registers(
     entity_registry: er.EntityRegistry, init_integration: MockConfigEntry
 ) -> None:
-    """Test the reserved fault registers get no sensor entity."""
+    """Test a reserved register (no fault bits defined) gets no dead sensor."""
     for number in (20, 21, 24, 25):
         assert (
             entity_registry.async_get_entity_id(
