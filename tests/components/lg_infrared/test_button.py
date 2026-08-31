@@ -23,7 +23,8 @@ def platforms() -> list[Platform]:
     return [Platform.BUTTON]
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("device_type", [LGDeviceType.TV, LGDeviceType.AC])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -106,18 +107,6 @@ async def test_button_availability_follows_ir_entity(
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.lg_tv_power_on"
     await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
-
-
-@pytest.mark.parametrize("device_type", [LGDeviceType.AC])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_ac_entities(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test all AC button entities are created with correct attributes."""
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize("device_type", [LGDeviceType.AC])
