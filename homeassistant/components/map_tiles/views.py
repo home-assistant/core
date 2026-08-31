@@ -290,8 +290,9 @@ class MapTilesTileJsonView(_MapTilesView):
     async def _async_fetch(self, url: str) -> Asset | None:
         """Fetch the upstream TileJSON and republish it as ours.
 
-        Derived from upstream rather than hardcoded: the OSMF asks consumers
-        to resolve tile URLs through the TileJSON so the endpoints can move.
+        The zoom range and attribution are taken from upstream rather than
+        hardcoded; the advertised tile endpoint is replaced with this proxy's
+        own path, which is pinned (the vector fetch URL does not follow it).
         """
         if (asset := await super()._async_fetch(url)) is None:
             return None
@@ -322,6 +323,7 @@ class MapTilesTileJsonView(_MapTilesView):
             return None
 
         # The only body built locally, so the only one this integration gzips.
+        # Kept on upstream's refresh cadence: it is how a moved endpoint arrives.
         return Asset(
             gzip.compress(
                 json_bytes(

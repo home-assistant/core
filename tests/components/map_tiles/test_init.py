@@ -192,7 +192,7 @@ async def test_png_served_verbatim(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that a raster tile is served as the bytes upstream made, for the digest."""
+    """Test that a raster tile is served exactly as upstream sent it."""
     aioclient_mock.get(RASTER_UPSTREAM, content=RASTER_TILE)
 
     client = await hass_client()

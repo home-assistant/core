@@ -44,10 +44,10 @@ class MapTilesCache:
     least recently used first.
     """
 
-    def __init__(self, hass: HomeAssistant, max_bytes: int = CACHE_MAX_BYTES) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self._hass = hass
-        self._max_bytes = max_bytes
+        self._max_bytes = CACHE_MAX_BYTES
         self._entries: OrderedDict[str, tuple[Asset, float]] = OrderedDict()
         self._size = 0
         self._fetches: dict[str, asyncio.Task[Asset | None]] = {}

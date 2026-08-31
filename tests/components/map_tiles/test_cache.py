@@ -1,6 +1,7 @@
 """Tests for the Map tiles cache."""
 
 import asyncio
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,6 +13,8 @@ from homeassistant.components.map_tiles.cache import (
 )
 from homeassistant.core import HomeAssistant
 
+_CACHE = "homeassistant.components.map_tiles.cache"
+
 TTL = 60
 
 BODY = b"0123456789"
@@ -21,7 +24,8 @@ ENTRY_COST = len(BODY) + 1 + _ENTRY_OVERHEAD
 
 async def test_evicts_least_recently_used(hass: HomeAssistant) -> None:
     """Test that the cache stays inside its ceiling, dropping the coldest first."""
-    cache = MapTilesCache(hass, max_bytes=2 * ENTRY_COST)
+    with patch(f"{_CACHE}.CACHE_MAX_BYTES", 2 * ENTRY_COST):
+        cache = MapTilesCache(hass)
     calls: list[str] = []
 
     async def fetch(key: str) -> Asset:
@@ -47,7 +51,8 @@ async def test_evicts_least_recently_used(hass: HomeAssistant) -> None:
 
 async def test_entry_larger_than_the_ceiling_is_kept(hass: HomeAssistant) -> None:
     """Test that a tile bigger than the whole cache is still served from it."""
-    cache = MapTilesCache(hass, max_bytes=10)
+    with patch(f"{_CACHE}.CACHE_MAX_BYTES", 10):
+        cache = MapTilesCache(hass)
     calls: list[str] = []
 
     async def fetch() -> Asset:
@@ -62,7 +67,8 @@ async def test_entry_larger_than_the_ceiling_is_kept(hass: HomeAssistant) -> Non
 
 async def test_empty_bodies_count_against_the_ceiling(hass: HomeAssistant) -> None:
     """Test that entries with empty bodies cannot grow the cache without bound."""
-    cache = MapTilesCache(hass, max_bytes=3 * (1 + _ENTRY_OVERHEAD))
+    with patch(f"{_CACHE}.CACHE_MAX_BYTES", 3 * (1 + _ENTRY_OVERHEAD)):
+        cache = MapTilesCache(hass)
     calls: list[str] = []
 
     async def fetch(key: str) -> Asset:
