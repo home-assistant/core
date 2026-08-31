@@ -17,6 +17,10 @@ from .account import IcloudConfigEntry
 from .const import DOMAIN
 from .coordinator import IcloudCalendarCoordinator, IcloudCalendarData, localize
 
+# The coordinator owns the polling and the entities are read-only, so there is
+# nothing here for Home Assistant to serialize.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

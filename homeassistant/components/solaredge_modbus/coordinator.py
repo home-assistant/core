@@ -169,6 +169,9 @@ class SolarEdgeModbusRuntimeData:
     settings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
     inverter_device_id: str
+    # What was attached when this entry was built, to notice a swap: a meter
+    # replaced by another one leaves the count alone.
+    attachments: frozenset[str]
 
     # The export mode and its flags share one register, which the library
     # changes by taking its cached value, flipping bits and writing it back.

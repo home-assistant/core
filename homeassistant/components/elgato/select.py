@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import elgato_device_action
 
 PARALLEL_UPDATES = 1
 
@@ -92,9 +92,8 @@ class ElgatoSelectEntity(ElgatoEntity, SelectEntity):
         """Return the selected option."""
         return self.entity_description.current_fn(self.coordinator.data)
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.coordinator.client, option)
-        await self.coordinator.async_request_refresh()
