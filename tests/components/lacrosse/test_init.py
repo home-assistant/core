@@ -6,6 +6,7 @@ from serial import SerialException
 
 from homeassistant.components.lacrosse.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -73,6 +74,25 @@ async def test_setup_and_unload(
         await hass.async_block_till_done()
 
     assert receiver.close.call_count == 1
+
+
+async def test_close_receiver_on_home_assistant_stop(hass: HomeAssistant) -> None:
+    """Test the receiver closes when Home Assistant stops."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    receiver = MagicMock()
+
+    with patch(
+        "homeassistant.components.lacrosse.pylacrosse.LaCrosse",
+        return_value=receiver,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    receiver.close.assert_called_once()
 
 
 async def test_setup_serial_error(hass: HomeAssistant) -> None:

@@ -6,7 +6,7 @@ import pylacrosse
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, Platform
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType
@@ -35,6 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> 
         raise ConfigEntryNotReady(f"Unable to open serial port: {exc}") from exc
 
     entry.runtime_data = lacrosse
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close()
+        )
+    )
     entry.async_on_unload(lacrosse.close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
