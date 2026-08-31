@@ -87,7 +87,12 @@
         }
       },
       "diagnostic_status": {
-        "name": "{component}"
+        "name": "{component}",
+        "state": {
+          "disabled": "[%key:component::duco::entity::sensor::diagnostic_filter::state::disabled%]",
+          "error": "[%key:component::duco::entity::sensor::diagnostic_filter::state::error%]",
+          "ok": "[%key:component::duco::entity::sensor::diagnostic_filter::state::ok%]"
+        }
       },
       "diagnostic_sun_control": {
         "name": "Sun control",

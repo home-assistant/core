@@ -257,26 +257,31 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_diagnostic_subsystem_sensor_preserves_unknown_component_and_status(
+async def test_diagnostic_subsystem_sensors_preserve_unknown_components_and_statuses(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
 ) -> None:
-    """Test diagnostics sensors keep unknown components and raw status strings."""
+    """Test diagnostics sensors keep distinct components and raw status strings."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
         diagnostic_subsystems=(
-            DiagComponent(component="FutureMode", status="NeedsServiceSoon"),
+            DiagComponent(component="Future Mode", status="NeedsServiceSoon"),
+            DiagComponent(component="Future-Mode", status="NeedsAttentionSoon"),
         )
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.living_futuremode")
+    state = hass.states.get("sensor.living_future_mode")
     assert state is not None
     assert state.state == "NeedsServiceSoon"
+
+    state = hass.states.get("sensor.living_future_mode_2")
+    assert state is not None
+    assert state.state == "NeedsAttentionSoon"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

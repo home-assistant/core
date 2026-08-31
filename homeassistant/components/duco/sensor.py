@@ -441,7 +441,7 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
             self._attr_translation_placeholders = {"component": component}
         self.entity_description = description
         super().__init__(coordinator, node)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{slugify(component)}_diagnostic"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{component}_diagnostic"
 
     @property
     @override

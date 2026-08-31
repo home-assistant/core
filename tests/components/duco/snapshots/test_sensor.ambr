@@ -1318,7 +1318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diagnostic_ventilation',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_1_ventilation_diagnostic',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_1_Ventilation_diagnostic',
     'unit_of_measurement': None,
   })
 # ---
