@@ -34,12 +34,7 @@ _ENTITY_EXCLUDED_FIELDS = frozenset({"d_serial", "d_ver_arm", "d_ver_dsp"})
 
 @dataclass(frozen=True, kw_only=True)
 class _FieldOverride:
-    """One field's overrides.
-
-    What its entity needs beyond what bluetti-modbus-lib's own field
-    metadata (unit, whether it's an enum) already says - one object per
-    field, instead of separate membership sets for each concern.
-    """
+    """One field's entity-description overrides beyond bluetti-modbus-lib's own field metadata."""
 
     device_class: SensorDeviceClass | None = None
     state_class: SensorStateClass | None = None
@@ -100,22 +95,12 @@ def _slug(name: str) -> str:
 
 @lru_cache
 def _enum_value_map(enum_cls: type[Enum]) -> dict[Enum, str]:
-    """Return a member -> state slug lookup, built once per enum type.
-
-    Cached rather than recomputed on every poll: the transform itself only
-    needs to run once per enum type (here, at most a handful of member
-    counts to look through), not once per entity per refresh.
-    """
+    """Return a member -> state slug lookup, built once per enum type."""
     return {member: _slug(member.name) for member in enum_cls}
 
 
 def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescription:
-    """Build an entity description for one register field.
-
-    Combines bluetti-modbus-lib's own field metadata (unit, whether it's an
-    enum) with this integration's per-field override, if any - one lookup,
-    not several membership checks against separate sets.
-    """
+    """Build an entity description for one register field."""
     field_override = _FIELD_OVERRIDES.get(name)
 
     if (
@@ -170,13 +155,7 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> StateType:
-        """Return the field's most recently read value.
-
-        An enum-typed field decodes to an Enum member, not a plain value -
-        translated to its stable state slug here (via the same lookup its
-        entity description's options list was built from) rather than
-        exposing the library's own repr.
-        """
+        """Return the field's most recently read value, decoding an enum to its stable state slug."""
         value = self.coordinator.device.values.get(self._field_name)
         if isinstance(value, Enum):
             return _enum_value_map(type(value))[value]
