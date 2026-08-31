@@ -8,11 +8,14 @@ from homeassistant.helpers import entity_registry as er
 from ...const import DOMAIN
 from .base import SuggestionProvider
 from .const import EntitySuggestion, EntitySuggestionsResult, SuggestionFilter
+from .functional_blocks import FunctionalBlockSuggestionProvider
 
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
-SUGGESTION_PROVIDERS: list[type[SuggestionProvider]] = []
+SUGGESTION_PROVIDERS: list[type[SuggestionProvider]] = [
+    FunctionalBlockSuggestionProvider,
+]
 
 
 def _add_existing_entity_ids(

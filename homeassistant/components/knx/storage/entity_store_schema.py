@@ -46,6 +46,51 @@ from ..validation import (
     validate_sensor_attributes,
 )
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
+from .dpa import (
+    DPA_417_INFO_ON_OFF,
+    DPA_417_SWITCH_ON_OFF,
+    DPA_418_ABS_SETVALUE_CONTROL,
+    DPA_418_ACTUAL_DIMMING_VALUE,
+    DPA_418_INFO_ON_OFF,
+    DPA_418_SWITCH_ON_OFF,
+    DPA_422_ABS_SETVALUE_CONTROL,
+    DPA_422_ACTUAL_DIMMING_VALUE,
+    DPA_422_COLOUR_SET_XYY,
+    DPA_422_CURRENT_COLOUR_XYY,
+    DPA_422_INFO_ON_OFF,
+    DPA_422_SWITCH_ON_OFF,
+    DPA_423_ABS_SETVALUE_CONTROL_BLUE,
+    DPA_423_ABS_SETVALUE_CONTROL_GREEN,
+    DPA_423_ABS_SETVALUE_CONTROL_RED,
+    DPA_423_ABS_SETVALUE_CONTROL_WHITE,
+    DPA_423_ACTUAL_DIMMING_VALUE_BLUE,
+    DPA_423_ACTUAL_DIMMING_VALUE_GREEN,
+    DPA_423_ACTUAL_DIMMING_VALUE_RED,
+    DPA_423_ACTUAL_DIMMING_VALUE_WHITE,
+    DPA_423_COLOUR_SET_RGB,
+    DPA_423_COLOUR_SET_RGBW,
+    DPA_423_COMBINED_INFO_ON_OFF,
+    DPA_423_COMBINED_SWITCH_ON_OFF,
+    DPA_423_CURRENT_COLOUR_RGB,
+    DPA_423_CURRENT_COLOUR_RGBW,
+    DPA_423_SWITCH_ON_OFF_BLUE,
+    DPA_423_SWITCH_ON_OFF_GREEN,
+    DPA_423_SWITCH_ON_OFF_RED,
+    DPA_423_SWITCH_ON_OFF_WHITE,
+    DPA_427_ABS_COLOUR_TEMPERATURE_CONTROL,
+    DPA_427_ABS_SETVALUE_CONTROL,
+    DPA_427_ACTUAL_DIMMING_VALUE,
+    DPA_427_CURRENT_COLOUR_TEMPERATURE,
+    DPA_427_INFO_ON_OFF,
+    DPA_427_SWITCH_ON_OFF,
+    DPA_800_CURRENT_ABS_POS_BLINDS_PERCENT,
+    DPA_800_CURRENT_ABS_POS_SLATS_PERCENT,
+    DPA_800_DEDICATED_STOP,
+    DPA_800_MOVE_UP_DOWN,
+    DPA_800_SET_ABS_POS_BLINDS_PERCENT,
+    DPA_800_SET_ABS_POS_SLATS_PERCENT,
+    DPA_800_STOP_STEP_UP_DOWN,
+)
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -212,26 +257,50 @@ _TRAVELLING_TIME_SELECTOR = selector.NumberSelector(
 class CoverKnxConfig:
     """UI configuration of a KNX cover."""
 
-    ga_up_down: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = (
-        None
-    )
+    ga_up_down: Annotated[
+        GroupAddressConfig | None,
+        ga(state=False, valid_dpt="1", dpa_write=[DPA_800_MOVE_UP_DOWN]),
+    ] = None
     invert_updown: Annotated[bool, selector.BooleanSelector()] = False
-    ga_stop: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = None
-    ga_step: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = None
+    ga_stop: Annotated[
+        GroupAddressConfig | None,
+        ga(state=False, valid_dpt="1", dpa_write=[DPA_800_DEDICATED_STOP]),
+    ] = None
+    ga_step: Annotated[
+        GroupAddressConfig | None,
+        ga(state=False, valid_dpt="1", dpa_write=[DPA_800_STOP_STEP_UP_DOWN]),
+    ] = None
     section_position_control: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
     ga_position_set: Annotated[
-        GroupAddressConfig | None, ga(state=False, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            state=False,
+            valid_dpt="5.001",
+            dpa_write=[DPA_800_SET_ABS_POS_BLINDS_PERCENT],
+        ),
     ] = None
     ga_position_state: Annotated[
-        GroupAddressConfig | None, ga(write=False, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            write=False,
+            valid_dpt="5.001",
+            dpa_state=[DPA_800_CURRENT_ABS_POS_BLINDS_PERCENT],
+        ),
     ] = None
     invert_position: Annotated[bool, selector.BooleanSelector()] = False
     section_tilt_control: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_angle: Annotated[GroupAddressConfig | None, ga(valid_dpt="5.001")] = None
+    ga_angle: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="5.001",
+            dpa_write=[DPA_800_SET_ABS_POS_SLATS_PERCENT],
+            dpa_state=[DPA_800_CURRENT_ABS_POS_SLATS_PERCENT],
+        ),
+    ] = None
     invert_angle: Annotated[bool, selector.BooleanSelector()] = False
     section_travel_time: Annotated[None, Key(remove=True), KNXSectionFlat()] = None
     travelling_time_up: Annotated[
@@ -366,7 +435,21 @@ class LightColorSingleAddress:
     """Light color controlled by a single group address."""
 
     ga_color: Annotated[
-        GroupAddressConfig | None, ga(write_required=True, dpt=LightColorMode)
+        GroupAddressConfig | None,
+        ga(
+            write_required=True,
+            dpt=LightColorMode,
+            dpa_write=[
+                DPA_422_COLOUR_SET_XYY,
+                DPA_423_COLOUR_SET_RGB,
+                DPA_423_COLOUR_SET_RGBW,
+            ],
+            dpa_state=[
+                DPA_422_CURRENT_COLOUR_XYY,
+                DPA_423_CURRENT_COLOUR_RGB,
+                DPA_423_CURRENT_COLOUR_RGBW,
+            ],
+        ),
     ] = None
 
 
@@ -375,28 +458,60 @@ class LightColorIndividualAddresses:
     """Light color controlled by individual addresses per color channel."""
 
     ga_red_switch: Annotated[
-        GroupAddressConfig | None, ga(write_required=False, valid_dpt="1")
+        GroupAddressConfig | None,
+        ga(write_required=False, valid_dpt="1", dpa_write=[DPA_423_SWITCH_ON_OFF_RED]),
     ] = None
     ga_red_brightness: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_RED],
+            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_RED],
+        ),
     ]
     ga_green_switch: Annotated[
-        GroupAddressConfig | None, ga(write_required=False, valid_dpt="1")
+        GroupAddressConfig | None,
+        ga(
+            write_required=False, valid_dpt="1", dpa_write=[DPA_423_SWITCH_ON_OFF_GREEN]
+        ),
     ] = None
     ga_green_brightness: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_GREEN],
+            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_GREEN],
+        ),
     ]
     ga_blue_switch: Annotated[
-        GroupAddressConfig | None, ga(write_required=False, valid_dpt="1")
+        GroupAddressConfig | None,
+        ga(write_required=False, valid_dpt="1", dpa_write=[DPA_423_SWITCH_ON_OFF_BLUE]),
     ] = None
     ga_blue_brightness: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_BLUE],
+            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_BLUE],
+        ),
     ]
     ga_white_switch: Annotated[
-        GroupAddressConfig | None, ga(write_required=False, valid_dpt="1")
+        GroupAddressConfig | None,
+        ga(
+            write_required=False, valid_dpt="1", dpa_write=[DPA_423_SWITCH_ON_OFF_WHITE]
+        ),
     ] = None
     ga_white_brightness: Annotated[
-        GroupAddressConfig | None, ga(write_required=True, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[DPA_423_ABS_SETVALUE_CONTROL_WHITE],
+            dpa_state=[DPA_423_ACTUAL_DIMMING_VALUE_WHITE],
+        ),
     ] = None
 
 
@@ -420,16 +535,54 @@ class LightKnxConfig:
     """UI configuration of a KNX light."""
 
     ga_switch: Annotated[
-        GroupAddressConfig | None, ga(write_required=True, valid_dpt="1")
+        GroupAddressConfig | None,
+        ga(
+            write_required=True,
+            valid_dpt="1",
+            dpa_write=[
+                DPA_417_SWITCH_ON_OFF,
+                DPA_418_SWITCH_ON_OFF,
+                DPA_422_SWITCH_ON_OFF,
+                DPA_423_COMBINED_SWITCH_ON_OFF,
+                DPA_427_SWITCH_ON_OFF,
+            ],
+            dpa_state=[
+                DPA_417_INFO_ON_OFF,
+                DPA_418_INFO_ON_OFF,
+                DPA_422_INFO_ON_OFF,
+                DPA_423_COMBINED_INFO_ON_OFF,
+                DPA_427_INFO_ON_OFF,
+            ],
+        ),
     ] = None
     ga_brightness: Annotated[
-        GroupAddressConfig | None, ga(write_required=True, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[
+                DPA_418_ABS_SETVALUE_CONTROL,
+                DPA_422_ABS_SETVALUE_CONTROL,
+                DPA_427_ABS_SETVALUE_CONTROL,
+            ],
+            dpa_state=[
+                DPA_418_ACTUAL_DIMMING_VALUE,
+                DPA_422_ACTUAL_DIMMING_VALUE,
+                DPA_427_ACTUAL_DIMMING_VALUE,
+            ],
+        ),
     ] = None
     section_color_temp: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
     ga_color_temp: Annotated[
-        GroupAddressConfig | None, ga(write_required=True, dpt=ColorTempModes)
+        GroupAddressConfig | None,
+        ga(
+            write_required=True,
+            dpt=ColorTempModes,
+            dpa_write=[DPA_427_ABS_COLOUR_TEMPERATURE_CONTROL],
+            dpa_state=[DPA_427_CURRENT_COLOUR_TEMPERATURE],
+        ),
     ] = None
     color_temp_min: Annotated[
         int,
@@ -736,7 +889,15 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
 class SwitchKnxConfig:
     """UI configuration of a KNX switch."""
 
-    ga_switch: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="1")]
+    ga_switch: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="1",
+            dpa_write=[DPA_417_SWITCH_ON_OFF],
+            dpa_state=[DPA_417_INFO_ON_OFF],
+        ),
+    ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     sync_state: SyncState = True
