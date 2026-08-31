@@ -477,20 +477,25 @@ async def test_target_temperature_feature_follows_configured_modes(
     [
         pytest.param(
             HVACMode.COOL,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
-            (HVACMode.COOL, FAN_HIGH, 29.0),
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                ATTR_SWING_MODE: "high",
+                ATTR_SWING_HORIZONTAL_MODE: "left",
+            },
+            (HVACMode.COOL, FAN_HIGH, 29.0, "high", "left"),
             id="full_state",
         ),
         pytest.param(
             STATE_UNAVAILABLE,
             {},
-            (HVACMode.OFF, FAN_AUTO, float(MIN_TEMP)),
+            (HVACMode.OFF, FAN_AUTO, float(MIN_TEMP), "off", "off"),
             id="unavailable_falls_back_to_defaults",
         ),
         pytest.param(
             HVACMode.HEAT,
             {"fan_mode": FAN_HIGH, "temperature": 29.0},
-            (HVACMode.OFF, FAN_HIGH, 29.0),
+            (HVACMode.OFF, FAN_HIGH, 29.0, "off", "off"),
             id="mode_no_longer_configured_is_ignored",
         ),
     ],
@@ -502,7 +507,7 @@ async def test_state_restored_on_restart(
     platforms: list[Platform],
     restored_state: str,
     restored_attributes: dict[str, Any],
-    expected: tuple[HVACMode, str, float],
+    expected: tuple[HVACMode, str, float, str, str],
 ) -> None:
     """Test the assumed state is restored, since infrared cannot read it back."""
     mock_restore_cache(
@@ -516,10 +521,14 @@ async def test_state_restored_on_restart(
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    expected_mode, expected_fan, expected_temp = expected
+    expected_mode, expected_fan, expected_temp, expected_swing, expected_swing_h = (
+        expected
+    )
     assert state.state == expected_mode
     assert state.attributes["fan_mode"] == expected_fan
     assert state.attributes["temperature"] == expected_temp
+    assert state.attributes[ATTR_SWING_MODE] == expected_swing
+    assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == expected_swing_h
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -682,32 +691,3 @@ async def test_receiver_updates_swing_from_fixed_code(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes[attribute] == expected
-
-
-async def test_swing_state_restored_on_restart(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    platforms: list[Platform],
-) -> None:
-    """Test the assumed swing state survives a restart."""
-    mock_restore_cache(
-        hass,
-        [
-            State(
-                _CLIMATE_ENTITY_ID,
-                HVACMode.COOL,
-                {ATTR_SWING_MODE: "high", ATTR_SWING_HORIZONTAL_MODE: "left"},
-            )
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(_CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes[ATTR_SWING_MODE] == "high"
-    assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == "left"
