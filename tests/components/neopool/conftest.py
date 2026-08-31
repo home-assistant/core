@@ -235,6 +235,32 @@ def mock_config_entry_binary_sensor() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_binary_sensor_no_options() -> MockConfigEntry:
+    """Return a config entry with every binary_sensor option disabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: False,
+            CONF_USE_COVER_SENSOR: False,
+            CONF_USE_AUX1: False,
+            CONF_USE_AUX2: False,
+            CONF_USE_AUX3: False,
+            CONF_USE_AUX4: False,
+        },
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (

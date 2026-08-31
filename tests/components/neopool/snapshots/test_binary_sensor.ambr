@@ -1,55 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.neopool-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ion_on_target',
-    'unique_id': '1234567890_ion on target',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_light-entry]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_light',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,114 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Light',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
-    'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pool_light',
-    'unique_id': '1234567890_pool light',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_light-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Light',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_opening-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_opening',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Opening',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
-    'original_icon': None,
-    'original_name': 'Opening',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pool_cover',
-    'unique_id': '1234567890_pool cover',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_opening-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Opening',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_opening',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 1',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -188,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power-state]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_2-entry]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -216,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_2',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -224,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 2',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -239,21 +87,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_2-state]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_2',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_3-entry]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -267,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_3',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -275,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 3',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -290,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_3-state]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_3',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_4-entry]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -318,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_4',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -326,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 4',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 4',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -341,21 +189,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_power_4-state]
+# name: test_all_entities[binary_sensor.neopool_auxiliary_relay_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 4',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_4',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_problem-entry]
+# name: test_all_entities[binary_sensor.neopool_chlorine_flow_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -369,7 +217,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_problem',
+    'entity_id': 'binary_sensor.neopool_chlorine_flow_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -377,12 +225,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Chlorine flow sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Chlorine flow sensor',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -392,21 +240,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_problem-state]
+# name: test_all_entities[binary_sensor.neopool_chlorine_flow_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Chlorine flow sensor',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_problem',
+    'entity_id': 'binary_sensor.neopool_chlorine_flow_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_problem_2-entry]
+# name: test_all_entities[binary_sensor.neopool_chlorine_measurement-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -420,7 +268,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_problem_2',
+    'entity_id': 'binary_sensor.neopool_chlorine_measurement',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -428,267 +276,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Problem',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ion_low',
-    'unique_id': '1234567890_ion low',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_problem_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Problem',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_problem_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_problem_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_problem_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Problem',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Problem',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ion_program_time_exceeded',
-    'unique_id': '1234567890_ion program time exceeded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_problem_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Problem',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_problem_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_problem_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_problem_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Problem',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Problem',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_low',
-    'unique_id': '1234567890_hidro low',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_problem_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Problem',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_problem_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
+    'object_id_base': 'Chlorine measurement',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ph_acid_pump',
-    'unique_id': '1234567890_ph acid pump',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'chlorine_control_module',
-    'unique_id': '1234567890_chlorine control module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
+    'original_name': 'Chlorine measurement',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -698,21 +291,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_running_11-state]
+# name: test_all_entities[binary_sensor.neopool_chlorine_measurement-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Chlorine measurement',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_11',
+    'entity_id': 'binary_sensor.neopool_chlorine_measurement',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_running_12-entry]
+# name: test_all_entities[binary_sensor.neopool_chlorine_pump_active-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -726,7 +319,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_12',
+    'entity_id': 'binary_sensor.neopool_chlorine_pump_active',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -734,828 +327,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Running',
+    'object_id_base': 'Chlorine pump active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'conductivity_control_module',
-    'unique_id': '1234567890_conductivity control module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_13-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_13',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'conductivity_measurement_active',
-    'unique_id': '1234567890_conductivity measurement active',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_13-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_13',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_14-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_14',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_module_active',
-    'unique_id': '1234567890_hidro module active',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_14-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_14',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_15-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_15',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_module_regulated',
-    'unique_id': '1234567890_hidro module regulated',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_15-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_15',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_16-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_16',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_activated_by_the_rx_module',
-    'unique_id': '1234567890_hidro activated by the rx module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_16-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_16',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_17-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_17',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_chlorine_shock_mode',
-    'unique_id': '1234567890_hidro chlorine shock mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_17-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_17',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_18-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_18',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hidro_activated_by_the_cl_module',
-    'unique_id': '1234567890_hidro activated by the cl module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_18-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_18',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_19-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_19',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'heating',
-    'unique_id': '1234567890_heating',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_19-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_19',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_running_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'filtration_pump',
-    'unique_id': '1234567890_filtration pump',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_20-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_20',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'uv_lamp',
-    'unique_id': '1234567890_uv lamp',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_20-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_20',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ph_module_control_status',
-    'unique_id': '1234567890_ph module control status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ph_control_module',
-    'unique_id': '1234567890_ph control module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ph_measurement_active',
-    'unique_id': '1234567890_ph measurement active',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'redox_pump_active',
-    'unique_id': '1234567890_redox pump active',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'redox_control_module',
-    'unique_id': '1234567890_redox control module',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'redox_measurement_active',
-    'unique_id': '1234567890_redox measurement active',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[binary_sensor.neopool_running_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.neopool_running_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Running',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Running',
+    'original_name': 'Chlorine pump active',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1565,21 +342,174 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.neopool_running_9-state]
+# name: test_all_entities[binary_sensor.neopool_chlorine_pump_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Chlorine pump active',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_running_9',
+    'entity_id': 'binary_sensor.neopool_chlorine_pump_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_opening-entry]
+# name: test_all_entities[binary_sensor.neopool_chlorine_regulation_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_chlorine_regulation_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine regulation active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Chlorine regulation active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chlorine_control_module',
+    'unique_id': '1234567890_chlorine control module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_chlorine_regulation_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Chlorine regulation active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_chlorine_regulation_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_conductivity_measurement-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_conductivity_measurement',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Conductivity measurement',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Conductivity measurement',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conductivity_measurement_active',
+    'unique_id': '1234567890_conductivity measurement active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_conductivity_measurement-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Conductivity measurement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_conductivity_measurement',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_conductivity_regulation_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_conductivity_regulation_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Conductivity regulation active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Conductivity regulation active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conductivity_control_module',
+    'unique_id': '1234567890_conductivity control module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_conductivity_regulation_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Conductivity regulation active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_conductivity_regulation_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_filtration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1593,7 +523,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_opening',
+    'entity_id': 'binary_sensor.neopool_filtration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1601,12 +531,776 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Opening',
+    'object_id_base': 'Filtration',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Filtration',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_pump',
+    'unique_id': '1234567890_filtration pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_filtration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Filtration',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_filtration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heating',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating',
+    'unique_id': '1234567890_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_activated_by_chlorine_module-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_activated_by_chlorine_module',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis activated by chlorine module',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis activated by chlorine module',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_activated_by_the_cl_module',
+    'unique_id': '1234567890_hidro activated by the cl module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_activated_by_chlorine_module-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis activated by chlorine module',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_activated_by_chlorine_module',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_activated_by_redox_module-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_activated_by_redox_module',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis activated by Redox module',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis activated by Redox module',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_activated_by_the_rx_module',
+    'unique_id': '1234567890_hidro activated by the rx module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_activated_by_redox_module-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis activated by Redox module',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_activated_by_redox_module',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_chlorine_shock_mode_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_chlorine_shock_mode_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis chlorine shock mode (boost)',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis chlorine shock mode (boost)',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_chlorine_shock_mode',
+    'unique_id': '1234567890_hidro chlorine shock mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_chlorine_shock_mode_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis chlorine shock mode (boost)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_chlorine_shock_mode_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis enabled',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis enabled',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_module_active',
+    'unique_id': '1234567890_hidro module active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_production_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_production_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis production problem',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis production problem',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_low',
+    'unique_id': '1234567890_hidro low',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_production_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis production problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_production_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_regulation_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_regulation_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hydrolysis regulation active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Hydrolysis regulation active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hidro_module_regulated',
+    'unique_id': '1234567890_hidro module regulated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_hydrolysis_regulation_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Hydrolysis regulation active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_hydrolysis_regulation_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_on_target-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ionizer_on_target',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ionizer on target',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ionizer on target',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ion_on_target',
+    'unique_id': '1234567890_ion on target',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_on_target-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Ionizer on target',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ionizer_on_target',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_production_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ionizer_production_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ionizer production problem',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Ionizer production problem',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ion_low',
+    'unique_id': '1234567890_ion low',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_production_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Ionizer production problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ionizer_production_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_program_time_exceeded-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ionizer_program_time_exceeded',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ionizer program time exceeded',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Ionizer program time exceeded',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ion_program_time_exceeded',
+    'unique_id': '1234567890_ion program time exceeded',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ionizer_program_time_exceeded-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Ionizer program time exceeded',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ionizer_program_time_exceeded',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_acid_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ph_acid_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH acid pump',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'pH acid pump',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_acid_pump',
+    'unique_id': '1234567890_ph acid pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_acid_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool pH acid pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ph_acid_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_flow_detection_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ph_flow_detection_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH flow detection control',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'pH flow detection control',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_module_control_status',
+    'unique_id': '1234567890_ph module control status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_flow_detection_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool pH flow detection control',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ph_flow_detection_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_measurement-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ph_measurement',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH measurement',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'pH measurement',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_measurement_active',
+    'unique_id': '1234567890_ph measurement active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_measurement-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool pH measurement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ph_measurement',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_regulation_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_ph_regulation_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH regulation active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'pH regulation active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_control_module',
+    'unique_id': '1234567890_ph control module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_ph_regulation_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool pH regulation active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_ph_regulation_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_pool_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.neopool_pool_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pool cover',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
-    'original_name': 'Opening',
+    'original_name': 'Pool cover',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1616,21 +1310,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_opening-state]
+# name: test_all_entities[binary_sensor.neopool_pool_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Pool cover',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_opening',
+    'entity_id': 'binary_sensor.neopool_pool_cover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power-entry]
+# name: test_all_entities[binary_sensor.neopool_pool_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1644,7 +1338,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power',
+    'entity_id': 'binary_sensor.neopool_pool_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1652,12 +1346,267 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Pool light',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
+    'original_icon': None,
+    'original_name': 'Pool light',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pool_light',
+    'unique_id': '1234567890_pool light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_pool_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Pool light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_pool_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_measurement-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_redox_measurement',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Redox measurement',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Redox measurement',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'redox_measurement_active',
+    'unique_id': '1234567890_redox measurement active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_measurement-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Redox measurement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_redox_measurement',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_pump_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_redox_pump_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Redox pump active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Redox pump active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'redox_pump_active',
+    'unique_id': '1234567890_redox pump active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_pump_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Redox pump active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_redox_pump_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_regulation_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_redox_regulation_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Redox regulation active',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Redox regulation active',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'redox_control_module',
+    'unique_id': '1234567890_redox control module',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_redox_regulation_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Redox regulation active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_redox_regulation_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_uv_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.neopool_uv_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'UV lamp',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'UV lamp',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_lamp',
+    'unique_id': '1234567890_uv lamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.neopool_uv_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool UV lamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_uv_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auxiliary relay 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 1',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1667,21 +1616,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power-state]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_2-entry]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1695,7 +1644,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_2',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1703,12 +1652,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 2',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1718,21 +1667,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_2-state]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_2',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_3-entry]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1746,7 +1695,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_3',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1754,12 +1703,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 3',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1769,21 +1718,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_3-state]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_3',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_4-entry]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1797,7 +1746,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.neopool_power_4',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1805,12 +1754,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Auxiliary relay 4',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Auxiliary relay 4',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1820,14 +1769,65 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_when_modules_absent[binary_sensor.neopool_power_4-state]
+# name: test_setup_when_modules_absent[binary_sensor.neopool_auxiliary_relay_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Auxiliary relay 4',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.neopool_power_4',
+    'entity_id': 'binary_sensor.neopool_auxiliary_relay_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_when_modules_absent[binary_sensor.neopool_pool_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.neopool_pool_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pool cover',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Pool cover',
+    'platform': 'neopool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pool_cover',
+    'unique_id': '1234567890_pool cover',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_when_modules_absent[binary_sensor.neopool_pool_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Pool cover',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.neopool_pool_cover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
