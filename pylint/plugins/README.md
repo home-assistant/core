@@ -140,6 +140,8 @@ Every check has a code following the
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 | `W7434` | [`home-assistant-config-flow-menu-missing-step`](#w7434-home-assistant-config-flow-menu-missing-step) | `async_show_menu` option has no matching `async_step_*` method |
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
+| `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
+| `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 
 
 ## `home_assistant_logger` checker
@@ -1003,3 +1005,37 @@ Use the dedicated helper that loads and parses in one step instead:
 data = load_json_object_fixture("data.json", DOMAIN)
 data = await async_load_json_object_fixture(hass, "data.json", DOMAIN)
 ```
+
+
+## `home_assistant_light_color_mode` checker
+
+A modern `LightEntity` must report **both** `supported_color_modes` and a
+current `color_mode`; setting one without the other raises
+`HomeAssistantError` at runtime. These two checks flag each half of that
+inconsistency. A light that sets *neither* is left alone -- it is either a
+legacy `supported_features`-based light or an abstract base.
+
+A value is considered *provided* by a class when, in that class or any of its
+resolvable ancestors (but excluding `LightEntity`'s own `None` defaults), any
+of these holds: a non-`None` class-body `_attr_...` assignment, a
+`self._attr_... = ...` assignment in a method body, or a property/method
+override of the public name. Mixin/abstract bases that are subclassed by
+another class in the same module are exempted, on the assumption that the
+concrete subclass is the runtime entity (and may supply the missing half).
+
+### `W7436`: `home-assistant-light-missing-color-mode`
+
+The light provides `supported_color_modes` but no `color_mode`. At runtime
+`LightEntity.state_attributes` raises `HomeAssistantError` ("does not report a
+color mode") whenever the light is on and `color_mode` is `None` -- there is
+no inference of the mode from a single supported mode, so this holds even for
+lights that support only `ONOFF` or `BRIGHTNESS`. Set `_attr_color_mode` or
+override the `color_mode` property.
+
+### `W7437`: `home-assistant-light-missing-supported-color-modes`
+
+The light provides `color_mode` but no `supported_color_modes`. At runtime
+`LightEntity._light_internal_supported_color_modes` raises `HomeAssistantError`
+("does not set supported color modes") from both `state_attributes` and
+`capability_attributes` whenever `supported_color_modes` is `None`. Set
+`_attr_supported_color_modes` or override the `supported_color_modes` property.
