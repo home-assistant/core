@@ -85,11 +85,23 @@
     "add_rfid_token": {
       "service": "mdi:card-plus"
     },
+    "add_vehicle_token": {
+      "service": "mdi:car-connected"
+    },
+    "authorize_charge_session": {
+      "service": "mdi:card-account-details-star"
+    },
     "delete_rfid_token": {
       "service": "mdi:card-remove"
     },
+    "delete_vehicle_token": {
+      "service": "mdi:car-off"
+    },
     "list_rfid_tokens": {
       "service": "mdi:card-account-details"
+    },
+    "list_vehicle_tokens": {
+      "service": "mdi:car-multiple"
     }
   }
 }

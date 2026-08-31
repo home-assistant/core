@@ -73,6 +73,12 @@
     "invalid_account": {
       "message": "The selected device ({device_name}) is not an account belonging to this Monzo connection."
     },
+    "invalid_api_response": {
+      "message": "The Monzo API returned an invalid response."
+    },
+    "invalid_api_response_with_details": {
+      "message": "The Monzo API returned an invalid response. Enable debug logging for details."
+    },
     "invalid_device": {
       "message": "The selected Monzo device could not be found."
     },
