@@ -4,20 +4,16 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.bluetti_modbus.const import (
-    DEVICE_TYPE_EP2000,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.bluetti_modbus.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import SERIAL, bluetti_data, seed_unit
+from .conftest import SERIAL
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -190,19 +186,6 @@ async def test_dead_link_on_the_retry_still_fails_the_refresh(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_error_when_device_type_unsupported(hass: HomeAssistant) -> None:
-    """A config entry whose device type the library no longer supports is fatal."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Unknown",
-        data=bluetti_data(device_type="unknown"),
-    )
-
-    await _setup(hass, entry)
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_identity_mismatch_after_setup_fails_the_refresh(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -231,22 +214,3 @@ async def test_excluded_fields_are_dropped_from_the_read_plan(
 
     device = mock_config_entry.runtime_data.coordinator.device
     assert device.get_field("ac_o_switch") is None
-
-
-async def test_ep2000_loads(
-    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
-) -> None:
-    """An EP2000, with its own different field map, also sets up cleanly."""
-    seed_unit(mock_modbus_connection.for_unit(2), device_type=DEVICE_TYPE_EP2000)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="EP2000",
-        data=bluetti_data(unit_id=2, device_type=DEVICE_TYPE_EP2000),
-    )
-
-    await _setup(hass, entry)
-
-    assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get("sensor.ep2000_battery_voltage")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE

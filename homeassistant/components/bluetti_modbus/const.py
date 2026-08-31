@@ -8,18 +8,17 @@ DOMAIN: Final = "bluetti_modbus"
 LOGGER = logging.getLogger(__package__)
 
 CONF_UNIT_ID: Final = "unit_id"
-CONF_DEVICE_TYPE: Final = "device_type"
 
 # BLUETTI's factory default: Modbus TCP on port 502, unit id 1.
 DEFAULT_PORT: Final = 502
 DEFAULT_UNIT_ID: Final = 1
 
-# The power-station models bluetti-modbus-lib supports as a top-level product.
-# "smeter" is deliberately excluded: it is a standalone accessory attached to
-# a power station, never something a user sets up as its own Modbus device.
+# The only power-station model bluetti-modbus-lib currently supports over
+# Modbus TCP. EP2000 was removed pending confirmation it actually exposes
+# Modbus TCP at all - see
+# bluetti-official/bluetti-home-assistant#125. "smeter" is a standalone
+# accessory, never something a user sets up as its own Modbus device.
 DEVICE_TYPE_BALCO260: Final = "balco260"
-DEVICE_TYPE_EP2000: Final = "ep2000"
-DEVICE_TYPES: Final = (DEVICE_TYPE_BALCO260, DEVICE_TYPE_EP2000)
 
 # This device's Modbus TCP stack is known to become unresponsive under
 # polling pressure - proven in production at this interval in the bluetti

@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_DEVICE_TYPE, CONF_UNIT_ID, DOMAIN, EXCLUDED_FIELDS
+from .const import CONF_UNIT_ID, DEVICE_TYPE_BALCO260, DOMAIN, EXCLUDED_FIELDS
 from .coordinator import (
     BluettiModbusConfigEntry,
     BluettiModbusDataUpdateCoordinator,
@@ -42,13 +42,8 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
-    device_type = entry.data[CONF_DEVICE_TYPE]
-    device = get_device(device_type, unit)
-    if device is None:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_device_type",
-        )
+    device = get_device(DEVICE_TYPE_BALCO260, unit)
+    assert device is not None  # DEVICE_TYPE_BALCO260 is always a known device type
 
     # These fields belong on other platforms once they exist (see
     # EXCLUDED_FIELDS); narrowing the read plan here, not just entity
@@ -70,11 +65,12 @@ async def async_setup_entry(
     if arm_version is not None or dsp_version is not None:
         sw_version = f"ARM {arm_version}, DSP {dsp_version}"
 
+    assert (
+        entry.unique_id is not None
+    )  # the config flow always sets it to the confirmed serial
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
-        device_info=bluetti_modbus_device_info(
-            entry.entry_id, device_type, entry.unique_id, sw_version
-        ),
+        device_info=bluetti_modbus_device_info(entry.unique_id, sw_version),
     )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **entry.runtime_data.device_info

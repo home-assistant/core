@@ -4,36 +4,28 @@ from typing import Any
 from unittest.mock import patch
 
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.bluetti_modbus.const import (
-    CONF_DEVICE_TYPE,
-    CONF_UNIT_ID,
-    DEVICE_TYPE_EP2000,
-    DOMAIN,
-)
+from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import DEVICE_TYPE, HOST, PORT, SERIAL, UNIT_ID, bluetti_data, seed_unit
+from .conftest import HOST, PORT, SERIAL, UNIT_ID, bluetti_data
 
 from tests.common import MockConfigEntry
 
 TITLE = "Balco260"
 
 
-def _user_input(
-    unit_id: int = UNIT_ID, device_type: str = DEVICE_TYPE
-) -> dict[str, Any]:
+def _user_input(unit_id: int = UNIT_ID) -> dict[str, Any]:
     """Form input for the user step."""
     return {
         CONF_HOST: HOST,
         CONF_PORT: PORT,
         CONF_UNIT_ID: unit_id,
-        CONF_DEVICE_TYPE: device_type,
     }
 
 
@@ -53,24 +45,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["title"] == TITLE
     assert result["data"] == bluetti_data()
     assert result["result"].unique_id == SERIAL
-
-
-async def test_user_flow_falls_back_to_link_identity_without_a_serial(
-    hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
-) -> None:
-    """A device type with no serial number field is identified by its link."""
-    seed_unit(mock_modbus_connection.for_unit(UNIT_ID), device_type=DEVICE_TYPE_EP2000)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input(device_type=DEVICE_TYPE_EP2000)
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id is None
 
 
 async def test_user_flow_cannot_connect(
@@ -170,23 +144,6 @@ async def test_user_flow_probe_timeout_surfaces_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_flow_unsupported_device_type(hass: HomeAssistant) -> None:
-    """A device type the installed library no longer supports is rejected."""
-    with patch(
-        "homeassistant.components.bluetti_modbus.config_flow.get_device",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], _user_input()
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unsupported_device_type"}
 
 
 async def test_user_flow_already_configured(

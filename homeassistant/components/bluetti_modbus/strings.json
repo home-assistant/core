@@ -6,19 +6,16 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "link_settings_in_use": "This address and device ID are already in use with different Modbus settings by another entry.",
-      "unsupported_device_type": "This device type is not supported by the installed version of bluetti-modbus."
+      "link_settings_in_use": "This address and device ID are already in use with different Modbus settings by another entry."
     },
     "step": {
       "user": {
         "data": {
-          "device_type": "Model",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "unit_id": "Device ID"
         },
         "data_description": {
-          "device_type": "The BLUETTI power station model you are connecting to.",
           "host": "The hostname or IP address of your BLUETTI power station.",
           "port": "The TCP port the device listens on for Modbus requests. The BLUETTI default is 502.",
           "unit_id": "The Modbus device ID of the power station. The BLUETTI default is 1."
@@ -174,19 +171,8 @@
     "link_settings_in_use": {
       "message": "The device cannot be set up with these link settings: {error}"
     },
-    "unsupported_device_type": {
-      "message": "This entry's device type is not supported by the installed version of bluetti-modbus."
-    },
     "wrong_device": {
       "message": "The device at this address is a different device than the one this entry was set up for."
-    }
-  },
-  "selector": {
-    "device_type": {
-      "options": {
-        "balco260": "Balco260",
-        "ep2000": "EP2000"
-      }
     }
   }
 }

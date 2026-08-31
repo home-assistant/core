@@ -16,7 +16,6 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant.components.bluetti_modbus.const import (
-    CONF_DEVICE_TYPE,
     CONF_UNIT_ID,
     DEVICE_TYPE_BALCO260,
     DOMAIN,
@@ -29,7 +28,6 @@ from tests.common import MockConfigEntry
 HOST = "1.2.3.4"
 PORT = 502
 UNIT_ID = 1
-DEVICE_TYPE = DEVICE_TYPE_BALCO260
 ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
 # Balco260's d_serial decodes from raw registers - zero-seeded here like
 # everything else, same as a real device's serial number would be a fixed,
@@ -37,20 +35,17 @@ ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
 SERIAL = "0"
 
 
-def bluetti_data(
-    unit_id: int = UNIT_ID, device_type: str = DEVICE_TYPE
-) -> dict[str, Any]:
+def bluetti_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
     """Config entry data for a device reached over Modbus TCP."""
     return {
         CONF_HOST: HOST,
         CONF_PORT: PORT,
         CONF_UNIT_ID: unit_id,
-        CONF_DEVICE_TYPE: device_type,
     }
 
 
-def seed_unit(unit: MockModbusUnit, device_type: str = DEVICE_TYPE) -> None:
-    """Seed a mock unit so every field this device type has decodes cleanly.
+def seed_unit(unit: MockModbusUnit) -> None:
+    """Seed a mock unit so every field Balco260 has decodes cleanly.
 
     There is no captured full register dump for this hardware yet (unlike a
     single self-describing header block, BLUETTI's map has none to capture
@@ -58,7 +53,7 @@ def seed_unit(unit: MockModbusUnit, device_type: str = DEVICE_TYPE) -> None:
     field metadata instead. Zero decodes safely everywhere, including the
     enum-typed status/warning/fault fields, whose "normal" member is always 0.
     """
-    device = get_device(device_type)
+    device = get_device(DEVICE_TYPE_BALCO260)
     assert device is not None
     for name in device.field_names():
         field = device.get_field(name)
