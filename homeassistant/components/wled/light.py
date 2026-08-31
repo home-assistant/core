@@ -177,7 +177,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return (
             super().available and self._segment in self.coordinator.data.state.segments
         )
-        
+    
     @property
     @override
     def color_mode(self) -> ColorMode | None:
