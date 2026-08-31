@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import override
 
-from duco_connectivity.models import Node, NodeType, VentilationState
+from duco_connectivity.models import DiagStatus, Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,6 +33,8 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+DIAGNOSTIC_STATUS_OPTIONS = [status.value for status in DiagStatus]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -235,6 +237,8 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
         key="filter",
         component="Filter",
         translation_key="diagnostic_filter",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIAGNOSTIC_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -242,6 +246,8 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
         key="sun_control",
         component="SunCtrl",
         translation_key="diagnostic_sun_control",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIAGNOSTIC_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -249,6 +255,8 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
         key="ventilation_cooling",
         component="VentCool",
         translation_key="diagnostic_ventilation_cooling",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIAGNOSTIC_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -256,6 +264,8 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
         key="ventilation",
         component="Ventilation",
         translation_key="diagnostic_ventilation",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIAGNOSTIC_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -429,6 +439,8 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
                 key=slugify(component),
                 component=component,
                 translation_key="diagnostic_status",
+                device_class=SensorDeviceClass.ENUM,
+                options=DIAGNOSTIC_STATUS_OPTIONS,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=False,
             )

@@ -23,6 +23,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -211,13 +212,18 @@ async def test_diagnostic_sensor_entity_registry_defaults(
     for entity_id in (
         "sensor.living_signal_strength",
         "sensor.living_filter",
-        "sensor.living_future_mode",
         "sensor.living_ventilation_cooling",
         "sensor.living_sun_control",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    entry = entity_registry.async_get("sensor.living_future_mode")
+    assert entry is not None
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entry.original_device_class == SensorDeviceClass.ENUM
+    assert entry.capabilities == {"options": ["ok", "disabled", "error"]}
 
     entry = entity_registry.async_get("sensor.living_ventilation")
     assert entry is not None
