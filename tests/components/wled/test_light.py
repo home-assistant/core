@@ -399,11 +399,7 @@ async def test_cct_light_reflects_active_color_mode(
     freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
-    """Test that an RGB+CCT segment reports the color mode of its active color.
-
-    Regression test for #123614: a color set on an analog RGB+CCT strip must be
-    reflected in Home Assistant instead of the entity staying frozen on color_temp.
-    """
+    """Test reporting the active color mode for an RGB+CCT segment."""
     device = mock_wled.update.return_value
 
     # A color is active on the segment (RGB non-zero) -> report RGBW and expose it
