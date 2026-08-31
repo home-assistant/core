@@ -27,6 +27,7 @@ from .coordinator import (
     PeblarVersionDataUpdateCoordinator,
 )
 from .services import async_setup_services
+from .websocket import PeblarSessionListener
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -59,14 +60,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         system_information = await peblar.system_information()
         api = await peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
     except PeblarConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryNotReady("Could not connect to Peblar charger") from err
-    except PeblarAuthenticationError as err:
-        raise ConfigEntryAuthFailed from err
-    except PeblarError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
-            "Unknown error occurred while connecting to Peblar charger"
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except PeblarAuthenticationError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from err
+    except PeblarError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="unknown_error",
+            translation_placeholders={"error": str(err)},
         ) from err
 
     # Setup the data coordinators
@@ -87,6 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         system_information=system_information,
         user_configuration_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
+    )
+
+    listener = PeblarSessionListener(hass, entry, peblar, meter_coordinator)
+    entry.async_create_background_task(
+        hass, listener.async_run(), name=f"Peblar {entry.title} event stream"
     )
 
     # Forward the setup to the platforms

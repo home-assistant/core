@@ -126,7 +126,8 @@ class LGDevice(MediaPlayerEntity):
         self._treble = 0
         self._device = None
         self._support_play_control = False
-        self._device_on = False
+        # Starts out matching the ON default of _attr_state, for the same reason
+        self._device_on = True
         self._stream_type = 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)}, name=host

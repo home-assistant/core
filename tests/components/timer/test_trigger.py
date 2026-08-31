@@ -634,13 +634,13 @@ async def test_time_remaining_trigger_entity_removed_from_target(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test trigger cancels scheduled fire when entity is removed from the target."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    label_reg = lr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    label = label_reg.async_create("Test Time Remaining")
+    label = label_registry.async_create("Test Time Remaining")
 
     entry = entity_registry.async_get_or_create(
         domain=DOMAIN, platform="test", unique_id="time_remaining_remove"
@@ -683,13 +683,13 @@ async def test_time_remaining_trigger_entity_added_to_target(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test trigger schedules a fire for an active timer added to the target later."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    label_reg = lr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    label = label_reg.async_create("Test Time Remaining Add")
+    label = label_registry.async_create("Test Time Remaining Add")
 
     entry = entity_registry.async_get_or_create(
         domain=DOMAIN, platform="test", unique_id="time_remaining_add"

@@ -138,6 +138,8 @@ Every check has a code following the
 | `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
 | `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
+| `W7434` | [`home-assistant-config-flow-menu-missing-step`](#w7434-home-assistant-config-flow-menu-missing-step) | `async_show_menu` option has no matching `async_step_*` method |
+| `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 
 
 ## `home_assistant_logger` checker
@@ -363,6 +365,25 @@ subentry flows (`ConfigSubentryFlow` subclasses) are excluded.
 Config flow should not include a name field. Users should not set names
 in config flows; they come automatically from the device or are set by
 the integration.
+
+
+## `home_assistant_config_flow_menu_options` checker
+
+Validates that every option passed to
+`self.async_show_menu(menu_options=...)` corresponds to an
+`async_step_<option>` method on the flow class. Each option becomes a
+`next_step_id` the flow manager dispatches to that method; a missing method
+raises `UnknownStep` at runtime when the user selects the option.
+
+Only statically resolvable forms are checked: a literal list/tuple/set of
+strings, or a literal dict keyed by the step ids. Dynamic forms
+(comprehensions, unresolved variables) and flows with an unresolvable base
+class are skipped to avoid false positives.
+
+### `W7434`: `home-assistant-config-flow-menu-missing-step`
+
+A `menu_options` entry does not match any `async_step_*` method defined on
+the flow class or its ancestors.
 
 
 ## `home_assistant_unused_test_fixture_args` checker
@@ -951,3 +972,34 @@ websocket command, which is only registered when the `usb` integration is set
 up. The selector therefore requires `usb` as a hard dependency
 (`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
 does not force `usb` to be set up.
+
+
+## `home_assistant_json_fixture` checker
+
+Detects tests that load a fixture and then parse it as JSON, instead of
+using the dedicated JSON fixture helpers from `tests.common`. Only runs on
+test modules. `tests.common` itself is exempt, since it defines the JSON
+fixture helpers, which legitimately parse a loaded fixture.
+
+### `W7435`: `home-assistant-json-fixture`
+
+A fixture loader (`load_fixture`, `load_fixture_bytes`, or
+`async_load_fixture`) is wrapped in a JSON-parsing call (`json.loads`,
+`json.load`, or the `json_loads` / `json_loads_array` / `json_loads_object`
+helpers), e.g.:
+
+```python
+data = json.loads(load_fixture("data.json", DOMAIN))
+data = json_loads_object(await async_load_fixture(hass, "data.json"))
+```
+
+Use the dedicated helper that loads and parses in one step instead:
+
+- `load_json_value_fixture` / `async_load_json_object_fixture` for a JSON value,
+- `load_json_array_fixture` / `async_load_json_array_fixture` for a JSON array,
+- `load_json_object_fixture` / `async_load_json_object_fixture` for a JSON object.
+
+```python
+data = load_json_object_fixture("data.json", DOMAIN)
+data = await async_load_json_object_fixture(hass, "data.json", DOMAIN)
+```

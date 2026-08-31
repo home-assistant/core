@@ -22,6 +22,7 @@ from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 @pytest.mark.parametrize(
     ("device_type", "device_name"),
     [
+        (LEDIrDeviceType.GENERIC_10_KEY, "10-key remote"),
         (LEDIrDeviceType.GENERIC_13_KEY, "13-key remote"),
         (LEDIrDeviceType.GENERIC_24_KEY, "24-key remote"),
         (LEDIrDeviceType.GENERIC_40_KEY, "40-key remote"),
