@@ -101,14 +101,6 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 
         self.session = session
 
-    @property
-    def heat_pump_online(self) -> bool:
-        """Return whether the heat pump still reports to the Weheat cloud.
-
-        Firmware that does not report the flag is assumed to be online.
-        """
-        return self.data.is_online is not False
-
     @override
     async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
@@ -151,11 +143,6 @@ class WeheatEnergyUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
         )
 
         self.session = session
-
-    @property
-    def heat_pump_online(self) -> bool:
-        """Return True, as the energy totals stay valid while the heat pump is offline."""
-        return True
 
     @override
     async def _async_update_data(self) -> HeatPump:

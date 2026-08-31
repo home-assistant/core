@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,12 +51,12 @@ async def test_create_binary_entities(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_connectivity_available_while_offline(
+async def test_offline_heat_pump_keeps_reporting(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the connectivity sensor reports offline instead of becoming unavailable."""
+    """Test an offline heat pump reports connectivity without hiding its last values."""
     mock_weheat_heat_pump.is_online = False
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -65,5 +65,5 @@ async def test_connectivity_available_while_offline(
     assert hass.states.get("binary_sensor.test_model_connectivity").state == STATE_OFF
     assert (
         hass.states.get("binary_sensor.test_model_indoor_unit_water_pump").state
-        == STATE_UNAVAILABLE
+        == STATE_OFF
     )

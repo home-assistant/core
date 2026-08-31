@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -108,19 +108,16 @@ async def test_code_becoming_unrecognised_reports_unknown(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
-async def test_energy_totals_survive_an_offline_heat_pump(
+async def test_offline_heat_pump_keeps_its_last_values(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that only the log based sensors go unavailable when the pump is offline."""
+    """Test the sensors keep reporting when the cloud marks the heat pump offline."""
     mock_weheat_heat_pump.is_online = False
 
     with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert (
-        hass.states.get("sensor.test_model_water_inlet_temperature").state
-        == STATE_UNAVAILABLE
-    )
+    assert hass.states.get("sensor.test_model_water_inlet_temperature").state == "11"
     assert hass.states.get("sensor.test_model_electricity_used").state == "28689"

@@ -108,7 +108,7 @@ async def async_setup_entry(
         if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
     ]
     entities.extend(
-        WeheatHeatPumpConnectivityBinarySensor(
+        WeheatHeatPumpBinarySensor(
             weheatdata.heat_pump_info,
             weheatdata.data_coordinator,
             CONNECTIVITY_SENSOR,
@@ -145,13 +145,3 @@ class WeheatHeatPumpBinarySensor(WeheatEntity, BinarySensorEntity):
         """Return True if the binary sensor is on."""
         value = self.entity_description.value_fn(self.coordinator.data)
         return bool(value) if value is not None else None
-
-
-class WeheatHeatPumpConnectivityBinarySensor(WeheatHeatPumpBinarySensor):
-    """Defines a Weheat connectivity sensor, which stays available while offline."""
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
