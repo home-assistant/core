@@ -159,18 +159,18 @@ async def test_compressed_tile_is_handed_on_as_it_arrived(
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Content-Encoding"] == "gzip"
-    assert resp.headers["Vary"] == "Accept-Encoding"
+    assert "Vary" not in resp.headers
     # The test client decompresses on read; a stale `Content-Encoding` over
     # already-decoded bytes would make this read fail.
     assert await resp.read() == tile
 
 
-async def test_client_that_cannot_take_gzip_gets_plain_bytes(
+async def test_gzip_is_served_regardless_of_accept_encoding(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that a caller which did not ask for gzip is not handed it anyway."""
+    """Test that a stored gzip asset is served compressed even for an identity request."""
     tile = b"a vector tile large enough to be worth compressing" * 100
     aioclient_mock.get(
         VECTOR_UPSTREAM,
@@ -182,7 +182,8 @@ async def test_client_that_cannot_take_gzip_gets_plain_bytes(
     resp = await client.get(VECTOR_PATH, headers={"Accept-Encoding": "identity"})
 
     assert resp.status == HTTPStatus.OK
-    assert "Content-Encoding" not in resp.headers
+    assert resp.headers["Content-Encoding"] == "gzip"
+    # The test client decompresses on read regardless of what it requested.
     assert await resp.read() == tile
 
 
@@ -412,27 +413,21 @@ async def test_oversized_upstream_body_is_refused(
     assert aioclient_mock.call_count == 2
 
 
-@pytest.mark.parametrize(
-    "content",
-    [
-        pytest.param(b"not gzip at all", id="lying content encoding"),
-        pytest.param(gzip.compress(b"0" * 1000), id="expands past the cap"),
-    ],
-)
-async def test_undecodable_cached_body_is_refused(
+async def test_tilejson_expanding_past_the_cap_is_refused(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    content: bytes,
 ) -> None:
-    """Test that a cached body that cannot be decoded for a client is refused."""
+    """Test that a TileJSON whose gzip body expands past the cap is refused."""
     aioclient_mock.get(
-        VECTOR_UPSTREAM, content=content, headers={"Content-Encoding": "gzip"}
+        TILEJSON_URL,
+        content=gzip.compress(b"0" * 1000),
+        headers={"Content-Encoding": "gzip"},
     )
 
     client = await hass_client()
     with patch("homeassistant.components.map_tiles.views.MAX_DECOMPRESSED_BYTES", 100):
-        resp = await client.get(VECTOR_PATH, headers={"Accept-Encoding": "identity"})
+        resp = await client.get(TILEJSON_PATH)
 
     assert resp.status == HTTPStatus.BAD_GATEWAY
 

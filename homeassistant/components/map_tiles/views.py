@@ -89,36 +89,26 @@ class _MapTilesView(HomeAssistantView):
         # 403 rather than banning the user's own IP over it.
         raise web.HTTPForbidden
 
-    async def _async_serve(
-        self, request: web.Request, key: str, url: str
-    ) -> web.Response:
-        """Serve an asset from the cache, fetching it upstream on a miss."""
+    async def _async_serve(self, key: str, url: str) -> web.Response:
+        """Serve an asset from the cache, fetching it upstream on a miss.
+
+        A gzip-encoded asset is served compressed to every client; Accept-Encoding
+        is intentionally not checked, since every browser accepts gzip. There is
+        therefore no identity variant, and hence no Vary on Accept-Encoding.
+        """
         asset = await self._cache.async_get(
             key, self.ttl, partial(self._async_fetch, url)
         )
         if asset is None:
             return web.Response(status=HTTPStatus.BAD_GATEWAY)
 
-        body, encoding = asset.body, asset.encoding
-        if (
-            encoding == GZIP
-            and GZIP not in request.headers.get(hdrs.ACCEPT_ENCODING, "").lower()
-        ):
-            try:
-                body = await self._hass.async_add_executor_job(_gzip_decompress, body)
-            except ValueError, zlib.error:
-                _LOGGER.error("Cached body for %s does not match its encoding", key)
-                return web.Response(status=HTTPStatus.BAD_GATEWAY)
-            encoding = None
+        headers = {hdrs.CACHE_CONTROL: f"private, max-age={self.max_age}"}
+        if asset.encoding:
+            headers[hdrs.CONTENT_ENCODING] = asset.encoding
 
-        headers = {
-            hdrs.CACHE_CONTROL: f"private, max-age={self.max_age}",
-            hdrs.VARY: hdrs.ACCEPT_ENCODING,
-        }
-        if encoding:
-            headers[hdrs.CONTENT_ENCODING] = encoding
-
-        return web.Response(body=body, content_type=self.content_type, headers=headers)
+        return web.Response(
+            body=asset.body, content_type=self.content_type, headers=headers
+        )
 
     async def _async_fetch(self, url: str) -> Asset | None:
         """Fetch url upstream, returning None on any upstream failure."""
@@ -183,7 +173,6 @@ class _MapTilesTileView(_MapTilesView):
 
         coordinates = {"z": zoom, "x": column, "y": row}
         return await self._async_serve(
-            request,
             self.key_template.format(**coordinates),
             self.upstream.format(**coordinates),
         )
@@ -230,7 +219,6 @@ class MapTilesGlyphsView(_MapTilesView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return await self._async_serve(
-            request,
             f"fonts/{fontstack}/{glyph_range}",
             f"{VECTOR_URL}/styles/shortbread/fonts/{fontstack}/{glyph_range}",
         )
@@ -253,9 +241,7 @@ class _MapTilesSpritesView(_MapTilesView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         path = f"sprites/{sprite_set}/{name}{self.extension}"
-        return await self._async_serve(
-            request, path, f"{VECTOR_URL}/styles/shortbread/{path}"
-        )
+        return await self._async_serve(path, f"{VECTOR_URL}/styles/shortbread/{path}")
 
 
 class MapTilesSpriteIndexView(_MapTilesSpritesView):
@@ -288,7 +274,7 @@ class MapTilesTileJsonView(_MapTilesView):
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Handle a GET request for the TileJSON."""
         self._authenticate(request)
-        return await self._async_serve(request, "tilejson.json", TILEJSON_URL)
+        return await self._async_serve("tilejson.json", TILEJSON_URL)
 
     @override
     async def _async_fetch(self, url: str) -> Asset | None:
