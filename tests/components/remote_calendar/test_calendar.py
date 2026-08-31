@@ -267,6 +267,58 @@ async def test_cancelled_event_does_not_turn_the_entity_on(
     assert state.state == STATE_OFF
 
 
+CANCELLED_OCCURRENCE_ICS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:Daily series
+    UID:daily-series
+    DTSTART;VALUE=DATE:20261002
+    DTEND;VALUE=DATE:20261003
+    RRULE:FREQ=DAILY;COUNT=5
+    STATUS:CONFIRMED
+    END:VEVENT
+    BEGIN:VEVENT
+    SUMMARY:Daily series
+    UID:daily-series
+    RECURRENCE-ID;VALUE=DATE:20261003
+    DTSTART;VALUE=DATE:20261003
+    DTEND;VALUE=DATE:20261004
+    STATUS:CANCELLED
+    END:VEVENT
+    END:VCALENDAR
+    """
+)
+
+
+@respx.mock
+async def test_cancelled_occurrence_of_a_series_is_not_returned(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    get_events: GetEventsFn,
+) -> None:
+    """Test that only the cancelled occurrence of a recurring series is dropped.
+
+    The filtering has to happen after the series is expanded: dropping the
+    cancelled VEVENT before expansion would remove the override, and the RRULE
+    would then produce that day as an ordinary event again.
+    """
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=CANCELLED_OCCURRENCE_ICS)
+    )
+    await setup_integration(hass, config_entry)
+
+    events = await get_events("2026-10-01T00:00:00Z", "2026-10-08T00:00:00Z")
+
+    assert [event["start"] for event in events] == [
+        {"date": "2026-10-02"},
+        {"date": "2026-10-04"},
+        {"date": "2026-10-05"},
+        {"date": "2026-10-06"},
+    ]
+
+
 @pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
 @respx.mock
 async def test_active_event(
