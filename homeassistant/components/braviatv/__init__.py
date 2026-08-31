@@ -29,9 +29,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: BraviaTVConfigEntry
 ) -> bool:
     """Migrate old config entries to the new unique_id based on MAC."""
-    if config_entry.version > 1:
-        return True
-
     if config_entry.version == 1:
         mac = config_entry.data[CONF_MAC]
         new_unique_id = dr.format_mac(mac)
