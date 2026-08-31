@@ -103,7 +103,7 @@ async def async_setup_entry(
             KnxYamlClimate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.CLIMATE):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.CLIMATE):
         entities.extend(
             KnxUiClimate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -114,6 +114,7 @@ async def async_setup_entry(
 
 def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
+    sync_state = config[CONF_SYNC_STATE]
     climate_mode = XknxClimateMode(
         xknx,
         name=f"{config[CONF_NAME]} Mode",
@@ -151,6 +152,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_heat_cool_state=config.get(
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         operation_modes=config.get(ClimateConf.OPERATION_MODES),
         controller_modes=config.get(ClimateConf.CONTROLLER_MODES),
     )
@@ -182,6 +184,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_command_value_state=config.get(
             ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         min_temp=config.get(ClimateConf.MIN_TEMP),
         max_temp=config.get(ClimateConf.MAX_TEMP),
         mode=climate_mode,

@@ -25,18 +25,23 @@ from uiprotect.data import (
     Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
+    VideoMode,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicCamera,
+    PublicCameraLedSettings,
     PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
+    PublicOsdSettings,
     PublicSensor,
+    PublicSensorAlarmSettingsRead,
     PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
+    PublicSensorThresholdSettings,
     PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
@@ -264,6 +269,10 @@ def make_public_sensor(
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
     motion_sensitivity: int | None = None,
+    temperature_enabled: bool | None = None,
+    humidity_enabled: bool | None = None,
+    light_enabled: bool | None = None,
+    alarm_enabled: bool | None = None,
     mount_type: MountType | None = None,
     is_opened: bool | None = None,
     is_leak_detected: bool | None = None,
@@ -329,6 +338,30 @@ def make_public_sensor(
             else motion_sensitivity
         ),
     )
+    public.temperature_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.temperature_settings.is_enabled
+            if temperature_enabled is None
+            else temperature_enabled
+        )
+    )
+    public.humidity_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.humidity_settings.is_enabled
+            if humidity_enabled is None
+            else humidity_enabled
+        )
+    )
+    public.light_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.light_settings.is_enabled if light_enabled is None else light_enabled
+        )
+    )
+    public.alarm_settings = PublicSensorAlarmSettingsRead(
+        is_enabled=(
+            sensor.alarm_settings.is_enabled if alarm_enabled is None else alarm_enabled
+        )
+    )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(
             percentage=(
@@ -367,6 +400,9 @@ def make_public_light(
     public = Mock(spec=PublicLight)
     public.id = light.id
     public.mac = light.mac
+    public.name = light.name
+    public.display_name = light.display_name
+    public.type = light.type
     public.model = ModelType.LIGHT
     public.state = DeviceState[light.state.name] if state is None else state
     public.is_light_on = light.is_light_on if is_light_on is None else is_light_on
@@ -422,6 +458,12 @@ def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
+    status_light: bool = False,
+    osd_name: bool = False,
+    osd_date: bool = False,
+    osd_logo: bool = False,
+    osd_debug: bool = False,
+    video_mode: VideoMode | None = None,
     is_motion_detected: bool = False,
     is_smart_currently_detected: bool = False,
     is_person_currently_detected: bool = False,
@@ -442,13 +484,19 @@ def make_public_camera(
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera mirroring a private camera's migrated fields.
+    """Build a public-API camera for a private camera's migrated fields.
 
     The stream tiers/mic/HDR back the migrated stream and select entities; the
     ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
-    gates (default: all types enabled). ``mic_volume`` and ``hdr_type`` default to
-    values derived from the private fixture so the public mirror matches it.
+    gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
+    and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
+    private camera when not overridden.
+
+    ``status_light`` and the ``osd_*`` flags deliberately default to off instead
+    of mirroring, so a test overriding one sets a value the private object would
+    not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
+    the test.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -458,6 +506,14 @@ def make_public_camera(
     public.type = camera.type
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
+    public.led_settings = PublicCameraLedSettings(is_enabled=status_light)
+    public.osd_settings = PublicOsdSettings(
+        is_name_enabled=osd_name,
+        is_date_enabled=osd_date,
+        is_logo_enabled=osd_logo,
+        is_debug_enabled=osd_debug,
+    )
+    public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
@@ -479,12 +535,15 @@ def make_public_camera(
         audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
     )
     # A Mock(spec) does not evaluate properties, so mirror the PublicCamera
-    # parity properties the migrated detection sensors gate on using the
-    # library's own logic.
+    # parity properties the migrated switches read and the detection sensors
+    # gate on, using the library's own logic.
     for name in (
+        "is_high_fps_enabled",
         "is_person_detection_on",
         "is_vehicle_detection_on",
         "is_animal_detection_on",
+        "is_package_detection_on",
+        "is_license_plate_detection_on",
         "is_smoke_detection_on",
         "is_co_detection_on",
         "is_siren_detection_on",
@@ -543,6 +602,7 @@ def setup_public_sensor(
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -562,14 +622,17 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.arm_profiles = {}
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # One mock per id so command assertions hit the entity's cached object.
         if (
             model is ModelType.LIGHT
+            and obj_id not in public_bootstrap.lights
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -597,6 +660,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 

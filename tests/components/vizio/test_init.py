@@ -6,7 +6,13 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from vizaio import VizioConnectionError
+from vizaio import (
+    ChargingStatus,
+    DeviceType,
+    VizioAuthError,
+    VizioConnectionError,
+    VizioNotFoundError,
+)
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -16,6 +22,7 @@ from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
+    CONF_DEVICE_TYPE,
     CONF_VOLUME_STEP,
     DOMAIN,
 )
@@ -26,6 +33,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -36,6 +45,8 @@ from .const import (
     ADDITIONAL_APP_CONFIG,
     APP_RECORDS,
     CURRENT_APP,
+    CURRENT_INPUT,
+    ENTITY_ID,
     HOST,
     HOST2,
     MOCK_USER_VALID_TV_CONFIG,
@@ -45,6 +56,7 @@ from .const import (
     UNIQUE_ID,
     VERSION,
     VOLUME_STEP,
+    state_extended,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -194,6 +206,219 @@ async def test_device_registry_without_model_or_version(
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_state_extended_polling(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
+) -> None:
+    """Test modern firmware polls via a single state_extended call."""
+    await setup_integration(hass, mock_tv_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["source"] == CURRENT_INPUT
+    # The bundled endpoint replaces the individual state getters
+    mock_vizio.get_power_state.assert_not_called()
+    mock_vizio.get_current_input.assert_not_called()
+    mock_vizio.get_current_app_config.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_state_extended_power_off(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
+) -> None:
+    """Test state_extended reporting the device as off."""
+    mock_vizio.get_state_extended.return_value = state_extended(power_on=False)
+
+    await setup_integration(hass, mock_tv_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    mock_vizio.get_settings.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_state_extended_probed_only_once(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test firmware without state_extended is not re-probed every refresh."""
+    mock_vizio.get_state_extended.side_effect = VizioNotFoundError("not supported")
+
+    await setup_integration(hass, mock_tv_config_entry)
+    mock_vizio.get_state_extended.reset_mock()
+
+    for _ in range(3):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_vizio.get_state_extended.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_state_extended_connection_error(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
+) -> None:
+    """Test a state_extended connection error fails the update."""
+    mock_vizio.get_state_extended.side_effect = VizioConnectionError("cannot connect")
+
+    mock_tv_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_tv_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_tv_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
+async def test_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth failure during refresh starts a reauth flow."""
+    await setup_integration(hass, mock_tv_config_entry)
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    with patch(
+        "homeassistant.components.vizio.Vizio.get_power_state",
+        side_effect=VizioAuthError("token rejected"),
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_auth_failure_at_setup_triggers_reauth(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test an auth failure during setup puts the entry in an error state."""
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioAuthError("token rejected"),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_power_state",
+            side_effect=VizioAuthError("token rejected"),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_model_name",
+            return_value=MODEL,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_version",
+            return_value=VERSION,
+        ),
+    ):
+        mock_tv_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_tv_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_tv_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classified_as_crave(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test a speaker entry is classified once and the result persisted."""
+    with (
+        patch(
+            "homeassistant.components.vizio.async_classify_device",
+            return_value=DeviceType.CRAVE360,
+        ) as mock_classify,
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        await setup_integration(hass, mock_speaker_config_entry)
+
+    mock_classify.assert_called_once()
+    assert mock_speaker_config_entry.data[CONF_DEVICE_TYPE] == "crave360"
+    assert hass.states.get("sensor.vizio_battery").state == "80"
+
+    # Reload: the persisted device type is used without re-classifying
+    with (
+        patch(
+            "homeassistant.components.vizio.async_classify_device",
+        ) as mock_classify,
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        assert await hass.config_entries.async_reload(
+            mock_speaker_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+    mock_classify.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classification_unavailable(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test classification failure falls back to the soundbar profile."""
+    # The autouse vizio_no_classification fixture raises VizioConnectionError
+    await setup_integration(hass, mock_speaker_config_entry)
+
+    assert CONF_DEVICE_TYPE not in mock_speaker_config_entry.data
+    assert hass.states.get("sensor.vizio_battery") is None
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classified_as_tv_not_persisted(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test a TV classification result is ignored for a speaker entry."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+        return_value=DeviceType.TV,
+    ):
+        await setup_integration(hass, mock_speaker_config_entry)
+
+    assert CONF_DEVICE_TYPE not in mock_speaker_config_entry.data
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_tv_not_classified(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test TV entries never trigger device classification."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+    ) as mock_classify:
+        await setup_integration(hass, mock_tv_config_entry)
+
+    mock_classify.assert_not_called()
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")

@@ -328,6 +328,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]",
     },
     {
+        "domain": "earn_e_p1",
+        "hostname": "energiemonitor-*",
+    },
+    {
+        "domain": "earn_e_p1",
+        "registered_devices": True,
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -461,6 +469,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0024BD*",
     },
     {
+        "domain": "harbor",
+        "hostname": "harborc-*",
+    },
+    {
         "domain": "home_connect",
         "hostname": "balay-*",
         "macaddress": "C8D778*",
@@ -491,6 +503,50 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "iaqualink",
         "hostname": "iaqualink-*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "1C4D89*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "302450*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "38AF29*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "3CE36B*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "3CEF8C*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "906A94*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "A0BD1D*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "A83162*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "AC3DFA*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "B44C3B*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "FCB69D*",
     },
     {
         "domain": "incomfort",

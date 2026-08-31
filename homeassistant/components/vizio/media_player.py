@@ -152,17 +152,26 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
         # Device is on - apply coordinator data
         self._attr_state = MediaPlayerState.ON
 
-        # Audio settings
-        if data.audio_settings:
-            self._attr_volume_level = (
-                float(data.audio_settings[VIZIO_VOLUME].value) / self._max_volume
+        # Audio settings. Volume and mute come from the collection when it
+        # carries them, and from the coordinator's individual reads when it
+        # does not - some firmware omits them from the collection.
+        volume: int | None
+        if data.audio_settings and VIZIO_VOLUME in data.audio_settings:
+            volume = int(data.audio_settings[VIZIO_VOLUME].value)
+        else:
+            volume = data.volume
+        self._attr_volume_level = (
+            None if volume is None else float(volume) / self._max_volume
+        )
+
+        if data.audio_settings and VIZIO_MUTE in data.audio_settings:
+            self._attr_is_volume_muted = (
+                str(data.audio_settings[VIZIO_MUTE].value).lower() == VIZIO_MUTE_ON
             )
-            if VIZIO_MUTE in data.audio_settings:
-                self._attr_is_volume_muted = (
-                    str(data.audio_settings[VIZIO_MUTE].value).lower() == VIZIO_MUTE_ON
-                )
-            else:
-                self._attr_is_volume_muted = None
+        else:
+            self._attr_is_volume_muted = data.is_muted
+
+        if data.audio_settings:
             if VIZIO_SOUND_MODE in data.audio_settings:
                 self._attr_supported_features |= (
                     MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -234,6 +243,10 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
         await async_device_command(
             self._device.set_setting(setting_type, setting_name, new_value)
         )
+
+    async def async_send_text(self, text: str) -> None:
+        """Type text into the focused on-screen field when send_text is called."""
+        await async_device_command(self._device.send_text(text))
 
     @override
     async def async_added_to_hass(self) -> None:

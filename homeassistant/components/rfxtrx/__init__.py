@@ -252,10 +252,10 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _updated_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:
         if event.data["action"] != "remove":
             return
-        device_entry = device_registry.deleted_devices[event.data["device_id"]]
-        if entry.entry_id not in device_entry.config_entries:
+        device = event.data["device"]
+        if device["config_entry_id"] != entry.entry_id:
             return
-        device_id = get_device_tuple_from_identifiers(device_entry.identifiers)
+        device_id = get_device_tuple_from_identifiers(device["identifiers"])
         if device_id:
             _remove_device(device_id)
 
@@ -447,7 +447,7 @@ def get_device_tuple_from_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove config entry from a device.
 
