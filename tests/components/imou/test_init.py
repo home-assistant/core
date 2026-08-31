@@ -63,11 +63,13 @@ async def test_setup_entry_failed_on_refresh(
 @pytest.mark.usefixtures("init_integration")
 async def test_device_registry_identifiers(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Device registry uses channel-aware identifiers from the default mock devices."""
-    registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    devices = dr.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
     assert len(devices) == 1
     assert (DOMAIN, "d1") in devices[0].identifiers
 

@@ -149,6 +149,7 @@ async def test_store_telegram_history_sqlite(
 async def test_store_telegram_history_error_handling(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
     side_effect: Exception,
 ) -> None:
     """Test storage initialization handling for the different failure modes."""
@@ -162,7 +163,6 @@ async def test_store_telegram_history_error_handling(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -170,6 +170,7 @@ async def test_store_telegram_history_error_handling(
 async def test_store_telegram_history_needs_migration_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test store init aborts when needs_migration times out and retries are off."""
 
@@ -191,7 +192,6 @@ async def test_store_telegram_history_needs_migration_timeout(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -695,6 +695,7 @@ async def test_nightly_eviction_error_handling(
 async def test_postgres_backend_init_error(
     hass: HomeAssistant,
     knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test PostgreSQL backend DSN handling and init failure path."""
     dsn = "postgresql://user:secret@db.local:5432/knx"
@@ -721,7 +722,6 @@ async def test_postgres_backend_init_error(
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None
