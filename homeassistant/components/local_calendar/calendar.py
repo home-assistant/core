@@ -250,10 +250,9 @@ def _is_cancelled(event: Event) -> bool:
 def _get_status(event: Event) -> CalendarEventStatus | None:
     """Return the status of an event, if a calendar entity reports that status.
 
-    Cancelled events are filtered out before this, so what is left is the set a
-    calendar entity reports, plus anything ical may add to its own enum later,
-    which maps to no status. ical's enum is a plain (str, Enum) rather than a
-    StrEnum, so its value has to be read explicitly.
+    Cancelled events are filtered out before this, so they never reach here.
+    ical's enum is a plain (str, Enum) rather than a StrEnum, so its value has to
+    be read explicitly.
     """
     if event.status is None:
         return None
