@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.core import HomeAssistant
@@ -80,6 +81,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Qingping BLE sensors."""
     coordinator = entry.runtime_data
+    if not isinstance(coordinator, PassiveBluetoothProcessorCoordinator):
+        return
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(

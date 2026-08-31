@@ -252,6 +252,8 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             payload = msg.payload
             if isinstance(payload, str):
                 payload = payload.encode()
+            elif isinstance(payload, bytearray):
+                payload = bytes(payload)
             if is_tlv_format(payload):
                 discovered.append(mac)
 

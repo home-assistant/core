@@ -80,6 +80,8 @@ class QingpingMqttCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         payload = message.payload
         if isinstance(payload, str):
             payload = payload.encode()
+        elif isinstance(payload, bytearray):
+            payload = bytes(payload)
         _LOGGER.debug(
             "[%s] Received message on %s: %s",
             self.mac,
