@@ -123,41 +123,8 @@
       "push_twist_position": {
         "name": "Push-twist position"
       },
-      "slot_1": {
-        "name": "Slot 1"
-      },
-      "slot_10": {
-        "name": "Slot 10"
-      },
-      "slot_11": {
-        "name": "Slot 11"
-      },
-      "slot_12": {
-        "name": "Slot 12"
-      },
-      "slot_2": {
-        "name": "Slot 2"
-      },
-      "slot_3": {
-        "name": "Slot 3"
-      },
-      "slot_4": {
-        "name": "Slot 4"
-      },
-      "slot_5": {
-        "name": "Slot 5"
-      },
-      "slot_6": {
-        "name": "Slot 6"
-      },
-      "slot_7": {
-        "name": "Slot 7"
-      },
-      "slot_8": {
-        "name": "Slot 8"
-      },
-      "slot_9": {
-        "name": "Slot 9"
+      "slot": {
+        "name": "Slot {slot_number}"
       },
       "twist_position": {
         "name": "Twist position"

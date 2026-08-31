@@ -37,7 +37,8 @@ class FlicTwistNumberEntityDescription(NumberEntityDescription):
 SLOT_DESCRIPTIONS: tuple[FlicTwistNumberEntityDescription, ...] = tuple(
     FlicTwistNumberEntityDescription(
         key=f"slot_{index + 1}",
-        translation_key=f"slot_{index + 1}",
+        translation_key="slot",
+        translation_placeholders={"slot_number": str(index + 1)},
         mode_index=index,
     )
     for index in range(TWIST_MODE_SLOT_CHANGING)

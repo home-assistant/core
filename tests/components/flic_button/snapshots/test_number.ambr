@@ -276,7 +276,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_1',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_1',
     'unit_of_measurement': '%',
   })
@@ -336,7 +336,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_10',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_10',
     'unit_of_measurement': '%',
   })
@@ -396,7 +396,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_11',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_11',
     'unit_of_measurement': '%',
   })
@@ -456,7 +456,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_12',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_12',
     'unit_of_measurement': '%',
   })
@@ -516,7 +516,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_2',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_2',
     'unit_of_measurement': '%',
   })
@@ -576,7 +576,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_3',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_3',
     'unit_of_measurement': '%',
   })
@@ -636,7 +636,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_4',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_4',
     'unit_of_measurement': '%',
   })
@@ -696,7 +696,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_5',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_5',
     'unit_of_measurement': '%',
   })
@@ -756,7 +756,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_6',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_6',
     'unit_of_measurement': '%',
   })
@@ -816,7 +816,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_7',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_7',
     'unit_of_measurement': '%',
   })
@@ -876,7 +876,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_8',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_8',
     'unit_of_measurement': '%',
   })
@@ -936,7 +936,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'slot_9',
+    'translation_key': 'slot',
     'unique_id': 'AA:BB:CC:DD:EE:F2-slot_9',
     'unit_of_measurement': '%',
   })
