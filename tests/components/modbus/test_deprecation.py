@@ -64,7 +64,7 @@ async def test_a_custom_integration_is_warned(
     assert "deprecated" in caplog.text
     assert "async_get_unit" in caplog.text
     assert "my_integration" in caplog.text
-    assert "2027.10" in caplog.text  # the deadline the user acts on
+    assert "2027.10" in caplog.text
     assert "modbus" not in caplog.text.split("my_integration")[0]
 
 
