@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import HOST, PORT, SERIAL, UNIT_ID, bluetti_data
+from .conftest import HOST, PORT, SERIAL, UNIT_ID, bluetti_data, seed_unit
 
 from tests.common import MockConfigEntry
 
@@ -188,6 +188,33 @@ async def test_user_flow_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], _user_input()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The same device answering at a different address/unit id still aborts.
+
+    Distinct from test_user_flow_already_configured, which deliberately
+    mismatches the existing entry's unique_id to isolate the host/port/
+    unit_id link-match path (_async_abort_entries_match) - this isolates
+    the other one, _abort_if_unique_id_configured(): a genuinely different
+    link (a different unit id here), but the same confirmed serial.
+    """
+    mock_config_entry.add_to_hass(hass)
+    seed_unit(mock_modbus_connection.for_unit(2))  # same default SERIAL
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(unit_id=2)
     )
 
     assert result["type"] is FlowResultType.ABORT
