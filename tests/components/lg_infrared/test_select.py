@@ -55,21 +55,31 @@ async def test_entities(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("option", "expected_button"),
+    ("previous_option", "option", "expected_button"),
     [
-        pytest.param("off", LGACCode.ENERGY_LIMIT_OFF, id="off"),
-        pytest.param("40", LGACCode.ENERGY_LIMIT_40, id="40"),
-        pytest.param("60", LGACCode.ENERGY_LIMIT_60, id="60"),
-        pytest.param("80", LGACCode.ENERGY_LIMIT_80, id="80"),
+        pytest.param("40", "off", LGACCode.ENERGY_LIMIT_OFF, id="off"),
+        pytest.param("off", "40", LGACCode.ENERGY_LIMIT_40, id="40"),
+        pytest.param("off", "60", LGACCode.ENERGY_LIMIT_60, id="60"),
+        pytest.param("off", "80", LGACCode.ENERGY_LIMIT_80, id="80"),
     ],
 )
 async def test_select_option_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    previous_option: str,
     option: str,
     expected_button: LGACCode,
 ) -> None:
     """Test selecting an energy cap sends the matching IR code."""
+    # Start from a different cap, so every case has to change the state rather than
+    # land on the one it started in.
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _ENTITY_ID, ATTR_OPTION: previous_option},
+        blocking=True,
+    )
+
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -77,8 +87,8 @@ async def test_select_option_sends_correct_code(
         blocking=True,
     )
 
-    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
-    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 2
+    timings = mock_infrared_emitter_entity.send_command_calls[1].get_raw_timings()
     assert timings == expected_button.to_command().get_raw_timings()
 
     state = hass.states.get(_ENTITY_ID)
