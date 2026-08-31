@@ -588,8 +588,9 @@ class ESPHomeManager:
     async def _async_register_outgoing_target(self) -> None:
         """Register this entry's MAC with the shared dial-in listener."""
         entry = self.entry
-        # A dial-in is only routed for an entry that can verify the device by
-        # key; entries predating MAC unique ids register from _on_connect
+        # Routed only for an entry that can verify the device by key and has
+        # a MAC unique id; entries predating MAC unique ids are unsupported
+        # until their first connect migrates the id and the entry reloads
         if (
             self._outgoing_unregister is not None
             or not entry.data.get(CONF_NOISE_PSK)
@@ -769,9 +770,6 @@ class ESPHomeManager:
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
-
-        # Covers entries whose unique id only just became the device MAC
-        await self._async_register_outgoing_target()
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""

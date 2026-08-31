@@ -83,23 +83,6 @@ async def test_outgoing_connection_requires_noise_psk(
     assert mock_client.outgoing_connection_target is False
 
 
-async def test_outgoing_connection_registers_after_unique_id_migration(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-    mock_server: MagicMock,
-) -> None:
-    """A legacy unique id registers once the first connect migrates it."""
-    entry = _make_entry(unique_id="legacy-name")
-    entry.add_to_hass(hass)
-    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
-    await hass.async_block_till_done()
-
-    assert entry.unique_id == MAC
-    assert mock_server.register.call_count == 1
-    assert mock_server.register.call_args.args[0] == MAC
-
-
 async def test_outgoing_connection_listener_unavailable(
     hass: HomeAssistant,
     mock_client: APIClient,
