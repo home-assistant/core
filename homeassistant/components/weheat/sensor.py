@@ -55,22 +55,6 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     raw_field: str | None = None
 
 
-def _cooling_state(status: HeatPump) -> str:
-    """Return the cooling state, derived the way the Weheat portal derives it.
-
-    Outside a cooling cycle the heat pump reports no cooling state at all, so fall
-    back to why cooling is not running rather than reporting nothing.
-    """
-    if (cooling_state := status.cooling_state) is not None:
-        return cooling_state.name.lower()
-    if status.heat_pump_state is HeatPump.State.STANDBY:
-        if status.cooling_pause_reason not in (None, HeatPump.CoolingPauseReason.NONE):
-            return "paused"
-        if status.cooling_stop_reason not in (None, HeatPump.CoolingStopReason.NONE):
-            return "stopped"
-    return "waiting"
-
-
 def _cooling_blocked_by(status: HeatPump) -> str | None:
     """Return the first condition that is keeping the heat pump from cooling."""
     conditions = status.cooling_start_conditions
@@ -256,14 +240,14 @@ SENSORS = [
         translation_key="cooling_state",
         key="cooling_state",
         device_class=SensorDeviceClass.ENUM,
-        raw_field="cooling_pause_reason",
-        options=[
-            *(state.name.lower() for state in HeatPump.CoolingState),
-            "paused",
-            "stopped",
-            "waiting",
-        ],
-        value_fn=_cooling_state,
+        options=[status.name.lower() for status in HeatPump.CoolingStatus],
+        value_fn=(
+            lambda status: (
+                status.cooling_status.name.lower()
+                if status.cooling_status is not None
+                else None
+            )
+        ),
     ),
     WeHeatSensorEntityDescription(
         translation_key="cooling_pause_reason",
