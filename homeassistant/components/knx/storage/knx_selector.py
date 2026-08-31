@@ -183,6 +183,9 @@ class GASelector(KNXSelectorBase):
 
     `dpt_required` optional dpt only apply to dpt-class lists, enums are always required.
     `valid_dpt` is used in frontend to filter dropdown menu - no validation is done.
+    `dpa_write` / `dpa_state` are KNX Information Model datapoint application
+    identifiers used by entity suggestion providers to assign addresses from
+    project data to that key - no validation is done and they are not serialized.
     """
 
     selector_type = "knx_group_address"
@@ -197,8 +200,14 @@ class GASelector(KNXSelectorBase):
         dpt: type[Enum] | list[HaDptClass] | None = None,
         dpt_required: bool = True,
         valid_dpt: str | Iterable[str] | None = None,
+        dpa_write: Iterable[str] | None = None,
+        dpa_state: Iterable[str] | None = None,
     ) -> None:
         """Initialize the group address selector."""
+        if dpa_write is not None and not write:
+            raise ValueError("`dpa_write` requires `write` to be allowed")
+        if dpa_state is not None and not state:
+            raise ValueError("`dpa_state` requires `state` to be allowed")
         self.write = write
         self.state = state
         self.passive = passive
@@ -207,6 +216,8 @@ class GASelector(KNXSelectorBase):
         self.dpt = dpt
         self.dpt_required = dpt_required
         self.valid_dpt = (valid_dpt,) if isinstance(valid_dpt, str) else valid_dpt
+        self.dpa_write = dpa_write
+        self.dpa_state = dpa_state
 
         self.schema = self.build_schema()
 
@@ -359,6 +370,8 @@ def ga(
     dpt: type[Enum] | list[HaDptClass] | None = None,
     dpt_required: bool = True,
     valid_dpt: str | Iterable[str] | None = None,
+    dpa_write: Iterable[str] | None = None,
+    dpa_state: Iterable[str] | None = None,
 ) -> probatio.Coerce:
     """Annotate a dataclass field with a group address selector.
 
@@ -375,6 +388,8 @@ def ga(
             dpt=dpt,
             dpt_required=dpt_required,
             valid_dpt=valid_dpt,
+            dpa_write=dpa_write,
+            dpa_state=dpa_state,
         )
     )
 
