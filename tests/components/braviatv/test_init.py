@@ -61,7 +61,9 @@ async def test_migrate_entry_from_cid_to_mac(
     assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, "very_unique_string")}
     )
-    assert device_registry.async_get(device.id).identifiers == set()
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "aa:bb:cc:dd:ee:ff")
+    }
 
 
 async def test_migrate_entry_with_empty_cid_to_mac(
@@ -113,4 +115,6 @@ async def test_migrate_entry_with_empty_cid_to_mac(
     assert migrated_terminate.unique_id == "aa:bb:cc:dd:ee:ff_terminate_apps"
 
     assert not device_registry.async_get_devices(identifiers={(DOMAIN, "")})
-    assert device_registry.async_get(device.id).identifiers == set()
+    assert device_registry.async_get(device.id).identifiers == {
+        (DOMAIN, "aa:bb:cc:dd:ee:ff")
+    }

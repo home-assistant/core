@@ -1,6 +1,6 @@
 """The Bravia TV integration."""
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aiohttp import CookieJar
 from pybravia import BraviaClient
@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_USE_SSL
+from .const import CONF_USE_SSL, DOMAIN
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 
 PLATFORMS: Final[list[Platform]] = [
@@ -30,13 +30,12 @@ async def async_migrate_entry(
         return True
 
     if config_entry.version == 1:
-        mac = config_entry.data.get(CONF_MAC)
-        if not mac:
-            return False
-
+        mac = config_entry.data[CONF_MAC]
         new_unique_id = dr.format_mac(mac)
+        old_unique_id = config_entry.unique_id
 
-        old_unique_id = config_entry.unique_id or ""
+        if TYPE_CHECKING:
+            assert old_unique_id is not None
 
         if old_unique_id != new_unique_id:
             ent_reg = er.async_get(hass)
@@ -59,7 +58,9 @@ async def async_migrate_entry(
             for device in dr.async_entries_for_config_entry(
                 dev_reg, config_entry.entry_id
             ):
-                dev_reg.async_update_device(device.id, new_identifiers=set())
+                dev_reg.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, new_unique_id)}
+                )
 
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, version=2

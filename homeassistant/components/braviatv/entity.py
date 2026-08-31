@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import BraviaTVCoordinator
 
 
@@ -24,6 +24,7 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
             assert coordinator.client.mac is not None
 
         self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
             manufacturer=ATTR_MANUFACTURER,
             model_id=coordinator.system_info.get("model"),
