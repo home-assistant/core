@@ -2,11 +2,13 @@
 
 from collections.abc import Generator
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
     DOMAIN,
     ClimateEntity,
@@ -130,6 +132,22 @@ class MockClimateEntityNoSetTemperature(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+
+
+class MockClimateEntityWithFanMode(ClimateEntity):
+    """Mock Climate device with fan mode support to use in tests."""
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_mode = HVACMode.OFF
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.FAN_MODE
+    # Mixed casing and a vendor-specific mode, as real integrations report.
+    _attr_fan_modes = ["auto", "Low", "Turbo"]
+    _attr_fan_mode = "auto"
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set the fan mode."""
+        self._attr_fan_mode = fan_mode
 
 
 async def test_set_temperature(
@@ -356,4 +374,122 @@ async def test_set_temperature_not_supported(hass: HomeAssistant) -> None:
 
     # Exception should contain details of what we tried to match
     assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.FEATURE
+
+
+@pytest.mark.parametrize(
+    ("requested_fan_mode", "expected_fan_mode"),
+    [
+        pytest.param("auto", "auto", id="exact"),
+        pytest.param("LOW", "Low", id="differing_case"),
+        pytest.param("Turbo", "Turbo", id="vendor_specific"),
+    ],
+)
+async def test_set_fan_mode(
+    hass: HomeAssistant,
+    requested_fan_mode: str,
+    expected_fan_mode: str,
+) -> None:
+    """Test HassClimateSetFanMode intent resolves against the entity's fan modes."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntityWithFanMode()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+
+    await create_mock_platform(hass, [climate_1])
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_SET_FAN_MODE,
+        {"fan_mode": {"value": requested_fan_mode}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_1.entity_id
+
+    state = hass.states.get(climate_1.entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == expected_fan_mode
+
+
+async def test_set_fan_mode_localized(hass: HomeAssistant) -> None:
+    """Test HassClimateSetFanMode intent with a localized fan mode name."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntityWithFanMode()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+
+    await create_mock_platform(hass, [climate_1])
+
+    # Only English translations are generated for tests, so stub the German ones.
+    with patch(
+        "homeassistant.components.climate.intent.translation.async_get_translations",
+        return_value={
+            f"{climate_intent.FAN_MODE_TRANSLATION_PREFIX}auto": "Automatisch",
+            f"{climate_intent.FAN_MODE_TRANSLATION_PREFIX}low": "Niedrig",
+        },
+    ):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_FAN_MODE,
+            {"fan_mode": {"value": "niedrig"}},
+            language="de",
+            assistant=conversation.DOMAIN,
+        )
+
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    state = hass.states.get(climate_1.entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == "Low"
+
+
+async def test_set_fan_mode_unsupported_mode(hass: HomeAssistant) -> None:
+    """Test HassClimateSetFanMode intent with a mode the entity does not have."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntityWithFanMode()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+
+    await create_mock_platform(hass, [climate_1])
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_FAN_MODE,
+            {"fan_mode": {"value": "diffuse"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    state = hass.states.get(climate_1.entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == "auto"
+
+
+async def test_set_fan_mode_not_supported(hass: HomeAssistant) -> None:
+    """Test HassClimateSetFanMode intent on an entity without fan mode support."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntity()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+
+    await create_mock_platform(hass, [climate_1])
+
+    with pytest.raises(intent.MatchFailedError) as error:
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_FAN_MODE,
+            {"fan_mode": {"value": "auto"}},
+            assistant=conversation.DOMAIN,
+        )
+
     assert error.value.result.no_match_reason is intent.MatchFailedReason.FEATURE
