@@ -733,26 +733,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             elif entry.data[CONF_DEVICE_ID] not in devices:
                 error = "invalid_device_id_for_ip"
             else:
-                data = {**entry.data, CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
-                if await self.hass.async_add_executor_job(
-                    partial(
-                        _select_and_connect,
-                        device_id=data[CONF_DEVICE_ID],
-                        device_type=data[CONF_TYPE],
-                        ip_address=user_input[CONF_IP_ADDRESS],
-                        port=data[CONF_PORT],
-                        token=data[CONF_TOKEN],
-                        key=data[CONF_KEY],
-                        device_protocol=data[CONF_PROTOCOL],
-                        model=data[CONF_MODEL],
-                        subtype=data[CONF_SUBTYPE],
-                    )
-                ):
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
-                    )
-                error = "device_auth_failed"
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
+                )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
