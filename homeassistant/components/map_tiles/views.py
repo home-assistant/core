@@ -74,10 +74,6 @@ class _MapTilesView(HomeAssistantView):
     content_type: str
     ttl: int
     max_age: int
-    # Cache bodies in the encoding upstream sent so nothing is re-compressed
-    # per request. The PNG views opt out: PNG gains nothing from gzip, and the
-    # raster blocked-tile digest must see the decoded bytes.
-    store_encoded = True
 
     def __init__(self, hass: HomeAssistant, cache: MapTilesCache) -> None:
         """Initialize the view."""
@@ -130,12 +126,14 @@ class _MapTilesView(HomeAssistantView):
     async def _async_fetch(self, url: str) -> Asset | None:
         """Fetch url upstream, returning None on any upstream failure."""
         session = async_get_clientsession(self._hass)
+        # Keep the body in the encoding upstream sent, so a gzipped asset is
+        # cached compressed instead of re-compressed for every client.
         try:
             async with session.get(
                 url,
                 headers=UPSTREAM_HEADERS,
                 timeout=UPSTREAM_TIMEOUT,
-                auto_decompress=not self.store_encoded,
+                auto_decompress=False,
             ) as response:
                 if response.status >= HTTPStatus.BAD_REQUEST:
                     _LOGGER.debug("Upstream %s returned %s", url, response.status)
@@ -161,11 +159,6 @@ class _MapTilesView(HomeAssistantView):
             return None
 
         body = b"".join(chunks)
-
-        if not self.store_encoded:
-            # The session decompressed it, so the upstream `Content-Encoding`
-            # no longer describes these bytes and passing it on breaks decoding.
-            return Asset(body, None)
         return Asset(body, response.headers.get(hdrs.CONTENT_ENCODING))
 
 
@@ -216,7 +209,6 @@ class MapTilesRasterView(_MapTilesTileView):
     name = "api:map_tiles:raster"
     url = "/api/map_tiles/raster/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png"
     content_type = "image/png"
-    store_encoded = False
     max_zoom = RASTER_MAX_ZOOM
     upstream = f"{RASTER_URL}/{{z}}/{{x}}/{{y}}.png"
     key_template = "raster/{z}/{x}/{y}.png"
@@ -305,7 +297,6 @@ class MapTilesSpriteSheetView(_MapTilesSpritesView):
     name = "api:map_tiles:sprite_sheet"
     url = "/api/map_tiles/sprites/{sprite_set}/{name}.png"
     content_type = "image/png"
-    store_encoded = False
     extension = ".png"
 
 

@@ -188,7 +188,7 @@ async def test_client_that_cannot_take_gzip_gets_plain_bytes(
     assert await resp.read() == tile
 
 
-async def test_png_is_not_stored_encoded(
+async def test_png_served_verbatim(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
