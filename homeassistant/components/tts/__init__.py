@@ -71,6 +71,7 @@ from .models import Voice
 
 __all__ = [
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_BITRATE",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_BYTES",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
@@ -99,6 +100,7 @@ ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
+ATTR_PREFERRED_BITRATE = "preferred_bitrate"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -108,6 +110,7 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_RATE,
     ATTR_PREFERRED_SAMPLE_CHANNELS,
     ATTR_PREFERRED_SAMPLE_BYTES,
+    ATTR_PREFERRED_BITRATE,
 }
 
 CONF_LANG = "language"
@@ -317,6 +320,7 @@ async def _async_convert_audio(
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
     to_sample_bytes: int | None = None,
+    to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
@@ -345,8 +349,13 @@ async def _async_convert_audio(
     if to_sample_channels is not None:
         command.extend(["-ac", str(to_sample_channels)])
     if to_extension == "mp3":
-        # Max quality for MP3.
-        command.extend(["-q:a", "0"])
+        if to_bitrate is not None:
+            # Constant bitrate. Some hardware decoders cannot handle the
+            # variable bitrate that -q:a produces.
+            command.extend(["-b:a", f"{to_bitrate}k"])
+        else:
+            # Max quality for MP3.
+            command.extend(["-q:a", "0"])
     if to_sample_bytes == 2:
         # 16-bit samples.
         command.extend(["-sample_fmt", "s16"])
@@ -588,6 +597,7 @@ class ResultStream:
                 ATTR_PREFERRED_SAMPLE_RATE,
                 ATTR_PREFERRED_SAMPLE_CHANNELS,
                 ATTR_PREFERRED_SAMPLE_BYTES,
+                ATTR_PREFERRED_BITRATE,
             )
         )
 
@@ -633,6 +643,7 @@ class ResultStream:
             to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
             to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
+            to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
         async for chunk in converted_audio:
             yield chunk
@@ -1082,6 +1093,14 @@ class SpeechManager:
         if sample_bytes is not None:
             sample_bytes = int(sample_bytes)
 
+        if ATTR_PREFERRED_BITRATE in supported_options:
+            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+        else:
+            bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
+
+        if bitrate is not None:
+            bitrate = int(bitrate)
+
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
@@ -1134,6 +1153,7 @@ class SpeechManager:
             or (sample_rate is not None)
             or (sample_channels is not None)
             or (sample_bytes is not None)
+            or (bitrate is not None)
         )
 
         if needs_conversion:
@@ -1145,6 +1165,7 @@ class SpeechManager:
                 to_sample_rate=sample_rate,
                 to_sample_channels=sample_channels,
                 to_sample_bytes=sample_bytes,
+                to_bitrate=bitrate,
             )
 
         async for chunk in data_gen:

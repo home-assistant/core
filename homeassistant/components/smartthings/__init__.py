@@ -25,6 +25,14 @@ from pysmartthings import (
 )
 from pysmartthings.models import HealthStatus
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -191,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_LOCATION_ID],
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
-    except SmartThingsSinkError as err:
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         _LOGGER.exception("Couldn't create a new subscription")
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id
@@ -230,16 +238,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             device_status[device.device_id] = FullDevice(
                 device=device, status=status, online=online.state == HealthStatus.ONLINE
             )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
-
-    scenes = {
-        scene.scene_id: scene
-        for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
-    }
 
     def handle_deleted_device(device_id: str) -> None:
         """Handle a deleted device."""
@@ -340,7 +351,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.minor_version < 2:
 
         def migrate_entities(entity_entry: RegistryEntry) -> dict[str, Any] | None:
-            if entity_entry.domain == "binary_sensor":
+            if entity_entry.domain == BINARY_SENSOR_DOMAIN:
                 device_id, attribute = entity_entry.unique_id.split(".")
                 if (
                     capability := BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES.get(
@@ -354,9 +365,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return {
                     "new_unique_id": new_unique_id,
                 }
-            if entity_entry.domain in {"cover", "climate", "fan", "light", "lock"}:
+            if entity_entry.domain in {
+                COVER_DOMAIN,
+                CLIMATE_DOMAIN,
+                FAN_DOMAIN,
+                LIGHT_DOMAIN,
+                LOCK_DOMAIN,
+            }:
                 return {"new_unique_id": f"{entity_entry.unique_id}_{MAIN}"}
-            if entity_entry.domain == "sensor":
+            if entity_entry.domain == SENSOR_DOMAIN:
                 delimiter = "." if " " not in entity_entry.unique_id else " "
                 if delimiter not in entity_entry.unique_id:
                     return None
@@ -422,7 +439,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     ),
                 }
 
-            if entity_entry.domain == "switch":
+            if entity_entry.domain == SWITCH_DOMAIN:
                 return {
                     "new_unique_id": (
                         f"{entity_entry.unique_id}_{MAIN}"

@@ -1,20 +1,19 @@
 """Fixtures for HERE Travel Time tests."""
 
-import json
 from unittest.mock import patch
 
 import pytest
 
-from tests.common import load_fixture
+from tests.common import load_json_object_fixture
 
-RESPONSE = json.loads(load_fixture("here_travel_time/car_response.json"))
-TRANSIT_RESPONSE = json.loads(
-    load_fixture("here_travel_time/transit_route_response.json")
+RESPONSE = load_json_object_fixture("here_travel_time/car_response.json")
+TRANSIT_RESPONSE = load_json_object_fixture(
+    "here_travel_time/transit_route_response.json"
 )
-NO_ATTRIBUTION_TRANSIT_RESPONSE = json.loads(
-    load_fixture("here_travel_time/no_attribution_transit_route_response.json")
+NO_ATTRIBUTION_TRANSIT_RESPONSE = load_json_object_fixture(
+    "here_travel_time/no_attribution_transit_route_response.json"
 )
-BIKE_RESPONSE = json.loads(load_fixture("here_travel_time/bike_response.json"))
+BIKE_RESPONSE = load_json_object_fixture("here_travel_time/bike_response.json")
 
 
 @pytest.fixture(name="valid_response")

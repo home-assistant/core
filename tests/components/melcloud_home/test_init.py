@@ -295,10 +295,16 @@ async def test_energy_coordinator_context_fetch_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    energy_sensor = hass.states.get("sensor.living_room_ac_energy_consumed_monthly")
-    assert energy_sensor is not None
+    assert (
+        energy_sensor := hass.states.get(
+            "sensor.living_room_ac_energy_consumed_monthly"
+        )
+    )
     assert energy_sensor.state == STATE_UNAVAILABLE
 
-    room_temperature_sensor = hass.states.get("sensor.living_room_ac_room_temperature")
-    assert room_temperature_sensor is not None
+    assert (
+        room_temperature_sensor := hass.states.get(
+            "sensor.living_room_ac_room_temperature"
+        )
+    )
     assert room_temperature_sensor.state != STATE_UNAVAILABLE
