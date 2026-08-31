@@ -123,12 +123,20 @@ class GoogleConfig(AbstractConfig):
     ) -> None:
         """Schedule a sync for a new or changed entity that should be exposed."""
         entity_id = event.data["entity_id"]
-        if event.data["action"] == "update" and not (
-            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
+        action = event.data["action"]
+        changes = set(event.data.get("changes", ()))
+        exposure_attributes = {"entity_category", "hidden_by"}
+        exposure_changed = bool(changes & exposure_attributes)
+        if action == "update" and not (
+            changes & (er.ENTITY_DESCRIBING_ATTRIBUTES | exposure_attributes)
         ):
             return
 
-        if event.data["action"] != "remove" and not self.should_expose(entity_id):
+        if (
+            action != "remove"
+            and not self.should_expose(entity_id)
+            and not exposure_changed
+        ):
             return
 
         self.async_schedule_google_sync_all()
