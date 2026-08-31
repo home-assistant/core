@@ -6,6 +6,7 @@ import inspect
 from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import velbus_frontend as velbus_panel
+from velbusaio.channels import Channel
 from velbusaio.exceptions import VelbusConfigError
 from velbusaio.panel_schema import get_module_instance_data, get_module_type_schema
 import voluptuous as vol
@@ -25,14 +26,14 @@ from .const import CONF_CHANNEL, CONF_CONFIG_ENTRY, DOMAIN
 from .data import VelbusConfigEntry
 
 if TYPE_CHECKING:
-    from velbusaio.channels import Channel
     from velbusaio.controller import Velbus
     from velbusaio.module import Module
 
 URL_BASE: Final = "/velbus_static"
 DATA_STATIC_REGISTERED: Final = "static_registered"
 DATA_WS_REGISTERED: Final = "ws_registered"
-DATA_PANEL: HassKey[dict[str, bool]] = HassKey(f"{DOMAIN}_panel")
+DATA_BUILD_ID: Final = "build_id"
+DATA_PANEL: HassKey[dict[str, Any]] = HassKey(f"{DOMAIN}_panel")
 
 type VelbusWebSocketHandler = Callable[
     [
@@ -114,20 +115,23 @@ async def async_update_panel(
         )
         panel_data[DATA_STATIC_REGISTERED] = True
 
+    build_id = await hass.async_add_executor_job(velbus_panel.get_build_id)
+    module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={build_id}"
     if async_panel_exists(hass, DOMAIN):
-        return
+        if panel_data.get(DATA_BUILD_ID) == build_id:
+            return
+        frontend.async_remove_panel(hass, DOMAIN, warn_if_unknown=False)
 
     await panel_custom.async_register_panel(
         hass=hass,
         frontend_url_path=DOMAIN,
         config_panel_domain=DOMAIN,
         webcomponent_name=velbus_panel.webcomponent_name,
-        module_url=(
-            f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={velbus_panel.__version__}"
-        ),
+        module_url=module_url,
         embed_iframe=True,
         require_admin=True,
     )
+    panel_data[DATA_BUILD_ID] = build_id
 
 
 def _get_entry(
@@ -457,8 +461,7 @@ async def ws_get_channel_actions(
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(err))
         return
 
-    table = module.get_action_table(channel)
-    if table is None:
+    if module.get_action_table(channel) is None:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -466,7 +469,9 @@ async def ws_get_channel_actions(
         )
         return
 
-    slots = await table.get_actions(refresh=msg["refresh"], include_empty=True)
+    slots = await module.get_channel_actions(
+        channel, refresh=msg["refresh"], include_empty=True
+    )
     connection.send_result(
         msg["id"],
         {"slots": [slot.to_dict() for slot in slots]},

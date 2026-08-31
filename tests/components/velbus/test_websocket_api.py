@@ -9,7 +9,6 @@ from homeassistant.components.velbus.const import (
     CONF_ADVANCED_MODE,
     CONF_CHANNEL,
     CONF_CONFIG_ENTRY,
-    DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
