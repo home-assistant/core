@@ -141,7 +141,7 @@ async def test_number_set_value(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     device: FixtureDevice,
-    value: int,
+    value: float,
     command_name: str,
 ) -> None:
     """Test setting a number value sends the correct command."""

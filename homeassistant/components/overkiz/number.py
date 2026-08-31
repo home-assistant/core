@@ -153,8 +153,9 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     # AtlanticPassAPCHeatingAndCoolingZone / AtlanticPassAPCHeatingZone
-    # Program setpoints (Eco / Comfort) — unlike climate.set_temperature,
-    # these do not create a derogation, so the time schedule keeps running
+    # Independently editable program setpoints (Eco / Comfort). On zone
+    # control zones this is the only way to adjust them without creating
+    # a derogation that overrides the time schedule
     OverkizNumberDescription(
         key=OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
         name="Comfort cooling target temperature",
