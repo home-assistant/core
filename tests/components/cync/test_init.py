@@ -68,7 +68,7 @@ async def test_migrate_unique_ids(
     )
     switch_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1006")},
+        identifiers={(DOMAIN, "1000-1111")},
     )
     switch_entry = entity_registry.async_get_or_create(
         Platform.SWITCH,
@@ -107,7 +107,7 @@ async def test_migrate_unique_ids(
     assert current_switch.unique_id == "1000-1101"
     current_switch_device = device_registry.async_get(switch_device_entry.id)
     assert current_switch_device is not None
-    assert (DOMAIN, "1000-1006") in current_switch_device.identifiers
+    assert (DOMAIN, "1000-1111") in current_switch_device.identifiers
 
     colliding_mesh_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,

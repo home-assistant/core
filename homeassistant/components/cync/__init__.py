@@ -132,7 +132,9 @@ def _migrate_unique_ids(
 
     entity_device_ids = {
         entity_entry.device_id
-        for entity_entry in light_entity_entries
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
         if entity_entry.device_id is not None
     }
     device_registry = dr.async_get(hass)
