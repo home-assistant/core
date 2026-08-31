@@ -1,14 +1,12 @@
 """Unit tests for the pure/self-contained helpers and mockable logic in coordinator.py.
 
-Like ``config_flow.py``, this module uses relative imports and must be loaded
-as a real package module. ``TrueNASCoordinator`` normally requires a running
-Home Assistant (``__init__`` builds a real ``DataUpdateCoordinator``), which
-``pytest-homeassistant-custom-component`` would be needed for -- unusable on
-this repo's Windows dev machine (see the memory note on that incompatibility).
-Instead, instance methods here are tested by constructing a bare instance via
-``TrueNASCoordinator.__new__`` and setting only the attributes each method
-under test actually touches, mirroring the Mock/AsyncMock approach already
-used for ``TrueNASConfigFlow``.
+Most helpers here are pure functions tested with bare mocks/``SimpleNamespace``.
+Instance methods are exercised through a real ``TrueNASCoordinator``, built via
+the ``coordinator`` fixture below: a ``hass``/``MockConfigEntry``-driven
+construction (mirroring test_init.py's entry-lifecycle tests) with the
+``aiotruenas`` client mocked at its boundary (mirroring test_api.py's ``api``
+fixture), so production ``__init__``/listener/update behavior is exercised
+for real instead of being bypassed via ``__new__``.
 """
 
 from __future__ import annotations
@@ -18,10 +16,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.truenas_ce import coordinator as coordinator_module
+from homeassistant.components.truenas_ce import (
+    api as api_module,
+    coordinator as coordinator_module,
+)
 from homeassistant.components.truenas_ce.const import (
     CONF_MONITORED_GROUPS,
     DEFAULT_POLL_INTERVAL,
+    DOMAIN,
     MONITOR_GROUP_CLOUDSYNC,
     MONITOR_GROUP_CONTAINERS,
     MONITOR_GROUP_CRONJOBS,
@@ -39,16 +41,45 @@ from homeassistant.components.truenas_ce.coordinator import (
     _stat_name_similar,
     _unwrap_app_stats_message,
 )
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 
-def _bare_coordinator() -> TrueNASCoordinator:
-    """Build a TrueNASCoordinator without running its hass-dependent __init__."""
-    coord = TrueNASCoordinator.__new__(TrueNASCoordinator)
-    coord._app_stats_event_name = None
-    coord._app_stats_sub_id = None
-    coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
-    return coord
+
+@pytest.fixture
+def mock_client() -> MagicMock:
+    """A mocked aiotruenas client, matching test_api.py's ``api`` fixture."""
+    client = MagicMock()
+    client.connected = False
+    client.connect = AsyncMock()
+    client.call = AsyncMock()
+    client.close = AsyncMock()
+    return client
+
+
+@pytest.fixture
+def coordinator(hass: HomeAssistant, mock_client: MagicMock) -> TrueNASCoordinator:
+    """Build a real TrueNASCoordinator via hass/MockConfigEntry.
+
+    The underlying aiotruenas client is mocked at its boundary (like
+    test_api.py's ``api`` fixture) so no network I/O happens, while
+    __init__/listener/update-relevant instance state is set up for real.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "TrueNAS",
+            CONF_HOST: "truenas.local",
+            CONF_API_KEY: "api-key",
+            CONF_VERIFY_SSL: True,
+        },
+        entry_id="e1",
+    )
+    entry.add_to_hass(hass)
+    with patch.object(api_module, "TrueNASClient", return_value=mock_client):
+        return TrueNASCoordinator(hass, entry)
 
 
 # ---------------------------
@@ -92,17 +123,19 @@ def test_as_str_keyed_leaves_str_uids_unchanged() -> None:
 # ---------------------------
 #   _is_group_monitored
 # ---------------------------
-def test_is_group_monitored_true_when_in_options() -> None:
+def test_is_group_monitored_true_when_in_options(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A group present in the monitored-groups option is reported as monitored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_VMS]}
     assert coord._is_group_monitored(MONITOR_GROUP_VMS) is True
 
 
-def test_is_group_monitored_false_when_absent() -> None:
+def test_is_group_monitored_false_when_absent(coordinator: TrueNASCoordinator) -> None:
     """A group missing from the monitored-groups option is not monitored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
     assert coord._is_group_monitored(MONITOR_GROUP_VMS) is False
@@ -111,18 +144,20 @@ def test_is_group_monitored_false_when_absent() -> None:
 # ---------------------------
 #   _parse_version
 # ---------------------------
-def test_parse_version_extracts_major_minor() -> None:
+def test_parse_version_extracts_major_minor(coordinator: TrueNASCoordinator) -> None:
     """The major/minor version numbers are parsed out of the version string."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"version": "TrueNAS-SCALE-25.04.1"}}
     coord._parse_version()
     assert coord._version_major == 25
     assert coord._version_minor == 4
 
 
-def test_parse_version_leaves_unset_on_no_match() -> None:
+def test_parse_version_leaves_unset_on_no_match(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A version string that does not match the expected pattern leaves fields unset."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"version": "not-a-version-string"}}
     coord._version_major = 0
     coord._version_minor = 0
@@ -134,17 +169,21 @@ def test_parse_version_leaves_unset_on_no_match() -> None:
 # ---------------------------
 #   _detect_virtualization
 # ---------------------------
-def test_detect_virtualization_true_for_known_manufacturer() -> None:
+def test_detect_virtualization_true_for_known_manufacturer(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A known hypervisor manufacturer string is detected as virtual."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"system_manufacturer": "QEMU", "system_product": ""}}
     coord._detect_virtualization()
     assert coord._is_virtual is True
 
 
-def test_detect_virtualization_true_for_known_product() -> None:
+def test_detect_virtualization_true_for_known_product(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A known hypervisor product string is detected as virtual."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "system_info": {"system_manufacturer": "", "system_product": "VirtualBox"}
     }
@@ -152,9 +191,11 @@ def test_detect_virtualization_true_for_known_product() -> None:
     assert coord._is_virtual is True
 
 
-def test_detect_virtualization_false_for_physical_hardware() -> None:
+def test_detect_virtualization_false_for_physical_hardware(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Physical hardware manufacturer/product strings are not detected as virtual."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "system_info": {"system_manufacturer": "Dell Inc.", "system_product": "R730"}
     }
@@ -165,17 +206,19 @@ def test_detect_virtualization_false_for_physical_hardware() -> None:
 # ---------------------------
 #   _update_uptime
 # ---------------------------
-def test_update_uptime_sets_epoch_on_first_run() -> None:
+def test_update_uptime_sets_epoch_on_first_run(coordinator: TrueNASCoordinator) -> None:
     """A zero uptimeEpoch is populated from the current uptime on first run."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": 0}}
     coord._update_uptime()
     assert coord.ds["system_info"]["uptimeEpoch"] > 0
 
 
-def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
+def test_update_uptime_keeps_old_epoch_within_tolerance(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An epoch close enough to the freshly computed value is left unchanged."""
-    coord = _bare_coordinator()
+    coord = coordinator
     now_epoch = int(dt_util.utcnow().timestamp())
     old_epoch = now_epoch - 3600 + 5  # within the 300s tolerance of a fresh reading
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": old_epoch}}
@@ -183,9 +226,11 @@ def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
     assert coord.ds["system_info"]["uptimeEpoch"] == old_epoch
 
 
-def test_update_uptime_replaces_stale_epoch_outside_tolerance() -> None:
+def test_update_uptime_replaces_stale_epoch_outside_tolerance(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An epoch drifted well past tolerance is replaced with a freshly computed one."""
-    coord = _bare_coordinator()
+    coord = coordinator
     now_epoch = int(dt_util.utcnow().timestamp())
     old_epoch = now_epoch - 3600 - 600  # 600s drift, well beyond the 300s tolerance
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": old_epoch}}
@@ -196,9 +241,11 @@ def test_update_uptime_replaces_stale_epoch_outside_tolerance() -> None:
     assert abs(new_epoch - (now_epoch - 3600)) <= 5
 
 
-def test_update_uptime_skips_when_uptime_not_positive() -> None:
+def test_update_uptime_skips_when_uptime_not_positive(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A non-positive uptime_seconds leaves the existing uptimeEpoch untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"uptime_seconds": 0, "uptimeEpoch": 123}}
     coord._update_uptime()
     assert coord.ds["system_info"]["uptimeEpoch"] == 123
@@ -207,9 +254,11 @@ def test_update_uptime_skips_when_uptime_not_positive() -> None:
 # ---------------------------
 #   _systemstats_process / _store_stat_value / _store_stat_defaults
 # ---------------------------
-def test_systemstats_process_stores_matching_legend_values() -> None:
+def test_systemstats_process_stores_matching_legend_values(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Each legend var's mean value is stored, missing means falling back to 0.0."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     graph = {
         "legend": ["shortterm", "midterm", "longterm"],
@@ -223,22 +272,26 @@ def test_systemstats_process_stores_matching_legend_values() -> None:
     assert coord.ds["system_info"]["load_longterm"] == pytest.approx(0.0)
 
 
-def test_systemstats_process_falls_back_to_defaults_without_aggregations() -> None:
+def test_systemstats_process_falls_back_to_defaults_without_aggregations(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A graph with no aggregations stores default (0.0) values for each var."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._systemstats_process("cpu", {}, "cpu")
     assert coord.ds["system_info"]["cpu_cpu"] == pytest.approx(0.0)
 
 
-def test_systemstats_process_defaults_use_dedicated_keys() -> None:
+def test_systemstats_process_defaults_use_dedicated_keys(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Defaults for a malformed graph land under the same key as a real value.
 
     A regression test for a bug where defaults bypassed the type-specific
     key mapping in _store_stat_value and were written under the bare var
     name instead, leaving the actually-exposed sensor keys stale.
     """
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._systemstats_process("size", {}, "arcsize")
     assert coord.ds["system_info"]["cache_size-arc_value"] == 0.0
@@ -246,9 +299,11 @@ def test_systemstats_process_defaults_use_dedicated_keys() -> None:
     assert coord.ds["system_info"]["memory-free_value"] == 0
 
 
-def test_systemstats_process_skips_legend_var_not_in_arr() -> None:
+def test_systemstats_process_skips_legend_var_not_in_arr(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A legend var absent from the vars tuple is not stored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     graph = {
         "legend": ["shortterm", "other"],
@@ -259,25 +314,31 @@ def test_systemstats_process_skips_legend_var_not_in_arr() -> None:
     assert "load_other" not in coord.ds["system_info"]
 
 
-def test_store_stat_value_arcsize_uses_dedicated_key() -> None:
+def test_store_stat_value_arcsize_uses_dedicated_key(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """The arcsize/size stat is rounded and stored under its dedicated key."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._store_stat_value("arcsize", "size", 12.345)
     assert coord.ds["system_info"]["cache_size-arc_value"] == pytest.approx(12.35)
 
 
-def test_store_stat_value_cpu_uses_prefixed_key() -> None:
+def test_store_stat_value_cpu_uses_prefixed_key(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """The cpu stat is stored under a "<type>_<var>" prefixed key."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._store_stat_value("cpu", "cpu", 12.345)
     assert coord.ds["system_info"]["cpu_cpu"] == pytest.approx(12.35)
 
 
-def test_store_stat_value_memory_only_stores_available() -> None:
+def test_store_stat_value_memory_only_stores_available(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Only the memory "available" var is stored; other memory vars are ignored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._store_stat_value("memory", "available", 100.0)
     assert coord.ds["system_info"]["memory-free_value"] == 100
@@ -285,9 +346,11 @@ def test_store_stat_value_memory_only_stores_available() -> None:
     assert "memory-used" not in coord.ds["system_info"]
 
 
-def test_store_stat_value_unknown_type_stores_raw_key() -> None:
+def test_store_stat_value_unknown_type_stores_raw_key(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unrecognized stat type falls back to storing under the raw var name."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._store_stat_value("diskstats", "reads", 12.345)
     assert coord.ds["system_info"]["reads"] == pytest.approx(12.35)
@@ -300,9 +363,9 @@ def test_store_stat_value_unknown_type_stores_raw_key() -> None:
 # these tests used to exercise directly now lives in and is tested by
 # aiotruenas's own TrueNASState.get_alerts(). get_alerts() just delegates and
 # assigns the result, so this only needs to lock in that plumbing.
-async def test_get_alerts_delegates_to_state() -> None:
+async def test_get_alerts_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_alerts assigns TrueNASState.get_alerts()'s result verbatim."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"alerts": {}}
     coord.state = MagicMock()
     coord.state.get_alerts = AsyncMock(
@@ -328,9 +391,11 @@ async def test_get_alerts_delegates_to_state() -> None:
 # directly now lives in and is tested by aiotruenas's own
 # TrueNASState.get_smb(). get_smb() just delegates and merges "connections"
 # into system_info, so this only needs to lock in that plumbing.
-async def test_get_smb_merges_connections_into_system_info() -> None:
+async def test_get_smb_merges_connections_into_system_info(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_smb copies TrueNASState.get_smb()'s "connections" into system_info."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord.state = MagicMock()
     coord.state.get_smb = AsyncMock(return_value={"connections": 3})
@@ -338,9 +403,11 @@ async def test_get_smb_merges_connections_into_system_info() -> None:
     assert coord.ds["system_info"]["smb_connections"] == 3
 
 
-async def test_get_smb_leaves_system_info_untouched_without_connections_key() -> None:
+async def test_get_smb_leaves_system_info_untouched_without_connections_key(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A malformed/failed state response (no "connections" key) is a no-op."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"smb_connections": 3}}
     coord.state = MagicMock()
     coord.state.get_smb = AsyncMock(return_value={})
@@ -355,9 +422,11 @@ async def test_get_smb_leaves_system_info_untouched_without_connections_key() ->
 # exercise directly now lives in and is tested by aiotruenas's own
 # TrueNASState.get_update(). get_updatecheck just merges the result into
 # ds["system_info"], so this only needs to lock in that plumbing.
-async def test_get_updatecheck_no_update_falls_back_to_running_version() -> None:
+async def test_get_updatecheck_no_update_falls_back_to_running_version(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """No pending update: the resting "up-to-date" version is replaced with the running one."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"version": "25.04.1"}}
     coord.state = MagicMock()
     coord.state.get_update = AsyncMock(
@@ -377,9 +446,11 @@ async def test_get_updatecheck_no_update_falls_back_to_running_version() -> None
     assert info["update_version"] == "25.04.1"
 
 
-async def test_get_updatecheck_pending_update_keeps_new_version() -> None:
+async def test_get_updatecheck_pending_update_keeps_new_version(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A pending update's own version is not overridden by the running version."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"version": "25.04.1"}}
     coord.state = MagicMock()
     coord.state.get_update = AsyncMock(
@@ -399,9 +470,11 @@ async def test_get_updatecheck_pending_update_keeps_new_version() -> None:
     assert info["update_version"] == "25.10.0"
 
 
-async def test_start_app_stats_stops_when_containers_not_monitored() -> None:
+async def test_start_app_stats_stops_when_containers_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Stats subscription is stopped and cleared when containers are unmonitored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {}},
         "app_stats": {"old-app": {"app_name": "old-app"}},
@@ -421,9 +494,11 @@ async def test_start_app_stats_stops_when_containers_not_monitored() -> None:
     assert coord.ds["app_stats"] == {}
 
 
-async def test_start_app_stats_clears_stats_when_never_subscribed() -> None:
+async def test_start_app_stats_clears_stats_when_never_subscribed(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Containers unmonitored and never subscribed: clear stats, no stop."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {}},
         "app_stats": {"old-app": {"app_name": "old-app"}},
@@ -443,9 +518,11 @@ async def test_start_app_stats_clears_stats_when_never_subscribed() -> None:
     assert coord.ds["app_stats"] == {}
 
 
-async def test_start_app_stats_defaults_when_config_entry_missing() -> None:
+async def test_start_app_stats_defaults_when_config_entry_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """start_app_stats should treat groups as monitored when config_entry is None."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -466,9 +543,11 @@ async def test_start_app_stats_defaults_when_config_entry_missing() -> None:
     coord.api.subscribe_events.assert_awaited_once()
 
 
-async def test_start_app_stats_defaults_when_monitored_groups_missing() -> None:
+async def test_start_app_stats_defaults_when_monitored_groups_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Treat groups as monitored when CONF_MONITORED_GROUPS is absent."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -490,9 +569,11 @@ async def test_start_app_stats_defaults_when_monitored_groups_missing() -> None:
     coord.api.subscribe_events.assert_awaited_once()
 
 
-async def test_start_app_stats_noops_when_api_not_connected() -> None:
+async def test_start_app_stats_noops_when_api_not_connected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A disconnected API skips subscribing and leaves existing stats untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {}},
         "app_stats": {"existing-app": {"app_name": "existing-app"}},
@@ -517,9 +598,11 @@ async def test_start_app_stats_noops_when_api_not_connected() -> None:
     }
 
 
-async def test_start_app_stats_keeps_existing_sub_when_no_apps() -> None:
+async def test_start_app_stats_keeps_existing_sub_when_no_apps(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """With no apps and same event name, start_app_stats keeps the existing sub."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {}, "app_stats": {"existing-app": {"app_name": "existing-app"}}}
 
     coord.api = MagicMock()
@@ -540,9 +623,11 @@ async def test_start_app_stats_keeps_existing_sub_when_no_apps() -> None:
     assert coord._app_stats_event_name == 'app.stats:{"interval": 60}'
 
 
-async def test_get_app_stats_clears_when_containers_not_monitored() -> None:
+async def test_get_app_stats_clears_when_containers_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_app_stats clears stale app stats once containers are unmonitored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app_stats": {"stale-app": {"cpu": 1}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -556,9 +641,11 @@ async def test_get_app_stats_clears_when_containers_not_monitored() -> None:
     assert coord.ds["app_stats"] == {}
 
 
-async def test_get_app_stats_does_nothing_when_disconnected_mid_call() -> None:
+async def test_get_app_stats_does_nothing_when_disconnected_mid_call(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A disconnected API leaves the stats dict and subscription id unchanged."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {"test-app": {"cpu": 1, "memory": 2}},
@@ -579,9 +666,11 @@ async def test_get_app_stats_does_nothing_when_disconnected_mid_call() -> None:
     assert coord._app_stats_sub_id == original_sub_id
 
 
-async def test_get_app_stats_does_nothing_when_no_apps() -> None:
+async def test_get_app_stats_does_nothing_when_no_apps(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """No apps: get_app_stats is a no-op."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {},
         "app_stats": {"existing-app": {"app_name": "existing-app"}},
@@ -598,9 +687,11 @@ async def test_get_app_stats_does_nothing_when_no_apps() -> None:
     assert coord.ds["app_stats"] == {"existing-app": {"app_name": "existing-app"}}
 
 
-async def test_get_app_stats_re_subscribes_when_sub_id_missing() -> None:
+async def test_get_app_stats_re_subscribes_when_sub_id_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A missing subscription id triggers a call to start_app_stats to resubscribe."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -617,9 +708,11 @@ async def test_get_app_stats_re_subscribes_when_sub_id_missing() -> None:
     start_mock.assert_awaited_once()
 
 
-async def test_get_app_stats_re_subscribes_when_existing_sub_not_active() -> None:
+async def test_get_app_stats_re_subscribes_when_existing_sub_not_active(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """If sub_id exists but api.is_subscribed is False, clear and resubscribe."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -638,9 +731,11 @@ async def test_get_app_stats_re_subscribes_when_existing_sub_not_active() -> Non
     start_mock.assert_awaited_once()
 
 
-async def test_get_app_stats_skips_malformed_app_name() -> None:
+async def test_get_app_stats_skips_malformed_app_name(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Events with a non-string or empty app_name are skipped, valid ones are kept."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -667,9 +762,9 @@ async def test_get_app_stats_skips_malformed_app_name() -> None:
 # ---------------------------
 #   start_app_stats / get_app_stats / stop_app_stats
 # ---------------------------
-async def test_start_app_stats_subscribes_once() -> None:
+async def test_start_app_stats_subscribes_once(coordinator: TrueNASCoordinator) -> None:
     """start_app_stats subscribes and records the returned subscription id."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -684,9 +779,11 @@ async def test_start_app_stats_subscribes_once() -> None:
     assert coord._app_stats_sub_id == "sub-1"
 
 
-async def test_start_app_stats_clears_stale_subscription() -> None:
+async def test_start_app_stats_clears_stale_subscription(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A stale subscription is unsubscribed before a new one is established."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -704,9 +801,11 @@ async def test_start_app_stats_clears_stale_subscription() -> None:
     assert coord._app_stats_sub_id == "sub-new"
 
 
-async def test_start_app_stats_handles_subscribe_failure() -> None:
+async def test_start_app_stats_handles_subscribe_failure(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A subscribe_events exception is swallowed, leaving the subscription id unset."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -720,9 +819,11 @@ async def test_start_app_stats_handles_subscribe_failure() -> None:
     assert coord._app_stats_sub_id is None
 
 
-async def test_get_app_stats_processes_and_updates_state() -> None:
+async def test_get_app_stats_processes_and_updates_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A subscription event's fields are normalized into per-app stats state."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -765,9 +866,11 @@ async def test_get_app_stats_processes_and_updates_state() -> None:
     ]
 
 
-async def test_get_app_stats_removes_missing_apps() -> None:
+async def test_get_app_stats_removes_missing_apps(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Stats for apps no longer in coord.ds["app"] are dropped."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {
             "test-app": {"name": "test-app"},
@@ -789,9 +892,11 @@ async def test_get_app_stats_removes_missing_apps() -> None:
     assert "old-app" not in coord.ds["app_stats"]
 
 
-async def test_get_app_stats_skips_malformed_fields() -> None:
+async def test_get_app_stats_skips_malformed_fields(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Malformed fields entries are skipped while well-formed ones are processed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -814,9 +919,11 @@ async def test_get_app_stats_skips_malformed_fields() -> None:
     assert coord.ds["app_stats"]["test-app"]["cpu_usage"] == pytest.approx(1.0)
 
 
-async def test_stop_app_stats_unsubscribes_events() -> None:
+async def test_stop_app_stats_unsubscribes_events(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """stop_app_stats unsubscribes and clears the tracked subscription state."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.unsubscribe_events = AsyncMock()
@@ -829,9 +936,11 @@ async def test_stop_app_stats_unsubscribes_events() -> None:
     assert coord._app_stats_event_name is None
 
 
-async def test_stop_app_stats_default_clears_even_when_disconnected() -> None:
+async def test_stop_app_stats_default_clears_even_when_disconnected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A disconnected API skips the unsubscribe call but still clears local state."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord.api.unsubscribe_events = AsyncMock()
@@ -845,9 +954,11 @@ async def test_stop_app_stats_default_clears_even_when_disconnected() -> None:
     assert coord._app_stats_event_name is None
 
 
-async def test_get_app_stats_unwraps_collection_update_envelope() -> None:
+async def test_get_app_stats_unwraps_collection_update_envelope(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A collection_update-wrapped event's params.fields are still processed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -893,9 +1004,11 @@ async def test_get_app_stats_unwraps_collection_update_envelope() -> None:
     ]
 
 
-async def test_get_app_stats_handles_missing_blkio_and_networks() -> None:
+async def test_get_app_stats_handles_missing_blkio_and_networks(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Malformed blkio/networks fields fall back to None/empty-list defaults."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -927,9 +1040,11 @@ async def test_get_app_stats_handles_missing_blkio_and_networks() -> None:
     assert coord.ds["app_stats"]["test-app"]["networks"] == []
 
 
-async def test_get_app_stats_handles_malformed_networks_list() -> None:
+async def test_get_app_stats_handles_malformed_networks_list(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Ensure _upsert_app_stats_entry keeps only valid network dicts."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -976,9 +1091,11 @@ async def test_get_app_stats_handles_malformed_networks_list() -> None:
     ]
 
 
-async def test_get_app_stats_ignores_non_dict_app_entries() -> None:
+async def test_get_app_stats_ignores_non_dict_app_entries(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Ensure _upsert_app_stats_entry ignores non-dict app objects in messages."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
         "app_stats": {},
@@ -998,9 +1115,11 @@ async def test_get_app_stats_ignores_non_dict_app_entries() -> None:
     assert coord.ds["app_stats"] == {}
 
 
-async def test_get_app_stats_normalizes_invalid_app_stats_to_none() -> None:
+async def test_get_app_stats_normalizes_invalid_app_stats_to_none(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Invalid cpu_usage/memory/blkio_read values should be normalized to None."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.get_subscription_events = AsyncMock(
@@ -1064,9 +1183,11 @@ def test_unwrap_app_stats_message_rejects_non_dict_params() -> None:
     )
 
 
-async def test_start_app_stats_uses_fixed_poll_interval() -> None:
+async def test_start_app_stats_uses_fixed_poll_interval(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """The app.stats subscription always uses the fixed default poll interval."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1093,9 +1214,9 @@ async def test_start_app_stats_uses_fixed_poll_interval() -> None:
 # hass's frame helper to have been set up by a running Home Assistant core
 # (unavailable via pytest-homeassistant-custom-component on this Windows dev
 # machine). It is exercised by CI's hass-fixture-based integration tests.
-def test_connected_delegates_to_api() -> None:
+def test_connected_delegates_to_api(coordinator: TrueNASCoordinator) -> None:
     """coord.connected() delegates directly to the API's connected() call."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     assert coord.connected() is True
@@ -1105,9 +1226,11 @@ def test_connected_delegates_to_api() -> None:
 # ---------------------------
 #   _async_ensure_connected
 # ---------------------------
-async def test_async_ensure_connected_noop_when_already_connected() -> None:
+async def test_async_ensure_connected_noop_when_already_connected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An already-connected API is not asked to connect again."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.connect = AsyncMock()
@@ -1115,9 +1238,11 @@ async def test_async_ensure_connected_noop_when_already_connected() -> None:
     coord.api.connect.assert_not_awaited()
 
 
-async def test_async_ensure_connected_raises_update_failed_on_exception() -> None:
+async def test_async_ensure_connected_raises_update_failed_on_exception(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A connect() exception is translated into UpdateFailed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1126,14 +1251,16 @@ async def test_async_ensure_connected_raises_update_failed_on_exception() -> Non
         await coord._async_ensure_connected()
 
 
-async def test_async_ensure_connected_raises_update_failed_on_invalid_key() -> None:
+async def test_async_ensure_connected_raises_update_failed_on_invalid_key(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An ERR_INVALID_KEY connect failure is translated into UpdateFailed.
 
     Bronze scope has no reauth flow to hand off to, so this degrades to the
     same UpdateFailed/entity-unavailable path as any other connection failure
     instead of ConfigEntryAuthFailed (see coordinator._async_ensure_connected).
     """
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord.api.connect = AsyncMock(return_value=False)
@@ -1146,9 +1273,11 @@ async def test_async_ensure_connected_raises_update_failed_on_invalid_key() -> N
         await coord._async_ensure_connected()
 
 
-async def test_async_ensure_connected_raises_update_failed_on_other_error() -> None:
+async def test_async_ensure_connected_raises_update_failed_on_other_error(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A non-auth connect failure is translated into UpdateFailed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord.api.connect = AsyncMock(return_value=False)
@@ -1158,9 +1287,9 @@ async def test_async_ensure_connected_raises_update_failed_on_other_error() -> N
         await coord._async_ensure_connected()
 
 
-async def test_async_ensure_connected_succeeds() -> None:
+async def test_async_ensure_connected_succeeds(coordinator: TrueNASCoordinator) -> None:
     """A successful connect() call completes without raising."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord.api.connect = AsyncMock(return_value=True)
@@ -1196,9 +1325,11 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
         setattr(coord, name, AsyncMock())
 
 
-async def test_async_update_data_runs_jobs_when_connected() -> None:
+async def test_async_update_data_runs_jobs_when_connected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """All get_* jobs run and the coordinator's ds dict is returned when connected."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
@@ -1214,9 +1345,11 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
     assert result is coord.ds
 
 
-async def test_async_update_data_skips_jobs_when_disconnected() -> None:
+async def test_async_update_data_skips_jobs_when_disconnected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A still-disconnected API raises UpdateFailed and skips running any jobs."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1229,9 +1362,11 @@ async def test_async_update_data_skips_jobs_when_disconnected() -> None:
     coord.get_systeminfo.assert_not_awaited()
 
 
-async def test_async_update_data_swallows_job_exceptions() -> None:
+async def test_async_update_data_swallows_job_exceptions(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A single job raising an exception does not abort the overall update."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
@@ -1245,9 +1380,11 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     assert result is coord.ds
 
 
-async def test_async_update_data_raises_when_system_info_missing() -> None:
+async def test_async_update_data_raises_when_system_info_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A first refresh missing system.info must not be reported as successful."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1265,9 +1402,11 @@ async def test_async_update_data_raises_when_system_info_missing() -> None:
 # ---------------------------
 #   get_systeminfo / _handle_update_job / _query_interfaces
 # ---------------------------
-async def test_get_systeminfo_parses_valid_response_and_runs_pipeline() -> None:
+async def test_get_systeminfo_parses_valid_response_and_runs_pipeline(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A valid system-info response is parsed and the update-job pipeline runs."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1289,9 +1428,11 @@ async def test_get_systeminfo_parses_valid_response_and_runs_pipeline() -> None:
     coord._handle_update_job.assert_awaited_once()
 
 
-async def test_get_systeminfo_skips_parse_on_invalid_response() -> None:
+async def test_get_systeminfo_skips_parse_on_invalid_response(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A None system-info response skips parsing but still runs the update job."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1303,9 +1444,11 @@ async def test_get_systeminfo_skips_parse_on_invalid_response() -> None:
     coord._handle_update_job.assert_awaited_once()
 
 
-async def test_get_systeminfo_returns_early_when_disconnected_after_parse() -> None:
+async def test_get_systeminfo_returns_early_when_disconnected_after_parse(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Disconnection after parsing returns early before the update-job pipeline."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1317,9 +1460,11 @@ async def test_get_systeminfo_returns_early_when_disconnected_after_parse() -> N
     coord._handle_update_job.assert_not_awaited()
 
 
-async def test_get_systeminfo_returns_early_disconnected_after_update_job() -> None:
+async def test_get_systeminfo_returns_early_disconnected_after_update_job(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Disconnection right after the update job skips further version parsing."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     # Connected for the pre-update-job check, disconnected right after.
@@ -1334,9 +1479,11 @@ async def test_get_systeminfo_returns_early_disconnected_after_update_job() -> N
     coord._parse_version.assert_not_called()
 
 
-async def test_handle_update_job_noop_without_jobid() -> None:
+async def test_handle_update_job_noop_without_jobid(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A zero update_jobid means no job status query is made."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"update_jobid": 0}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock()
@@ -1344,9 +1491,11 @@ async def test_handle_update_job_noop_without_jobid() -> None:
     coord.api.query.assert_not_awaited()
 
 
-async def test_handle_update_job_keeps_progress_while_running() -> None:
+async def test_handle_update_job_keeps_progress_while_running(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A RUNNING update job's progress percentage and state are stored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"update_jobid": 5, "update_available": True}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1358,9 +1507,11 @@ async def test_handle_update_job_keeps_progress_while_running() -> None:
     assert coord.ds["system_info"]["update_state"] == "RUNNING"
 
 
-async def test_handle_update_job_resets_when_finished() -> None:
+async def test_handle_update_job_resets_when_finished(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A finished (SUCCESS) update job resets jobid/progress/state to idle defaults."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {
         "system_info": {
             "update_jobid": 5,
@@ -1379,9 +1530,11 @@ async def test_handle_update_job_resets_when_finished() -> None:
     assert coord.ds["system_info"]["update_state"] == "unknown"
 
 
-async def test_handle_update_job_returns_early_when_disconnected() -> None:
+async def test_handle_update_job_returns_early_when_disconnected(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A disconnected API leaves the existing update_jobid untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"update_jobid": 5}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1390,9 +1543,11 @@ async def test_handle_update_job_returns_early_when_disconnected() -> None:
     assert coord.ds["system_info"]["update_jobid"] == 5
 
 
-async def test_query_interfaces_derives_link_up() -> None:
+async def test_query_interfaces_derives_link_up(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Each interface's link_up flag is derived from its reported link state."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(
@@ -1409,9 +1564,11 @@ async def test_query_interfaces_derives_link_up() -> None:
 # ---------------------------
 #   get_systemstats family
 # ---------------------------
-def test_select_stat_graph_names_includes_interface_when_present() -> None:
+def test_select_stat_graph_names_includes_interface_when_present(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """The interface graph is included whenever interfaces exist."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {"eth0": {}}}
     coord._is_virtual = False
     coord._systemstats_errored = {}
@@ -1420,9 +1577,11 @@ def test_select_stat_graph_names_includes_interface_when_present() -> None:
     assert "cputemp" in names
 
 
-def test_select_stat_graph_names_removes_cputemp_for_virtual() -> None:
+def test_select_stat_graph_names_removes_cputemp_for_virtual(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A virtual machine drops cputemp, and no interfaces drops the interface graph."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}}
     coord._is_virtual = True
     coord._systemstats_errored = {}
@@ -1431,9 +1590,11 @@ def test_select_stat_graph_names_removes_cputemp_for_virtual() -> None:
     assert "interface" not in names
 
 
-def test_select_stat_graph_names_filters_cooldown_graphs() -> None:
+def test_select_stat_graph_names_filters_cooldown_graphs(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A graph that recently errored is excluded while still in its cooldown."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}}
     coord._is_virtual = False
     coord._systemstats_errored = {"cpu": dt_util.utcnow()}
@@ -1442,9 +1603,11 @@ def test_select_stat_graph_names_filters_cooldown_graphs() -> None:
     assert "cpu" not in names
 
 
-async def test_fetch_stat_graphs_collects_and_records_failures() -> None:
+async def test_fetch_stat_graphs_collects_and_records_failures(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Successful graph queries are collected and failed ones are recorded."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord._systemstats_errored = {}
     coord.api = MagicMock()
@@ -1455,10 +1618,10 @@ async def test_fetch_stat_graphs_collects_and_records_failures() -> None:
 
 
 def test_record_failed_graphs_logs_only_new_failures(
-    caplog: pytest.LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
 ) -> None:
     """Only a graph not already in the errored dict is warned about (new failure)."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord._systemstats_errored = {"cpu": dt_util.utcnow()}
     with caplog.at_level("WARNING"):
@@ -1467,17 +1630,21 @@ def test_record_failed_graphs_logs_only_new_failures(
     assert coord._systemstats_errored.keys() == {"cpu", "memory"}
 
 
-def test_record_failed_graphs_noop_for_empty_list() -> None:
+def test_record_failed_graphs_noop_for_empty_list(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An empty failed-graphs list leaves the errored dict untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord._systemstats_errored = {}
     coord._record_failed_graphs([])
     assert coord._systemstats_errored == {}
 
 
-def test_process_system_stat_dispatches_by_name() -> None:
+def test_process_system_stat_dispatches_by_name(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A "load" stat item with no aggregations falls back to zeroed defaults."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     # Missing "aggregations"/"legend" fails the isinstance guard in
     # _systemstats_process, so it falls back to _store_stat_defaults, which
@@ -1486,16 +1653,20 @@ def test_process_system_stat_dispatches_by_name() -> None:
     assert coord.ds["system_info"]["load_shortterm"] == 0.0
 
 
-def test_process_system_stat_ignores_missing_name() -> None:
+def test_process_system_stat_ignores_missing_name(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A stat item without a "name" key is ignored instead of raising."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._process_system_stat({})  # must not raise
 
 
-def test_process_system_stat_dispatches_cputemp() -> None:
+def test_process_system_stat_dispatches_cputemp(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A "cputemp" stat item is dispatched to _process_cputemp."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     item = {"name": "cputemp", "aggregations": {"mean": {"core0": 40.0}}}
     with patch.object(coord, "_process_cputemp") as mock:
@@ -1503,9 +1674,11 @@ def test_process_system_stat_dispatches_cputemp() -> None:
     mock.assert_called_once_with(item)
 
 
-def test_process_system_stat_dispatches_cpu_and_rounds_usage() -> None:
+def test_process_system_stat_dispatches_cpu_and_rounds_usage(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A "cpu" stat item derives cpu_usage from the (defaulted) cpu_cpu value."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._process_system_stat({"name": "cpu"})
     # No aggregations/legend -> _store_stat_defaults zeroes cpu_cpu, which then
@@ -1513,9 +1686,11 @@ def test_process_system_stat_dispatches_cpu_and_rounds_usage() -> None:
     assert coord.ds["system_info"]["cpu_usage"] == pytest.approx(0.0)
 
 
-def test_process_system_stat_dispatches_interface_for_known_identifier() -> None:
+def test_process_system_stat_dispatches_interface_for_known_identifier(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An interface stat item for a tracked identifier updates its rx/tx values."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {"eth0": {}}}
     coord._process_system_stat(
         {"name": "interface", "identifier": "eth0", "legend": "not-a-list"}
@@ -1524,17 +1699,19 @@ def test_process_system_stat_dispatches_interface_for_known_identifier() -> None
     assert coord.ds["interface"]["eth0"]["tx"] == 0.0
 
 
-def test_process_system_stat_ignores_interface_for_unknown_identifier() -> None:
+def test_process_system_stat_ignores_interface_for_unknown_identifier(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An interface stat item for an untracked identifier is ignored."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}, "interface": {}}
     coord._process_system_stat({"name": "interface", "identifier": "eth99"})
     assert coord.ds["interface"] == {}
 
 
-def test_process_system_stat_dispatches_memory() -> None:
+def test_process_system_stat_dispatches_memory(coordinator: TrueNASCoordinator) -> None:
     """A "memory" stat item is dispatched to the memory-specific processor."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"physmem": 1000}}
     coord._process_system_stat(
         {
@@ -1546,9 +1723,11 @@ def test_process_system_stat_dispatches_memory() -> None:
     assert coord.ds["system_info"]["memory-free_value"] == 250
 
 
-def test_process_system_stat_dispatches_arcsize() -> None:
+def test_process_system_stat_dispatches_arcsize(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An "arcsize" stat item is stored under the dedicated ARC cache key."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._process_system_stat(
         {
@@ -1560,9 +1739,11 @@ def test_process_system_stat_dispatches_arcsize() -> None:
     assert coord.ds["system_info"]["cache_size-arc_value"] == pytest.approx(12.35)
 
 
-def test_process_system_stat_dispatches_unknown_name() -> None:
+def test_process_system_stat_dispatches_unknown_name(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unrecognized stat name is recorded in the unknown-stat-names set."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord.host = "truenas.local"
     coord._unknown_system_stat_names = set()
@@ -1570,25 +1751,29 @@ def test_process_system_stat_dispatches_unknown_name() -> None:
     assert "weird_stat" in coord._unknown_system_stat_names
 
 
-def test_process_cputemp_stores_max_mean() -> None:
+def test_process_cputemp_stores_max_mean(coordinator: TrueNASCoordinator) -> None:
     """cpu_temperature is set to the highest mean core temperature."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._process_cputemp({"aggregations": {"mean": {"core0": 40.0, "core1": 45.0}}})
     assert coord.ds["system_info"]["cpu_temperature"] == 45.0
 
 
-def test_process_cputemp_none_when_no_valid_means() -> None:
+def test_process_cputemp_none_when_no_valid_means(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An empty means dict leaves cpu_temperature as None."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {}}
     coord._process_cputemp({"aggregations": {"mean": {}}})
     assert coord.ds["system_info"]["cpu_temperature"] is None
 
 
-def test_process_memory_stat_computes_usage_percent() -> None:
+def test_process_memory_stat_computes_usage_percent(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Memory total/free/usage-percent are all derived from physmem and available."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"system_info": {"physmem": 1000}}
     coord._process_memory_stat(
         {"legend": ["available"], "aggregations": {"mean": {"available": 250.0}}}
@@ -1599,10 +1784,10 @@ def test_process_memory_stat_computes_usage_percent() -> None:
 
 
 def test_handle_unknown_stat_logs_once_and_detects_near_miss(
-    caplog: pytest.LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
 ) -> None:
     """A repeated unknown stat name is only logged once, not on every call."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.host = "truenas.local"
     coord._unknown_system_stat_names = set()
     with caplog.at_level("DEBUG"):
@@ -1611,9 +1796,11 @@ def test_handle_unknown_stat_logs_once_and_detects_near_miss(
     assert caplog.text.count("unknown system stat graph name") == 1
 
 
-def test_process_system_stat_interface_updates_rx_tx() -> None:
+def test_process_system_stat_interface_updates_rx_tx(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Valid received/sent means update the interface's rx/tx to positive values."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {"eth0": {}}}
     item = {
         "legend": ["received", "sent"],
@@ -1624,18 +1811,22 @@ def test_process_system_stat_interface_updates_rx_tx() -> None:
     assert coord.ds["interface"]["eth0"]["tx"] > 0
 
 
-def test_process_system_stat_interface_zeroes_on_invalid_legend() -> None:
+def test_process_system_stat_interface_zeroes_on_invalid_legend(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A non-list legend zeroes the interface's rx/tx instead of raising."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {"eth0": {}}}
     coord._process_system_stat_interface({"legend": "not-a-list"}, "eth0")
     assert coord.ds["interface"]["eth0"]["rx"] == 0.0
     assert coord.ds["interface"]["eth0"]["tx"] == 0.0
 
 
-def test_process_system_stat_interface_zeroes_when_mean_not_dict() -> None:
+def test_process_system_stat_interface_zeroes_when_mean_not_dict(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A non-dict aggregations.mean zeroes the interface's rx/tx instead of raising."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {"eth0": {}}}
     item = {
         "legend": ["received", "sent"],
@@ -1646,9 +1837,11 @@ def test_process_system_stat_interface_zeroes_when_mean_not_dict() -> None:
     assert coord.ds["interface"]["eth0"]["tx"] == 0.0
 
 
-async def test_get_systemstats_returns_early_without_graph_names() -> None:
+async def test_get_systemstats_returns_early_without_graph_names(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """No selectable graph names (all in cooldown) skips the API query entirely."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}}
     coord._is_virtual = True
     coord._systemstats_errored = {
@@ -1663,9 +1856,11 @@ async def test_get_systemstats_returns_early_without_graph_names() -> None:
     coord.api.query.assert_not_awaited()
 
 
-async def test_get_systemstats_returns_when_fetch_yields_no_graphs() -> None:
+async def test_get_systemstats_returns_when_fetch_yields_no_graphs(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A None graph-fetch response leaves system_info untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}, "system_info": {}}
     coord._is_virtual = True
     coord._systemstats_errored = {}
@@ -1678,9 +1873,11 @@ async def test_get_systemstats_returns_when_fetch_yields_no_graphs() -> None:
     assert coord.ds["system_info"] == {}
 
 
-async def test_get_systemstats_processes_returned_graphs() -> None:
+async def test_get_systemstats_processes_returned_graphs(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Graphs returned by the API are processed into system_info values."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"interface": {}, "system_info": {}}
     coord._is_virtual = True
     coord._systemstats_errored = {}
@@ -1699,9 +1896,9 @@ async def test_get_systemstats_processes_returned_graphs() -> None:
 # now lives in and is tested by aiotruenas's own TrueNASState.get_service().
 # get_service just delegates and assigns the result, so this only needs to
 # lock in that plumbing.
-async def test_get_service_delegates_to_state() -> None:
+async def test_get_service_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_service assigns TrueNASState.get_service()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"service": {}}
     coord.state = MagicMock()
     coord.state.get_service = AsyncMock(
@@ -1719,9 +1916,9 @@ async def test_get_service_delegates_to_state() -> None:
 # aggregation logic these tests used to exercise directly now lives in and is
 # tested by aiotruenas's own TrueNASState.get_pool(). get_pool just delegates
 # and assigns the result, so this only needs to lock in that plumbing.
-async def test_get_pool_delegates_to_state() -> None:
+async def test_get_pool_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_pool assigns TrueNASState.get_pool()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"pool": {}}
     coord.state = MagicMock()
     coord.state.get_pool = AsyncMock(
@@ -1735,9 +1932,11 @@ async def test_get_pool_delegates_to_state() -> None:
 # ---------------------------
 #   get_dataset
 # ---------------------------
-async def test_get_dataset_empty_when_group_not_monitored() -> None:
+async def test_get_dataset_empty_when_group_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored datasets group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"dataset": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -1748,9 +1947,11 @@ async def test_get_dataset_empty_when_group_not_monitored() -> None:
     coord.state.get_dataset.assert_not_awaited()
 
 
-async def test_get_dataset_returns_empty_when_none_found() -> None:
+async def test_get_dataset_returns_empty_when_none_found(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An empty datasets response leaves the dataset dict empty."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_DATASETS]}
@@ -1760,9 +1961,11 @@ async def test_get_dataset_returns_empty_when_none_found() -> None:
     assert coord.ds["dataset"] == {}
 
 
-async def test_get_dataset_parses_when_monitored() -> None:
+async def test_get_dataset_parses_when_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A monitored datasets group assigns TrueNASState.get_dataset()'s result."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_DATASETS]}
@@ -1782,9 +1985,9 @@ async def test_get_dataset_parses_when_monitored() -> None:
 # tested by aiotruenas's own TrueNASState.get_disk(). get_disk just
 # delegates and assigns the result, so this only needs to lock in that
 # plumbing.
-async def test_get_disk_delegates_to_state() -> None:
+async def test_get_disk_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_disk assigns TrueNASState.get_disk()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"disk": {}}
     coord.state = MagicMock()
     coord.state.get_disk = AsyncMock(
@@ -1801,9 +2004,9 @@ async def test_get_disk_delegates_to_state() -> None:
 # lives in and is tested by aiotruenas's own TrueNASState.get_vm(). get_vm
 # just delegates and assigns the result, so this only needs to lock in that
 # plumbing.
-async def test_get_vm_empty_when_not_monitored() -> None:
+async def test_get_vm_empty_when_not_monitored(coordinator: TrueNASCoordinator) -> None:
     """An unmonitored VMs group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"vm": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -1814,9 +2017,9 @@ async def test_get_vm_empty_when_not_monitored() -> None:
     coord.state.get_vm.assert_not_awaited()
 
 
-async def test_get_vm_delegates_to_state() -> None:
+async def test_get_vm_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_vm assigns TrueNASState.get_vm()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"vm": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_VMS]}
@@ -1836,9 +2039,11 @@ async def test_get_vm_delegates_to_state() -> None:
 # between the legacy virt.instance.query and TrueNAS-26.0+ container.query
 # based on its own version detection). get_container just delegates and
 # assigns the result, so this only needs to lock in that plumbing.
-async def test_get_container_empty_when_not_monitored() -> None:
+async def test_get_container_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored containers group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"container": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -1849,9 +2054,11 @@ async def test_get_container_empty_when_not_monitored() -> None:
     coord.state.get_container.assert_not_awaited()
 
 
-async def test_get_container_delegates_to_state() -> None:
+async def test_get_container_delegates_to_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_container assigns TrueNASState.get_container()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"container": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CONTAINERS]}
@@ -1871,9 +2078,11 @@ async def test_get_container_delegates_to_state() -> None:
 # exercise directly now lives in and is tested by aiotruenas's own
 # TrueNASState.get_directoryservices(). get_directoryservices just delegates
 # and assigns the result, so this only needs to lock in that plumbing.
-async def test_get_directoryservices_empty_when_not_monitored() -> None:
+async def test_get_directoryservices_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored directory-services group clears the dict without querying."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"directoryservices": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -1884,9 +2093,11 @@ async def test_get_directoryservices_empty_when_not_monitored() -> None:
     coord.state.get_directoryservices.assert_not_awaited()
 
 
-async def test_get_directoryservices_delegates_to_state() -> None:
+async def test_get_directoryservices_delegates_to_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_directoryservices assigns TrueNASState.get_directoryservices()'s result."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"directoryservices": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {
@@ -1903,9 +2114,11 @@ async def test_get_directoryservices_delegates_to_state() -> None:
 # ---------------------------
 #   get_certificates
 # ---------------------------
-async def test_get_certificates_computes_days_until_expiry() -> None:
+async def test_get_certificates_computes_days_until_expiry(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A certificate's days_until_expiry is computed from its "until" timestamp."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {}
     coord.api = MagicMock()
     future = dt_util.utcnow() + timedelta(days=10)
@@ -1923,9 +2136,11 @@ async def test_get_certificates_computes_days_until_expiry() -> None:
     assert coord.ds["certificate"]["cert1"]["days_until_expiry"] in (9, 10)
 
 
-async def test_get_certificates_none_expiry_when_until_missing() -> None:
+async def test_get_certificates_none_expiry_when_until_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A certificate without an "until" field gets a None days_until_expiry."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=[{"id": 1, "name": "cert1"}])
@@ -1940,9 +2155,9 @@ async def test_get_certificates_none_expiry_when_until_missing() -> None:
 # exercise directly now lives in and is tested by aiotruenas's own
 # TrueNASState.get_arc(). get_arc just delegates and assigns the result, so
 # this only needs to lock in that plumbing.
-async def test_get_arc_delegates_to_state() -> None:
+async def test_get_arc_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_arc assigns TrueNASState.get_arc()'s result verbatim."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {}
     coord.state = MagicMock()
     coord.state.get_arc = AsyncMock(
@@ -1963,9 +2178,11 @@ async def test_get_arc_delegates_to_state() -> None:
 # these tests used to exercise directly now lives in and is tested by
 # aiotruenas's own TrueNASState.get_ups(). get_ups just delegates and
 # assigns the result, so this only needs to lock in that plumbing.
-async def test_get_ups_empty_when_not_monitored() -> None:
+async def test_get_ups_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored UPS group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"ups": {"stale": 1}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -1976,9 +2193,9 @@ async def test_get_ups_empty_when_not_monitored() -> None:
     coord.state.get_ups.assert_not_awaited()
 
 
-async def test_get_ups_delegates_to_state() -> None:
+async def test_get_ups_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_ups assigns TrueNASState.get_ups()'s result verbatim."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_UPS]}
@@ -1997,9 +2214,11 @@ async def test_get_ups_delegates_to_state() -> None:
 # get_snapshottask()/get_scrub(). Each get_* method just delegates and
 # assigns the (str-keyed) result, so these only need to lock in that
 # plumbing.
-async def test_get_cloudsync_empty_when_not_monitored() -> None:
+async def test_get_cloudsync_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored cloudsync group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"cloudsync": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -2010,9 +2229,11 @@ async def test_get_cloudsync_empty_when_not_monitored() -> None:
     coord.state.get_cloudsync.assert_not_awaited()
 
 
-async def test_get_cloudsync_delegates_to_state() -> None:
+async def test_get_cloudsync_delegates_to_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_cloudsync assigns TrueNASState.get_cloudsync()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"cloudsync": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CLOUDSYNC]}
@@ -2024,9 +2245,11 @@ async def test_get_cloudsync_delegates_to_state() -> None:
     assert "cs1" in coord.ds["cloudsync"]
 
 
-async def test_get_replication_empty_when_not_monitored() -> None:
+async def test_get_replication_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored replication group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"replication": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -2037,9 +2260,11 @@ async def test_get_replication_empty_when_not_monitored() -> None:
     coord.state.get_replication.assert_not_awaited()
 
 
-async def test_get_replication_delegates_to_state() -> None:
+async def test_get_replication_delegates_to_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_replication assigns TrueNASState.get_replication()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"replication": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_REPLICATION]}
@@ -2051,9 +2276,11 @@ async def test_get_replication_delegates_to_state() -> None:
     assert coord.ds["replication"]["1"]["state"] == "RUNNING"
 
 
-async def test_get_rsync_empty_when_not_monitored() -> None:
+async def test_get_rsync_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored rsync group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"rsynctask": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -2064,9 +2291,9 @@ async def test_get_rsync_empty_when_not_monitored() -> None:
     coord.state.get_rsync.assert_not_awaited()
 
 
-async def test_get_rsync_delegates_to_state() -> None:
+async def test_get_rsync_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_rsync assigns TrueNASState.get_rsync()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"rsynctask": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_RSYNC]}
@@ -2076,9 +2303,11 @@ async def test_get_rsync_delegates_to_state() -> None:
     assert "1" in coord.ds["rsynctask"]
 
 
-async def test_get_snapshottask_empty_when_not_monitored() -> None:
+async def test_get_snapshottask_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored snapshots group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"snapshottask": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -2089,9 +2318,11 @@ async def test_get_snapshottask_empty_when_not_monitored() -> None:
     coord.state.get_snapshottask.assert_not_awaited()
 
 
-async def test_get_snapshottask_delegates_to_state() -> None:
+async def test_get_snapshottask_delegates_to_state(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """get_snapshottask assigns TrueNASState.get_snapshottask()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"snapshottask": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_SNAPSHOTS]}
@@ -2105,9 +2336,9 @@ async def test_get_snapshottask_delegates_to_state() -> None:
     assert coord.ds["snapshottask"]["1"]["schedule"] == schedule
 
 
-async def test_get_scrub_delegates_to_state() -> None:
+async def test_get_scrub_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_scrub assigns TrueNASState.get_scrub()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"scrub": {}}
     coord.state = MagicMock()
     coord.state.get_scrub = AsyncMock(return_value={1: {"id": 1, "pool_name": "tank"}})
@@ -2125,9 +2356,9 @@ async def test_get_scrub_delegates_to_state() -> None:
 # this only needs to lock in that plumbing plus the update_jobid
 # carry-forward (see get_app's docstring: TrueNASState.get_app() never
 # carries this HA-only field, so it is preserved by hand across polls).
-async def test_get_app_delegates_to_state() -> None:
+async def test_get_app_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_app assigns TrueNASState.get_app()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {}}
     coord.state = MagicMock()
     coord.state.get_app = AsyncMock(
@@ -2140,14 +2371,16 @@ async def test_get_app_delegates_to_state() -> None:
     assert coord.ds["app"]["app1"]["update_jobid"] == 0
 
 
-async def test_get_app_carries_forward_update_jobid() -> None:
+async def test_get_app_carries_forward_update_jobid(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An in-progress upgrade job's update_jobid must survive across a poll.
 
     TrueNASState.get_app() returns a freshly-built dict that never carries
     this HA-specific field; losing it would strand app upgrade-job tracking
     (_clear_finished_app_updates) forever on the next poll.
     """
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"app1": {"update_jobid": 5}}}
     coord.state = MagicMock()
     coord.state.get_app = AsyncMock(return_value={"app1": {"running": True}})
@@ -2156,9 +2389,11 @@ async def test_get_app_carries_forward_update_jobid() -> None:
     assert coord.ds["app"]["app1"]["update_jobid"] == 5
 
 
-async def test_clear_finished_app_updates_resets_when_not_running() -> None:
+async def test_clear_finished_app_updates_resets_when_not_running(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A SUCCESS-state update job resets the app's update_jobid to zero."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"app1": {"update_jobid": 5}}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=[{"state": "SUCCESS"}])
@@ -2166,9 +2401,11 @@ async def test_clear_finished_app_updates_resets_when_not_running() -> None:
     assert coord.ds["app"]["app1"]["update_jobid"] == 0
 
 
-async def test_clear_finished_app_updates_keeps_running_job() -> None:
+async def test_clear_finished_app_updates_keeps_running_job(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A RUNNING update job leaves the app's update_jobid untouched."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"app1": {"update_jobid": 5}}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=[{"state": "RUNNING"}])
@@ -2176,9 +2413,11 @@ async def test_clear_finished_app_updates_keeps_running_job() -> None:
     assert coord.ds["app"]["app1"]["update_jobid"] == 5
 
 
-async def test_clear_finished_app_updates_skips_without_jobid() -> None:
+async def test_clear_finished_app_updates_skips_without_jobid(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A zero update_jobid skips the job-status query entirely."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"app1": {"update_jobid": 0}}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock()
@@ -2189,65 +2428,77 @@ async def test_clear_finished_app_updates_skips_without_jobid() -> None:
 # ---------------------------
 #   app.stats subscription helpers
 # ---------------------------
-def test_get_app_identifier_prefers_name() -> None:
+def test_get_app_identifier_prefers_name(coordinator: TrueNASCoordinator) -> None:
     """The "name" field is preferred over the legacy "app_name" field."""
-    coord = _bare_coordinator()
+    coord = coordinator
     assert coord._get_app_identifier({"name": "app1", "app_name": "legacy"}) == "app1"
 
 
-def test_get_app_identifier_falls_back_to_app_name() -> None:
+def test_get_app_identifier_falls_back_to_app_name(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Without a "name" field, the legacy "app_name" field is used instead."""
-    coord = _bare_coordinator()
+    coord = coordinator
     assert coord._get_app_identifier({"app_name": "legacy"}) == "legacy"
 
 
-def test_get_app_identifier_returns_none_when_missing() -> None:
+def test_get_app_identifier_returns_none_when_missing(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """With neither "name" nor "app_name" present, None is returned."""
-    coord = _bare_coordinator()
+    coord = coordinator
     assert coord._get_app_identifier({}) is None
 
 
-def test_resolve_app_stats_event_name_uses_fixed_poll_interval() -> None:
+def test_resolve_app_stats_event_name_uses_fixed_poll_interval(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """The event name embeds the fixed default poll interval."""
-    coord = _bare_coordinator()
+    coord = coordinator
     assert (
         coord._resolve_app_stats_event_name()
         == f'app.stats:{{"interval": {DEFAULT_POLL_INTERVAL}}}'
     )
 
 
-async def test_stop_app_stats_if_active_stops_when_subscribed() -> None:
+async def test_stop_app_stats_if_active_stops_when_subscribed(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An active subscription is force-stopped."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord._app_stats_sub_id = "sub-1"
     coord.stop_app_stats = AsyncMock()
     await coord._stop_app_stats_if_active()
     coord.stop_app_stats.assert_awaited_once_with(force=True)
 
 
-async def test_stop_app_stats_if_active_noop_when_not_subscribed() -> None:
+async def test_stop_app_stats_if_active_noop_when_not_subscribed(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """No active subscription means stop_app_stats is never called."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord._app_stats_sub_id = None
     coord.stop_app_stats = AsyncMock()
     await coord._stop_app_stats_if_active()
     coord.stop_app_stats.assert_not_awaited()
 
 
-async def test_maybe_teardown_changed_app_stats_subscription_stops_on_change() -> None:
+async def test_maybe_teardown_changed_app_stats_subscription_stops_on_change(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A changed event name tears down the existing subscription."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord._app_stats_event_name = "old"
     coord.stop_app_stats = AsyncMock()
     await coord._maybe_teardown_changed_app_stats_subscription("new")
     coord.stop_app_stats.assert_awaited_once_with(force=True)
 
 
-async def test_maybe_clear_inactive_app_stats_subscription_clears_when_inactive() -> (
-    None
-):
+async def test_maybe_clear_inactive_app_stats_subscription_clears_when_inactive(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An inactive subscription id (per the API) is cleared locally."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord._app_stats_sub_id = "sub-1"
     coord.api = MagicMock()
     coord.api.is_subscribed = AsyncMock(return_value=False)
@@ -2255,18 +2506,22 @@ async def test_maybe_clear_inactive_app_stats_subscription_clears_when_inactive(
     assert coord._app_stats_sub_id is None
 
 
-async def test_subscribe_to_app_stats_handles_missing_sub_id() -> None:
+async def test_subscribe_to_app_stats_handles_missing_sub_id(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A None subscription id from subscribe_events leaves it unset."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.subscribe_events = AsyncMock(return_value=(None, None))
     await coord._subscribe_to_app_stats("event")
     assert coord._app_stats_sub_id is None
 
 
-async def test_subscribe_to_app_stats_handles_exception() -> None:
+async def test_subscribe_to_app_stats_handles_exception(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A subscribe_events exception is swallowed instead of propagating."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.subscribe_events = AsyncMock(side_effect=Exception("boom"))
     await coord._subscribe_to_app_stats("event")  # must not raise
@@ -2274,10 +2529,10 @@ async def test_subscribe_to_app_stats_handles_exception() -> None:
 
 
 async def test_stop_app_stats_unsubscribe_exception_still_clears_state(
-    caplog: pytest.LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
 ) -> None:
     """An unsubscribe_events exception still clears the local subscription id."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.unsubscribe_events = AsyncMock(side_effect=Exception("boom"))
@@ -2287,9 +2542,11 @@ async def test_stop_app_stats_unsubscribe_exception_still_clears_state(
     assert coord._app_stats_sub_id is None
 
 
-async def test_stop_app_stats_not_connected_no_force_is_noop() -> None:
+async def test_stop_app_stats_not_connected_no_force_is_noop(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """A disconnected API without force=True leaves the subscription state as-is."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord._app_stats_sub_id = "sub-1"
@@ -2298,24 +2555,28 @@ async def test_stop_app_stats_not_connected_no_force_is_noop() -> None:
     assert coord._app_stats_sub_id == "sub-1"
 
 
-def test_coerce_float_handles_invalid_values() -> None:
+def test_coerce_float_handles_invalid_values(coordinator: TrueNASCoordinator) -> None:
     """Unparsable values yield None, a parsable numeric string yields a float."""
-    coord = _bare_coordinator()
+    coord = coordinator
     assert coord._coerce_float(None) is None
     assert coord._coerce_float("bad") is None
     assert coord._coerce_float("3.5") == pytest.approx(3.5)
 
 
-def test_collect_current_app_names_uses_identifier() -> None:
+def test_collect_current_app_names_uses_identifier(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Only dict app entries contribute their identifier to the name set."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app": {"a": {"name": "app1"}, "b": "not-a-dict"}}
     assert coord._collect_current_app_names() == {"app1"}
 
 
-def test_prune_stale_app_stats_removes_missing_entries() -> None:
+def test_prune_stale_app_stats_removes_missing_entries(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """Stats for apps outside the given current-names set are removed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"app_stats": {"app1": {}, "stale": {}}}
     coord._prune_stale_app_stats({"app1"})
     assert coord.ds["app_stats"] == {"app1": {}}
@@ -2324,9 +2585,11 @@ def test_prune_stale_app_stats_removes_missing_entries() -> None:
 # ---------------------------
 #   get_cronjob
 # ---------------------------
-async def test_get_cronjob_empty_when_not_monitored() -> None:
+async def test_get_cronjob_empty_when_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
     """An unmonitored cronjobs group clears the dict without querying the state layer."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"cronjob": {"stale": {}}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -2337,9 +2600,9 @@ async def test_get_cronjob_empty_when_not_monitored() -> None:
     coord.state.get_cronjob.assert_not_awaited()
 
 
-async def test_get_cronjob_delegates_to_state() -> None:
+async def test_get_cronjob_delegates_to_state(coordinator: TrueNASCoordinator) -> None:
     """get_cronjob assigns TrueNASState.get_cronjob()'s result, str-keyed."""
-    coord = _bare_coordinator()
+    coord = coordinator
     coord.ds = {"cronjob": {}}
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CRONJOBS]}
