@@ -84,7 +84,7 @@
   },
   "issues": {
     "connection_lost": {
-      "description": "The connection to the Velbus interface was lost. Check that your Velbus interface is powered on and reachable. Home Assistant will automatically reconnect.",
+      "description": "The connection to the Velbus interface \"{name}\" was lost. Check that your Velbus interface is powered on and reachable. Home Assistant will automatically reconnect.",
       "title": "Velbus connection lost"
     },
     "deprecated_interface_parameter": {

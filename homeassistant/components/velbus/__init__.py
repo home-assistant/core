@@ -147,22 +147,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
         vlp_file=entry.data.get(CONF_VLP_FILE),
     )
-    try:
-        await controller.connect()
-    except VelbusConnectionFailed as error:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connection_failed",
-        ) from error
-
     issue_id = f"connection_lost_{entry.entry_id}"
 
-    # The connection is up, so any connection_lost issue is stale. It cannot be
-    # cleared by on_reconnect: the controller reports the initial connection while
-    # connect() is still running, before the callback below is registered.
-    ir.async_delete_issue(hass, DOMAIN, issue_id)
-
-    async def on_disconnect() -> None:
+    def _create_connection_lost_issue() -> None:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -171,7 +158,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             is_persistent=True,
             severity=ir.IssueSeverity.ERROR,
             translation_key="connection_lost",
+            translation_placeholders={"name": entry.title},
         )
+
+    try:
+        await controller.connect()
+    except VelbusConnectionFailed as error:
+        # A reload that fails to reconnect starts from here too: async_unload_entry
+        # already cleared the issue via the async_on_unload hook below, and this is
+        # the only chance to put it back before setup bails out into SETUP_RETRY.
+        _create_connection_lost_issue()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from error
+
+    # The connection is up, so any connection_lost issue is stale. It cannot be
+    # cleared by on_reconnect: the controller reports the initial connection while
+    # connect() is still running, before the callback below is registered.
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    async def on_disconnect() -> None:
+        _create_connection_lost_issue()
 
     async def on_reconnect() -> None:
         ir.async_delete_issue(hass, DOMAIN, issue_id)

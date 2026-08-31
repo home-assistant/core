@@ -32,11 +32,15 @@ async def test_setup_connection_failed(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the setup that fails during velbus connect."""
     controller.return_value.connect.side_effect = VelbusConnectionFailed()
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
 
 
 async def test_setup_start_failed(
@@ -258,7 +262,9 @@ async def test_connection_lost_creates_issue(
     await on_disconnect()
 
     issue_id = f"connection_lost_{config_entry.entry_id}"
-    assert (DOMAIN, issue_id) in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders == {"name": config_entry.title}
 
 
 async def test_connection_restored_deletes_issue(
@@ -281,6 +287,34 @@ async def test_connection_restored_deletes_issue(
     assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
+async def test_reload_while_offline_keeps_connection_lost_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a reload which fails to reconnect doesn't silently drop the issue.
+
+    async_unload_entry (via the async_on_unload hook) clears the issue on every
+    reload, success or not. If the reconnect attempt in async_setup_entry then
+    fails, the issue must be recreated there — otherwise a reload that can't
+    restore the connection leaves the entry in SETUP_RETRY with no repair issue.
+    """
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    controller.return_value.connect.side_effect = VelbusConnectionFailed()
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+
 async def test_setup_deletes_stale_issue(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
@@ -297,6 +331,7 @@ async def test_setup_deletes_stale_issue(
         is_persistent=True,
         severity=ir.IssueSeverity.ERROR,
         translation_key="connection_lost",
+        translation_placeholders={"name": config_entry.title},
     )
     assert (DOMAIN, issue_id) in issue_registry.issues
 
@@ -330,6 +365,7 @@ async def test_remove_entry_deletes_connection_lost_issue(
         is_persistent=True,
         severity=ir.IssueSeverity.ERROR,
         translation_key="connection_lost",
+        translation_placeholders={"name": config_entry.title},
     )
     assert (DOMAIN, issue_id) in issue_registry.issues
 
