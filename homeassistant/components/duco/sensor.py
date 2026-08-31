@@ -443,6 +443,5 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
         """Return the diagnostic status."""
         for diagnostic in self.coordinator.data.diagnostic_subsystems:
             if diagnostic.component == self.entity_description.component:
-                # Unknown values stay visible until translations can be added.
-                return diagnostic.status or diagnostic.raw_status
+                return diagnostic.status
         return None

@@ -257,13 +257,13 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_diagnostic_subsystem_sensors_preserve_unknown_components_and_statuses(
+async def test_diagnostic_subsystem_sensors_with_unknown_statuses(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
 ) -> None:
-    """Test diagnostics sensors keep distinct components and raw status strings."""
+    """Test diagnostic sensors report unknown for unrecognized statuses."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
         diagnostic_subsystems=(
@@ -277,11 +277,11 @@ async def test_diagnostic_subsystem_sensors_preserve_unknown_components_and_stat
 
     state = hass.states.get("sensor.living_future_mode")
     assert state is not None
-    assert state.state == "NeedsServiceSoon"
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.living_future_mode_2")
     assert state is not None
-    assert state.state == "NeedsAttentionSoon"
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
