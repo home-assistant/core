@@ -411,7 +411,6 @@ async def test_cct_light_reflects_active_color_mode(
     assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBW
     assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 0)
 
-    # Only white / CCT active (RGB all zero) -> report COLOR_TEMP again
     device.state.segments[0].color = Color(primary=(0, 0, 0, 200))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
