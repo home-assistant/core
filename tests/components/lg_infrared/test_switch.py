@@ -56,35 +56,19 @@ async def test_entities(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "service", "expected_button", "expected_state"),
+    ("entity_id", "on_code", "off_code"),
     [
         pytest.param(
             _ION_ENTITY_ID,
-            SERVICE_TURN_ON,
             LGACCode.ION_GENERATOR_ON,
-            STATE_ON,
-            id="ion_on",
-        ),
-        pytest.param(
-            _ION_ENTITY_ID,
-            SERVICE_TURN_OFF,
             LGACCode.ION_GENERATOR_OFF,
-            STATE_OFF,
-            id="ion_off",
+            id="ion",
         ),
         pytest.param(
             _AUTO_CLEAN_ENTITY_ID,
-            SERVICE_TURN_ON,
             LGACCode.AUTO_CLEAN_ON,
-            STATE_ON,
-            id="auto_clean_on",
-        ),
-        pytest.param(
-            _AUTO_CLEAN_ENTITY_ID,
-            SERVICE_TURN_OFF,
             LGACCode.AUTO_CLEAN_OFF,
-            STATE_OFF,
-            id="auto_clean_off",
+            id="auto_clean",
         ),
     ],
 )
@@ -92,22 +76,33 @@ async def test_switch_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_id: str,
-    service: str,
-    expected_button: LGACCode,
-    expected_state: str,
+    on_code: LGACCode,
+    off_code: LGACCode,
 ) -> None:
-    """Test toggling a switch sends the matching discrete IR code."""
+    """Test turning a switch on and off sends the matching discrete IR codes."""
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == expected_button.to_command().get_raw_timings()
+    assert timings == on_code.to_command().get_raw_timings()
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == expected_state
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 2
+    timings = mock_infrared_emitter_entity.send_command_calls[1].get_raw_timings()
+    assert timings == off_code.to_command().get_raw_timings()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_state_restored_on_restart(
