@@ -14,20 +14,16 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectSelector,
-    SelectSelectorConfig,
     TextSelector,
 )
 
 from .const import (
-    CONF_DEVICE_TYPE,
     CONF_UNIT_ID,
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
-    DEVICE_TYPES,
+    DEVICE_TYPE_BALCO260,
     DOMAIN,
 )
-from .entity import device_name
 
 STEP_USER = vol.Schema(
     {
@@ -47,11 +43,6 @@ STEP_USER = vol.Schema(
                 )
             ),
             vol.Coerce(int),
-        ),
-        vol.Required(CONF_DEVICE_TYPE): SelectSelector(
-            SelectSelectorConfig(
-                options=list(DEVICE_TYPES), translation_key=CONF_DEVICE_TYPE
-            )
         ),
     }
 )
@@ -82,15 +73,13 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             data = _normalized(user_input)
             errors, serial = await self._async_validate(data)
             if not errors:
-                if serial is not None:
-                    # Not defensive/just-in-case: EP2000 genuinely has no
-                    # d_serial field in bluetti-modbus-lib's register map
-                    # (only Balco260 does), so serial is None for every
-                    # EP2000 entry, not just a hypothetical case. Catches the
-                    # same device already added under a different link
-                    # (moved to a new address, for example).
-                    await self.async_set_unique_id(serial)
-                    self._abort_if_unique_id_configured()
+                assert (
+                    serial is not None
+                )  # only unset alongside a non-empty errors dict
+                # Catches the same device already added under a different
+                # link (moved to a new address, for example).
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
                 # Always checked too: this exact link claimed by some other
                 # entry, whether or not either side has a serial number.
                 self._async_abort_entries_match(
@@ -100,9 +89,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_UNIT_ID: data[CONF_UNIT_ID],
                     }
                 )
-                return self.async_create_entry(
-                    title=device_name(data[CONF_DEVICE_TYPE]), data=data
-                )
+                return self.async_create_entry(title="Balco260", data=data)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER, errors=errors
@@ -113,23 +100,18 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Probe the device, returning form errors and its serial number.
 
-        The serial number is ``None`` both on failure and when the device
-        type doesn't report one over Modbus.
+        The serial number is ``None`` only alongside a non-empty errors
+        dict - a successful probe always confirms one.
         """
         params = ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
         try:
             async with async_get_temporary_unit(
                 self.hass, params, data[CONF_UNIT_ID]
             ) as unit:
-                device = get_device(data[CONF_DEVICE_TYPE], unit)
-                if device is None:
-                    return {"base": "unsupported_device_type"}, None
-                # Confirms the picked model's registers answer, not that the
-                # device is one - EP2000's map is a near-subset of Balco260's
-                # at identical addresses, so a Balco260 answers as an EP2000
-                # too. Telling them apart needs a real distinguishing register
-                # confirmed against actual EP2000 hardware, which isn't
-                # available yet.
+                device = get_device(DEVICE_TYPE_BALCO260, unit)
+                assert (
+                    device is not None
+                )  # DEVICE_TYPE_BALCO260 is always a known device type
                 await device.async_update_with_retry()
         except HomeAssistantError:
             # The address is already claimed by another entry with different

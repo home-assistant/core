@@ -3,45 +3,31 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_TYPE_BALCO260, DEVICE_TYPE_EP2000, DOMAIN
+from .const import DOMAIN
 from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordinator
 
-_MODEL_NAMES = {
-    DEVICE_TYPE_BALCO260: "Balco260",
-    DEVICE_TYPE_EP2000: "EP2000",
-}
-
-
-def device_name(device_type: str) -> str:
-    """Return the model name a device type reads like in the UI."""
-    return _MODEL_NAMES.get(device_type, "BLUETTI power station")
+_MODEL_NAME = "Balco260"
 
 
 def bluetti_modbus_device_info(
-    entry_id: str,
-    device_type: str,
-    serial: str | None,
-    sw_version: str | None = None,
+    serial: str, sw_version: str | None = None
 ) -> DeviceInfo:
     """Return device information for a BLUETTI Modbus device.
 
     serial is entry.unique_id, not a fresh register read - the same value
     confirmed at config-flow time, before this device would otherwise be
-    shown as a plain sensor. Identity keys on it where the model reports one
-    (Balco260), falling back to entry_id only for a model with no serial
-    field over Modbus (EP2000).
+    shown as a plain sensor.
 
     sw_version is the raw ARM/DSP firmware values as reported (see
     __init__.py's caller) - real values, not decoded into a version scheme
     that isn't documented anywhere, but device identity rather than a
     measurement, so it belongs here rather than as a sensor.
     """
-    model = device_name(device_type)
     return DeviceInfo(
-        identifiers={(DOMAIN, serial or entry_id)},
+        identifiers={(DOMAIN, serial)},
         manufacturer="BLUETTI",
-        model=model,
-        name=model,
+        model=_MODEL_NAME,
+        name=_MODEL_NAME,
         serial_number=serial,
         sw_version=sw_version,
     )
@@ -61,8 +47,9 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
         """Initialize a BLUETTI Modbus entity."""
         super().__init__(coordinator=entry.runtime_data.coordinator)
         self._field_name = field_name
-        # entry.unique_id is the confirmed serial where the model reports one
-        # (Balco260); entry_id is the fallback for one that doesn't (EP2000).
-        self._attr_unique_id = f"{entry.unique_id or entry.entry_id}_{field_name}"
+        assert (
+            entry.unique_id is not None
+        )  # the config flow always sets it to the confirmed serial
+        self._attr_unique_id = f"{entry.unique_id}_{field_name}"
         self._attr_translation_key = field_name
         self._attr_device_info = entry.runtime_data.device_info
