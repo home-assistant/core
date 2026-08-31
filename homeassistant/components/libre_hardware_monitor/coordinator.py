@@ -136,9 +136,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]
                     )
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self._entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         self._previous_devices = detected_devices

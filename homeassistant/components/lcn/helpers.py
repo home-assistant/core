@@ -211,7 +211,9 @@ def register_lcn_address_devices(
     """
     device_registry = dr.async_get(hass)
 
-    host_identifiers = (DOMAIN, config_entry.entry_id)
+    host_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
 
     for device_config in config_entry.data[CONF_DEVICES]:
         address = device_config[CONF_ADDRESS]
@@ -233,7 +235,7 @@ def register_lcn_address_devices(
         device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers=identifiers,
-            via_device=host_identifiers,
+            via_device_id=host_device_id,
             manufacturer="Issendorff",
             sw_version=sw_version,
             name=device_name,

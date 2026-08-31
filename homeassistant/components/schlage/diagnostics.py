@@ -14,6 +14,4 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = config_entry.runtime_data
     # NOTE: Schlage diagnostics are already redacted.
-    return {
-        "locks": [ld.lock.get_diagnostics() for ld in coordinator.data.locks.values()]
-    }
+    return {"locks": [ld.lock.get_diagnostics() for ld in coordinator.data.values()]}

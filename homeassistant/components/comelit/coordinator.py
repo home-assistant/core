@@ -93,7 +93,11 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     f"{self.config_entry.entry_id}-{object_type}-{object_class.index}",
                 )
             },
-            via_device=(DOMAIN, self.config_entry.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.config_entry.entry_id),
+                config_entry_id=self.config_entry.entry_id,
+            ),
             name=object_class.name,
             model=f"{self._device} {object_type}",
             manufacturer="Comelit",
@@ -149,10 +153,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     (DOMAIN, identifier), self.config_entry.entry_id
                 )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
 
 class ComelitSerialBridge(ComelitBaseCoordinator[T]):

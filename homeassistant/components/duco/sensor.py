@@ -262,10 +262,7 @@ async def async_setup_entry(
                     (DOMAIN, f"{mac}_{node_id}"), entry.entry_id
                 )
                 if device:
-                    device_reg.async_update_device(
-                        device.id,
-                        remove_config_entry_id=entry.entry_id,
-                    )
+                    device_reg.async_remove_device(device.id)
             known_nodes.difference_update(stale_node_ids)
             known_box_sensors.difference_update(
                 {

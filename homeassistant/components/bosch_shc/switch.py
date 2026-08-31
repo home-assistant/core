@@ -24,6 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BoschConfigEntry
 from .entity import SHCEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class SHCSwitchEntityDescription(SwitchEntityDescription):
@@ -87,6 +89,7 @@ async def async_setup_entry(
 
     entities: list[SwitchEntity] = [
         SHCSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -97,6 +100,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCRoutingSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -106,6 +110,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -116,6 +121,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -126,6 +132,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -136,6 +143,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSwitch(
+            hass=hass,
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -154,13 +162,14 @@ class SHCSwitch(SHCEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: SHCDevice,
         parent_id: str,
         entry_id: str,
         description: SHCSwitchEntityDescription,
     ) -> None:
         """Initialize a SHC switch."""
-        super().__init__(device, parent_id, entry_id)
+        super().__init__(hass, device, parent_id, entry_id)
         self.entity_description = description
 
     @property
@@ -200,9 +209,11 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _device: SHCSmartPlug
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize an SHC routing switch."""
-        super().__init__(device, parent_id, entry_id)
+        super().__init__(hass, device, parent_id, entry_id)
         self._attr_unique_id = f"{device.serial}_routing"
 
     @property

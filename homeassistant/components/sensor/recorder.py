@@ -359,7 +359,7 @@ def _normalize_states(
 
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float] | None = None
-    last_unit: str | None | UndefinedType = UNDEFINED
+    last_unit: str | UndefinedType | None = UNDEFINED
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:

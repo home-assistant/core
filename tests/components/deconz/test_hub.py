@@ -30,8 +30,8 @@ async def test_device_registry_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Successful setup."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_setup.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry_setup.unique_id), config_entry_setup.entry_id
     )
     assert device_entry == snapshot
 

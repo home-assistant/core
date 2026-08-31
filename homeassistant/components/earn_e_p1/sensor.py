@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -119,23 +119,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up EARN-E P1 sensor entities."""
     coordinator = entry.runtime_data
-    added_keys: set[str] = set()
+    pending_keys = {description.key for description in SENSOR_DESCRIPTIONS}
+    remove_listener: CALLBACK_TYPE | None = None
+
+    @callback
+    def _async_remove_listener() -> None:
+        nonlocal remove_listener
+        if remove_listener is not None:
+            remove_listener()
+            remove_listener = None
 
     @callback
     def _async_add_sensors() -> None:
         if coordinator.data is None:
             return
-        new_entities = [
-            EarnEP1Sensor(coordinator, description)
-            for description in SENSOR_DESCRIPTIONS
-            if description.key in coordinator.data and description.key not in added_keys
-        ]
-        if new_entities:
-            added_keys.update(entity.entity_description.key for entity in new_entities)
-            async_add_entities(new_entities)
+        if new_keys := pending_keys & coordinator.data.keys():
+            pending_keys.difference_update(new_keys)
+            async_add_entities(
+                EarnEP1Sensor(coordinator, description)
+                for description in SENSOR_DESCRIPTIONS
+                if description.key in new_keys
+            )
+        if not pending_keys:
+            _async_remove_listener()
 
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
     _async_add_sensors()
+    if pending_keys:
+        remove_listener = coordinator.async_add_listener(_async_add_sensors)
+        entry.async_on_unload(_async_remove_listener)
 
 
 class EarnEP1Sensor(EarnEP1Entity, SensorEntity):

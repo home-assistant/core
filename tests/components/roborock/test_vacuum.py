@@ -6,6 +6,7 @@ from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
+from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
@@ -20,6 +21,7 @@ from homeassistant.components.roborock.services import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+    SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -314,6 +316,63 @@ async def test_goto_not_supported(
             DOMAIN,
             SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
             {ATTR_ENTITY_ID: entity_id, "x": 25500, "y": 25500},
+            blocking=True,
+        )
+
+
+async def test_zoned_cleaning(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    vacuum_command: Mock,
+) -> None:
+    """Test cleaning specific zones."""
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            "x1": 28582,
+            "y1": 21363,
+            "x2": 27425,
+            "y2": 22816,
+            "repeats": 0,
+        },
+        blocking=True,
+    )
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == (
+        call(RoborockCommand.APP_ZONED_CLEAN, params=[[28582, 21363, 27425, 22816, 0]])
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_zoned_cleaning_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test that unsupported vacuums raise ServiceNotSupported for zoned cleaning."""
+    with pytest.raises(
+        ServiceNotSupported,
+        match="does not support action roborock.set_vacuum_zoned_cleaning",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "x1": 28582,
+                "y1": 21363,
+                "x2": 27425,
+                "y2": 22816,
+                "repeats": 0,
+            },
             blocking=True,
         )
 
@@ -830,6 +889,26 @@ async def test_q7_activity_none_status(
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     assert vacuum.state == "unknown"
+
+
+async def test_q7_working_sleep_is_paused(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test a cleaning job that fell asleep is reported as paused."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties._props_data.status = (
+        WorkStatusMapping.WORKING_SLEEP
+    )
+
+    coordinator = setup_entry.runtime_data.b01_q7[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == "paused"
 
 
 @pytest.fixture(name="q10_vacuum_api", autouse=False)
