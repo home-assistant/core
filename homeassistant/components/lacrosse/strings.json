@@ -1,10 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "sensor_already_configured": "This sensor is already configured."
+      "sensor_already_configured": "This sensor is already configured.",
+      "value_type_required": "Select at least temperature or humidity."
     },
     "step": {
       "add_sensor": {
@@ -15,10 +17,12 @@
       },
       "sensor": {
         "data": {
+          "battery": "Reports battery state",
           "expire_after": "Mark unavailable after (seconds)",
           "friendly_name": "Name",
+          "humidity": "Reports humidity",
           "id": "Sensor ID",
-          "type": "Sensor type"
+          "temperature": "Reports temperature"
         }
       },
       "user": {

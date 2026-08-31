@@ -6,7 +6,11 @@ from uuid import uuid4
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_FRIENDLY_NAME,
@@ -20,17 +24,20 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_BATTERY,
     CONF_BAUD,
     CONF_DATARATE,
     CONF_EXPIRE_AFTER,
     CONF_FREQUENCY,
+    CONF_HUMIDITY,
     CONF_JEELINK_LED,
+    CONF_TEMPERATURE,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
     DEFAULT_BAUD,
     DEFAULT_DEVICE,
     DOMAIN,
-    TYPES,
+    LaCrosseSensorType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,11 +57,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_SENSOR_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
-        vol.Required(CONF_TYPE): vol.In(TYPES),
+        vol.Required(CONF_TEMPERATURE, default=True): cv.boolean,
+        vol.Required(CONF_HUMIDITY, default=False): cv.boolean,
+        vol.Required(CONF_BATTERY, default=False): cv.boolean,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
+
+VALUE_SENSOR_TYPES = LaCrosseSensorType.TEMPERATURE | LaCrosseSensorType.HUMIDITY
 
 
 class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -104,6 +115,14 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add more sensors to an existing receiver."""
+        self._data = dict(self._get_reconfigure_entry().data)
+        self._sensors = dict(self._data.pop(CONF_SENSORS, {}))
+        return await self.async_step_sensor()
+
     async def async_step_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -111,14 +130,29 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            sensor_key = f"{user_input[CONF_ID]}_{user_input[CONF_TYPE]}"
-            if sensor_key in self._sensors:
+            selected = LaCrosseSensorType(0)
+            for sensor_type in LaCrosseSensorType:
+                if user_input.pop(sensor_type.key):
+                    selected |= sensor_type
+
+            sensor_id = user_input[CONF_ID]
+            keys = {
+                sensor_type: f"{sensor_id}_{sensor_type.key}"
+                for sensor_type in LaCrosseSensorType
+                if sensor_type & selected
+            }
+
+            if not selected & VALUE_SENSOR_TYPES:
+                errors["base"] = "value_type_required"
+            elif any(key in self._sensors for key in keys.values()):
                 errors["base"] = "sensor_already_configured"
             else:
-                self._sensors[sensor_key] = {
-                    **user_input,
-                    CONF_UNIQUE_ID: uuid4().hex,
-                }
+                for sensor_type, key in keys.items():
+                    self._sensors[key] = {
+                        **user_input,
+                        CONF_TYPE: sensor_type.key,
+                        CONF_UNIQUE_ID: uuid4().hex,
+                    }
                 return await self.async_step_add_sensor()
 
         return self.async_show_form(
@@ -136,8 +170,10 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create an entry using the configured receiver and sensors."""
-        return self.async_create_entry(
-            title=self._data[CONF_DEVICE],
-            data={**self._data, CONF_SENSORS: self._sensors},
-        )
+        """Create or update an entry using the configured receiver and sensors."""
+        data = {**self._data, CONF_SENSORS: self._sensors}
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
+        return self.async_create_entry(title=self._data[CONF_DEVICE], data=data)
