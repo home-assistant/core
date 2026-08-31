@@ -168,7 +168,8 @@ async def test_turn_on_off_broadcast(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the broadcast light can be turned on and off."""
-    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
+    line_id = mock_lunatone_dali_broadcast.line
+    entity_id = f"light.dali_line_{line_id}"
     light_status = iter((True, True, False))
 
     await setup_integration(hass, mock_config_entry)
@@ -176,7 +177,9 @@ async def test_turn_on_off_broadcast(
     async def fake_update():
         status = next(light_status)
         for device in mock_lunatone_devices.data.devices:
-            device.features.switchable.status = status
+            device.features.switchable.status = (
+                status if device.line == line_id else True
+            )
 
     mock_lunatone_devices.async_update.side_effect = fake_update
 
