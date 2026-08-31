@@ -1,5 +1,6 @@
 """The Bravia TV integration."""
 
+import logging
 from typing import TYPE_CHECKING, Final
 
 from aiohttp import CookieJar
@@ -14,6 +15,8 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_USE_SSL, DOMAIN
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.BUTTON,
@@ -64,6 +67,11 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, version=2
+        )
+
+        _LOGGER.info(
+            "Migration to configuration version %s successful",
+            config_entry.version,
         )
 
     return True
