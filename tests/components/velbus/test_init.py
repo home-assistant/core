@@ -40,7 +40,12 @@ async def test_setup_connection_failed(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     issue_id = f"connection_lost_{config_entry.entry_id}"
-    assert (DOMAIN, issue_id) in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"name": config_entry.title}
 
 
 async def test_setup_start_failed(
@@ -264,6 +269,9 @@ async def test_connection_lost_creates_issue(
     issue_id = f"connection_lost_{config_entry.entry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"name": config_entry.title}
 
 
@@ -312,7 +320,11 @@ async def test_reload_while_offline_keeps_connection_lost_issue(
     await hass.config_entries.async_reload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert (DOMAIN, issue_id) in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
 
 
 async def test_setup_deletes_stale_issue(
