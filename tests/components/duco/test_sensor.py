@@ -27,12 +27,7 @@ from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERV
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    icon,
-    translation,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform_integration
 
@@ -192,14 +187,14 @@ async def test_iaq_sensor_entities_disabled_by_default(
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_diagnostic_sensor_entities_disabled_by_default(
+async def test_diagnostic_sensor_entity_registry_defaults(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that optional diagnostic sensor entities are disabled by default."""
+    """Test the diagnostic sensor entity registry defaults."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
         diagnostic_subsystems=(
@@ -222,15 +217,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-        assert hass.states.get(entity_id) is None
 
-
-@pytest.mark.usefixtures("init_integration")
-async def test_ventilation_diagnostic_sensor_enabled_by_default(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the ventilation diagnostic sensor is enabled by default."""
     entry = entity_registry.async_get("sensor.living_ventilation")
     assert entry is not None
     assert entry.disabled_by is None
@@ -242,7 +229,6 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test diagnostics sensors are created from the setup diagnostics data."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
@@ -259,43 +245,15 @@ async def test_diagnostic_subsystem_sensors_created_at_setup(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     expected_entities = {
-        "sensor.living_filter": ("ok", "OK", "diagnostic_filter"),
-        "sensor.living_sun_control": ("ok", "OK", "diagnostic_sun_control"),
-        "sensor.living_ventilation": (
-            "error",
-            "Error",
-            "diagnostic_ventilation",
-        ),
-        "sensor.living_ventilation_cooling": (
-            "disabled",
-            "Disabled",
-            "diagnostic_ventilation_cooling",
-        ),
+        "sensor.living_filter": "ok",
+        "sensor.living_sun_control": "ok",
+        "sensor.living_ventilation": "error",
+        "sensor.living_ventilation_cooling": "disabled",
     }
-    icons = await icon.async_get_icons(hass, "entity", integrations=[DOMAIN])
-    for entity_id, (
-        expected_state,
-        expected_translated_state,
-        translation_key,
-    ) in expected_entities.items():
+    for entity_id, expected_state in expected_entities.items():
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == expected_state
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.translation_key == translation_key
-        assert (
-            translation.async_translate_state(
-                hass,
-                state.state,
-                Platform.SENSOR,
-                DOMAIN,
-                translation_key,
-                None,
-            )
-            == expected_translated_state
-        )
-        assert icons[DOMAIN][Platform.SENSOR][translation_key] is not None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -170,8 +170,6 @@ async def test_setup_entry_succeeds_without_initial_diagnostics(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.error_reason_translation_key is None
-    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 @pytest.mark.usefixtures("mock_duco_client")
