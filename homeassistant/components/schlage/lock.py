@@ -1,14 +1,21 @@
 """Platform for Schlage lock integration."""
 
+from datetime import datetime
 from typing import Any, override
 
-from pyschlage.code import AccessCode
+from pyschlage.code import (
+    AccessCode,
+    MultiRecurringSchedule,
+    RecurringSchedule,
+    TemporarySchedule,
+)
 from pyschlage.exceptions import Error as SchlageError
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
@@ -114,14 +121,45 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             ) from ex
         return self._lock.access_codes
 
-    async def add_code(self, name: str, code: str, notify_on_use: bool = True) -> None:
+    async def add_code(
+        self,
+        name: str,
+        code: str,
+        notify_on_use: bool = True,
+        start_datetime: datetime | None = None,
+        end_datetime: datetime | None = None,
+    ) -> None:
         """Add a lock code."""
+        has_start = start_datetime is not None
+        has_end = end_datetime is not None
+
+        if has_start != has_end:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_temporary_dates_required",
+            )
+
+        schedule = None
+        if start_datetime is not None and end_datetime is not None:
+            start_utc = dt_util.as_utc(start_datetime)
+            end_utc = dt_util.as_utc(end_datetime)
+            if start_utc >= end_utc:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="schlage_start_after_end",
+                )
+            schedule = TemporarySchedule(start=start_utc, end=end_utc)
 
         codes = await self._async_fetch_access_codes()
         self._validate_code_name(codes, name)
         self._validate_code_value(codes, code)
 
-        access_code = AccessCode(name=name, code=code, notify_on_use=notify_on_use)
+        access_code = AccessCode(
+            name=name,
+            code=code,
+            notify_on_use=notify_on_use,
+            schedule=schedule,
+        )
         try:
             await self.hass.async_add_executor_job(
                 self._lock.add_access_code, access_code
@@ -162,6 +200,59 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             ) from ex
         await self.coordinator.async_request_refresh()
 
+    @staticmethod
+    def _serialize_recurring(schedule: RecurringSchedule) -> dict[str, Any]:
+        """Serialize a single RecurringSchedule to a dict."""
+        return {
+            "days_of_week": {
+                "sun": schedule.days_of_week.sun,
+                "mon": schedule.days_of_week.mon,
+                "tue": schedule.days_of_week.tue,
+                "wed": schedule.days_of_week.wed,
+                "thu": schedule.days_of_week.thu,
+                "fri": schedule.days_of_week.fri,
+                "sat": schedule.days_of_week.sat,
+            },
+            "start_hour": schedule.start_hour,
+            "start_minute": schedule.start_minute,
+            "end_hour": schedule.end_hour,
+            "end_minute": schedule.end_minute,
+        }
+
+    @staticmethod
+    def _serialize_schedule(
+        schedule: MultiRecurringSchedule | TemporarySchedule | RecurringSchedule | None,
+    ) -> dict[str, Any] | None:
+        """Serialize a pyschlage schedule to a dict, or ``None`` for ``None`` input.
+
+        A ``TemporarySchedule`` is serialized with ``"type": "temporary"`` and ISO 8601
+        datetime strings for ``start_datetime`` and ``end_datetime``.  Recurring shapes
+        are serialized from pyschlage attributes (``days_of_week`` booleans,
+        ``start_hour``, ``start_minute``, ``end_hour``, ``end_minute``), with
+        ``"type"`` set to ``"recurring"`` or ``"multi_recurring"`` as appropriate.
+        """
+        if isinstance(schedule, TemporarySchedule):
+            return {
+                "type": "temporary",
+                "start_datetime": schedule.start.isoformat(),
+                "end_datetime": schedule.end.isoformat(),
+            }
+        if isinstance(schedule, MultiRecurringSchedule):
+            schedules: list[RecurringSchedule] = []
+            if schedule.schedule1 is not None:
+                schedules.append(schedule.schedule1)
+            if schedule.schedule2 is not None:
+                schedules.append(schedule.schedule2)
+            windows = [
+                SchlageLockEntity._serialize_recurring(sched) for sched in schedules
+            ]
+            return {"type": "multi_recurring", "windows": windows}
+        if isinstance(schedule, RecurringSchedule):
+            result = SchlageLockEntity._serialize_recurring(schedule)
+            result["type"] = "recurring"
+            return result
+        return None
+
     async def get_codes(self) -> ServiceResponse:
         """Get lock codes."""
         await self._async_fetch_access_codes()
@@ -171,6 +262,10 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                 code: {
                     "name": self._lock.access_codes[code].name,
                     "code": self._lock.access_codes[code].code,
+                    "access_code_id": self._lock.access_codes[code].access_code_id,
+                    "schedule": self._serialize_schedule(
+                        self._lock.access_codes[code].schedule
+                    ),
                 }
                 for code in self._lock.access_codes
             }
