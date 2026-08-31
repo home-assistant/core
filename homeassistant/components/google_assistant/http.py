@@ -49,6 +49,9 @@ from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
+# Registry attributes that affect whether an entity is exposed by default.
+EXPOSURE_ATTRIBUTES = {"entity_category", "hidden_by"}
+
 
 def _get_homegraph_jwt(time, iss, key):
     now = int(time.timestamp())
@@ -124,18 +127,18 @@ class GoogleConfig(AbstractConfig):
         """Schedule a sync for a new or changed entity that should be exposed."""
         entity_id = event.data["entity_id"]
         action = event.data["action"]
-        changes = set(event.data.get("changes", ()))
-        exposure_attributes = {"entity_category", "hidden_by"}
-        exposure_changed = bool(changes & exposure_attributes)
-        if action == "update" and not (
-            changes & (er.ENTITY_DESCRIBING_ATTRIBUTES | exposure_attributes)
-        ):
-            return
+        exposure_changed = False
+
+        if event.data["action"] == "update":
+            changes = set(event.data["changes"])
+            if not changes & (er.ENTITY_DESCRIBING_ATTRIBUTES | EXPOSURE_ATTRIBUTES):
+                return
+            exposure_changed = bool(changes & EXPOSURE_ATTRIBUTES)
 
         if (
             action != "remove"
-            and not self.should_expose(entity_id)
             and not exposure_changed
+            and not self.should_expose(entity_id)
         ):
             return
 
