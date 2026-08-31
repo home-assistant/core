@@ -3437,7 +3437,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.1.6
+wiim==0.1.7
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
