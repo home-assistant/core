@@ -136,11 +136,14 @@
         "state": {
           "active": "Cooling",
           "idle": "Idle",
+          "paused": "Paused",
           "pausing": "Pausing",
           "standby": "[%key:common::state::standby%]",
           "standby_run_cp": "Standby, pump running",
           "starting": "Starting",
+          "stopped": "Stopped",
           "stopping": "Stopping",
+          "waiting": "Waiting to start",
           "water_check": "Checking water temperature"
         }
       },
