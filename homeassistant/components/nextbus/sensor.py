@@ -4,14 +4,14 @@ import logging
 from typing import cast, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from . import NextBusConfigEntry
+from .const import CONF_AGENCY, CONF_ROUTE
 from .coordinator import NextBusDataUpdateCoordinator
 from .util import maybe_first
 
@@ -20,18 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: NextBusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load values from configuration and initialize the platform."""
     _LOGGER.debug(config.data)
-    entry_agency = config.data[CONF_AGENCY]
-    entry_stop = config.data[CONF_STOP]
-    coordinator_key = f"{entry_agency}-{entry_stop}"
-
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(coordinator_key)
+    coordinator = config.runtime_data
 
     async_add_entities(
         (

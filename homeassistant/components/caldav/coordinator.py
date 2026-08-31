@@ -67,10 +67,10 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
         event_list = []
         for event in vevent_list:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
             event_list.append(
@@ -122,10 +122,10 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
-            if not hasattr(event.instance, "vevent"):
+            if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
+            vevent = event.vobject_instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today: date | datetime
                 _start_of_tomorrow: datetime | date
@@ -138,7 +138,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
+                    new_vevent = new_event.vobject_instance.vevent  # type: ignore[attr-defined]
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -147,9 +147,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 elif _start_of_tomorrow <= start_dt:
                     break
         vevents = [
-            event.instance.vevent
+            event.vobject_instance.vevent
             for event in results + new_events
-            if hasattr(event.instance, "vevent")
+            if hasattr(event.vobject_instance, "vevent")
         ]
 
         # dtstart can be a date or datetime depending if the event lasts a
