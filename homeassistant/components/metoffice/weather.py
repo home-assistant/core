@@ -1,6 +1,5 @@
 """Support for UK Met Office weather service."""
 
-from datetime import datetime
 from typing import Any, cast, override
 
 from homeassistant.components.weather import (
@@ -30,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import get_device_info
 from .const import (
@@ -274,7 +274,7 @@ class MetOfficeWeather(
             self.forecast_coordinators["daily"],
         )
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
+        start_datetime = dt_util.now(
             tz=timesteps[0]["time"].tzinfo
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         return [
@@ -293,7 +293,7 @@ class MetOfficeWeather(
         )
 
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
+        start_datetime = dt_util.now(
             tz=timesteps[0]["time"].tzinfo
         ).replace(minute=0, second=0, microsecond=0)
         return [
@@ -311,7 +311,7 @@ class MetOfficeWeather(
             self.forecast_coordinators["twice_daily"],
         )
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
+        start_datetime = dt_util.now(
             tz=timesteps[0]["time"].tzinfo
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         return [
