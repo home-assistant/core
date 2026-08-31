@@ -143,7 +143,7 @@ async def test_migrate_device_without_entity(
     area_entry = area_registry.async_get_or_create("Porch")
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1112")},
+        identifiers={(DOMAIN, "10000-1112")},
         name="Offline light",
     )
     device_registry.async_update_device(
@@ -158,7 +158,7 @@ async def test_migrate_device_without_entity(
 
     migrated_device = device_registry.async_get(device_entry.id)
     assert migrated_device is not None
-    assert migrated_device.identifiers == {(DOMAIN, "1000-3")}
+    assert migrated_device.identifiers == {(DOMAIN, "10000-3")}
     assert migrated_device.area_id == area_entry.id
     assert migrated_device.labels == {"outside"}
     assert migrated_device.name_by_user == "Porch light"
@@ -189,11 +189,11 @@ async def test_resume_entityless_device_finalization(
     )
     chained_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1111")},
+        identifiers={(DOMAIN, "10000-1111")},
     )
     first_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101")},
+        identifiers={(DOMAIN, "10000-1101")},
     )
 
     original_update_device = device_registry.async_update_device
@@ -204,7 +204,7 @@ async def test_resume_entityless_device_finalization(
     ) -> dr.DeviceEntry | None:
         nonlocal failed
         result = original_update_device(device_id, new_identifiers=new_identifiers)
-        if not failed and new_identifiers == {(DOMAIN, "1000-1101")}:
+        if not failed and new_identifiers == {(DOMAIN, "10000-1101")}:
             failed = True
             raise RuntimeError
         return result
@@ -226,10 +226,10 @@ async def test_resume_entityless_device_finalization(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     migrated_chained_device = device_registry.async_get(chained_device.id)
     assert migrated_chained_device is not None
-    assert migrated_chained_device.identifiers == {(DOMAIN, "1000-1101")}
+    assert migrated_chained_device.identifiers == {(DOMAIN, "10000-1101")}
     migrated_first_device = device_registry.async_get(first_device.id)
     assert migrated_first_device is not None
-    assert migrated_first_device.identifiers == {(DOMAIN, "1000-1")}
+    assert migrated_first_device.identifiers == {(DOMAIN, "10000-1")}
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
     assert "mesh_unique_ids_device_finalize_pending" not in mock_config_entry.data
 
