@@ -1,4 +1,4 @@
-"""Sensor platform for Discogs."""
+"""Show the amount of records in a user's Discogs collection."""
 
 from datetime import timedelta
 import random
@@ -36,32 +36,37 @@ UNIT_RECORDS = "records"
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
+SENSOR_COLLECTION_TYPE = "collection"
+SENSOR_WANTLIST_TYPE = "wantlist"
+SENSOR_RANDOM_RECORD_TYPE = "random_record"
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_COLLECTION_TYPE,
+        translation_key="collection",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_WANTLIST_TYPE,
+        translation_key="wantlist",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_RANDOM_RECORD_TYPE,
+        translation_key="random_record",
+        icon=ICON_PLAYER,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional("name"): cv.string,
         vol.Optional("monitored_conditions"): vol.All(cv.ensure_list, [cv.string]),
     }
-)
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="collection",
-        translation_key="collection",
-        icon=ICON_RECORD,
-        native_unit_of_measurement=UNIT_RECORDS,
-    ),
-    SensorEntityDescription(
-        key="wantlist",
-        translation_key="wantlist",
-        icon=ICON_RECORD,
-        native_unit_of_measurement=UNIT_RECORDS,
-    ),
-    SensorEntityDescription(
-        key="random_record",
-        translation_key="random_record",
-        icon=ICON_PLAYER,
-    ),
 )
 
 
@@ -134,7 +139,7 @@ async def async_setup_entry(
 
 
 class DiscogsSensor(SensorEntity):
-    """Representation of a Discogs sensor."""
+    """Create a new Discogs sensor for a specific type."""
 
     _attr_attribution = "Data provided by Discogs"
     _attr_has_entity_name = True
@@ -145,9 +150,10 @@ class DiscogsSensor(SensorEntity):
         client: discogs_client.Client,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the Discogs sensor."""
         self.entity_description = description
         self._client = client
+        self._discogs_data: dict[str, Any] = {}
         self._attrs: dict[str, Any] = {}
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -161,56 +167,59 @@ class DiscogsSensor(SensorEntity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the extra state attributes."""
-        if self.entity_description.key == "random_record" and self._attrs:
+        """Return the device state attributes of the sensor."""
+        if self._attr_native_value is None or self._attrs is None:
+            return None
+
+        if (
+            self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
+            and self._attr_native_value is not None
+        ):
             return {
-                ATTR_IDENTITY: self._attrs.get("username"),
-                "cat_no": self._attrs.get("cat_no"),
-                "cover_image": self._attrs.get("cover_image"),
-                "format": self._attrs.get("format"),
-                "label": self._attrs.get("label"),
-                "released": self._attrs.get("released"),
+                "cat_no": self._attrs["labels"][0]["catno"],
+                "cover_image": self._attrs["cover_image"],
+                "format": (
+                    f"{self._attrs['formats'][0]['name']}"
+                    f" ({self._attrs['formats'][0]['descriptions'][0]})"
+                ),
+                "label": self._attrs["labels"][0]["name"],
+                "released": self._attrs["year"],
+                ATTR_IDENTITY: self._discogs_data["user"],
             }
-        return {ATTR_IDENTITY: self._attrs.get("username")}
+
+        return {
+            ATTR_IDENTITY: self._discogs_data["user"],
+        }
+
+    def get_random_record(self) -> str | None:
+        """Get a random record suggestion from the user's collection."""
+        # Index 0 in the folders is the 'All' folder
+        collection = self._discogs_data["folders"][0]
+        if collection.count > 0:
+            random_index = random.randrange(collection.count)
+            random_record = collection.releases[random_index].release
+
+            self._attrs = random_record.data
+            return (
+                f"{random_record.data['artists'][0]['name']} -"
+                f" {random_record.data['title']}"
+            )
+
+        return None
 
     def update(self) -> None:
-        """Fetch data from Discogs."""
+        """Set state to the amount of records in user's collection."""
         identity = self._client.identity()
-        self._attrs["username"] = identity.name
+        self._discogs_data = {
+            "user": identity.name,
+            "folders": identity.collection_folders,
+            "collection_count": identity.num_collection,
+            "wantlist_count": identity.num_wantlist,
+        }
 
-        if self.entity_description.key == "collection":
-            self._attr_native_value = identity.num_collection
-        elif self.entity_description.key == "wantlist":
-            self._attr_native_value = identity.num_wantlist
+        if self.entity_description.key == SENSOR_COLLECTION_TYPE:
+            self._attr_native_value = self._discogs_data["collection_count"]
+        elif self.entity_description.key == SENSOR_WANTLIST_TYPE:
+            self._attr_native_value = self._discogs_data["wantlist_count"]
         else:
-            self._attr_native_value = self._get_random_record(identity)
-
-    def _get_random_record(self, identity: Any) -> str | None:
-        """Get a random record from the user's collection."""
-        folders = identity.collection_folders
-        if folders and folders[0].count > 0:
-            collection = folders[0]
-            random_index = random.randrange(collection.count)
-            release = collection.releases[random_index].release
-            data = release.data
-            artists = data.get("artists", [])
-            artist_name = artists[0]["name"] if artists else "Unknown"
-            labels = data.get("labels", [])
-            formats = data.get("formats", [])
-            fmt_entry = formats[0] if formats else {}
-            fmt_descriptions = fmt_entry.get("descriptions", [])
-            self._attrs.update(
-                {
-                    "cat_no": labels[0]["catno"] if labels else None,
-                    "cover_image": data.get("cover_image"),
-                    "format": (
-                        f"{fmt_entry.get('name', '')} ({fmt_descriptions[0]})"
-                        if fmt_descriptions
-                        else fmt_entry.get("name")
-                    ),
-                    "label": labels[0]["name"] if labels else None,
-                    "released": data.get("year"),
-                }
-            )
-            return f"{artist_name} - {data.get('title', 'Unknown')}"
-        return None
+            self._attr_native_value = self.get_random_record()
