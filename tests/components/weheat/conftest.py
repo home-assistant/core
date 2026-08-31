@@ -168,6 +168,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
         "current_control_method": 4,
         "cooling_pause_reason": 4,
         "cooling_stop_reason": 0,
+        "cooling_start_conditions": 2043,
         "total_ein_heating": 12345,
     }
 

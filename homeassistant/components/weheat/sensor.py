@@ -201,6 +201,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="last_cooling_time",
         key="last_cooling_time",
+        raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.last_cooling_time,
@@ -253,6 +254,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="cooling_available_from",
         key="cooling_available_from",
+        raw_field="cooling_start_conditions",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.cooling_available_from,
