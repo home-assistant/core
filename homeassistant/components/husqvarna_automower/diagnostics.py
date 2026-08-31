@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
