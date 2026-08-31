@@ -527,7 +527,7 @@ async def test_user_no_mac_new_device(
 async def test_user_empty_host(
     hass: HomeAssistant,
 ) -> None:
-    """Test user flow with empty host shows missing_data error."""
+    """Test user flow shows error and returns to user step when host is empty."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -535,6 +535,15 @@ async def test_user_empty_host(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: ""},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "missing_data"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -549,5 +558,4 @@ async def test_user_empty_host(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "missing_data"
+    assert result["type"] is FlowResultType.CREATE_ENTRY

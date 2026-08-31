@@ -58,6 +58,9 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step for manual addition."""
         if user_input is not None:
             self._host = user_input[CONF_HOST].strip()
+            if not self._host:
+                return self._show_user_form(errors={"base": "missing_data"})
+
             self._name = ""
 
             _LOGGER.debug(
@@ -68,6 +71,13 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_auth()
 
+        return self._show_user_form()
+
+    def _show_user_form(
+        self,
+        errors: dict[str, str] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Show the manual device form."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -75,6 +85,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): cv.string,
                 }
             ),
+            errors=errors or {},
         )
 
     @override
