@@ -52,6 +52,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_USERNAME,
     DOMAIN,
 )
+from homeassistant.components.music_assistant.media_player import MusicAssistantPlayer
 from homeassistant.components.music_assistant.services import (
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
@@ -81,6 +82,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    create_players_from_fixture,
     setup_integration_from_fixtures,
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
@@ -94,6 +96,31 @@ MOCK_TRACK = Track(
     name="Test Track",
     provider_mappings={},
 )
+
+
+@pytest.mark.parametrize(
+    ("mass_icon", "mdi_icon"),
+    [
+        pytest.param("speaker", "mdi:speaker", id="speaker"),
+        pytest.param("speakers", "mdi:speaker-multiple", id="speakers"),
+        pytest.param("tv", "mdi:television", id="tv"),
+        pytest.param("smartphone", "mdi:cellphone", id="smartphone"),
+        pytest.param("google-nest", "mdi:speaker", id="fallback"),
+        pytest.param("mdi-speaker", "mdi:speaker", id="legacy-mdi-dash"),
+        pytest.param("mdi:speaker", "mdi:speaker", id="legacy-mdi-colon"),
+    ],
+)
+def test_player_icon(
+    music_assistant_client: MagicMock, mass_icon: str, mdi_icon: str
+) -> None:
+    """Test Music Assistant player icon mapping."""
+    player = create_players_from_fixture()[0]
+    player.icon = mass_icon
+    music_assistant_client.players._players[player.player_id] = player
+
+    entity = MusicAssistantPlayer(music_assistant_client, player.player_id)
+
+    assert entity.icon == mdi_icon
 
 
 async def test_media_player(
