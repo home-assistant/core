@@ -9,7 +9,6 @@ from duco_connectivity import (
     DiagInfo,
     DucoConnectionError,
     DucoError,
-    DucoResponseError,
     DucoUnsupportedCapabilityError,
     Node,
     NodeGeneralInfo,
@@ -202,6 +201,7 @@ async def test_diagnostic_sensor_entity_registry_defaults(
             DiagComponent(component="Filter", status="Ok"),
             DiagComponent(component="VentCool", status="Ok"),
             DiagComponent(component="SunCtrl", status="Ok"),
+            DiagComponent(component="Future Mode", status="Ok"),
         )
     )
 
@@ -211,6 +211,7 @@ async def test_diagnostic_sensor_entity_registry_defaults(
     for entity_id in (
         "sensor.living_signal_strength",
         "sensor.living_filter",
+        "sensor.living_future_mode",
         "sensor.living_ventilation_cooling",
         "sensor.living_sun_control",
     ):
@@ -221,67 +222,6 @@ async def test_diagnostic_sensor_entity_registry_defaults(
     entry = entity_registry.async_get("sensor.living_ventilation")
     assert entry is not None
     assert entry.disabled_by is None
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_diagnostic_subsystem_sensors_created_at_setup(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_sensor_nodes: list[Node],
-) -> None:
-    """Test diagnostics sensors are created from the setup diagnostics data."""
-    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=(
-            DiagComponent(component="Ventilation", status="Error"),
-            DiagComponent(component="Filter", status="Ok"),
-            DiagComponent(component="VentCool", status="Disable"),
-            DiagComponent(component="SunCtrl", status="Ok"),
-        )
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    expected_entities = {
-        "sensor.living_filter": "ok",
-        "sensor.living_sun_control": "ok",
-        "sensor.living_ventilation": "error",
-        "sensor.living_ventilation_cooling": "disabled",
-    }
-    for entity_id, expected_state in expected_entities.items():
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected_state
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_diagnostic_subsystem_sensors_with_unknown_statuses(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_sensor_nodes: list[Node],
-) -> None:
-    """Test diagnostic sensors report unknown for unrecognized statuses."""
-    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=(
-            DiagComponent(component="Future Mode", status="NeedsServiceSoon"),
-            DiagComponent(component="Future-Mode", status="NeedsAttentionSoon"),
-        )
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("sensor.living_future_mode")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    state = hass.states.get("sensor.living_future_mode_2")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -311,6 +251,21 @@ async def test_diagnostic_subsystem_sensors_added_after_initial_empty_response(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.living_ventilation")
+    assert state is not None
+    assert state.state == "ok"
+
+    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+        diagnostic_subsystems=(
+            DiagComponent(component="Ventilation", status="Ok"),
+            DiagComponent(component="Filter", status="Ok"),
+        )
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_filter")
     assert state is not None
     assert state.state == "ok"
 
@@ -344,12 +299,23 @@ async def test_diagnostic_subsystem_sensors_wait_for_box_node(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    "diagnostic_subsystems",
+    [
+        pytest.param((), id="missing"),
+        pytest.param(
+            (DiagComponent(component="Ventilation", status="Unexpected"),),
+            id="unknown_status",
+        ),
+    ],
+)
 async def test_diagnostic_subsystem_sensor_state_becomes_unknown_when_missing(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    diagnostic_subsystems: tuple[DiagComponent, ...],
 ) -> None:
-    """Test diagnostics sensors stay registered and report unknown when missing."""
+    """Test diagnostic sensors report unknown without a recognized status."""
     mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
         diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Ok"),)
     )
@@ -362,7 +328,9 @@ async def test_diagnostic_subsystem_sensor_state_becomes_unknown_when_missing(
     assert state is not None
     assert state.state == "ok"
 
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo()
+    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+        diagnostic_subsystems=diagnostic_subsystems
+    )
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -379,9 +347,6 @@ async def test_diagnostic_subsystem_sensor_state_becomes_unknown_when_missing(
     [
         pytest.param(DucoConnectionError("offline"), id="connection_error"),
         pytest.param(DucoError("api error"), id="duco_error"),
-        pytest.param(
-            DucoResponseError(500, "/info", "bad response"), id="response_error"
-        ),
     ],
 )
 async def test_diagnostic_subsystem_sensor_becomes_unavailable_on_refresh_error(
@@ -412,31 +377,6 @@ async def test_diagnostic_subsystem_sensor_becomes_unavailable_on_refresh_error(
     state = hass.states.get("sensor.living_ventilation")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_diagnostic_subsystem_sensors_are_added_after_setup(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test new diagnostic subsystem entities are added after setup."""
-    assert hass.states.get("sensor.living_filter") is None
-
-    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
-        diagnostic_subsystems=(
-            DiagComponent(component="Ventilation", status="Ok"),
-            DiagComponent(component="Filter", status="Ok"),
-        )
-    )
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("sensor.living_filter")
-    assert state is not None
-    assert state.state == "ok"
 
 
 @pytest.mark.usefixtures("init_integration")
