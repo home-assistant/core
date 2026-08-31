@@ -11,8 +11,13 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_listen_entity_updates,
+    async_should_expose,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -87,6 +92,7 @@ class GoogleConfig(AbstractConfig):
         self._config = config
         self._access_token = None
         self._access_token_renew = None
+        self._should_expose_by_default_cache: dict[tuple[str, bool], bool] = {}
 
     @override
     async def async_initialize(self):
@@ -97,7 +103,35 @@ class GoogleConfig(AbstractConfig):
 
         await super().async_initialize()
 
+        self._on_deinitialize.append(
+            async_listen_entity_updates(
+                self.hass, DOMAIN, self.async_schedule_google_sync_all
+            )
+        )
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_entity_registry_updated,
+            )
+        )
+
         self.async_enable_local_sdk()
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Schedule a sync for a new or changed entity that should be exposed."""
+        entity_id = event.data["entity_id"]
+        if event.data["action"] == "update" and not (
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            return
+
+        if event.data["action"] != "remove" and not self.should_expose(entity_id):
+            return
+
+        self.async_schedule_google_sync_all()
 
     @property
     @override
@@ -169,8 +203,41 @@ class GoogleConfig(AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
+        self._async_reconcile_yaml_exposure(entity_id)
+        return async_should_expose(self.hass, DOMAIN, entity_id)
+
+    def _should_expose_by_default(
+        self, entity_id: str, *, auxiliary_entity: bool
+    ) -> bool:
+        """Return if entity's domain is exposed by default per YAML configuration."""
+        cache_key = (entity_id, auxiliary_entity)
+        if (cached := self._should_expose_by_default_cache.get(cache_key)) is not None:
+            return cached
+
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
+
+        domain_exposed_by_default = (
+            expose_by_default and split_entity_id(entity_id)[0] in exposed_domains
+        )
+
+        # Expose an entity by default if the entity's domain is exposed by default
+        # and the entity is not a config or diagnostic entity
+        result = domain_exposed_by_default and not auxiliary_entity
+        self._should_expose_by_default_cache[cache_key] = result
+        return result
+
+    @callback
+    def _async_reconcile_yaml_exposure(self, entity_id: str) -> None:
+        """Align one entity's shared exposure setting with YAML configuration.
+
+        Called on every should_expose(), so a UI change to an entity YAML
+        has an opinion on only lasts until the next such call.
+        """
+        explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
+        if explicit_expose is not None:
+            async_expose_entity(self.hass, DOMAIN, entity_id, explicit_expose)
+            return
 
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(entity_id)
@@ -182,22 +249,8 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
-        explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
-
-        domain_exposed_by_default = (
-            expose_by_default and split_entity_id(entity_id)[0] in exposed_domains
-        )
-
-        # Expose an entity by default if the entity's domain is exposed by default
-        # and the entity is not a config or diagnostic entity
-        entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
-
-        # Expose an entity if the entity's is exposed by default and
-        # the configuration doesn't explicitly exclude it from being
-        # exposed, or if the entity is explicitly exposed
-        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
-
-        return is_default_exposed or explicit_expose
+        if self._should_expose_by_default(entity_id, auxiliary_entity=auxiliary_entity):
+            async_expose_entity(self.hass, DOMAIN, entity_id, True)
 
     @override
     def should_2fa(self, state):

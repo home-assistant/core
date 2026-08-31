@@ -3,17 +3,16 @@
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import json
-import os
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 from uuid import uuid4
 
-import py
 import pytest
 
-from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
+from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA, helpers
 from homeassistant.components.google_assistant.const import (
+    DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
@@ -27,8 +26,15 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
+from homeassistant.components.homeassistant.const import DATA_EXPOSED_ENTITIES
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_get_entity_settings,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -36,7 +42,6 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
-    async_test_home_assistant,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -381,6 +386,270 @@ async def test_missing_service_account(hass: HomeAssistant) -> None:
     assert config._access_token_renew is renew
 
 
+async def test_should_expose_uses_exposed_entities_store(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test should_expose delegates to the shared store for entities YAML doesn't cover."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+
+    async_expose_entity(hass, DOMAIN, entry.entity_id, False)
+    assert google_config.should_expose(entry.entity_id) is False
+
+    async_expose_entity(hass, DOMAIN, entry.entity_id, True)
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_should_expose_reconciles_yaml_domain_exposure(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test should_expose exposes an entity matched by expose_by_default/exposed_domains."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    # Nothing is written until should_expose is actually queried.
+    assert async_get_entity_settings(hass, entry.entity_id) == {}
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_should_expose_reconciles_yaml_explicit_exclude(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an explicit entity_config exclude wins over a matching domain default."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {entry.entity_id: {"expose": False}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(entry.entity_id) is False
+
+
+async def test_should_expose_reconciles_yaml_explicit_include(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an explicit entity_config include applies even outside exposed_domains."""
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", suggested_object_id="ac"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {entry.entity_id: {"expose": True}},
+        }
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_should_expose_defers_to_ui_when_yaml_has_no_opinion(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test should_expose leaves an entity YAML doesn't mention to the shared store."""
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="not_exposed"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    # Not written by YAML reconciliation; falls through to (and is cached
+    # by) the shared store's own generic fallback.
+    assert google_config.should_expose(entry.entity_id) is False
+
+
+async def test_ui_exposure_change_is_reverted_on_next_should_expose(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a UI change to a YAML-matched entity is reverted on the next query."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(entry.entity_id) is True
+
+    # The user unexposes it via the UI...
+    async_expose_entity(hass, DOMAIN, entry.entity_id, False)
+    assert (
+        async_get_entity_settings(hass, entry.entity_id)[DOMAIN]["should_expose"]
+        is False
+    )
+
+    # ...but the change doesn't survive the next should_expose query, e.g.
+    # from an incoming request from Google.
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_ui_exposure_change_persists_when_yaml_has_no_opinion(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a UI change to an entity YAML doesn't cover survives should_expose queries."""
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="not_exposed"
+    )
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    async_expose_entity(hass, DOMAIN, entry.entity_id, True)
+
+    assert google_config.should_expose(entry.entity_id) is True
+
+
+async def test_new_entity_matching_yaml_domain_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a newly registered entity matching exposed_domains schedules a sync."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "expose_by_default": True, "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+    await google_config.async_connect_agent_user("mock-user-id")
+
+    with (
+        patch.object(google_config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert google_config.should_expose(entry.entity_id) is True
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
+async def test_new_entity_exposed_via_expose_new_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a newly registered entity exposed via expose_new schedules a sync."""
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "expose_by_default": False, "exposed_domains": []}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+    await google_config.async_connect_agent_user("mock-user-id")
+
+    hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(DOMAIN, True)
+
+    with (
+        patch.object(google_config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
+async def test_expose_update_triggers_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that updating exposed entities schedules a Google sync."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # "light" is exposed by default; the entity is reconciled as soon as
+    # it's registered, since the listener is already active.
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    assert config.should_expose(entry.entity_id) is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        async_expose_entity(hass, DOMAIN, entry.entity_id, False)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
+@pytest.mark.parametrize(
+    ("update_kwargs", "expected_calls"),
+    [
+        pytest.param(
+            {"aliases": ["Kitchen Light"]},
+            [call("mock-user-id")],
+            id="aliases_changed",
+        ),
+        pytest.param({"icon": "mdi:lightbulb"}, [], id="unrelated_field_changed"),
+    ],
+)
+async def test_registry_update_triggers_sync_only_for_aliases(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    update_kwargs: dict[str, Any],
+    expected_calls: list[Any],
+) -> None:
+    """Test only alias changes on an exposed entity schedule a Google sync."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # "light" is exposed by default; the entity is reconciled as soon as
+    # it's registered, since the listener is already active.
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    assert config.should_expose(entry.entity_id) is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entity_registry.async_update_entity(entry.entity_id, **update_kwargs)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert mock_sync.call_args_list == expected_calls
+
+
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -599,26 +868,25 @@ async def test_async_get_users_no_store(hass: HomeAssistant) -> None:
     assert await async_get_users(hass) == []
 
 
-async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
+async def test_async_get_users_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test async_get_users from a store.
 
     This test ensures we can load from data saved by GoogleConfigStore.
     """
-    async with async_test_home_assistant() as hass:
-        hass.config.config_dir = await hass.async_add_executor_job(
-            tmpdir.mkdir, "temp_storage"
-        )
+    store = GoogleConfigStore(hass)
+    await store.async_initialize()
 
-        store = GoogleConfigStore(hass)
-        await store.async_initialize()
+    store.add_agent_user_id("agent_1")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
 
-        store.add_agent_user_id("agent_1")
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-        await hass.async_block_till_done()
-
+    with patch(
+        "homeassistant.components.google_assistant.http.json_util.load_json",
+        return_value=hass_storage["google_assistant"],
+    ):
         assert await async_get_users(hass) == ["agent_1"]
-
-        await hass.async_stop()
 
 
 VALID_STORE_DATA = json.dumps(
@@ -687,16 +955,11 @@ AGENT_USER_IDS_NOT_DICT = json.dumps(
     ],
 )
 async def test_async_get_users(
-    tmpdir: py.path.local, store_data: str, expected_users: list[str]
+    hass: HomeAssistant, tmp_path: Path, store_data: str, expected_users: list[str]
 ) -> None:
     """Test async_get_users from stored JSON data."""
-    async with async_test_home_assistant() as hass:
-        hass.config.config_dir = await hass.async_add_executor_job(
-            tmpdir.mkdir, "temp_storage"
-        )
-        path = hass.config.config_dir / ".storage" / GoogleConfigStore._STORAGE_KEY
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        await hass.async_add_executor_job(Path(path).write_text, store_data)
-        assert await async_get_users(hass) == expected_users
-
-        await hass.async_stop()
+    hass.config.config_dir = str(tmp_path)
+    path = tmp_path / STORAGE_DIR / GoogleConfigStore._STORAGE_KEY
+    await hass.async_add_executor_job(path.parent.mkdir)
+    await hass.async_add_executor_job(path.write_text, store_data)
+    assert await async_get_users(hass) == expected_users

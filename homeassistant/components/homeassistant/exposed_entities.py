@@ -22,7 +22,12 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
-KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
+KNOWN_ASSISTANTS = (
+    "cloud.alexa",
+    "cloud.google_assistant",
+    "conversation",
+    "google_assistant",
+)
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
