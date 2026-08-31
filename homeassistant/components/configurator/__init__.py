@@ -84,7 +84,7 @@ def async_request_config(
 ) -> str:
     """Create a new request for configuration.
 
-    Will return an ID to be used for sequent calls.
+    Will return an ID to be used for subsequent calls.
     """
     _report_deprecation()
     return _async_request_config(
