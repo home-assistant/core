@@ -15,7 +15,7 @@ from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_ACCOUNT, MOCK_EMAIL, MOCK_USER_INPUT
+from .conftest import MOCK_ACCOUNT, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -85,10 +85,18 @@ async def test_step_user_exceptions(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    # Yes, to the critical reviewer, this is the end of this flow
-    # The rest is tested below to finalize it and recover properly :)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"otp": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_ACCOUNT.user_account.full_name
+    assert result["data"][CONF_EMAIL] == MOCK_ACCOUNT.user_account.email
+    assert result["data"][CONF_TOKEN] == mock_zonneplan_client.token.as_dict()
+    assert result["result"].unique_id == MOCK_ACCOUNT.user_account.uuid
 
 
 @pytest.mark.parametrize(
@@ -140,13 +148,11 @@ async def test_step_otp_exceptions(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_already_configured(hass: HomeAssistant) -> None:
+async def test_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test aborting when the account is already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_ACCOUNT.user_account.uuid,
-        data={CONF_EMAIL: MOCK_EMAIL},
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
