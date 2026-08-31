@@ -21,11 +21,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     PERCENTAGE,
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -115,7 +117,15 @@ def _add_sensors(
         expire_after: int | None = device_config.get(CONF_EXPIRE_AFTER)
 
         sensors.append(
-            sensor_class(hass, lacrosse, device, name, expire_after, device_config)
+            sensor_class(
+                hass,
+                lacrosse,
+                config[CONF_DEVICE],
+                device,
+                name,
+                expire_after,
+                device_config,
+            )
         )
 
     add_entities(sensors)
@@ -133,6 +143,7 @@ class LaCrosseSensor(SensorEntity):
         self,
         hass: HomeAssistant,
         lacrosse: pylacrosse.LaCrosse,
+        receiver_device: str,
         device_id: str,
         name: str,
         expire_after: int | None,
@@ -147,6 +158,12 @@ class LaCrosseSensor(SensorEntity):
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_name = name
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID, device_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
+            manufacturer="LaCrosse",
+            name=f"LaCrosse sensor {config[CONF_ID]}",
+        )
 
         lacrosse.register_callback(
             int(self._config[CONF_ID]), self._callback_lacrosse, None

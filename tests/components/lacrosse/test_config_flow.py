@@ -1,6 +1,7 @@
 """Tests for the LaCrosse config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
 import pytest
 
@@ -31,27 +32,27 @@ IMPORT_CONFIG = {
     "device": "/dev/pts/6",
     "baud": 57600,
     "sensors": {
-        "heating_humidity": {
+        "heating": {
             "type": "humidity",
             "id": 34,
         },
         "heating_temperature": {
-            "name": "Heating Temperature",
+            "name": "heating",
             "type": "temperature",
             "id": 34,
         },
         "heating_lacrosse_battery": {
-            "name": "Heating Sensor Battery",
+            "name": "Heating battery",
             "type": "battery",
             "id": 34,
         },
         "livingroom_temperature": {
-            "name": "Living room Temperature",
+            "name": "Living room temperature",
             "type": "temperature",
             "id": 9,
         },
         "livingroom_lacrosse_battery": {
-            "name": "Living room Sensor Battery",
+            "name": "Living room battery",
             "type": "battery",
             "id": 9,
         },
@@ -63,46 +64,56 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test configuring a receiver and its sensors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.uuid4",
+        side_effect=[UUID(int=1), UUID(int=2)],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], RECEIVER_DATA
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECEIVER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "sensor"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEMPERATURE_SENSOR
-    )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "add_sensor"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEMPERATURE_SENSOR
+        )
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "add_sensor"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "sensor"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "sensor"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "sensor"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], HUMIDITY_SENSOR
-    )
-    assert result["type"] is FlowResultType.MENU
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], HUMIDITY_SENSOR
+        )
+        assert result["type"] is FlowResultType.MENU
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"next_step_id": "finish"}
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"next_step_id": "finish"}
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyUSB0"
     assert result["data"] == {
         **RECEIVER_DATA,
         "sensors": {
-            "1_temperature": TEMPERATURE_SENSOR,
-            "1_humidity": HUMIDITY_SENSOR,
+            "1_temperature": {
+                **TEMPERATURE_SENSOR,
+                "unique_id": "00000000000000000000000000000001",
+            },
+            "1_humidity": {
+                **HUMIDITY_SENSOR,
+                "unique_id": "00000000000000000000000000000002",
+            },
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -125,9 +136,15 @@ async def test_duplicate_receiver(hass: HomeAssistant) -> None:
 
 async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test importing a receiver and sensors from YAML."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=IMPORT_CONFIG
-    )
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.uuid4",
+        side_effect=[UUID(int=i) for i in range(1, 6)],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=IMPORT_CONFIG,
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/pts/6"
@@ -140,30 +157,35 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "toggle_interval": None,
         "toggle_mask": None,
         "sensors": {
-            "heating_humidity": {
+            "heating": {
                 "id": 34,
                 "type": "humidity",
-                "friendly_name": "heating_humidity",
+                "friendly_name": "heating",
+                "unique_id": "00000000000000000000000000000001",
             },
-            "Heating Temperature": {
+            "heating_temperature": {
                 "id": 34,
                 "type": "temperature",
-                "friendly_name": "Heating Temperature",
+                "friendly_name": "heating",
+                "unique_id": "00000000000000000000000000000002",
             },
-            "Heating Sensor Battery": {
+            "heating_lacrosse_battery": {
                 "id": 34,
                 "type": "battery",
-                "friendly_name": "Heating Sensor Battery",
+                "friendly_name": "Heating battery",
+                "unique_id": "00000000000000000000000000000003",
             },
-            "Living room Temperature": {
+            "livingroom_temperature": {
                 "id": 9,
                 "type": "temperature",
-                "friendly_name": "Living room Temperature",
+                "friendly_name": "Living room temperature",
+                "unique_id": "00000000000000000000000000000004",
             },
-            "Living room Sensor Battery": {
+            "livingroom_lacrosse_battery": {
                 "id": 9,
                 "type": "battery",
-                "friendly_name": "Living room Sensor Battery",
+                "friendly_name": "Living room battery",
+                "unique_id": "00000000000000000000000000000005",
             },
         },
     }

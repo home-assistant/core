@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any, override
+from uuid import uuid4
 
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +51,7 @@ STEP_SENSOR_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
         vol.Required(CONF_TYPE): vol.In(TYPES),
-        vol.Required(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
@@ -83,8 +85,8 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         for slug, sensor_config in import_config.get(CONF_SENSORS, {}).items():
             sensor_input = dict(sensor_config)
             sensor_input[CONF_FRIENDLY_NAME] = sensor_input.pop(CONF_NAME, slug)
-            sensor_key = sensor_input[CONF_FRIENDLY_NAME]
-            sensors[sensor_key] = sensor_input
+            sensor_input[CONF_UNIQUE_ID] = uuid4().hex
+            sensors[slug] = sensor_input
         entry_input[CONF_SENSORS] = sensors
 
         self._async_abort_entries_match({CONF_DEVICE: entry_input[CONF_DEVICE]})
@@ -113,7 +115,10 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             if sensor_key in self._sensors:
                 errors["base"] = "sensor_already_configured"
             else:
-                self._sensors[sensor_key] = user_input
+                self._sensors[sensor_key] = {
+                    **user_input,
+                    CONF_UNIQUE_ID: uuid4().hex,
+                }
                 return await self.async_step_add_sensor()
 
         return self.async_show_form(
