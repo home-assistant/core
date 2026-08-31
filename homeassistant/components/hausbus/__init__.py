@@ -95,10 +95,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     # unload, rather than silently leaving a stray thread running. HA
     # core marks the resulting FAILED_UNLOAD state as non-recoverable
     # (see ConfigEntryState in homeassistant/config_entries.py):
-    # async_unload()/async_setup()/async_remove() all refuse to touch
-    # the entry again afterwards, so this function is never re-entered
-    # for the same entry - the only way out is restarting Home
-    # Assistant, which starts a fresh process with a fresh gateway and
-    # HomeServer, not a second call here.
+    # async_unload()/async_setup() refuse to touch the entry again
+    # afterwards, so this function is never re-entered for the same
+    # entry via a retry. The entry can still be deleted by the user -
+    # ConfigEntries._async_remove() removes non-recoverable entries
+    # directly (reporting require_restart instead of calling
+    # async_unload_entry again), it just can't be re-set-up in the
+    # running process - the only way to get a working entry again is
+    # restarting Home Assistant, which starts a fresh process with a
+    # fresh gateway and HomeServer, not a second call here.
     await async_release_home_server(hass, gateway.home_server)
     return unload_ok

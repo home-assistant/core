@@ -6,14 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
+from homeassistant.components.hausbus.const import NEW_CHANNEL_ADDED
 from homeassistant.components.hausbus.gateway import (
     HausbusGateway,
     async_acquire_home_server,
     async_release_home_server,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
@@ -94,29 +93,37 @@ async def test_register_channel_buffers_until_platform_ready(
 ) -> None:
     """Channels discovered before platform setup are buffered, not dispatched."""
     channel = _make_channel(2)
-    device_info = DeviceInfo(identifiers={(DOMAIN, "2")})
 
     received: list[tuple] = []
     async_dispatcher_connect(
         hass, NEW_CHANNEL_ADDED, lambda *args: received.append(args)
     )
 
-    gateway._register_channel(channel, device_info)
+    gateway.newDeviceDetected(
+        2, "Controller", _make_module_id(), MagicMock(), [channel]
+    )
     await hass.async_block_till_done()
 
+    # Buffered: not dispatched yet, but still recognized as already
+    # discovered (a duplicate report of it must not be queued twice).
     assert received == []
-    assert gateway._pending_channels == [(channel, device_info)]
+    gateway.newDeviceDetected(
+        2, "Controller", _make_module_id(), MagicMock(), [channel]
+    )
+    await hass.async_block_till_done()
+    assert received == []
 
     await gateway.async_flush_pending_channels()
     await hass.async_block_till_done()
 
     assert len(received) == 1
-    assert gateway._pending_channels == []
-    assert gateway._platform_ready is True
+    assert gateway.registered_channels == {2}
 
     # Channels discovered after the flush are dispatched immediately.
     other_channel = _make_channel(3)
-    gateway._register_channel(other_channel, device_info)
+    gateway.newDeviceDetected(
+        3, "Controller", _make_module_id(), MagicMock(), [other_channel]
+    )
     await hass.async_block_till_done()
     assert len(received) == 2
 
