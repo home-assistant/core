@@ -63,6 +63,15 @@ def _gzip_decompress(body: bytes) -> bytes:
     return decompressed
 
 
+def _upstream_ttl(cache_control: str) -> float | None:
+    """Return upstream's max-age in seconds, or None when it sends none."""
+    for directive in cache_control.split(","):
+        name, _, value = directive.strip().partition("=")
+        if name.lower() == "max-age" and value.isdigit():
+            return float(value)
+    return None
+
+
 class _MapTilesView(HomeAssistantView):
     """Serve one class of map asset, from the cache or from upstream."""
 
@@ -146,7 +155,8 @@ class _MapTilesView(HomeAssistantView):
             return None
 
         body = b"".join(chunks)
-        return Asset(body, response.headers.get(hdrs.CONTENT_ENCODING))
+        ttl = _upstream_ttl(response.headers.get(hdrs.CACHE_CONTROL, ""))
+        return Asset(body, response.headers.get(hdrs.CONTENT_ENCODING), ttl)
 
 
 class _MapTilesTileView(_MapTilesView):
@@ -326,4 +336,5 @@ class MapTilesTileJsonView(_MapTilesView):
                 mtime=0,
             ),
             GZIP,
+            asset.ttl,
         )

@@ -189,3 +189,24 @@ async def test_stale_entry_is_refreshed_behind_the_response(
     await hass.async_block_till_done()
 
     assert await cache.async_get("key", TTL, fetch) == Asset(b"second", None)
+
+
+async def test_asset_ttl_overrides_the_fallback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that an asset's own ttl decides staleness, not the caller's fallback."""
+    cache = MapTilesCache(hass)
+    tiles = [b"first", b"second"]
+
+    async def fetch() -> Asset:
+        return Asset(tiles.pop(0), None, ttl=TTL)
+
+    # The fallback is ten times the asset's own ttl, so only the latter can
+    # explain a refresh landing right after TTL elapses.
+    assert await cache.async_get("key", 10 * TTL, fetch) == Asset(b"first", None, TTL)
+
+    freezer.tick(TTL + 1)
+    assert await cache.async_get("key", 10 * TTL, fetch) == Asset(b"first", None, TTL)
+    await hass.async_block_till_done()
+
+    assert await cache.async_get("key", 10 * TTL, fetch) == Asset(b"second", None, TTL)

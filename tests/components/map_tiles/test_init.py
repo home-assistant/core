@@ -502,6 +502,32 @@ async def test_stale_tile_survives_an_upstream_outage(
         assert await (await client.get(VECTOR_PATH)).read() == VECTOR_TILE
 
 
+async def test_upstream_max_age_drives_the_refresh(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that upstream's Cache-Control max-age, not the fallback TTL, refreshes."""
+    aioclient_mock.get(
+        VECTOR_UPSTREAM, content=VECTOR_TILE, headers={"Cache-Control": "max-age=5"}
+    )
+
+    client = await hass_client()
+    assert await (await client.get(VECTOR_PATH)).read() == VECTOR_TILE
+
+    # Past upstream's 5 s max-age but far below the multi-day fallback TTL.
+    freezer.tick(6)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(VECTOR_UPSTREAM, content=b"a newer tile")
+
+    assert await (await client.get(VECTOR_PATH)).read() == VECTOR_TILE
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 1
+    assert await (await client.get(VECTOR_PATH)).read() == b"a newer tile"
+
+
 async def test_token_query_param_authenticates(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

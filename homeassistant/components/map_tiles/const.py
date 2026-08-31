@@ -31,9 +31,10 @@ UPSTREAM_HEADERS: Final = {
     "Accept-Encoding": "gzip",
 }
 
-# Refresh intervals, not lifetimes: an expired entry is never dropped, because
-# it is what keeps the map up while upstream is unreachable.
-TILE_TTL: Final = 24 * 60 * 60
+# Fallback refresh intervals, used only when upstream sends no Cache-Control
+# max-age to honor. Intervals, not lifetimes: an expired entry is never dropped,
+# because it is what keeps the map up while upstream is unreachable.
+TILE_TTL: Final = 7 * 24 * 60 * 60
 # Glyphs and sprites are pinned to an upstream release and never change.
 ASSET_TTL: Final = 30 * 24 * 60 * 60
 # Short: the TileJSON is how upstream would announce a moved tile endpoint.

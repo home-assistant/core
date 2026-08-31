@@ -26,6 +26,7 @@ class Asset:
 
     body: bytes
     encoding: str | None
+    ttl: float | None = None
 
 
 type FetchCallback = Callable[[], Coroutine[Any, Any, Asset | None]]
@@ -52,13 +53,17 @@ class MapTilesCache:
         self._fetches: dict[str, asyncio.Task[Asset | None]] = {}
 
     async def async_get(self, key: str, ttl: int, fetch: FetchCallback) -> Asset | None:
-        """Return the entry for key, fetching or refreshing it as needed."""
+        """Return the entry for key, fetching or refreshing it as needed.
+
+        ttl is the fallback refresh interval, used when the stored asset carries
+        no upstream max-age of its own.
+        """
         if (entry := self._entries.get(key)) is None:
             return await self._async_fetch(key, fetch)
 
         self._entries.move_to_end(key)
         asset, stored_at = entry
-        if time.monotonic() - stored_at > ttl:
+        if time.monotonic() - stored_at > (ttl if asset.ttl is None else asset.ttl):
             # Serve the stale entry now and refresh in the background, so an
             # upstream outage degrades to slightly old tiles, not to no map.
             self._hass.async_create_background_task(
