@@ -1,7 +1,6 @@
 """Tests for the Lunatone integration."""
 
 import copy
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -29,7 +28,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -250,10 +249,6 @@ async def test_line_broadcast_available_status(
     assert state.state != "unavailable"
 
     await mock_config_entry.runtime_data.coordinator_info.async_refresh()
-    await hass.async_block_till_done()
-
-    freezer.tick(timedelta(seconds=10))
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
