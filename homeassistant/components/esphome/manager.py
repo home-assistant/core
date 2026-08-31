@@ -110,6 +110,15 @@ UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
 
 
 @callback
+def _is_outgoing_connection_target(noise_psk: str | None) -> bool:
+    """A dial-back target must hold a real key.
+
+    Keyless entries store an empty key, and the zero-PSK provisioning client
+    authenticates nobody, so neither may declare the flag or route dial-ins.
+    """
+    return bool(noise_psk) and noise_psk != ZERO_NOISE_PSK
+
+
 def async_create_api_client(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
@@ -126,10 +135,7 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        # Always a dial-back target on a key-verified transport; keyless
-        # entries store an empty key, and the zero-PSK provisioning client
-        # authenticates nobody, so neither claims the flag
-        outgoing_connection_target=bool(noise_psk) and noise_psk != ZERO_NOISE_PSK,
+        outgoing_connection_target=_is_outgoing_connection_target(noise_psk),
     )
 
 
@@ -227,7 +233,6 @@ class ESPHomeManager:
         "_cancel_subscribe_logs",
         "_dashboard_key_sync_warned",
         "_log_level",
-        "_outgoing_unregister",
         "cli",
         "device_id",
         "domain_data",
@@ -264,7 +269,6 @@ class ESPHomeManager:
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
         self._dashboard_key_sync_warned = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
-        self._outgoing_unregister: CALLBACK_TYPE | None = None
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -584,29 +588,20 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
-    async def _async_register_outgoing_target(self) -> None:
+    async def _async_register_outgoing_target(
+        self, reconnect_logic: ReconnectLogic
+    ) -> None:
         """Register this entry's MAC with the shared dial-in listener."""
         entry = self.entry
-        # Routed only when this client can verify the device by key (the
-        # client's key, not entry data: a key provisioned mid-connect only
-        # takes effect after the next reload) and the unique id is a MAC;
-        # entries predating MAC unique ids wait for their next reload after
-        # the first connect migrates the id
-        if (
-            self._outgoing_unregister is not None
-            or not self.cli.noise_psk
-            or not (mac := entry.unique_id)
-            or ":" not in mac
+        if not _is_outgoing_connection_target(self.cli.noise_psk) or not (
+            (mac := entry.unique_id) and ":" in mac
         ):
             return
-        reconnect_logic = self.reconnect_logic
-        assert reconnect_logic is not None, "Reconnect logic must be set"
         if (
             unregister := await async_register_outgoing_target(
                 self.hass, mac, reconnect_logic
             )
         ) is not None:
-            self._outgoing_unregister = unregister
             self.entry_data.cleanup_callbacks.append(unregister)
 
     async def _on_connect(self) -> None:
@@ -1207,7 +1202,7 @@ class ESPHomeManager:
         # After the restored unique id above so those entries register too:
         # the device may open the TCP connection to us when it cannot be
         # reached, and a dial-in for this MAC is handed to the reconnect logic
-        await self._async_register_outgoing_target()
+        await self._async_register_outgoing_target(reconnect_logic)
 
         await reconnect_logic.start()
 

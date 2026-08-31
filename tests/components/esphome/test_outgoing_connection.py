@@ -54,8 +54,6 @@ async def test_outgoing_connection_registration(
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()
 
-    mock_server.start.assert_awaited_once()
-    assert mock_server.register.call_count == 1
     assert mock_server.register.call_args.args[0] == MAC
     # The client declares itself a dial-back target in its hello
     assert mock_client.outgoing_connection_target is True

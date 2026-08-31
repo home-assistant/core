@@ -11,14 +11,14 @@ from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-KEY_OUTGOING_CONNECTION_SERVER: HassKey[OutgoingConnectionServer | None] = HassKey(
+_KEY_OUTGOING_CONNECTION_SERVER: HassKey[OutgoingConnectionServer | None] = HassKey(
     "esphome_outgoing_connection_server"
 )
 
 
-@singleton(KEY_OUTGOING_CONNECTION_SERVER, async_=True)
+@singleton(_KEY_OUTGOING_CONNECTION_SERVER, async_=True)
 async def _async_get_server(hass: HomeAssistant) -> OutgoingConnectionServer | None:
-    """Get the process-wide listener; None when the port cannot be bound."""
+    """Get the shared listener; None when the port cannot be bound."""
     server = OutgoingConnectionServer()
     try:
         await server.start()
