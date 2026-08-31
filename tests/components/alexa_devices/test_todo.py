@@ -1,5 +1,7 @@
 """Test Alexa Devices todo entities."""
 
+import asyncio
+from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -26,6 +28,7 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
@@ -115,7 +118,7 @@ async def test_all_entities(
     """Test all entities."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
     mock_amazon_devices_client.get_todo_list_items = AsyncMock(
-        side_effect=lambda list_id: mock_todo_items.get(list_id, {})
+        side_effect=lambda list_id: dict(mock_todo_items.get(list_id, {}))
     )
 
     with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.TODO]):
@@ -132,11 +135,30 @@ async def test_add_todo_item(
 ) -> None:
     """Test adding a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
-    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+    list_items: dict[str, AmazonListItem] = {}
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(list_items)
+    )
 
     await setup_integration(hass, mock_config_entry)
 
     entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Amazon has the item from the moment the call returns
+    mock_amazon_devices_client.add_todo_list_item = AsyncMock(
+        side_effect=lambda list_id, name: list_items.update(
+            {
+                "item_6": AmazonListItem(
+                    id="item_6",
+                    name=name,
+                    status=AmazonListItemStatus.ACTIVE,
+                    version=1,
+                )
+            }
+        )
+    )
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -148,6 +170,132 @@ async def test_add_todo_item(
     mock_amazon_devices_client.add_todo_list_item.assert_called_once_with(
         "todo_list_id", "New Task"
     )
+    assert hass.states.get(entity_id).state == "1"
+
+
+async def test_concurrent_writes_keep_the_newest_answer(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test a slow read of an older list does not overwrite a newer one."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    list_items: dict[str, AmazonListItem] = {}
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(list_items)
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    def add_item(list_id: str, name: str) -> None:
+        list_items[name] = AmazonListItem(
+            id=name, name=name, status=AmazonListItemStatus.ACTIVE, version=1
+        )
+
+    mock_amazon_devices_client.add_todo_list_item = AsyncMock(side_effect=add_item)
+
+    # Hold the first read until both items have been written
+    released = asyncio.Event()
+    reads = 0
+
+    async def read_items(list_id: str) -> dict[str, AmazonListItem]:
+        nonlocal reads
+        reads += 1
+        items = dict(list_items)
+        if reads == 1:
+            await released.wait()
+        return items
+
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(side_effect=read_items)
+
+    writes = asyncio.gather(
+        *[
+            hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.ADD_ITEM,
+                {ATTR_ENTITY_ID: entity_id, "item": item},
+                blocking=True,
+            )
+            for item in ("First task", "Second task")
+        ]
+    )
+    await asyncio.sleep(0)
+    released.set()
+    await writes
+
+    assert hass.states.get(entity_id).state == "2"
+
+
+async def test_pushed_event_survives_a_refresh(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test an event arriving during a read back is not lost by that read."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    list_items: dict[str, AmazonListItem] = {}
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(list_items)
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    def add_item(list_id: str, name: str) -> None:
+        list_items[name] = AmazonListItem(
+            id=name, name=name, status=AmazonListItemStatus.ACTIVE, version=1
+        )
+
+    mock_amazon_devices_client.add_todo_list_item = AsyncMock(side_effect=add_item)
+
+    # Hold the read back until the event has been handled
+    released = asyncio.Event()
+
+    async def read_items(list_id: str) -> dict[str, AmazonListItem]:
+        items = dict(list_items)
+        await released.wait()
+        return items
+
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(side_effect=read_items)
+
+    write = asyncio.create_task(
+        hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ENTITY_ID: entity_id, "item": "Written task"},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+
+    # Alexa reports an item of its own while the read back is in flight
+    pushed = asyncio.create_task(
+        coordinator.todo_event_handler(
+            AmazonListEvent(
+                list_id="todo_list_id",
+                item_id="item_6",
+                type=AmazonListEventType.CREATED,
+                items=AmazonListItem(
+                    id="item_6",
+                    name="Spoken task",
+                    status=AmazonListItemStatus.ACTIVE,
+                    version=1,
+                ),
+            )
+        )
+    )
+    await asyncio.sleep(0)
+    released.set()
+    await write
+    await pushed
+
+    assert hass.states.get(entity_id).state == "2"
 
 
 async def test_delete_todo_item(
@@ -160,12 +308,21 @@ async def test_delete_todo_item(
     """Test deleting a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
     mock_amazon_devices_client.get_todo_list_items = AsyncMock(
-        side_effect=lambda list_id: mock_todo_items.get(list_id, {})
+        side_effect=lambda list_id: dict(mock_todo_items.get(list_id, {}))
     )
 
     await setup_integration(hass, mock_config_entry)
 
     entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    assert hass.states.get(entity_id).state == "1"
+
+    # Amazon has dropped the item from the moment the call returns
+    mock_amazon_devices_client.delete_todo_list_item = AsyncMock(
+        side_effect=lambda list_id, item_id, version: mock_todo_items[list_id].pop(
+            item_id
+        )
+    )
 
     # Delete item_2
     await hass.services.async_call(
@@ -178,6 +335,48 @@ async def test_delete_todo_item(
     mock_amazon_devices_client.delete_todo_list_item.assert_called_once_with(
         "todo_list_id", "item_2", 1
     )
+    assert hass.states.get(entity_id).state == "0"
+
+
+async def test_delete_todo_items_partial_failure(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
+) -> None:
+    """Test a delete that went through is not left in the cache by a later failure."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(mock_todo_items.get(list_id, {}))
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    assert hass.states.get(entity_id).state == "1"
+
+    # Amazon drops item_2 and then stops answering
+    def delete_item(list_id: str, item_id: str, version: int) -> None:
+        if item_id == "item_3":
+            raise CannotConnect
+        mock_todo_items[list_id].pop(item_id)
+
+    mock_amazon_devices_client.delete_todo_list_item = AsyncMock(
+        side_effect=delete_item
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ENTITY_ID: entity_id, "item": ["item_2", "item_3"]},
+            blocking=True,
+        )
+
+    # Reading the list back worked, so the entity stays usable
+    assert hass.states.get(entity_id).state == "0"
 
 
 async def test_update_todo_item(
@@ -190,7 +389,7 @@ async def test_update_todo_item(
     """Test updating a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
     mock_amazon_devices_client.get_todo_list_items = AsyncMock(
-        side_effect=lambda list_id: mock_todo_items.get(list_id, {})
+        side_effect=lambda list_id: dict(mock_todo_items.get(list_id, {}))
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -252,6 +451,66 @@ async def test_update_todo_item(
     mock_amazon_devices_client.rename_todo_list_item.assert_called_once_with(
         "todo_list_id", "item_2", "Both Changed", 2
     )
+
+    # Neither status nor name changed -> no API calls
+    mock_amazon_devices_client.set_todo_list_item_checked_status.reset_mock()
+    mock_amazon_devices_client.rename_todo_list_item.reset_mock()
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "item": "item_2",
+            "rename": "Task 1",
+            "status": TodoItemStatus.NEEDS_ACTION,
+        },
+        blocking=True,
+    )
+    mock_amazon_devices_client.set_todo_list_item_checked_status.assert_not_called()
+    mock_amazon_devices_client.rename_todo_list_item.assert_not_called()
+
+
+async def test_update_todo_item_refreshes_state(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
+) -> None:
+    """Test the entity reflects an updated item once the call returns."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
+        side_effect=lambda list_id: dict(mock_todo_items.get(list_id, {}))
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
+
+    assert hass.states.get(entity_id).state == "1"
+
+    # Amazon has the item checked from the moment the call returns
+    def check_item(list_id: str, item_id: str, checked: bool, version: int) -> None:
+        mock_todo_items[list_id][item_id] = replace(
+            mock_todo_items[list_id][item_id], status=AmazonListItemStatus.COMPLETE
+        )
+
+    mock_amazon_devices_client.set_todo_list_item_checked_status = AsyncMock(
+        side_effect=check_item
+    )
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "item": "item_2",
+            "status": TodoItemStatus.COMPLETED,
+        },
+        blocking=True,
+    )
+
+    assert hass.states.get(entity_id).state == "0"
 
 
 @pytest.mark.parametrize(

@@ -1487,6 +1487,192 @@ async def test_working_location_entity(
     assert state.attributes.get("message") == expected_event_message
 
 
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_working_location_get_events(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test get_events for working location entity with recurring and single events from diagnostics."""
+    events = [
+        {
+            **TEST_EVENT,
+            "id": "event-home",
+            "iCalUID": "event-home@google.com",
+            "summary": "Home",
+            "start": {"date": "2026-08-24"},
+            "end": {"date": "2026-08-25"},
+            "transparency": "transparent",
+            "status": "confirmed",
+            "eventType": "workingLocation",
+            "visibility": "public",
+            "recurrence": ["RRULE:FREQ=WEEKLY;BYDAY=MO"],
+        },
+        {
+            **TEST_EVENT,
+            "id": "event-office",
+            "iCalUID": "event-office@google.com",
+            "summary": "Office",
+            "start": {"date": "2026-08-25"},
+            "end": {"date": "2026-08-26"},
+            "transparency": "transparent",
+            "status": "confirmed",
+            "eventType": "workingLocation",
+            "visibility": "public",
+        },
+    ]
+    mock_events_list_items(events)
+    assert await component_setup()
+
+    entity_registry.async_update_entity(
+        entity_id="calendar.working_location", disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Query events via calendar.get_events action
+    response = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "start_date_time": "2026-08-24T00:00:00Z",
+            "end_date_time": "2026-09-01T00:00:00Z",
+        },
+        target={"entity_id": "calendar.working_location"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.working_location": {
+            "events": [
+                {
+                    "start": "2026-08-24",
+                    "end": "2026-08-25",
+                    "summary": "Home",
+                    "description": "test event",
+                    "location": "Test Cases",
+                },
+                {
+                    "start": "2026-08-25",
+                    "end": "2026-08-26",
+                    "summary": "Office",
+                    "description": "test event",
+                    "location": "Test Cases",
+                },
+                {
+                    "start": "2026-08-31",
+                    "end": "2026-09-01",
+                    "summary": "Home",
+                    "description": "test event",
+                    "location": "Test Cases",
+                },
+            ]
+        }
+    }
+
+
+@pytest.mark.parametrize("calendar_is_primary", [True])
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "primary",
+                        "name": "Primary",
+                        "ignore_availability": False,
+                        "track": True,
+                    }
+                ],
+            }
+        ]
+    ],
+)
+async def test_working_location_ignore_availability_false(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_calendars_yaml: None,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test working location entity when primary calendar has ignore_availability=False in YAML reproduces empty events issue."""
+    event = {
+        **TEST_EVENT,
+        "id": "event-home",
+        "iCalUID": "event-home@google.com",
+        "summary": "Home",
+        "start": {"date": "2026-08-24"},
+        "end": {"date": "2026-08-25"},
+        "transparency": "transparent",
+        "status": "confirmed",
+        "eventType": "workingLocation",
+        "visibility": "public",
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    entity_entry = entity_registry.async_get("calendar.working_location")
+    assert entity_entry
+    assert entity_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(
+        entity_id="calendar.working_location", disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Query events via calendar.get_events action on working location entity
+    response = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "start_date_time": "2026-08-24T00:00:00Z",
+            "end_date_time": "2026-08-26T00:00:00Z",
+        },
+        target={"entity_id": "calendar.working_location"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.working_location": {
+            "events": [
+                {
+                    "start": "2026-08-24",
+                    "end": "2026-08-25",
+                    "summary": "Home",
+                    "description": "test event",
+                    "location": "Test Cases",
+                }
+            ]
+        }
+    }
+
+    # Query events via calendar.get_events action on primary calendar entity
+    primary_response = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "start_date_time": "2026-08-24T00:00:00Z",
+            "end_date_time": "2026-08-26T00:00:00Z",
+        },
+        target={"entity_id": "calendar.primary"},
+        blocking=True,
+        return_response=True,
+    )
+    # The primary calendar filters out transparent events because ignore_availability is False
+    assert primary_response == {"calendar.primary": {"events": []}}
+
+
 @pytest.mark.parametrize("calendar_is_primary", [False])
 async def test_no_working_location_entity(
     hass: HomeAssistant,
