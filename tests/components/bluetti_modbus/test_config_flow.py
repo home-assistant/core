@@ -29,7 +29,7 @@ def _user_input(unit_id: int = UNIT_ID) -> dict[str, Any]:
     }
 
 
-async def test_user_flow(hass: HomeAssistant) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_modbus_unit: MockModbusUnit) -> None:
     """A device on the network is probed and its entry created."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -108,8 +108,15 @@ class _ConflictingUnit:
         return None
 
 
-async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
-    """A link already claimed with different settings is not a transient failure."""
+async def test_user_flow_link_settings_in_use(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A link already claimed with different settings is not a transient failure.
+
+    The form recovers once the conflicting entry is gone, the same as any
+    other form error - only the patched-out probe during the first attempt
+    made it look permanent.
+    """
     with patch(
         "homeassistant.components.bluetti_modbus.config_flow.async_get_temporary_unit",
         return_value=_ConflictingUnit(),
@@ -117,12 +124,33 @@ async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], _user_input()
-        )
+        flow_id = result["flow_id"]
+        result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "link_settings_in_use"}
+
+    result = await hass.config_entries.flow.async_configure(flow_id, _user_input())
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_rejects_a_zero_serial(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A responder reporting serial 0 is not a real device identity."""
+    mock_modbus_unit.holding[50206] = 0  # d_serial's least-significant word
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input()
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_probe_timeout_surfaces_cannot_connect(

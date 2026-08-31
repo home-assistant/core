@@ -127,4 +127,11 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
 
         serial = device.values.get("d_serial")
-        return {}, str(serial) if serial is not None else None
+        if not serial:
+            # d_serial is a UINT64; a genuine Balco260 always has a real,
+            # non-zero manufactured serial. 0 means whatever answered these
+            # addresses isn't reporting a real identity - not a real device
+            # to identify, so this is a failed probe, the same as a device
+            # that didn't answer at all.
+            return {"base": "cannot_connect"}, None
+        return {}, str(serial)

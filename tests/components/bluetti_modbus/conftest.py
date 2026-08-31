@@ -29,10 +29,11 @@ HOST = "1.2.3.4"
 PORT = 502
 UNIT_ID = 1
 ENTRY_ID = "01K3ZZZZZZZZZZZZZZZZZZZZZZ"
-# Balco260's d_serial decodes from raw registers - zero-seeded here like
-# everything else, same as a real device's serial number would be a fixed,
-# non-zero value.
-SERIAL = "0"
+# A real Balco260 always has a non-zero manufactured serial (the config flow
+# rejects 0 as not a real device identity - see config_flow.py), so this
+# can't be zero-seeded like everything else; seed_unit() overrides it after
+# the generic zero pass.
+SERIAL = "1234"
 
 
 def bluetti_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -51,7 +52,10 @@ def seed_unit(unit: MockModbusUnit) -> None:
     single self-describing header block, BLUETTI's map has none to capture
     once): every field's own registers are zeroed directly from the library's
     field metadata instead. Zero decodes safely everywhere, including the
-    enum-typed status/warning/fault fields, whose "normal" member is always 0.
+    enum-typed status/warning/fault fields, whose "normal" member is always 0
+    - except d_serial, which the config flow treats 0 as a failed probe, not
+    a real device (see config_flow.py); the register holding its
+    least-significant word is overridden with SERIAL's value afterwards.
     """
     device = get_device(DEVICE_TYPE_BALCO260)
     assert device is not None
@@ -60,6 +64,10 @@ def seed_unit(unit: MockModbusUnit) -> None:
         assert field is not None
         for offset in range(field.count):
             unit.holding[field.address + offset] = 0
+
+    serial_field = device.get_field("d_serial")
+    assert serial_field is not None
+    unit.holding[serial_field.address] = int(SERIAL)
 
 
 @pytest.fixture(autouse=True)
