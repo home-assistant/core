@@ -60,6 +60,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         sensor_key="updateNewVersion",
         icon="mdi:update",
     ),
+    # deprecated: The uptime sensor is deprecated and will be removed in 2027.4.0. Use last_restart instead.
     GoogleWifiSensorEntityDescription(
         key=ATTR_UPTIME,
         primary_key="system",
