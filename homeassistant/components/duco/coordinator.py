@@ -15,7 +15,7 @@ from duco_connectivity.exceptions import (
 from duco_connectivity.models import (
     BoardInfo,
     BypassSupplyTemperatureTarget,
-    DiagComponent,
+    DiagStatus,
     Node,
     NodeListActionItemList,
     NodeName,
@@ -42,7 +42,7 @@ class DucoData:
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
-    diagnostic_subsystems: tuple[DiagComponent, ...]
+    diagnostic_subsystems: dict[str, DiagStatus | None]
     rssi_wifi: int | None
     time_filter_remain: int | None
     ventilation_temperatures: VentilationTemperatureInfo | None
@@ -196,7 +196,10 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
-        diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
+        diagnostic_subsystems = {
+            diagnostic.component: diagnostic.status
+            for diagnostic in diagnostic_info.diagnostic_subsystems
+        }
 
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary

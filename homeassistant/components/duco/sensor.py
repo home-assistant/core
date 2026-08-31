@@ -344,12 +344,12 @@ async def async_setup_entry(
             if node.general.node_type != NodeType.BOX:
                 continue
 
-            for diagnostic in coordinator.data.diagnostic_subsystems:
-                if diagnostic.component in known_diagnostic_components:
+            for component in coordinator.data.diagnostic_subsystems:
+                if component in known_diagnostic_components:
                     continue
-                known_diagnostic_components.add(diagnostic.component)
+                known_diagnostic_components.add(component)
                 new_entities.append(
-                    DucoDiagnosticSensorEntity(coordinator, node, diagnostic.component)
+                    DucoDiagnosticSensorEntity(coordinator, node, component)
                 )
 
             for description in BOX_SENSOR_DESCRIPTIONS:
@@ -452,7 +452,6 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
     @override
     def native_value(self) -> str | None:
         """Return the diagnostic status."""
-        for diagnostic in self.coordinator.data.diagnostic_subsystems:
-            if diagnostic.component == self.entity_description.component:
-                return diagnostic.status
-        return None
+        return self.coordinator.data.diagnostic_subsystems.get(
+            self.entity_description.component
+        )
