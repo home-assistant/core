@@ -166,6 +166,7 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         # A partial name still resolves, as it did before.
         ("Streaming", "extInput:cec?type=player&port=1"),
         ("straße", "extInput:scart?port=1"),
+        ("STRASSE", "extInput:scart?port=1"),
     ],
 )
 async def test_select_source(

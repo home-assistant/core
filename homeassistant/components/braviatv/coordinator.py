@@ -153,7 +153,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 # Reuse the spelling already listed, so the source reported while
                 # playing is always one of the names offered in the list.
                 known = next(
-                    (s for s in self.source_list if s.lower() == name.lower()), None
+                    (s for s in self.source_list if s.casefold() == name.casefold()),
+                    None,
                 )
                 if known is None:
                     self.source_list.append(name)
@@ -311,9 +312,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    folded = query.lower()
-                    title = (item.get("title") or "").lower()
-                    name = (item.get("name") or "").lower()
+                    folded = query.casefold()
+                    title = (item.get("title") or "").casefold()
+                    name = (item.get("name") or "").casefold()
                     # A generic name wins over a label, so labelling an input with
                     # another one's name cannot capture it from an automation.
                     if folded == title:
