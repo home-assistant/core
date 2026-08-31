@@ -496,7 +496,9 @@ async def test_last_seen_segments(
 
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_segments_changed_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test segments changed issue."""
     mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
@@ -531,7 +533,7 @@ async def test_segments_changed_issue(
     mock_vacuum.async_create_segments_issue()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
@@ -549,4 +551,4 @@ async def test_segments_changed_issue(
     )
     await hass.async_block_till_done()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None  # pylint: disable=home-assistant-tests-registry-fixtures
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
