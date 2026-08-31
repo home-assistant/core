@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_o_p_total',
-    'unique_id': '0_ac_o_p_total',
+    'unique_id': '1234_ac_o_p_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_t_avg',
-    'unique_id': '0_b_t_avg',
+    'unique_id': '1234_b_t_avg',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -148,7 +148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_cycle_count',
-    'unique_id': '0_b_cycle_count',
+    'unique_id': '1234_b_cycle_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -200,7 +200,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soc',
-    'unique_id': '0_b_soc',
+    'unique_id': '1234_b_soc',
     'unit_of_measurement': '%',
   })
 # ---
@@ -253,7 +253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soh',
-    'unique_id': '0_b_soh',
+    'unique_id': '1234_b_soh',
     'unit_of_measurement': '%',
   })
 # ---
@@ -304,7 +304,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_type',
-    'unique_id': '0_b_type',
+    'unique_id': '1234_b_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -359,7 +359,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_v',
-    'unique_id': '0_b_v',
+    'unique_id': '1234_b_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -412,7 +412,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_cell_count',
-    'unique_id': '0_b_cell_count',
+    'unique_id': '1234_b_cell_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -467,7 +467,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_f',
-    'unique_id': '0_g_i_f',
+    'unique_id': '1234_g_i_f',
     'unit_of_measurement': 'Hz',
   })
 # ---
@@ -525,7 +525,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_p_total',
-    'unique_id': '0_g_i_p_total',
+    'unique_id': '1234_g_i_p_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -578,7 +578,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_num_inverters',
-    'unique_id': '0_d_num_inverters',
+    'unique_id': '1234_d_num_inverters',
     'unit_of_measurement': None,
   })
 # ---
@@ -639,7 +639,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_status',
-    'unique_id': '0_d_inverter_status',
+    'unique_id': '1234_d_inverter_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -700,7 +700,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_type',
-    'unique_id': '0_d_inverter_type',
+    'unique_id': '1234_d_inverter_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -750,7 +750,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_num_battery_packs',
-    'unique_id': '0_d_num_battery_packs',
+    'unique_id': '1234_d_num_battery_packs',
     'unit_of_measurement': None,
   })
 # ---
@@ -805,7 +805,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_c',
-    'unique_id': '0_pv_1_i_c',
+    'unique_id': '1234_pv_1_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -863,7 +863,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_p',
-    'unique_id': '0_pv_1_i_p',
+    'unique_id': '1234_pv_1_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -921,7 +921,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_1_i_v',
-    'unique_id': '0_pv_1_i_v',
+    'unique_id': '1234_pv_1_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -979,7 +979,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_c',
-    'unique_id': '0_pv_2_i_c',
+    'unique_id': '1234_pv_2_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -1037,7 +1037,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_p',
-    'unique_id': '0_pv_2_i_p',
+    'unique_id': '1234_pv_2_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1095,7 +1095,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_2_i_v',
-    'unique_id': '0_pv_2_i_v',
+    'unique_id': '1234_pv_2_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -1153,7 +1153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_c',
-    'unique_id': '0_pv_3_i_c',
+    'unique_id': '1234_pv_3_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -1211,7 +1211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_p',
-    'unique_id': '0_pv_3_i_p',
+    'unique_id': '1234_pv_3_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1269,7 +1269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_3_i_v',
-    'unique_id': '0_pv_3_i_v',
+    'unique_id': '1234_pv_3_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -1327,7 +1327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_c',
-    'unique_id': '0_pv_4_i_c',
+    'unique_id': '1234_pv_4_i_c',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -1385,7 +1385,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_p',
-    'unique_id': '0_pv_4_i_p',
+    'unique_id': '1234_pv_4_i_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1443,7 +1443,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_4_i_v',
-    'unique_id': '0_pv_4_i_v',
+    'unique_id': '1234_pv_4_i_v',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -1501,7 +1501,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_ac_e',
-    'unique_id': '0_pv_ac_e',
+    'unique_id': '1234_pv_ac_e',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -1559,7 +1559,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_ac_p',
-    'unique_id': '0_pv_ac_p',
+    'unique_id': '1234_pv_ac_p',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1612,7 +1612,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_ntc_count',
-    'unique_id': '0_b_ntc_count',
+    'unique_id': '1234_b_ntc_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1667,7 +1667,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_o_e_total',
-    'unique_id': '0_ac_o_e_total',
+    'unique_id': '1234_ac_o_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -1725,7 +1725,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_i_e',
-    'unique_id': '0_b_i_e',
+    'unique_id': '1234_b_i_e',
     'unit_of_measurement': 'Wh',
   })
 # ---
@@ -1783,7 +1783,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_c_total',
-    'unique_id': '0_b_c_total',
+    'unique_id': '1234_b_c_total',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -1841,7 +1841,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_o_e',
-    'unique_id': '0_b_o_e',
+    'unique_id': '1234_b_o_e',
     'unit_of_measurement': 'Wh',
   })
 # ---
@@ -1896,7 +1896,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soc_total',
-    'unique_id': '0_b_soc_total',
+    'unique_id': '1234_b_soc_total',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1949,7 +1949,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_soh_total',
-    'unique_id': '0_b_soh_total',
+    'unique_id': '1234_b_soh_total',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2005,7 +2005,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_v_total',
-    'unique_id': '0_b_v_total',
+    'unique_id': '1234_b_v_total',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -2063,7 +2063,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_o_e_total',
-    'unique_id': '0_g_o_e_total',
+    'unique_id': '1234_g_o_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -2121,7 +2121,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'g_i_e_total',
-    'unique_id': '0_g_i_e_total',
+    'unique_id': '1234_g_i_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -2179,7 +2179,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'd_inverter_total',
-    'unique_id': '0_d_inverter_total',
+    'unique_id': '1234_d_inverter_total',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -2237,7 +2237,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_i_e_total',
-    'unique_id': '0_pv_i_e_total',
+    'unique_id': '1234_pv_i_e_total',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -2295,7 +2295,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pv_i_p_total',
-    'unique_id': '0_pv_i_p_total',
+    'unique_id': '1234_pv_i_p_total',
     'unit_of_measurement': 'W',
   })
 # ---
