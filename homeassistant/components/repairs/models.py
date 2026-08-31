@@ -50,14 +50,17 @@ class RepairsFlow(
         """Return the flow's issue_id."""
         if "issue_id" in self.context:
             return self.context["issue_id"]
-        # Error prevention in legacy custom integrations that may access attribute
-        # prior to the flow manager running async_create_flow
+        # Avoid breaking changes in legacy custom integrations that may access
+        # this propertyprior to the flow manager running async_create_flow
         return self._issue_id
 
     @issue_id.setter
     def issue_id(self, issue_id: str) -> None:
-        """Provide deprecation warning."""
-        # Prevent errors in custom integrations that may attempt to set/access issue_id prior to the flow manager async_create_flow
+        """Allow legacy implementations to set issue_id.
+
+        Setter is retained to avoid breaking changes in custom integrations that may set issue_id in a RepairFlow
+        prior to the flow manager applying the context (self.issue_id will be a valid value).
+        """
         self._issue_id = issue_id
 
     @override

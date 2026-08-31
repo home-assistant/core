@@ -1,4 +1,4 @@
-"""Tests for repairs model.py."""
+"""Tests for repairs issue_handler.py."""
 
 import pytest
 
