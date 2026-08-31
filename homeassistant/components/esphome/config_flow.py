@@ -55,11 +55,13 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import json_loads_object
 
 from .const import (
+    CONF_ALLOW_OUTGOING_CONNECTION,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
+    DEFAULT_ALLOW_OUTGOING_CONNECTION,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_BLUETOOTH_SCANNING_MODE,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
@@ -1026,6 +1028,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             vol.Required(
                 CONF_SUBSCRIBE_LOGS,
                 default=options.get(CONF_SUBSCRIBE_LOGS, False),
+            ): bool,
+            vol.Required(
+                CONF_ALLOW_OUTGOING_CONNECTION,
+                default=options.get(
+                    CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
+                ),
             ): bool,
         }
         if _entry_has_bluetooth_scanner(self.config_entry):

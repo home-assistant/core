@@ -186,6 +186,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         noise_psk: str | None = None,
         expected_name: str | None = None,
         timezone: str | None = None,
+        outgoing_connection_target: bool = False,
     ) -> None:
         """Fake the client constructor."""
         mock_client.host = address

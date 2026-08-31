@@ -24,6 +24,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.esphome import config_flow, dashboard
 from homeassistant.components.esphome.const import (
+    CONF_ALLOW_OUTGOING_CONNECTION,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
     CONF_DEVICE_NAME,
@@ -2448,6 +2449,7 @@ async def test_option_flow_allow_service_calls(
     assert result["data_schema"]({}) == {
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         CONF_SUBSCRIBE_LOGS: False,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
     }
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -2456,6 +2458,7 @@ async def test_option_flow_allow_service_calls(
     assert result["data_schema"]({}) == {
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         CONF_SUBSCRIBE_LOGS: False,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
     }
     with patch(
         "homeassistant.components.esphome.async_setup_entry", return_value=True
@@ -2470,6 +2473,7 @@ async def test_option_flow_allow_service_calls(
     assert result["data"] == {
         CONF_ALLOW_SERVICE_CALLS: True,
         CONF_SUBSCRIBE_LOGS: False,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
     }
     assert len(mock_reload.mock_calls) == 1
 
@@ -2491,6 +2495,7 @@ async def test_option_flow_subscribe_logs(
     assert result["data_schema"]({}) == {
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         CONF_SUBSCRIBE_LOGS: False,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
     }
 
     with patch(
@@ -2506,6 +2511,7 @@ async def test_option_flow_subscribe_logs(
     assert result["data"] == {
         CONF_ALLOW_SERVICE_CALLS: False,
         CONF_SUBSCRIBE_LOGS: True,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
     }
     assert len(mock_reload.mock_calls) == 1
 
@@ -2592,6 +2598,7 @@ async def test_option_flow_bluetooth_scanning_mode(
     assert result["data_schema"]({}) == {
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         CONF_SUBSCRIBE_LOGS: False,
+        CONF_ALLOW_OUTGOING_CONNECTION: False,
         CONF_BLUETOOTH_SCANNING_MODE: DEFAULT_BLUETOOTH_SCANNING_MODE,
     }
     with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):

@@ -21,6 +21,7 @@ from aioesphomeapi import (
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
+    OutgoingConnectionServer,
     ReconnectLogic,
     RequiresEncryptionAPIError,
     SupportsResponseType,
@@ -42,6 +43,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGGING_CHANGED,
     Platform,
 )
@@ -68,6 +70,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
     json as json_helper,
+    singleton,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -84,11 +87,13 @@ from homeassistant.util.json import json_loads_object
 from .bluetooth import async_connect_scanner
 from .const import (
     CLIENT_INFO,
+    CONF_ALLOW_OUTGOING_CONNECTION,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
+    DEFAULT_ALLOW_OUTGOING_CONNECTION,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
@@ -125,7 +130,25 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
+        outgoing_connection_target=entry.options.get(
+            CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
+        ),
     )
+
+
+@singleton.singleton("esphome_outgoing_connection_server")
+async def _async_get_outgoing_connection_server(
+    hass: HomeAssistant,
+) -> OutgoingConnectionServer:
+    """Get the process-wide listener for device-initiated connections."""
+    server = OutgoingConnectionServer()
+    await server.start()
+
+    async def _async_stop(event: Event) -> None:
+        await server.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    return server
 
 
 if TYPE_CHECKING:
@@ -1139,6 +1162,22 @@ class ESPHomeManager:
             reconnect_logic.stop_callback,
         )
         entry_data.cleanup_callbacks.extend(cleanups)
+
+        if entry.options.get(
+            CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
+        ) and (mac := entry.unique_id):
+            # The device may open the TCP connection to us when it cannot be
+            # reached; a dial-in for this MAC is handed to the reconnect logic
+            try:
+                server = await _async_get_outgoing_connection_server(hass)
+            except OSError as err:
+                _LOGGER.warning(
+                    "%s: Cannot listen for outgoing connections: %s", self.host, err
+                )
+            else:
+                entry_data.cleanup_callbacks.append(
+                    server.register(mac, reconnect_logic)
+                )
 
         infos, services = await entry_data.async_load_from_store(
             restore_states=bool(entry.unique_id)
