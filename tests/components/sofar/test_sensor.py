@@ -169,8 +169,11 @@ async def test_fault_sensor_reports_active_faults(
     assert state.attributes["active_faults"] == expected_active_faults
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_fault_sensor_ignores_reserved_registers(
-    entity_registry: er.EntityRegistry, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test a reserved register (no fault bits defined) gets no dead sensor."""
     for number in (20, 21, 24, 25):
@@ -180,6 +183,15 @@ async def test_fault_sensor_ignores_reserved_registers(
             )
             is None
         )
+    # Their non-reserved neighbors do exist, so fault sensors aren't just
+    # failing wholesale.
+    for number in (19, 22, 23, 26):
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault_{number}"
+        )
+        assert entity_id is not None
+        assert (state := hass.states.get(entity_id)) is not None
+        assert state.state == "no_fault"
 
 
 @pytest.mark.parametrize(
