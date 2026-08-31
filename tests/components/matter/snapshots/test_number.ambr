@@ -422,10 +422,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,7 +445,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -460,12 +460,12 @@
 # name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -720,10 +720,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -743,7 +743,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -758,12 +758,12 @@
 # name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -781,10 +781,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -804,7 +804,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -819,12 +819,12 @@
 # name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4654,10 +4654,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4677,7 +4677,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -4692,12 +4692,12 @@
 # name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -5303,5 +5303,188 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_slat_rotation_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.home_blind_wi_fi_slat_rotation_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Slat rotation time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Slat rotation time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'slat_rotation_time',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoSlatRotationTime-258-355729411',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_slat_rotation_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Slat rotation time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.home_blind_wi_fi_slat_rotation_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.3',
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_travel_time_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.home_blind_wi_fi_travel_time_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Travel time down',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Travel time down',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'travel_time_down',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoTravelTimeDown-258-355729410',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_travel_time_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Travel time down',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.home_blind_wi_fi_travel_time_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '46.0',
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_travel_time_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.home_blind_wi_fi_travel_time_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Travel time up',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Travel time up',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'travel_time_up',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoTravelTimeUp-258-355729409',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[wago_home_blind_control][number.home_blind_wi_fi_travel_time_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Travel time up',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.home_blind_wi_fi_travel_time_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '49.0',
   })
 # ---
