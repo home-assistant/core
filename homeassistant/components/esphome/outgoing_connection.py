@@ -9,7 +9,11 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
+from .const import (
+    CONF_ALLOW_OUTGOING_CONNECTION,
+    CONF_NOISE_PSK,
+    DEFAULT_ALLOW_OUTGOING_CONNECTION,
+)
 from .entry_data import ESPHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,9 +25,15 @@ KEY_OUTGOING_CONNECTION_SERVER: HassKey[OutgoingConnectionServer | None] = HassK
 
 @callback
 def outgoing_connection_enabled(entry: ESPHomeConfigEntry) -> bool:
-    """Return True when the entry opts into device-initiated connections."""
+    """Return True when the entry opts into device-initiated connections.
+
+    Always False without a stored encryption key: the device side is Noise
+    only, so a keyless entry can neither declare itself a dial-back target
+    nor have a dial-in routed to it.
+    """
     return bool(
-        entry.options.get(
+        entry.data.get(CONF_NOISE_PSK)
+        and entry.options.get(
             CONF_ALLOW_OUTGOING_CONNECTION, DEFAULT_ALLOW_OUTGOING_CONNECTION
         )
     )

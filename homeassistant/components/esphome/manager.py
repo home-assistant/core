@@ -130,7 +130,13 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        outgoing_connection_target=outgoing_connection_enabled(entry),
+        # The zero-PSK provisioning client must never claim to be a
+        # dial-back target: its transport authenticates nobody
+        outgoing_connection_target=(
+            noise_psk is not None
+            and noise_psk != ZERO_NOISE_PSK
+            and outgoing_connection_enabled(entry)
+        ),
     )
 
 
@@ -588,12 +594,11 @@ class ESPHomeManager:
     async def _async_register_outgoing_target(self) -> None:
         """Register this entry's MAC with the shared dial-in listener."""
         entry = self.entry
+        # outgoing_connection_enabled requires a stored key, so a dial-in is
+        # never routed for an entry that cannot verify the device
         if (
             self._outgoing_unregister is not None
             or not outgoing_connection_enabled(entry)
-            # Never route a dial-in for an entry that cannot verify the
-            # device by key
-            or not entry.data.get(CONF_NOISE_PSK)
             or not (mac := entry.unique_id)
             or ":" not in mac
         ):
@@ -613,6 +618,10 @@ class ESPHomeManager:
     async def _async_on_outgoing_capable_device(self) -> None:
         """Handle a connected device that supports outgoing connections."""
         entry = self.entry
+        if not entry.data.get(CONF_NOISE_PSK):
+            # A keyless entry cannot use the feature; leave the sentinel
+            # unset so it can still auto enable once the entry has a key
+            return
         if CONF_ALLOW_OUTGOING_CONNECTION not in entry.options:
             # First supported device seen: turn the option on and remember;
             # it stays discoverable and reversible in the entry options. The
