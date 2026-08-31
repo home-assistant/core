@@ -15,6 +15,7 @@ from tests.typing import ClientSessionGenerator
 
 async def test_change_schedule_fails(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     doorbird_mocker: DoorbirdMockerType,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -24,9 +25,8 @@ async def test_change_schedule_fails(
         favorites_side_effect=mock_not_found_exception()
     )
     assert doorbird_entry.entry.state is ConfigEntryState.SETUP_RETRY
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert len(issue_reg.issues) == 1
-    issue = list(issue_reg.issues.values())[0]
+    assert len(issue_registry.issues) == 1
+    issue = list(issue_registry.issues.values())[0]
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
 
