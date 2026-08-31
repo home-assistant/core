@@ -1255,6 +1255,34 @@ async def test_pending_key_resumes_without_reregister(hass: HomeAssistant) -> No
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
+async def test_timed_out_key_reregisters_for_a_fresh_window(
+    hass: HomeAssistant,
+) -> None:
+    """A key whose approval window expired is re-registered, not left stuck."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(
+                    AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT
+                )
+            ),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ) as mock_add,
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    mock_add.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
 async def test_unrecognized_state_aborts_pairing(hass: HomeAssistant) -> None:
     """An unrecognized authorized-client state aborts rather than re-registering."""
     entry = await _setup_account_no_subentry(hass)

@@ -63,9 +63,6 @@ class PowerwallKeyRejectedError(Exception):
     """Signal that the gateway refused a v1r-signed read with our RSA key."""
 
 
-_PENDING_STATES = (AuthorizedClientState.PENDING_VERIFICATION,)
-
-
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -308,13 +305,19 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # without re-registering it (re-adding would reset a pending key).
             if client.state == AuthorizedClientState.VERIFIED:
                 return await self.async_step_credentials()
-            if client.state in _PENDING_STATES:
+            if client.state == AuthorizedClientState.PENDING_VERIFICATION:
                 return await self.async_step_pair()
-            # The typed accessor preserves an unrecognized state verbatim. Such
-            # a read is not usable, so treat it as a lookup failure rather than
-            # resuming pairing on a state we cannot reason about.
-            LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
-            return self.async_abort(reason="cannot_connect")
+            if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+                # The typed accessor preserves an unrecognized state verbatim. Such
+                # a read is not usable, so treat it as a lookup failure rather than
+                # resuming pairing on a state we cannot reason about.
+                LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
+                return self.async_abort(reason="cannot_connect")
+            # PENDING_VERIFICATION_TIMEOUT is terminal on its own: the ~9-minute
+            # presence-proof window already expired. Re-registering the same
+            # public key resets that window without creating a duplicate record
+            # (tesla_fleet_api's add_authorized_client docs), so fall through to
+            # register below instead of aborting a flow that can never recover.
 
         assert self._energy_site is not None
         try:
