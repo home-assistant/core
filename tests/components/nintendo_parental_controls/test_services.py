@@ -1,13 +1,19 @@
 """Test Nintendo Parental Controls service calls."""
 
+from datetime import time
 from typing import Any
 from unittest.mock import AsyncMock
 
+from pynintendoparental.exceptions import InvalidDeviceStateError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nintendo_parental_controls.const import (
+    ATTR_BEDTIME_END,
+    ATTR_BEDTIME_START,
     ATTR_BONUS_TIME,
+    ATTR_DAY_OF_WEEK,
+    ATTR_MAX_PLAY_TIME,
     DOMAIN,
 )
 from homeassistant.components.nintendo_parental_controls.services import (
@@ -105,6 +111,13 @@ async def test_add_bonus_time(
             NintendoParentalServices.PLAYER_USAGE_REPORT,
             {ATTR_DEVICE_ID: "invalid_device", ATTR_ENTITY_ID: PLAYER_ENTITY_ID},
             True,
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
+        ),
+        (
+            NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+            {ATTR_DEVICE_ID: "invalid_device", ATTR_DAY_OF_WEEK: "monday"},
+            False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
@@ -326,3 +339,68 @@ async def test_player_service_failures(
         )
     assert err.value.translation_domain == exception_domain
     assert err.value.translation_key == exception_key
+
+
+async def test_update_daily_restrictions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+) -> None:
+    """Ensure that the daily restrictions update as expected."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    await hass.services.async_call(
+        DOMAIN,
+        NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+        {
+            ATTR_DEVICE_ID: device_entry.id,
+            ATTR_DAY_OF_WEEK: "monday",
+            ATTR_BEDTIME_START: time(21, 0, 0),
+            ATTR_BEDTIME_END: time(9, 0, 0),
+            ATTR_MAX_PLAY_TIME: 360,
+        },
+        blocking=True,
+    )
+    assert len(mock_nintendo_device.set_daily_restrictions.mock_calls) == 1
+    mock_nintendo_device.set_daily_restrictions.assert_called_once_with(
+        enabled=True,
+        bedtime_enabled=True,
+        day_of_week="monday",
+        bedtime_start=time(9, 0, 0),
+        bedtime_end=time(21, 0, 0),
+        max_daily_playtime=360,
+    )
+
+
+async def test_update_daily_restrictions_invalid_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+) -> None:
+    """Test update daily restrictions raises when device is in invalid state."""
+    mock_nintendo_device.set_daily_restrictions.side_effect = InvalidDeviceStateError()
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+            {
+                ATTR_DEVICE_ID: device_entry.id,
+                ATTR_DAY_OF_WEEK: "monday",
+                ATTR_MAX_PLAY_TIME: 360,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "requires_daily_restrictions"

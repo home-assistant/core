@@ -102,8 +102,24 @@
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
     },
+    "requires_daily_restrictions": {
+      "message": "Daily restrictions can only be set when restriction mode is set to different for each day."
+    },
     "update_required": {
       "message": "The Nintendo Switch parental controls integration requires an update due to changes in Nintendo's API."
+    }
+  },
+  "selector": {
+    "day_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
     }
   },
   "services": {
@@ -144,6 +160,32 @@
         }
       },
       "name": "Player usage report"
+    },
+    "update_daily_restrictions": {
+      "description": "Update restrictions for a specific day of the week on the selected Nintendo Switch.",
+      "fields": {
+        "bedtime_end": {
+          "description": "The time from which play is allowed. Must be between 05:00 and 09:00.",
+          "name": "Bedtime end"
+        },
+        "bedtime_start": {
+          "description": "The time when bedtime restrictions start. Must be between 16:00 and 23:00, or 00:00.",
+          "name": "Bedtime start"
+        },
+        "day_of_week": {
+          "description": "The day of the week to update restrictions for.",
+          "name": "Day of the week"
+        },
+        "device_id": {
+          "description": "The ID of the device to update daily restrictions for.",
+          "name": "Device"
+        },
+        "max_play_time": {
+          "description": "The maximum playtime allowed in minutes for this day (0 to 360).",
+          "name": "Max playtime"
+        }
+      },
+      "name": "Update daily restrictions"
     },
     "update_pin_code": {
       "description": "Update the PIN code for the selected Nintendo Switch.",
