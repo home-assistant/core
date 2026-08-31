@@ -6754,11 +6754,12 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     ],
 )
 async def test_clean_up_repairs(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     client = await hass_ws_client()
 
     # Create some issues
