@@ -523,7 +523,7 @@ class Template:
         if not self.hass:
             raise RuntimeError(f"hass not set while rendering {self}")
 
-        if render_info_cv.get() is not None:
+        if (in_flight := render_info_cv.get()) is not None and in_flight.collecting:
             raise RuntimeError(
                 f"RenderInfo already set while rendering {self}, "
                 "this usually indicates the template is being rendered "
@@ -543,6 +543,7 @@ class Template:
         except TemplateError as ex:
             render_info.exception = ex
         finally:
+            render_info.collecting = False
             render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001

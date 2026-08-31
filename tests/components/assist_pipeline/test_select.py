@@ -16,7 +16,7 @@ from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -126,6 +126,7 @@ async def test_select_entity_registering_device(
 
 async def test_select_entity_changing_pipelines(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_select: MockConfigEntry,
     pipeline_1: Pipeline,
     pipeline_2: Pipeline,
@@ -135,7 +136,12 @@ async def test_select_entity_changing_pipelines(
     config_entry = init_select  # nicer naming
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    pipeline_entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, "test-prefix-pipeline"
+    )
+    assert pipeline_entity_id is not None
+
+    state = hass.states.get(pipeline_entity_id)
     assert state is not None
     assert state.state == "preferred"
     assert state.attributes["options"] == [
@@ -150,13 +156,13 @@ async def test_select_entity_changing_pipelines(
         "select",
         "select_option",
         {
-            "entity_id": "select.assist_pipeline_test_prefix_pipeline",
+            "entity_id": pipeline_entity_id,
             "option": pipeline_2.name,
         },
         blocking=True,
     )
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get(pipeline_entity_id)
     assert state is not None
     assert state.state == pipeline_2.name
 
@@ -168,14 +174,14 @@ async def test_select_entity_changing_pipelines(
         config_entry, [Platform.SELECT]
     )
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get(pipeline_entity_id)
     assert state is not None
     assert state.state == pipeline_2.name
 
     # Remove selected pipeline
     await pipeline_storage.async_delete_item(pipeline_2.id)
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get(pipeline_entity_id)
     assert state is not None
     assert state.state == "preferred"
     assert state.attributes["options"] == [
@@ -187,13 +193,19 @@ async def test_select_entity_changing_pipelines(
 
 async def test_select_entity_changing_vad_sensitivity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_select: MockConfigEntry,
 ) -> None:
     """Test entity tracking vad sensitivity changes."""
     config_entry = init_select  # nicer naming
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    vad_entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, "test-vad_sensitivity"
+    )
+    assert vad_entity_id is not None
+
+    state = hass.states.get(vad_entity_id)
     assert state is not None
     assert state.state == VadSensitivity.DEFAULT.value
 
@@ -202,13 +214,13 @@ async def test_select_entity_changing_vad_sensitivity(
         "select",
         "select_option",
         {
-            "entity_id": "select.assist_pipeline_test_vad_sensitivity",
+            "entity_id": vad_entity_id,
             "option": VadSensitivity.AGGRESSIVE.value,
         },
         blocking=True,
     )
 
-    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    state = hass.states.get(vad_entity_id)
     assert state is not None
     assert state.state == VadSensitivity.AGGRESSIVE.value
 
@@ -220,6 +232,6 @@ async def test_select_entity_changing_vad_sensitivity(
         config_entry, [Platform.SELECT]
     )
 
-    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    state = hass.states.get(vad_entity_id)
     assert state is not None
     assert state.state == VadSensitivity.AGGRESSIVE.value

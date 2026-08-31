@@ -308,6 +308,25 @@
     ]
   },
   {
+    "name": "Ph",
+    "readoutIdentifier": "Ph-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PH",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Valve group 003",
+      "sourceType": "IrrigationValveGroup",
+      "userDefinedName": null,
+      "sourceGroups": ["Irrigation"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 6.2
+      }
+    ]
+  },
+  {
     "name": "CO2 level",
     "readoutIdentifier": "CO2Level-Measured",
     "readoutValueType": "Double",

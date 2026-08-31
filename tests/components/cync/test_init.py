@@ -9,7 +9,11 @@ from homeassistant.components.cync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from tests.common import MockConfigEntry
 
@@ -125,6 +129,109 @@ async def test_migrate_unique_ids(
         entity_registry.async_get(colliding_mesh_entry.entity_id)
         == colliding_mesh_entry
     )
+
+
+async def test_migrate_device_without_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migration preserves a device whose entity was removed."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, version=1)
+    area_entry = area_registry.async_get_or_create("Porch")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1112")},
+        name="Offline light",
+    )
+    device_registry.async_update_device(
+        device_entry.id,
+        area_id=area_entry.id,
+        labels={"outside"},
+        name_by_user="Porch light",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_device = device_registry.async_get(device_entry.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, "1000-3")}
+    assert migrated_device.area_id == area_entry.id
+    assert migrated_device.labels == {"outside"}
+    assert migrated_device.name_by_user == "Porch light"
+
+
+async def test_resume_entityless_device_finalization(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    cync_client: MagicMock,
+) -> None:
+    """Test retry does not remap an already-final entity-less identifier."""
+    home = cync_client.get_homes()[0]
+    lights = [
+        device
+        for device in home.get_flattened_device_list()
+        if isinstance(device, CyncLight)
+    ]
+    next(light for light in lights if light.device_id == 1111).mesh_device_id = 1101
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "mesh_unique_ids_migration_pending": True,
+        },
+    )
+    chained_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1111")},
+    )
+    first_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1101")},
+    )
+
+    original_update_device = device_registry.async_update_device
+    failed = False
+
+    def fail_after_chained_device_finalization(
+        device_id: str, *, new_identifiers: set[tuple[str, str]]
+    ) -> dr.DeviceEntry | None:
+        nonlocal failed
+        result = original_update_device(device_id, new_identifiers=new_identifiers)
+        if not failed and new_identifiers == {(DOMAIN, "1000-1101")}:
+            failed = True
+            raise RuntimeError
+        return result
+
+    with patch.object(
+        device_registry,
+        "async_update_device",
+        side_effect=fail_after_chained_device_finalization,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.data["mesh_unique_ids_device_finalize_pending"] is True
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    migrated_chained_device = device_registry.async_get(chained_device.id)
+    assert migrated_chained_device is not None
+    assert migrated_chained_device.identifiers == {(DOMAIN, "1000-1101")}
+    migrated_first_device = device_registry.async_get(first_device.id)
+    assert migrated_first_device is not None
+    assert migrated_first_device.identifiers == {(DOMAIN, "1000-1")}
+    assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
+    assert "mesh_unique_ids_device_finalize_pending" not in mock_config_entry.data
 
 
 async def test_migration_without_lights_clears_marker(

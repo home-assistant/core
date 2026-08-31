@@ -81,7 +81,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) ->
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: JellyfinConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data
