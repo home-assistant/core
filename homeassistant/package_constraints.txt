@@ -20,11 +20,11 @@ audioop-lts==0.2.2
 av==17.0.1
 awesomeversion==25.8.0
 bcrypt==5.0.0
-bleak-retry-connector==4.6.3
+bleak-retry-connector==4.7.0
 bleak==3.0.2
 bluetooth-adapters==2.4.0
 bluetooth-auto-recovery==1.6.4
-bluetooth-data-tools==1.29.21
+bluetooth-data-tools==1.29.24
 cached-ipaddress==1.1.2
 certifi>=2021.5.30
 ciso8601==2.3.3
@@ -36,7 +36,7 @@ fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==6.26.7
+habluetooth==6.26.11
 hass-nabucasa==2.7.0
 hassil==3.12.0
 home-assistant-bluetooth==2.0.0
@@ -156,7 +156,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.32.0
+protobuf==6.33.6
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

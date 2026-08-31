@@ -209,9 +209,6 @@
       "offroad_lightbar_present": {
         "name": "Offroad lightbar"
       },
-      "passenger_seat_belt": {
-        "name": "Passenger seat belt"
-      },
       "pin_to_drive_enabled": {
         "name": "PIN to Drive enabled"
       },

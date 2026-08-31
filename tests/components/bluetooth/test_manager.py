@@ -44,7 +44,6 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
-from homeassistant.util.json import json_loads
 
 from . import (
     HCI0_SOURCE_ADDRESS,
@@ -66,7 +65,7 @@ from tests.common import (
     MockModule,
     async_call_logger_set_level,
     async_fire_time_changed,
-    async_load_fixture,
+    async_load_json_object_fixture,
     mock_integration,
 )
 
@@ -466,8 +465,10 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(hass, "bluetooth.remote_scanners", bluetooth.DOMAIN)
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -508,10 +509,10 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     """Test history restore when remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(
-            hass, "bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN
-        )
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][

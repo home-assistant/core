@@ -3,7 +3,13 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from peblar import Peblar, PeblarAuthenticationError, PeblarConnectionError, PeblarError
+from peblar import (
+    Peblar,
+    PeblarApi,
+    PeblarAuthenticationError,
+    PeblarConnectionError,
+    PeblarError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_ALIAS, CONF_DESCRIPTION
@@ -15,6 +21,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
     async_get_config_entry,
     async_register_admin_service,
@@ -24,6 +31,7 @@ from .const import CONF_EVCC_ID, CONF_UID, DOMAIN
 from .coordinator import PeblarConfigEntry
 
 SERVICE_ADD_RFID_TOKEN = "add_rfid_token"
+SERVICE_AUTHORIZE_CHARGE_SESSION = "authorize_charge_session"
 SERVICE_ADD_VEHICLE_TOKEN = "add_vehicle_token"
 SERVICE_DELETE_RFID_TOKEN = "delete_rfid_token"
 SERVICE_DELETE_VEHICLE_TOKEN = "delete_vehicle_token"
@@ -37,6 +45,18 @@ ADD_TOKEN_SCHEMA = TOKEN_SCHEMA.extend({vol.Required(CONF_DESCRIPTION): str})
 
 VEHICLE_SCHEMA = CHARGER_SCHEMA.extend({vol.Required(CONF_EVCC_ID): str})
 ADD_VEHICLE_SCHEMA = VEHICLE_SCHEMA.extend({vol.Required(CONF_ALIAS): str})
+
+# The charger takes the token by UID or by description, and wants exactly
+# one of the two.
+AUTHORIZE_SCHEMA = vol.All(
+    CHARGER_SCHEMA.extend(
+        {
+            vol.Exclusive(CONF_UID, "token"): str,
+            vol.Exclusive(CONF_DESCRIPTION, "token"): str,
+        }
+    ),
+    cv.has_at_least_one_key(CONF_UID, CONF_DESCRIPTION),
+)
 
 
 def _get_rfid_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
@@ -56,6 +76,47 @@ def _get_rfid_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
         )
 
     return entry.runtime_data.user_configuration_coordinator.peblar
+
+
+def _get_authorizing_api(hass: HomeAssistant, entry_id: str) -> PeblarApi:
+    """Return the local REST API, for a charger that authorizes sessions.
+
+    Presenting a token lives on the local REST API rather than the web
+    one, unlike the actions that manage the lists it draws from.
+
+    The token comes from the standalone authorization list, so the reader
+    has to be there. Beyond that there are two ways for this to be
+    pointless: a charger managed by a backoffice over OCPP decides for
+    itself and refuses the request, and a charger set to charge without
+    authorization has nothing to authorize in the first place.
+    """
+    entry: PeblarConfigEntry = async_get_config_entry(hass, DOMAIN, entry_id)
+    runtime_data = entry.runtime_data
+
+    if not runtime_data.system_information.hardware_has_rfid:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_rfid_hardware",
+            translation_placeholders={"charger": entry.title},
+        )
+
+    configuration = runtime_data.user_configuration_coordinator.data
+
+    if configuration.secc_ocpp_active:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="managed_by_backoffice",
+            translation_placeholders={"charger": entry.title},
+        )
+
+    if configuration.session_manager_charge_without_authentication:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="authorization_not_required",
+            translation_placeholders={"charger": entry.title},
+        )
+
+    return runtime_data.data_coordinator.api
 
 
 def _get_autocharge_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
@@ -143,6 +204,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         async with _handle_peblar_errors(hass, entry_id):
             await peblar.delete_rfid_token(uid=call.data[CONF_UID])
 
+    async def _handle_authorize_charge_session(call: ServiceCall) -> None:
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        api = _get_authorizing_api(hass, entry_id)
+        async with _handle_peblar_errors(hass, entry_id):
+            await api.authorize_charge_session(
+                token=call.data.get(CONF_UID),
+                name=call.data.get(CONF_DESCRIPTION),
+            )
+
     async def _handle_list_vehicle_tokens(call: ServiceCall) -> ServiceResponse:
         entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
         peblar = _get_autocharge_peblar(hass, entry_id)
@@ -213,4 +283,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_DELETE_VEHICLE_TOKEN,
         _handle_delete_vehicle_token,
         schema=VEHICLE_SCHEMA,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_AUTHORIZE_CHARGE_SESSION,
+        _handle_authorize_charge_session,
+        schema=AUTHORIZE_SCHEMA,
     )
