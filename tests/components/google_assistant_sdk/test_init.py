@@ -1,5 +1,6 @@
 """Tests for Google Assistant SDK."""
 
+import asyncio
 from datetime import timedelta
 import http
 import time
@@ -465,6 +466,8 @@ async def test_conversation_agent_refresh_token(
     )
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+    # The replaced assistant is closed rather than left holding its gRPC channel
+    mock_text_assistant.return_value.close.assert_awaited_once()
 
 
 async def test_conversation_agent_language_changed(
@@ -499,6 +502,94 @@ async def test_conversation_agent_language_changed(
     mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "es-ES")])
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+    # The replaced assistant is closed rather than left holding its gRPC channel
+    mock_text_assistant.return_value.close.assert_awaited_once()
+
+
+async def test_conversation_agent_serializes_requests(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test concurrent conversations do not overlap on the shared assistant.
+
+    The assistant holds the state of a single conversation, and it is closed
+    when it is replaced, so a request must not start while another one is still
+    waiting for its response.
+    """
+    await setup_integration()
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    events: list[str] = []
+
+    async def assist(text: str) -> tuple[str, None, None]:
+        events.append(f"start {text}")
+        await asyncio.sleep(0)
+        events.append(f"end {text}")
+        return (text, None, None)
+
+    async def close() -> None:
+        events.append("close")
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
+    ) as mock_text_assistant:
+        mock_text_assistant.return_value.assist.side_effect = assist
+        mock_text_assistant.return_value.close.side_effect = close
+        # Different languages, so the second request replaces the assistant
+        await asyncio.gather(
+            conversation.async_converse(
+                hass, "one", None, Context(), "en-US", config_entry.entry_id
+            ),
+            conversation.async_converse(
+                hass, "two", None, Context(), "es-ES", config_entry.entry_id
+            ),
+        )
+
+    in_flight = 0
+    for event in events:
+        if event.startswith("start"):
+            in_flight += 1
+            assert in_flight == 1, f"overlapping requests: {events}"
+        elif event.startswith("end"):
+            in_flight -= 1
+        else:
+            assert in_flight == 0, f"closed while a request was in flight: {events}"
+    assert events.count("close") == 1
+
+
+async def test_conversation_agent_closed_on_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test unloading the entry closes the assistant the agent was holding."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
+    ) as mock_text_assistant:
+        await conversation.async_converse(
+            hass, "tell me a joke", None, Context(), "en-US", config_entry.entry_id
+        )
+        mock_text_assistant.return_value.close.assert_not_awaited()
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_text_assistant.return_value.close.assert_awaited_once()
 
 
 async def test_oauth_implementation_not_available(
