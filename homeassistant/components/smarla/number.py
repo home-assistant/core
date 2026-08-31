@@ -1,6 +1,7 @@
 """Support for the Swing2Sleep Smarla number entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pysmarlaapi.federwiege.services.classes import Property
 
@@ -57,11 +58,13 @@ class SmarlaNumber(SmarlaBaseEntity, NumberEntity):
     _property: Property[int]
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         v = self._property.get()
         return float(v) if v is not None else None
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Update to the smarla device."""
         self._property.set(int(value))

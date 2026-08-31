@@ -1,6 +1,7 @@
 """Sensor entities for Tami4Edge."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -87,6 +88,7 @@ class Tami4EdgeSensorEntity(
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

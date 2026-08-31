@@ -1,7 +1,7 @@
 """Config flow for HomeWizard."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from homewizard_energy import (
     HomeWizardEnergy,
@@ -19,7 +19,7 @@ from homewizard_energy.models import Device
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
@@ -42,6 +42,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     product_type: str | None = None
     serial: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,7 +60,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_authorize()
             else:
                 await self.async_set_unique_id(
-                    f"{device_info.product_type}_{device_info.serial}"
+                    f"{device_info.product_type}_{device_info.serial}",
+                    raise_on_progress=False,
                 )
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
@@ -109,7 +111,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         await self.async_set_unique_id(
-            f"{device_info.product_type}_{device_info.serial}"
+            f"{device_info.product_type}_{device_info.serial}",
+            raise_on_progress=self.source != SOURCE_USER,
         )
         self._abort_if_unique_id_configured(updates=data)
         return self.async_create_entry(
@@ -117,6 +120,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -141,6 +145,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

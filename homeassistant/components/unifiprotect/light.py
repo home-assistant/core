@@ -1,16 +1,25 @@
 """Component providing Lights for UniFi Protect."""
 
 import logging
-from typing import Any
+from typing import Any, cast, override
 
-from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
-from uiprotect.data.devices import LightDeviceSettings
+from uiprotect.data import (
+    Light,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    PublicDeviceModel,
+)
+from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .data import ProtectDeviceType, UFPConfigEntry
+from .const import DEFAULT_BRAND
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import async_ufp_instance_command
 
@@ -31,14 +40,40 @@ async def async_setup_entry(
         if device.model is ModelType.LIGHT and device.can_write(
             data.api.bootstrap.auth_user
         ):
-            async_add_entities([ProtectLight(data, device)])
+            light = cast(Light, device)
+            public = data.async_get_public_device(light)
+            async_add_entities(
+                [
+                    ProtectLight(
+                        data,
+                        public if isinstance(public, PublicLight) else None,
+                        light,
+                    )
+                ]
+            )
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, PublicLight):
+            async_add_entities([ProtectLight(data, device, None)])
 
     data.async_subscribe_adopt(_add_new_device)
-    async_add_entities(
-        ProtectLight(data, device)
-        for device in data.get_by_types({ModelType.LIGHT})
-        if device.can_write(data.api.bootstrap.auth_user)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
+
+    entities: list[ProtectLight] = []
+    for public, private in data.get_public_lights():
+        if private is None:
+            # Public-only creates from the public object; hybrid defers to the
+            # adopt dispatch (its private fill would clash on unique_id).
+            if data.api.is_public_only:
+                entities.append(ProtectLight(data, public, None))
+            continue
+        # Created even without a public mirror; unavailable until one arrives.
+        if private.can_write(data.api.bootstrap.auth_user):
+            entities.append(ProtectLight(data, public, private))
+    async_add_entities(entities)
 
 
 def unifi_brightness_to_hass(value: int) -> int:
@@ -60,17 +95,53 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
+    # State comes from the public API; the base class primes the object and
+    # subscribes to the public devices websocket on this flag.
+    _ufp_uses_public = True
+
+    def __init__(
+        self,
+        data: ProtectData,
+        public: PublicLight | None,
+        private: Light | None,
+    ) -> None:
+        """Initialize the light."""
+        self._private = private
+        self._ufp_public_obj = public
+        # unique_id and device info derive from the base device, so hybrid must
+        # keep the private one to leave existing entities unchanged.
+        super().__init__(data, cast(ProtectDeviceType, private or public))
 
     @callback
+    @override
+    def _async_set_device_info(self) -> None:
+        if self._private is not None:
+            super()._async_set_device_info()
+            return
+        # market_name/firmware/URL and the NVR link are private-only.
+        public = cast(PublicLight, self.device)
+        self._attr_device_info = DeviceInfo(
+            name=public.display_name,
+            model=public.type,
+            manufacturer=DEFAULT_BRAND,
+            connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
+        )
+
+    @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        updated_device = self.device
-        self._attr_is_on = updated_device.is_light_on
-        self._attr_brightness = unifi_brightness_to_hass(
-            updated_device.light_device_settings.led_level
+        if (public := self._ufp_public_obj) is None:
+            return
+        light = cast(PublicLight, public)
+        self._attr_is_on = light.is_light_on
+        led_level = light.light_device_settings.led_level
+        self._attr_brightness = (
+            None if led_level is None else unifi_brightness_to_hass(led_level)
         )
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -85,25 +156,13 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         else:
             _LOGGER.debug("Turning on light")
 
-        await self.device.api.update_light_public(
-            self.device.id,
-            is_light_force_enabled=True,
-            light_device_settings=(
-                LightDeviceSettings(
-                    is_indicator_enabled=self.device.light_device_settings.is_indicator_enabled,
-                    led_level=led_level,
-                    pir_duration=self.device.light_device_settings.pir_duration,
-                    pir_sensitivity=self.device.light_device_settings.pir_sensitivity,
-                )
-                if led_level is not None
-                else None
-            ),
-        )
+        # Reachable only while available (public object present); the setter
+        # validates the level and writes through the light's own settings.
+        await cast(PublicLight, self._ufp_public_obj).set_light(True, led_level)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")
-        await self.device.api.update_light_public(
-            self.device.id, is_light_force_enabled=False
-        )
+        await cast(PublicLight, self._ufp_public_obj).set_light(False)

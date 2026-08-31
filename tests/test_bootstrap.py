@@ -76,7 +76,7 @@ def disable_block_async_io(disable_block_async_io):
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
     with (
-        patch("homeassistant.components.http.start_http_server_and_save_config"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
         patch("homeassistant.components.http.HomeAssistantHTTP.stop"),
     ):
         yield
@@ -131,25 +131,78 @@ async def test_async_enable_logging(
 
 
 @pytest.mark.parametrize(
-    ("extra_env", "log_file_count", "old_log_file_count"),
-    [({}, 0, 1), ({"HA_DUPLICATE_LOG_FILE": "1"}, 1, 0)],
+    (
+        "env",
+        "log_file_count",
+        "old_log_file_count",
+        "data_logging",
+        "data_logging_disabled_reason",
+    ),
+    [
+        pytest.param(
+            {"SUPERVISOR": "1"},
+            0,
+            1,
+            None,
+            None,
+            id="supervisor",
+        ),
+        pytest.param(
+            {"SUPERVISOR": "1", "HA_DUPLICATE_LOG_FILE": "1"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            None,
+            id="supervisor-duplicate-log-file",
+        ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "1"},
+            0,
+            1,
+            None,
+            "environment",
+            id="disable-log-file",
+        ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "0"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            None,
+            id="disable-log-file-false",
+        ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "invalid"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            None,
+            id="disable-log-file-invalid",
+        ),
+    ],
 )
-async def test_async_enable_logging_supervisor(
+async def test_async_enable_logging_log_file_disable_control(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    extra_env: dict[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+    env: dict[str, str],
     log_file_count: int,
     old_log_file_count: int,
+    data_logging: str | None,
+    data_logging_disabled_reason: str | None,
 ) -> None:
-    """Test the default log file is not created on Supervisor."""
+    """Test the default log file disable controls."""
 
     # Ensure we start with a clean slate
     cleanup_log_files()
     assert len(glob.glob(CONFIG_LOG_FILE)) == 0
     assert len(glob.glob(ARG_LOG_FILE)) == 0
 
+    for env_var in ("SUPERVISOR", "HA_DUPLICATE_LOG_FILE", "HA_DISABLE_LOG_FILE"):
+        monkeypatch.delenv(env_var, raising=False)
+    for env_var, value in env.items():
+        monkeypatch.setenv(env_var, value)
+
     with (
-        patch.dict(os.environ, {"SUPERVISOR": "1", **extra_env}),
         patch(
             "homeassistant.bootstrap.async_activate_log_queue_handler"
         ) as mock_async_activate_log_queue_handler,
@@ -157,11 +210,19 @@ async def test_async_enable_logging_supervisor(
     ):
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
+        assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
+        assert (
+            hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
+            == data_logging_disabled_reason
+        )
+        assert hass.config.as_dict()["logging"] == {
+            "log_file_disabled_reason": data_logging_disabled_reason,
+        }
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
         # Check that if the log file exists, it is renamed
-        def write_log_file():
+        def write_log_file() -> None:
             with open(
                 get_test_config_dir("home-assistant.log"), "w", encoding="utf8"
             ) as f:
@@ -174,6 +235,11 @@ async def test_async_enable_logging_supervisor(
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == old_log_file_count
+        assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
+        assert (
+            hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
+            == data_logging_disabled_reason
+        )
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -183,9 +249,9 @@ async def test_async_enable_logging_supervisor(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        # Even on Supervisor, the log file should be created
-        # if it is explicitly specified
+        # The log file should be created if it is explicitly specified.
         assert len(glob.glob(ARG_LOG_FILE)) > 0
+        assert bootstrap.DATA_LOGGING in hass.data
 
     cleanup_log_files()
 
@@ -553,9 +619,11 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     assert "recorder" in hass.config.components
     assert "http" in hass.config.components
 
-    assert order == [
-        "http",
-        "an_after_dep",
+    # http (a dependency) and an_after_dep (an after_dependency) are both set
+    # up in the frontend substage of stage 0; their relative order depends on
+    # set iteration order and is not guaranteed.
+    assert set(order[:2]) == {"http", "an_after_dep"}
+    assert order[2:] == [
         "frontend",
         "recorder",
         "normal_integration",

@@ -1,5 +1,7 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 
+from typing import override
+
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -149,6 +151,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
             self._attr_name = None
 
     @property
+    @override
     def device_id(self):
         """Return id of the device."""
         return self._id[0]
@@ -179,6 +182,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return round(float(self._value))
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if not self.available:
@@ -192,6 +196,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return self._value
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return "-".join(map(str, self._id))

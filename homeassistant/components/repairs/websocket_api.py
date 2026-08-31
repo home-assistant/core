@@ -1,7 +1,8 @@
 """The repairs websocket API."""
 
+from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
+from homeassistant.config_entries import ConfigEntry, UnknownEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
@@ -19,6 +21,7 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
+from .issue_handler import RepairsFlowManager
 
 
 @callback
@@ -105,7 +108,20 @@ def ws_list_issues(
     connection.send_result(msg["id"], {"issues": issues})
 
 
-class RepairsFlowIndexView(FlowManagerIndexView):
+def _prepare_repairs_flow_result_json(
+    result: data_entry_flow.FlowResult,
+    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+) -> dict[str, Any]:
+    """Convert result to serializable JSON dict."""
+    entry: ConfigEntry | None = result.pop("result", None)  # type: ignore[typeddict-item]
+    data = prepare_result_json(result)
+    if entry is not None:
+        # Overwrite the ConfigEntry object with its json representation for frontend.
+        data["result"] = entry.as_json_fragment
+    return data
+
+
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -121,6 +137,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
         try:
@@ -128,30 +145,55 @@ class RepairsFlowIndexView(FlowManagerIndexView):
                 data["handler"],
                 data={"issue_id": data["issue_id"]},
             )
-        except data_entry_flow.UnknownHandler:
-            return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.UnknownStep:
+        except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
+                f"Unknown flow{f': {ex!s}' if str(ex) else ''}",
+                HTTPStatus.NOT_FOUND,
             )
+        except data_entry_flow.UnknownStep as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+        except UnknownEntry as ex:
+            return self.json_message(
+                f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
+            )
+        return self.json(self._prepare_result_json(result))
 
-        return self.json(
-            self._prepare_result_json(result),
-        )
+    @override
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResult
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
+        return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
-class RepairsFlowResourceView(FlowManagerResourceView):
+class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
     """View to interact with the option flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
 
     @require_admin(permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        return await super().post(request, flow_id)
+        try:
+            result = await super().post(request, flow_id)
+        except UnknownEntry as ex:
+            # Raised by _async_set_next_flow_if_valid in a RepairsFlow
+            return self.json_message(
+                f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
+            )
+        return result
+
+    @override
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResult
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
+        return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)

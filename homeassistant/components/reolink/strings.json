@@ -203,6 +203,9 @@
       "guard_set": {
         "name": "Guard set current position"
       },
+      "pre_siren": {
+        "name": "Pre-siren"
+      },
       "ptz_auto": {
         "name": "PTZ continuous rotation"
       },
@@ -241,6 +244,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
@@ -478,6 +484,15 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "f50": "50 Hz",
+          "f60": "60 Hz",
+          "off": "[%key:common::state::off%]",
+          "other": "Other"
+        }
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -543,7 +558,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
@@ -846,8 +862,14 @@
       "pre_record": {
         "name": "Pre-recording"
       },
+      "pre_siren_on_event": {
+        "name": "Pre-siren on event"
+      },
       "privacy_mask": {
         "name": "Privacy mask"
+      },
+      "privacy_mask_lens": {
+        "name": "Privacy mask lens {channel}"
       },
       "privacy_mode": {
         "name": "Privacy mode"
@@ -869,6 +891,17 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "name": "Floodlight schedule end"
+      },
+      "floodlight_schedule_start": {
+        "name": "Floodlight schedule start"
       }
     }
   },
@@ -929,6 +962,9 @@
     },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "webhook_no_url": {
+      "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
     }
   },
   "issues": {

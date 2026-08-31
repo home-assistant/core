@@ -80,6 +80,29 @@ async def test_missing_sensor_graceful_handling(
     assert state.state == "Charging"
 
 
+async def test_websocket_callback_updates_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test the websocket callback pushes updates to entity state."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state == "Charging"
+
+    mock_charger.status = "Sleeping"
+    await mock_charger.callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state == "Sleeping"
+
+
 async def test_sensor_unavailable_on_coordinator_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

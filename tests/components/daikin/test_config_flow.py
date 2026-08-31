@@ -96,7 +96,8 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (web_exceptions.HTTPForbidden, "invalid_auth"),
-        (DaikinException, "unknown"),
+        (DaikinException("Empty values."), "cannot_connect"),
+        (DaikinException, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

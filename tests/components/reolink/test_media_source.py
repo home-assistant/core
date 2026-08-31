@@ -149,6 +149,7 @@ async def test_browsing(
     entry_id = config_entry.entry_id
     reolink_host.supported.return_value = 1
     reolink_host.model = "Reolink TrackMix PoE"
+    reolink_host.is_dual_lens = True
     reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -263,6 +264,7 @@ async def test_browsing(
     )
 
     reolink_host.model = TEST_HOST_MODEL
+    reolink_host.is_dual_lens = False
 
     # browse event trigger person on a NVR
     reolink_host.is_nvr = True

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
 import voluptuous as vol
@@ -154,6 +155,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
@@ -164,6 +166,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
 
@@ -175,6 +178,7 @@ class EnOceanPowerSensor(EnOceanSensor):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
         if telegram.rorg != 0xA5:
@@ -228,6 +232,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.range_from = range_from
         self.range_to = range_to
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
         if telegram.rorg != 0xA5:
@@ -250,6 +255,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
     - A5-10-10 to A5-10-14 (Room Operating Panels)
     """
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
         if telegram.rorg != 0xA5:
@@ -266,6 +272,7 @@ class EnOceanWindowHandle(EnOceanSensor):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
         action = (telegram.telegram_data[0] & 0x70) >> 4

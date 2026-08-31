@@ -20,7 +20,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -48,23 +47,6 @@ async def target_water_heaters(hass: HomeAssistant) -> list[str]:
     return await target_entities(hass, "water_heater")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "water_heater.operation_mode_changed",
-        "water_heater.target_temperature_changed",
-        "water_heater.target_temperature_crossed_threshold",
-        "water_heater.turned_off",
-        "water_heater.turned_on",
-    ],
-)
-async def test_water_heater_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the water heater triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _CROSSED_THRESHOLD = {
     "threshold": {
@@ -74,7 +56,6 @@ _CROSSED_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -117,7 +98,6 @@ async def test_water_heater_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -178,7 +158,6 @@ async def test_water_heater_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -225,7 +204,6 @@ async def test_water_heater_state_attribute_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -286,7 +264,6 @@ async def test_water_heater_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -326,7 +303,6 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -387,7 +363,6 @@ async def test_water_heater_state_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),

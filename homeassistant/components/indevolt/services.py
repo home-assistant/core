@@ -146,7 +146,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results: list[None | BaseException] = await asyncio.gather(
+    results: list[BaseException | None] = await asyncio.gather(
         *(
             coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators

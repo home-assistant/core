@@ -8,7 +8,6 @@ from typing import Final
 from energyzero import Electricity, Gas, VatOption
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -17,7 +16,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -83,28 +82,9 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
 
 def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
     """Get the coordinator from the entry."""
-    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: EnergyZeroConfigEntry | None = call.hass.config_entries.async_get_entry(
-        entry_id
+    entry: EnergyZeroConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
     )
-
-    if not entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry": entry.title,
-            },
-        )
-
     return entry.runtime_data
 
 

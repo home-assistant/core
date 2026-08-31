@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
 
@@ -115,6 +116,7 @@ class OpenEVSEBinarySensor(
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.charger)

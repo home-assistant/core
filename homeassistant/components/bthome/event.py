@@ -1,6 +1,7 @@
 """Support for bthome event entities."""
 
 from dataclasses import replace
+from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -71,9 +72,15 @@ class BTHomeEventEntity(EventEntity):
         # If there is only one button then it will be "button"
         base_event_class, _, postfix = event_class.partition("_")
         base_description = DESCRIPTIONS_BY_EVENT_CLASS[base_event_class]
-        self.entity_description = replace(base_description, key=event_class)
-        postfix_name = f" {postfix}" if postfix else ""
-        self._attr_name = f"{base_event_class.title()}{postfix_name}"
+        if postfix:
+            self.entity_description = replace(
+                base_description,
+                key=event_class,
+                translation_key=f"{base_event_class}_numbered",
+            )
+            self._attr_translation_placeholders = {"number": postfix}
+        else:
+            self.entity_description = replace(base_description, key=event_class)
         # Matches logic in PassiveBluetoothProcessorEntity
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, address)},
@@ -88,6 +95,7 @@ class BTHomeEventEntity(EventEntity):
         if event:
             self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()

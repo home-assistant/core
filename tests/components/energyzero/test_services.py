@@ -94,7 +94,7 @@ def config_entry_data(
             {"config_entry": "incorrect entry"},
             {"incl_vat": True},
             ServiceValidationError,
-            "Invalid config entry.+",
+            ".+ config entry with ID incorrect entry was not found",
         ),
         (
             {"config_entry": True},
@@ -151,7 +151,8 @@ async def test_service_called_with_unloaded_entry(
     data = {"config_entry": mock_config_entry.entry_id, "incl_vat": True}
 
     with pytest.raises(
-        ServiceValidationError, match=f"{mock_config_entry.title} is not loaded"
+        ServiceValidationError,
+        match=f"{mock_config_entry.title} for integration energyzero is not loaded",
     ):
         await hass.services.async_call(
             DOMAIN,

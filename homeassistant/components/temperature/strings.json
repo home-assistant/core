@@ -27,7 +27,7 @@
   "title": "Temperature",
   "triggers": {
     "changed": {
-      "description": "Triggers after one or more temperatures change.",
+      "description": "Triggers when one or more temperatures change.",
       "fields": {
         "threshold": {
           "name": "[%key:component::temperature::common::trigger_threshold_name%]"
@@ -36,7 +36,7 @@
       "name": "Temperature changed"
     },
     "crossed_threshold": {
-      "description": "Triggers after one or more temperatures cross a threshold.",
+      "description": "Triggers when one or more temperatures cross a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::temperature::common::trigger_behavior_name%]"

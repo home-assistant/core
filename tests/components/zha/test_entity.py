@@ -6,20 +6,24 @@ from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
+from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import MockConfigEntry
+
 
 async def test_device_registry_via_device(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test ZHA `via_device` is set correctly."""
+    """Test a ZHA device links to the coordinator device via via_device_id."""
 
     await setup_zha()
     gateway = get_zha_gateway(hass)
@@ -39,12 +43,13 @@ async def test_device_registry_via_device(
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_coordinator_device = device_registry.async_get_device(
-        identifiers={("zha", str(gateway.state.node_info.ieee))}
+    coordinator_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(gateway.state.node_info.ieee)), config_entry.entry_id
     )
+    assert coordinator_device is not None
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(zha_device.ieee)), config_entry.entry_id
     )
-
-    assert reg_device.via_device_id == reg_coordinator_device.id
+    assert reg_device is not None
+    assert reg_device.via_device_id == coordinator_device.id

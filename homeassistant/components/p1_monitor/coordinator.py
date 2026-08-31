@@ -1,6 +1,6 @@
 """Coordinator for the P1 Monitor integration."""
 
-from typing import TypedDict
+from typing import TypedDict, override
 
 from p1monitor import (
     P1Monitor,
@@ -66,6 +66,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> P1MonitorData:
         """Fetch data from P1 Monitor."""
         data: P1MonitorData = {

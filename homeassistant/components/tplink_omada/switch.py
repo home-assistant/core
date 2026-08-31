@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from tplink_omada_client import (
     GatewayPortSettings,
@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
-from .entity import OmadaDeviceEntity
+from .entity import OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
-        await coordinator.async_request_refresh()
+        await coordinator.async_refresh()
 
         entities: list[Entity] = []
         entities.extend(
@@ -68,7 +68,7 @@ async def async_setup_entry(
                 port,
                 port.port_id,
                 desc,
-                port_name=_get_switch_port_base_name(port),
+                port_name=get_switch_port_base_name(port),
             )
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
@@ -118,14 +118,6 @@ async def async_setup_entry(
         ),
         entity_callback=_create_gateway_port_entities,
     )
-
-
-def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
-    """Get display name for a switch port."""
-
-    if port.name == f"Port{port.port}":
-        return str(port.port)
-    return f"{port.port} ({port.name})"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -294,6 +286,7 @@ class OmadaDevicePortSwitchEntity[
         self._attr_unique_id = f"{device.mac}_{port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name or port_id}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -312,15 +305,18 @@ class OmadaDevicePortSwitchEntity[
             await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_turn_on_off(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_turn_on_off(False)
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return bool(
@@ -338,6 +334,7 @@ class OmadaDevicePortSwitchEntity[
             self._attr_is_on = self.entity_description.update_func(self._port_details)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()

@@ -1,7 +1,7 @@
 """IDrive e2 config flow."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError
@@ -63,6 +63,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, str]
     _buckets: list[str]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

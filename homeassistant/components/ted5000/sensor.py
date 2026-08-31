@@ -3,6 +3,7 @@
 from contextlib import suppress
 from datetime import timedelta
 import logging
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -101,6 +102,7 @@ class Ted5000Sensor(SensorEntity):
         self.update()
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the resources."""
         if unit := self.entity_description.native_unit_of_measurement:

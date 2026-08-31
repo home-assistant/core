@@ -1,6 +1,6 @@
 """Light platform for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -37,11 +37,13 @@ class XthingsCloudBaseLight(XthingsCloudEntity, LightEntity):
     """Xthings Cloud base light entity."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self.device_data["status"]["on"]
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
         level = self.device_data["status"].get("brightness")
@@ -49,10 +51,12 @@ class XthingsCloudBaseLight(XthingsCloudEntity, LightEntity):
             return round(level * 255 / 100)
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         raise NotImplementedError
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         raise NotImplementedError
@@ -86,6 +90,7 @@ class XthingsCloudLight(XthingsCloudBaseLight):
         self._attr_supported_color_modes = modes
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return current color mode."""
         status = self.device_data["status"]
@@ -104,6 +109,7 @@ class XthingsCloudLight(XthingsCloudBaseLight):
         return ColorMode.ONOFF
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the HS color value."""
         status = self.device_data["status"]
@@ -114,10 +120,12 @@ class XthingsCloudLight(XthingsCloudBaseLight):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         return self.device_data["status"].get("temperature")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         client = self.coordinator.client
@@ -159,6 +167,7 @@ class XthingsCloudLight(XthingsCloudBaseLight):
         else:
             await client.async_brite_on(self._device_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.coordinator.client.async_brite_off(self._device_id)
@@ -181,6 +190,7 @@ class XthingsCloudSwitch(XthingsCloudBaseLight):
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         client = self.coordinator.client
@@ -192,6 +202,7 @@ class XthingsCloudSwitch(XthingsCloudBaseLight):
                 return
         await client.async_switch_on(self._device_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.coordinator.client.async_switch_off(self._device_id)

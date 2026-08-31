@@ -1,6 +1,6 @@
 """Config flow for Tasmota."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -20,6 +20,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._prefix = DEFAULT_PREFIX
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -43,6 +44,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -26,6 +26,12 @@
         "description": "The credentials for {username} need to be updated",
         "title": "Re-authenticate Blink"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

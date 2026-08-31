@@ -6,21 +6,32 @@ from actron_neo_api.models.system import ActronAirSystemInfo
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     ActronAirConfigEntry,
     ActronAirRuntimeData,
     ActronAirSystemCoordinator,
 )
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
     """Set up Actron Air integration from a config entry."""
 
-    api = ActronAirAPI(refresh_token=entry.data[CONF_API_TOKEN])
+    api = ActronAirAPI(
+        refresh_token=entry.data[CONF_API_TOKEN],
+        session=async_get_clientsession(hass),
+    )
     systems: list[ActronAirSystemInfo] = []
 
     try:
@@ -37,12 +48,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
             translation_key="setup_connection_error",
         ) from err
 
+    device_registry = dr.async_get(hass)
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
         coordinator = ActronAirSystemCoordinator(hass, entry, api, system)
-        _LOGGER.debug("Setting up coordinator for system: %s", system.serial)
+        LOGGER.debug("Setting up coordinator for system: %s", system.serial)
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system.serial] = coordinator
+
+        # Register the AC system device so zone and peripheral entities can link to
+        # it as their via device when they are set up.
+        ac_system = coordinator.data.ac_system
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, system.serial)},
+            name=ac_system.system_name,
+            manufacturer="Actron Air",
+            model_id=ac_system.master_wc_model,
+            sw_version=ac_system.master_wc_firmware_version,
+            serial_number=system.serial,
+        )
 
     entry.runtime_data = ActronAirRuntimeData(
         api=api,

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysensibo.model import SensiboDevice
 
@@ -86,6 +86,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.key not in self.device_data.active_features:
@@ -93,11 +94,13 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         return super().available
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.value_fn(self.device_data)
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return possible options."""
         options = self.entity_description.options_fn(self.device_data)
@@ -105,6 +108,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
             assert options is not None
         return options
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
         await self.async_send_api_call(

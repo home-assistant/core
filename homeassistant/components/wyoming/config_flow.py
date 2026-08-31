@@ -1,7 +1,7 @@
 """Config flow for Wyoming integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -33,6 +33,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
     _service: WyomingService | None = None
     _name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,6 +60,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="no_services")
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -110,6 +112,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

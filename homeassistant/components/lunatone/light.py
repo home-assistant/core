@@ -1,6 +1,6 @@
 """Platform for Lunatone light integration."""
 
-from typing import Any
+from typing import Any, override
 
 from lunatone_rest_api_client import DALIBroadcast
 from lunatone_rest_api_client.models import LineStatus
@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -90,29 +91,37 @@ class LunatoneLight(
         self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.unique_id
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._device.name,
-            via_device=(
-                DOMAIN,
-                f"{self._config_entry_unique_id}-line{self._device.data.line}",
+            name=self._device.data.name,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (
+                    DOMAIN,
+                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
+                ),
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device is not None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if light is on."""
         return self._device is not None and self._device.is_on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return (
@@ -122,6 +131,7 @@ class LunatoneLight(
         )
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.rgbw_color is not None:
@@ -135,16 +145,19 @@ class LunatoneLight(
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {self.color_mode}
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temp of this light in kelvin."""
         return self._device.color_temperature
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of this light."""
         rgb_color = self._device.rgb_color
@@ -155,6 +168,7 @@ class LunatoneLight(
         )
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the RGBW color of this light."""
         rgbw_color = self._device.rgbw_color
@@ -166,11 +180,13 @@ class LunatoneLight(
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data[self._device_id]
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if brightness_supported(self.supported_color_modes):
@@ -196,6 +212,7 @@ class LunatoneLight(
             await self._device.switch_on()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if brightness_supported(self.supported_color_modes):
@@ -249,16 +266,22 @@ class LunatoneLineBroadcastLight(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
-            via_device=(DOMAIN, config_entry_unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, config_entry_unique_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             **extra_info,
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         line_status = self.coordinator.data.lines[str(self._broadcast.line)].line_status
         return super().available and line_status == LineStatus.OK
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the line to turn on."""
         await self._broadcast.fade_to_brightness(
@@ -266,6 +289,7 @@ class LunatoneLineBroadcastLight(
         )
         await self._coordinator_devices.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         await self._broadcast.fade_to_brightness(0)

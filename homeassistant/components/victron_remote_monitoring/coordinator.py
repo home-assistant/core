@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import datetime
+from typing import override
 
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
@@ -87,6 +88,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
             update_interval=datetime.timedelta(minutes=60),
         )
 
+    @override
     async def _async_update_data(self) -> VRMForecastStore:
         """Fetch data from VRM API."""
         try:

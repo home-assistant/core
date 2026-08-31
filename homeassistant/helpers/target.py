@@ -1,11 +1,12 @@
 """Helpers for dealing with entity targets."""
 
 import abc
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
-from typing import Any, TypeGuard
+from typing import Any, TypeGuard, override
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -20,6 +21,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -42,10 +44,19 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class TargetStateChangedData:
-    """Data for state change events related to targets."""
+    """Data for state change events related to targets.
+
+    `targeted_entity_states` holds the states of all targeted entities as of
+    the state change event. State change events are dispatched one event loop
+    iteration after the state machine is updated, so the live state machine
+    may already contain later changes; this mapping does not. It is only
+    valid during the synchronous callback: it is updated in place as
+    subsequent events are dispatched.
+    """
 
     state_change_event: Event[EventStateChangedData]
     targeted_entity_ids: set[str]
+    targeted_entity_states: Mapping[str, State | None]
 
 
 def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
@@ -144,6 +155,44 @@ class SelectedEntities:
         )
 
 
+@callback
+def _resolve_referenced_devices(
+    dev_reg: dr.DeviceRegistry, device_ids: set[str], selected: SelectedEntities
+) -> None:
+    """Resolve targeted device ids into referenced device ids."""
+    for device_id in device_ids:
+        device = dev_reg.async_get(device_id)
+        if device is None:
+            selected.missing_devices.add(device_id)
+            selected.referenced_devices.add(device_id)
+        elif isinstance(device, dr.ChildDeviceEntry):
+            selected.referenced_devices.add(device_id)
+        elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            # A multi config entry composite device id is no longer a device itself;
+            # it resolves to the devices it was split into so actions targeting it
+            # still trickle down. Only the splits are referenced, not the composite id,
+            # so a device-id consumer does not act on the same underlying device twice.
+            # Each split's children are included too, matching the direct-device branch.
+            for split_device in split_devices:
+                selected.referenced_devices.add(split_device.id)
+                selected.referenced_devices.update(
+                    child_device.id
+                    for child_device in dr.async_entries_for_parent_device(
+                        dev_reg, split_device.id
+                    )
+                )
+        else:
+            selected.referenced_devices.add(device_id)
+            selected.referenced_devices.update(
+                child_device.id
+                for child_device in dr.async_entries_for_parent_device(
+                    dev_reg, device_id
+                )
+            )
+
+
 def async_extract_referenced_entity_ids(
     hass: HomeAssistant,
     target_selection: TargetSelection,
@@ -194,9 +243,7 @@ def async_extract_referenced_entity_ids(
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
-    for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+    _resolve_referenced_devices(dev_reg, target_selection.device_ids, selected)
 
     if target_selection.label_ids:
         label_reg = lr.async_get(hass)
@@ -208,7 +255,11 @@ def async_extract_referenced_entity_ids(
                 if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
-            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
+            # Labels are never inherited by child devices (see
+            # dr.async_entries_for_label): a labeled parent is not expanded into its
+            # children. Only devices that carry the label themselves are targeted,
+            # which is consistent with template label_devices() and search.
+            for device_entry in dr.async_entries_for_label(dev_reg, label_id):
                 selected.referenced_devices.add(device_entry.id)
 
             for area_entry in area_reg.areas.get_areas_for_label(label_id):
@@ -223,7 +274,6 @@ def async_extract_referenced_entity_ids(
         )
 
     selected.referenced_areas.update(target_selection.area_ids)
-    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -248,7 +298,7 @@ def async_extract_referenced_entity_ids(
         for area_id in selected.referenced_areas:
             referenced_devices_by_area.update(
                 device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+                for device_entry in dr.async_entries_for_area(dev_reg, area_id)
             )
     selected.referenced_devices.update(referenced_devices_by_area)
 
@@ -292,7 +342,7 @@ class TargetEntityChangeTracker(abc.ABC):
 
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
-    def async_setup(self) -> Callable[[], None]:
+    async def async_setup(self) -> Callable[[], None]:
         """Set up the state change tracking."""
         self._setup_registry_listeners()
         self._handle_target_update()
@@ -304,18 +354,20 @@ class TargetEntityChangeTracker(abc.ABC):
         """Called when there's an update to tracked target entities."""
 
     @callback
-    def _handle_target_update(self, event: Event[Any] | None = None) -> None:
-        """Handle updates in the tracked targets."""
+    def _referenced_entities(self) -> set[str]:
+        """Return the currently tracked, filtered entity ids."""
         selected = async_extract_referenced_entity_ids(
             self._hass,
             self._target_selection,
             expand_group=False,
             primary_entities_only=self._primary_entities_only,
         )
-        filtered_entities = self._entity_filter(
-            selected.referenced | selected.indirectly_referenced
-        )
-        self._handle_entities_update(filtered_entities)
+        return self._entity_filter(selected.referenced | selected.indirectly_referenced)
+
+    @callback
+    def _handle_target_update(self, event: Event[Any] | None = None) -> None:
+        """Handle updates in the tracked targets."""
+        self._handle_entities_update(self._referenced_entities())
 
     def _setup_registry_listeners(self) -> None:
         """Set up listeners for registry changes that require resubscription."""
@@ -323,7 +375,8 @@ class TargetEntityChangeTracker(abc.ABC):
         # Subscribe to registry updates that can change the entities to track:
         # - Entity registry: entity added/removed;
         #   entity labels changed; entity area changed.
-        # - Device registry: device labels changed; device area changed.
+        # - Device registry: device labels changed; device area changed;
+        #   child device added/removed under a targeted parent.
         # - Area registry: area floor changed.
         #
         # We don't track other registries (like floor or label registries) because their
@@ -356,11 +409,21 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         target_selection: TargetSelection,
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
-        on_entities_update: Callable[[set[str], set[str]], None] | None = None,
+        on_entities_update: Callable[
+            [set[str], set[str], Mapping[str, State | None]],
+            Coroutine[Any, Any, None] | None,
+        ]
+        | None = None,
         *,
         primary_entities_only: bool = True,
     ) -> None:
-        """Initialize the state change tracker."""
+        """Initialize the state change tracker.
+
+        `on_entities_update` may be a plain callback or a coroutine function.
+        It is called with the added and removed entity ids and the states of
+        all currently targeted entities; the states mapping is only valid during
+        the synchronous call, so a coroutine must copy what it needs before awaiting.
+        """
         super().__init__(
             hass,
             target_selection,
@@ -371,45 +434,109 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._on_entities_update = on_entities_update
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._tracked_entities: set[str] = set()
+        self._tracked_entity_states: dict[str, State | None] = {}
+        self._update_tasks: set[asyncio.Task[None]] = set()
 
+    @override
+    async def async_setup(self) -> Callable[[], None]:
+        """Set up tracking, awaiting the update for the initial entity set.
+
+        The initial update is awaited so that a coroutine `on_entities_update`
+        (e.g. one that loads history) completes before setup returns.
+        """
+        self._setup_registry_listeners()
+        entities = self._referenced_entities()
+        if (coro := self._apply_entities_update(entities)) is not None:
+            await coro
+        return self._unsubscribe
+
+    @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Handle the tracked entities."""
+        """Handle a registry-driven change to the tracked entity set."""
+        if (coro := self._apply_entities_update(tracked_entities)) is None:
+            return
+        # Tracked so it can be cancelled on unsubscribe.
+        task = self._hass.async_create_background_task(
+            coro, "Target entity tracker update"
+        )
+        self._update_tasks.add(task)
+        task.add_done_callback(self._update_tasks.discard)
+
+    def _apply_entities_update(
+        self, tracked_entities: set[str]
+    ) -> Coroutine[Any, Any, None] | None:
+        """Resubscribe to state changes; return the update coroutine, if any."""
         previous_entities = self._tracked_entities
         self._tracked_entities = tracked_entities
 
+        # Carry over the tracked states of still-tracked entities: they are
+        # consistent with the already-dispatched event stream, while the live
+        # state machine may be ahead of it. Only entities new to the view are
+        # read from the live state machine.
+        previous_states = self._tracked_entity_states
+        tracked_entity_states = {
+            entity_id: (
+                previous_states[entity_id]
+                if entity_id in previous_states
+                else self._hass.states.get(entity_id)
+            )
+            for entity_id in tracked_entities
+        }
+        self._tracked_entity_states = tracked_entity_states
+
+        result: Coroutine[Any, Any, None] | None = None
         if self._on_entities_update is not None:
             added = tracked_entities - previous_entities
             removed = previous_entities - tracked_entities
             if added or removed:
-                self._on_entities_update(added, removed)
+                result = self._on_entities_update(added, removed, tracked_entity_states)
 
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
             """Handle state change events."""
-            if event.data["entity_id"] in tracked_entities:
-                self._action(TargetStateChangedData(event, tracked_entities))
+            if (entity_id := event.data["entity_id"]) not in tracked_entities:
+                return
+            tracked_entity_states[entity_id] = event.data["new_state"]
+            self._action(
+                TargetStateChangedData(event, tracked_entities, tracked_entity_states)
+            )
 
         _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
-        if self._state_change_unsub:
-            self._state_change_unsub()
+        # Subscribe before unsubscribing the previous listener: if this
+        # tracker is the only subscriber, unsubscribing first tears down the
+        # shared state change tracker, dropping events which have been fired
+        # but not yet dispatched.
+        previous_unsub = self._state_change_unsub
         self._state_change_unsub = async_track_state_change_event(
             self._hass, tracked_entities, state_change_listener
         )
+        if previous_unsub:
+            previous_unsub()
+        return result
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
         if self._state_change_unsub:
             self._state_change_unsub()
             self._state_change_unsub = None
+        for task in self._update_tasks:
+            task.cancel()
+        self._update_tasks.clear()
 
 
-def async_track_target_selector_state_change_event(
+async def async_track_target_selector_state_change_event(
     hass: HomeAssistant,
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
-    on_entities_update: Callable[[set[str], set[str]], None] | None = None,
+    on_entities_update: Callable[
+        [set[str], set[str], Mapping[str, State | None]],
+        Coroutine[Any, Any, None] | None,
+    ]
+    | None = None,
     *,
     primary_entities_only: bool = True,
 ) -> CALLBACK_TYPE:
@@ -419,6 +546,10 @@ def async_track_target_selector_state_change_event(
     When `primary_entities_only` is True, indirect target
     expansion (via device, area, and floor) skips entities
     with an `entity_category` (config or diagnostic entities).
+
+    `on_entities_update` is called with the added and removed entity ids and
+    the states of all currently targeted entities. It may be a coroutine
+    function; The states mapping is only valid during the synchronous call.
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:
@@ -435,4 +566,4 @@ def async_track_target_selector_state_change_event(
         on_entities_update,
         primary_entities_only=primary_entities_only,
     )
-    return tracker.async_setup()
+    return await tracker.async_setup()

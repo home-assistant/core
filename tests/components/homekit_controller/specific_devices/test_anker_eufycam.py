@@ -15,10 +15,11 @@ from ..common import (
 async def test_eufycam_setup(hass: HomeAssistant) -> None:
     """Test that a eufycam can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
-    await setup_test_accessories(hass, accessories)
+    config_entry, _ = await setup_test_accessories(hass, accessories)
 
     await assert_devices_and_entities_created(
         hass,
+        config_entry.entry_id,
         DeviceTestInfo(
             unique_id=HUB_TEST_ACCESSORY_ID,
             name="eufy HomeBase2-0AAA",

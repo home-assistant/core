@@ -1,7 +1,7 @@
 """Config flow for the Seko PoolDose integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
@@ -65,6 +65,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return serial_number, None, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -108,6 +109,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

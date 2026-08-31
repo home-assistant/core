@@ -1,7 +1,7 @@
 """Support for ZhongHong HVAC Controller."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
@@ -157,10 +157,11 @@ class ZhongHongClimate(ClimateEntity):
         self._hub = hub
         self._current_operation = None
         self._current_fan_mode = None
-        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"
+        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_name = self._attr_unique_id
         self.is_initialized = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
@@ -183,6 +184,7 @@ class ZhongHongClimate(ClimateEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if self.is_on:
@@ -195,6 +197,7 @@ class ZhongHongClimate(ClimateEntity):
         return self._device.is_on
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if not self._current_fan_mode:
@@ -202,6 +205,7 @@ class ZhongHongClimate(ClimateEntity):
         return FAN_MODE_REVERSE_MAP.get(self._current_fan_mode, self._current_fan_mode)
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         if not self._device.fan_list:
@@ -209,23 +213,28 @@ class ZhongHongClimate(ClimateEntity):
         return list({FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list})
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temp
 
+    @override
     def turn_on(self) -> None:
         """Turn on ac."""
         return self._device.turn_on()
 
+    @override
     def turn_off(self) -> None:
         """Turn off ac."""
         return self._device.turn_off()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -234,6 +243,7 @@ class ZhongHongClimate(ClimateEntity):
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -246,6 +256,7 @@ class ZhongHongClimate(ClimateEntity):
 
         self._device.set_operation_mode(hvac_mode.upper())
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         mapped_mode = FAN_MODE_MAP.get(fan_mode)

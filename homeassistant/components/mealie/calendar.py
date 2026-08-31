@@ -1,6 +1,7 @@
 """Calendar platform for Mealie."""
 
 from datetime import datetime
+from typing import override
 
 from aiomealie import Mealplan, MealplanEntryType
 from awesomeversion import AwesomeVersion
@@ -70,6 +71,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         self._attr_translation_key = entry_type.name.lower()
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         mealplans = self.coordinator.data[self._entry_type]
@@ -78,6 +80,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         sorted_mealplans = sorted(mealplans, key=lambda x: x.mealplan_date)
         return _get_event_from_mealplan(sorted_mealplans[0])
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

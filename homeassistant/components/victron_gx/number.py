@@ -1,6 +1,6 @@
 """Support for Victron GX number entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -29,6 +29,11 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, NumberDeviceClass] = {
     MetricType.FREQUENCY: NumberDeviceClass.FREQUENCY,
     MetricType.ELECTRIC_STORAGE_PERCENTAGE: NumberDeviceClass.BATTERY,
     MetricType.TEMPERATURE: NumberDeviceClass.TEMPERATURE,
+    MetricType.HUMIDITY: NumberDeviceClass.HUMIDITY,
+    MetricType.PRESSURE: NumberDeviceClass.PRESSURE,
+    MetricType.DISTANCE: NumberDeviceClass.DISTANCE,
+    MetricType.POWER_FACTOR: NumberDeviceClass.POWER_FACTOR,
+    MetricType.COST: NumberDeviceClass.MONETARY,
     MetricType.SPEED: NumberDeviceClass.SPEED,
     MetricType.LIQUID_VOLUME: NumberDeviceClass.VOLUME_STORAGE,
     MetricType.DURATION: NumberDeviceClass.DURATION,
@@ -72,7 +77,6 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         self._attr_native_value = metric.value
         if metric.min_value is not None:
             self._attr_native_min_value = metric.min_value
@@ -81,11 +85,19 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         if metric.step is not None:
             self._attr_native_step = metric.step
 
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement."""
+        return self._resolve_native_unit_of_measurement()
+
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         if TYPE_CHECKING:

@@ -1,5 +1,7 @@
 """Support for Alpha2 IO device battery sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -49,6 +51,7 @@ class Alpha2IODeviceBatterySensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         # 0=empty, 1=weak, 2=good

@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from hass_nabucasa import AlreadyConnectedError
+from hass_nabucasa import AlreadyConnectedError, AuthTimeoutError
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -386,6 +386,24 @@ async def test_login_view_request_timeout(
     assert cloud.login.call_args[1]["check_connection"] is False
 
     assert req.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_login_view_request_auth_timeout(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test authentication timeout while trying to log in."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = AuthTimeoutError
+
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert cloud.login.call_args[1]["check_connection"] is False
+
+    assert req.status == HTTPStatus.GATEWAY_TIMEOUT
 
 
 async def test_login_view_with_already_existing_connection(
@@ -959,6 +977,8 @@ async def test_websocket_status(
             "alexa_default_expose": DEFAULT_EXPOSED_DOMAINS,
             "alexa_report_state": True,
             "google_report_state": True,
+            "onboarded_items": [],
+            "onboarding_postponed_until": None,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
             "cloud_ice_servers_enabled": True,
@@ -989,6 +1009,8 @@ async def test_websocket_status(
         "remote_certificate": None,
         "http_use_ssl": False,
         "active_subscription": True,
+        "onboarding_completed": False,
+        "onboarding_postponed": False,
     }
 
 
@@ -1233,6 +1255,106 @@ async def test_websocket_update_preferences_no_token(
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
+
+
+async def test_websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test postponing onboarding."""
+    client = await hass_ws_client(hass)
+
+    assert cloud.client.prefs.onboarding_postponed is False
+
+    await client.send_json_auto_id({"type": "cloud/onboarding/postpone"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["onboarding_postponed"] is True
+    assert cloud.client.prefs.onboarding_postponed_until is not None
+
+    freezer.tick(datetime.timedelta(hours=25))
+
+    await client.send_json_auto_id({"type": "cloud/status"})
+    response = await client.receive_json()
+
+    assert response["result"]["onboarding_postponed"] is False
+
+
+async def test_websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test completing onboarding items."""
+    client = await hass_ws_client(hass)
+
+    assert cloud.client.prefs.onboarded_items == []
+    assert cloud.client.prefs.onboarding_completed is False
+
+    # Complete a subset of items
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "backup"]}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarded_items == ["remote", "backup"]
+    assert response["result"]["onboarding_completed"] is False
+
+    # Already-completed items are ignored, only new ones are added
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/onboarding/complete",
+            "items": ["remote", "voice", "streaming"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarding_completed is True
+    assert response["result"]["onboarding_completed"] is True
+    assert cloud.client.prefs.onboarded_items == [
+        "remote",
+        "backup",
+        "voice",
+        "streaming",
+    ]
+
+    # Completing already-completed items is a no-op
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "backup"]}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarded_items == [
+        "remote",
+        "backup",
+        "voice",
+        "streaming",
+    ]
+
+
+async def test_websocket_cloud_onboarding_complete_invalid_item(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test completing an invalid onboarding item."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "invalid"]}
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
 
 
 async def test_enabling_webhook(
@@ -1789,6 +1911,8 @@ async def test_support_package_requires_admin(
         {"type": "cloud/update_prefs", "alexa_report_state": True},
         {"type": "cloud/cloudhook/create", "webhook_id": "mock-webhook-id"},
         {"type": "cloud/cloudhook/delete", "webhook_id": "mock-webhook-id"},
+        {"type": "cloud/onboarding/postpone"},
+        {"type": "cloud/onboarding/complete", "items": ["remote"]},
     ],
 )
 async def test_ws_commands_require_admin(

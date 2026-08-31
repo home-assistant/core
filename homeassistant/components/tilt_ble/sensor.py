@@ -1,5 +1,7 @@
 """Support for Tilt Hydrometers."""
 
+from typing import override
+
 from tilt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -106,6 +108,7 @@ class TiltBluetoothSensorEntity(
     """Representation of a Tilt Hydrometer BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

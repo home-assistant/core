@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_actron_api() -> Generator[AsyncMock]:
+def mock_actron_api_class() -> Generator[MagicMock]:
     """Mock the Actron Air API class."""
     with (
         patch(
@@ -32,6 +32,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
             "homeassistant.components.actron_air.config_flow.ActronAirAPI",
             new=mock_api,
         ),
+    ):
+        yield mock_api
+
+
+@pytest.fixture
+def mock_actron_api(mock_actron_api_class: MagicMock) -> Generator[AsyncMock]:
+    """Mock the Actron Air API instance."""
+    with (
         patch.object(ActronAirACSystem, "set_system_mode", new_callable=AsyncMock),
         patch.object(
             ActronAirUserAirconSettings, "set_away_mode", new_callable=AsyncMock
@@ -54,7 +62,7 @@ def mock_actron_api() -> Generator[AsyncMock]:
             ActronAirUserAirconSettings, "set_fan_mode", new_callable=AsyncMock
         ),
     ):
-        api = mock_api.return_value
+        api = mock_actron_api_class.return_value
 
         # Mock device code request
         api.request_device_code.return_value = ActronAirDeviceCode(
@@ -124,6 +132,7 @@ def mock_zone() -> MagicMock:
     zone.live_temp_c = 22.0
     zone.current_setpoint = 24.0
     zone.is_active = True
+    zone.zone_position = 75.0
     zone.hvac_mode = "COOL"
     zone.humidity = 50.0
     zone.min_temp = 16

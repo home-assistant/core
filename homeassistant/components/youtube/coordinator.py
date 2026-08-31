@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the YouTube integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from youtubeaio.helper import first
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
@@ -52,6 +52,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=15),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         youtube = await self._auth.get_resource()
         res = {}

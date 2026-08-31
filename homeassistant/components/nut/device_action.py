@@ -70,7 +70,9 @@ def _get_runtime_data_from_device_id(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and return None on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return None
     return _get_runtime_data_for_device(hass, device)
 
@@ -98,7 +100,9 @@ def _get_runtime_data_from_device_id_exception_on_failure(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and raise exception on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
             translation_key="device_not_found",

@@ -1,4 +1,5 @@
 """Support for Traccar Client."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from http import HTTPStatus
 from json import JSONDecodeError

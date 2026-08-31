@@ -1,5 +1,7 @@
 """Support for Qbus select."""
 
+from typing import override
+
 from qbusmqttapi.const import KEY_PROPERTIES_VALUE
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttStepperState, StateType
@@ -64,6 +66,7 @@ class QbusStepper(QbusEntity, SelectEntity):
         }
         self._attr_options = [item["name"] for item in value_list]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = self._name_to_value.get(option)
@@ -83,6 +86,7 @@ class QbusStepper(QbusEntity, SelectEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttStepperState) -> None:
         """Update the state from a received Qbus state."""
         value = state.read_value()

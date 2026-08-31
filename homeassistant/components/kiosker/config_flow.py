@@ -1,7 +1,8 @@
 """Config flow for the Kiosker integration."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from kiosker import (
     AuthenticationError,
@@ -35,6 +36,11 @@ STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_TOKEN): str,
     }
 )
 
@@ -97,6 +103,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_version: str | None = None
         self._discovered_ssl: bool | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -120,6 +127,44 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            config_data = {
+                **reauth_entry.data,
+                CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+            }
+            validation_errors, device_id = await validate_input(self.hass, config_data)
+            if validation_errors:
+                errors.update(validation_errors)
+            else:
+                assert device_id is not None
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={"name": reauth_entry.title},
+            errors=errors,
+        )
+
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from airgradient import AirGradientClient, ConfigurationControl
 
@@ -103,6 +104,7 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.coordinator.client)

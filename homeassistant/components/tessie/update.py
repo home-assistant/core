@@ -1,6 +1,6 @@
 """Update platform for Tessie integration."""
 
-from typing import Any
+from typing import Any, override
 
 from tessie_api import schedule_software_update
 
@@ -40,6 +40,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         super().__init__(vehicle, "update")
 
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         if self.get("vehicle_state_software_update_status") in (
@@ -50,12 +51,14 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self._attr_supported_features
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the current app version."""
         # Discard build from version number
         return self.coordinator.data["vehicle_state_car_version"].split(" ")[0]
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version."""
         if self.get("vehicle_state_software_update_status") in (
@@ -69,6 +72,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self.installed_version
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation progress."""
         return (
@@ -77,6 +81,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         )
 
     @property
+    @override
     def update_percentage(self) -> int | None:
         """Update installation progress."""
         if (
@@ -87,12 +92,14 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return None
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         if self.latest_version is None:
             return None
         return f"https://stats.tessie.com/versions/{self.latest_version}"
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

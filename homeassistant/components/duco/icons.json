@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "filter_remaining": {
+        "default": "mdi:air-filter"
+      },
       "iaq_co2": {
         "default": "mdi:molecule-co2"
       },

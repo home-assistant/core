@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp import BasicAuth, ClientError
 
@@ -38,6 +38,7 @@ async def async_get_auth_implementation(
 class SmartThingsOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

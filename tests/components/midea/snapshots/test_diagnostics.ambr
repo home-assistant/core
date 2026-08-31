@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_attributes': dict({
+      'fan_speed': 103,
+      'indoor_temperature': 21.0,
+      'max_temperature': 26,
+      'min_temperature': 17,
+      'mode': 1,
+      'power': True,
+      'swing_horizontal': True,
+      'swing_vertical': True,
+      'target_temperature': 22.0,
+    }),
+    'entry': dict({
+      'data': dict({
+        'device_id': 12345678,
+        'ip_address': '1.1.1.1',
+        'key': '**REDACTED**',
+        'model': 'MSAGBU-09HRFN8',
+        'name': 'Bedroom AC',
+        'port': 6444,
+        'protocol': 3,
+        'subtype': 0,
+        'token': '**REDACTED**',
+        'type': 172,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'midea',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

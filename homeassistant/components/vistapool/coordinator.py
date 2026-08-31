@@ -1,7 +1,7 @@
 """Data coordinator for the Vistapool integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioaquarite import (
     AquariteAuth,
@@ -50,6 +50,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
         try:
@@ -71,6 +72,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.pool_id, _on_data
         )
 
+    @override
     async def async_shutdown(self) -> None:
         """Cleanly close the resilient subscription."""
         if self.subscription is not None:
@@ -81,3 +83,22 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_value(self, path: str, default: Any = None) -> Any:
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
+
+    def apply_optimistic(self, value_path: str, value: Any) -> None:
+        """Reflect a just-written value before the Firestore push round-trips.
+
+        Hayward's cloud takes several seconds to acknowledge a write back
+        through Firestore, which would make the UI feel laggy. Writing into
+        coordinator.data after a successful REST call gives entities instant
+        feedback; the next snapshot from Firestore overwrites it harmlessly.
+        """
+        keys = value_path.split(".")
+        target: dict[str, Any] = self.data
+        for key in keys[:-1]:
+            child = target.get(key)
+            if not isinstance(child, dict):
+                child = {}
+                target[key] = child
+            target = child
+        target[keys[-1]] = value
+        self.async_set_updated_data(self.data)

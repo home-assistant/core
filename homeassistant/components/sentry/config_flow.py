@@ -1,7 +1,7 @@
 """Config flow for sentry integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from sentry_sdk.utils import BadDsn, Dsn
 import voluptuous as vol
@@ -43,12 +43,14 @@ class SentryConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SentryOptionsFlow:
         """Get the options flow for this handler."""
         return SentryOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

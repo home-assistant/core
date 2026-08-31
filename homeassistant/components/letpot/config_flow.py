@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from letpot.client import LetPotClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotConnectionException
@@ -80,6 +80,7 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_EMAIL: auth.email,
             }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

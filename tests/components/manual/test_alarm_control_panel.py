@@ -13,7 +13,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.demo import alarm_control_panel as demo
 from homeassistant.components.manual.alarm_control_panel import (
     ATTR_NEXT_STATE,
     ATTR_PREVIOUS_STATE,
@@ -36,15 +35,6 @@ from tests.common import async_fire_time_changed, mock_component, mock_restore_c
 from tests.components.alarm_control_panel import common
 
 CODE = "HELLO_CODE"
-
-
-async def test_setup_demo_platform(hass: HomeAssistant) -> None:
-    """Test setup."""
-    mock = MagicMock()
-    add_entities = mock.MagicMock()
-    # pylint: disable-next=home-assistant-tests-direct-platform-async-setup-entry
-    await demo.async_setup_entry(hass, {}, add_entities)
-    assert add_entities.call_count == 1
 
 
 @pytest.mark.parametrize(

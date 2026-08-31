@@ -1,6 +1,7 @@
 """Tests for HomematicIP Cloud sensor."""
 
-from homematicip.base.enums import ValveState
+from homematicip.base.enums import ValveState, WindowState
+import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -34,6 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfLength,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -338,6 +340,29 @@ async def test_hmip_illuminance_sensor2(
     assert ha_state.attributes[ATTR_CURRENT_ILLUMINATION] == 785.2
     assert ha_state.attributes[ATTR_HIGHEST_ILLUMINATION] == 837.1
     assert ha_state.attributes[ATTR_LOWEST_ILLUMINATION] == 785.2
+
+
+async def test_hmip_motion_detector_push_button_single_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test MotionDetectorPushButton produces exactly one illuminance sensor."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewegungsmelder für 55er Rahmen – innen"]
+    )
+    illuminance_states = [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_illuminance")
+    ]
+    assert len(illuminance_states) == 1
+    assert (
+        illuminance_states[0].entity_id
+        == "sensor.bewegungsmelder_fur_55er_rahmen_innen_illuminance"
+    )
+    assert illuminance_states[0].state == "14.2"
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_hmip_windspeed_sensor(
@@ -745,6 +770,38 @@ async def test_hmip_tilt_vibration_sensor_tilt_state(
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_SECOND_TRIGGER_ANGLE] == 75
 
 
+async def test_hmip_rotary_handle_window_state_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipWindowStateSensor exposes the three-way state of HmIP-SRH."""
+    entity_id = "sensor.fenstergriffsensor_window_state"
+    entity_name = "Fenstergriffsensor Window state"
+    device_model = "HmIP-SRH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fenstergriffsensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "tilted"
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "open"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", WindowState.CLOSED
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "closed"
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+
 async def test_hmip_tilt_vibration_sensor_tilt_angle(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -874,7 +931,7 @@ async def test_hmip_smoke_detector_dirt_level(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -1023,3 +1080,58 @@ async def test_hmip_soil_temperature_sensor(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "18.3"
+
+
+@pytest.mark.parametrize(
+    ("device_data_fixture", "device_label", "entity_id", "device_model", "channel"),
+    [
+        (
+            "wall_mounted_thermostat_with_carbon_device_data",
+            "Wandthermostat mit CO2",
+            "sensor.wandthermostat_mit_co2_carbon_dioxide",
+            "HmIP-WGTC",
+            3,
+        ),
+        (
+            "carbon_dioxide_sensor_device_data",
+            "CO2 Sensor miko ",
+            "sensor.co2_sensor_miko_carbon_dioxide",
+            "HmIP-SCTH230",
+            1,
+        ),
+    ],
+)
+async def test_hmip_carbon_dioxide_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomematicipHAP,
+    request: pytest.FixtureRequest,
+    device_data_fixture: str,
+    device_label: str,
+    entity_id: str,
+    device_model: str,
+    channel: int,
+) -> None:
+    """Test the carbon dioxide sensor on both channel types."""
+    device_data = request.getfixturevalue(device_data_fixture)
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[device_label], extra_devices=[device_data]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, f"{device_label} Carbon dioxide", device_model
+    )
+
+    assert (
+        ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfRatio.PARTS_PER_MILLION
+    )
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "carbonDioxideConcentration",
+        812.0,
+        channel=channel,
+        channel_real_index=channel,
+    )
+    assert hass.states.get(entity_id).state == "812.0"

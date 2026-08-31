@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -41,6 +42,7 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
     entity_description: StarlinkBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Calculate the binary sensor value from the entity description."""
         return self.entity_description.value_fn(self.coordinator.data)

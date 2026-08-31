@@ -1,7 +1,7 @@
 """Class to hold all alarm control panel accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
@@ -152,6 +152,7 @@ class SecuritySystem(HomeAccessory):
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state

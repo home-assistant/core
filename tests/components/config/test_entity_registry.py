@@ -24,6 +24,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockUser,
     RegistryEntryWithDefaults,
     mock_registry,
 )
@@ -1576,3 +1577,108 @@ async def test_get_automatic_entity_ids(
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
+
+
+async def test_get_settings(client: MockHAClientWebSocket) -> None:
+    """Test get settings."""
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}
+
+
+async def test_update_settings(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test update settings."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": ["floor", "area", "device", "entity"],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": ["floor", "area", "device", "entity"]}
+    assert entity_registry.settings.entity_id_parts == (
+        er.EntityNamePart.FLOOR,
+        er.EntityNamePart.AREA,
+        er.EntityNamePart.DEVICE,
+        er.EntityNamePart.ENTITY,
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": ["floor", "area", "device", "entity"]}
+
+    # Clear the override
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/settings/update", "entity_id_parts": None}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}
+    assert entity_registry.settings.entity_id_parts is None
+
+
+@pytest.mark.parametrize(
+    "entity_id_parts",
+    [
+        pytest.param(["entity", "device", "bad_part"], id="unknown_part"),
+        pytest.param(["entity", "device", "entity"], id="duplicate"),
+        pytest.param(["entity"], id="missing_device"),
+        pytest.param(["device"], id="missing_entity"),
+        pytest.param([], id="empty"),
+    ],
+)
+async def test_update_settings_invalid(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    entity_id_parts: list[str],
+) -> None:
+    """Test update settings with an invalid parts list."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": entity_id_parts,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert entity_registry.settings.entity_id_parts is None
+
+
+async def test_update_settings_requires_admin(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test update settings fails for non admin."""
+    hass_admin_user.groups = []
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": ["device", "entity"],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+    assert entity_registry.settings.entity_id_parts is None
+
+    # Reading settings is not restricted
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}

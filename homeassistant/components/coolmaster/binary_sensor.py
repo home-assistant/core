@@ -1,5 +1,7 @@
 """Binary Sensor platform for CoolMasterNet integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -36,6 +38,7 @@ class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._unit.clean_filter

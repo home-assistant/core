@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from youless_api import YoulessAPI
 
@@ -32,5 +33,6 @@ class YouLessCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
         await self.hass.async_add_executor_job(self.device.update)

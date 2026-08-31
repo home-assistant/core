@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     CONF_AT,
     CONF_ENTITY_ID,
     CONF_OFFSET,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -224,7 +224,7 @@ async def async_attach_trigger(  # noqa: C901
                 )
         elif (
             new_state.domain == "sensor"
-            and new_state.attributes.get(ATTR_DEVICE_CLASS)
+            and new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (sensor.SensorDeviceClass.TIMESTAMP, sensor.SensorDeviceClass.UPTIME)
             and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
@@ -10,13 +11,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
-from homeassistant.components.imou.const import (
-    PARAM_STATE,
-    PARAM_STATUS,
-    PTZ_MOVE_DURATION_MS,
-)
+from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -26,6 +23,7 @@ from .const import UNKNOWN_BUTTON_KEY, create_online_device
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_button_entities_snapshot(
     hass: HomeAssistant,
@@ -37,6 +35,7 @@ async def test_button_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
 @pytest.mark.parametrize(
     "imou_mock_devices",
     [
@@ -56,7 +55,7 @@ async def test_setup_ignores_unknown_button_types(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown button keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     assert len(entries) == 1
     assert entries[0].translation_key == PARAM_MUTE
@@ -127,7 +126,9 @@ async def test_press_button_service_propagates_api_error(
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the button press: cloud failure"
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

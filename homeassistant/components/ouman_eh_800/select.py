@@ -1,6 +1,7 @@
 """Select platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import (
     ControlEnum,
@@ -107,12 +108,14 @@ class OumanEh800SelectEntity(OumanEh800Entity, SelectEntity):
         self._attr_options = [member.name.lower() for member in endpoint.enum_type]
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the currently selected option."""
         value = self.coordinator.data[self._endpoint]
         assert isinstance(value, ControlEnum)
         return value.name.lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option on the device."""
         await self.coordinator.async_set_endpoint_value(

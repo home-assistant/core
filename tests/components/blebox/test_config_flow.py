@@ -9,10 +9,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
-from homeassistant.components.blebox.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.blebox.const import DEFAULT_PORT, DOMAIN
+from homeassistant.config_entries import SOURCE_DHCP, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -25,6 +26,26 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+DHCP_SERVICE_INFO = DhcpServiceInfo(
+    ip="172.100.123.4",
+    hostname="shutterbox-348",
+    macaddress="4cebd61da348",
+)
+
+
+@pytest.fixture(name="zeroconf_data")
+def zeroconf_data_fixture() -> ZeroconfServiceInfo:
+    """Return ZeroconfServiceInfo for a BleBox device."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("172.100.123.4"),
+        ip_addresses=[ip_address("172.100.123.4")],
+        port=80,
+        hostname="bbx-bbtest123456.local.",
+        type="_bbxsrv._tcp.local.",
+        name="bbx-bbtest123456._bbxsrv._tcp.local.",
+        properties={"_raw": {}},
+    )
 
 
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
@@ -43,6 +64,7 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
 
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
+    type(product).product = PropertyMock(return_value="gateController")
     type(product).type = PropertyMock(return_value="gateBox")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
@@ -77,13 +99,13 @@ async def test_flow_works(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
     assert result["title"] == "My gate controller"
     assert result["data"] == {
         config_flow.CONF_HOST: "172.2.3.4",
@@ -108,9 +130,13 @@ async def test_flow_with_connection_failure(
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -123,9 +149,13 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -137,9 +167,13 @@ async def test_flow_with_unknown_failure(
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "unknown"}
 
@@ -154,9 +188,13 @@ async def test_flow_with_unsupported_version(
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "unsupported_version"}
 
@@ -169,11 +207,15 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
@@ -192,9 +234,13 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
@@ -225,34 +271,36 @@ async def test_async_remove_entry(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
+async def test_flow_with_zeroconf(
+    hass: HomeAssistant, zeroconf_data: ZeroconfServiceInfo
+) -> None:
     """Test setup from zeroconf discovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("172.100.123.4"),
-            ip_addresses=[ip_address("172.100.123.4")],
-            port=80,
-            hostname="bbx-bbtest123456.local.",
-            type="_bbxsrv._tcp.local.",
-            name="bbx-bbtest123456._bbxsrv._tcp.local.",
-            properties={"_raw": {}},
-        ),
-    )
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        return_value=create_product_mock("abcd0123ef5678"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
 
     with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {"host": "172.100.123.4", "port": 80}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
+    assert result["data"] == {"host": "172.100.123.4", "port": 80}
 
 
 async def test_flow_with_zeroconf_when_already_configured(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zeroconf_data: ZeroconfServiceInfo,
 ) -> None:
     """Test behaviour if device already configured."""
     config_entry.add_to_hass(hass)
@@ -264,25 +312,19 @@ async def test_flow_with_zeroconf_when_already_configured(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
         return_value=feature.product,
     ):
-        result2 = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("172.100.123.4"),
-                ip_addresses=[ip_address("172.100.123.4")],
-                port=80,
-                hostname="bbx-bbtest123456.local.",
-                type="_bbxsrv._tcp.local.",
-                name="bbx-bbtest123456._bbxsrv._tcp.local.",
-                properties={"_raw": {}},
-            ),
+            data=zeroconf_data,
         )
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
-async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -> None:
+async def test_flow_with_zeroconf_when_device_unsupported(
+    hass: HomeAssistant, zeroconf_data: ZeroconfServiceInfo
+) -> None:
     """Test behaviour when device is not supported."""
     with patch(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
@@ -291,25 +333,16 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("172.100.123.4"),
-                ip_addresses=[ip_address("172.100.123.4")],
-                port=80,
-                hostname="bbx-bbtest123456.local.",
-                type="_bbxsrv._tcp.local.",
-                name="bbx-bbtest123456._bbxsrv._tcp.local.",
-                properties={"_raw": {}},
-            ),
+            data=zeroconf_data,
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_device_version"
 
 
 async def test_flow_with_zeroconf_when_device_response_unsupported(
-    hass: HomeAssistant,
+    hass: HomeAssistant, zeroconf_data: ZeroconfServiceInfo
 ) -> None:
     """Test behaviour when device returned unsupported response."""
-
     with patch(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
         side_effect=blebox_uniapi.error.UnsupportedBoxResponse,
@@ -317,24 +350,34 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("172.100.123.4"),
-                ip_addresses=[ip_address("172.100.123.4")],
-                port=80,
-                hostname="bbx-bbtest123456.local.",
-                type="_bbxsrv._tcp.local.",
-                name="bbx-bbtest123456._bbxsrv._tcp.local.",
-                properties={"_raw": {}},
-            ),
+            data=zeroconf_data,
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_device_response"
+
+
+async def test_flow_with_zeroconf_when_unauthorized(
+    hass: HomeAssistant, zeroconf_data: ZeroconfServiceInfo
+) -> None:
+    """Test behaviour when device requires authentication during zeroconf discovery."""
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        side_effect=blebox_uniapi.error.UnauthorizedRequest,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "authorization_required"
 
 
 def create_product_mock(unique_id: str = "abcd0123ef5678"):
     """Return a product mock with a given unique_id."""
     product = create_autospec(blebox_uniapi.box.Box, True, True)
     type(product).unique_id = PropertyMock(return_value=unique_id)
+    type(product).name = PropertyMock(return_value="BleBox device")
     return product
 
 
@@ -393,12 +436,105 @@ async def test_reconfigure_flow_unique_id_mismatch(
     assert result["reason"] == "unique_id_mismatch"
 
 
+async def test_flow_with_dhcp(hass: HomeAssistant) -> None:
+    """Test setup from DHCP discovery."""
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        return_value=create_product_mock("abcd0123ef5678"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=DHCP_SERVICE_INFO,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
+    assert result["data"] == {
+        "host": DHCP_SERVICE_INFO.ip,
+        "port": DEFAULT_PORT,
+    }
+
+
+async def test_flow_with_dhcp_when_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that DHCP discovery updates the host when device is already configured."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        return_value=create_product_mock("abcd0123ef5678"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=DHCP_SERVICE_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[config_flow.CONF_HOST] == DHCP_SERVICE_INFO.ip
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(
+            blebox_uniapi.error.UnsupportedBoxVersion,
+            "unsupported_device_version",
+            id="unsupported_version",
+        ),
+        pytest.param(
+            blebox_uniapi.error.UnsupportedBoxResponse,
+            "unsupported_device_response",
+            id="unsupported_response",
+        ),
+        pytest.param(
+            blebox_uniapi.error.UnauthorizedRequest,
+            "authorization_required",
+            id="unauthorized",
+        ),
+        pytest.param(
+            blebox_uniapi.error.Error,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_flow_with_dhcp_aborts(
+    hass: HomeAssistant,
+    side_effect: type[Exception],
+    reason: str,
+) -> None:
+    """Test that DHCP discovery aborts on connection errors."""
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=DHCP_SERVICE_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
         pytest.param(blebox_uniapi.error.Error, "cannot_connect", id="api_error"),
         pytest.param(
-            blebox_uniapi.error.UnauthorizedRequest, "cannot_connect", id="auth_failure"
+            blebox_uniapi.error.UnauthorizedRequest, "invalid_auth", id="auth_failure"
         ),
         pytest.param(
             blebox_uniapi.error.UnsupportedBoxVersion,
@@ -442,3 +578,107 @@ async def test_reconfigure_flow_recovers_after_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reauth_flow_works(
+    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+) -> None:
+    """Test that reauth flow updates credentials and reloads."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with product_class_mock as box_class:
+        box_class.async_from_host = AsyncMock(
+            return_value=create_product_mock("abcd0123ef5678")
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
+    assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
+
+
+async def test_reauth_flow_works_without_credentials(
+    hass: HomeAssistant, product_class_mock
+) -> None:
+    """Test that reauth flow clears credentials when submitted without them."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            config_flow.CONF_HOST: "172.100.123.4",
+            config_flow.CONF_PORT: 80,
+            config_flow.CONF_USERNAME: "admin",
+            config_flow.CONF_PASSWORD: "secret",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with product_class_mock as box_class:
+        box_class.async_from_host = AsyncMock(
+            return_value=create_product_mock("abcd0123ef5678")
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[config_flow.CONF_USERNAME] is None
+    assert config_entry.data[config_flow.CONF_PASSWORD] is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        pytest.param(
+            blebox_uniapi.error.UnauthorizedRequest, "invalid_auth", id="auth_failure"
+        ),
+        pytest.param(blebox_uniapi.error.Error, "cannot_connect", id="api_error"),
+        pytest.param(RuntimeError, "unknown", id="runtime_error"),
+    ],
+)
+async def test_reauth_flow_recovers_after_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    product_class_mock,
+    exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test that reauth shows the correct error and allows a successful retry."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with product_class_mock as box_class:
+        box_class.async_from_host = AsyncMock(side_effect=exception)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    with product_class_mock as box_class:
+        box_class.async_from_host = AsyncMock(
+            return_value=create_product_mock("abcd0123ef5678")
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

@@ -1,10 +1,12 @@
 """Tests for the todo integration."""
 
+import dataclasses
 import datetime
 from typing import Any
 import zoneinfo
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -20,6 +22,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
     TodoServices,
+    _serialize_todo_item,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
@@ -1149,6 +1152,48 @@ async def test_subscribe(
     }
 
 
+async def test_subscribe_new_subscriber_does_not_notify_existing(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test a new subscriber does not push an update to existing subscribers."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    client1 = await hass_ws_client(hass)
+    await client1.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client1.receive_json()
+    assert msg["success"]
+    # Initial push to the first subscriber
+    msg = await client1.receive_json()
+    assert msg["type"] == "event"
+
+    # A second client subscribes and receives its own initial push
+    client2 = await hass_ws_client(hass)
+    await client2.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client2.receive_json()
+    assert msg["success"]
+    msg = await client2.receive_json()
+    assert msg["type"] == "event"
+
+    # The first client must not receive a leaked event from the second
+    # subscription; the next message it gets is the pong for its own ping.
+    await client1.send_json_auto_id({"type": "ping"})
+    msg = await client1.receive_json()
+    assert msg["type"] == "pong"
+
+
 async def test_subscribe_entity_does_not_exist(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1172,6 +1217,35 @@ async def test_subscribe_entity_does_not_exist(
         "code": "invalid_entity_id",
         "message": "To-do list entity not found: todo.unknown",
     }
+
+
+def test_serialize_todo_item_matches_asdict() -> None:
+    """Test the shallow serialization is equivalent to dataclasses.asdict.
+
+    The websocket subscriber path uses the cheaper shallow _serialize_todo_item
+    instead of dataclasses.asdict. This equivalence only holds while TodoItem
+    stays a flat dataclass of immutable values.
+    """
+    item = TodoItem(
+        summary="Item #1",
+        uid="1",
+        status=TodoItemStatus.COMPLETED,
+        due=datetime.date(2023, 11, 17),
+        description="A description",
+        completed=datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+    )
+    assert _serialize_todo_item(item) == dataclasses.asdict(item)
+
+
+def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
+    """Guard the TodoItem fields and their types against changes.
+
+    A change here means the flat-immutable-dataclass assumption behind
+    _serialize_todo_item must be re-checked (see test_serialize_todo_item_matches_asdict).
+    """
+    assert {
+        field.name: str(field.type) for field in dataclasses.fields(TodoItem)
+    } == snapshot
 
 
 @pytest.mark.parametrize(

@@ -640,8 +640,8 @@ async def test_async_update_name_and_beolink(
     # Check that device name has been changed
     assert mock_config_entry.unique_id
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.unique_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
         )
     )
     assert device.name == TEST_FRIENDLY_NAME_2
@@ -1267,6 +1267,7 @@ async def test_async_play_media_url_m3u(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": None,
             },
@@ -1282,6 +1283,7 @@ async def test_async_play_media_url_m3u(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": None,
             },

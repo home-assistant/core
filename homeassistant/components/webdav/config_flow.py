@@ -1,7 +1,7 @@
 """Config flow for the WebDAV integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiowebdav2.exceptions import (
     AccessDeniedError,
@@ -46,6 +46,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WebDAV."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

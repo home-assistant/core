@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic, cast
+from typing import Any, Generic, cast, override
 
 from ring_doorbell import (
     RingCapability,
@@ -145,16 +145,19 @@ class RingSiren(RingEntity[RingDeviceT], SirenEntity):
             self.async_write_ha_state()
 
     @refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         await self._async_set_siren(True, **kwargs)
 
     @refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
         await self._async_set_siren(False)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
         if not self.entity_description.is_on_fn:

@@ -1,5 +1,7 @@
 """Tests for the SMTP integration."""
 
+from smtplib import SMTPAuthenticationError
+from socket import gaierror
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -43,9 +45,39 @@ async def test_entry_setup_unload(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    assert hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (ConnectionRefusedError, ConfigEntryState.SETUP_RETRY),
+        (gaierror, ConfigEntryState.SETUP_RETRY),
+        (SMTPAuthenticationError(0, ""), ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry not ready."""
+
+    smtp.login.side_effect = exception
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
 
 
 @pytest.mark.usefixtures("smtp")
@@ -114,7 +146,6 @@ async def test_import(
 @pytest.mark.usefixtures("smtp")
 async def test_import_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test yaml import aborts if already configured."""
@@ -164,7 +195,6 @@ async def test_import_already_configured(
 
     await hass.async_block_till_done()
 
-    assert len(mock_setup_entry.mock_calls) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert issue_registry.async_get_issue(

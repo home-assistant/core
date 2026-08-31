@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pynintendoauth.exceptions import (
     HttpException,
@@ -47,6 +48,7 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
             authenticator, hass.config.time_zone, hass.config.language
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
         try:

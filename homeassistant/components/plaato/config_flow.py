@@ -1,6 +1,6 @@
 """Config flow for Plaato."""
 
-from typing import Any
+from typing import Any, override
 
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
@@ -42,6 +42,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._init_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -181,6 +182,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PlaatoOptionsFlowHandler:

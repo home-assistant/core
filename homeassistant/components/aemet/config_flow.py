@@ -1,6 +1,6 @@
 """Config flow for AEMET OpenData."""
 
-from typing import Any
+from typing import Any, override
 
 from aemet_opendata.exceptions import AuthError
 from aemet_opendata.interface import AEMET, ConnectionOptions
@@ -31,6 +31,7 @@ OPTIONS_FLOW = {
 class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +83,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

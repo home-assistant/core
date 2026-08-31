@@ -1,5 +1,7 @@
 """Support for Homekit cameras."""
 
+from typing import override
+
 from aiohomekit.model import Accessory
 from aiohomekit.model.services import ServicesTypes
 
@@ -19,10 +21,12 @@ class HomeKitCamera(AccessoryEntity, Camera):
 
     # content_type = "image/jpeg"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

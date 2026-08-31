@@ -33,8 +33,9 @@ async def test_setup(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078"),
+        mock_config_entry.entry_id,
     )
 
     assert device_entry == snapshot
@@ -97,6 +98,30 @@ async def test_setup_failed_connect(
         f"Unable to connect to device {mock_config_entry.data[CONF_ADDRESS]} "
         "due to TimeoutError: mock reachability reason" in caplog.text
     )
+
+
+async def test_setup_device_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the device is not found by any scanner."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.bluetooth."
+            "async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.get_device",
+            return_value=None,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_unknown_error(

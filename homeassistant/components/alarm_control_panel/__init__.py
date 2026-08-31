@@ -2,13 +2,13 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_ALARM_ARM_AWAY,
@@ -28,11 +28,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -146,6 +147,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         return self.alarm_state
@@ -291,20 +293,25 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @cached_property
+    @override
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return {
-            ATTR_CODE_FORMAT: self.code_format,
-            ATTR_CHANGED_BY: self.changed_by,
-            ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
+            AlarmControlPanelEntityStateAttribute.CODE_FORMAT: self.code_format,
+            AlarmControlPanelEntityStateAttribute.CHANGED_BY: self.changed_by,
+            AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: (
+                self.code_arm_required
+            ),
         }
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the alarm control panel entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -313,6 +320,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         self._async_read_entity_options()
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from types import MethodType
-from typing import Any
+from typing import Any, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
@@ -20,6 +20,7 @@ from . import get_addons_list
 from .const import (
     ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
@@ -31,6 +32,7 @@ from .const import (
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
     PLACEHOLDER_KEY_ADDON_INFO,
     PLACEHOLDER_KEY_COMPONENTS,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REFERENCE,
 )
 from .coordinator import get_issues_info
@@ -39,6 +41,7 @@ from .issues import Issue, Suggestion
 
 SUGGESTION_CONFIRMATION_REQUIRED = {
     "addon_execute_remove",
+    "mount_move_local_data",
     "system_adopt_data_disk",
     "system_execute_reboot",
 }
@@ -163,6 +166,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
     """Handler for docker config issue fixing flow."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
@@ -197,6 +201,7 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
     """Handler for addon issue fixing flows."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
@@ -215,6 +220,7 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
     """Handler for deprecated addon issue fixing flows."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
@@ -225,6 +231,19 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
             placeholders[PLACEHOLDER_KEY_ADDON_DOCUMENTATION] = (
                 f"homeassistant://hassio/addon/{self.issue.reference}/documentation"
             )
+        return placeholders or None
+
+
+class AppPortConflictRepairFlow(AddonIssueRepairFlow):
+    """Handler for app port conflict issue fixing flows."""
+
+    @property
+    @override
+    def description_placeholders(self) -> dict[str, str] | None:
+        """Get description placeholders for steps."""
+        placeholders: dict[str, str] = super().description_placeholders or {}
+        if self.issue and self.issue.reference_extra:
+            placeholders[PLACEHOLDER_KEY_PORT] = str(self.issue.reference_extra["port"])
         return placeholders or None
 
 
@@ -242,6 +261,8 @@ async def async_create_fix_flow(
         return DockerConfigIssueRepairFlow(hass, issue_id)
     if issue and issue.key == ISSUE_KEY_ADDON_DEPRECATED:
         return DeprecatedAddonIssueRepairFlow(hass, issue_id)
+    if issue and issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT:
+        return AppPortConflictRepairFlow(hass, issue_id)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,

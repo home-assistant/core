@@ -41,7 +41,7 @@ ENTITY_COVER = "cover.living_room_window"
 
 @pytest.fixture
 def cover_only() -> Generator[None]:
-    """Enable only the climate platform."""
+    """Enable only the cover platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
         [Platform.COVER],
@@ -211,6 +211,7 @@ async def test_stop_cover(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_COVER)
     assert state.attributes[ATTR_CURRENT_POSITION] == 80
+    assert state.state == CoverState.OPEN
 
 
 async def test_close_cover_tilt(hass: HomeAssistant) -> None:

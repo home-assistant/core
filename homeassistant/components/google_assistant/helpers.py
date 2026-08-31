@@ -8,7 +8,7 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -59,7 +59,7 @@ def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[
     er.RegistryEntry | None,
-    dr.DeviceEntry | None,
+    dr.AnyDeviceEntry | None,
     ar.AreaEntry | None,
 ]:
     """Get registry entries."""
@@ -68,16 +68,13 @@ def _get_registry_entries(
     area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
-        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        device_entry = dev_reg.async_get(entity_entry.device_id)
     else:
         device_entry = None
 
-    if entity_entry and entity_entry.area_id:
-        area_id = entity_entry.area_id
-    elif device_entry and device_entry.area_id:
-        area_id = device_entry.area_id
-    else:
-        area_id = None
+    area_id = (
+        er.async_get_effective_area_id(hass, entity_entry) if entity_entry else None
+    )
 
     if area_id is not None:
         area_entry = area_reg.async_get_area(area_id)
@@ -530,6 +527,7 @@ class GoogleEntity:
         self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
@@ -667,18 +665,19 @@ class GoogleEntity:
                 device["matterOriginalVendorId"] = matter_info["vendor_id"]
                 device["matterOriginalProductId"] = matter_info["product_id"]
 
-        # Add deviceInfo
-        device_info = {}
+        # Add deviceInfo (child devices carry no hardware/firmware fields)
+        if isinstance(device_entry, dr.DeviceEntry):
+            device_info = {}
 
-        if device_entry.manufacturer:
-            device_info["manufacturer"] = device_entry.manufacturer
-        if device_entry.model:
-            device_info["model"] = device_entry.model
-        if device_entry.sw_version:
-            device_info["swVersion"] = device_entry.sw_version
+            if device_entry.manufacturer:
+                device_info["manufacturer"] = device_entry.manufacturer
+            if device_entry.model:
+                device_info["model"] = device_entry.model
+            if device_entry.sw_version:
+                device_info["swVersion"] = device_entry.sw_version
 
-        if device_info:
-            device["deviceInfo"] = device_info
+            if device_info:
+                device["deviceInfo"] = device_info
 
         return device
 

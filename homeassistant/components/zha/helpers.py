@@ -11,9 +11,8 @@ import itertools
 import logging
 import queue
 import re
-import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -77,6 +76,8 @@ from zha.zigbee.device import (
     ZHAEvent,
 )
 from zha.zigbee.group import Group, GroupInfo, GroupMember
+import zhaquirks
+import zhaquirks.legacy
 from zigpy.config import (
     CONF_DATABASE,
     CONF_DEVICE,
@@ -312,6 +313,36 @@ class ZHADeviceProxy(EventBase):
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
+    @callback
+    def async_rebind_device(self, device: Device) -> None:
+        """Repoint this proxy to a replacement device object after a re-interview."""
+        for unsub in self._unsubs:
+            unsub()
+
+        self._unsubs.clear()
+
+        self.device = device
+        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+        self.attach_event_handlers()
+
+    @callback
+    def attach_event_handlers(self) -> None:
+        """Attach event handlers to the ZHA device."""
+        device_registry = dr.async_get(self.gateway_proxy.hass)
+
+        # Sync the device's firmware version into the device registry
+        def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
+            """Update software version in device registry."""
+            device_registry.async_update_device(
+                self.device_id, sw_version=event.new_firmware_version
+            )
+
+        self._unsubs.append(
+            self.device.on_event(
+                DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
+            )
+        )
+
     @property
     def device_id(self) -> str:
         """Return the HA device registry device id."""
@@ -325,26 +356,25 @@ class ZHADeviceProxy(EventBase):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return a device description for device."""
-        ieee = str(self.device.ieee)
-        time_struct = time.localtime(self.device.last_seen)
-        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+        info = self.device.device_info
+        ieee = str(info.ieee)
         return {
             ATTR_IEEE: ieee,
-            ATTR_NWK: self.device.nwk,
-            ATTR_MANUFACTURER: self.device.manufacturer,
-            ATTR_MODEL: self.device.model,
-            ATTR_NAME: self.device.name or ieee,
-            ATTR_QUIRK_APPLIED: self.device.quirk_applied,
-            ATTR_QUIRK_CLASS: self.device.quirk_class,
-            ATTR_EXPOSES_FEATURES: self.device.exposes_features,
-            ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
-            ATTR_POWER_SOURCE: self.device.power_source,
-            ATTR_LQI: self.device.lqi,
-            ATTR_RSSI: self.device.rssi,
-            ATTR_LAST_SEEN: update_time,
-            ATTR_AVAILABLE: self.device.available,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_SIGNATURE: self.device.zigbee_signature,
+            ATTR_NWK: info.nwk,
+            ATTR_MANUFACTURER: info.manufacturer,
+            ATTR_MODEL: info.model,
+            ATTR_NAME: info.name or ieee,
+            ATTR_QUIRK_APPLIED: info.quirk_applied,
+            ATTR_QUIRK_CLASS: info.quirk_class,
+            ATTR_EXPOSES_FEATURES: info.exposes_features,
+            ATTR_MANUFACTURER_CODE: info.manufacturer_code,
+            ATTR_POWER_SOURCE: info.power_source,
+            ATTR_LQI: info.lqi,
+            ATTR_RSSI: info.rssi,
+            ATTR_LAST_SEEN: info.last_seen,
+            ATTR_AVAILABLE: info.available,
+            ATTR_DEVICE_TYPE: info.device_type,
+            ATTR_SIGNATURE: info.signature,
         }
 
     @property
@@ -414,7 +444,9 @@ class ZHADeviceProxy(EventBase):
         if reg_device is not None:
             device_info[USER_GIVEN_NAME] = reg_device.name_by_user
             device_info[DEVICE_REG_ID] = reg_device.id
-            device_info[ATTR_AREA_ID] = reg_device.area_id
+            device_info[ATTR_AREA_ID] = dr.async_get_effective_area_id(
+                self.gateway_proxy.hass, reg_device
+            )
         return device_info
 
     @callback
@@ -612,7 +644,7 @@ class ZHAGatewayProxy(EventBase):
             or entity_entry.device_id is None
         ):
             return
-        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+        device_entry: dr.AnyDeviceEntry | None = dr.async_get(self.hass).async_get(
             entity_entry.device_id
         )
         assert device_entry
@@ -726,11 +758,24 @@ class ZHAGatewayProxy(EventBase):
     def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
         """Handle a device fully initialized event."""
         zha_device = self.gateway.get_device(event.device_info.ieee)
+
+        # If ZHA swaps out the underlying device object, we need to update the proxy to
+        # point to the new one. The replacement is initialized silently
+        # (its entity-added events are suppressed), so we repoint the proxy and re-add
+        # its entities here; the old entities were already removed via teardown events
+        # on the previous object.
+        device_proxy = self.device_proxies.get(zha_device.ieee)
+        swapped_device = (
+            device_proxy is not None and device_proxy.device is not zha_device
+        )
+
         zha_device_proxy = self._async_get_or_create_device_proxy(zha_device)
+        if swapped_device:
+            zha_device_proxy.async_rebind_device(zha_device)
 
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
-        if event.new_join:
+        if event.new_join or swapped_device:
             self._create_entity_metadata(zha_device_proxy)
             async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
         async_dispatcher_send(
@@ -870,19 +915,7 @@ class ZHAGatewayProxy(EventBase):
                 sw_version=zha_device.firmware_version,
             )
             zha_device_proxy.device_id = device_registry_device.id
-
-            def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
-                """Update software version in device registry."""
-                device_registry.async_update_device(
-                    device_registry_device.id,
-                    sw_version=event.new_firmware_version,
-                )
-
-            self._unsubs.append(
-                zha_device.on_event(
-                    DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
-                )
-            )
+            zha_device_proxy.attach_event_handlers()
 
         return zha_device_proxy
 
@@ -1056,6 +1089,7 @@ class LogRelayHandler(logging.Handler):
             rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
+    @override
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
@@ -1362,15 +1396,19 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     quirks_config: QuirksConfiguration = QuirksConfiguration(
         enabled=ha_zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True),
         custom_quirks_path=ha_zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH),
+        setup_function=zhaquirks.setup,
+        uninitialized_packet_handler=(
+            zhaquirks.legacy.handle_message_from_uninitialized_sender
+        ),
     )
     overrides_config: dict[str, DeviceOverridesConfiguration] = {}
     overrides: dict[str, dict[str, Any]] = cast(
         dict[str, dict[str, Any]], ha_zha_data.yaml_config.get(CONF_DEVICE_CONFIG)
     )
     if overrides is not None:
-        for unique_id, override in overrides.items():
+        for unique_id, override_data in overrides.items():
             overrides_config[unique_id] = DeviceOverridesConfiguration(
-                type=override["type"],
+                type=override_data["type"],
             )
 
     return ZHAData(

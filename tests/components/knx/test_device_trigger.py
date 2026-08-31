@@ -29,8 +29,9 @@ async def test_if_fires_on_telegram(
 ) -> None:
     """Test telegram device triggers firing."""
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
 
     # "id" field added to action to test if `trigger_data` passed
@@ -128,8 +129,9 @@ async def test_default_if_fires_on_telegram(
     # "group_value_write", "group_value_response",
     # "group_value_read", "incoming", "outgoing"
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
 
     assert await async_setup_component(
@@ -210,8 +212,9 @@ async def test_remove_device_trigger(
     """Test for removed callback when device trigger not used."""
     automation_name = "telegram_trigger_automation"
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
     assert await async_setup_component(
         hass,
@@ -260,8 +263,9 @@ async def test_get_triggers(
 ) -> None:
     """Test we get the expected device triggers from knx."""
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
     expected_trigger = {
         "platform": "device",
@@ -283,8 +287,9 @@ async def test_get_trigger_capabilities(
 ) -> None:
     """Test we get the expected capabilities telegram device trigger."""
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
 
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -371,8 +376,9 @@ async def test_invalid_device_trigger(
 ) -> None:
     """Test invalid telegram device trigger configuration."""
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
     caplog.clear()
     with caplog.at_level(logging.ERROR):
@@ -414,8 +420,9 @@ async def test_invalid_trigger_configuration(
 ) -> None:
     """Test invalid telegram device trigger configuration at attach_trigger."""
     await knx.setup_integration()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface"),
+        knx.mock_config_entry.entry_id,
     )
     # After changing the config in async_attach_trigger, the config is validated again
     # against the integration trigger. This test checks if this validation works.

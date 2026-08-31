@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from typing import override
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
@@ -91,6 +92,7 @@ class EheimDigitalUpdateCoordinator(
                     )
         self.async_set_updated_data(self.hub.devices)
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self.hub.connect()
@@ -104,6 +106,7 @@ class EheimDigitalUpdateCoordinator(
         except (TimeoutError, EheimDigitalClientError) as err:
             raise ConfigEntryNotReady from err
 
+    @override
     async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
         try:
             await self.hub.update()

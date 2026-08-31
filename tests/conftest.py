@@ -32,6 +32,7 @@ from aiohttp.test_utils import (
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
+from bleak_retry_connector import bleak_manager
 import freezegun
 import multidict
 import pytest
@@ -40,7 +41,6 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
-from syrupy.session import SnapshotSession
 
 # Setup patching of JSON functions before any other Home Assistant imports
 from . import patch_json  # isort:skip
@@ -108,7 +108,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -172,11 +172,6 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
-
-    # Override default finish to detect unused snapshots despite xdist
-    # Temporary workaround until it is finalised inside syrupy
-    # See https://github.com/syrupy-project/syrupy/pull/901
-    SnapshotSession.finish = override_syrupy_finish
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -965,22 +960,31 @@ def hass_ws_client(
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
-        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+        hass: HomeAssistant = hass,
+        access_token: str | None = hass_access_token,
+        supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a websocket client."""
+        """Create a client, skipping token auth for Supervisor Unix sockets."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
         auth_resp = await websocket.receive_json()
-        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
-
-        if access_token is None:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        if supervisor_unix_socket:
+            assert auth_resp["type"] == TYPE_AUTH_OK
         else:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
+            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        auth_ok = await websocket.receive_json()
-        assert auth_ok["type"] == TYPE_AUTH_OK
+            if access_token is None:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
+            else:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": access_token}
+                )
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok["type"] == TYPE_AUTH_OK
 
         def _get_next_id() -> Generator[int]:
             i = 0
@@ -993,11 +997,10 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+        async def _remove_device(device_id: str) -> Any:
             await _send_json_auto_id(
                 {
-                    "type": "config/device_registry/remove_config_entry",
-                    "config_entry_id": config_entry_id,
+                    "type": "config/device_registry/remove",
                     "device_id": device_id,
                 }
             )
@@ -1973,6 +1976,8 @@ async def mock_enable_bluetooth(
 @pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
+    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
+
     with (
         # Simulate the Bluetooth management API being unavailable, as it is on
         # CI and most dev machines. Letting the real setup() run would attempt
@@ -2020,7 +2025,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2030,7 +2034,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
@@ -2069,7 +2073,7 @@ async def hassio_stubs(
 ) -> None:
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):
         await async_setup_component(hass, "hassio", {})
 
@@ -2260,8 +2264,11 @@ DhcpServiceInfo.__init__ = _dhcp_service_info_init
 def disable_http_server() -> Generator[None]:
     """Disable automatic start of HTTP server during tests.
 
-    This prevents the HTTP server from starting in tests that setup
-    integrations which depend on the HTTP component.
+    This prevents the HTTP server from binding sockets and starting in tests
+    that setup integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with (
+        patch("homeassistant.components.http.HomeAssistantHTTP.async_bind"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
+    ):
         yield

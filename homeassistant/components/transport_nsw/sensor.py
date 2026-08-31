@@ -1,7 +1,7 @@
 """Support for Transport NSW (AU) to query next leave event."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
@@ -88,6 +88,7 @@ class TransportNSWSensor(SensorEntity):
         self._attr_icon = ICONS[None]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:

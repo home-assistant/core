@@ -1,6 +1,6 @@
 """Config flow for Islamic Prayer Times integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -46,12 +46,14 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

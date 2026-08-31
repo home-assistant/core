@@ -98,7 +98,14 @@ async def test_step_user_no_selection(
     result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_FILTERS: {CONF_HEADLINE_FILTER: ""}},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FILTERS: {CONF_HEADLINE_FILTER: ""}},
     )
 
     assert result["type"] is FlowResultType.FORM

@@ -2,9 +2,9 @@
 # name: test_sensors[default_user]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Last.fm',
-      'entity_picture': 'image',
-      'friendly_name': 'LastFM testaccount1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'image',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1',
       'last_played': 'artist - title',
       'play_count': 1,
       'top_played': 'artist - title',
@@ -20,9 +20,9 @@
 # name: test_sensors[first_time_user]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Last.fm',
-      'entity_picture': 'image',
-      'friendly_name': 'LastFM testaccount1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'image',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1',
       'last_played': None,
       'play_count': 0,
       'top_played': None,

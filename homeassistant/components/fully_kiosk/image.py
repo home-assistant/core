@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fullykiosk import FullyKiosk, FullyKioskError
 
@@ -62,6 +62,7 @@ class FullyImageEntity(FullyKioskEntity, ImageEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         try:

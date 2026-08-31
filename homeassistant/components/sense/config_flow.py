@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from sense_energy import (
     ASyncSenseable,
@@ -122,6 +122,7 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

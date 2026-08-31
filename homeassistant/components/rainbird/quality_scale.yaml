@@ -21,6 +21,9 @@ rules:
       an aiohttp.ClientSession with a connection limit, and also uses a request
       debouncer.
   test-before-configure: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Integration is polling and does not subscribe to events.
@@ -33,12 +36,11 @@ rules:
       installing the app.
   docs-removal-instructions: todo
   test-before-setup: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      All config flow tests should finish with CREATE_ENTRY and ABORT to
-      test they are able to recover from errors
+  config-flow-test-coverage: done
   docs-actions: done
   runtime-data: done
 

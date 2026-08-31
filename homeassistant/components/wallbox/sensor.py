@@ -1,7 +1,7 @@
 """Home Assistant component for accessing the Wallbox Portal API sensors."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -202,6 +202,7 @@ class WallboxSensor(WallboxEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor, rounded if applicable."""
         if (
@@ -216,6 +217,7 @@ class WallboxSensor(WallboxEntity, SensorEntity):
         return cast(StateType, self.coordinator.data[self.entity_description.key])
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.key in (

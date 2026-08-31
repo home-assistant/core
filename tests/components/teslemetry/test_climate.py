@@ -1,5 +1,6 @@
 """Test the Teslemetry climate platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -19,7 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -28,6 +29,7 @@ from . import assert_entities, reload_platform, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_IGNORED_REASON,
+    METADATA,
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
@@ -200,6 +202,26 @@ async def test_climate_alt(
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.CLIMATE])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+async def test_climate_state_unknown(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test that a missing climate_state_is_climate_on reports unknown, not off."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["polling"] = True
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["is_climate_on"] = None
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    assert hass.states.get("climate.test_climate").state == STATE_UNKNOWN
 
 
 async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:

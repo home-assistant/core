@@ -87,6 +87,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to {host}"
+    },
     "communication_error": {
       "message": "Communication error with sauna control unit"
     },

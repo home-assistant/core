@@ -264,8 +264,8 @@ class KnxExposeEntity:
                 if issubclass(option.dpt, DPTNumeric):
                     return float(value)
                 if issubclass(option.dpt, DPTString):
-                    # DPT 16.000 only allows up to 14 Bytes
-                    return str(value)[:14]
+                    # DPT 16 only allows up to 14 chars, DPT 4 a single char
+                    return str(value)[: option.dpt.payload_length]
             except (ValueError, TypeError) as err:
                 _LOGGER.warning(
                     'Could not expose %s %s value "%s" to KNX: Conversion failed: %s',

@@ -572,8 +572,8 @@ async def test_remote_scanner_bluetooth_config_entry(
     assert adapter_entry is not None
     assert adapter_entry.state is ConfigEntryState.LOADED
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), adapter_entry.entry_id
     )
     assert dev is not None
     assert dev.config_entries == {adapter_entry.entry_id}
