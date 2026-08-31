@@ -38,25 +38,11 @@
       "health_score": {
         "name": "Health score"
       },
-      "last_reported": {
-        "name": "Last reported"
-      },
       "light_quality": {
         "name": "Light quality"
       },
       "moisture": {
         "name": "Soil moisture"
-      },
-      "status": {
-        "name": "Status",
-        "state": {
-          "no_plant": "Add a plant in the app",
-          "no_sensor": "Add a sensor in the app",
-          "offline": "Sensor offline",
-          "ok": "OK",
-          "outdated": "Readings outdated",
-          "waiting_for_data": "Waiting for first readings"
-        }
       }
     }
   },
@@ -66,16 +52,6 @@
     },
     "invalid_auth": {
       "message": "The SmartyPlants API key was rejected. Enter a new one to reconnect."
-    }
-  },
-  "issues": {
-    "plant_without_sensor": {
-      "description": "The plant \"{name}\" has no SmartyPlants sensor attached, so it cannot report any readings. Attach a sensor to it in the SmartyPlants app. Readings appear here a few minutes later.",
-      "title": "{name} has no sensor"
-    },
-    "sensor_without_plant": {
-      "description": "The sensor \"{name}\" is not assigned to a plant, so its readings cannot be scored against a species. Assign it to a plant in the SmartyPlants app. Readings appear here a few minutes later.",
-      "title": "{name} is not assigned to a plant"
     }
   }
 }

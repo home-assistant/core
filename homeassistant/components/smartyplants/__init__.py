@@ -33,13 +33,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Devices exist only once the platforms have added their entities, so the
-    # first name/area sync happens here rather than during the first refresh.
-    coordinator.async_sync_devices()
-    entry.async_on_unload(
-        coordinator.async_add_listener(coordinator.async_sync_devices)
-    )
-
     return True
 
 

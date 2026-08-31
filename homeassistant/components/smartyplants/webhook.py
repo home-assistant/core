@@ -7,28 +7,18 @@ import logging
 from typing import TYPE_CHECKING
 
 from aiohttp.web import Request, Response
+from pysmartyplants import EVENT_SENSOR_UPDATE, SensorUpdate
 
 from homeassistant.components import webhook as hass_webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 
-from .const import (
-    CONF_WEBHOOK_SECRET,
-    DOMAIN,
-    EVENT_SENSOR_ADDED,
-    EVENT_SENSOR_REMOVED,
-    EVENT_SENSOR_UPDATE,
-    SIGNATURE_HEADER,
-)
+from .const import CONF_WEBHOOK_SECRET, DOMAIN, SIGNATURE_HEADER
 
 if TYPE_CHECKING:
     from .coordinator import SmartyPlantsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-# sensor_added is handled exactly like sensor_update: merging an unknown id
-# into the cache is what makes its entities appear.
-MERGE_EVENTS = {EVENT_SENSOR_UPDATE, EVENT_SENSOR_ADDED}
 
 
 def _signature_matches(secret: str, body: bytes, provided: str | None) -> bool:
@@ -73,36 +63,19 @@ async def async_register_webhook(
             _LOGGER.warning("Rejected webhook: body was not valid JSON")
             return Response(status=400)
 
-        if not isinstance(payload, dict):
+        # The body arrives from the internet, so it is parsed and type-checked
+        # before anything reads it. Anything unusable is refused outright.
+        update = SensorUpdate.from_api(payload)
+        if update is None:
+            _LOGGER.warning("Rejected webhook: payload was malformed")
             return Response(status=400)
 
-        event = payload.get("event")
-        if not isinstance(event, str):
-            _LOGGER.warning("Rejected webhook: event was not a string")
-            return Response(status=400)
-
-        sensor = payload.get("sensor")
-        if sensor is not None and not isinstance(sensor, dict):
-            _LOGGER.warning("Rejected webhook: sensor was not an object")
-            return Response(status=400)
-
-        # The id is used as a dictionary key, so an unhashable one would raise
-        # rather than be rejected.
-        if sensor is not None and not isinstance(sensor.get("id"), (str, type(None))):
-            _LOGGER.warning("Rejected webhook: sensor id was not a string")
-            return Response(status=400)
-
-        coordinator = entry.runtime_data
-
-        if event in MERGE_EVENTS:
-            coordinator.async_apply_webhook_payload(payload)
-        elif event == EVENT_SENSOR_REMOVED:
-            if sensor_id := (sensor or {}).get("id"):
-                coordinator.async_remove_sensor(sensor_id)
+        if update.event == EVENT_SENSOR_UPDATE:
+            await entry.runtime_data.async_apply_update(update)
         else:
             # Unknown events are accepted and ignored so that adding new event
             # types on the backend never breaks an older integration.
-            _LOGGER.debug("Ignoring unsupported webhook event: %s", event)
+            _LOGGER.debug("Ignoring unsupported webhook event: %s", update.event)
 
         return Response(status=200)
 

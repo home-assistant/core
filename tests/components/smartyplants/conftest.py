@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pysmartyplants import Sensor
 import pytest
 
 ACCOUNT_ID = "acct-0001"
@@ -103,26 +104,7 @@ def mock_client() -> Generator[AsyncMock]:
     ) as mock:
         client = mock.return_value
         client.async_verify = AsyncMock(return_value=ACCOUNT_ID)
-        client.async_get_sensors = AsyncMock(return_value=[SENSOR_FIXTURE])
-        client.async_get_plants = AsyncMock(return_value=[])
+        client.async_get_sensors = AsyncMock(
+            return_value=[Sensor.from_api(SENSOR_FIXTURE)]
+        )
         yield client
-
-
-PLANT_WITHOUT_SENSOR = {
-    "id": "plant-9",
-    "name": "New Fern",
-    "imageUrl": None,
-    "species": "Nephrolepis exaltata",
-    "commonNames": ["Boston fern"],
-    "environment": "Bathroom",
-    "sensor": None,
-    "health": {
-        "score": None,
-        "isHealthy": True,
-        "needsAttentionCount": 0,
-        "classifications": [],
-    },
-    "readings": None,
-    "alerts": [],
-    "needsAttention": False,
-}

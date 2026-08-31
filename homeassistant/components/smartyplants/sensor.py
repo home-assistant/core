@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, override
+from typing import override
+
+from pysmartyplants import Reading, Readings, Sensor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,65 +19,65 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from .const import STATUS_OPTIONS
-from .coordinator import (
-    SmartyPlantsConfigEntry,
-    SmartyPlantsCoordinator,
-    last_reported,
-    setup_status,
-)
-from .entity import SmartyPlantsEntity, async_setup_dynamic_entities
+from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
+from .entity import SmartyPlantsEntity
 
 # Read-only and coordinator-driven, so updates need not be serialised.
 PARALLEL_UPDATES = 0
 
 
-def _numeric(value: Any) -> int | float | None:
-    """Return the value only when it is genuinely a number.
+def _metric(pick: Callable[[Readings], Reading]) -> Callable[[Sensor], float | None]:
+    """Build the value function for one reading block.
 
-    The backend can send a placeholder such as "-" for a metric it could not
-    compute. Home Assistant refuses a non-numeric state on a measurement
-    entity and raises, so anything unparsable becomes unknown instead.
-
-    Numbers are returned as they arrived, so an integer reading is not
-    reported as a float.
+    A metric the backend is still working out reports nothing, rather than a
+    placeholder the user would read as a measurement.
     """
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return value
-    if isinstance(value, str):
-        try:
-            return float(value)
-        except ValueError:
+
+    def value(sensor: Sensor) -> float | None:
+        if sensor.readings is None:
             return None
-    return None
+        reading = pick(sensor.readings)
+        return None if reading.is_calculating else reading.value
+
+    return value
 
 
-def _reading(sensor: dict[str, Any], key: str) -> float | None:
-    """Pull a numeric reading, withholding it while the metric is calculating."""
-    block = (sensor.get("readings") or {}).get(key) or {}
-    if block.get("isCalculating"):
+def _fertilise_days(sensor: Sensor) -> float | None:
+    """Return how long until the plant is due to be fed."""
+    if sensor.readings is None or sensor.readings.fertiliser.is_calculating:
         return None
-    return _numeric(block.get("value"))
+    return sensor.readings.fertiliser.days_until_fertilise
+
+
+def _health_score(sensor: Sensor) -> float | None:
+    """Return the overall score the backend derived for this plant."""
+    return sensor.health.score if sensor.health is not None else None
+
+
+def _battery(sensor: Sensor) -> float | None:
+    """Prefer the battery reading, falling back to the sensor's own level."""
+    if sensor.readings is not None and sensor.readings.battery.value is not None:
+        return sensor.readings.battery.value
+    return sensor.battery_percentage
+
+
+def _temperature_unit(sensor: Sensor) -> str | None:
+    """Follow the unit the user chose in the SmartyPlants app."""
+    if sensor.readings is not None and sensor.readings.temperature.unit == "°F":
+        return UnitOfTemperature.FAHRENHEIT
+    return UnitOfTemperature.CELSIUS
 
 
 @dataclass(frozen=True, kw_only=True)
 class SmartyPlantsSensorDescription(SensorEntityDescription):
     """Describes one SmartyPlants sensor entity."""
 
-    value_fn: Callable[[dict[str, Any]], StateType | datetime]
-    unit_fn: Callable[[dict[str, Any]], str | None] | None = None
-    # Readings block backing this entity, when it differs from the entity key.
-    readings_key: str | None = None
-    # Diagnostics stay visible when readings go stale, so the user can see why.
-    stale_sensitive: bool = True
-    # Skipped for plants that have no sensor, where the metric has no meaning.
-    requires_sensor: bool = True
+    value_fn: Callable[[Sensor], float | None]
+    # Set where the backend reports the unit alongside the reading.
+    unit_fn: Callable[[Sensor], str | None] | None = None
 
 
 SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
@@ -85,14 +86,8 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
-        # The backend honours the user's preferred unit, so read it per update.
-        unit_fn=lambda sensor: (
-            UnitOfTemperature.FAHRENHEIT
-            if ((sensor.get("readings") or {}).get("temperature") or {}).get("unit")
-            == "°F"
-            else UnitOfTemperature.CELSIUS
-        ),
-        value_fn=lambda sensor: _reading(sensor, "temperature"),
+        unit_fn=_temperature_unit,
+        value_fn=_metric(lambda readings: readings.temperature),
     ),
     SmartyPlantsSensorDescription(
         key="humidity",
@@ -100,7 +95,7 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda sensor: _reading(sensor, "humidity"),
+        value_fn=_metric(lambda readings: readings.humidity),
     ),
     SmartyPlantsSensorDescription(
         key="moisture",
@@ -109,7 +104,7 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda sensor: _reading(sensor, "moisture"),
+        value_fn=_metric(lambda readings: readings.moisture),
     ),
     SmartyPlantsSensorDescription(
         key="light",
@@ -117,16 +112,15 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
-        value_fn=lambda sensor: _reading(sensor, "light"),
+        value_fn=_metric(lambda readings: readings.light),
     ),
     SmartyPlantsSensorDescription(
         key="light_quality",
         translation_key="light_quality",
         suggested_display_precision=0,
-        readings_key="lightQuality",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda sensor: _reading(sensor, "lightQuality"),
+        value_fn=_metric(lambda readings: readings.light_quality),
     ),
     SmartyPlantsSensorDescription(
         key="health_score",
@@ -134,28 +128,15 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda sensor: _numeric((sensor.get("health") or {}).get("score")),
+        value_fn=_health_score,
     ),
     SmartyPlantsSensorDescription(
         key="fertilise_days",
         translation_key="fertilise_days",
         suggested_display_precision=0,
-        readings_key="fertiliser",
         native_unit_of_measurement=UnitOfTime.DAYS,
-        value_fn=lambda sensor: (
-            None
-            if ((sensor.get("readings") or {}).get("fertiliser") or {}).get(
-                "isCalculating"
-            )
-            else _numeric(
-                ((sensor.get("readings") or {}).get("fertiliser") or {}).get(
-                    "daysUntilFertilise"
-                )
-            )
-        ),
+        value_fn=_fertilise_days,
     ),
-    # Diagnostics below: these describe the sensor itself, so they must keep
-    # reporting once the readings are no longer trustworthy.
     SmartyPlantsSensorDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -163,33 +144,7 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        stale_sensitive=False,
-        value_fn=lambda sensor: _numeric(
-            ((sensor.get("readings") or {}).get("battery") or {}).get(
-                "value", sensor.get("batteryPercentage")
-            )
-        ),
-    ),
-    SmartyPlantsSensorDescription(
-        key="status",
-        translation_key="status",
-        device_class=SensorDeviceClass.ENUM,
-        options=STATUS_OPTIONS,
-        stale_sensitive=False,
-        requires_sensor=False,
-        value_fn=setup_status,
-    ),
-    SmartyPlantsSensorDescription(
-        key="last_reported",
-        translation_key="last_reported",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        # Useful when chasing a problem, noise the rest of the time: the
-        # status and connectivity entities already say whether data is
-        # arriving.
-        entity_registry_enabled_default=False,
-        stale_sensitive=False,
-        value_fn=last_reported,
+        value_fn=_battery,
     ),
 )
 
@@ -202,16 +157,10 @@ async def async_setup_entry(
     """Create one set of sensor entities per physical sensor."""
     coordinator = entry.runtime_data
 
-    async_setup_dynamic_entities(
-        entry,
-        coordinator,
-        async_add_entities,
-        lambda sensor_id: (
-            SmartyPlantsSensor(coordinator, sensor_id, description)
-            for description in SENSOR_TYPES
-            if description.requires_sensor is False
-            or not coordinator.data[sensor_id].get("isPlantOnly")
-        ),
+    async_add_entities(
+        SmartyPlantsSensor(coordinator, sensor_id, description)
+        for sensor_id in coordinator.data
+        for description in SENSOR_TYPES
     )
 
 
@@ -230,44 +179,30 @@ class SmartyPlantsSensor(SmartyPlantsEntity, SensorEntity):
         super().__init__(coordinator, sensor_id)
         self.entity_description = description
         self._attr_unique_id = f"{sensor_id}_{description.key}"
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._update_unit()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Pick up the unit alongside the new readings."""
+        self._update_unit()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_unit(self) -> None:
+        """Follow the unit the backend reports for this reading.
+
+        Held as an attribute rather than read on demand because the unit is
+        part of the entity's capabilities, which Home Assistant reads even
+        while the sensor is unavailable and has no readings to consult.
+        """
+        if (unit_fn := self.entity_description.unit_fn) is not None:
+            if self._sensor_id in self.coordinator.data:
+                self._attr_native_unit_of_measurement = unit_fn(self.sensor)
 
     @property
     @override
-    def available(self) -> bool:
-        """Follow the shared availability rule for this entity's description."""
-        return self._availability_for(
-            stale_sensitive=self.entity_description.stale_sensitive,
-            requires_sensor=self.entity_description.requires_sensor,
-        )
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Prefer the unit reported by the backend when one is supplied."""
-        if self.entity_description.unit_fn is not None:
-            return self.entity_description.unit_fn(self.sensor)
-        return super().native_unit_of_measurement
-
-    @property
-    @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> float | None:
         """Return the current value for this metric."""
         return self.entity_description.value_fn(self.sensor)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Expose the optimal band and status so users can build alerts on it."""
-        description = self.entity_description
-        block = self.readings.get(description.readings_key or description.key)
-        if not isinstance(block, dict):
-            return None
-
-        attributes: dict[str, Any] = {}
-        if (status := block.get("status")) is not None:
-            attributes["status"] = status
-        if isinstance(optimal := block.get("optimalRange"), dict):
-            attributes["optimal_low"] = optimal.get("low")
-            attributes["optimal_high"] = optimal.get("high")
-
-        return attributes or None

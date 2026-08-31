@@ -53,8 +53,8 @@ rules:
   entity-unavailable:
     status: done
     comment: |
-      Entities go unavailable when the sensor is offline or its last reading
-      has aged past the staleness window.
+      Entities go unavailable when the backend reports the sensor as offline
+      or it disappears from the account.
   integration-owner: done
   log-when-unavailable:
     status: done
@@ -68,10 +68,17 @@ rules:
   diagnostics: todo
   discovery:
     status: exempt
-    comment: Cloud account based; devices cannot be discovered on the network.
+    comment: |
+      The sensors report raw measurements to the SmartyPlants cloud, which
+      derives the readings from them using the plant's species profile. A
+      sensor found on the network would have nothing usable to offer. Setup is
+      account-level in any case: one config entry covers every sensor on the
+      account and is authenticated with an API key, not per device.
   discovery-update-info:
     status: exempt
-    comment: Cloud account based; there is no network discovery to update from.
+    comment: |
+      The integration never talks to the sensors directly, so there is no
+      network information to keep current.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -79,22 +86,20 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: done
-    comment: Sensors added in the app appear on the next poll.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Every entity is a distinct measurement of the plant's condition, so none
+      of them is noise that should start out disabled.
   entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: done
-  stale-devices:
-    status: done
-    comment: |
-      Sensors deleted in the app are removed from the device registry on the
-      next poll.
+  repair-issues: todo
+  stale-devices: todo
 
   # Platinum
   async-dependency: done

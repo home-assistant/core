@@ -2624,7 +2624,7 @@ pysmartthings==4.0.1
 pysmarty2==0.10.3
 
 # homeassistant.components.smartyplants
-pysmartyplants==0.1.0
+pysmartyplants==0.2.0
 
 # homeassistant.components.smhi
 pysmhi==2.0.0

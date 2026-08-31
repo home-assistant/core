@@ -7,17 +7,11 @@
       "health_score": {
         "default": "mdi:heart-pulse"
       },
-      "last_reported": {
-        "default": "mdi:clock-outline"
-      },
       "light_quality": {
         "default": "mdi:white-balance-sunny"
       },
       "moisture": {
         "default": "mdi:water-percent"
-      },
-      "status": {
-        "default": "mdi:information-outline"
       }
     }
   }

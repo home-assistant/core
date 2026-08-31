@@ -1,15 +1,15 @@
-"""Test SmartyPlants setup, staleness, device churn and webhook pushes."""
+"""Test SmartyPlants setup, availability and webhook pushes."""
 
 import asyncio
 from copy import deepcopy
-from datetime import timedelta
 from hashlib import sha256
 import hmac
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmartyplants import SmartyPlantsConnectionError
+from pysmartyplants import Sensor, SmartyPlantsConnectionError
 import pytest
 
 from homeassistant.components.smartyplants.const import (
@@ -26,14 +26,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import PLANT_WITHOUT_SENSOR, SENSOR_FIXTURE
+from .conftest import SENSOR_FIXTURE
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -49,15 +44,15 @@ ENTRY_DATA = {
 }
 
 
-def _fresh_sensor(timestamp: str) -> dict:
-    """Return the fixture with a specific report time."""
-    sensor = deepcopy(SENSOR_FIXTURE)
-    sensor["lastDataReceived"] = timestamp
-    return sensor
+def _sensor(**overrides: Any) -> Sensor:
+    """Return the fixture sensor, with the given wire fields replaced."""
+    payload = deepcopy(SENSOR_FIXTURE)
+    payload.update(overrides)
+    return Sensor.from_api(payload)
 
 
 async def _setup(
-    hass: HomeAssistant, sensors: list[dict], plants: list[dict] | None = None
+    hass: HomeAssistant, sensors: list[Sensor] | None = None
 ) -> tuple[MockConfigEntry, AsyncMock]:
     """Set up the integration with a mocked client."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="test")
@@ -67,550 +62,303 @@ async def _setup(
         "homeassistant.components.smartyplants.SmartyPlantsClient", autospec=True
     ) as mock:
         client = mock.return_value
-        client.async_get_sensors = AsyncMock(return_value=sensors)
-        client.async_get_plants = AsyncMock(return_value=plants or [])
+        client.async_get_sensors = AsyncMock(
+            return_value=[_sensor()] if sensors is None else sensors
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return entry, client
 
 
-async def test_entities_created_with_readings(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A fresh sensor produces readings, connectivity and health entities."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-    assert hass.states.get("sensor.monstera_soil_moisture").state == "41"
-    assert hass.states.get("sensor.monstera_health_score").state == "82"
-    assert hass.states.get("sensor.monstera_fertilise_in").state == "21"
-    assert hass.states.get("sensor.monstera_status").state == "ok"
-
-
-async def test_readings_go_unavailable_when_stale(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Past the three-hour window, readings are withheld but diagnostics stay."""
-    freezer.move_to("2026-08-19T14:01:00+00:00")  # 4h 1m after the reading
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    # Measurements are no longer trustworthy.
-    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.monstera_soil_moisture").state == STATE_UNAVAILABLE
-
-    # Diagnostics must keep reporting so the user can see why.
-    assert hass.states.get("sensor.monstera_status").state == "outdated"
-    assert hass.states.get("sensor.monstera_battery").state == "87"
-
-
-async def test_offline_sensor_hides_readings(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A backend-reported offline sensor also withholds its readings."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    offline = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    offline["isOnline"] = False
-    await _setup(hass, [offline])
-
-    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.monstera_status").state == "offline"
-
-
-async def test_new_sensor_appears_without_restart(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A plant added in the app shows up on the next poll."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    first = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    _, client = await _setup(hass, [first])
-
-    assert hass.states.get("sensor.fiddle_leaf_fig_temperature") is None
-
-    second = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    second["id"] = "sensor-2"
-    second["identifier"] = "device-99999"
-    second["plant"] = {**second["plant"], "id": "plant-2", "name": "Fiddle Leaf Fig"}
-    client.async_get_sensors.return_value = [first, second]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.fiddle_leaf_fig_temperature").state == "22.5"
-
-
-async def test_deleted_sensor_removes_device(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """A plant deleted in the app has its device and entities removed."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    assert {(DOMAIN, "sensor-1")} in [d.identifiers for d in devices]
-
-    client.async_get_sensors.return_value = []
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == []
-    assert hass.states.get("sensor.monstera_temperature") is None
-
-
-async def test_webhook_push_updates_state(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A correctly signed push updates entities without waiting for a poll."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-    payload = {
+def _push_body(**changes: Any) -> dict[str, Any]:
+    """Build a sensor_update push carrying only what it changes."""
+    payload: dict[str, Any] = {
         "event": "sensor_update",
-        "sensor": {
-            "id": "sensor-1",
-            "identifier": "device-12345",
-            "name": "Sensor-device-12345",
-            "plantId": "plant-1",
-            "plantName": "Monstera",
-            "isOnline": True,
-            "batteryPercentage": 86,
-        },
-        "health": {"score": 90, "isHealthy": True, "needsAttentionCount": 0},
-        "readings": {
-            **deepcopy(SENSOR_FIXTURE["readings"]),
-            "temperature": {
-                "value": 25.5,
-                "unit": "°C",
-                "status": "OK",
-                "optimalRange": {"low": 18, "high": 26},
-                "min": 0,
-                "max": 50,
-                "isCalculating": False,
-            },
-        },
-        "timestamp": "2026-08-19T10:29:00.000Z",
+        "sensor": {"id": "sensor-1"},
     }
-    body = json.dumps(payload).encode()
-    signature = hmac.new(WEBHOOK_SECRET.encode(), body, sha256).hexdigest()
-
-    client = await hass_client_no_auth()
-    response = await client.post(
-        f"/api/webhook/{WEBHOOK_ID}",
-        data=body,
-        headers={"X-Smartyplants-Signature": signature},
-    )
-
-    assert response.status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "25.5"
-    assert hass.states.get("sensor.monstera_health_score").state == "90"
+    payload.update(changes)
+    return payload
 
 
-async def test_webhook_rejects_bad_signature(
-    hass: HomeAssistant,
+async def _post(
     hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """An unsigned or wrongly signed push is refused and changes nothing."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    payload = {"event": "sensor_update", "sensor": {"id": "sensor-1"}}
-    body = json.dumps(payload).encode()
-
+    payload: Any,
+    *,
+    secret: str | None = WEBHOOK_SECRET,
+    signature: str | None = None,
+) -> int:
+    """Post a webhook body and return the status code."""
     client = await hass_client_no_auth()
-    response = await client.post(
-        f"/api/webhook/{WEBHOOK_ID}",
-        data=body,
-        headers={"X-Smartyplants-Signature": "not-the-right-signature"},
-    )
-
-    assert response.status == 401
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-
-async def _post_event(client, payload: dict, secret: str = WEBHOOK_SECRET) -> int:
-    """Send a signed webhook payload and return the status code."""
     body = json.dumps(payload).encode()
-    signature = hmac.new(secret.encode(), body, sha256).hexdigest()
+
+    headers = {}
+    if signature is not None:
+        headers["X-Smartyplants-Signature"] = signature
+    elif secret is not None:
+        headers["X-Smartyplants-Signature"] = hmac.new(
+            secret.encode(), body, sha256
+        ).hexdigest()
+
     response = await client.post(
-        f"/api/webhook/{WEBHOOK_ID}",
-        data=body,
-        headers={"X-Smartyplants-Signature": signature},
+        f"/api/webhook/{WEBHOOK_ID}", data=body, headers=headers
     )
     return response.status
 
 
-async def test_webhook_sensor_added_creates_entities(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
+async def test_entities_are_created_from_the_first_poll(hass: HomeAssistant) -> None:
+    """Every reading on the fixture sensor becomes an entity."""
+    await _setup(hass)
+
+    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
+    assert hass.states.get("sensor.monstera_humidity").state == "55"
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "41"
+    assert hass.states.get("sensor.monstera_light_quality").state == "78"
+    assert hass.states.get("sensor.monstera_health_score").state == "82"
+    assert hass.states.get("sensor.monstera_fertilise_in").state == "21"
+    assert hass.states.get("sensor.monstera_battery").state == "87"
+
+
+async def test_device_is_named_after_the_plant(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """A sensor_added push creates the new plant without waiting for a poll."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    assert hass.states.get("sensor.fiddle_leaf_fig_temperature") is None
+    """The device carries the plant's name and the sensor's serial number."""
+    entry, _ = await _setup(hass)
 
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_added",
-            "sensor": {
-                "id": "sensor-2",
-                "identifier": "device-99999",
-                "name": "Sensor-device-99999",
-                "plantId": "plant-2",
-                "plantName": "Fiddle Leaf Fig",
-                "isOnline": True,
-                "batteryPercentage": 91,
-            },
-            "health": {"score": 75, "isHealthy": True, "needsAttentionCount": 0},
-            "readings": deepcopy(SENSOR_FIXTURE["readings"]),
-            "timestamp": "2026-08-19T10:29:00.000Z",
-        },
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "sensor-1"), entry.entry_id
     )
+    assert device is not None
+    assert device.name == "Monstera"
+    assert device.serial_number == "device-12345"
+    assert device.manufacturer == "SmartyPlants"
 
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.fiddle_leaf_fig_temperature").state == "22.5"
-    assert hass.states.get("sensor.fiddle_leaf_fig_health_score").state == "75"
+
+async def test_offline_sensor_is_unavailable(hass: HomeAssistant) -> None:
+    """A sensor the backend reports as offline stops reporting."""
+    await _setup(hass, [_sensor(isOnline=False)])
+
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
 
 
-async def test_webhook_sensor_removed_drops_device(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
+async def test_sensor_dropped_from_the_payload_is_unavailable(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A sensor_removed push deletes the device and its entities at once."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, _ = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    assert hass.states.get("sensor.monstera_temperature") is not None
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_removed",
-            "sensor": {"id": "sensor-1"},
-            "timestamp": "2026-08-19T10:29:00.000Z",
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == []
-    assert hass.states.get("sensor.monstera_temperature") is None
-
-
-async def test_unknown_event_is_ignored(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """An unrecognised event is accepted and changes nothing.
-
-    The events beyond sensor_update are optional, so a backend that sends
-    something this version does not know about must not break it.
-    """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client, {"event": "something_new", "sensor": {"id": "sensor-1"}}
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
+    """A sensor that disappears from the account stops reporting."""
+    _, client = await _setup(hass)
     assert hass.states.get("sensor.monstera_temperature").state == "22.5"
 
-
-async def test_removal_still_works_without_push_events(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Polling alone reaches the same result when no push events are sent."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
     client.async_get_sensors.return_value = []
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == []
-
-
-async def test_device_uses_environment_as_area(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """The plant's environment becomes the Home Assistant area."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, _ = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-    area = area_registry.async_get_area(device.area_id)
-
-    assert device.name == "Monstera"
-    assert area.name == "Living Room"
-
-
-async def test_rename_and_move_are_synced(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Renaming a plant in the app updates the device on the next poll."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    renamed = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    renamed["plant"] = {**renamed["plant"], "name": "Big Monstera"}
-    client.async_get_sensors.return_value = [renamed]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-    assert device.name == "Big Monstera"
-
-
-async def test_user_chosen_area_is_not_overridden(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """An area the user picked survives a change of environment in the app."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-
-    chosen = area_registry.async_get_or_create("Study")
-    device_registry.async_update_device(device.id, area_id=chosen.id)
-
-    moved = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    moved["plant"] = {**moved["plant"], "environment": "Balcony"}
-    client.async_get_sensors.return_value = [moved]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-    assert device.area_id == chosen.id
-
-
-async def test_unassigned_plant_falls_back_to_sensor_name(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Deleting a plant unassigns the sensor; the device keeps working."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    unassigned = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    unassigned["plant"] = None
-    client.async_get_sensors.return_value = [unassigned]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-    assert device.name == "Sensor-device-12345"
-
-
-async def test_plant_without_sensor_asks_for_one(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A sensorless plant appears with no data and a prompt to add a sensor."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [], [PLANT_WITHOUT_SENSOR])
-
-    # The device carries the prompt and nothing else: with no sensor attached
-    # there is no measurement to show, so no reading entities are created.
-    assert hass.states.get("sensor.new_fern_status").state == "no_sensor"
-
-    assert hass.states.get("sensor.new_fern_temperature") is None
-    assert hass.states.get("sensor.new_fern_soil_moisture") is None
-    assert hass.states.get("sensor.new_fern_battery") is None
-
-
-async def test_sensor_without_plant_asks_for_one(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """An unassigned sensor reports that a plant still needs adding."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    orphan = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    orphan["plant"] = None
-    await _setup(hass, [orphan])
-
-    assert hass.states.get("sensor.sensor_device_12345_status").state == "no_plant"
-    assert (
-        hass.states.get("sensor.sensor_device_12345_temperature").state
-        == STATE_UNAVAILABLE
-    )
-
-    # The sensor itself is real, so its own diagnostics keep reporting.
-    assert hass.states.get("sensor.sensor_device_12345_battery").state == "87"
-
-
-async def test_status_reports_paired_sensor_as_ok(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A properly paired, fresh sensor reports no outstanding setup."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    assert hass.states.get("sensor.monstera_status").state == "ok"
-
-
-async def test_status_reports_outdated_readings(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Past the staleness window the status says so, and stays available."""
-    freezer.move_to("2026-08-19T14:01:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    assert hass.states.get("sensor.monstera_status").state == "outdated"
-
-
-async def test_attaching_a_sensor_replaces_the_plant_device(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Once a sensor is attached, the plant-only placeholder gives way to it."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, client = await _setup(hass, [], [PLANT_WITHOUT_SENSOR])
-    assert hass.states.get("sensor.new_fern_status").state == "no_sensor"
-
-    attached = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    attached["plant"] = {**attached["plant"], "id": "plant-9", "name": "New Fern"}
-    client.async_get_sensors.return_value = [attached]
-    client.async_get_plants.return_value = [
-        {**PLANT_WITHOUT_SENSOR, "sensor": {"id": "sensor-1"}}
-    ]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    assert [d.identifiers for d in devices] == [{(DOMAIN, "sensor-1")}]
-
-
-async def test_repair_raised_for_plant_without_sensor(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """An unpaired plant raises a repair that clears once a sensor is added."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    _, client = await _setup(hass, [], [PLANT_WITHOUT_SENSOR])
-    issue = issue_registry.async_get_issue(DOMAIN, "no_sensor_plant:plant-9")
-    assert issue is not None
-    assert issue.translation_key == "plant_without_sensor"
-    assert issue.translation_placeholders == {"name": "New Fern"}
-
-    attached = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    attached["plant"] = {**attached["plant"], "id": "plant-9", "name": "New Fern"}
-    client.async_get_sensors.return_value = [attached]
-    client.async_get_plants.return_value = [
-        {**PLANT_WITHOUT_SENSOR, "sensor": {"id": "sensor-1"}}
-    ]
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(DOMAIN, "no_sensor_plant:plant-9") is None
-
-
-async def test_repair_raised_for_sensor_without_plant(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """An unassigned sensor raises its own repair."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    orphan = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    orphan["plant"] = None
-    await _setup(hass, [orphan])
-
-    issue = issue_registry.async_get_issue(DOMAIN, "no_plant_sensor-1")
-    assert issue is not None
-    assert issue.translation_key == "sensor_without_plant"
-    assert issue.translation_placeholders == {"name": "Sensor-device-12345"}
-
-
-async def test_no_repair_when_everything_is_paired(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """A healthy account raises nothing."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    assert not [
-        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
-    ]
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
 
 
 async def test_connection_failure_marks_entities_unavailable(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A transport failure makes entities unavailable rather than wrong."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    _, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
+    """A backend outage is surfaced rather than leaving stale values on show."""
+    _, client = await _setup(hass)
 
-    client.async_get_sensors.side_effect = SmartyPlantsConnectionError("down")
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+    client.async_get_sensors.side_effect = SmartyPlantsConnectionError("boom")
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
 
 
-async def test_unload_entry(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+async def test_missing_readings_report_unknown(hass: HomeAssistant) -> None:
+    """A sensor that has never reported has entities but no values."""
+    await _setup(hass, [_sensor(readings=None)])
+
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNKNOWN
+
+
+async def test_placeholder_reading_reports_unknown(hass: HomeAssistant) -> None:
+    """The backend sends "-" for a metric it could not compute."""
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["moisture"]["value"] = "-"
+    await _setup(hass, [_sensor(readings=readings)])
+
+    assert hass.states.get("sensor.monstera_soil_moisture").state == STATE_UNKNOWN
+
+
+async def test_numeric_string_reading_is_accepted(hass: HomeAssistant) -> None:
+    """A number sent as a string is still a reading."""
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["moisture"]["value"] = "41"
+    await _setup(hass, [_sensor(readings=readings)])
+
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "41.0"
+
+
+async def test_calculating_metric_reports_unknown(hass: HomeAssistant) -> None:
+    """A metric still being worked out is withheld."""
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["fertiliser"]["isCalculating"] = True
+    await _setup(hass, [_sensor(readings=readings)])
+
+    assert hass.states.get("sensor.monstera_fertilise_in").state == STATE_UNKNOWN
+
+
+async def test_temperature_follows_the_backend_unit(hass: HomeAssistant) -> None:
+    """A reading sent in Fahrenheit is read as Fahrenheit.
+
+    Home Assistant then converts it for display, which is what proves the
+    backend's unit was picked up: read as Celsius, 72.5 would have stayed
+    72.5 instead of converting to 22.5.
+    """
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["temperature"]["unit"] = "°F"
+    readings["temperature"]["value"] = 72.5
+    await _setup(hass, [_sensor(readings=readings)])
+
+    state = hass.states.get("sensor.monstera_temperature")
+    assert state.state == "22.5"
+    assert state.attributes["unit_of_measurement"] == "°C"
+
+
+async def test_display_precision_is_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Unloading removes the entities and leaves the entry unloaded."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry, _ = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
+    """Readings are rounded for display rather than shown raw."""
+    await _setup(hass)
+
+    entry = entity_registry.async_get("sensor.monstera_temperature")
+    assert entry.options["sensor"]["suggested_display_precision"] == 1
+
+
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """The entry unloads cleanly."""
+    entry, _ = await _setup(hass)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_webhook_rejects_malformed_body(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
+async def test_push_updates_state(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
-    """A correctly signed body that is not JSON is refused."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
+    """A signed push is applied without waiting for the next poll."""
+    await _setup(hass)
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "41"
 
-    body = b"not json at all"
-    signature = hmac.new(WEBHOOK_SECRET.encode(), body, sha256).hexdigest()
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["moisture"]["value"] = 55
+    assert await _post(hass_client_no_auth, _push_body(readings=readings)) == 200
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "55"
+
+
+async def test_push_keeps_what_it_left_out(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A push is flatter than a poll and must not blank the rest."""
+    await _setup(hass)
+
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["moisture"]["value"] = 55
+    assert await _post(hass_client_no_auth, _push_body(readings=readings)) == 200
+    await hass.async_block_till_done()
+
+    # The push carried no online flag, battery or health, so those survive.
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "55"
+    assert hass.states.get("sensor.monstera_battery").state == "87"
+    assert hass.states.get("sensor.monstera_health_score").state == "82"
+
+
+async def test_push_can_take_a_sensor_offline(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """An explicit offline flag is a real change, not a missing field."""
+    await _setup(hass)
+
+    body = _push_body()
+    body["sensor"]["isOnline"] = False
+    assert await _post(hass_client_no_auth, body) == 200
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
+
+
+async def test_push_for_an_unknown_sensor_is_ignored(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A push naming a sensor we have no entities for changes nothing."""
+    await _setup(hass)
+
+    body = _push_body()
+    body["sensor"]["id"] = "sensor-unknown"
+    assert await _post(hass_client_no_auth, body) == 200
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
+
+
+async def test_unknown_event_is_accepted_and_ignored(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A new backend event type must not break an older integration."""
+    await _setup(hass)
+
+    body = _push_body()
+    body["event"] = "something_new"
+    assert await _post(hass_client_no_auth, body) == 200
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
+
+
+async def test_push_without_a_signature_is_refused(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """An unsigned post is not trusted."""
+    await _setup(hass)
+    assert await _post(hass_client_no_auth, _push_body(), secret=None) == 401
+
+
+async def test_push_with_a_wrong_signature_is_refused(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A forged signature is rejected."""
+    await _setup(hass)
+    assert await _post(hass_client_no_auth, _push_body(), signature="deadbeef") == 401
+
+
+async def test_pushes_are_refused_without_a_configured_secret(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Without a secret there is no way to prove who sent the push."""
+    data = {
+        key: value for key, value in ENTRY_DATA.items() if key != CONF_WEBHOOK_SECRET
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id="test")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.smartyplants.SmartyPlantsClient", autospec=True
+    ) as mock:
+        mock.return_value.async_get_sensors = AsyncMock(return_value=[_sensor()])
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert await _post(hass_client_no_auth, _push_body(), secret="anything") == 401
+
+
+async def test_malformed_body_is_refused(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A body that is not JSON is rejected before anything reads it."""
+    await _setup(hass)
 
     client = await hass_client_no_auth()
+    body = b"not json"
+    signature = hmac.new(WEBHOOK_SECRET.encode(), body, sha256).hexdigest()
     response = await client.post(
         f"/api/webhook/{WEBHOOK_ID}",
         data=body,
@@ -619,438 +367,86 @@ async def test_webhook_rejects_malformed_body(
     assert response.status == 400
 
 
-async def test_webhook_rejects_non_object_payload(
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "just a string",
+        [1, 2, 3],
+        {"sensor": {"id": "sensor-1"}},
+        {"event": 42, "sensor": {"id": "sensor-1"}},
+        {"event": ["sensor_update"], "sensor": {"id": "sensor-1"}},
+        {"event": "sensor_update", "sensor": "sensor-1"},
+        {"event": "sensor_update", "sensor": {"id": 42}},
+        {"event": "sensor_update", "sensor": {"id": ["sensor-1"]}},
+        {"event": "sensor_update", "sensor": {}},
+    ],
+)
+async def test_malformed_payloads_are_refused(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
+    payload: Any,
 ) -> None:
-    """Valid JSON that is not an object is refused."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    assert await _post_event(client, ["not", "an", "object"]) == 400
-
-
-async def test_webhook_rejects_missing_signature(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A push with no signature header at all is refused."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    response = await client.post(f"/api/webhook/{WEBHOOK_ID}", data=b"{}")
-    assert response.status == 401
-
-
-async def test_webhook_without_secret_refuses_pushes(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """With no secret stored, a push cannot be proven genuine, so it is refused."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="nosecret",
-        data={k: v for k, v in ENTRY_DATA.items() if k != CONF_WEBHOOK_SECRET},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.smartyplants.SmartyPlantsClient", autospec=True
-    ) as mock:
-        mock.return_value.async_get_sensors = AsyncMock(
-            return_value=[_fresh_sensor("2026-08-19T10:00:00.000Z")]
-        )
-        mock.return_value.async_get_plants = AsyncMock(return_value=[])
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    client = await hass_client_no_auth()
-    response = await client.post(f"/api/webhook/{WEBHOOK_ID}", data=b"{}")
-    assert response.status == 401
-
-
-async def test_webhook_removed_event_for_unknown_sensor_is_ignored(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Removing something we never had changes nothing."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client, {"event": "sensor_removed", "sensor": {"id": "does-not-exist"}}
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-
-async def test_webhook_update_without_sensor_id_is_ignored(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A push with no sensor id cannot be applied to anything."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    status = await _post_event(client, {"event": "sensor_update", "sensor": {}})
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-
-async def test_repaired_sensor_gets_entities_back(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A sensor removed and later re-paired is rebuilt, not silently skipped."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    sensor = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    _, client = await _setup(hass, [sensor])
-    assert hass.states.get("sensor.monstera_temperature") is not None
-
-    client.async_get_sensors.return_value = []
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature") is None
-
-    client.async_get_sensors.return_value = [sensor]
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
+    """Every field arrives from the internet and is checked before use."""
+    await _setup(hass)
+    assert await _post(hass_client_no_auth, payload) == 400
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.monstera_temperature").state == "22.5"
 
 
-async def test_push_without_timestamp_keeps_readings_fresh(
+@pytest.mark.parametrize("timestamp", [123, ["2026-08-19"], {"at": "2026-08-19"}])
+async def test_wrongly_typed_timestamp_does_not_break_the_update(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    timestamp: Any,
+) -> None:
+    """A non-string timestamp is dropped instead of reaching date handling."""
+    await _setup(hass)
+
+    readings = deepcopy(SENSOR_FIXTURE["readings"])
+    readings["moisture"]["value"] = 55
+    body = _push_body(readings=readings)
+    body["timestamp"] = timestamp
+
+    assert await _post(hass_client_no_auth, body) == 200
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "55"
+
+
+async def test_push_during_a_poll_is_not_reverted(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A push with no timestamp must not blank the one already known."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
+    """A push that lands mid-poll survives the response the poll is storing.
 
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_update",
-            "sensor": {"id": "sensor-1", "plantId": "plant-1", "plantName": "Monstera"},
-            "readings": deepcopy(SENSOR_FIXTURE["readings"]),
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-    assert hass.states.get("sensor.monstera_status").state == "ok"
-
-
-async def test_push_for_unpaired_sensor_does_not_fake_a_plant(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Merging a push must not invent a plant that does not exist."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    orphan = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    orphan["plant"] = None
-    await _setup(hass, [orphan])
-    assert hass.states.get("sensor.sensor_device_12345_status").state == "no_plant"
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_update",
-            "sensor": {"id": "sensor-1"},
-            "readings": deepcopy(SENSOR_FIXTURE["readings"]),
-            "timestamp": "2026-08-19T10:29:00.000Z",
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.sensor_device_12345_status").state == "no_plant"
-
-
-async def test_push_with_malformed_readings_is_not_applied(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A push whose readings are the wrong shape must not poison the cache."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_update",
-            "sensor": {"id": "sensor-1", "plantId": "plant-1", "plantName": "Monstera"},
-            "readings": "not-a-mapping",
-            "health": ["also", "wrong"],
-            "timestamp": "2026-08-19T10:29:00.000Z",
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    # The previous good readings survive rather than being replaced by junk.
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-    assert hass.states.get("sensor.monstera_health_score").state == "82"
-
-
-async def test_optimal_range_attributes_are_exposed(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Entities whose readings block is named differently still get attributes."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    temperature = hass.states.get("sensor.monstera_temperature")
-    assert temperature.attributes["optimal_low"] == 18
-    assert temperature.attributes["optimal_high"] == 26
-
-    # These two are backed by lightQuality and fertiliser respectively.
-    light_quality = hass.states.get("sensor.monstera_light_quality")
-    assert light_quality.attributes["status"] == "OPTIMAL"
-    assert light_quality.attributes["optimal_low"] == 40
-
-    assert hass.states.get("sensor.monstera_fertilise_in").attributes["status"] == "OK"
-
-
-async def test_non_numeric_readings_become_unknown(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A placeholder such as "-" must not crash the sensor platform.
-
-    Home Assistant refuses a non-numeric state on a measurement entity and
-    raises when writing it, taking the whole coordinator update down with it.
+    Both write the cached sensors, so without serialising them the poll would
+    finish last and put its older readings back.
     """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    sensor = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    readings = sensor["readings"]
-    readings["lightQuality"] = {**readings["lightQuality"], "value": "-"}
-    readings["temperature"] = {**readings["temperature"], "value": "not a number"}
-    readings["battery"] = {**readings["battery"], "value": "-"}
-    sensor["health"] = {**sensor["health"], "score": "-"}
-    sensor["readings"]["fertiliser"] = {
-        **readings["fertiliser"],
-        "daysUntilFertilise": "-",
-    }
+    _, client = await _setup(hass)
 
-    await _setup(hass, [sensor])
+    release = asyncio.Event()
 
-    for entity_id in (
-        "sensor.monstera_light_quality",
-        "sensor.monstera_temperature",
-        "sensor.monstera_health_score",
-        "sensor.monstera_fertilise_in",
-        "sensor.monstera_battery",
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None, f"{entity_id} was not created"
-        assert state.state == STATE_UNKNOWN, f"{entity_id} was {state.state}"
+    async def _slow_poll() -> list[Sensor]:
+        await release.wait()
+        return [_sensor()]  # still reporting the original 41% moisture
 
+    client.async_get_sensors = AsyncMock(side_effect=_slow_poll)
 
-async def test_numeric_strings_are_accepted(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """A number sent as a string is still a number."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    sensor = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    sensor["readings"]["temperature"] = {
-        **sensor["readings"]["temperature"],
-        "value": "22.5",
-    }
-    await _setup(hass, [sensor])
-
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-
-async def test_display_precision_is_registered(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Readings are rounded for display rather than shown at full float width.
-
-    The backend sends values such as 94.57999542229342 for soil moisture, which
-    is accurate but unreadable on a card.
-    """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    sensor = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    sensor["readings"]["moisture"] = {
-        **sensor["readings"]["moisture"],
-        "value": 94.57999542229342,
-    }
-    await _setup(hass, [sensor])
-    entry = entity_registry.async_get("sensor.monstera_soil_moisture")
-    assert entry is not None
-    assert entry.options["sensor"]["suggested_display_precision"] == 0
-
-    # The stored state keeps the underlying value, so history and automations
-    # are unaffected by the rounding shown on a card.
-    state = hass.states.get("sensor.monstera_soil_moisture")
-    assert float(state.state) == pytest.approx(94.57999542229342)
-
-
-async def test_push_without_online_flag_keeps_cached_state(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A partial push must not silently bring an offline sensor back online.
-
-    Every other omitted field keeps its previous value, so defaulting this one
-    to online would expose cached readings for a sensor that is not reporting.
-    """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    offline = _fresh_sensor("2026-08-19T10:00:00.000Z")
-    offline["isOnline"] = False
-    await _setup(hass, [offline])
-    assert hass.states.get("sensor.monstera_status").state == "offline"
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_update",
-            "sensor": {"id": "sensor-1", "plantId": "plant-1", "plantName": "Monstera"},
-            "readings": deepcopy(SENSOR_FIXTURE["readings"]),
-            "timestamp": "2026-08-19T10:29:00.000Z",
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_status").state == "offline"
-    assert hass.states.get("sensor.monstera_temperature").state == STATE_UNAVAILABLE
-
-
-async def test_webhook_rejects_malformed_event_and_sensor(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Signed payloads of the wrong shape are refused rather than raising."""
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    client = await hass_client_no_auth()
-
-    # An unhashable event would raise on the set membership test.
-    assert await _post_event(client, {"event": [], "sensor": {"id": "sensor-1"}}) == 400
-    # A string sensor has no .get().
-    assert (
-        await _post_event(client, {"event": "sensor_update", "sensor": "nope"}) == 400
-    )
-    # An unhashable id would raise when used as a dictionary key.
-    assert (
-        await _post_event(client, {"event": "sensor_update", "sensor": {"id": []}})
-        == 400
-    )
-    assert (
-        await _post_event(client, {"event": "sensor_removed", "sensor": {"id": {}}})
-        == 400
-    )
-
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-
-async def test_non_string_timestamp_is_treated_as_missing(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A pushed timestamp of the wrong type must not raise on entity updates.
-
-    The value is cached as it arrives, so anything that is not a string or a
-    datetime would reach .tzinfo and fail while writing state.
-    """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-
-    client = await hass_client_no_auth()
-    status = await _post_event(
-        client,
-        {
-            "event": "sensor_update",
-            "sensor": {"id": "sensor-1", "plantId": "plant-1", "plantName": "Monstera"},
-            "readings": deepcopy(SENSOR_FIXTURE["readings"]),
-            "timestamp": 1234567890,
-        },
-    )
-
-    assert status == 200
-    await hass.async_block_till_done()
-    # Treated as no timestamp at all, so the readings read as outdated rather
-    # than bringing the whole update down.
-    assert hass.states.get("sensor.monstera_status").state == "outdated"
-
-
-async def test_poll_in_flight_does_not_revert_a_push(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A push that lands mid-poll survives the poll completing.
-
-    The poll fetched its snapshot before the push arrived, so assigning it
-    afterwards would roll the pushed reading back until the next poll.
-    """
-    freezer.move_to("2026-08-19T10:30:00+00:00")
-    _, client = await _setup(hass, [_fresh_sensor("2026-08-19T10:00:00.000Z")])
-    assert hass.states.get("sensor.monstera_temperature").state == "22.5"
-
-    pushed = asyncio.Event()
-
-    async def _slow_fetch() -> list[dict]:
-        # Let the push land while this poll is still awaiting its response.
-        await pushed.wait()
-        return [_fresh_sensor("2026-08-19T10:00:00.000Z")]
-
-    client.async_get_sensors.side_effect = _slow_fetch
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await asyncio.sleep(0)
 
-    webhook_client = await hass_client_no_auth()
     readings = deepcopy(SENSOR_FIXTURE["readings"])
-    readings["temperature"] = {**readings["temperature"], "value": 30.5}
-    assert (
-        await _post_event(
-            webhook_client,
-            {
-                "event": "sensor_update",
-                "sensor": {
-                    "id": "sensor-1",
-                    "plantId": "plant-1",
-                    "plantName": "Monstera",
-                },
-                "readings": readings,
-                "timestamp": "2026-08-19T10:29:00.000Z",
-            },
-        )
-        == 200
+    readings["moisture"]["value"] = 55
+    push = hass.async_create_task(
+        _post(hass_client_no_auth, _push_body(readings=readings))
     )
-    pushed.set()
+    await asyncio.sleep(0)
+
+    release.set()
+    assert await push == 200
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.monstera_temperature").state == "30.5"
+    assert hass.states.get("sensor.monstera_soil_moisture").state == "55"
