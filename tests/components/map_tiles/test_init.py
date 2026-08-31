@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import gzip
-from hashlib import sha256
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -13,7 +12,6 @@ import pytest
 from homeassistant.components.map_tiles.const import (
     ASSET_MAX_AGE,
     ATTRIBUTION,
-    BLOCKED_TILE_SIZES,
     DATA_ACCESS_TOKENS,
     DOMAIN,
     RASTER_URL,
@@ -437,47 +435,6 @@ async def test_undecodable_cached_body_is_refused(
         resp = await client.get(VECTOR_PATH, headers={"Accept-Encoding": "identity"})
 
     assert resp.status == HTTPStatus.BAD_GATEWAY
-
-
-@pytest.mark.parametrize("blocked_size", sorted(BLOCKED_TILE_SIZES))
-async def test_blocked_raster_tile_is_refused(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
-    blocked_size: int,
-) -> None:
-    """Test that the PNG which means we were blocked never becomes a response."""
-    blocked = b"x" * blocked_size
-    aioclient_mock.get(RASTER_UPSTREAM, content=blocked)
-
-    client = await hass_client()
-    with patch(
-        "homeassistant.components.map_tiles.views.BLOCKED_TILE_SHA256S",
-        frozenset({sha256(blocked).hexdigest()}),
-    ):
-        assert (await client.get(RASTER_PATH)).status == HTTPStatus.BAD_GATEWAY
-        # Not cached, so the second request has to go out again.
-        assert (await client.get(RASTER_PATH)).status == HTTPStatus.BAD_GATEWAY
-
-    assert aioclient_mock.call_count == 2
-    assert "OpenStreetMap blocked a raster tile request" in caplog.text
-
-
-@pytest.mark.parametrize("blocked_size", sorted(BLOCKED_TILE_SIZES))
-async def test_tile_matching_only_the_blocked_length_is_served(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    blocked_size: int,
-) -> None:
-    """Test that a real tile of a blocked tile's length is not thrown away."""
-    aioclient_mock.get(RASTER_UPSTREAM, content=b"y" * blocked_size)
-
-    client = await hass_client()
-    resp = await client.get(RASTER_PATH)
-
-    assert resp.status == HTTPStatus.OK
 
 
 async def test_cached_tile_is_not_fetched_again(

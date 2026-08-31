@@ -2,7 +2,6 @@
 
 from functools import partial
 import gzip
-import hashlib
 from http import HTTPStatus
 import json
 import logging
@@ -21,8 +20,6 @@ from .const import (
     ASSET_MAX_AGE,
     ASSET_TTL,
     ATTRIBUTION,
-    BLOCKED_TILE_SHA256S,
-    BLOCKED_TILE_SIZES,
     DATA_ACCESS_TOKENS,
     FONTSTACK_RE,
     GLYPH_RANGE_RE,
@@ -212,27 +209,6 @@ class MapTilesRasterView(_MapTilesTileView):
     max_zoom = RASTER_MAX_ZOOM
     upstream = f"{RASTER_URL}/{{z}}/{{x}}/{{y}}.png"
     key_template = "raster/{z}/{x}/{y}.png"
-
-    @override
-    async def _async_fetch(self, url: str) -> Asset | None:
-        """Fetch a raster tile, rejecting OSM's "Access blocked" placeholder."""
-        if (asset := await super()._async_fetch(url)) is None:
-            return None
-
-        # Caching it would serve "Access blocked" to the household for a week.
-        # The User-Agent should make this unreachable, hence logged not retried.
-        if (
-            len(asset.body) in BLOCKED_TILE_SIZES
-            and hashlib.sha256(asset.body).hexdigest() in BLOCKED_TILE_SHA256S
-        ):
-            _LOGGER.error(
-                "OpenStreetMap blocked a raster tile request, which means Home"
-                " Assistant is no longer identifying itself the way their tile"
-                " usage policy requires. Please report this"
-            )
-            return None
-
-        return asset
 
 
 class MapTilesGlyphsView(_MapTilesView):

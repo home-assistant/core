@@ -57,23 +57,6 @@ CACHE_MAX_BYTES: Final = 32 * 1024 * 1024
 MAX_FETCH_BYTES: Final = 8 * 1024 * 1024
 MAX_DECOMPRESSED_BYTES: Final = 32 * 1024 * 1024
 
-# Being blocked arrives as HTTP 200 with a valid PNG reading "Access blocked".
-# Length is the cheap check, the digest confirms it. Exact bytes of the "403"
-# (general block), "403r" (referer required) and "451" (missing attribution)
-# variants documented at https://wiki.openstreetmap.org/wiki/Blocked_tiles
-# (as of 2026-08).
-BLOCKED_TILE_SIZES: Final = frozenset({6987, 6939, 6772})
-BLOCKED_TILE_SHA256S: Final = frozenset(
-    {
-        # 403_tile.png
-        "b02c44252dac5a5e820ecef1e9bf9200e9407c042df668a466a1aa81a9ecca7a",
-        # 403r_tile.png
-        "641c0181751e4029c9ad949cf03f6aee55859ce283a55492c8e28133d9e31c4b",
-        # 451_Attribution_Tile.png
-        "eca627aff6dc5c5996dc73efe5faf407ec513cc94a8bd3c1ea99310ccb49208a",
-    }
-)
-
 # MapLibre overzooms above the source maxzoom, so nothing legitimate asks for a
 # vector tile past z14.
 VECTOR_MAX_ZOOM: Final = 14
