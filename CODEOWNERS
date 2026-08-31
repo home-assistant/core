@@ -1109,6 +1109,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
+/homeassistant/components/map_tiles/ @home-assistant/core
+/tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
