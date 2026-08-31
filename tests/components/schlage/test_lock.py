@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyschlage.code import (
     AccessCode,
+    DaysOfWeek,
     MultiRecurringSchedule,
     RecurringSchedule,
     TemporarySchedule,
@@ -676,33 +677,6 @@ async def test_add_code_service_temporary_pin(
     assert call_args.schedule.end == end
 
 
-async def test_add_code_service_start_without_end(
-    hass: HomeAssistant,
-    mock_lock: Mock,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test add_code service rejects start without end."""
-
-    mock_lock.access_codes = {}
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Both start and end datetimes must be provided",
-    ) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_CODE,
-            service_data={
-                "entity_id": "lock.vault_door",
-                "name": "test_user",
-                "code": "1234",
-                "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
-            },
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == "schlage_temporary_dates_required"
-
-
 async def test_add_code_service_validation_before_refresh(
     hass: HomeAssistant,
     mock_lock: Mock,
@@ -727,89 +701,72 @@ async def test_add_code_service_validation_before_refresh(
     mock_lock.refresh_access_codes.assert_not_called()
 
 
-async def test_add_code_service_end_without_start(
-    hass: HomeAssistant,
-    mock_lock: Mock,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test add_code service rejects end without start."""
-
-    mock_lock.access_codes = {}
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Both start and end datetimes must be provided",
-    ) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_CODE,
-            service_data={
-                "entity_id": "lock.vault_door",
-                "name": "test_user",
-                "code": "1234",
+@pytest.mark.parametrize(
+    ("service_data", "match", "translation_key"),
+    [
+        pytest.param(
+            {
+                "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "Both start and end datetimes must be provided",
+            "schlage_temporary_dates_required",
+            id="start_without_end",
+        ),
+        pytest.param(
+            {
                 "end_datetime": datetime(2025, 1, 1, 18, 0, 0, tzinfo=UTC).isoformat(),
             },
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == "schlage_temporary_dates_required"
-
-
-async def test_add_code_service_start_after_end(
-    hass: HomeAssistant,
-    mock_lock: Mock,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test add_code service rejects start after end."""
-
-    mock_lock.access_codes = {}
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Start datetime must be before end datetime",
-    ) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_CODE,
-            service_data={
-                "entity_id": "lock.vault_door",
-                "name": "test_user",
-                "code": "1234",
-                "start_datetime": datetime(
-                    2025, 1, 1, 18, 0, 0, tzinfo=UTC
-                ).isoformat(),
+            "Both start and end datetimes must be provided",
+            "schlage_temporary_dates_required",
+            id="end_without_start",
+        ),
+        pytest.param(
+            {
+                "start_datetime": datetime(2025, 1, 2, 8, 0, 0, tzinfo=UTC).isoformat(),
                 "end_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
             },
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == "schlage_start_after_end"
-
-
-async def test_add_code_service_start_equals_end(
-    hass: HomeAssistant,
-    mock_lock: Mock,
-    mock_added_config_entry: MockSchlageConfigEntry,
-) -> None:
-    """Test add_code service rejects start equal to end."""
-
-    mock_lock.access_codes = {}
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Start datetime must be before end datetime",
-    ) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_CODE,
-            service_data={
-                "entity_id": "lock.vault_door",
-                "name": "test_user",
-                "code": "1234",
+            "Start datetime must be before end datetime",
+            "schlage_start_after_end",
+            id="start_after_end",
+        ),
+        pytest.param(
+            {
                 "start_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
                 "end_datetime": datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC).isoformat(),
             },
+            "Start datetime must be before end datetime",
+            "schlage_start_after_end",
+            id="start_equals_end",
+        ),
+    ],
+)
+async def test_add_code_service_invalid_datetime(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    service_data: dict[str, str],
+    match: str,
+    translation_key: str,
+) -> None:
+    """Test add_code service rejects invalid datetime combinations."""
+    mock_lock.access_codes = {}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match=match,
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+                **service_data,
+            },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "schlage_start_after_end"
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_add_code_service_temporary_pin_non_utc_timezone(
@@ -1022,6 +979,150 @@ async def test_get_codes_service_multi_recurring_schedule(
                 "start_minute": 0,
                 "end_hour": 23,
                 "end_minute": 59,
+            }
+        ],
+    }
+
+
+async def test_get_codes_service_multi_recurring_two_windows(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test get_codes serializes a multi recurring schedule with two windows."""
+
+    schedule1 = RecurringSchedule(
+        days_of_week=DaysOfWeek(
+            sun=False, mon=True, tue=True, wed=True, thu=True, fri=True, sat=False
+        ),
+        start_hour=8,
+        start_minute=0,
+        end_hour=17,
+        end_minute=30,
+    )
+    schedule2 = RecurringSchedule(
+        days_of_week=DaysOfWeek(
+            sun=True, mon=False, tue=False, wed=False, thu=False, fri=False, sat=True
+        ),
+        start_hour=9,
+        start_minute=15,
+        end_hour=12,
+        end_minute=45,
+    )
+    code = Mock()
+    code.name = "multi_user"
+    code.code = "5678"
+    code.access_code_id = "ac_002"
+    code.schedule = MultiRecurringSchedule(schedule1=schedule1, schedule2=schedule2)
+    mock_lock.access_codes = {"1": code}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert response["lock.vault_door"]["1"]["schedule"] == {
+        "type": "multi_recurring",
+        "windows": [
+            {
+                "days_of_week": {
+                    "sun": False,
+                    "mon": True,
+                    "tue": True,
+                    "wed": True,
+                    "thu": True,
+                    "fri": True,
+                    "sat": False,
+                },
+                "start_hour": 8,
+                "start_minute": 0,
+                "end_hour": 17,
+                "end_minute": 30,
+            },
+            {
+                "days_of_week": {
+                    "sun": True,
+                    "mon": False,
+                    "tue": False,
+                    "wed": False,
+                    "thu": False,
+                    "fri": False,
+                    "sat": True,
+                },
+                "start_hour": 9,
+                "start_minute": 15,
+                "end_hour": 12,
+                "end_minute": 45,
+            },
+        ],
+    }
+
+
+async def test_get_codes_service_multi_recurring_one_window_only(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test multi_recurring schedule with schedule2=None serializes one window."""
+
+    code = Mock()
+    code.name = "single_window_user"
+    code.code = "9999"
+    code.access_code_id = "ac_003"
+    code.schedule = MultiRecurringSchedule(
+        schedule1=RecurringSchedule(
+            days_of_week=DaysOfWeek(
+                sun=False,
+                mon=True,
+                tue=False,
+                wed=False,
+                thu=False,
+                fri=False,
+                sat=False,
+            ),
+            start_hour=6,
+            start_minute=30,
+            end_hour=8,
+            end_minute=0,
+        ),
+        schedule2=None,
+    )
+    mock_lock.access_codes = {"1": code}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert response["lock.vault_door"]["1"]["schedule"] == {
+        "type": "multi_recurring",
+        "windows": [
+            {
+                "days_of_week": {
+                    "sun": False,
+                    "mon": True,
+                    "tue": False,
+                    "wed": False,
+                    "thu": False,
+                    "fri": False,
+                    "sat": False,
+                },
+                "start_hour": 6,
+                "start_minute": 30,
+                "end_hour": 8,
+                "end_minute": 0,
             }
         ],
     }
