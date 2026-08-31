@@ -33,37 +33,37 @@
   "entity": {
     "binary_sensor": {
       "cooling_start_condition_contact_not_blocked": {
-        "name": "External contact not blocking"
+        "name": "Cooling contact not blocking"
       },
       "cooling_start_condition_control_method": {
-        "name": "Control method allows cooling"
+        "name": "Cooling allowed by control method"
       },
       "cooling_start_condition_demand": {
-        "name": "Cooling demand from cooling curve"
+        "name": "Cooling demand"
       },
       "cooling_start_condition_dtc": {
-        "name": "No cooling faults active"
+        "name": "No cooling faults"
       },
       "cooling_start_condition_exponential_backoff": {
-        "name": "Restart delay elapsed"
+        "name": "Cooling restart delay elapsed"
       },
       "cooling_start_condition_heat_cool_delay": {
         "name": "Heating to cooling delay elapsed"
       },
       "cooling_start_condition_indoor_unit_connected": {
-        "name": "Indoor unit connected"
+        "name": "Cooling indoor unit connected"
       },
       "cooling_start_condition_inside_temperature": {
-        "name": "Room warmer than target"
+        "name": "Cooling room warmer than target"
       },
       "cooling_start_condition_outside_air_temperature": {
-        "name": "Outside temperature high enough"
+        "name": "Cooling outside temperature high enough"
       },
       "cooling_start_condition_water_temperature": {
         "name": "Water warmer than cooling curve"
       },
       "cooling_start_condition_water_to_air": {
-        "name": "Air warmer than water"
+        "name": "Cooling air warmer than water"
       },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
