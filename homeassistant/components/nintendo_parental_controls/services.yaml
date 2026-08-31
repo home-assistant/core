@@ -29,3 +29,26 @@ update_pin_code:
       selector:
         device:
           integration: nintendo_parental_controls
+player_usage_report:
+  fields:
+    device_id:
+      required: true
+      example: 1234567890abcdef1234567890abcdef
+      selector:
+        device:
+          integration: nintendo_parental_controls
+    entity_id:
+      required: true
+      example: sensor.example_player_used_screen_time
+      selector:
+        entity:
+          integration: nintendo_parental_controls
+          domain: sensor
+device_usage_report:
+  fields:
+    device_id:
+      required: true
+      example: 1234567890abcdef1234567890abcdef
+      selector:
+        device:
+          integration: nintendo_parental_controls

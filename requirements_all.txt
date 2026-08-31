@@ -2916,6 +2916,9 @@ pyzbar==0.1.9
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
 
+# homeassistant.components.zonneplan
+pyzonneplan==0.1.2
+
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
 
@@ -3227,7 +3230,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.10.0
+tesla-fleet-api==1.12.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
