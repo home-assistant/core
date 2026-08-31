@@ -1,7 +1,7 @@
 """Test the Willow config flow."""
 
 from http import HTTPStatus
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -68,7 +68,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_willow_client: MagicMock,
-    mock_setup_entry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Walk a happy-path OAuth2 flow end to end."""
     result = await _initiate_user_flow(hass)
