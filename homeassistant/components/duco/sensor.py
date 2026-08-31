@@ -274,9 +274,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
-    initial_diagnostic_components = tuple(
-        diagnostic.component for diagnostic in coordinator.data.diagnostic_subsystems
-    )
 
     # Track the node IDs for which node entities have already been created, so
     # we can detect both newly added and stale (deregistered) nodes on every
@@ -285,6 +282,7 @@ async def async_setup_entry(
     # Track optional box-level sensors separately so they can still be added
     # later if their capability probe transiently failed during initial setup.
     known_box_sensors: set[tuple[int, str]] = set()
+    known_diagnostic_components: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -339,16 +337,17 @@ async def async_setup_entry(
                     for description in SENSOR_DESCRIPTIONS
                     if node.general.node_type in description.node_types
                 )
-                if node.general.node_type == NodeType.BOX:
-                    # The initial response defines the entity set, but the BOX node
-                    # itself can be absent from a transiently incomplete node list.
-                    new_entities.extend(
-                        DucoDiagnosticSensorEntity(coordinator, node, component)
-                        for component in initial_diagnostic_components
-                    )
 
             if node.general.node_type != NodeType.BOX:
                 continue
+
+            for diagnostic in coordinator.data.diagnostic_subsystems:
+                if diagnostic.component in known_diagnostic_components:
+                    continue
+                known_diagnostic_components.add(diagnostic.component)
+                new_entities.append(
+                    DucoDiagnosticSensorEntity(coordinator, node, diagnostic.component)
+                )
 
             for description in BOX_SENSOR_DESCRIPTIONS:
                 description_key = (node.node_id, description.key)

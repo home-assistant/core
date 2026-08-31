@@ -54,7 +54,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    _initial_diagnostics_loaded: bool
     _supports_time_filter_remain: bool
     _supports_ventilation_temperatures: bool
     _supports_bypass_supply_temperature_targets: bool
@@ -76,7 +75,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self._initial_diagnostics_loaded = False
         self._supports_time_filter_remain = True
         self._supports_ventilation_temperatures = True
         self._supports_bypass_supply_temperature_targets = True
@@ -185,34 +183,20 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
-        if not self._initial_diagnostics_loaded:
-            # The first successful response defines the stable diagnostics entity set.
-            # Some models legitimately report no diagnostic subsystems.
-            try:
-                diagnostic_info = await self.client.async_get_diagnostics_info()
-            except DucoConnectionError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                ) from err
-            except DucoError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="api_error",
-                ) from err
+        try:
+            diagnostic_info = await self.client.async_get_diagnostics_info()
+        except DucoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except DucoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
-            diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
-            self._initial_diagnostics_loaded = True
-        else:
-            # After setup, diagnostics only back existing box-linked sensors, so
-            # transient diagnostics endpoint failures should not unload them.
-            diagnostic_subsystems = self.data.diagnostic_subsystems
-            try:
-                diagnostic_info = await self.client.async_get_diagnostics_info()
-            except DucoError as err:
-                _LOGGER.debug("Could not fetch Duco diagnostics info", exc_info=err)
-            else:
-                diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
+        diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
 
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
