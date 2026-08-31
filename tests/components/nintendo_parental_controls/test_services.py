@@ -385,7 +385,9 @@ async def test_update_daily_restrictions_invalid_state(
     mock_nintendo_device: AsyncMock,
 ) -> None:
     """Test update daily restrictions raises when device is in invalid state."""
-    mock_nintendo_device.set_daily_restrictions.side_effect = InvalidDeviceStateError()
+    mock_nintendo_device.set_daily_restrictions.side_effect = InvalidDeviceStateError(
+        "Invalid device state"
+    )
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "testdevid"), mock_config_entry.entry_id
