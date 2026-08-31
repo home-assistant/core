@@ -128,8 +128,8 @@ async def test_setup_with_product_model(
     await hass.config_entries.async_setup(mock_config_entry_with_product_model.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "ec:74:d7:97:53:c5")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ec:74:d7:97:53:c5"), mock_config_entry_with_product_model.entry_id
     )
     assert device is not None
     assert device.model == "GDS3710"
@@ -178,8 +178,8 @@ async def test_coordinator_firmware_update(
         await init_integration.runtime_data.coordinator.async_request_refresh()
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, init_integration.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, init_integration.unique_id), init_integration.entry_id
     )
     assert device is not None
     assert device.sw_version == "1.0.0"
