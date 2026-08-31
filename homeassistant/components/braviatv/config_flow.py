@@ -84,10 +84,9 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         system_info = await self.client.get_system_info()
         mac = system_info[ATTR_MAC]
-        unique_id = dr.format_mac(mac)
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(dr.format_mac(mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.device_config[CONF_HOST]}
         )
