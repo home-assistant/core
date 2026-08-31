@@ -1,7 +1,6 @@
 """Support for Homevolt number entities."""
 
-from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
@@ -14,16 +13,8 @@ from .entity import HomevoltEntity, homevolt_exception_handler
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 
 
-@dataclass(frozen=True, kw_only=True)
-class HomevoltNumberEntityDescription(NumberEntityDescription):
-    """Custom entity description for Homevolt numbers."""
-
-    set_value_fn: Any = None
-    value_fn: Any = None
-
-
-NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
-    HomevoltNumberEntityDescription(
+NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
+    NumberEntityDescription(
         key="setpoint",
         translation_key="setpoint",
         native_min_value=0,
@@ -32,7 +23,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="max_charge",
         translation_key="max_charge",
         native_min_value=0,
@@ -41,7 +32,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="max_discharge",
         translation_key="max_discharge",
         native_min_value=0,
@@ -50,7 +41,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="min_soc",
         translation_key="min_soc",
         native_min_value=0,
@@ -59,7 +50,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="max_soc",
         translation_key="max_soc",
         native_min_value=0,
@@ -68,7 +59,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="grid_import_limit",
         translation_key="grid_import_limit",
         native_min_value=0,
@@ -77,7 +68,7 @@ NUMBER_DESCRIPTIONS: tuple[HomevoltNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.CONFIG,
     ),
-    HomevoltNumberEntityDescription(
+    NumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
         native_min_value=0,
@@ -107,19 +98,25 @@ async def async_setup_entry(
 class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
     """Representation of a Homevolt number entity."""
 
-    entity_description: HomevoltNumberEntityDescription
+    entity_description: NumberEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: HomevoltDataUpdateCoordinator,
-        description: HomevoltNumberEntityDescription,
+        description: NumberEntityDescription,
     ) -> None:
         """Initialize the number entity."""
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.unique_id}_{description.key}"
         device_id = coordinator.data.unique_id
         super().__init__(coordinator, f"ems_{device_id}")
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the current manual schedule supports parameter writes."""
+        return super().available and self.coordinator.client.battery_parameters_writable
 
     @property
     @override

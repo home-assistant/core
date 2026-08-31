@@ -1,80 +1,187 @@
-"""Tests for the Homevolt SELECT platform."""
+"""Tests for the Homevolt select platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
+from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError
+from homevolt.const import CONTROLLABLE_SCHEDULE_TYPE
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homevolt.const import DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
+from homeassistant.helpers import entity_registry as er
 
-# entity_registry is not required for these tests
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+ENTITY_ID = "select.homevolt_ems_battery_mode"
+MODE_BY_OPTION = {option: mode for mode, option in CONTROLLABLE_SCHEDULE_TYPE.items()}
 
 
 @pytest.fixture
-def platforms_select() -> list[Platform]:
-    """Return platforms including SELECT for this test."""
-    # Sensor is required for the coordinator; add SELECT as well.
-    return [Platform.SENSOR, Platform.SELECT]
+def platforms(mock_homevolt_client: MagicMock) -> list[Platform]:
+    """Load the select platform with manual control enabled."""
+    mock_homevolt_client.local_mode_enabled = True
+    mock_homevolt_client.current_schedule["local_mode"] = True
+    return [Platform.SELECT]
 
 
-async def test_select_entity_created(
+async def test_select_entity(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homevolt_client,
-    platforms_select: list[Platform],
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """The select entity should be created with correct options and state."""
-    # Initialise integration with SELECT platform enabled.
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.homevolt.PLATFORMS", platforms_select):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    """Test the battery mode select."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
-    entity_id = f"select.{DOMAIN}_schedule_type"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
-
-    # The fixture schedule type is 1 → "grid_charge"
-    assert state.state == "grid_charge"
-
-    # Expect all defined schedule types to be present.
-    expected_options = {
-        "idle",
-        "grid_charge",
-        "grid_discharge",
-        "solar_charge",
-        "solar_discharge",
-    }
-    assert set(state.attributes["options"]) == expected_options
+    assert state.state == "inverter_charge"
+    assert state.attributes["options"] == list(CONTROLLABLE_SCHEDULE_TYPE.values())
 
 
-async def test_select_option_changes(
+@pytest.mark.parametrize(("mode", "option"), list(CONTROLLABLE_SCHEDULE_TYPE.items()))
+async def test_select_option(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homevolt_client,
-    platforms_select: list[Platform],
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+    mode: int,
+    option: str,
 ) -> None:
-    """Selecting a new option calls the client and triggers a refresh."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.homevolt.PLATFORMS", platforms_select):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    """Test every supported battery mode command."""
 
-    entity_id = f"select.{DOMAIN}_schedule_type"
+    async def set_battery_mode(*, mode: str) -> None:
+        mock_homevolt_client.schedule["mode"] = MODE_BY_OPTION[mode]
+        mock_homevolt_client.schedule_mode = mock_homevolt_client.schedule["mode"]
 
-    # Change to a different schedule type.
+    mock_homevolt_client.set_battery_mode.side_effect = set_battery_mode
+    mock_homevolt_client.set_battery_mode.reset_mock()
+    mock_homevolt_client.update_info.reset_mock()
+
     await hass.services.async_call(
         SELECT_DOMAIN,
-        "select_option",
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "solar_charge"},
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
         blocking=True,
     )
 
-    # Verify the client method was called with the correct enum value (3).
-    mock_homevolt_client.set_schedule_type.assert_awaited_once_with(3)
+    mock_homevolt_client.set_battery_mode.assert_awaited_once_with(mode=option)
+    mock_homevolt_client.update_info.assert_awaited_once_with()
+    assert mock_homevolt_client.schedule["mode"] == mode
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == option
 
-    # The coordinator should have refreshed the data.
-    assert mock_homevolt_client.update_info.called
+
+async def test_select_unknown_mode(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test a missing schedule mode is unknown, not idle."""
+    mock_homevolt_client.schedule["mode"] = None
+    mock_homevolt_client.schedule_mode = None
+
+    await init_integration.runtime_data.async_request_refresh()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_select_unavailable_without_local_mode(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test mode changes are unavailable until local mode is enabled."""
+    mock_homevolt_client.local_mode_enabled = False
+
+    await init_integration.runtime_data.async_request_refresh()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_invalid_select_option(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test invalid options never reach the client."""
+    mock_homevolt_client.set_battery_mode.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "invalid"},
+            blocking=True,
+        )
+
+    mock_homevolt_client.set_battery_mode.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "translation_key", "placeholders"),
+    [
+        (
+            HomevoltAuthenticationError("auth failed"),
+            ConfigEntryAuthFailed,
+            "auth_failed",
+            None,
+        ),
+        (
+            HomevoltConnectionError("connection failed"),
+            HomeAssistantError,
+            "communication_error",
+            {"error": "connection failed"},
+        ),
+        (
+            HomevoltError("unknown error"),
+            HomeAssistantError,
+            "unknown_error",
+            {"error": "unknown error"},
+        ),
+    ],
+)
+async def test_select_option_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+    exception: HomevoltError,
+    expected_exception: type[Exception],
+    translation_key: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test translated client errors when selecting a mode."""
+    mock_homevolt_client.set_battery_mode.side_effect = exception
+    mock_homevolt_client.update_info.reset_mock()
+
+    with pytest.raises(expected_exception) as exc_info:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "solar_charge"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
+    mock_homevolt_client.update_info.assert_not_awaited()
