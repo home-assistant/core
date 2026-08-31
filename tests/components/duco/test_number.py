@@ -92,32 +92,6 @@ async def test_bypass_supply_temperature_targets_missing_skips_number_creation(
     assert hass.states.get(_ZONE_2_ENTITY_ID) is None
 
 
-@pytest.mark.parametrize(
-    "field",
-    [
-        pytest.param("minimum", id="missing_minimum"),
-        pytest.param("maximum", id="missing_maximum"),
-        pytest.param("increment", id="missing_increment"),
-    ],
-)
-@pytest.mark.usefixtures("mock_duco_client")
-async def test_bypass_supply_temperature_target_incomplete_metadata_skips_number_creation(
-    hass: HomeAssistant,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
-    mock_config_entry: MockConfigEntry,
-    field: str,
-) -> None:
-    """Test incomplete target metadata does not expose an invalid control."""
-    mock_bypass_supply_temperature_targets[1] = replace(
-        mock_bypass_supply_temperature_targets[1], **{field: None}
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
-
-    assert hass.states.get(_ZONE_1_ENTITY_ID) is None
-    assert hass.states.get(_ZONE_2_ENTITY_ID) is not None
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_set_bypass_supply_temperature_target(
     hass: HomeAssistant,

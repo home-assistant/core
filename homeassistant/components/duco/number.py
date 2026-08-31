@@ -56,14 +56,6 @@ async def async_setup_entry(
                 if (description.key, zone_id) in known_entities:
                     continue
 
-                # Skip incomplete metadata because guessing valid limits would expose an invalid control.
-                if (
-                    target.minimum is None
-                    or target.maximum is None
-                    or target.increment is None
-                ):
-                    continue
-
                 known_entities.add((description.key, zone_id))
                 new_entities.append(
                     DucoBypassSupplyTemperatureTargetNumber(
