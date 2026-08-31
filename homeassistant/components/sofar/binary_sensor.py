@@ -19,8 +19,6 @@ from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
 
-# Combiner boxes, string fuses and AFCI are commercial hardware a PV
-# or hybrid unit does not have.
 _DISABLED_BY_DEFAULT = frozenset(
     {
         FaultCategory.ARC_FAULT,
