@@ -100,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
 
-    # Create main device that holds most device information
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -116,7 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         ),
     )
 
-    # Create a device for every connected DALI line
     for line_id, line_info in info_api.data.lines.items():
         line_unique_id = f"{entry.unique_id}-line{line_id}"
 
