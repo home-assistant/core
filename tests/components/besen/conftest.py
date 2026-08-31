@@ -50,6 +50,8 @@ FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
 def charger_state(
     *,
     charger_status: bool | None = True,
+    language: str | None = "English",
+    temperature_unit: str | None = "Celsius",
     available: bool = True,
     authenticated: bool = True,
     phases: int = 1,
@@ -67,7 +69,12 @@ def charger_state(
             hardware_version="HW1",
             software_version="SW1",
         ),
-        config=ChargerConfig(device_name="Garage", rssi=-55),
+        config=ChargerConfig(
+            language=language,
+            temperature_unit=temperature_unit,
+            device_name="Garage",
+            rssi=-55,
+        ),
         charge=(
             charge
             if charge is not None
@@ -100,6 +107,8 @@ def _configure_client_mock(client: Mock) -> None:
     client.async_stop = AsyncMock()
     client.async_start_charging = AsyncMock()
     client.async_stop_charging = AsyncMock()
+    client.async_set_language = AsyncMock()
+    client.async_set_temperature_unit = AsyncMock()
     client.add_listener.return_value = Mock()
 
 
@@ -157,8 +166,16 @@ def mock_besen_client() -> Generator[Mock]:
         async def async_stop_charging() -> None:
             publish_besen_state(client, charger_state(charger_status=False))
 
+        async def async_set_language(language: str) -> None:
+            publish_besen_state(client, charger_state(language=language))
+
+        async def async_set_temperature_unit(unit: str) -> None:
+            publish_besen_state(client, charger_state(temperature_unit=unit))
+
         client.async_start_charging.side_effect = async_start_charging
         client.async_stop_charging.side_effect = async_stop_charging
+        client.async_set_language.side_effect = async_set_language
+        client.async_set_temperature_unit.side_effect = async_set_temperature_unit
         yield client
 
 

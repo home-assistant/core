@@ -38,6 +38,28 @@
     }
   },
   "entity": {
+    "select": {
+      "language": {
+        "name": "Language",
+        "state": {
+          "chinese": "\u4e2d\u6587",
+          "english": "English",
+          "french": "Fran\u00e7ais",
+          "german": "Deutsch",
+          "hebrew": "\u05e2\u05d1\u05e8\u05d9\u05ea",
+          "italian": "Italiano",
+          "polish": "Polski",
+          "spanish": "Espa\u00f1ol"
+        }
+      },
+      "temperature_unit": {
+        "name": "Temperature unit",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      }
+    },
     "sensor": {
       "charging_power": { "name": "Charging power" },
       "external_temperature": { "name": "External temperature" },
