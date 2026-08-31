@@ -17,7 +17,7 @@ from homeassistant.util.color import (
 
 from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import color_temperature_range, elgato_exception_handler
+from .helpers import color_temperature_range, elgato_device_action
 
 PARALLEL_UPDATES = 1
 
@@ -122,9 +122,8 @@ class ElgatoNumberEntity(ElgatoEntity, NumberEntity):
         # 6535 K, above a maximum that cannot then be set again.
         return min(max(value, self.native_min_value), self.native_max_value)
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the number value."""
         await self.entity_description.set_fn(self.coordinator.client, value)
-        await self.coordinator.async_request_refresh()

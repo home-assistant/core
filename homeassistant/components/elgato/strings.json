@@ -86,6 +86,15 @@
     "communication_error": {
       "message": "An error occurred while communicating with the Elgato device."
     },
+    "firmware_communication_error": {
+      "message": "An error occurred while downloading the firmware from Elgato."
+    },
+    "firmware_install_error": {
+      "message": "The Elgato device did not accept the firmware: {error}"
+    },
+    "firmware_unknown_error": {
+      "message": "An unknown error occurred while downloading the firmware from Elgato."
+    },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Elgato device."
     }
