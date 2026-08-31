@@ -177,18 +177,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return (
             super().available and self._segment in self.coordinator.data.state.segments
         )
-
+        
     @property
     @override
     def color_mode(self) -> ColorMode | None:
-        """Return the active color mode, derived from the segment color.
-
-        A WLED segment that supports both white color temperature and a color
-        channel (analog/PWM RGB+CCT) reports a single static mode at setup, so the
-        UI never reflects the actual color. Derive the mode from the live segment
-        data instead: if any RGB channel is non-zero, the segment is showing a
-        color (RGBW), otherwise it is in white / color-temperature mode.
-        """
         supported = self._attr_supported_color_modes or set()
         if ColorMode.COLOR_TEMP in supported and (
             ColorMode.RGBW in supported or ColorMode.RGB in supported
