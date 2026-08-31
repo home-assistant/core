@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_binary_entities[binary_sensor.test_model_air_warmer_than_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_model_air_warmer_than_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air warmer than water',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air warmer than water',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_start_condition_water_to_air',
+    'unique_id': '0000-1111-2222-3333_cooling_start_condition_water_to_air',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_air_warmer_than_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Air warmer than water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_model_air_warmer_than_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_entities[binary_sensor.test_model_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -50,7 +100,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_allowed_by_control_method-entry]
+# name: test_binary_entities[binary_sensor.test_model_control_method_allows_cooling-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +114,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_allowed_by_control_method',
+    'entity_id': 'binary_sensor.test_model_control_method_allows_cooling',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +122,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cooling allowed by control method',
+    'object_id_base': 'Control method allows cooling',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cooling allowed by control method',
+    'original_name': 'Control method allows cooling',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,20 +137,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_allowed_by_control_method-state]
+# name: test_binary_entities[binary_sensor.test_model_control_method_allows_cooling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling allowed by control method',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Control method allows cooling',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_allowed_by_control_method',
+    'entity_id': 'binary_sensor.test_model_control_method_allows_cooling',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_allowed_by_diagnostics-entry]
+# name: test_binary_entities[binary_sensor.test_model_cooling_demand_from_cooling_curve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -114,7 +164,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_allowed_by_diagnostics',
+    'entity_id': 'binary_sensor.test_model_cooling_demand_from_cooling_curve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,62 +172,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cooling allowed by diagnostics',
+    'object_id_base': 'Cooling demand from cooling curve',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cooling allowed by diagnostics',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cooling_start_condition_dtc',
-    'unique_id': '0000-1111-2222-3333_cooling_start_condition_dtc',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_allowed_by_diagnostics-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling allowed by diagnostics',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_allowed_by_diagnostics',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_demand-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_demand',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cooling demand',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cooling demand',
+    'original_name': 'Cooling demand from cooling curve',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -187,13 +187,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_demand-state]
+# name: test_binary_entities[binary_sensor.test_model_cooling_demand_from_cooling_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling demand',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling demand from cooling curve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_demand',
+    'entity_id': 'binary_sensor.test_model_cooling_demand_from_cooling_curve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -553,7 +553,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_outside_air_temperature_high_enough-entry]
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_faults_active-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -567,7 +567,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_outside_air_temperature_high_enough',
+    'entity_id': 'binary_sensor.test_model_no_cooling_faults_active',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -575,12 +575,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Outside air temperature high enough',
+    'object_id_base': 'No cooling faults active',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Outside air temperature high enough',
+    'original_name': 'No cooling faults active',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_start_condition_dtc',
+    'unique_id': '0000-1111-2222-3333_cooling_start_condition_dtc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_faults_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model No cooling faults active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_model_no_cooling_faults_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_outside_temperature_high_enough-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_model_outside_temperature_high_enough',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outside temperature high enough',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Outside temperature high enough',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -590,13 +640,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_outside_air_temperature_high_enough-state]
+# name: test_binary_entities[binary_sensor.test_model_outside_temperature_high_enough-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Outside air temperature high enough',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Outside temperature high enough',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_outside_air_temperature_high_enough',
+    'entity_id': 'binary_sensor.test_model_outside_temperature_high_enough',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -653,7 +703,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_room_temperature_high_enough-entry]
+# name: test_binary_entities[binary_sensor.test_model_room_warmer_than_target-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -667,7 +717,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_room_temperature_high_enough',
+    'entity_id': 'binary_sensor.test_model_room_warmer_than_target',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -675,12 +725,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Room temperature high enough',
+    'object_id_base': 'Room warmer than target',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Room temperature high enough',
+    'original_name': 'Room warmer than target',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -690,20 +740,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_room_temperature_high_enough-state]
+# name: test_binary_entities[binary_sensor.test_model_room_warmer_than_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Room temperature high enough',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Room warmer than target',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_room_temperature_high_enough',
+    'entity_id': 'binary_sensor.test_model_room_warmer_than_target',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_water_temperature_high_enough-entry]
+# name: test_binary_entities[binary_sensor.test_model_water_warmer_than_cooling_curve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -717,7 +767,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_water_temperature_high_enough',
+    'entity_id': 'binary_sensor.test_model_water_warmer_than_cooling_curve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -725,12 +775,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Water temperature high enough',
+    'object_id_base': 'Water warmer than cooling curve',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Water temperature high enough',
+    'original_name': 'Water warmer than cooling curve',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -740,63 +790,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_water_temperature_high_enough-state]
+# name: test_binary_entities[binary_sensor.test_model_water_warmer_than_cooling_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water temperature high enough',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water warmer than cooling curve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_water_temperature_high_enough',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_water_warmer_than_outside_air-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_water_warmer_than_outside_air',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Water warmer than outside air',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Water warmer than outside air',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cooling_start_condition_water_to_air',
-    'unique_id': '0000-1111-2222-3333_cooling_start_condition_water_to_air',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_water_warmer_than_outside_air-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Water warmer than outside air',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_water_warmer_than_outside_air',
+    'entity_id': 'binary_sensor.test_model_water_warmer_than_cooling_curve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -36,13 +36,13 @@
         "name": "External contact not blocking"
       },
       "cooling_start_condition_control_method": {
-        "name": "Cooling allowed by control method"
+        "name": "Control method allows cooling"
       },
       "cooling_start_condition_demand": {
-        "name": "Cooling demand"
+        "name": "Cooling demand from cooling curve"
       },
       "cooling_start_condition_dtc": {
-        "name": "Cooling allowed by diagnostics"
+        "name": "No cooling faults active"
       },
       "cooling_start_condition_exponential_backoff": {
         "name": "Restart delay elapsed"
@@ -54,16 +54,16 @@
         "name": "Indoor unit connected"
       },
       "cooling_start_condition_inside_temperature": {
-        "name": "Room temperature high enough"
+        "name": "Room warmer than target"
       },
       "cooling_start_condition_outside_air_temperature": {
-        "name": "Outside air temperature high enough"
+        "name": "Outside temperature high enough"
       },
       "cooling_start_condition_water_temperature": {
-        "name": "Water temperature high enough"
+        "name": "Water warmer than cooling curve"
       },
       "cooling_start_condition_water_to_air": {
-        "name": "Water warmer than outside air"
+        "name": "Air warmer than water"
       },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
