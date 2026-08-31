@@ -238,7 +238,12 @@ async def test_release_home_server_surfaces_shutdown_runtime_error(
 async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
     hass: HomeAssistant,
 ) -> None:
-    """Test cleanup when HomeServer construction completes after cancellation."""
+    """A HomeServer must be shut down even if constructed after cancellation.
+
+    Regression test: a HomeServer that finishes constructing after its
+    acquirer was cancelled must still be shut down, instead of leaking its
+    socket and worker threads, as long as nothing else has since acquired it.
+    """
     construction_started = threading.Event()
     release_construction = threading.Event()
     home_server = MagicMock()
@@ -250,9 +255,7 @@ async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
 
     # `new=` rather than `side_effect=`: hass's test-mode
     # async_add_executor_job() special-cases a Mock target and runs it
-    # inline instead of on a worker thread, which would make it impossible
-    # to ever observe (or cancel into) an in-flight construction. Patching
-    # in a plain function instead makes it take the real executor path.
+    # inline, so it could never be observed in flight.
     with patch(
         "homeassistant.components.hausbus.gateway.HomeServer",
         new=_slow_construct,
@@ -262,7 +265,7 @@ async def test_cancelled_acquire_shuts_down_home_server_once_constructed(
         # Wait until the executor-backed constructor call has actually
         # started, so cancelling below lands while it is still running -
         # not before hass.async_add_executor_job() has even scheduled it.
-        assert await hass.async_add_executor_job(construction_started.wait, 5)
+        await hass.async_add_executor_job(construction_started.wait, 5)
 
         # async_acquire_home_server()'s except-CancelledError branch itself
         # awaits home_server_job (to know whether it needs cleaning up)

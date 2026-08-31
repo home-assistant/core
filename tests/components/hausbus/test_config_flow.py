@@ -109,12 +109,8 @@ async def test_user_flow_os_error_shows_search_timeout(
 
     # `new=` rather than `side_effect=`: hass's test-mode executor-job
     # runner special-cases a Mock target and runs it inline instead of on
-    # a worker thread. Left as a Mock, this failure - and the flow
-    # cascading past SHOW_PROGRESS straight to the search_timeout step -
-    # would complete synchronously within the first async_configure() call
-    # below, which then feeds that call's own user_input={} right back
-    # into async_step_search_timeout() as if it were a resubmission,
-    # looping the flow between wait_for_device and search_timeout forever.
+    # a worker thread, which would mask the async flow cascade this test
+    # exercises below.
     with patch(
         "homeassistant.components.hausbus.gateway.HomeServer",
         new=_raise_os_error,

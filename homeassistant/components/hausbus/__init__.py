@@ -45,9 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     # Start device discovery in the background: it is a best-effort UDP
     # broadcast that may find devices at any time, not only at startup, so
     # setup does not block on it. The task is stored on the gateway so
-    # async_unload_entry can await it before tearing down the HomeServer
-    # singleton; if it is still running by then, the config entry
-    # framework cancels it once async_unload_entry returns.
+    # async_unload_entry can await it to completion before tearing down
+    # the HomeServer singleton.
     gateway.discovery_task = entry.async_create_background_task(
         hass, gateway.start_discovery(), "Haus-Bus discovery"
     )
@@ -61,11 +60,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
         with contextlib.suppress(Exception):
             await gateway.discovery_task
 
-    # Stop delivering newly discovered devices before unloading the cover
-    # platform below. pyhausbus's DeviceWorker thread can still be
-    # processing in-flight search replies after searchDevices() (and
-    # discovery_task above) return, and the cover platform's
-    # NEW_CHANNEL_ADDED dispatcher listener - registered via
+    # Gate dispatch before touching the pyhausbus listener:
+    # removeBusDeviceListener() cannot recall a newDeviceDetected() call
+    # already in flight or already queued onto the event loop, and the
+    # cover platform's NEW_CHANNEL_ADDED listener is not disconnected
+    # until this function returns successfully - so a late callback could
+    # still call async_add_entities() on a mid-teardown platform.
+    # gateway.pause_channel_dispatch() (see its docstring) closes that
+    # gap; both it and the listener removal are undone if the platform
+    # unload fails.
     gateway.pause_channel_dispatch()
     gateway.home_server.removeBusDeviceListener(gateway)
     try:
@@ -81,28 +84,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
 
     gateway.home_server.removeBusEventListener(gateway)
 
-    # HomeServer is a process-wide singleton that an in-progress config
-    # flow can also be holding a reference to (see
-    # gateway.async_acquire_home_server), so release our reference
-    # rather than shutting it down unconditionally here - it is only
-    # actually shut down once nothing else still needs it. Otherwise
-    # its UDP listener and worker/collector threads would keep running
-    # indefinitely after unload.
-    #
-    # This can raise RuntimeError if a worker/collector thread was too
-    # slow to stop (see gateway.async_release_home_server) - by design,
-    # so that failure is surfaced rather than reported as a successful
-    # unload, rather than silently leaving a stray thread running. HA
-    # core marks the resulting FAILED_UNLOAD state as non-recoverable
-    # (see ConfigEntryState in homeassistant/config_entries.py):
-    # async_unload()/async_setup() refuse to touch the entry again
-    # afterwards, so this function is never re-entered for the same
-    # entry via a retry. The entry can still be deleted by the user -
-    # ConfigEntries._async_remove() removes non-recoverable entries
-    # directly (reporting require_restart instead of calling
-    # async_unload_entry again), it just can't be re-set-up in the
-    # running process - the only way to get a working entry again is
-    # restarting Home Assistant, which starts a fresh process with a
-    # fresh gateway and HomeServer, not a second call here.
+    # HomeServer is a process-wide singleton also referenced by any
+    # in-progress config flow (see gateway.async_acquire_home_server), so
+    # release our reference via async_release_home_server() rather than
+    # shutting it down unconditionally - see that function's docstring
+    # for the RuntimeError it can raise.
     await async_release_home_server(hass, gateway.home_server)
     return unload_ok
