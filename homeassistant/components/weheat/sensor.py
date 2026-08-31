@@ -54,6 +54,14 @@ class WeHeatSensorEntityDescription(SensorEntityDescription):
     raw_field: str | None = None
 
 
+def _cooling_blocked_by(status: HeatPump) -> str | None:
+    """Return the first condition that is keeping the heat pump from cooling."""
+    conditions = status.cooling_start_conditions
+    if conditions is None:
+        return None
+    return next((name for name, met in conditions.items() if not met), "none")
+
+
 def _is_supported(
     entity_description: WeHeatSensorEntityDescription, heat_pump: HeatPump
 ) -> bool:
@@ -220,6 +228,15 @@ SENSORS = [
                 else None
             )
         ),
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="cooling_blocked_by",
+        key="cooling_blocked_by",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        raw_field="cooling_start_conditions",
+        options=["none", *HeatPump.COOLING_START_CONDITION_BITS],
+        value_fn=_cooling_blocked_by,
     ),
     WeHeatSensorEntityDescription(
         translation_key="cooling_state",

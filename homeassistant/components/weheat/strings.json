@@ -100,6 +100,23 @@
       "cooling_available_from": {
         "name": "Cooling available from"
       },
+      "cooling_blocked_by": {
+        "name": "Cooling blocked by",
+        "state": {
+          "contact_not_blocked": "Blocked by external contact",
+          "control_method": "Control method does not allow cooling",
+          "demand": "No cooling demand",
+          "dtc": "Cooling fault active",
+          "exponential_backoff": "Waiting for restart delay",
+          "heat_cool_delay": "Waiting for heating to cooling delay",
+          "indoor_unit_connected": "Indoor unit not connected",
+          "inside_temperature": "Room not warmer than target",
+          "none": "Not blocked",
+          "outside_air_temperature": "Outside temperature too low",
+          "water_temperature": "Water not warmer than cooling curve",
+          "water_to_air": "Air not warmer than water"
+        }
+      },
       "cooling_pause_reason": {
         "name": "Cooling pause reason",
         "state": {

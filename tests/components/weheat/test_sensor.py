@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 30), (True, 36)])
+@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 31), (True, 37)])
 async def test_create_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
@@ -52,6 +53,42 @@ async def test_create_entities(
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == nr_of_entities
+
+
+def _start_conditions(*unmet: str) -> dict[str, bool]:
+    """Build a start condition mapping with the named conditions not met."""
+    return {name: name not in unmet for name in HeatPump.COOLING_START_CONDITION_BITS}
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected"),
+    [
+        pytest.param(_start_conditions(), "none", id="all_met"),
+        pytest.param(
+            _start_conditions("outside_air_temperature"),
+            "outside_air_temperature",
+            id="one_unmet",
+        ),
+        # the first unmet condition wins, following the order the pump reports them in
+        pytest.param(_start_conditions("demand", "dtc"), "dtc", id="several_unmet"),
+        pytest.param(None, STATE_UNKNOWN, id="not_decoded"),
+    ],
+)
+@pytest.mark.usefixtures("mock_weheat_discover")
+async def test_cooling_blocked_by(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    conditions: dict[str, bool] | None,
+    expected: str,
+) -> None:
+    """Test the sensor names the condition that is keeping the heat pump from cooling."""
+    mock_weheat_heat_pump.cooling_start_conditions = conditions
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_model_cooling_blocked_by").state == expected
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")

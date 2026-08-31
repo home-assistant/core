@@ -486,6 +486,86 @@
     'state': '2025-06-21T15:30:00+00:00',
   })
 # ---
+# name: test_all_entities[sensor.test_model_cooling_blocked_by-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'control_method',
+        'dtc',
+        'outside_air_temperature',
+        'inside_temperature',
+        'indoor_unit_connected',
+        'water_to_air',
+        'demand',
+        'water_temperature',
+        'contact_not_blocked',
+        'exponential_backoff',
+        'heat_cool_delay',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_model_cooling_blocked_by',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling blocked by',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cooling blocked by',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_blocked_by',
+    'unique_id': '0000-1111-2222-3333_cooling_blocked_by',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_cooling_blocked_by-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling blocked by',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'control_method',
+        'dtc',
+        'outside_air_temperature',
+        'inside_temperature',
+        'indoor_unit_connected',
+        'water_to_air',
+        'demand',
+        'water_temperature',
+        'contact_not_blocked',
+        'exponential_backoff',
+        'heat_cool_delay',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_cooling_blocked_by',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'demand',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_cooling_pause_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

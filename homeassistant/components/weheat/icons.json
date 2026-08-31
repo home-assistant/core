@@ -66,6 +66,9 @@
       "cooling_available_from": {
         "default": "mdi:timer-sand"
       },
+      "cooling_blocked_by": {
+        "default": "mdi:snowflake-alert"
+      },
       "cooling_pause_reason": {
         "default": "mdi:snowflake-off"
       },
