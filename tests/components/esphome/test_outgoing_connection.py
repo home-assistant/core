@@ -67,14 +67,16 @@ async def test_outgoing_connection_registration(
     unregister.assert_called()
 
 
+@pytest.mark.parametrize("noise_psk", [None, ""])
 async def test_outgoing_connection_requires_noise_psk(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     mock_server: MagicMock,
+    noise_psk: str | None,
 ) -> None:
-    """A keyless entry never registers or sets the dial-back flag."""
-    entry = _make_entry(noise_psk=None)
+    """A keyless entry (missing or empty key) never registers or sets the flag."""
+    entry = _make_entry(noise_psk=noise_psk)
     entry.add_to_hass(hass)
     await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
     await hass.async_block_till_done()

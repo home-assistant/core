@@ -126,11 +126,10 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        # Always a dial-back target on a key-verified transport; the zero-PSK
-        # provisioning client authenticates nobody so it never claims the flag
-        outgoing_connection_target=(
-            noise_psk is not None and noise_psk != ZERO_NOISE_PSK
-        ),
+        # Always a dial-back target on a key-verified transport; keyless
+        # entries store an empty key, and the zero-PSK provisioning client
+        # authenticates nobody, so neither claims the flag
+        outgoing_connection_target=bool(noise_psk) and noise_psk != ZERO_NOISE_PSK,
     )
 
 
@@ -588,12 +587,14 @@ class ESPHomeManager:
     async def _async_register_outgoing_target(self) -> None:
         """Register this entry's MAC with the shared dial-in listener."""
         entry = self.entry
-        # Routed only for an entry that can verify the device by key and has
-        # a MAC unique id; entries predating MAC unique ids are unsupported
-        # until their first connect migrates the id and the entry reloads
+        # Routed only when this client can verify the device by key (the
+        # client's key, not entry data: a key provisioned mid-connect only
+        # takes effect after the next reload) and the unique id is a MAC;
+        # entries predating MAC unique ids wait for their next reload after
+        # the first connect migrates the id
         if (
             self._outgoing_unregister is not None
-            or not entry.data.get(CONF_NOISE_PSK)
+            or not self.cli.noise_psk
             or not (mac := entry.unique_id)
             or ":" not in mac
         ):
@@ -1171,10 +1172,6 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        # The device may open the TCP connection to us when it cannot be
-        # reached; a dial-in for this MAC is handed to the reconnect logic
-        await self._async_register_outgoing_target()
-
         infos, services = await entry_data.async_load_from_store(
             restore_states=bool(entry.unique_id)
         )
@@ -1206,6 +1203,11 @@ class ESPHomeManager:
                 hass.config_entries.async_update_entry(
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
+
+        # After the restored unique id above so those entries register too:
+        # the device may open the TCP connection to us when it cannot be
+        # reached, and a dial-in for this MAC is handed to the reconnect logic
+        await self._async_register_outgoing_target()
 
         await reconnect_logic.start()
 
