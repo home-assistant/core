@@ -96,7 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
 
     device = await hass.async_add_executor_job(_create_device, data, ip_address)
     if device is None:
-        raise ConfigEntryError("Unable to initialize device")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unable_initialize_device"
+        )
 
     connected = await hass.async_add_executor_job(_connect, device)
     if not connected:
@@ -121,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
         if not connected:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="unable_connect",
+                translation_key="unable_connect_device",
                 translation_placeholders={"device_id": str(device_id)},
             )
 
