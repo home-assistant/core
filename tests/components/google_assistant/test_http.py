@@ -32,7 +32,11 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_get_entity_settings,
     async_is_entity_locked,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EntityCategory,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -508,6 +512,32 @@ async def test_should_expose_locks_yaml_matched_entities(
 
     assert google_config.should_expose(entry.entity_id) is True
     assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is True
+
+
+async def test_should_expose_clears_stale_yaml_exposure_on_unlock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test becoming an auxiliary entity clears a previously locked exposure."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {"project_id": "1234", "exposed_domains": ["light"]}
+    )
+    google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
+
+    assert google_config.should_expose(entry.entity_id) is True
+    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is True
+
+    entity_registry.async_update_entity(
+        entry.entity_id, entity_category=EntityCategory.DIAGNOSTIC
+    )
+    await hass.async_block_till_done()
+
+    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is False
+    assert google_config.should_expose(entry.entity_id) is False
 
 
 async def test_ui_exposure_change_persists_when_yaml_has_no_opinion(

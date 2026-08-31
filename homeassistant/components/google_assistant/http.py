@@ -13,6 +13,7 @@ import jwt
 from homeassistant.components import webhook
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
+    async_is_entity_locked,
     async_listen_entity_updates,
     async_set_entity_locked,
     async_should_expose,
@@ -287,9 +288,13 @@ class GoogleConfig(AbstractConfig):
         should_expose_by_default = self._should_expose_by_default(
             entity_id, auxiliary_entity=auxiliary_entity
         )
+        was_locked = async_is_entity_locked(self.hass, DOMAIN, entity_id)
         async_set_entity_locked(self.hass, DOMAIN, entity_id, should_expose_by_default)
         if should_expose_by_default:
             async_expose_entity(self.hass, DOMAIN, entity_id, True)
+        elif was_locked:
+            # Was locked, so the stored value is ours to clear.
+            async_expose_entity(self.hass, DOMAIN, entity_id, False)
 
     @override
     def should_2fa(self, state):
