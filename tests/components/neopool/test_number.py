@@ -771,17 +771,19 @@ async def test_pending_write_dropped_on_remove(
     mock_neopool_client.async_set_setpoint.assert_not_awaited()
 
 
-async def test_external_cancel_propagates_and_still_writes(
+async def test_external_cancel_propagates_but_spares_coalesced_caller(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Cancelling one awaiting caller re-raises but leaves the queued write.
+    """Cancelling one caller re-raises for it but spares the coalesced batch.
 
-    Cancelling a single service task (not an entity removal) must propagate the
-    cancellation to that caller without resolving the shared coalesce future,
-    so the debounced write still fires on the next tick.
+    Two blocking callers land in the same debounce window and share one
+    coalesce future. Cancelling one caller's service task must propagate the
+    cancellation to that caller alone: the shield keeps the shared future
+    alive, so the write still fires and the surviving caller observes its
+    outcome without a spurious cancellation.
     """
     mock_neopool_client.async_set_setpoint = AsyncMock(
         return_value={"MBF_PAR_PH1": 750}
@@ -792,15 +794,18 @@ async def test_external_cancel_propagates_and_still_writes(
     mock_neopool_client.async_set_setpoint.reset_mock()
 
     victim = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    survivor = _set_value_nowait(hass, ph1_entity_id, 7.5)
     await _let_park(hass)
 
-    # Cancel only this caller's task; cancellation must propagate to it.
+    # Cancel only the victim's task; its cancellation must propagate to it.
     victim.cancel()
     with pytest.raises(asyncio.CancelledError):
         await victim
 
-    # The batch is untouched: the queued write still fires on the next tick.
+    # The batch is untouched: the queued write fires and the survivor, still
+    # awaiting the shielded future, returns cleanly with the write's outcome.
     await _flush(hass, freezer)
+    await survivor
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.PH_MAX, 750
     )

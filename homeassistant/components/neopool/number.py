@@ -348,13 +348,15 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         future = self._write_future
         self._write_unsub = async_call_later(self.hass, WRITE_DELAY, self._async_flush)
         try:
-            await future
+            # Shield the shared future: cancelling one caller's service task must
+            # not cancel the batch and release the other coalesced callers.
+            await asyncio.shield(future)
         except asyncio.CancelledError:
             if self._removing:
                 # Removed while waiting: nothing to report, exit cleanly.
                 return
             # This service task was cancelled, not the batch: re-raise so the
-            # shared future stays intact for the other coalesced callers.
+            # caller's cancellation propagates while the shielded future lives on.
             raise
 
     async def _async_flush(self, _now: datetime) -> None:
