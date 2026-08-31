@@ -275,7 +275,7 @@ class MetOfficeWeather(
         )
         timesteps = coordinator.data.timesteps
         start_datetime = dt_util.now(
-            tz=timesteps[0]["time"].tzinfo
+            time_zone=timesteps[0]["time"].tzinfo
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         return [
             _build_daily_forecast_data(timestep)
@@ -294,7 +294,7 @@ class MetOfficeWeather(
 
         timesteps = coordinator.data.timesteps
         start_datetime = dt_util.now(
-            tz=timesteps[0]["time"].tzinfo
+            time_zone=timesteps[0]["time"].tzinfo
         ).replace(minute=0, second=0, microsecond=0)
         return [
             _build_hourly_forecast_data(timestep)
@@ -312,7 +312,7 @@ class MetOfficeWeather(
         )
         timesteps = coordinator.data.timesteps
         start_datetime = dt_util.now(
-            tz=timesteps[0]["time"].tzinfo
+            time_zone=timesteps[0]["time"].tzinfo
         ).replace(hour=0, minute=0, second=0, microsecond=0)
         return [
             _build_twice_daily_forecast_data(timestep)
