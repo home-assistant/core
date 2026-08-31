@@ -383,6 +383,180 @@ PRODUCTION_DESCRIPTIONS: tuple[
 )
 
 
+# MARK: - Platform setup
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PowersensorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up all Powersensor sensor entities for a config entry."""
+    runtime: PowersensorRuntimeData = entry.runtime_data
+    vhh: VirtualHousehold = runtime.vhh
+    dispatcher: PowersensorMessageDispatcher = runtime.dispatcher
+
+    # Tracks which VHH entity groups have been added this session.
+    # Reset on every reload since this is a closure-local, not RuntimeData.
+    vhh_state = PowersensorVirtualHouseholdState()
+
+    # Tracks which role-gated sensor entities have been created, keyed by
+    # (mac, description.key).  Used only to prevent handle_role_update from
+    # re-adding entities that handle_discovered_sensor already created.
+    role_entities_added: set[tuple[str, str]] = set()
+
+    entry_id = entry.entry_id
+
+    # Role update handling
+    @callback
+    def handle_role_update(mac_address: str, new_role: str | None) -> None:
+        """Persist role changes and trigger a VHH refresh when needed."""
+        existing_roles: dict[str, str | None] = dict(entry.data.get(CFG_ROLES, {}))
+        old_role = existing_roles.get(mac_address)
+
+        if old_role == new_role:
+            return
+
+        _LOGGER.debug("Updating role for %s: %s → %s", mac_address, old_role, new_role)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CFG_ROLES: {**existing_roles, mac_address: new_role}},
+        )
+
+        if mac_address in dispatcher.plugs:
+            # Plugs always have ROLE_APPLIANCE — no entity creation needed here.
+            return
+
+        # Keep the dispatcher's in-memory role cache in sync.  When a role
+        # arrives via the reconfigure flow the dispatcher itself never sees a
+        # measurement event for it, so its sensors dict still holds the old
+        # (possibly None) value.  update_virtual_household_entities reads
+        # dispatcher.sensors.values() to decide whether to create VHH entities,
+        # so if this isn't updated now those entities won't be created until the
+        # next measurement arrives.
+        if mac_address in dispatcher.sensors:
+            dispatcher.sensors[mac_address] = new_role
+
+        if new_role in (ROLE_SOLAR, ROLE_HOUSENET):
+            async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
+
+        # Create any role-gated entities not present at initial discovery
+        # (e.g. power/energy when a sensor is assigned ROLE_HOUSENET/ROLE_SOLAR,
+        # or flow/volume when assigned ROLE_WATER).
+        new_entities = [
+            PowersensorSensorEntity(entry_id, mac_address, new_role, desc)
+            for desc in SENSOR_DESCRIPTIONS
+            if desc.supported_roles is not None
+            and new_role in desc.supported_roles
+            and (mac_address, desc.key) not in role_entities_added
+        ]
+        if new_entities:
+            _LOGGER.debug(
+                "Adding %d role-specific entities for %s (role=%s)",
+                len(new_entities),
+                mac_address,
+                new_role,
+            )
+            for e in new_entities:
+                role_entities_added.add((mac_address, e.entity_description.key))
+            async_add_entities(new_entities, False)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
+    )
+
+    # Sensor discovery
+    @callback
+    def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
+        """Create entities for a newly discovered sensor."""
+        new_sensors = [
+            PowersensorSensorEntity(entry_id, sensor_mac, sensor_role, desc)
+            for desc in SENSOR_DESCRIPTIONS
+            if desc.supported_roles is None or sensor_role in desc.supported_roles
+        ]
+
+        # Pre-populate role_entities_added so handle_role_update — which fires
+        # shortly after via ROLE_UPDATE_SIGNAL — doesn't add duplicates.
+        for e in new_sensors:
+            if e.entity_description.supported_roles is not None:
+                role_entities_added.add((sensor_mac, e.entity_description.key))
+
+        async_add_entities(new_sensors, False)
+
+        if sensor_role in (ROLE_HOUSENET, ROLE_SOLAR):
+            async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, CREATE_SENSOR_SIGNAL, handle_discovered_sensor)
+    )
+
+    # Plug discovery
+    @callback
+    def handle_discovered_plug(plug_mac: str) -> None:
+        """Create entities for a newly discovered plug."""
+        _LOGGER.debug("Plug discovered: %s", plug_mac)
+        async_add_entities(
+            [
+                PowersensorPlugEntity(entry_id, plug_mac, ROLE_APPLIANCE, desc)
+                for desc in PLUG_DESCRIPTIONS
+            ],
+            False,
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, CREATE_PLUG_SIGNAL, handle_discovered_plug)
+    )
+
+    # Virtual Household
+    @callback
+    def update_virtual_household_entities() -> None:
+        """Add VHH sensor entities once the required sensor roles are present.
+
+        Called at startup and whenever a sensor role changes to ROLE_HOUSENET
+        or ROLE_SOLAR.
+
+        VirtualHousehold automatically enables solar processing when it first
+        receives a solar-role event (see VirtualHousehold.process_average_power_event),
+        so no reload is needed when a solar sensor is discovered mid-session.
+        """
+        has_mains = any(role == ROLE_HOUSENET for role in dispatcher.sensors.values())
+        has_solar = any(role == ROLE_SOLAR for role in dispatcher.sensors.values())
+
+        if not has_mains:
+            _LOGGER.debug("No house-net sensor yet; VHH not operational")
+            return
+
+        if not vhh_state.mains_added:
+            _LOGGER.debug("Enabling mains components in virtual household")
+            async_add_entities(
+                [
+                    PowersensorHouseholdEntity(vhh, desc)
+                    for desc in CONSUMPTION_DESCRIPTIONS
+                ],
+                False,
+            )
+            vhh_state.mains_added = True
+
+        if has_solar and not vhh_state.solar_added:
+            _LOGGER.debug("Enabling solar components in virtual household")
+            async_add_entities(
+                [
+                    PowersensorHouseholdEntity(vhh, desc)
+                    for desc in PRODUCTION_DESCRIPTIONS
+                ],
+                False,
+            )
+            vhh_state.solar_added = True
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, UPDATE_VHH_SIGNAL, update_virtual_household_entities
+        )
+    )
+
+    update_virtual_household_entities()
+
+
 # MARK: - Base entity
 
 
@@ -632,177 +806,3 @@ class PowersensorHouseholdEntity(SensorEntity):
         if (val := msg.get(desc.message_key)) is not None:
             self._attr_native_value = desc.formatter(val)
             self.async_write_ha_state()
-
-
-# MARK: - Platform setup
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: PowersensorConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up all Powersensor sensor entities for a config entry."""
-    runtime: PowersensorRuntimeData = entry.runtime_data
-    vhh: VirtualHousehold = runtime.vhh
-    dispatcher: PowersensorMessageDispatcher = runtime.dispatcher
-
-    # Tracks which VHH entity groups have been added this session.
-    # Reset on every reload since this is a closure-local, not RuntimeData.
-    vhh_state = PowersensorVirtualHouseholdState()
-
-    # Tracks which role-gated sensor entities have been created, keyed by
-    # (mac, description.key).  Used only to prevent handle_role_update from
-    # re-adding entities that handle_discovered_sensor already created.
-    role_entities_added: set[tuple[str, str]] = set()
-
-    entry_id = entry.entry_id
-
-    # Role update handling
-    @callback
-    def handle_role_update(mac_address: str, new_role: str | None) -> None:
-        """Persist role changes and trigger a VHH refresh when needed."""
-        existing_roles: dict[str, str | None] = dict(entry.data.get(CFG_ROLES, {}))
-        old_role = existing_roles.get(mac_address)
-
-        if old_role == new_role:
-            return
-
-        _LOGGER.debug("Updating role for %s: %s → %s", mac_address, old_role, new_role)
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CFG_ROLES: {**existing_roles, mac_address: new_role}},
-        )
-
-        if mac_address in dispatcher.plugs:
-            # Plugs always have ROLE_APPLIANCE — no entity creation needed here.
-            return
-
-        # Keep the dispatcher's in-memory role cache in sync.  When a role
-        # arrives via the reconfigure flow the dispatcher itself never sees a
-        # measurement event for it, so its sensors dict still holds the old
-        # (possibly None) value.  update_virtual_household_entities reads
-        # dispatcher.sensors.values() to decide whether to create VHH entities,
-        # so if this isn't updated now those entities won't be created until the
-        # next measurement arrives.
-        if mac_address in dispatcher.sensors:
-            dispatcher.sensors[mac_address] = new_role
-
-        if new_role in (ROLE_SOLAR, ROLE_HOUSENET):
-            async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
-
-        # Create any role-gated entities not present at initial discovery
-        # (e.g. power/energy when a sensor is assigned ROLE_HOUSENET/ROLE_SOLAR,
-        # or flow/volume when assigned ROLE_WATER).
-        new_entities = [
-            PowersensorSensorEntity(entry_id, mac_address, new_role, desc)
-            for desc in SENSOR_DESCRIPTIONS
-            if desc.supported_roles is not None
-            and new_role in desc.supported_roles
-            and (mac_address, desc.key) not in role_entities_added
-        ]
-        if new_entities:
-            _LOGGER.debug(
-                "Adding %d role-specific entities for %s (role=%s)",
-                len(new_entities),
-                mac_address,
-                new_role,
-            )
-            for e in new_entities:
-                role_entities_added.add((mac_address, e.entity_description.key))
-            async_add_entities(new_entities, False)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
-    )
-
-    # Sensor discovery
-    @callback
-    def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
-        """Create entities for a newly discovered sensor."""
-        new_sensors = [
-            PowersensorSensorEntity(entry_id, sensor_mac, sensor_role, desc)
-            for desc in SENSOR_DESCRIPTIONS
-            if desc.supported_roles is None or sensor_role in desc.supported_roles
-        ]
-
-        # Pre-populate role_entities_added so handle_role_update — which fires
-        # shortly after via ROLE_UPDATE_SIGNAL — doesn't add duplicates.
-        for e in new_sensors:
-            if e.entity_description.supported_roles is not None:
-                role_entities_added.add((sensor_mac, e.entity_description.key))
-
-        async_add_entities(new_sensors, False)
-
-        if sensor_role in (ROLE_HOUSENET, ROLE_SOLAR):
-            async_dispatcher_send(hass, UPDATE_VHH_SIGNAL)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, CREATE_SENSOR_SIGNAL, handle_discovered_sensor)
-    )
-
-    # Plug discovery
-    @callback
-    def handle_discovered_plug(plug_mac: str) -> None:
-        """Create entities for a newly discovered plug."""
-        _LOGGER.debug("Plug discovered: %s", plug_mac)
-        async_add_entities(
-            [
-                PowersensorPlugEntity(entry_id, plug_mac, ROLE_APPLIANCE, desc)
-                for desc in PLUG_DESCRIPTIONS
-            ],
-            False,
-        )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, CREATE_PLUG_SIGNAL, handle_discovered_plug)
-    )
-
-    # Virtual Household
-    @callback
-    def update_virtual_household_entities() -> None:
-        """Add VHH sensor entities once the required sensor roles are present.
-
-        Called at startup and whenever a sensor role changes to ROLE_HOUSENET
-        or ROLE_SOLAR.
-
-        VirtualHousehold automatically enables solar processing when it first
-        receives a solar-role event (see VirtualHousehold.process_average_power_event),
-        so no reload is needed when a solar sensor is discovered mid-session.
-        """
-        has_mains = any(role == ROLE_HOUSENET for role in dispatcher.sensors.values())
-        has_solar = any(role == ROLE_SOLAR for role in dispatcher.sensors.values())
-
-        if not has_mains:
-            _LOGGER.debug("No house-net sensor yet; VHH not operational")
-            return
-
-        if not vhh_state.mains_added:
-            _LOGGER.debug("Enabling mains components in virtual household")
-            async_add_entities(
-                [
-                    PowersensorHouseholdEntity(vhh, desc)
-                    for desc in CONSUMPTION_DESCRIPTIONS
-                ],
-                False,
-            )
-            vhh_state.mains_added = True
-
-        if has_solar and not vhh_state.solar_added:
-            _LOGGER.debug("Enabling solar components in virtual household")
-            async_add_entities(
-                [
-                    PowersensorHouseholdEntity(vhh, desc)
-                    for desc in PRODUCTION_DESCRIPTIONS
-                ],
-                False,
-            )
-            vhh_state.solar_added = True
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, UPDATE_VHH_SIGNAL, update_virtual_household_entities
-        )
-    )
-
-    update_virtual_household_entities()
