@@ -2528,7 +2528,7 @@ pypoint==3.0.0
 pyportainer==1.0.45
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.2
+pyprobeplus==2.1.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
