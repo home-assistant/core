@@ -224,7 +224,6 @@ DEFAULT_INTEGRATIONS = {
     "hardware",
     "labs",
     "logger",
-    "map_tiles",
     "network",
     "system_health",
     #
