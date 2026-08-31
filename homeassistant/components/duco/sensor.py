@@ -240,7 +240,6 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: dict[str, DucoDiagnosticSensorEntityDescription]
         device_class=SensorDeviceClass.ENUM,
         options=DIAGNOSTIC_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     "SunCtrl": DucoDiagnosticSensorEntityDescription(
         key="sun_control",

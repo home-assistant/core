@@ -211,7 +211,6 @@ async def test_diagnostic_sensor_entity_registry_defaults(
 
     for entity_id in (
         "sensor.living_signal_strength",
-        "sensor.living_filter",
         "sensor.living_ventilation_cooling",
         "sensor.living_sun_control",
     ):
@@ -225,9 +224,10 @@ async def test_diagnostic_sensor_entity_registry_defaults(
     assert entry.original_device_class == SensorDeviceClass.ENUM
     assert entry.capabilities == {"options": ["ok", "disabled", "error"]}
 
-    entry = entity_registry.async_get("sensor.living_ventilation")
-    assert entry is not None
-    assert entry.disabled_by is None
+    for entity_id in ("sensor.living_filter", "sensor.living_ventilation"):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
