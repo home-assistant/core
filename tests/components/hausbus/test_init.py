@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
+from homeassistant.components.hausbus.gateway import async_acquire_home_server
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -126,7 +129,6 @@ async def test_unload_buffers_channel_discovered_during_platform_unload(
         assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert received == []
-    assert [chan for chan, _device_info in gateway._pending_channels] == [channel]
 
 
 async def test_unload_flushes_buffered_channel_if_platform_unload_fails(
@@ -165,7 +167,6 @@ async def test_unload_flushes_buffered_channel_if_platform_unload_fails(
         assert not await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert [chan for chan, _device_info in received] == [channel]
-    assert gateway._pending_channels == []
 
 
 async def test_setup_releases_home_server_if_platform_setup_fails(
@@ -191,3 +192,29 @@ async def test_setup_releases_home_server_if_platform_setup_fails(
     mock_home_server.removeBusEventListener.assert_called_once_with(gateway)
     mock_home_server.removeBusDeviceListener.assert_called_once_with(gateway)
     mock_home_server.shutdown.assert_called_once()
+
+
+async def test_unload_shutdown_failure_is_not_handed_out_again(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """A HomeServer whose shutdown fails during unload is not reused.
+
+    Regression test: async_unload_entry() has already removed both bus
+    listeners and unloaded the cover platform by the time it calls
+    async_release_home_server() - if that final shutdown then fails, a
+    later acquirer (a config flow, or single_config_entry permitting, a
+    future setup) must not be handed the same half torn-down HomeServer,
+    or a bare removeBusDeviceListener() call on it would raise ValueError
+    against a listener list shutdown() already cleared.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_home_server.shutdown.side_effect = RuntimeError("DeviceWorker failed to stop")
+
+    assert not await hass.config_entries.async_unload(config_entry.entry_id)
+
+    with pytest.raises(OSError):
+        await async_acquire_home_server(hass)

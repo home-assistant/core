@@ -68,7 +68,7 @@ async def test_register_channel_ignores_duplicates(
     hass: HomeAssistant, gateway: HausbusGateway
 ) -> None:
     """A channel discovered twice is only dispatched once."""
-    gateway._platform_ready = True
+    await gateway.async_flush_pending_channels()
     channel = _make_channel(1)
 
     received: list[tuple] = []
@@ -132,7 +132,7 @@ async def test_new_device_detected_registers_each_channel(
     hass: HomeAssistant, gateway: HausbusGateway
 ) -> None:
     """newDeviceDetected() hands each channel to _register_channel via the event loop."""
-    gateway._platform_ready = True
+    await gateway.async_flush_pending_channels()
     first_channel = _make_channel(4)
     second_channel = _make_channel(5)
 

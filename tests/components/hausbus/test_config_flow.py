@@ -19,14 +19,22 @@ async def test_user_flow_creates_entry(
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test the user flow creates a config entry once a device is found."""
-    # A plain function, not a MagicMock: hass's test-mode executor-job
+    search_started = threading.Event()
+    release_search = threading.Event()
+
+    def _blocking_search_devices() -> None:
+        search_started.set()
+        assert release_search.wait(timeout=5), "test did not release in time"
+
+    # A real function, not a MagicMock: hass's test-mode executor-job
     # runner special-cases Mock targets and runs them inline instead of on
-    # a worker thread. Left as a Mock, the whole search would complete
-    # synchronously within async_configure(), so the flow would cascade
-    # straight past SHOW_PROGRESS to CREATE_ENTRY before this test could
-    # ever observe the progress step - which is not how it behaves for a
-    # real, executor-backed search.
-    mock_home_server.searchDevices = lambda: None
+    # a worker thread. Blocking on an Event (rather than returning
+    # instantly) makes the SHOW_PROGRESS assertion below deterministic
+    # instead of depending on how fast a real executor thread happens to
+    # be scheduled - a fast enough thread could otherwise let the flow
+    # cascade straight past SHOW_PROGRESS to CREATE_ENTRY before this test
+    # could ever observe the progress step.
+    mock_home_server.searchDevices = _blocking_search_devices
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,6 +45,12 @@ async def test_user_flow_creates_entry(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "wait_for_device"
+
+    # Wait until searchDevices() has actually started on the executor
+    # before releasing it, so async_block_till_done() below waits for a
+    # search that is genuinely still in flight.
+    assert await hass.async_add_executor_job(search_started.wait, 5)
+    release_search.set()
 
     await hass.async_block_till_done()
 
@@ -53,10 +67,20 @@ async def test_user_flow_search_timeout_then_retry(
 ) -> None:
     """Test the search-timeout step and that submitting it retries the search."""
     mock_home_server.is_any_device_found.return_value = False
-    # A plain function, not a MagicMock: see test_user_flow_creates_entry.
-    # Needed on the retry cycle below in particular, where
+
+    search_started = threading.Event()
+    release_search = threading.Event()
+
+    def _blocking_search_devices() -> None:
+        search_started.set()
+        assert release_search.wait(timeout=5), "test did not release in time"
+
+    # A real function, not a MagicMock: see test_user_flow_creates_entry.
+    # Blocking on an Event makes the SHOW_PROGRESS assertions below
+    # deterministic instead of depending on real executor thread timing -
+    # needed on the retry cycle below in particular, where
     # is_any_device_found() is already True before the search even starts.
-    mock_home_server.searchDevices = lambda: None
+    mock_home_server.searchDevices = _blocking_search_devices
 
     with patch(
         "homeassistant.components.hausbus.config_flow._DEVICE_SEARCH_TIMEOUT",
@@ -75,6 +99,9 @@ async def test_user_flow_search_timeout_then_retry(
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
 
+        assert await hass.async_add_executor_job(search_started.wait, 5)
+        release_search.set()
+
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -83,6 +110,8 @@ async def test_user_flow_search_timeout_then_retry(
         assert result["step_id"] == "search_timeout"
 
         mock_home_server.is_any_device_found.return_value = True
+        search_started.clear()
+        release_search.clear()
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -91,6 +120,9 @@ async def test_user_flow_search_timeout_then_retry(
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
+
+        assert await hass.async_add_executor_job(search_started.wait, 5)
+        release_search.set()
 
         await hass.async_block_till_done()
 
@@ -103,17 +135,23 @@ async def test_user_flow_os_error_shows_search_timeout(
     hass: HomeAssistant,
 ) -> None:
     """Test that a failure to construct/use the HomeServer is treated as a timeout."""
+    construction_started = threading.Event()
+    release_construction = threading.Event()
 
-    def _raise_os_error() -> NoReturn:
+    def _blocking_os_error() -> NoReturn:
+        construction_started.set()
+        assert release_construction.wait(timeout=5), "test did not release in time"
         raise OSError
 
     # `new=` rather than `side_effect=`: hass's test-mode executor-job
     # runner special-cases a Mock target and runs it inline instead of on
     # a worker thread, which would mask the async flow cascade this test
-    # exercises below.
+    # exercises below. Blocking on an Event makes the SHOW_PROGRESS
+    # assertion below deterministic instead of depending on real executor
+    # thread timing.
     with patch(
         "homeassistant.components.hausbus.gateway.HomeServer",
-        new=_raise_os_error,
+        new=_blocking_os_error,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -127,6 +165,9 @@ async def test_user_flow_os_error_shows_search_timeout(
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "wait_for_device"
+
+        assert await hass.async_add_executor_job(construction_started.wait, 5)
+        release_construction.set()
 
         await hass.async_block_till_done()
 

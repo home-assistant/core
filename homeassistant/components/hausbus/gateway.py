@@ -39,6 +39,14 @@ _home_server_lock = asyncio.Lock()
 # is a fresh object per test and simply starts out with no entry.
 _home_server_refs: WeakKeyDictionary[HomeServer, int] = WeakKeyDictionary()
 
+# HomeServer instances whose shutdown() failed to fully stop their worker
+# or collector thread (see async_release_home_server). pyhausbus.HomeServer()
+# keeps returning this very same object until shutdown() completes without
+# error, so without this, a fresh async_acquire_home_server() call - from a
+# config flow, or a later setup attempt - could hand this half torn-down
+# instance straight back out.
+_broken_home_servers: WeakKeyDictionary[HomeServer, None] = WeakKeyDictionary()
+
 
 async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     """Acquire a reference to the shared HomeServer, creating it on first use.
@@ -50,6 +58,10 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     counted here rather than triggered by whichever caller happens to
     finish first - otherwise one flow being aborted could tear down the
     HomeServer that another flow, or the config entry, is still using.
+
+    Raises OSError if a previous release left this singleton unable to
+    fully shut down (see async_release_home_server) - it cannot be handed
+    out again until Home Assistant restarts and starts a fresh process.
 
     Always pair a call to this with async_release_home_server(), passing
     back the exact object this returned.
@@ -64,6 +76,13 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
 
             _release_cancelled_home_server(hass, home_server_job)
             raise
+
+        if home_server in _broken_home_servers:
+            raise OSError(
+                "The Haus-Bus network connection failed to shut down "
+                "cleanly earlier and cannot be reopened until Home "
+                "Assistant restarts"
+            )
 
         _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
         return home_server
@@ -108,7 +127,18 @@ async def _async_shutdown_unreferenced_home_server(
     async with _home_server_lock:
         if _home_server_refs.get(home_server, 0) > 0:
             return
-        await hass.async_add_executor_job(home_server.shutdown)
+        try:
+            shutdown_job = hass.async_add_executor_job(home_server.shutdown)
+            await asyncio.shield(shutdown_job)
+        except asyncio.CancelledError:
+            with contextlib.suppress(Exception):
+                await shutdown_job
+            if shutdown_job.done() and shutdown_job.exception() is not None:
+                _broken_home_servers[home_server] = None
+            raise
+        except Exception:
+            _broken_home_servers[home_server] = None
+            raise
 
 
 async def async_release_home_server(
@@ -121,13 +151,34 @@ async def async_release_home_server(
     real failure to fully release the HomeServer's resources - swallowing
     it here would report a successful unload while a stray thread could
     still be running against a HomeServer a subsequent reload replaces, so
-    it is intentionally left to propagate rather than caught.
+    it is intentionally left to propagate rather than caught. The failed
+    HomeServer is instead marked (see _broken_home_servers) so a later
+    async_acquire_home_server() call refuses to hand this same half
+    torn-down instance back out.
+
+    The shutdown executor job itself is shielded from cancellation: this
+    coroutine may be cancelled (e.g. during Home Assistant shutdown) while
+    shutdown() is still running on its worker thread. Since that thread
+    keeps running regardless, releasing _home_server_lock before it
+    actually finishes would let a concurrent acquirer receive the same
+    still-shutting-down singleton.
     """
     async with _home_server_lock:
         refcount = _home_server_refs.get(home_server, 0) - 1
         if refcount <= 0:
             _home_server_refs.pop(home_server, None)
-            await hass.async_add_executor_job(home_server.shutdown)
+            try:
+                shutdown_job = hass.async_add_executor_job(home_server.shutdown)
+                await asyncio.shield(shutdown_job)
+            except asyncio.CancelledError:
+                with contextlib.suppress(Exception):
+                    await shutdown_job
+                if shutdown_job.done() and shutdown_job.exception() is not None:
+                    _broken_home_servers[home_server] = None
+                raise
+            except Exception:
+                _broken_home_servers[home_server] = None
+                raise
         else:
             _home_server_refs[home_server] = refcount
 
