@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -53,7 +54,7 @@ async def async_setup_entry(
             for description in _DESCRIPTIONS
         )
 
-    _add_new_locks(coordinator.data.locks)
+    _add_new_locks(coordinator.data)
     coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
@@ -74,6 +75,7 @@ class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary_sensor is on."""
         return self.entity_description.value_fn(self._lock_data)

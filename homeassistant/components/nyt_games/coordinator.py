@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from nyt_games import Connections, NYTGamesClient, NYTGamesError, SpellingBee, Wordle
 
@@ -45,6 +46,7 @@ class NYTGamesCoordinator(DataUpdateCoordinator[NYTGamesData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> NYTGamesData:
         try:
             stats_data = await self.client.get_latest_stats()

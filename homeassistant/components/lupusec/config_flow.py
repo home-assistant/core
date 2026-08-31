@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import Any
+from typing import Any, override
 
 import lupupy
 import voluptuous as vol
@@ -28,6 +28,7 @@ DATA_SCHEMA = vol.Schema(
 class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

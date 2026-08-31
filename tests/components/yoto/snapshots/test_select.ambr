@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_all_entities[select.nursery_yoto_day_mode_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'orange_peel',
+        'tambourine_red',
+        'lilac',
+        'apple_green',
+        'bumblebee_yellow',
+        'sky_blue',
+        'white',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.nursery_yoto_day_mode_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Day mode color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day mode color',
+    'platform': 'yoto',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'day_mode_color',
+    'unique_id': 'player-test_day_mode_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.nursery_yoto_day_mode_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Day mode color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'orange_peel',
+        'tambourine_red',
+        'lilac',
+        'apple_green',
+        'bumblebee_yellow',
+        'sky_blue',
+        'white',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.nursery_yoto_day_mode_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'tambourine_red',
+  })
+# ---
+# name: test_all_entities[select.nursery_yoto_night_mode_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'orange_peel',
+        'tambourine_red',
+        'lilac',
+        'apple_green',
+        'bumblebee_yellow',
+        'sky_blue',
+        'white',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.nursery_yoto_night_mode_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Night mode color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night mode color',
+    'platform': 'yoto',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'night_mode_color',
+    'unique_id': 'player-test_night_mode_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.nursery_yoto_night_mode_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Night mode color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'orange_peel',
+        'tambourine_red',
+        'lilac',
+        'apple_green',
+        'bumblebee_yellow',
+        'sky_blue',
+        'white',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.nursery_yoto_night_mode_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sky_blue',
+  })
+# ---

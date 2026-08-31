@@ -1,6 +1,7 @@
 """Base entity for Mill devices."""
 
 from abc import abstractmethod
+from typing import override
 
 from mill import MillDevice
 
@@ -36,6 +37,7 @@ class MillBaseEntity(CoordinatorEntity[MillDataUpdateCoordinator]):
         self._update_attr(mill_device)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr(self.coordinator.data[self._id])
@@ -47,6 +49,7 @@ class MillBaseEntity(CoordinatorEntity[MillDataUpdateCoordinator]):
         """Update the attribute of the entity."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._available

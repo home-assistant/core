@@ -9,7 +9,9 @@ from homeassistant.const import Platform
 
 from .error import WyomingError
 
-_INFO_TIMEOUT = 1
+# Allow time for satellites that are briefly busy on connect (e.g. playing a
+# startup sound) to answer the Describe before we time out and retry.
+_INFO_TIMEOUT = 5
 _INFO_RETRY_WAIT = 2
 _INFO_RETRIES = 3
 

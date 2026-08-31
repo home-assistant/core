@@ -1,6 +1,6 @@
 """Support for deCONZ switches."""
 
-from typing import Any
+from typing import Any, override
 
 from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light
@@ -46,10 +46,12 @@ class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
     TYPE = SWITCH_DOMAIN
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._device.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.hub.api.lights.lights.set_state(
@@ -57,6 +59,7 @@ class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
             on=True,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.hub.api.lights.lights.set_state(

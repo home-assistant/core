@@ -5,6 +5,7 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
+from homeassistant.components.select import SelectEntityCapabilityAttribute
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
@@ -39,9 +40,11 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     # If options are specified, call SERVICE_SET_OPTIONS
-    if ATTR_OPTIONS in state.attributes:
+    if SelectEntityCapabilityAttribute.OPTIONS in state.attributes:
         service = SERVICE_SET_OPTIONS
-        service_data[ATTR_OPTIONS] = state.attributes[ATTR_OPTIONS]
+        service_data[ATTR_OPTIONS] = state.attributes[
+            SelectEntityCapabilityAttribute.OPTIONS
+        ]
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True

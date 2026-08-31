@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.baichuan import DEFAULT_BC_PORT
@@ -41,6 +41,7 @@ from .const import (
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -115,6 +116,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
@@ -152,6 +154,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -240,6 +243,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -312,6 +316,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_BC_PORT] = host.api.baichuan.port
                 user_input[CONF_BC_ONLY] = host.api.baichuan_only
                 user_input[CONF_BC_CONNECT] = host.api.baichuan.connection_type.value
+                user_input[CONF_UID] = host.api.uid
                 user_input[CONF_SUPPORTS_PRIVACY_MODE] = host.api.supported(
                     None, "privacy_mode"
                 )

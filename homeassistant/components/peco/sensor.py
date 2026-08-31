@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -103,11 +103,13 @@ class PecoSensor(CoordinatorEntity[PecoOutageCoordinator], SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return state attributes for the sensor."""
         return self.entity_description.attribute_fn(self.coordinator.data)

@@ -1,7 +1,7 @@
 """Syslog notification service."""
 
 import syslog
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -90,6 +90,7 @@ class SyslogNotificationService(BaseNotificationService):
         self._option = option
         self._priority = priority
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to syslog."""
 

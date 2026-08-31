@@ -1,7 +1,7 @@
 """Support for Minut Point binary sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pypoint import EVENTS
 
@@ -76,9 +76,10 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self._device_name = key
         self._events = EVENTS[key]
-        self._attr_unique_id = f"point.{device_id}-{key}"
+        self._attr_unique_id = f"point.{device_id}-{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_icon = DEVICES[key].get("icon")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
@@ -86,6 +87,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor."""
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:

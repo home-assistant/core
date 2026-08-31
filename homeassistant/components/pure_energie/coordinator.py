@@ -1,6 +1,6 @@
 """Coordinator for the Pure Energie integration."""
 
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from gridnet import Device, GridNet, SmartBridge
 
@@ -45,6 +45,7 @@ class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):
             self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
+    @override
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch data from SmartBridge."""
         return PureEnergieData(

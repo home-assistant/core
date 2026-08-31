@@ -2,7 +2,7 @@
 
 import logging
 from pprint import pformat
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmsDevice
@@ -41,6 +41,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._usn: str | None = None
         self._name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,6 +70,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

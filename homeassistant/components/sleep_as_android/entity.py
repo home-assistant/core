@@ -1,6 +1,7 @@
 """Base entity for Sleep as Android integration."""
 
 from abc import abstractmethod
+from typing import override
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,6 +38,7 @@ class SleepAsAndroidEntity(Entity):
     def _async_handle_event(self, webhook_id: str, data: dict[str, str]) -> None:
         """Handle the Sleep as Android event."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register event callback."""
 

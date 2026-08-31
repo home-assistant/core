@@ -1,5 +1,7 @@
 """Setup Mullvad VPN Binary Sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -58,6 +60,7 @@ class MullvadBinarySensor(CoordinatorEntity[MullvadCoordinator], BinarySensorEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state for this binary sensor."""
         return self.coordinator.data[self.entity_description.key]

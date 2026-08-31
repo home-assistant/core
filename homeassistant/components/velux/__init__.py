@@ -1,6 +1,8 @@
 """Support for VELUX KLF 200 devices."""
 
-from pyvlx import PyVLX, PyVLXException
+import dataclasses
+
+from pyvlx import OpeningDevice, PyVLX, PyVLXException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,8 +16,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN, LOGGER, PLATFORMS, PYVLX_FROM_CONFIG_FLOW
+from .coordinator import VeluxLimitationCoordinator
 
-type VeluxConfigEntry = ConfigEntry[PyVLX]
+
+@dataclasses.dataclass
+class VeluxData:
+    """Runtime data for a Velux config entry."""
+
+    pyvlx: PyVLX
+    limitation_coordinators: dict[int, VeluxLimitationCoordinator]
+
+
+type VeluxConfigEntry = ConfigEntry[VeluxData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -60,7 +72,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         ) from ex
 
     LOGGER.debug("Velux connection to %s successful", host)
-    entry.runtime_data = pyvlx
+
+    limitation_coordinators: dict[int, VeluxLimitationCoordinator] = {}
+    for node in pyvlx.nodes:
+        if isinstance(node, OpeningDevice):
+            coordinator = VeluxLimitationCoordinator(hass, entry, node)
+            # do not await coordinator.async_config_entry_first_refresh() here to avoid doing
+            # it for disabled entities, the entities will call it when they are added to hass
+            limitation_coordinators[node.node_id] = coordinator
+
+    entry.runtime_data = VeluxData(
+        pyvlx=pyvlx, limitation_coordinators=limitation_coordinators
+    )
 
     connections = None
     if (mac := entry.data.get(CONF_MAC)) is not None:
@@ -103,5 +126,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bo
         # Disconnecting will reboot the gateway in the pyvlx
         # library, which is needed to allow new
         # connections to be made later.
-        await entry.runtime_data.disconnect()
+        await entry.runtime_data.pyvlx.disconnect()
     return unload_ok

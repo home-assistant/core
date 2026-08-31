@@ -75,6 +75,8 @@
       "stop_all": "Stop all"
     },
     "trigger_type": {
+      "long_press": "\"{subtype}\" long pressed",
+      "multi_tap": "\"{subtype}\" multi-tapped",
       "press": "\"{subtype}\" pressed",
       "release": "\"{subtype}\" released"
     }

@@ -1,7 +1,7 @@
 """Matter light."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
@@ -301,6 +301,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return ha_color_mode
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
 
@@ -331,6 +332,7 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.OnOff.Commands.On(),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.send_device_command(
@@ -338,6 +340,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         if self._attr_supported_color_modes is None:
@@ -457,7 +460,14 @@ class MatterLight(MatterEntity, LightEntity):
             self._transitions_disabled = True
             LOGGER.warning(
                 "Detected a device that has been reported to have firmware issues "
-                "with light transitions. Transitions will be disabled for this light"
+                "with light transitions. Transitions will be disabled for this "
+                "light: %s %s (vendor_id: %s, product_id: %s, hw: %s, sw: %s)",
+                device_info.vendorName,
+                device_info.productName,
+                device_info.vendorID,
+                device_info.productID,
+                device_info.hardwareVersionString,
+                device_info.softwareVersionString,
             )
 
 

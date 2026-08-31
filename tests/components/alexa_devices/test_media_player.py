@@ -700,3 +700,28 @@ async def test_unmute_volume_without_prev_volume_returns_early(
     )
 
     mock_amazon_devices_client.set_device_volume.assert_not_awaited()
+
+
+async def test_unmute_volume_when_alexa_muted_restores_current_volume(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unmute restores current volume when device was muted directly by Alexa."""
+    await _setup_media_player_platform(hass, mock_config_entry)
+
+    await _push_volume_state(
+        mock_amazon_devices_client,
+        volume_state=AmazonVolumeState(volume=30, is_muted=True),
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        blocking=True,
+    )
+
+    mock_amazon_devices_client.set_device_volume.assert_awaited_once()
+    assert mock_amazon_devices_client.set_device_volume.call_args.args[1] == 30

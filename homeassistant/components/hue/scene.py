@@ -1,7 +1,7 @@
 """Support for scene platform for Hue scenes (V2 only)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -107,13 +107,16 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        self.hue_group = self.controller.get_group(self.resource.id)
+        if (hue_group := self.controller.get_group(self.resource.id)) is None:
+            raise KeyError(self.resource.group.rid)
+        self.hue_group = hue_group
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.hue_group.id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -127,6 +130,7 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return name of the scene."""
         return self.resource.metadata.name
@@ -152,6 +156,7 @@ class HueSceneEntity(HueSceneEntityBase):
             return True
         return False
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -178,6 +183,7 @@ class HueSceneEntity(HueSceneEntityBase):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         brightness = None
@@ -211,6 +217,7 @@ class HueSmartSceneEntity(HueSceneEntityBase):
         """Return if this smart scene is currently active."""
         return self.resource.state == SmartSceneState.ACTIVE
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue Smart scene."""
 
@@ -220,6 +227,7 @@ class HueSmartSceneEntity(HueSceneEntityBase):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         res = {

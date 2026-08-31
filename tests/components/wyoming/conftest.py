@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import stt
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -49,7 +50,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -64,7 +65,7 @@ def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -79,7 +80,7 @@ def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -94,7 +95,7 @@ def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -109,7 +110,7 @@ def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -221,7 +222,7 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
 def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,

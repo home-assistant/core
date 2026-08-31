@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyitachip2ir
 import voluptuous as vol
@@ -40,6 +40,8 @@ CONF_COMMANDS = "commands"
 CONF_DATA = "data"
 CONF_IR_COUNT = "ir_count"
 
+EMPTY_COMMAND_PLACEHOLDER = '""'
+
 PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MAC): cv.string,
@@ -69,6 +71,35 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
 )
 
 
+def _format_command_value(value: str) -> str:
+    """Format a command name or command data value."""
+    value = value.strip()
+    return value or EMPTY_COMMAND_PLACEHOLDER
+
+
+def _format_command_table(commands: Iterable[dict[str, str]]) -> str:
+    """Format YAML commands for pyitachip2ir."""
+    return "".join(
+        f"{_format_command_value(command[CONF_NAME])}\n"
+        f"{_format_command_value(command[CONF_DATA])}\n"
+        for command in commands
+    )
+
+
+def _setup_remote_entity(
+    itachip2ir: Any, device_config: dict[str, Any]
+) -> ITachIP2IRRemote:
+    """Create an iTach remote entity from YAML device config."""
+    name = device_config.get(CONF_NAME)
+    modaddr = int(device_config.get(CONF_MODADDR, DEFAULT_MODADDR))
+    connaddr = int(device_config.get(CONF_CONNADDR, DEFAULT_CONNADDR))
+    ir_count = int(device_config.get(CONF_IR_COUNT, DEFAULT_IR_COUNT))
+    command_table = _format_command_table(device_config[CONF_COMMANDS])
+
+    itachip2ir.addDevice(name, modaddr, connaddr, command_table)
+    return ITachIP2IRRemote(itachip2ir, name, ir_count)
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -84,48 +115,38 @@ def setup_platform(
         _LOGGER.error("Unable to find iTach")
         return
 
-    devices = []
-    for data in config[CONF_DEVICES]:
-        name = data.get(CONF_NAME)
-        modaddr = int(data.get(CONF_MODADDR, DEFAULT_MODADDR))
-        connaddr = int(data.get(CONF_CONNADDR, DEFAULT_CONNADDR))
-        ir_count = int(data.get(CONF_IR_COUNT, DEFAULT_IR_COUNT))
-        cmddatas = ""
-        for cmd in data.get(CONF_COMMANDS):
-            cmdname = cmd[CONF_NAME].strip()
-            if not cmdname:
-                cmdname = '""'
-            cmddata = cmd[CONF_DATA].strip()
-            if not cmddata:
-                cmddata = '""'
-            cmddatas += f"{cmdname}\n{cmddata}\n"
-        itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
-        devices.append(ITachIP2IRRemote(itachip2ir, name, ir_count))
+    devices = [
+        _setup_remote_entity(itachip2ir, device_config)
+        for device_config in config[CONF_DEVICES]
+    ]
     add_entities(devices, True)
 
 
 class ITachIP2IRRemote(remote.RemoteEntity):
     """Device that sends commands to an ITachIP2IR device."""
 
-    def __init__(self, itachip2ir, name, ir_count):
+    def __init__(self, itachip2ir: Any, name: str | None, ir_count: int) -> None:
         """Initialize device."""
         self.itachip2ir = itachip2ir
         self._attr_is_on = False
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._ir_count = ir_count or DEFAULT_IR_COUNT
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._attr_is_on = True
         self.itachip2ir.send(self.name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
         self.itachip2ir.send(self.name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)

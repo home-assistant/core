@@ -1,7 +1,6 @@
 """Native Home Assistant iOS app component."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-import datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -71,8 +70,6 @@ ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
 BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
-
-ATTR_LAST_SEEN_AT = "lastSeenAt"
 
 ATTR_PUSH_TOKEN = "pushToken"
 ATTR_APP = "app"
@@ -341,8 +338,6 @@ class iOSIdentifyDeviceView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app[KEY_HASS]
-
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
         device_id = data[ATTR_DEVICE_ID]
 

@@ -33,16 +33,16 @@
         },
         "description": "Reconfigure Telegram bot",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::proxy_url%]"
             },
             "data_description": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::proxy_url%]"
             },
-            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]"
+            "name": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::name%]"
           }
         },
         "title": "Telegram bot setup"
@@ -58,7 +58,7 @@
         },
         "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "api_endpoint": "API endpoint",
               "proxy_url": "Proxy URL"
@@ -67,7 +67,7 @@
               "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
               "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },

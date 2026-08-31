@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from time import time
 from typing import TYPE_CHECKING
 
 from renault_api.exceptions import NotAuthenticatedException
@@ -17,26 +18,21 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_MODEL_ID,
     ATTR_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-if TYPE_CHECKING:
-    from . import RenaultConfigEntry
-
-from time import time
-
 from .const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    CONF_LOGIN_TOKEN,
     COOLING_UPDATES_SECONDS,
     MAX_CALLS_PER_HOURS,
+    RenaultConfigurationKeys,
 )
 from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -106,20 +102,26 @@ class RenaultHub:
     async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         # Reuse the stored login token, or fall back to a password login.
-        if login_token := config_entry.data.get(CONF_LOGIN_TOKEN):
+        if login_token := config_entry.data.get(RenaultConfigurationKeys.LOGIN_TOKEN):
             self._client.session.set_login_token(login_token)
         elif await self.attempt_login(
-            config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+            config_entry.data[RenaultConfigurationKeys.USERNAME],
+            config_entry.data[RenaultConfigurationKeys.PASSWORD],
         ):
             # Persist the login token so the next setup can skip the password.
             self._hass.config_entries.async_update_entry(
                 config_entry,
-                data={**config_entry.data, CONF_LOGIN_TOKEN: self.login_token},
+                data={
+                    **config_entry.data,
+                    RenaultConfigurationKeys.LOGIN_TOKEN: self.login_token,
+                },
             )
         else:
             raise NotAuthenticatedException
 
-        account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
+        account_id: str = config_entry.data[
+            RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID
+        ]
 
         self._account = await self._client.get_api_account(account_id)
         vehicle_links = await _get_filtered_vehicles(self._account)

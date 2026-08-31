@@ -1,6 +1,7 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -151,6 +152,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self._optimistic = optimistic
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
@@ -159,24 +161,28 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._check_code(code):
             return
         self.set_alarm_state(self._event_disarm, AlarmControlPanelState.DISARMED)
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, AlarmControlPanelState.ARMED_HOME)
 
+    @override
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):

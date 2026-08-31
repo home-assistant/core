@@ -1,6 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API lock."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.core import HomeAssistant
@@ -58,14 +58,17 @@ class WallboxLock(WallboxEntity, LockEntity):
         )
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return the status of the lock."""
         return self.coordinator.data[CHARGER_LOCKED_UNLOCKED_KEY]  # type: ignore[no-any-return]
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock charger."""
         await self.coordinator.async_set_lock_unlock(True)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charger."""
         await self.coordinator.async_set_lock_unlock(False)

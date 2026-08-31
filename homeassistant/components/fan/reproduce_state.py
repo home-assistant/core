@@ -25,20 +25,22 @@ from . import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
+from .const import FanEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
+# Maps a state attribute to the (service, service argument) used to restore it.
 # These are used as parameters to fan.turn_on service.
 SPEED_AND_MODE_ATTRIBUTES = {
-    ATTR_PERCENTAGE: SERVICE_SET_PERCENTAGE,
-    ATTR_PRESET_MODE: SERVICE_SET_PRESET_MODE,
+    FanEntityStateAttribute.PERCENTAGE: (SERVICE_SET_PERCENTAGE, ATTR_PERCENTAGE),
+    FanEntityStateAttribute.PRESET_MODE: (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
 }
 
-SIMPLE_ATTRIBUTES = {  # attribute: service
-    ATTR_DIRECTION: SERVICE_SET_DIRECTION,
-    ATTR_OSCILLATING: SERVICE_OSCILLATE,
+SIMPLE_ATTRIBUTES = {
+    FanEntityStateAttribute.DIRECTION: (SERVICE_SET_DIRECTION, ATTR_DIRECTION),
+    FanEntityStateAttribute.OSCILLATING: (SERVICE_OSCILLATE, ATTR_OSCILLATING),
 }
 
 
@@ -69,9 +71,12 @@ async def _async_reproduce_state(
             # The `turn_on` method will figure out in which mode to
             # turn the fan on.
             service_calls[SERVICE_TURN_ON] = {
-                attr: state.attributes.get(attr)
-                for attr in SPEED_AND_MODE_ATTRIBUTES
-                if state.attributes.get(attr) is not None
+                service_arg: value
+                for attribute, (
+                    _service,
+                    service_arg,
+                ) in SPEED_AND_MODE_ATTRIBUTES.items()
+                if (value := state.attributes.get(attribute)) is not None
             }
         else:
             # If the fan is already on, we need to set speed or mode
@@ -81,18 +86,20 @@ async def _async_reproduce_state(
             # them is always going to be stored as None. If we were to
             # try to set it, it will raise an error. So instead we
             # only update the one that is non-None.
-            for attr, service in SPEED_AND_MODE_ATTRIBUTES.items():
-                value = state.attributes.get(attr)
-                if value is not None and value != cur_state.attributes.get(attr):
-                    service_calls[service] = {attr: value}
+            for attribute, (service, service_arg) in SPEED_AND_MODE_ATTRIBUTES.items():
+                value = state.attributes.get(attribute)
+                if value is not None and value != cur_state.attributes.get(attribute):
+                    service_calls[service] = {service_arg: value}
 
         # The simple attributes are copied directly. They can only be
         # None if the fan does not support the feature in the first
         # place, so the equality check ensures we don't call the
         # services with invalid parameters.
-        for attr, service in SIMPLE_ATTRIBUTES.items():
-            if (value := state.attributes.get(attr)) != cur_state.attributes.get(attr):
-                service_calls[service] = {attr: value}
+        for attribute, (service, service_arg) in SIMPLE_ATTRIBUTES.items():
+            if (value := state.attributes.get(attribute)) != cur_state.attributes.get(
+                attribute
+            ):
+                service_calls[service] = {service_arg: value}
     elif state.state == STATE_OFF and cur_state.state != state.state:
         service_calls[SERVICE_TURN_OFF] = {}
 

@@ -1,7 +1,8 @@
 """Coordinator for the Anthropic integration."""
 
 import datetime
-import re
+from functools import partial
+from typing import override
 
 import anthropic
 
@@ -20,7 +21,17 @@ UPDATE_INTERVAL_DISCONNECTED = datetime.timedelta(minutes=1)
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
 
-_model_short_form = re.compile(r"[^\d]-\d$")
+async def async_create_client(
+    hass: HomeAssistant, api_key: str
+) -> anthropic.AsyncAnthropic:
+    """Create an Anthropic client."""
+    return await hass.async_add_executor_job(
+        partial(
+            anthropic.AsyncAnthropic,
+            api_key=api_key,
+            http_client=get_async_client(hass),
+        )
+    )
 
 
 @callback
@@ -28,7 +39,7 @@ def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
     if model_id[-2:-1] != "-" and not model_id.endswith("-preview"):
         model_id = model_id[:-9]
-    if _model_short_form.search(model_id):
+    if model_id.endswith("-4"):
         return model_id + "-0"
     return model_id
 
@@ -36,7 +47,8 @@ def model_alias(model_id: str) -> str:
 class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]]):
     """Coordinator using different intervals after success and failure."""
 
-    client: anthropic.AsyncAnthropic
+    config_entry: AnthropicConfigEntry
+    _client: anthropic.AsyncAnthropic
 
     def __init__(self, hass: HomeAssistant, config_entry: AnthropicConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -49,11 +61,21 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             update_method=self.async_update_data,
             always_update=False,
         )
-        self.client = anthropic.AsyncAnthropic(
-            api_key=config_entry.data[CONF_API_KEY], http_client=get_async_client(hass)
+
+    @property
+    def client(self) -> anthropic.AsyncAnthropic:
+        """Return the Anthropic client."""
+        return self._client
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        self._client = await async_create_client(
+            self.hass, self.config_entry.data[CONF_API_KEY]
         )
 
     @callback
+    @override
     def async_set_updated_data(self, data: list[anthropic.types.ModelInfo]) -> None:
         """Manually update data, notify listeners and update refresh interval."""
         self.update_interval = UPDATE_INTERVAL_CONNECTED

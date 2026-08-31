@@ -1,6 +1,7 @@
 """The Nibe Heat Pump sensors."""
 
 from datetime import date
+from typing import override
 
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
@@ -122,6 +123,7 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
         self._attr_temperature_unit = self._coil_current.unit
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if not self.coordinator.data:
             return
@@ -162,6 +164,7 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
@@ -177,6 +180,7 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
 
         return False
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         if not self._coil_temporary_lux:

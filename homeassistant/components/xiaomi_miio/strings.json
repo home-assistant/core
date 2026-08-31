@@ -138,6 +138,7 @@
     },
     "select": {
       "airpurifier_mode": {
+        "name": "Mode",
         "state": {
           "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite",
@@ -145,6 +146,7 @@
         }
       },
       "display_orientation": {
+        "name": "Display orientation",
         "state": {
           "forward": "Forward",
           "left": "Left",
@@ -152,6 +154,7 @@
         }
       },
       "led_brightness": {
+        "name": "LED brightness",
         "state": {
           "bright": "Bright",
           "dim": "Dim",
@@ -159,6 +162,7 @@
         }
       },
       "ptc_level": {
+        "name": "Auxiliary heat level",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",

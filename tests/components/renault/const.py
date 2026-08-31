@@ -1,22 +1,17 @@
 """Constants for the Renault integration tests."""
 
-from homeassistant.components.renault.const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    CONF_LOCALE,
-    CONF_LOGIN_TOKEN,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.renault.const import RenaultConfigurationKeys
 
 MOCK_ACCOUNT_ID = "account_id_1"
 MOCK_LOGIN_TOKEN = "sample-login-token"
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
-    CONF_USERNAME: "email@test.com",
-    CONF_PASSWORD: "test",
-    CONF_LOGIN_TOKEN: MOCK_LOGIN_TOKEN,
-    CONF_KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
-    CONF_LOCALE: "fr_FR",
+    RenaultConfigurationKeys.USERNAME: "email@test.com",
+    RenaultConfigurationKeys.PASSWORD: "test",
+    RenaultConfigurationKeys.LOGIN_TOKEN: MOCK_LOGIN_TOKEN,
+    RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
+    RenaultConfigurationKeys.LOCALE: "fr_FR",
 }
 
 MOCK_VEHICLES = {

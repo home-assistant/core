@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -39,13 +41,14 @@
 # name: test_all_entities[device_tracker.landevice1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LanDevice1',
-      'host_name': 'LanDevice1',
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LanDevice1',
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'LanDevice1',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      'ip': '192.168.1.11',
-      'mac': 'yy:yy:yy:yy:yy:yy',
-      'source_type': <SourceType.ROUTER: 'router'>,
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.1.11',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: 'yy:yy:yy:yy:yy:yy',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.landevice1',
@@ -61,7 +64,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -95,14 +100,15 @@
 # name: test_all_entities[device_tracker.wifidevice0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WifiDevice0',
-      'host_name': 'WifiDevice0',
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WifiDevice0',
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'WifiDevice0',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      'ip': '192.168.1.10',
-      'mac': 'xx:xx:xx:xx:xx:xx',
-      'source_type': <SourceType.ROUTER: 'router'>,
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.1.10',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: 'xx:xx:xx:xx:xx:xx',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.wifidevice0',

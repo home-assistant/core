@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
 
@@ -42,6 +43,7 @@ class AzureEventHubClientConnectionString(AzureEventHubClient):
     event_hub_connection_string: str
 
     @property
+    @override
     def client(self) -> EventHubProducerClient:
         """Return the client."""
         return EventHubProducerClient.from_connection_string(
@@ -60,6 +62,7 @@ class AzureEventHubClientSAS(AzureEventHubClient):
     event_hub_sas_key: str
 
     @property
+    @override
     def client(self) -> EventHubProducerClient:
         """Get a Event Producer Client."""
         return EventHubProducerClient(

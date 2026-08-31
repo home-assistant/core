@@ -1,7 +1,7 @@
 """Adds config flow for System Monitor."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -95,6 +95,7 @@ class SystemMonitorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return "System Monitor"

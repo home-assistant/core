@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +11,24 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::ovhcloud_ai_endpoints::config::step::user::data_description::api_key%]"
+        },
+        "description": "The OVHcloud AI Endpoints API key is no longer valid. Please enter a new one."
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::ovhcloud_ai_endpoints::config::step::user::data_description::api_key%]"
+        },
+        "description": "Update the API key used to authenticate with OVHcloud AI Endpoints."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -24,6 +44,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before configuring.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",
@@ -43,6 +64,17 @@
             "prompt": "Instruct how the LLM should respond. This can be a template."
           },
           "description": "Configure the conversation agent"
+        },
+        "reconfigure": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "llm_hass_api": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::llm_hass_api%]",
+            "prompt": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::prompt%]"
+          },
+          "description": "Update the prompt and the Home Assistant LLM APIs for this conversation agent. Create a new conversation agent to use a different model."
         }
       }
     }

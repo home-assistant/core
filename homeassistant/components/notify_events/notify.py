@@ -2,7 +2,7 @@
 
 import logging
 import os.path
-from typing import Any
+from typing import Any, override
 
 from notify_events import Message
 
@@ -122,6 +122,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
         return msg
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
         data = kwargs.get(ATTR_DATA) or {}

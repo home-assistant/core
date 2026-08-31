@@ -1,0 +1,98 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "api_error": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "quota_exceeded": "Your account or API key has insufficient credits.",
+      "timeout": "Connection timed out.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "model": {
+        "data": {
+          "chat_model": "[%key:common::generic::model%]"
+        },
+        "data_description": {
+          "chat_model": "Select the model to use."
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "URL"
+        },
+        "data_description": {
+          "api_key": "API key for the server (optional).",
+          "base_url": "Base URL of your running OpenAI-compatible server (e.g. http://localhost:8080/v1)."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "llm_hass_api": "Control Home Assistant",
+            "max_tokens": "Maximum tokens to return in response",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "Instructions",
+            "recommended": "Recommended model settings",
+            "temperature": "Temperature",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "chat_model": "Select the model to use.",
+            "llm_hass_api": "Select the level of control over Home Assistant.",
+            "max_tokens": "Select the maximum number of tokens to return.",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "recommended": "Select whether to use recommended model settings.",
+            "temperature": "Select the temperature for response variability.",
+            "top_p": "Select the top P value for response diversity."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "API error: {message}."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to the server: {message}."
+    },
+    "file_not_found": {
+      "message": "File does not exist: {file_path}."
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication: {message}."
+    },
+    "json_parse_error": {
+      "message": "Unexpected tool argument response: {message}."
+    },
+    "quota_exceeded": {
+      "message": "Your account or API key has insufficient credits: {message}."
+    },
+    "timeout": {
+      "message": "Connection timed out: {message}."
+    },
+    "unsupported_file_type": {
+      "message": "Only images and PDF are supported by the OpenAI API, {file_path} is not an image file or PDF."
+    }
+  }
+}

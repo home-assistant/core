@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyatv import exceptions
 from pyatv.const import (
@@ -38,11 +38,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .const import DOMAIN
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,9 +126,9 @@ class AppleTvMediaPlayer(
         self._app_list: dict[str, str] = {}
 
     @callback
+    @override
     def async_device_connected(self, atv: AppleTV) -> None:
         """Handle when connection is made to device."""
-        # NB: Do not use _is_feature_available here as it only works when playing
         if atv.features.in_state(FeatureState.Available, FeatureName.PushUpdates):
             atv.push_updater.listener = self
             atv.push_updater.start()
@@ -176,11 +178,13 @@ class AppleTvMediaPlayer(
             self.async_write_ha_state()
 
     @callback
+    @override
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self.manager.is_connecting:
@@ -200,10 +204,11 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
-            return MediaPlayerState.IDLE  # Bad or unknown state?
+            return MediaPlayerState.IDLE  # type: ignore[unreachable]  # Bad or unknown state?
         return None
 
     @callback
+    @override
     def playstatus_update(self, updater: PushUpdater, playstatus: Playing) -> None:
         """Print what is currently playing when it changes.
 
@@ -214,6 +219,7 @@ class AppleTvMediaPlayer(
         self.async_write_ha_state()
 
     @callback
+    @override
     def playstatus_error(self, updater: PushUpdater, exception: Exception) -> None:
         """Inform about an error and restart push updates.
 
@@ -224,6 +230,7 @@ class AppleTvMediaPlayer(
         self.async_write_ha_state()
 
     @callback
+    @override
     def powerstate_update(self, old_state: PowerState, new_state: PowerState) -> None:
         """Update power state when it changes.
 
@@ -232,6 +239,7 @@ class AppleTvMediaPlayer(
         self.async_write_ha_state()
 
     @callback
+    @override
     def volume_update(self, old_level: float, new_level: float) -> None:
         """Update volume when it changes.
 
@@ -240,6 +248,7 @@ class AppleTvMediaPlayer(
         self.async_write_ha_state()
 
     @callback
+    @override
     def volume_device_update(
         self, output_device: OutputDevice, old_level: float, new_level: float
     ) -> None:
@@ -249,6 +258,7 @@ class AppleTvMediaPlayer(
         """
 
     @callback
+    @override
     def outputdevices_update(
         self, old_devices: list[OutputDevice], new_devices: list[OutputDevice]
     ) -> None:
@@ -258,6 +268,7 @@ class AppleTvMediaPlayer(
         """
 
     @property
+    @override
     def app_id(self) -> str | None:
         """ID of the current running app."""
         if (
@@ -269,6 +280,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def app_name(self) -> str | None:
         """Name of the current running app."""
         if (
@@ -280,11 +292,13 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         return list(self._app_list.keys())
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         if self._playing:
@@ -296,6 +310,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if self._playing:
@@ -303,6 +318,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self.atv and self._is_feature_available(FeatureName.Volume):
@@ -310,6 +326,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if self._playing:
@@ -317,6 +334,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._playing:
@@ -324,12 +342,14 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """Last valid time of media position."""
         if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return self._playing_last_updated
         return None
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -352,23 +372,44 @@ class AppleTvMediaPlayer(
                 media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        if self._is_feature_available(FeatureName.StreamFile) and (
+        use_stream_file = self._is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
-        ):
-            _LOGGER.debug("Streaming %s via RAOP", media_id)
-            await self.atv.stream.stream_file(media_id)
-        elif self._is_feature_available(FeatureName.PlayUrl) and (
-            (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
-        ):
-            _LOGGER.debug("Playing %s via AirPlay", media_id)
-            await self.atv.stream.play_url(media_id)
-        else:
-            _LOGGER.error(
-                "Media streaming is not possible with current configuration for %s",
-                media_id,
-            )
+        )
+
+        try:
+            if use_stream_file:
+                _LOGGER.debug("Streaming %s via RAOP", media_id)
+                await self.atv.stream.stream_file(media_id)
+            elif self._is_feature_available(FeatureName.PlayUrl) and (
+                (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
+            ):
+                _LOGGER.debug("Playing %s via AirPlay", media_id)
+                await self.atv.stream.play_url(media_id)
+            else:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="streaming_not_supported",
+                )
+        except exceptions.NotSupportedError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="streaming_not_supported",
+            ) from ex
+        except (
+            exceptions.BlockedStateError,
+            exceptions.ConnectionLostError,
+            exceptions.InvalidStateError,
+            exceptions.OperationTimeoutError,
+            exceptions.PlaybackError,
+            exceptions.ProtocolError,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_failed",
+            ) from ex
 
     @property
+    @override
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         state = self.state
@@ -381,6 +422,7 @@ class AppleTvMediaPlayer(
             return self.atv.metadata.artwork_id
         return None
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         state = self.state
@@ -396,6 +438,7 @@ class AppleTvMediaPlayer(
         return None, None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if self._playing:
@@ -403,6 +446,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._playing and self._is_feature_available(FeatureName.Artist):
@@ -410,6 +454,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         if self._playing and self._is_feature_available(FeatureName.Album):
@@ -417,6 +462,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_series_title(self) -> str | None:
         """Title of series of current playing media, TV show only."""
         if self._playing and self._is_feature_available(FeatureName.SeriesName):
@@ -424,6 +470,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_season(self) -> str | None:
         """Season of current playing media, TV show only."""
         if self._playing and self._is_feature_available(FeatureName.SeasonNumber):
@@ -431,6 +478,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def media_episode(self) -> str | None:
         """Episode of current playing media, TV show only."""
         if self._playing and self._is_feature_available(FeatureName.EpisodeNumber):
@@ -438,6 +486,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         if (
@@ -452,6 +501,7 @@ class AppleTvMediaPlayer(
         return None
 
     @property
+    @override
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         if self._playing and self._is_feature_available(FeatureName.Shuffle):
@@ -460,10 +510,11 @@ class AppleTvMediaPlayer(
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
-        if self.atv and self._playing:
+        if self.atv:
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -503,11 +554,13 @@ class AppleTvMediaPlayer(
 
         return cur_item
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self.atv and self._is_feature_available(FeatureName.TurnOn):
             await self.atv.power.turn_on()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         if (
@@ -520,57 +573,68 @@ class AppleTvMediaPlayer(
         ):
             await self.atv.power.turn_off()
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Pause media on media player."""
         if self.atv and self._playing:
             await self.atv.remote_control.play_pause()
 
+    @override
     async def async_media_play(self) -> None:
         """Play media."""
         if self.atv:
             await self.atv.remote_control.play()
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop the media player."""
         if self.atv:
             await self.atv.remote_control.stop()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause the media player."""
         if self.atv:
             await self.atv.remote_control.pause()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         if self.atv:
             await self.atv.remote_control.next()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         if self.atv:
             await self.atv.remote_control.previous()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.atv:
             await self.atv.remote_control.set_position(round(position))
 
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         if self.atv:
             await self.atv.audio.volume_up()
 
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         if self.atv:
             await self.atv.audio.volume_down()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         if self.atv:
             # pyatv expects volume in percent
             await self.atv.audio.set_volume(volume * 100.0)
 
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if self.atv:
@@ -580,6 +644,7 @@ class AppleTvMediaPlayer(
             }.get(repeat, RepeatState.Off)
             await self.atv.remote_control.set_repeat(mode)
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         if self.atv:
@@ -587,6 +652,7 @@ class AppleTvMediaPlayer(
                 ShuffleState.Songs if shuffle else ShuffleState.Off
             )
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.atv:

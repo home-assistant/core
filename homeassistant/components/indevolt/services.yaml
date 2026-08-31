@@ -18,8 +18,8 @@ charge:
       required: true
       selector:
         number:
-          min: 1
-          max: 2400
+          min: 0
+          max: 10800
           step: 1
           unit_of_measurement: "W"
 
@@ -43,7 +43,7 @@ discharge:
       required: true
       selector:
         number:
-          min: 1
-          max: 2400
+          min: 0
+          max: 10800
           step: 1
           unit_of_measurement: "W"

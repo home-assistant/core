@@ -1,6 +1,6 @@
 """Platform for climate integration."""
 
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -69,6 +69,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         self._attr_max_temp = self._multi_level_switch_property.max
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if hasattr(self._device_instance, "multi_level_sensor_property"):
@@ -86,13 +87,16 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._value
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])

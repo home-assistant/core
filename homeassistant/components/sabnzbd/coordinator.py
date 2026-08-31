@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
@@ -37,6 +37,7 @@ class SabnzbdUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=30),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the SABnzbd API."""
         try:

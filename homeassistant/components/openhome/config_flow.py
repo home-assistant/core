@@ -1,7 +1,7 @@
 """Config flow for Linn / OpenHome."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -27,6 +27,7 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str | None
     _name: str
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

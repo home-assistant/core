@@ -3,6 +3,7 @@
 import logging
 from typing import Protocol, cast
 
+import telegram
 from telegram import Bot
 from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
@@ -34,6 +35,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
@@ -693,9 +695,19 @@ async def async_migrate_entry(
         minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+    bot_device = None
+    bot_id = None
+    if devices:
+        bot_device = devices[0]
+        bot_id = next(
+            identifier
+            for domain, identifier in bot_device.identifiers
+            if domain == DOMAIN
+        )
 
     # version 1.1: to add default API endpoint
     if version == 1 and minor_version == 1:
@@ -710,6 +722,68 @@ async def async_migrate_entry(
             config_entry.minor_version,
             updated,
         )
+
+    # version 1.2 -> 1.3: give each chat its own device, linked to the shared bot device,
+    # and make sure the bot device is tied to (entry, None).
+    if version == 1 and config_entry.minor_version < 3:
+        if bot_id is not None and bot_device is not None:
+            notify_entities = {
+                entity.config_subentry_id: entity
+                for entity in er.async_entries_for_config_entry(
+                    entity_registry, config_entry.entry_id
+                )
+                # The event entity (no subentry) stays on the shared bot device
+                if entity.config_subentry_id is not None
+            }
+            for subentry_id in config_entry.subentries:
+                per_chat_device = device_registry.async_get_or_create(
+                    config_entry_id=config_entry.entry_id,
+                    config_subentry_id=subentry_id,
+                    identifiers={(DOMAIN, f"{bot_id}_{subentry_id}")},
+                    via_device_id=bot_device.id,
+                )
+                if entity := notify_entities.get(subentry_id):
+                    entity_registry.async_update_entity(
+                        entity.entity_id,
+                        device_id=per_chat_device.id,
+                    )
+            # Hand the bot device back to (entry, None), keeping the event entity
+            device_registry.async_update_device(
+                bot_device.id, new_config_subentry_id=None
+            )
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
+
+    # version 1.3 -> 1.4: migrate notify entity unique IDs to stable subentry IDs.
+    if version == 1 and config_entry.minor_version < 4:
+        if bot_id is not None and bot_device is not None:
+            old_to_new_unique_ids = {
+                f"{bot_id}_{subentry.data[CONF_CHAT_ID]}": (
+                    f"{bot_id}_{subentry.subentry_id}"
+                )
+                for subentry in config_entry.subentries.values()
+            }
+
+            @callback
+            def update_unique_id(
+                registry_entry: er.RegistryEntry,
+            ) -> dict[str, str] | None:
+                """Update old chat ID based unique IDs."""
+                if registry_entry.domain != Platform.NOTIFY:
+                    return None
+                if (
+                    new_unique_id := old_to_new_unique_ids.get(registry_entry.unique_id)
+                ) is None:
+                    return None
+                if entity_registry.async_get_entity_id(
+                    registry_entry.domain, registry_entry.platform, new_unique_id
+                ):
+                    return None
+                return {"new_unique_id": new_unique_id}
+
+            await er.async_migrate_entries(
+                hass, config_entry.entry_id, update_unique_id
+            )
+        hass.config_entries.async_update_entry(config_entry, minor_version=4)
 
     return True
 
@@ -927,6 +1001,18 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
     return chat_ids
 
 
+def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.DeviceInfo:
+    """Return device info for the shared bot device."""
+    return dr.DeviceInfo(
+        name=config_entry.title,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        manufacturer="Telegram",
+        model=config_entry.data[CONF_PLATFORM].capitalize(),
+        sw_version=telegram.__version__,
+        identifiers={(DOMAIN, f"{bot_id}")},
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
@@ -954,41 +1040,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
-    await _async_migrate_notify_entity_unique_ids(hass, entry, bot.id)
+    # Create the bot device before the platforms are set up, so the per-chat devices can
+    # resolve it as their via_device no matter which platform is set up first
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **bot_device_info(entry, bot.id)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
-
-
-async def _async_migrate_notify_entity_unique_ids(
-    hass: HomeAssistant, entry: TelegramBotConfigEntry, bot_id: int
-) -> None:
-    """Migrate notify entity unique IDs to stable subentry IDs."""
-    entity_registry = er.async_get(hass)
-    old_to_new_unique_ids = {
-        f"{bot_id}_{subentry.data[CONF_CHAT_ID]}": f"{bot_id}_{subentry.subentry_id}"
-        for subentry in entry.subentries.values()
-    }
-
-    @callback
-    def update_unique_id(registry_entry: er.RegistryEntry) -> dict[str, str] | None:
-        """Update old chat ID based unique IDs."""
-        if registry_entry.domain != Platform.NOTIFY:
-            return None
-        if (
-            new_unique_id := old_to_new_unique_ids.get(registry_entry.unique_id)
-        ) is None:
-            return None
-        if entity_registry.async_get_entity_id(
-            registry_entry.domain, registry_entry.platform, new_unique_id
-        ):
-            return None
-        return {"new_unique_id": new_unique_id}
-
-    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:

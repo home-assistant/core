@@ -1,7 +1,7 @@
 """Test for Portainer services."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyportainer import (
     PortainerAuthenticationError,
@@ -20,6 +20,7 @@ from homeassistant.components.portainer.services import (
     ATTR_TIMEOUT,
     SERVICE_PRUNE_IMAGES,
     SERVICE_RECREATE_CONTAINER,
+    _async_get_device_and_entry,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -48,8 +49,8 @@ async def test_services(
     """Tests that the services are correct."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
     await hass.services.async_call(
@@ -93,8 +94,8 @@ async def test_service_prune_images(
     """Test prune images service with the variants."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
     await hass.services.async_call(
@@ -136,8 +137,8 @@ async def test_service_recreate_container(
     """Test recreate container service with the variants."""
 
     await setup_integration(hass, mock_config_entry)
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
     await hass.services.async_call(
@@ -161,15 +162,15 @@ async def test_service_recreate_container(
     [
         (
             PortainerAuthenticationError("auth"),
-            "invalid_auth_no_details",
+            "invalid_auth",
         ),
         (
             PortainerConnectionError("conn"),
-            "cannot_connect_no_details",
+            "cannot_connect",
         ),
         (
             PortainerTimeoutError("timeout"),
-            "timeout_connect_no_details",
+            "timeout_connect",
         ),
     ],
 )
@@ -185,8 +186,8 @@ async def test_service_recreate_container_portainer_exceptions(
 ) -> None:
     """Test recreate container service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
 
@@ -212,12 +213,12 @@ async def test_service_validation_errors(
     """Tests that the Portainer services handle bad data."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
 
@@ -239,7 +240,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PRUNE_IMAGES,
@@ -248,7 +249,7 @@ async def test_service_validation_errors(
         )
     mock_portainer_client.images_prune.assert_not_called()
 
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
@@ -263,7 +264,9 @@ async def test_service_validation_errors(
         config_entry_id=other_entry.entry_id,
         identifiers={("well_no_portainer_for_sure", "some_identifier")},
     )
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(
+        ServiceValidationError, match=f"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
@@ -280,6 +283,31 @@ async def test_service_validation_errors(
             blocking=True,
         )
     mock_portainer_client.container_recreate.assert_not_called()
+
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_IMAGES,
+            {ATTR_DEVICE_ID: container.id},
+            blocking=True,
+        )
+    mock_portainer_client.images_prune.assert_not_called()
+
+
+async def test_service_prune_images_device_gone(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test resolution raises when the device ID no longer exists in the registry."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_call = MagicMock()
+    mock_call.hass = hass
+
+    with pytest.raises(ServiceValidationError):
+        _async_get_device_and_entry(mock_call, "nonexistent_device_id")
+    mock_portainer_client.images_prune.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -309,8 +337,8 @@ async def test_service_portainer_exceptions(
 ) -> None:
     """Test service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
 
     mock_portainer_client.images_prune.side_effect = exception

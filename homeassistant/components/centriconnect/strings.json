@@ -65,5 +65,16 @@
         "name": "Tank size"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with device: {error}"
+    },
+    "entry_setup_failed": {
+      "message": "Could not fetch device info"
+    },
+    "unexpected_response": {
+      "message": "Unexpected response: {error}"
+    }
   }
 }

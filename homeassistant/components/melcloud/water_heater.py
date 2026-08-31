@@ -1,6 +1,6 @@
 """Platform for water_heater integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pymelcloud import DEVICE_TYPE_ATW, AtwDevice
 from pymelcloud.atw_device import (
@@ -60,44 +60,53 @@ class AtwWaterHeater(MelCloudEntity, WaterHeaterEntity):
         self._attr_unique_id = coordinator.device.serial
         self._attr_device_info = coordinator.device_info
 
+    @override
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.async_set({PROPERTY_POWER: True})
 
+    @override
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.async_set({PROPERTY_POWER: False})
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
         return {ATTR_STATUS: self._device.status}
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation as reported by pymelcloud."""
         return self._device.operation_mode
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes as reported by pymelcloud."""
         return self._device.operation_modes
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.tank_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_tank_temperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.coordinator.async_set(
@@ -108,16 +117,19 @@ class AtwWaterHeater(MelCloudEntity, WaterHeaterEntity):
             }
         )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self.coordinator.async_set({PROPERTY_OPERATION_MODE: operation_mode})
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.target_tank_temperature_min or DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.target_tank_temperature_max or DEFAULT_MAX_TEMP

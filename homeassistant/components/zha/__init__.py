@@ -9,6 +9,7 @@ from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
+from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
@@ -33,7 +34,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, repairs, websocket_api
-from .config_flow import ZhaConfigFlowHandler
 from .const import (
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
@@ -159,15 +159,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
-    # Load and cache device trigger information early
+    # Load and cache device trigger information early. Quirks were registered by
+    # `Gateway.async_from_config` above, so pass the resolver to quirk devices
+    # and surface quirk-defined triggers (e.g. remote button presses).
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.create_zigpy_app(connect=False) as app:
+    async with radio_mgr.create_zigpy_app(
+        connect=False, device_resolver=DEVICE_REGISTRY.resolve
+    ) as app:
         for dev in app.devices.values():
-            dev_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, str(dev.ieee))},
-                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            dev_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, str(dev.ieee)), config_entry.entry_id
             )
 
             if dev_entry is None:
@@ -223,6 +226,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
+
+    # Ensure the gateway is torn down if setup fails after this point
+    config_entry.async_on_unload(ha_zha_data.gateway_proxy.shutdown)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
@@ -282,11 +288,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
-
-    if ha_zha_data.gateway_proxy is not None:
-        await ha_zha_data.gateway_proxy.shutdown()
-        ha_zha_data.gateway_proxy = None
-
+    ha_zha_data.gateway_proxy = None
     ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata
@@ -309,10 +311,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > ZhaConfigFlowHandler.VERSION:
-        # This means the user has downgraded from a future major version
-        return False
 
     if config_entry.version == 1:
         data = {

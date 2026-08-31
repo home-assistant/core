@@ -1,6 +1,6 @@
 """Initialization of ATAG One climate platform."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -53,42 +53,50 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.atag.climate.temp_unit
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return try_parse_enum(HVACMode, self.coordinator.atag.climate.hvac_mode)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.atag.climate.status
         return HVACAction.HEATING if is_active else HVACAction.IDLE
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.atag.climate.temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.atag.climate.target_temperature
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, manual."""
         preset = self.coordinator.atag.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.coordinator.atag.climate.set_temp(kwargs.get(ATTR_TEMPERATURE))
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.coordinator.atag.climate.set_hvac_mode(hvac_mode)
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.coordinator.atag.climate.set_preset_mode(PRESET_MAP[preset_mode])

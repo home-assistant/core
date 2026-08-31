@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from energyflip import EnergyFlip, EnergyFlipException
 
@@ -52,6 +52,7 @@ class EnergyFlipUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]
 
         self._energyflip = energyflip
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Update the data by performing a request to EnergyFlip."""
         try:

@@ -1,6 +1,7 @@
 """Support for Tuya event entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.event import (
     EventDefinition,
@@ -163,6 +164,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self._dpcode_wrapper = definition.event_wrapper
         self._attr_event_types = definition.event_wrapper.options
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

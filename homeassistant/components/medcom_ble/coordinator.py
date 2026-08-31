@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from bleak import BleakError
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
@@ -39,6 +40,7 @@ class MedcomBleUpdateCoordinator(DataUpdateCoordinator[MedcomBleDevice]):
         self._elevation = hass.config.elevation
         self._is_metric = hass.config.units is METRIC_SYSTEM
 
+    @override
     async def _async_update_data(self) -> MedcomBleDevice:
         """Get data from Medcom BLE radiation monitor."""
         ble_device = bluetooth.async_ble_device_from_address(self.hass, self._address)

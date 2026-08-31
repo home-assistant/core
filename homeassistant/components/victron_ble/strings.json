@@ -50,6 +50,9 @@
   },
   "entity": {
     "sensor": {
+      "ac_apparent_power": {
+        "name": "AC apparent power"
+      },
       "ac_current": {
         "name": "AC current"
       },
@@ -66,6 +69,9 @@
       },
       "ac_out_power": {
         "name": "AC-out power"
+      },
+      "ac_voltage": {
+        "name": "AC voltage"
       },
       "alarm": {
         "name": "Alarm",
@@ -210,6 +216,9 @@
       "external_device_load": {
         "name": "External device load"
       },
+      "input_current": {
+        "name": "Input current"
+      },
       "input_voltage": {
         "name": "Input voltage"
       },
@@ -253,6 +262,9 @@
           "switched_off_register": "Switched off by register",
           "switched_off_switch": "Switched off by switch"
         }
+      },
+      "output_current": {
+        "name": "Output current"
       },
       "output_phase_current": {
         "name": "Output phase {phase} current"

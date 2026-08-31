@@ -21,7 +21,7 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
@@ -29,7 +29,7 @@ from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, Config
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, pytest
 from tests.typing import ClientSessionGenerator
@@ -102,7 +102,7 @@ async def test_reconfigure_flow_broadcast(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "invalid",
                 },
             },
@@ -119,7 +119,7 @@ async def test_reconfigure_flow_broadcast(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_BROADCAST,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -157,7 +157,7 @@ async def test_reconfigure_flow_webhooks(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
                 CONF_PROXY_URL: "https://test",
             },
@@ -273,7 +273,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock1",
                 },
             },
@@ -291,7 +291,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock2",
                 },
             },
@@ -329,7 +329,7 @@ async def test_create_entry(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "invalid",
             },
         },
@@ -352,7 +352,7 @@ async def test_create_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
@@ -376,7 +376,7 @@ async def test_create_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
@@ -448,7 +448,7 @@ async def test_create_webhook_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: api_endpoint,
                 },
             },
@@ -576,6 +576,7 @@ async def test_subentry_flow_with_message_thread(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test subentry flow with a message thread."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -610,6 +611,14 @@ async def test_subentry_flow_with_message_thread(
     assert subentry.title == "mock title thread 987"
     assert subentry.unique_id == "123456:987"
     assert subentry.data == {CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987}
+    existing_subentry_id = next(iter(mock_broadcast_config_entry.subentries))
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"123456_{existing_subentry_id}"),
+        mock_broadcast_config_entry.entry_id,
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"123456_{subentry_id}"), mock_broadcast_config_entry.entry_id
+    )
 
 
 async def test_subentry_flow_duplicate_message_thread(
@@ -686,6 +695,7 @@ async def test_subentry_flow_reconfigure_updates_notify_entity(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test subentry reconfigure updates the existing notify entity."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -694,7 +704,6 @@ async def test_subentry_flow_reconfigure_updates_notify_entity(
     await hass.async_block_till_done()
 
     subentry_id = list(mock_broadcast_config_entry.subentries)[0]
-    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_broadcast_config_entry.entry_id
     )
@@ -932,7 +941,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_API_ENDPOINT: "http://mock_api_endpoint",
         },
     }
