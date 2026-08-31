@@ -2,6 +2,8 @@
 
 import logging
 
+from satel_integra import SatelIntegraError
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -84,7 +86,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
 
-    panel_info = await client.controller.read_panel_info()
+    try:
+        panel_info = await client.controller.read_panel_info()
+    except SatelIntegraError:
+        _LOGGER.warning("Unable to read Satel panel information", exc_info=True)
+        panel_info = None
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

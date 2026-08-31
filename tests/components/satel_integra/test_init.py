@@ -8,6 +8,7 @@ from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
     SatelPanelBusyError,
+    SatelUnexpectedResponseError,
 )
 from syrupy.assertion import SnapshotAssertion
 
@@ -223,6 +224,26 @@ async def test_parent_device_exists(
     )
     assert device_entry == snapshot(name="parent-device")
     mock_satel.read_panel_info.assert_awaited_once_with()
+
+
+async def test_panel_info_read_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a panel information read error does not prevent setup."""
+    mock_satel.read_panel_info.side_effect = SatelUnexpectedResponseError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_ENTRY_ID), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.model is None
+    assert device_entry.sw_version is None
 
 
 @pytest.mark.parametrize(
