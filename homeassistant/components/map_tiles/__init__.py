@@ -3,14 +3,16 @@
 Serves the frontend's base map - OpenStreetMap vector tiles, their TileJSON,
 glyphs and sprites, and raster tiles for devices that cannot render vector ones.
 
-It is a proxy because a browser cannot identify the application it belongs to:
-`User-Agent` and `Referer` are forbidden header names, and the only referrer a
-browser can send is its origin, which identifies a Nabu Casa installation.
+A proxy is needed because the OSMF tile policy wants requests identified via
+`User-Agent` or `Referer`, and a browser can send neither: both are forbidden
+header names, and the default referrer (the page origin) would expose the
+user's Nabu Casa installation URL.
 """
 
 from collections import deque
-from random import SystemRandom
-from typing import Any, Final
+from datetime import datetime
+import secrets
+from typing import Any
 
 import voluptuous as vol
 
@@ -21,7 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .cache import MapTilesCache
-from .const import DATA_ACCESS_TOKENS, DOMAIN, TOKEN_CHANGE_INTERVAL
+from .const import DATA_ACCESS_TOKENS, DOMAIN, TOKEN_CHANGE_INTERVAL, TOKEN_SIZE
 from .views import (
     MapTilesGlyphsView,
     MapTilesRasterView,
@@ -31,27 +33,20 @@ from .views import (
     MapTilesVectorView,
 )
 
-_RND: Final = SystemRandom()
-
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-def _new_token() -> str:
-    """Return a fresh access token."""
-    return hex(_RND.getrandbits(256))[2:]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Map tiles integration."""
     # Leaflet asks for raster tiles with an <img>, which can carry no header, so
     # the token has to live in the URL.
-    access_tokens: deque[str] = deque([_new_token()], maxlen=2)
+    access_tokens: deque[str] = deque([secrets.token_hex(TOKEN_SIZE)], maxlen=2)
     hass.data[DATA_ACCESS_TOKENS] = access_tokens
 
     @callback
-    def _rotate_token(_now: Any) -> None:
+    def _rotate_token(_now: datetime) -> None:
         """Rotate the access token."""
-        access_tokens.append(_new_token())
+        access_tokens.append(secrets.token_hex(TOKEN_SIZE))
 
     async_track_time_interval(
         hass, _rotate_token, TOKEN_CHANGE_INTERVAL, cancel_on_shutdown=True

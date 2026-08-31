@@ -7,6 +7,7 @@ from http import HTTPStatus
 import json
 import logging
 from typing import Final, override
+import zlib
 
 from aiohttp import ClientError, hdrs, web
 
@@ -20,11 +21,13 @@ from .const import (
     ASSET_MAX_AGE,
     ASSET_TTL,
     ATTRIBUTION,
-    BLOCKED_TILE_BYTES,
-    BLOCKED_TILE_SHA256,
+    BLOCKED_TILE_SHA256S,
+    BLOCKED_TILE_SIZES,
     DATA_ACCESS_TOKENS,
     FONTSTACK_RE,
     GLYPH_RANGE_RE,
+    MAX_DECOMPRESSED_BYTES,
+    MAX_FETCH_BYTES,
     RASTER_MAX_ZOOM,
     RASTER_URL,
     SPRITE_NAME_RE,
@@ -42,14 +45,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Origin relative: an absolute URL built from the request would be wrong behind
-# a reverse proxy that has not been told to forward the original host.
+# A root-relative path works behind any reverse proxy; an absolute URL built
+# from the request's Host header would not if the proxy does not forward it.
 VECTOR_TILE_PATH = "/api/map_tiles/vector/{z}/{x}/{y}.mvt"
 
-# int() on an arbitrarily long digit string is not free.
+# Cap coordinate length before int(), which is expensive on huge digit strings.
 MAX_COORDINATE_DIGITS = 8
 
 GZIP: Final = "gzip"
+
+
+def _gzip_decompress(body: bytes) -> bytes:
+    """Decompress a gzip body, refusing pathological expansion."""
+    decompressor = zlib.decompressobj(wbits=16 + zlib.MAX_WBITS)
+    decompressed = decompressor.decompress(body, MAX_DECOMPRESSED_BYTES)
+    if decompressor.unconsumed_tail:
+        raise ValueError("Decompressed body too large")
+    if not decompressor.eof or decompressor.unused_data:
+        raise ValueError("Malformed gzip body")
+    return decompressed
 
 
 class _MapTilesView(HomeAssistantView):
@@ -60,8 +74,9 @@ class _MapTilesView(HomeAssistantView):
     content_type: str
     ttl: int
     max_age: int
-    # Cached and served in the encoding upstream sent, so nothing is compressed
-    # per request. PNG opts out: its digest has to match the bytes as made.
+    # Cache bodies in the encoding upstream sent so nothing is re-compressed
+    # per request. The PNG views opt out: PNG gains nothing from gzip, and the
+    # raster blocked-tile digest must see the decoded bytes.
     store_encoded = True
 
     def __init__(self, hass: HomeAssistant, cache: MapTilesCache) -> None:
@@ -70,7 +85,7 @@ class _MapTilesView(HomeAssistantView):
         self._cache = cache
 
     def _authenticate(self, request: web.Request) -> None:
-        """Authenticate the request using Bearer token or query token."""
+        """Authenticate via the standard middleware or a map tiles query token."""
         access_tokens = self._hass.data[DATA_ACCESS_TOKENS]
         if request[KEY_AUTHENTICATED] or request.query.get("token") in access_tokens:
             return
@@ -92,14 +107,19 @@ class _MapTilesView(HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_GATEWAY)
 
         body, encoding = asset.body, asset.encoding
-        if encoding == GZIP and GZIP not in request.headers.get(
-            hdrs.ACCEPT_ENCODING, ""
+        if (
+            encoding == GZIP
+            and GZIP not in request.headers.get(hdrs.ACCEPT_ENCODING, "").lower()
         ):
-            body = await self._hass.async_add_executor_job(gzip.decompress, body)
+            try:
+                body = await self._hass.async_add_executor_job(_gzip_decompress, body)
+            except ValueError, zlib.error:
+                _LOGGER.error("Cached body for %s does not match its encoding", key)
+                return web.Response(status=HTTPStatus.BAD_GATEWAY)
             encoding = None
 
         headers = {
-            hdrs.CACHE_CONTROL: f"public, max-age={self.max_age}",
+            hdrs.CACHE_CONTROL: f"private, max-age={self.max_age}",
             hdrs.VARY: hdrs.ACCEPT_ENCODING,
         }
         if encoding:
@@ -108,24 +128,39 @@ class _MapTilesView(HomeAssistantView):
         return web.Response(body=body, content_type=self.content_type, headers=headers)
 
     async def _async_fetch(self, url: str) -> Asset | None:
-        """Fetch url upstream, or None if it has nothing to give us."""
+        """Fetch url upstream, returning None on any upstream failure."""
         session = async_get_clientsession(self._hass)
         try:
-            response = await session.get(
+            async with session.get(
                 url,
                 headers=UPSTREAM_HEADERS,
                 timeout=UPSTREAM_TIMEOUT,
                 auto_decompress=not self.store_encoded,
-            )
-            if response.status >= HTTPStatus.BAD_REQUEST:
-                _LOGGER.debug("Upstream %s returned %s", url, response.status)
-                return None
-            # An empty body is a legitimate answer: a vector tile with nothing
-            # in it comes back as a short 200, not a 204 or a 404.
-            body = await response.read()
+            ) as response:
+                if response.status >= HTTPStatus.BAD_REQUEST:
+                    _LOGGER.debug("Upstream %s returned %s", url, response.status)
+                    return None
+                # Accumulated in chunks so a hostile upstream cannot make this
+                # process buffer an arbitrarily large response. An empty body
+                # is a legitimate answer: a vector tile with nothing in it
+                # comes back as a short 200, not a 204 or a 404.
+                chunks: list[bytes] = []
+                read = 0
+                async for chunk in response.content.iter_chunked(64 * 1024):
+                    read += len(chunk)
+                    if read > MAX_FETCH_BYTES:
+                        _LOGGER.warning(
+                            "Upstream %s body exceeds %s bytes, refusing it",
+                            url,
+                            MAX_FETCH_BYTES,
+                        )
+                        return None
+                    chunks.append(chunk)
         except (ClientError, TimeoutError) as err:
             _LOGGER.debug("Upstream %s failed: %s", url, err)
             return None
+
+        body = b"".join(chunks)
 
         if not self.store_encoded:
             # The session decompressed it, so the upstream `Content-Encoding`
@@ -188,15 +223,15 @@ class MapTilesRasterView(_MapTilesTileView):
 
     @override
     async def _async_fetch(self, url: str) -> Asset | None:
-        """Fetch a raster tile, rejecting the one that means we were blocked."""
+        """Fetch a raster tile, rejecting OSM's "Access blocked" placeholder."""
         if (asset := await super()._async_fetch(url)) is None:
             return None
 
         # Caching it would serve "Access blocked" to the household for a week.
         # The User-Agent should make this unreachable, hence logged not retried.
         if (
-            len(asset.body) == BLOCKED_TILE_BYTES
-            and hashlib.sha256(asset.body).hexdigest() == BLOCKED_TILE_SHA256
+            len(asset.body) in BLOCKED_TILE_SIZES
+            and hashlib.sha256(asset.body).hexdigest() in BLOCKED_TILE_SHA256S
         ):
             _LOGGER.error(
                 "OpenStreetMap blocked a raster tile request, which means Home"
@@ -292,17 +327,20 @@ class MapTilesTileJsonView(_MapTilesView):
     async def _async_fetch(self, url: str) -> Asset | None:
         """Fetch the upstream TileJSON and republish it as ours.
 
-        Generated from theirs rather than written by hand: the OSMF asks
-        consumers to resolve tiles through it so they can move them.
+        Derived from upstream rather than hardcoded: the OSMF asks consumers
+        to resolve tile URLs through the TileJSON so the endpoints can move.
         """
         if (asset := await super()._async_fetch(url)) is None:
             return None
+        return await self._hass.async_add_executor_job(self._rebuild, asset)
 
+    def _rebuild(self, asset: Asset) -> Asset | None:
+        """Rewrite the upstream TileJSON to point back at this instance."""
         try:
             tilejson = json.loads(
-                gzip.decompress(asset.body) if asset.encoding else asset.body
+                _gzip_decompress(asset.body) if asset.encoding else asset.body
             )
-        except ValueError:
+        except ValueError, zlib.error:
             _LOGGER.error("Upstream TileJSON is not valid JSON")
             return None
 
@@ -310,18 +348,25 @@ class MapTilesTileJsonView(_MapTilesView):
             _LOGGER.error("Upstream TileJSON does not list any tiles")
             return None
 
-        # Ours to build, so this is the one thing compressed here.
+        try:
+            # Clamped to what the tile view will actually serve.
+            minzoom = max(int(tilejson.get("minzoom", 0)), 0)
+            maxzoom = min(
+                int(tilejson.get("maxzoom", VECTOR_MAX_ZOOM)), VECTOR_MAX_ZOOM
+            )
+        except TypeError, ValueError:
+            _LOGGER.error("Upstream TileJSON zoom range is not numeric")
+            return None
+
+        # The only body built locally, so the only one this integration gzips.
         return Asset(
             gzip.compress(
                 json_bytes(
                     {
                         **tilejson,
                         "tiles": [VECTOR_TILE_PATH],
-                        # Clamped to what the tile view will actually serve.
-                        "minzoom": max(tilejson.get("minzoom", 0), 0),
-                        "maxzoom": min(
-                            tilejson.get("maxzoom", VECTOR_MAX_ZOOM), VECTOR_MAX_ZOOM
-                        ),
+                        "minzoom": minzoom,
+                        "maxzoom": maxzoom,
                         "attribution": ATTRIBUTION,
                     }
                 ),

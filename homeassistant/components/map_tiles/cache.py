@@ -4,23 +4,24 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 import time
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.core import HomeAssistant
 
 from .const import CACHE_MAX_BYTES, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+# Approximate bookkeeping cost of one entry (key, tuple, Asset, timestamp and
+# dict slot), charged so tiny bodies cannot grow the entry count without bound.
+_ENTRY_OVERHEAD: Final = 300
 
 
 @dataclass(frozen=True, slots=True)
 class Asset:
-    """An upstream response, held in the encoding it is served in.
+    """An upstream response body plus the Content-Encoding it is stored in.
 
-    Holding the compressed bytes is what stops a dense vector tile from being
-    compressed again here for every client that asks for it.
+    Kept compressed as upstream sent it, so a dense vector tile is not
+    re-compressed for every client that requests it.
     """
 
     body: bytes
@@ -28,6 +29,11 @@ class Asset:
 
 
 type FetchCallback = Callable[[], Coroutine[Any, Any, Asset | None]]
+
+
+def _entry_size(key: str, asset: Asset) -> int:
+    """Return what an entry counts against the size ceiling."""
+    return len(asset.body) + len(key) + _ENTRY_OVERHEAD
 
 
 class MapTilesCache:
@@ -52,9 +58,9 @@ class MapTilesCache:
 
         self._entries.move_to_end(key)
         asset, stored_at = entry
-        if time.time() - stored_at > ttl:
-            # Behind the response rather than in front of it, so an upstream
-            # outage degrades to slightly old tiles, not to no map.
+        if time.monotonic() - stored_at > ttl:
+            # Serve the stale entry now and refresh in the background, so an
+            # upstream outage degrades to slightly old tiles, not to no map.
             self._hass.async_create_background_task(
                 self._async_fetch(key, fetch), f"{DOMAIN} refresh {key}"
             )
@@ -63,25 +69,24 @@ class MapTilesCache:
     def _store(self, key: str, asset: Asset) -> None:
         """Store an entry, evicting until back under the size ceiling."""
         if (previous := self._entries.pop(key, None)) is not None:
-            self._size -= len(previous[0].body)
+            self._size -= _entry_size(key, previous[0])
 
-        self._entries[key] = (asset, time.time())
-        self._size += len(asset.body)
+        self._entries[key] = (asset, time.monotonic())
+        self._size += _entry_size(key, asset)
 
         while self._size > self._max_bytes and len(self._entries) > 1:
-            _key, (evicted, _stored_at) = self._entries.popitem(last=False)
-            self._size -= len(evicted.body)
+            evicted_key, (evicted, _stored_at) = self._entries.popitem(last=False)
+            self._size -= _entry_size(evicted_key, evicted)
 
     async def _async_fetch(self, key: str, fetch: FetchCallback) -> Asset | None:
         """Fetch key upstream, joining a fetch already in flight for it."""
         if (pending := self._fetches.get(key)) is None:
-            # Not eager: the task drops itself from _fetches when it finishes,
-            # which has to happen after it was put there.
-            pending = self._fetches[key] = self._hass.async_create_task(
-                self._async_fetch_and_store(key, fetch),
-                f"{DOMAIN} fetch {key}",
-                eager_start=False,
+            pending = self._hass.async_create_task(
+                self._async_fetch_and_store(key, fetch), f"{DOMAIN} fetch {key}"
             )
+            if not pending.done():
+                self._fetches[key] = pending
+                pending.add_done_callback(lambda _task: self._fetches.pop(key, None))
 
         # Shielded: one client navigating away must not cancel the fetch the
         # others are waiting on.
@@ -91,11 +96,6 @@ class MapTilesCache:
         self, key: str, fetch: FetchCallback
     ) -> Asset | None:
         """Fetch key upstream and store what comes back."""
-        try:
-            if (asset := await fetch()) is not None:
-                self._store(key, asset)
-        finally:
-            # Not from a done callback, which would leave a finished task in
-            # here to be replayed as a result.
-            del self._fetches[key]
+        if (asset := await fetch()) is not None:
+            self._store(key, asset)
         return asset

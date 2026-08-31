@@ -13,7 +13,7 @@ import pytest
 from homeassistant.components.map_tiles.const import (
     ASSET_MAX_AGE,
     ATTRIBUTION,
-    BLOCKED_TILE_BYTES,
+    BLOCKED_TILE_SIZES,
     DATA_ACCESS_TOKENS,
     DOMAIN,
     RASTER_URL,
@@ -77,7 +77,7 @@ async def test_vector_tile(
 
     assert resp.status == HTTPStatus.OK
     assert resp.content_type == "application/vnd.mapbox-vector-tile"
-    assert resp.headers["Cache-Control"] == f"public, max-age={TILE_MAX_AGE}"
+    assert resp.headers["Cache-Control"] == f"private, max-age={TILE_MAX_AGE}"
     assert await resp.read() == VECTOR_TILE
 
 
@@ -110,7 +110,7 @@ async def test_glyphs(
 
     assert resp.status == HTTPStatus.OK
     assert resp.content_type == "application/x-protobuf"
-    assert resp.headers["Cache-Control"] == f"public, max-age={ASSET_MAX_AGE}"
+    assert resp.headers["Cache-Control"] == f"private, max-age={ASSET_MAX_AGE}"
     assert await resp.read() == GLYPHS
 
 
@@ -162,8 +162,8 @@ async def test_compressed_tile_is_handed_on_as_it_arrived(
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Content-Encoding"] == "gzip"
     assert resp.headers["Vary"] == "Accept-Encoding"
-    # Read once the client has undone the encoding, which a stale
-    # `Content-Encoding` over decoded bytes would break.
+    # The test client decompresses on read; a stale `Content-Encoding` over
+    # already-decoded bytes would make this read fail.
     assert await resp.read() == tile
 
 
@@ -218,7 +218,7 @@ async def test_upstream_headers_identify_home_assistant(
     headers = aioclient_mock.mock_calls[0][3]
     assert headers["User-Agent"].startswith("HomeAssistant/")
     assert "abuse@home-assistant.io" in headers["User-Agent"]
-    # Pinned, so what lands in the cache is the encoding we can hand on.
+    # Pinned to gzip so cached bodies are in an encoding every client accepts.
     assert headers["Accept-Encoding"] == "gzip"
     # A Referer would be the instance hostname, which identifies an installation.
     assert "Referer" not in headers
@@ -269,6 +269,18 @@ async def test_tilejson_maxzoom_is_clamped(
         pytest.param({"json": {"tiles": []}}, id="no tiles"),
         pytest.param({"json": {}}, id="empty"),
         pytest.param({"json": ["not", "an", "object"]}, id="not an object"),
+        pytest.param(
+            {"content": b"not gzip", "headers": {"Content-Encoding": "gzip"}},
+            id="lying content encoding",
+        ),
+        pytest.param(
+            {"json": {**UPSTREAM_TILEJSON, "minzoom": "low"}},
+            id="minzoom not numeric",
+        ),
+        pytest.param(
+            {"json": {**UPSTREAM_TILEJSON, "maxzoom": None}},
+            id="maxzoom not numeric",
+        ),
     ],
 )
 async def test_tilejson_unusable(
@@ -385,20 +397,64 @@ async def test_empty_vector_tile_is_served(
     assert await resp.read() == b""
 
 
+async def test_oversized_upstream_body_is_refused(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a body larger than the fetch cap is refused rather than held."""
+    aioclient_mock.get(VECTOR_UPSTREAM, content=b"x" * 200)
+
+    client = await hass_client()
+    with patch("homeassistant.components.map_tiles.views.MAX_FETCH_BYTES", 100):
+        assert (await client.get(VECTOR_PATH)).status == HTTPStatus.BAD_GATEWAY
+        # Not cached, so the second request has to go out again.
+        assert (await client.get(VECTOR_PATH)).status == HTTPStatus.BAD_GATEWAY
+
+    assert aioclient_mock.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param(b"not gzip at all", id="lying content encoding"),
+        pytest.param(gzip.compress(b"0" * 1000), id="expands past the cap"),
+    ],
+)
+async def test_undecodable_cached_body_is_refused(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    content: bytes,
+) -> None:
+    """Test that a cached body that cannot be decoded for a client is refused."""
+    aioclient_mock.get(
+        VECTOR_UPSTREAM, content=content, headers={"Content-Encoding": "gzip"}
+    )
+
+    client = await hass_client()
+    with patch("homeassistant.components.map_tiles.views.MAX_DECOMPRESSED_BYTES", 100):
+        resp = await client.get(VECTOR_PATH, headers={"Accept-Encoding": "identity"})
+
+    assert resp.status == HTTPStatus.BAD_GATEWAY
+
+
+@pytest.mark.parametrize("blocked_size", sorted(BLOCKED_TILE_SIZES))
 async def test_blocked_raster_tile_is_refused(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
+    blocked_size: int,
 ) -> None:
     """Test that the PNG which means we were blocked never becomes a response."""
-    blocked = b"x" * BLOCKED_TILE_BYTES
+    blocked = b"x" * blocked_size
     aioclient_mock.get(RASTER_UPSTREAM, content=blocked)
 
     client = await hass_client()
     with patch(
-        "homeassistant.components.map_tiles.views.BLOCKED_TILE_SHA256",
-        sha256(blocked).hexdigest(),
+        "homeassistant.components.map_tiles.views.BLOCKED_TILE_SHA256S",
+        frozenset({sha256(blocked).hexdigest()}),
     ):
         assert (await client.get(RASTER_PATH)).status == HTTPStatus.BAD_GATEWAY
         # Not cached, so the second request has to go out again.
@@ -408,13 +464,15 @@ async def test_blocked_raster_tile_is_refused(
     assert "OpenStreetMap blocked a raster tile request" in caplog.text
 
 
+@pytest.mark.parametrize("blocked_size", sorted(BLOCKED_TILE_SIZES))
 async def test_tile_matching_only_the_blocked_length_is_served(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    blocked_size: int,
 ) -> None:
-    """Test that a real tile of the blocked tile's length is not thrown away."""
-    aioclient_mock.get(RASTER_UPSTREAM, content=b"y" * BLOCKED_TILE_BYTES)
+    """Test that a real tile of a blocked tile's length is not thrown away."""
+    aioclient_mock.get(RASTER_UPSTREAM, content=b"y" * blocked_size)
 
     client = await hass_client()
     resp = await client.get(RASTER_PATH)
@@ -527,6 +585,24 @@ async def test_both_live_tokens_authenticate(
     for token in tokens:
         resp = await client.get(f"{RASTER_PATH}?token={token}")
         assert resp.status == HTTPStatus.OK
+
+
+async def test_rotated_out_token_is_rejected(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a token stops authenticating once two rotations have passed."""
+    client = await hass_client_no_auth()
+    token = hass.data[DATA_ACCESS_TOKENS][-1]
+
+    for _ in range(2):
+        freezer.tick(TOKEN_CHANGE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    resp = await client.get(f"{RASTER_PATH}?token={token}")
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.parametrize(

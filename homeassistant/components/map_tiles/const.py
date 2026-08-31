@@ -20,13 +20,14 @@ UPSTREAM_TIMEOUT: Final = ClientTimeout(total=10)
 
 CONTACT: Final = "abuse@home-assistant.io"
 UPSTREAM_HEADERS: Final = {
-    # The raster endpoint blocks a browser that sends no `Referer` and accepts
-    # an application `User-Agent` instead, which a browser cannot set.
+    # OSM blocks referer-less browser requests; the accepted alternative is an
+    # identifying application `User-Agent`, which this proxy supplies because
+    # a browser cannot.
     "User-Agent": (
         f"HomeAssistant/{__version__} (+https://www.home-assistant.io; {CONTACT})"
     ),
-    # Pinned so the encoding that lands in the cache is one we can hand on; the
-    # client session otherwise offers whichever codecs happen to be installed.
+    # Pinned to gzip so cached bodies are in an encoding every client accepts;
+    # the session default advertises whichever codecs happen to be installed.
     "Accept-Encoding": "gzip",
 }
 
@@ -35,11 +36,11 @@ UPSTREAM_HEADERS: Final = {
 TILE_TTL: Final = 24 * 60 * 60
 # Glyphs and sprites are pinned to an upstream release and never change.
 ASSET_TTL: Final = 30 * 24 * 60 * 60
-# Short, because this is where a move of the tile source arrives.
+# Short: the TileJSON is how upstream would announce a moved tile endpoint.
 TILEJSON_TTL: Final = 60 * 60
 
-# The OSMF asks consumers to hold tiles for at least a week, which a browser can
-# do for itself where this instance would spend memory doing it for them.
+# The OSMF asks consumers to cache tiles for at least a week; the max-age
+# delegates that to the browser cache instead of this instance's memory.
 TILE_MAX_AGE: Final = 7 * 24 * 60 * 60
 ASSET_MAX_AGE: Final = 30 * 24 * 60 * 60
 TILEJSON_MAX_AGE: Final = 5 * 60
@@ -50,11 +51,27 @@ TILEJSON_MAX_AGE: Final = 5 * 60
 # costs a few dozen requests.
 CACHE_MAX_BYTES: Final = 32 * 1024 * 1024
 
+# Far above any legitimate asset (tiles top out at a few hundred KB), so only a
+# hostile or broken upstream hits them; they bound what a single response can
+# make this process hold in memory, on the wire and after decompression.
+MAX_FETCH_BYTES: Final = 8 * 1024 * 1024
+MAX_DECOMPRESSED_BYTES: Final = 32 * 1024 * 1024
+
 # Being blocked arrives as HTTP 200 with a valid PNG reading "Access blocked".
-# Length is the cheap check, the digest confirms it.
-BLOCKED_TILE_BYTES: Final = 6987
-BLOCKED_TILE_SHA256: Final = (
-    "b02c44252dac5a5e820ecef1e9bf9200e9407c042df668a466a1aa81a9ecca7a"
+# Length is the cheap check, the digest confirms it. Exact bytes of the "403"
+# (general block), "403r" (referer required) and "451" (missing attribution)
+# variants documented at https://wiki.openstreetmap.org/wiki/Blocked_tiles
+# (as of 2026-08).
+BLOCKED_TILE_SIZES: Final = frozenset({6987, 6939, 6772})
+BLOCKED_TILE_SHA256S: Final = frozenset(
+    {
+        # 403_tile.png
+        "b02c44252dac5a5e820ecef1e9bf9200e9407c042df668a466a1aa81a9ecca7a",
+        # 403r_tile.png
+        "641c0181751e4029c9ad949cf03f6aee55859ce283a55492c8e28133d9e31c4b",
+        # 451_Attribution_Tile.png
+        "eca627aff6dc5c5996dc73efe5faf407ec513cc94a8bd3c1ea99310ccb49208a",
+    }
 )
 
 # MapLibre overzooms above the source maxzoom, so nothing legitimate asks for a
@@ -74,6 +91,9 @@ FONTSTACK_RE: Final = re.compile(
 GLYPH_RANGE_RE: Final = re.compile(r"^\d{1,5}-\d{1,5}\.pbf$")
 SPRITE_SET_RE: Final = re.compile(r"^[a-z0-9_-]{1,32}$")
 SPRITE_NAME_RE: Final = re.compile(r"^sprites(?:@2x)?$")
+
+# Bytes of entropy per access token.
+TOKEN_SIZE: Final = 32
 
 # Two tokens are live at a time, so one stays valid for 30 to 60 minutes.
 TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=30)

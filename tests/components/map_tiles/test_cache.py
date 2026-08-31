@@ -3,21 +3,30 @@
 import asyncio
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
-from homeassistant.components.map_tiles.cache import Asset, MapTilesCache
+from homeassistant.components.map_tiles.cache import (
+    _ENTRY_OVERHEAD,
+    Asset,
+    MapTilesCache,
+)
 from homeassistant.core import HomeAssistant
 
 TTL = 60
 
+BODY = b"0123456789"
+# What one entry with a single-character key counts against the ceiling.
+ENTRY_COST = len(BODY) + 1 + _ENTRY_OVERHEAD
+
 
 async def test_evicts_least_recently_used(hass: HomeAssistant) -> None:
     """Test that the cache stays inside its ceiling, dropping the coldest first."""
-    cache = MapTilesCache(hass, max_bytes=20)
+    cache = MapTilesCache(hass, max_bytes=2 * ENTRY_COST)
     calls: list[str] = []
 
     async def fetch(key: str) -> Asset:
         calls.append(key)
-        return Asset(b"0123456789", None)
+        return Asset(BODY, None)
 
     for key in ("a", "b"):
         await cache.async_get(key, TTL, lambda key=key: fetch(key))
@@ -49,6 +58,23 @@ async def test_entry_larger_than_the_ceiling_is_kept(hass: HomeAssistant) -> Non
     await cache.async_get("big", TTL, fetch)
 
     assert calls == ["fetched"]
+
+
+async def test_empty_bodies_count_against_the_ceiling(hass: HomeAssistant) -> None:
+    """Test that entries with empty bodies cannot grow the cache without bound."""
+    cache = MapTilesCache(hass, max_bytes=3 * (1 + _ENTRY_OVERHEAD))
+    calls: list[str] = []
+
+    async def fetch(key: str) -> Asset:
+        calls.append(key)
+        return Asset(b"", None)
+
+    for key in ("a", "b", "c", "d", "e"):
+        await cache.async_get(key, TTL, lambda key=key: fetch(key))
+
+    # The per-entry overhead pushed "a" out despite its zero-length body.
+    await cache.async_get("a", TTL, lambda: fetch("a"))
+    assert calls == ["a", "b", "c", "d", "e", "a"]
 
 
 async def test_the_encoding_is_cached_with_the_body(hass: HomeAssistant) -> None:
@@ -120,6 +146,30 @@ async def test_a_cancelled_client_does_not_cancel_the_fetch(
     released.set()
 
     assert await staying == Asset(b"tile", None)
+
+
+async def test_a_cancelled_fetch_does_not_poison_the_key(hass: HomeAssistant) -> None:
+    """Test that a key can be fetched again after its fetch task was cancelled."""
+    cache = MapTilesCache(hass)
+    released = asyncio.Event()
+    calls: list[str] = []
+
+    async def fetch() -> Asset:
+        calls.append("fetched")
+        await released.wait()
+        return Asset(b"tile", None)
+
+    waiting = asyncio.create_task(cache.async_get("key", TTL, fetch))
+    await asyncio.sleep(0)
+
+    # Cancel the fetch task itself, as a shutdown would.
+    cache._fetches["key"].cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiting
+
+    released.set()
+    assert await cache.async_get("key", TTL, fetch) == Asset(b"tile", None)
+    assert len(calls) == 2
 
 
 async def test_stale_entry_is_refreshed_behind_the_response(
