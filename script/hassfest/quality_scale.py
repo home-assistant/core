@@ -2041,6 +2041,7 @@ NO_QUALITY_SCALE = [
     "logbook",
     "logger",
     "lovelace",
+    "map_tiles",
     "media_source",
     "moisture",
     "motion",
