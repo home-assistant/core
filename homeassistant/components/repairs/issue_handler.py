@@ -8,7 +8,6 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from .const import DOMAIN
@@ -59,13 +58,8 @@ class RepairsFlowManager(
         """Override to ensure appropriate context is set in the flow result."""
         _context: RepairsFlowContext = context or {}
         if "issue_id" not in _context and data is not None and "issue_id" in data:
-            # fallback for legacy integrations
+            # fallback for custom integrations
             _context |= {"issue_id": data["issue_id"]}
-            report_usage(
-                "initializes a RepairsFlow using issue_id in a deprecated manner via the data parameter and not in context parameter",
-                breaks_in_ha_version="2027.8.0",
-                integration_domain=handler,
-            )
         return await super().async_init(handler, context=_context, data=data)
 
     @override
@@ -78,7 +72,7 @@ class RepairsFlowManager(
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
         if context is None or "issue_id" not in context:
-            raise KeyError("issue_id was not set in context")
+            raise KeyError("issue_id was not set in context or data")
         issue_id = context["issue_id"]
 
         issue_registry = ir.async_get(self.hass)

@@ -36,9 +36,10 @@ LOGGER = logging.getLogger(__name__)
 class MissingBackupSetupRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: SynologyDSMConfigEntry) -> None:
+    def __init__(self, entry: SynologyDSMConfigEntry, issue_id: str) -> None:
         """Create flow."""
         self.entry = entry
+        self.issue_id = issue_id
         super().__init__()
 
     async def async_step_init(
@@ -119,6 +120,6 @@ async def async_create_fix_flow(
         entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry and issue_id.startswith(ISSUE_MISSING_BACKUP_SETUP):
-        return MissingBackupSetupRepairFlow(entry)
+        return MissingBackupSetupRepairFlow(entry, issue_id)
 
     return ConfirmRepairFlow()

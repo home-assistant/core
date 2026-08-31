@@ -10,7 +10,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.frame import report_usage
 
 from .const import FlowType
 
@@ -44,23 +43,22 @@ class RepairsFlow(
     """Handle a flow for fixing an issue."""
 
     data: dict[str, str | int | float | None] | None
-    _deprecated_issue_id: str
+    _issue_id: str
 
     @property
     def issue_id(self) -> str:
         """Return the flow's issue_id."""
         if "issue_id" in self.context:
             return self.context["issue_id"]
-        return self._deprecated_issue_id
+        # Error prevention in legacy custom integrations that may access attribute
+        # prior to the flow manager running async_create_flow
+        return self._issue_id
 
     @issue_id.setter
     def issue_id(self, issue_id: str) -> None:
         """Provide deprecation warning."""
-        report_usage(
-            "attempts to set issue_id directly in a RepairsFlow which is unnecessary since issue_id is set by the repairs flow manager",
-            breaks_in_ha_version="2027.8.0",
-        )
-        self._deprecated_issue_id = issue_id
+        # Prevent errors in custom integrations that may attempt to set/access issue_id prior to the flow manager async_create_flow
+        self._issue_id = issue_id
 
     @override
     @callback

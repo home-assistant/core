@@ -385,9 +385,10 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
 class DisableOpenWiFiApFlow(RepairsFlow):
     """Handler for Disable Open WiFi AP flow."""
 
-    def __init__(self, device: RpcDevice) -> None:
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
         """Initialize."""
         self._device = device
+        self.issue_id = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -427,9 +428,10 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 class EnableRtspFlow(RepairsFlow):
     """Handler for Enable RTSP flow."""
 
-    def __init__(self, device: RpcDevice) -> None:
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
         """Initialize."""
         self._device = device
+        self.issue_id = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -500,9 +502,9 @@ async def async_create_fix_flow(
         return DisableOutboundWebSocketFlow(device)
 
     if "open_wifi_ap" in issue_id:
-        return DisableOpenWiFiApFlow(device)
+        return DisableOpenWiFiApFlow(device, issue_id)
 
     if "rtsp_disabled" in issue_id:
-        return EnableRtspFlow(device)
+        return EnableRtspFlow(device, issue_id)
 
     return ConfirmRepairFlow()
