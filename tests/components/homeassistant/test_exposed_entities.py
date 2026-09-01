@@ -549,7 +549,7 @@ async def test_list_exposed_entities_locked(
 
     entity_id = "test.not_exposed"
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_set_entity_locked("cloud.google_assistant", entity_id, True)
+    exposed_entities.async_set_entity_locked("cloud.google_assistant", entity_id, False)
 
     await ws_client.send_json_auto_id({"type": "homeassistant/expose_entity/list"})
     response = await ws_client.receive_json()
