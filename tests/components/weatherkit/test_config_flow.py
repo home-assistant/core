@@ -9,6 +9,7 @@ from apple_weatherkit.client import (
     WeatherKitApiClientError,
 )
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.weatherkit.config_flow import (
@@ -198,6 +199,7 @@ async def test_reconfigure_flow(
             CONF_LONGITUDE: -74.006,
         },
         CONF_KEY_ID: "new-key-id",
+        CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nnewkey\n-----END PRIVATE KEY-----",
     }
 
     with patch(
@@ -215,6 +217,49 @@ async def test_reconfigure_flow(
     assert entry.data[CONF_LATITUDE] == 40.7128
     assert entry.data[CONF_LONGITUDE] == -74.006
     assert entry.data[CONF_KEY_ID] == "new-key-id"
+    assert entry.data[CONF_KEY_PEM] == new_user_input[CONF_KEY_PEM]
+
+
+async def test_reconfigure_flow_blank_key_pem_keeps_current_value(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that leaving the private key blank during reconfigure keeps the current value."""
+    entry = await init_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    schema = result["data_schema"]
+    suggested_values = {
+        key.schema: key.description.get("suggested_value")
+        for key in schema.schema
+        if isinstance(key, vol.Marker)
+        and key.description
+        and "suggested_value" in key.description
+    }
+    assert suggested_values[CONF_KEY_PEM] == ""
+
+    new_user_input = {
+        **EXAMPLE_USER_INPUT,
+        CONF_KEY_ID: "new-key-id",
+        CONF_KEY_PEM: "",
+    }
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            new_user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_KEY_ID] == "new-key-id"
+    assert entry.data[CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
 
 
 @pytest.mark.parametrize(

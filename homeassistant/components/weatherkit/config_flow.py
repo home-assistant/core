@@ -47,6 +47,23 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+RECONFIGURE_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=False, icon="")
+        ),
+        # Auth
+        vol.Required(CONF_KEY_ID): str,
+        vol.Required(CONF_SERVICE_ID): str,
+        vol.Required(CONF_TEAM_ID): str,
+        vol.Optional(CONF_KEY_PEM, default=""): TextSelector(
+            TextSelectorConfig(
+                multiline=True,
+            )
+        ),
+    }
+)
+
 
 class WeatherKitUnsupportedLocationError(Exception):
     """Error to indicate a location is unsupported."""
@@ -97,6 +114,9 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            if not user_input[CONF_KEY_PEM]:
+                user_input[CONF_KEY_PEM] = reconfigure_entry.data[CONF_KEY_PEM]
+
             errors = await self._validate_and_fix_input(user_input)
             if not errors:
                 self._flatten_location(user_input)
@@ -113,9 +133,12 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LATITUDE: reconfigure_entry.data[CONF_LATITUDE],
                 CONF_LONGITUDE: reconfigure_entry.data[CONF_LONGITUDE],
             },
+            CONF_KEY_PEM: "",
         }
 
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, suggested_values)
+        data_schema = self.add_suggested_values_to_schema(
+            RECONFIGURE_DATA_SCHEMA, suggested_values
+        )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=data_schema,

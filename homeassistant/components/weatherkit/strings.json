@@ -20,6 +20,9 @@
           "service_id": "[%key:component::weatherkit::config::step::user::data::service_id%]",
           "team_id": "[%key:component::weatherkit::config::step::user::data::team_id%]"
         },
+        "data_description": {
+          "key_pem": "Leave blank to keep the currently configured private key."
+        },
         "description": "[%key:component::weatherkit::config::step::user::description%]",
         "title": "Reconfigure WeatherKit"
       },
