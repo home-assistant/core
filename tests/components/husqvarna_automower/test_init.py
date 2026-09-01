@@ -543,7 +543,6 @@ async def test_rename_work_area(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     values: dict[str, MowerAttributes],
 ) -> None:
