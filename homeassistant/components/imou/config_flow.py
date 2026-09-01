@@ -75,8 +75,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_APP_ID])
             self._abort_if_unique_id_configured()
-            errors = await self._validate_input(user_input)
-            if not errors:
+            if not (errors := await self._validate_input(user_input)):
                 return self.async_create_entry(
                     title="Imou",
                     data={
@@ -116,14 +115,15 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            errors = await self._validate_input(
-                {
-                    CONF_APP_ID: reauth_entry.data[CONF_APP_ID],
-                    CONF_APP_SECRET: user_input[CONF_APP_SECRET],
-                    CONF_API_URL: reauth_entry.data[CONF_API_URL],
-                }
-            )
-            if not errors:
+            if not (
+                errors := await self._validate_input(
+                    {
+                        CONF_APP_ID: reauth_entry.data[CONF_APP_ID],
+                        CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                        CONF_API_URL: reauth_entry.data[CONF_API_URL],
+                    }
+                )
+            ):
                 await self.async_set_unique_id(reauth_entry.data[CONF_APP_ID])
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
