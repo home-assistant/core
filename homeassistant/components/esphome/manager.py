@@ -119,12 +119,14 @@ def _is_outgoing_connection_target(noise_psk: str | None) -> bool:
     return bool(noise_psk) and noise_psk != ZERO_NOISE_PSK
 
 
+@callback
 def async_create_api_client(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
     zeroconf_instance: zeroconf.HaZeroconf,
     *,
     noise_psk: str | None,
+    declare_outgoing_target: bool = True,
 ) -> APIClient:
     """Create an APIClient for a config entry."""
     return APIClient(
@@ -135,7 +137,8 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
-        outgoing_connection_target=_is_outgoing_connection_target(noise_psk),
+        outgoing_connection_target=declare_outgoing_target
+        and _is_outgoing_connection_target(noise_psk),
     )
 
 
@@ -591,8 +594,13 @@ class ESPHomeManager:
     async def _async_register_outgoing_target(
         self, reconnect_logic: ReconnectLogic
     ) -> None:
-        """Register this entry's MAC with the shared dial-in listener."""
+        """Register this entry's MAC with the shared dial-in listener.
+
+        Runs once at setup; a dynamically provisioned key takes effect on
+        the next reload or restart.
+        """
         entry = self.entry
+        # The client's key, not entry data: must match what the hello declared
         if not _is_outgoing_connection_target(self.cli.noise_psk) or not (
             (mac := entry.unique_id) and ":" in mac
         ):

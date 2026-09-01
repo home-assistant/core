@@ -1,8 +1,9 @@
 """Tests for device-initiated outgoing connections."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import ZERO_NOISE_PSK, APIClient
 import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
@@ -29,7 +30,7 @@ def _make_entry(
 
 
 @pytest.fixture
-def mock_server() -> MagicMock:
+def mock_server() -> Generator[MagicMock]:
     """Patch the aioesphomeapi listener class in the singleton module."""
     server = MagicMock()
     server.start = AsyncMock()
@@ -63,6 +64,8 @@ async def test_outgoing_connection_registration(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     unregister.assert_called()
+    # The last unregistration stops the listener and frees the port
+    mock_server.stop.assert_awaited_once()
 
 
 @pytest.mark.parametrize("noise_psk", [None, ""])
@@ -99,6 +102,12 @@ async def test_outgoing_connection_listener_unavailable(
     assert entry.state is ConfigEntryState.LOADED
     mock_server.register.assert_not_called()
 
+    # The failure is not cached; a reload retries the bind
+    mock_server.start.side_effect = None
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_server.register.assert_called_once()
+
 
 async def test_outgoing_connection_shared_listener(
     hass: HomeAssistant,
@@ -121,3 +130,35 @@ async def test_outgoing_connection_shared_listener(
 
     mock_server.start.assert_awaited_once()
     assert mock_server.register.call_count == 2
+
+
+async def test_outgoing_connection_zero_psk_never_registers(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """The zero-PSK provisioning key authenticates nobody and never routes."""
+    entry = _make_entry(noise_psk=ZERO_NOISE_PSK)
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+
+    mock_server.register.assert_not_called()
+    assert mock_client.outgoing_connection_target is False
+
+
+async def test_outgoing_connection_requires_mac_unique_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """A pre-2023 non-MAC unique id has no route; the flag is still declared."""
+    entry = _make_entry(unique_id="my-old-device")
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+
+    mock_server.register.assert_not_called()
+    assert mock_client.outgoing_connection_target is True
