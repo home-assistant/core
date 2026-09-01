@@ -4,7 +4,11 @@ from datetime import time
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pynintendoparental.exceptions import InvalidDeviceStateError
+from pynintendoparental.exceptions import (
+    BedtimeOutOfRangeError,
+    ExtraPlayingTimeActiveError,
+    InvalidDeviceStateError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,6 +18,10 @@ from homeassistant.components.nintendo_parental_controls.const import (
     ATTR_BONUS_TIME,
     ATTR_DAY_OF_WEEK,
     ATTR_MAX_PLAY_TIME,
+    BEDTIME_ALARM_MAX,
+    BEDTIME_ALARM_MIN,
+    BEDTIME_END_TIME_MAX,
+    BEDTIME_END_TIME_MIN,
     DOMAIN,
 )
 from homeassistant.components.nintendo_parental_controls.services import (
@@ -398,17 +406,46 @@ async def test_update_daily_restrictions(
     )
 
 
-async def test_update_daily_restrictions_invalid_state(
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            InvalidDeviceStateError("Invalid device state"),
+            "requires_daily_restrictions",
+            None,
+            id="requires_daily_restrictions",
+        ),
+        pytest.param(
+            ExtraPlayingTimeActiveError("Extra playing time active"),
+            "extra_playing_time_active",
+            None,
+            id="extra_playing_time_active",
+        ),
+        pytest.param(
+            BedtimeOutOfRangeError("Bedtime out of range"),
+            "bedtime_out_of_range",
+            {
+                "bedtime_alarm_min": BEDTIME_ALARM_MIN,
+                "bedtime_alarm_max": BEDTIME_ALARM_MAX,
+                "bedtime_end_time_min": BEDTIME_END_TIME_MIN,
+                "bedtime_end_time_max": BEDTIME_END_TIME_MAX,
+            },
+            id="bedtime_out_of_range",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_nintendo_client")
+async def test_update_daily_restrictions_exceptions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_nintendo_client: AsyncMock,
     mock_nintendo_device: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
 ) -> None:
-    """Test update daily restrictions raises when device is in invalid state."""
-    mock_nintendo_device.set_daily_restrictions.side_effect = InvalidDeviceStateError(
-        "Invalid device state"
-    )
+    """Test update daily restrictions raises expected exceptions."""
+    mock_nintendo_device.set_daily_restrictions.side_effect = side_effect
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "testdevid"), mock_config_entry.entry_id
@@ -426,4 +463,5 @@ async def test_update_daily_restrictions_invalid_state(
             blocking=True,
         )
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "requires_daily_restrictions"
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
