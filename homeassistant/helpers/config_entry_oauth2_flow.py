@@ -210,8 +210,6 @@ class AbstractOAuth2Implementation(ABC):
             new_token["expires_in"] = int(new_token["expires_in"])
         except (KeyError, TypeError, ValueError) as err:
             raise OAuth2TokenRequestConnectionError(domain=self.service_domain) from err
-        if not new_token.get("access_token"):
-            raise OAuth2TokenRequestConnectionError(domain=self.service_domain)
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
