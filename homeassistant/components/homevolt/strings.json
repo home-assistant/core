@@ -54,6 +54,41 @@
     }
   },
   "entity": {
+    "number": {
+      "grid_export_limit": {
+        "name": "Grid export limit"
+      },
+      "grid_import_limit": {
+        "name": "Grid import limit"
+      },
+      "max_charge": {
+        "name": "Maximum charge power"
+      },
+      "max_discharge": {
+        "name": "Maximum discharge power"
+      },
+      "max_soc": {
+        "name": "Maximum state of charge"
+      },
+      "min_soc": {
+        "name": "Minimum state of charge"
+      },
+      "setpoint": {
+        "name": "Power setpoint"
+      }
+    },
+    "select": {
+      "battery_mode": {
+        "name": "Battery mode",
+        "state": {
+          "frequency_reserve": "Frequency reserve",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge"
+        }
+      }
+    },
     "sensor": {
       "available_charging_energy": {
         "name": "Available charging energy"
@@ -170,6 +205,15 @@
   "exceptions": {
     "auth_failed": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "command_outcome_unknown": {
+      "message": "The Homevolt command was sent, but its result could not be verified: {error}"
+    },
+    "command_rejected": {
+      "message": "The Homevolt battery rejected the command: {error}"
+    },
+    "command_verification_failed": {
+      "message": "The Homevolt battery did not apply the requested command: {error}"
     },
     "communication_error": {
       "message": "Error communicating with the Homevolt battery: {error}"
