@@ -798,6 +798,75 @@ async def test_push_supersedes_in_flight_manual_refresh(
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
+async def test_self_heal_supersedes_in_flight_manual_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a self-heal publish during a manual refresh outranks the fetch result.
+
+    The manual fetch read the document before the self-heal did; accepting
+    its late result would overwrite the fresher data the self-heal
+    published after the optimistic TTL expired.
+    """
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+
+    release = asyncio.Event()
+    calls: list[None] = []
+
+    async def _manual_hangs_then_self_heal(
+        *_args: Any, **_kwargs: Any
+    ) -> dict[str, Any]:
+        """The manual fetch hangs with a pre-write read; the self-heal reads fresh."""
+        calls.append(None)
+        if len(calls) == 1:
+            await release.wait()
+            return {"light": {"status": 0}}
+        return {"light": {"status": 1}}
+
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    mock_vistapool_client.fetch_pool_data.side_effect = _manual_hangs_then_self_heal
+
+    refresh = hass.async_create_task(
+        hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert len(calls) == 1
+
+    # The TTL expiry drops the write and the self-heal publishes fresh data.
+    async_fire_time_changed(hass, fire_all=True)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert len(calls) == 2
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+    # The manual fetch completes with its older read; the self-heal must win.
+    release.set()
+    await refresh
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+
 async def test_refresh_preserves_other_pending_optimistic_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
