@@ -77,6 +77,37 @@ async def test_update_gateway_device_falls_back_to_entry_data(
     assert device.sw_version is None
 
 
+async def test_update_gateway_device_omits_unknown_serial(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Unknown USB serial placeholders are not stored in the device registry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_GATEWAY_TITLE,
+        data={**MOCK_ENTRY_DATA, "usb_serial_number": "unknown"},
+    )
+    entry.add_to_hass(hass)
+
+    transceiver = type(
+        "Transceiver",
+        (),
+        {
+            "usb_serial_number": "unknown",
+            "hw_version": "1.0",
+            "fw_version": "2.0",
+        },
+    )()
+
+    update_gateway_device(hass, entry, transceiver)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.serial_number is None
+
+
 async def test_update_gateway_device_updates_existing_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

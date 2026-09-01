@@ -30,6 +30,7 @@ from .const import (
     SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
     SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
     SUPPORTED_USB_IDS,
+    UNKNOWN_USB_SERIAL,
     USB_DEVICE_NAMES,
     get_frequency_for_pid,
     is_country_allowed_for_frequency,
@@ -37,6 +38,19 @@ from .const import (
 from .transceiver import RX11Transceiver
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _device_from_port(port: Any) -> dict[str, Any]:
+    """Build gateway device metadata from a discovered serial port."""
+    device_entry = USB_DEVICE_NAMES[(port.vid, port.pid)]
+    return {
+        "device": port.device,
+        "vid": port.vid,
+        "pid": port.pid,
+        "serial_number": port.serial_number or UNKNOWN_USB_SERIAL,
+        "manufacturer": port.manufacturer or device_entry["manufacturer"],
+        "product": device_entry["product"],
+    }
 
 
 class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -78,7 +92,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_device_connection(self, device_path: str) -> bool:
         """Verify that an RX11 transceiver is reachable on the given port."""
-        transceiver = RX11Transceiver(self.hass, device_path)
+        transceiver = RX11Transceiver(self.hass, device_path=device_path)
         connected = False
         try:
             connected = await transceiver.connect()
@@ -128,15 +142,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         if user_input is None and len(ports) == 1:
-            port = ports[0]
-            self._device = {
-                "device": port.device,
-                "vid": port.vid,
-                "pid": port.pid,
-                "serial_number": port.serial_number or "unknown",
-                "manufacturer": port.manufacturer or "unknown",
-                "product": USB_DEVICE_NAMES[(port.vid, port.pid)]["product"],
-            }
+            self._device = _device_from_port(ports[0])
             return await self.async_step_confirm()
 
         if user_input is not None:
@@ -145,16 +151,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             if selected_port is None:
                 errors["base"] = "device_no_longer_available"
             else:
-                self._device = {
-                    "device": selected_port.device,
-                    "vid": selected_port.vid,
-                    "pid": selected_port.pid,
-                    "serial_number": selected_port.serial_number or "unknown",
-                    "manufacturer": selected_port.manufacturer or "unknown",
-                    "product": USB_DEVICE_NAMES[(selected_port.vid, selected_port.pid)][
-                        "product"
-                    ],
-                }
+                self._device = _device_from_port(selected_port)
                 return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -171,11 +168,11 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         if (vid, pid) not in SUPPORTED_USB_IDS:
             return self.async_abort(reason="no_devices_found")
 
-        serial_number = discovery_info.serial_number or "unknown"
+        serial_number = discovery_info.serial_number or UNKNOWN_USB_SERIAL
 
         unique_id = (
             f"easywave_{serial_number}"
-            if serial_number != "unknown"
+            if serial_number != UNKNOWN_USB_SERIAL
             else f"easywave_{vid:04X}_{pid:04X}"
         )
         await self.async_set_unique_id(unique_id)
@@ -204,7 +201,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         vid = self._device.get("vid")
         pid = self._device.get("pid")
 
-        if serial_number != "unknown":
+        if serial_number != UNKNOWN_USB_SERIAL:
             unique_id = f"easywave_{serial_number}"
         elif vid is not None and pid is not None:
             unique_id = f"easywave_{vid:04X}_{pid:04X}"

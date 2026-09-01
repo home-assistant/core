@@ -5,11 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.easywave.transceiver import RX11Transceiver
+from homeassistant.components.easywave.const import SUPPORTED_USB_IDS
+from homeassistant.components.easywave.transceiver import (
+    RX11Transceiver,
+    resolve_gateway_port,
+)
 from homeassistant.core import HomeAssistant
 
 DEVICE_PATH = "/dev/ttyACM0"
 GATEWAY_PATH = "homeassistant.components.easywave.transceiver.EasywaveGateway"
+RESOLVE_PATH = "homeassistant.components.easywave.transceiver.resolve_gateway_port"
 
 
 @pytest.fixture
@@ -35,7 +40,7 @@ def mock_gateway() -> MagicMock:
 def transceiver(hass: HomeAssistant, mock_gateway: MagicMock) -> RX11Transceiver:
     """Return an RX11Transceiver with a mocked gateway."""
     with patch(GATEWAY_PATH, return_value=mock_gateway):
-        return RX11Transceiver(hass, DEVICE_PATH)
+        return RX11Transceiver(hass, device_path=DEVICE_PATH)
 
 
 def _gateway_callbacks(mock_gateway_cls: MagicMock) -> Any:
@@ -43,15 +48,32 @@ def _gateway_callbacks(mock_gateway_cls: MagicMock) -> Any:
     return mock_gateway_cls.call_args.kwargs["callbacks"]
 
 
-async def test_connect_delegates_to_gateway(
+async def test_connect_prepares_connection_before_gateway_connect(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
-    """Connect delegates to the library gateway."""
-    mock_gateway.is_connected = True
-    mock_gateway.device_path = DEVICE_PATH
+    """Connect resolves the configured gateway before opening it."""
+    with patch.object(transceiver, "_prepare_connection", AsyncMock()) as mock_prepare:
+        assert await transceiver.connect() is True
 
-    assert await transceiver.connect() is True
+    mock_prepare.assert_awaited_once()
     mock_gateway.connect.assert_awaited_once()
+
+
+async def test_prepare_connection_sets_gateway_target(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Connection preparation resolves and assigns the gateway port."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(
+            hass,
+            {"usb_serial_number": "222", "device_path": "/dev/ttyACM0"},
+        )
+
+    with patch(RESOLVE_PATH, return_value=DEVICE_PATH):
+        await transceiver._prepare_connection()
+
+    assert mock_gateway._config.port == DEVICE_PATH
+    assert mock_gateway._device_path is None
 
 
 async def test_disconnect_and_dispose_delegate_to_gateway(
@@ -65,11 +87,13 @@ async def test_disconnect_and_dispose_delegate_to_gateway(
     mock_gateway.stop.assert_awaited_once()
 
 
-async def test_reconnect_delegates_to_gateway(
+async def test_reconnect_prepares_connection_before_gateway_reconnect(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
-    """Reconnect delegates to the library gateway."""
-    assert await transceiver.reconnect() is True
+    """Reconnect re-resolves the configured gateway port."""
+    with patch.object(transceiver, "_prepare_connection", AsyncMock()):
+        assert await transceiver.reconnect() is True
+
     mock_gateway.reconnect.assert_awaited_once()
 
 
@@ -90,7 +114,7 @@ async def test_connected_callback_is_forwarded(
     """Gateway connect events invoke the registered callback."""
     callback = MagicMock()
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver = RX11Transceiver(hass, device_path=DEVICE_PATH)
         transceiver.set_connected_callback(callback)
         _gateway_callbacks(mock_gateway_cls).on_connected(MagicMock())
 
@@ -104,7 +128,7 @@ async def test_disconnect_callback_is_forwarded(
     """Gateway disconnect events invoke the registered callback."""
     callback = MagicMock()
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver = RX11Transceiver(hass, device_path=DEVICE_PATH)
         transceiver.set_disconnect_callback(callback)
         _gateway_callbacks(mock_gateway_cls).on_disconnected()
 
@@ -117,7 +141,7 @@ async def test_connected_notify_without_callback(
 ) -> None:
     """Connect notifications are ignored when no callback is registered."""
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        RX11Transceiver(hass, DEVICE_PATH)
+        RX11Transceiver(hass, device_path=DEVICE_PATH)
         _gateway_callbacks(mock_gateway_cls).on_connected(MagicMock())
 
 
@@ -126,7 +150,7 @@ async def test_disconnect_notify_without_callback(
 ) -> None:
     """Disconnect notifications are ignored when no callback is registered."""
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        RX11Transceiver(hass, DEVICE_PATH)
+        RX11Transceiver(hass, device_path=DEVICE_PATH)
         _gateway_callbacks(mock_gateway_cls).on_disconnected()
 
 
@@ -136,7 +160,7 @@ async def test_connected_notify_logs_callback_error(
     """Connect callback scheduling errors are logged without raising."""
     callback = MagicMock()
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver = RX11Transceiver(hass, device_path=DEVICE_PATH)
         transceiver.set_connected_callback(callback)
         with patch.object(
             hass.loop, "call_soon_threadsafe", side_effect=RuntimeError("loop closed")
@@ -152,7 +176,7 @@ async def test_disconnect_notify_logs_callback_error(
     """Disconnect callback scheduling errors are logged without raising."""
     callback = MagicMock()
     with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver = RX11Transceiver(hass, device_path=DEVICE_PATH)
         transceiver.set_disconnect_callback(callback)
         with patch.object(
             hass.loop, "call_soon_threadsafe", side_effect=OSError("loop closed")
@@ -171,10 +195,49 @@ def test_properties_proxy_gateway_state(mock_gateway: MagicMock) -> None:
     mock_gateway.fw_version = "2.5"
 
     with patch(GATEWAY_PATH, return_value=mock_gateway):
-        transceiver = RX11Transceiver(MagicMock(), DEVICE_PATH)
+        transceiver = RX11Transceiver(MagicMock(), device_path=DEVICE_PATH)
 
     assert transceiver.is_connected is True
     assert transceiver.device_path == DEVICE_PATH
     assert transceiver.usb_serial_number == "12345"
     assert transceiver.hw_version == "RX11 v1.0"
     assert transceiver.fw_version == "2.5"
+
+
+def test_resolve_gateway_port_prefers_usb_serial() -> None:
+    """Port resolution matches the configured USB serial number."""
+    port_a = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111"
+    )
+    port_b = MagicMock(
+        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="222"
+    )
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port_a, port_b],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="222",
+            )
+            == "/dev/ttyACM1"
+        )
+
+
+def test_resolve_gateway_port_returns_none_for_unknown_serial() -> None:
+    """Port resolution fails when the configured serial is absent."""
+    port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111")
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        return_value=[port],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+            )
+            is None
+        )

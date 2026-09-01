@@ -5,8 +5,10 @@ easywave-home-control library. This module only adapts the gateway API to
 Home Assistant callbacks and entity lifecycle.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from functools import partial
 import logging
+from typing import Any
 
 from easywave_home_control import (
     EasywaveGateway,
@@ -15,26 +17,76 @@ from easywave_home_control import (
     GatewayInfo,
 )
 from easywave_home_control.codec import EwbRcvEvent
+import serial.tools.list_ports
 
 from homeassistant.core import HomeAssistant
 
-from .const import SUPPORTED_USB_IDS
+from .const import (
+    CONF_DEVICE_PATH,
+    CONF_USB_SERIAL_NUMBER,
+    SUPPORTED_USB_IDS,
+    normalized_usb_serial,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def resolve_gateway_port(
+    usb_ids: frozenset[tuple[int, int]],
+    *,
+    usb_serial: str | None = None,
+    device_path: str | None = None,
+) -> str | None:
+    """Return the serial port for a configured gateway, if uniquely identifiable."""
+    try:
+        ports = [
+            port
+            for port in serial.tools.list_ports.comports()
+            if port.vid is not None
+            and port.pid is not None
+            and (port.vid, port.pid) in usb_ids
+        ]
+    except OSError:
+        return None
+
+    if usb_serial:
+        for port in ports:
+            if port.serial_number == usb_serial:
+                return port.device
+        return None
+
+    if device_path:
+        for port in ports:
+            if port.device == device_path:
+                return port.device
+
+    if len(ports) == 1:
+        return ports[0].device
+
+    return None
 
 
 class RX11Transceiver:
     """Thin Home Assistant wrapper around easywave_home_control.EasywaveGateway."""
 
-    def __init__(self, hass: HomeAssistant, device_path: str | None = None) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: Mapping[str, Any] | None = None,
+        *,
+        device_path: str | None = None,
+    ) -> None:
         """Initialize the RX11 gateway wrapper."""
         self.hass = hass
+        config = config or {}
+        self._usb_serial = normalized_usb_serial(config.get(CONF_USB_SERIAL_NUMBER))
+        self._configured_path = config.get(CONF_DEVICE_PATH) or device_path
         self._disconnect_callback: Callable[[], None] | None = None
         self._connected_callback: Callable[[], None] | None = None
         self._gateway = EasywaveGateway(
             GatewayConfig(
                 transceiver_id="RX11",
-                port=device_path,
+                port=None,
                 usb_ids=SUPPORTED_USB_IDS,
                 auto_reconnect=False,
                 auto_listen=False,
@@ -96,8 +148,22 @@ class RX11Transceiver:
         except (OSError, RuntimeError) as err:
             _LOGGER.error("Error in disconnect callback: %s", err)
 
+    async def _prepare_connection(self) -> None:
+        """Resolve the configured gateway port before connecting."""
+        port = await self.hass.async_add_executor_job(
+            partial(
+                resolve_gateway_port,
+                SUPPORTED_USB_IDS,
+                usb_serial=self._usb_serial,
+                device_path=self._configured_path,
+            )
+        )
+        self._gateway._config.port = port  # noqa: SLF001
+        self._gateway._device_path = None  # noqa: SLF001
+
     async def connect(self) -> bool:
         """Connect to the RX11 transceiver."""
+        await self._prepare_connection()
         return await self._gateway.connect()
 
     async def disconnect(self) -> None:
@@ -110,6 +176,7 @@ class RX11Transceiver:
 
     async def reconnect(self) -> bool:
         """Reconnect to the RX11 transceiver."""
+        await self._prepare_connection()
         return await self._gateway.reconnect()
 
     async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:

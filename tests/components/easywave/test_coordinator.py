@@ -494,3 +494,14 @@ async def test_clear_listener_task_clears_own_task(
     await own_loop()
 
     assert coordinator._listener_task is None
+
+
+async def test_begin_learning_rejects_second_session(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Only one device learning session can hold the hardware lock."""
+    assert await coordinator.begin_learning() is True
+    assert coordinator.is_learning_busy() is True
+    assert await coordinator.begin_learning() is False
+    coordinator.end_learning()
+    assert coordinator.is_learning_busy() is False

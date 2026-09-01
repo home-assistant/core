@@ -210,6 +210,8 @@ class EasywaveDeviceFlowMixin:
         coordinator = self._get_coordinator()
         if coordinator is None or not coordinator.transceiver.is_connected:
             return self.async_abort(reason="device_not_connected")
+        if coordinator.is_learning_busy():
+            return self.async_abort(reason="learning_in_progress")
 
         if self._learn_task is None:
             self._learn_task = self.hass.async_create_task(
@@ -299,18 +301,23 @@ class EasywaveDeviceFlowMixin:
         self, coordinator: Any, *, accept_telegram: Any
     ) -> dict[str, Any] | None:
         """Listen for a matching telegram with exclusive hardware access."""
-        await coordinator.suspend_telegram_listener()
+        if not await coordinator.begin_learning():
+            return None
         try:
-            deadline = time.monotonic() + LEARNING_TIMEOUT
-            while time.monotonic() < deadline:
-                remaining = deadline - time.monotonic()
-                telegram = await coordinator.transceiver.receive_telegram(
-                    timeout=min(remaining, 10.0)
-                )
-                if telegram is None:
-                    continue
-                if learned := accept_telegram(telegram):
-                    return learned
+            await coordinator.suspend_telegram_listener()
+            try:
+                deadline = time.monotonic() + LEARNING_TIMEOUT
+                while time.monotonic() < deadline:
+                    remaining = deadline - time.monotonic()
+                    telegram = await coordinator.transceiver.receive_telegram(
+                        timeout=min(remaining, 10.0)
+                    )
+                    if telegram is None:
+                        continue
+                    if learned := accept_telegram(telegram):
+                        return learned
+            finally:
+                coordinator.resume_telegram_listener()
         finally:
-            coordinator.resume_telegram_listener()
+            coordinator.end_learning()
         return None

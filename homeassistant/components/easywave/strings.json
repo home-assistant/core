@@ -32,6 +32,7 @@
         "device_added": "The device was added successfully.",
         "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
         "learning_cancelled": "Learning mode was cancelled.",
+        "learning_in_progress": "Another device learning session is already in progress. Please wait and try again.",
         "no_device_learned": "No device was detected."
       },
       "entry_type": "Easywave neo sensor",
@@ -79,6 +80,7 @@
         "device_added": "The device was added successfully.",
         "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
         "learning_cancelled": "Learning mode was cancelled.",
+        "learning_in_progress": "Another device learning session is already in progress. Please wait and try again.",
         "no_device_learned": "No device was detected."
       },
       "entry_type": "Easywave transmitter",

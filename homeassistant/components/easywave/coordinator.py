@@ -64,6 +64,22 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._transmitter_entities: list[Any] = []
         self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
+        self._learning_lock = asyncio.Lock()
+
+    def is_learning_busy(self) -> bool:
+        """Return True when a device learning session holds the hardware lock."""
+        return self._learning_lock.locked()
+
+    async def begin_learning(self) -> bool:
+        """Try to acquire exclusive access for a device learning session."""
+        if self._learning_lock.locked():
+            return False
+        await self._learning_lock.acquire()
+        return True
+
+    def end_learning(self) -> None:
+        """Release a device learning session lock."""
+        self._learning_lock.release()
 
     def _update_gateway_device(self) -> None:
         """Update the gateway device in the device registry."""

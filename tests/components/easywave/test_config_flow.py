@@ -103,6 +103,25 @@ async def test_user_flow_single_port_skips_to_confirm(hass: HomeAssistant) -> No
     assert result["step_id"] == "confirm"
 
 
+async def test_user_flow_single_port_uses_known_manufacturer_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Missing OS manufacturer metadata falls back to the USB device mapping."""
+    port = _make_port()
+    port.manufacturer = None
+
+    with patch(COMPORTS_PATH, return_value=[port]), _patch_connecting_transceiver():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["usb_manufacturer"] == "ELDAT"
+
+
 async def test_user_flow_select_port(hass: HomeAssistant) -> None:
     """Test user flow shows port selection form when multiple RX11 sticks are found."""
     port1 = _make_port()

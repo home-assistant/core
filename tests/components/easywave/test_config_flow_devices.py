@@ -47,10 +47,6 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 
 async def _start_transmitter_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -125,12 +121,10 @@ def _make_coordinator(
         coordinator.transceiver.receive_telegram = AsyncMock(return_value=telegram)
     coordinator.suspend_telegram_listener = AsyncMock()
     coordinator.resume_telegram_listener = MagicMock()
+    coordinator.is_learning_busy = MagicMock(return_value=False)
+    coordinator.begin_learning = AsyncMock(return_value=True)
+    coordinator.end_learning = MagicMock()
     return coordinator
-
-
-# ---------------------------------------------------------------------------
-# Transmitter flow
-# ---------------------------------------------------------------------------
 
 
 MOCK_SENSOR_SERIAL = "bb" * 16
@@ -343,11 +337,6 @@ async def test_transmitter_flow_adds_second_device_to_existing_bucket(
     )
 
 
-# ---------------------------------------------------------------------------
-# Neo sensor flow
-# ---------------------------------------------------------------------------
-
-
 async def test_neo_sensor_flow_full(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -403,11 +392,6 @@ async def test_neo_sensor_flow_duplicate_rejected(
     assert result["reason"] == "already_configured"
 
 
-# ---------------------------------------------------------------------------
-# Disconnected gateway guard
-# ---------------------------------------------------------------------------
-
-
 async def test_device_flow_aborts_when_disconnected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -420,6 +404,25 @@ async def test_device_flow_aborts_when_disconnected(
     result = await _start_device_flow(hass, mock_config_entry)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_not_connected"
+
+
+async def test_device_flow_aborts_when_learning_in_progress(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a second learning flow aborts while another session is active."""
+    coordinator = _make_coordinator(is_connected=True)
+    coordinator.is_learning_busy = MagicMock(return_value=True)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_device_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "buttons_1"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "learning_in_progress"
 
 
 async def test_device_flow_aborts_without_runtime_data(

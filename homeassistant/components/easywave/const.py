@@ -11,10 +11,9 @@ DOMAIN: Final = "easywave"
 # 868 MHz (EU ISM band), which is harmonized across CEPT member states.
 FREQUENCY_868MHZ: Final = "868 MHz"
 
-# Single source of truth for supported USB sticks.
-# Adding a new device here is sufficient — config flow and discovery pick it up
-# automatically. Also update the `usb` list in manifest.json.
-#
+# Single source of truth for supported USB sticks. Also register matching
+# ``TransceiverProfile.usb_ids`` in easywave-home-control and update the
+# ``usb`` list in manifest.json — runtime USB discovery uses the library profile.
 # Key:   (VID, PID) as int
 # Value: {"manufacturer": str, "product": str, "frequency": str}
 USB_DEVICE_NAMES: Final[dict[tuple[int, int], dict[str, str]]] = {
@@ -37,6 +36,16 @@ CONF_USB_PID: Final = "usb_pid"
 CONF_USB_SERIAL_NUMBER: Final = "usb_serial_number"
 CONF_USB_MANUFACTURER: Final = "usb_manufacturer"
 CONF_USB_PRODUCT: Final = "usb_product"
+
+UNKNOWN_USB_SERIAL: Final = "unknown"
+
+
+def normalized_usb_serial(serial: str | None) -> str | None:
+    """Return a USB serial number suitable for the device registry."""
+    if not serial or serial == UNKNOWN_USB_SERIAL:
+        return None
+    return serial
+
 
 ALLOWED_COUNTRIES_868MHZ: Final = frozenset(
     {
