@@ -574,11 +574,7 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        self._setup_completed = False
-        self._unsub_push: Callable[[], None] | None = None
-        self._pushed_during_poll: dict[RoborockDyadDataProtocol, StateType] | None = (
-            None
-        )
+        self._unsub_update = api.add_update_listener(self._handle_update)
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
             protocol
@@ -587,57 +583,44 @@ class RoborockWetDryVacUpdateCoordinator(
         ]
 
     @override
-    async def _async_setup(self) -> None:
-        """Listen for state the device pushes on its own."""
-        self._unsub_push = await self.api.add_listener(self._handle_push)
-
-    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
-        if not self._setup_completed:
-            await self._async_setup()
-            self._setup_completed = True
-        self._pushed_during_poll = {}
         try:
-            data = await self.api.query_values(self.request_protocols)
+            await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
-            if pushed := self._take_pushed_during_poll():
-                return {**(self.data or {}), **pushed}
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
-        return {**data, **self._take_pushed_during_poll()}
+            if not self._should_suppress_update_failure():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_data_fail",
+                ) from ex
+        return self.api.values
+
+    def _should_suppress_update_failure(self) -> bool:
+        """Determine if we should suppress update failure reporting.
+
+        The device leaves the network while it sleeps on its dock, so a poll can
+        fail while the device is still reporting its state on its own.
+        """
+        if (last_message_time := self.api.last_message_time) is None:
+            return False
+        failure_duration = dt_util.utcnow() - last_message_time
+        _LOGGER.debug("Update failure duration: %s", failure_duration)
+        return failure_duration < MIN_UNAVAILABLE_DURATION
 
     @callback
-    def _take_pushed_during_poll(self) -> dict[RoborockDyadDataProtocol, StateType]:
-        """Return the values pushed while the poll was in flight, and stop recording."""
-        pushed, self._pushed_during_poll = self._pushed_during_poll, None
-        return pushed or {}
-
-    @callback
-    def _handle_push(self, values: dict[RoborockDyadDataProtocol, StateType]) -> None:
-        """Apply an unsolicited state push from the device."""
-        if self._pushed_during_poll is not None:
-            self._pushed_during_poll.update(values)
-        data = {**(self.data or {}), **values}
-        if all(protocol in values for protocol in self.request_protocols):
-            self.async_set_updated_data(data)
-            return
-        # A partial push must not postpone the poll, or a protocol the device
-        # never pushes would stay stale for as long as pushes keep arriving.
-        self.data = data
+    def _handle_update(self) -> None:
+        """Apply the state the device reported on its own."""
+        _LOGGER.debug("Wet dry vac state updated, updating coordinator data")
+        self.data = self.api.values
         self.last_update_success = True
         self.async_update_listeners()
 
     @override
     async def async_shutdown(self) -> None:
-        """Unsubscribe the push listener on shutdown."""
-        if self._unsub_push is not None:
-            self._unsub_push()
-            self._unsub_push = None
+        """Stop following the device state on shutdown."""
+        self._unsub_update()
         await super().async_shutdown()
 
 
