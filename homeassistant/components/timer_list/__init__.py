@@ -27,6 +27,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -265,6 +266,24 @@ class TimerListEntity(Entity):
     This base class only provides the event/listener plumbing shared by the
     websocket API and triggers. Concrete implementations are responsible for
     storing timers and scheduling their completion.
+
+    Implementations that let Home Assistant own the timers should reuse
+    ``InMemoryTimerListEntity`` rather than subclassing this directly; it
+    implements the whole state machine described below. Subclass this when the
+    timers live somewhere else, such as on a device or behind a remote API.
+
+    Every action method takes a timer id and must, unless noted otherwise:
+
+    - raise the ``timer_not_found`` ``ServiceValidationError`` for an unknown
+      id, which ``_get_timer`` does;
+    - do nothing at all if the timer is already ``finished`` or ``cancelled``,
+      or is otherwise in a state the action does not apply to, rather than
+      raising or emitting an event;
+    - emit exactly one event via ``_notify`` when it does change something.
+
+    Voice intents call these methods directly and do not check
+    ``supported_features``, so an action may be invoked on an entity that does
+    not advertise it.
     """
 
     _attr_should_poll = False
@@ -281,38 +300,85 @@ class TimerListEntity(Entity):
 
     @property
     def timers(self) -> list[TimerItem]:
-        """Return the timers in the list."""
+        """Return the timers in the list.
+
+        Includes archived (``finished`` and ``cancelled``) timers, which are
+        what voice commands like "how long is left on my timer?" report on.
+        """
         raise NotImplementedError
+
+    def _get_timer(self, timer_id: str) -> TimerItem:
+        """Return a timer by id or raise if it does not exist.
+
+        Implementations that can look an id up more cheaply than scanning
+        ``timers`` should override this, keeping the same exception.
+        """
+        for timer in self.timers:
+            if timer.timer_id == timer_id:
+                return timer
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="timer_not_found",
+            translation_placeholders={"timer_id": timer_id},
+        )
 
     async def async_create_timer(self, *, name: str | None, duration: timedelta) -> str:
         """Create a new timer, returning its id.
 
-        The timer starts counting down immediately.
+        The timer starts counting down immediately; there is no created-but-not
+        -running state. Emits ``CREATED``.
         """
         raise NotImplementedError
 
     async def async_pause_timer(self, timer_id: str) -> None:
-        """Pause an active timer."""
+        """Pause an active timer, emitting ``PAUSED``.
+
+        Does nothing if the timer is not currently ``active``. The time left
+        must be frozen in ``paused_remaining`` so it survives the pause.
+        """
         raise NotImplementedError
 
     async def async_unpause_timer(self, timer_id: str) -> None:
-        """Resume a paused timer."""
+        """Resume a paused timer, emitting ``UNPAUSED``.
+
+        Does nothing if the timer is not currently ``paused``.
+        """
         raise NotImplementedError
 
     async def async_cancel_timer(self, timer_id: str) -> None:
-        """Cancel a timer without finishing it."""
+        """Cancel a timer without finishing it, emitting ``CANCELLED``.
+
+        The timer stays in the list as ``cancelled`` with ``ended_at`` set. No
+        ``FINISHED`` event is emitted, so satellites stay silent.
+        """
         raise NotImplementedError
 
     async def async_finish_timer(self, timer_id: str) -> None:
-        """Finish a timer early, as if its remaining time had elapsed."""
+        """Finish a timer early, as if its remaining time had elapsed.
+
+        Emits ``FINISHED``, so satellites ring, and leaves the timer in the
+        list as ``finished`` with ``ended_at`` set. Applies to paused timers
+        too. ``FINISHED`` therefore does not imply the full duration elapsed.
+        """
         raise NotImplementedError
 
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
-        """Add (or, with a negative duration, subtract) time on a timer."""
+        """Add (or, with a negative duration, subtract) time on a timer.
+
+        Emits ``TIME_CHANGED`` carrying ``duration`` as the event's signed
+        ``delta``. ``created_duration`` must not change, and ``total_duration``
+        must be raised so it stays at least the new remaining time. Subtracting
+        more than is left finishes the timer instead, emitting ``FINISHED``.
+        """
         raise NotImplementedError
 
     async def async_remove_timer(self, timer_id: str) -> None:
-        """Remove a timer from the list regardless of its status."""
+        """Remove a timer from the list regardless of its status.
+
+        Emits ``REMOVED``. Implementations may also emit it unprompted when
+        evicting old archived timers, so subscribers must tolerate it for a
+        timer they did not ask to remove.
+        """
         raise NotImplementedError
 
     @final

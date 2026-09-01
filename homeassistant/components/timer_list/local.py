@@ -159,6 +159,7 @@ class InMemoryTimerListEntity(TimerListEntity):
         del self._timers[timer_id]
         self._notify(TimerListEventType.REMOVED, timer)
 
+    @override
     def _get_timer(self, timer_id: str) -> TimerItem:
         """Return a timer by id or raise if it does not exist."""
         if (timer := self._timers.get(timer_id)) is None:

@@ -6,11 +6,16 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.timer_list import TimerListEntity
-from homeassistant.components.timer_list.const import DOMAIN, TimerListEntityFeature
+from homeassistant.components.timer_list import TimerItem, TimerListEntity
+from homeassistant.components.timer_list.const import (
+    DOMAIN,
+    TimerListEntityFeature,
+    TimerStatus,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util import dt as dt_util
 
 from . import MockTimerListEntity, create_mock_platform
 
@@ -282,6 +287,31 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
     """Test acting on an unknown timer id raises."""
     with pytest.raises(ServiceValidationError):
         await _call(hass, "pause_timer", timer_id="does-not-exist")
+
+
+async def test_base_entity_resolves_timers_by_id() -> None:
+    """Test implementations get id lookup from the base class for free."""
+    timer = TimerItem(
+        timer_id="01HZ8ABCDEF0123456789ABCDE",
+        name=None,
+        status=TimerStatus.ACTIVE,
+        created_duration=timedelta(minutes=5),
+        created_at=dt_util.utcnow(),
+    )
+
+    class StubTimerListEntity(TimerListEntity):
+        """A timer list that only implements the required property."""
+
+        @property
+        def timers(self) -> list[TimerItem]:
+            """Return the timers in the list."""
+            return [timer]
+
+    entity = StubTimerListEntity()
+    assert entity._get_timer(timer.timer_id) is timer
+
+    with pytest.raises(ServiceValidationError):
+        entity._get_timer("does-not-exist")
 
 
 @pytest.mark.parametrize(
