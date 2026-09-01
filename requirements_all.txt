@@ -2702,7 +2702,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.14.0
+python-duco-connectivity==0.15.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
