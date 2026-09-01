@@ -52,11 +52,13 @@ async def test_button_entities_snapshot(
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_ignores_unknown_button_types(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown button keys from the API are not turned into entities."""
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert len(entries) == 1
     assert entries[0].translation_key == PARAM_MUTE
 

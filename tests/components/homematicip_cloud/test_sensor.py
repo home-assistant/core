@@ -925,7 +925,9 @@ async def test_hmip_water_valve_water_volume_since_open(
 
 
 async def test_hmip_smoke_detector_dirt_level(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test HomematicipSmokeDetectorDirtLevel."""
     entity_id = "sensor.rauchwarnmelder_dirt_level"
@@ -933,7 +935,6 @@ async def test_hmip_smoke_detector_dirt_level(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
