@@ -10,7 +10,12 @@ import pytest
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.usb import SerialDevice
-from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
+from homeassistant.components.velbus.const import (
+    CONF_ADVANCED_MODE,
+    CONF_TLS,
+    CONF_VLP_FILE,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -32,6 +37,32 @@ DISCOVERY_INFO = UsbServiceInfo(
 )
 
 USB_DEV = "/dev/ttyACME100 - Some serial port, s/n: 1234 - Virtual serial port"
+
+
+async def _finish_setup_flow(hass: HomeAssistant, flow_id: str) -> dict:
+    """Complete the advanced mode step and return the created entry result."""
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_ADVANCED_MODE: False},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    return result
+
+
+async def _start_reconfigure_network(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> dict:
+    """Start reconfigure flow and open the network step."""
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "network"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network"
+    return result
 
 
 def com_port() -> SerialDevice:
@@ -149,11 +180,13 @@ async def test_user_network_succes(
         result["flow_id"],
         {},
     )
-    assert result
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "advanced_mode"
+    result = await _finish_setup_flow(hass, result["flow_id"])
     data = result.get("data")
     assert data
     assert data[CONF_PORT] == expected
+    assert data[CONF_ADVANCED_MODE] is False
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
@@ -245,8 +278,9 @@ async def test_user_usb_success(hass: HomeAssistant) -> None:
         result["flow_id"],
         {},
     )
-    assert result
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "advanced_mode"
+    result = await _finish_setup_flow(hass, result["flow_id"])
     assert result.get("title") == "Velbus USB"
     data = result.get("data")
     assert data
@@ -332,10 +366,6 @@ async def test_vlp_step_success(
 
     with (
         patch(
-            "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-        patch(
             "velbusaio.vlp_reader.VlpFile.read",
             AsyncMock(return_value=True),
         ),
@@ -351,7 +381,14 @@ async def test_vlp_step_success(
         )
         await hass.async_block_till_done()
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "advanced_mode"
+    with patch(
+        "homeassistant.components.velbus.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await _finish_setup_flow(hass, result["flow_id"])
+        await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -363,10 +400,7 @@ async def test_reconfigure_step(
 ) -> None:
     """Testcase for the reconfigure step."""
     await init_integration(hass, config_entry)
-    result = await config_entry.start_reconfigure_flow(hass)
-    assert result
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "network"
+    result = await _start_reconfigure_network(hass, config_entry)
 
     # Submit the network step with the same host/port
     result = await hass.config_entries.flow.async_configure(
@@ -410,10 +444,7 @@ async def test_reconfigure_step_change_host_port(
 ) -> None:
     """Testcase for the reconfigure step changing host and port."""
     await init_integration(hass, config_entry)
-    result = await config_entry.start_reconfigure_flow(hass)
-    assert result
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "network"
+    result = await _start_reconfigure_network(hass, config_entry)
 
     # Submit the network step with a new host/port
     result = await hass.config_entries.flow.async_configure(
@@ -463,9 +494,7 @@ async def test_reconfigure_step_password_preserved(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await entry.start_reconfigure_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "network"
+    result = await _start_reconfigure_network(hass, entry)
     # Verify the password is pre-filled in the suggested values
     assert result["data_schema"](
         {
@@ -606,3 +635,33 @@ async def test_flow_usb_failed(hass: HomeAssistant) -> None:
     assert result
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_advanced_mode_config_flow(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test advanced mode is configured through the config flow."""
+    await init_integration(hass, config_entry)
+
+    assert not config_entry.data.get(CONF_ADVANCED_MODE, False)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "advanced_mode"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "advanced_mode"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ADVANCED_MODE: True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_ADVANCED_MODE] is True

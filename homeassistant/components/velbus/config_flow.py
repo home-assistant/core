@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import CONF_TLS, CONF_VLP_FILE, DOMAIN
+from .const import CONF_ADVANCED_MODE, CONF_TLS, CONF_VLP_FILE, DOMAIN
 
 STORAGE_PATH: Final = ".storage/velbus.{key}.vlp"
 
@@ -35,7 +35,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 3
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
@@ -43,11 +43,15 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._vlp_file: str | None = None
         self._title: str = ""
 
-    def _create_device(self) -> ConfigFlowResult:
+    def _create_device(self, advanced_mode: bool = False) -> ConfigFlowResult:
         """Create an entry async."""
         return self.async_create_entry(
             title=self._title,
-            data={CONF_PORT: self._device, CONF_VLP_FILE: self._vlp_file},
+            data={
+                CONF_PORT: self._device,
+                CONF_VLP_FILE: self._vlp_file,
+                CONF_ADVANCED_MODE: advanced_mode,
+            },
         )
 
     async def _test_connection(self) -> bool:
@@ -213,15 +217,17 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_errors[CONF_VLP_FILE] = str(e)
             if self.source == SOURCE_RECONFIGURE:
                 old_entry = self._get_reconfigure_entry()
-                return self.async_update_reload_and_abort(
-                    old_entry,
-                    data={
-                        CONF_VLP_FILE: self._vlp_file,
-                        CONF_PORT: self._device,
-                    },
-                )
+                data = {
+                    **old_entry.data,
+                    CONF_VLP_FILE: self._vlp_file,
+                }
+                # Keep the existing port when VLP is reconfigured without
+                # visiting the network/USB step (self._device stays empty).
+                if self._device:
+                    data[CONF_PORT] = self._device
+                return self.async_update_reload_and_abort(old_entry, data=data)
             if not step_errors:
-                return self._create_device()
+                return await self.async_step_advanced_mode()
 
         return self.async_show_form(
             step_id="vlp",
@@ -242,7 +248,40 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_network()
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=["network", "vlp", "advanced_mode"],
+        )
+
+    async def async_step_advanced_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage advanced mode."""
+        if user_input is not None:
+            advanced_mode = user_input[CONF_ADVANCED_MODE]
+            if self.source == SOURCE_RECONFIGURE:
+                entry = self._get_reconfigure_entry()
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_ADVANCED_MODE: advanced_mode,
+                    },
+                )
+            return self._create_device(advanced_mode=advanced_mode)
+
+        default = False
+        if self.source == SOURCE_RECONFIGURE:
+            default = self._get_reconfigure_entry().data.get(CONF_ADVANCED_MODE, False)
+
+        return self.async_show_form(
+            step_id="advanced_mode",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_ADVANCED_MODE, default=default): bool,
+                }
+            ),
+        )
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:

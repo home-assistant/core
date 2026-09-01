@@ -1,9 +1,10 @@
 {
   "domain": "velbus",
   "name": "Velbus",
+  "after_dependencies": ["panel_custom"],
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
-  "dependencies": ["usb", "file_upload"],
+  "dependencies": ["file_upload", "http", "usb", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/velbus",
   "integration_type": "hub",
   "iot_class": "local_push",
@@ -15,7 +16,7 @@
     "velbus-handler"
   ],
   "quality_scale": "silver",
-  "requirements": ["velbus-aio==2026.7.2"],
+  "requirements": ["velbus-aio==2026.7.25", "velbus-frontend==2026.9.0"],
   "usb": [
     {
       "pid": "0B1B",
