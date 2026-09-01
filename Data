@@ -90,9 +90,12 @@ const Redis = require('ioredis');
 const redis = new Redis(); // localhost:6379
 
 // set data
-await redis.set('key', 'value');
-// get data
-const val = await redis.get('key');
+async function main() {
+  await redis.set('key', 'value');
+  const val = await redis.get('key');
+}
+
+main().catch(console.error);
 ```
 
 ### C. React + Firebase
