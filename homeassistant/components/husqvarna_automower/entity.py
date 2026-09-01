@@ -9,7 +9,6 @@ from typing import Any, Concatenate, overload, override
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
@@ -94,14 +93,6 @@ def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
 
     # call without brackets: @handle_sending_exception
     return decorator(_func)
-
-
-@callback
-def _work_area_translation_key(work_area_id: int, key: str) -> str:
-    """Return the translation key."""
-    if work_area_id == 0:
-        return f"my_lawn_{key}"
-    return f"work_area_{key}"
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
