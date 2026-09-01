@@ -1,223 +1,143 @@
 """Bitcoin information service that uses blockchain.com."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
-from typing import override
+from datetime import timedelta
+import logging
 
+from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CURRENCY,
-    CONF_DISPLAY_OPTIONS,
-    UnitOfInformation,
-    UnitOfTime,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import Throttle
 
+from .config_flow import API_ERRORS
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
-from .coordinator import BitcoinConfigEntry, BitcoinData, BitcoinDataUpdateCoordinator
 
-PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
 
 BREAKS_IN_HA_VERSION = "2027.4.0"
 
-BTC = "BTC"
-SATOSHI = 1e-8
-USD = "USD"
+SCAN_INTERVAL = timedelta(minutes=5)
 
+# Every sensor polls on its own, so without this each cycle would hit
+# blockchain.com once per sensor instead of once in total.
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-@dataclass(frozen=True, kw_only=True)
-class BitcoinSensorEntityDescription(SensorEntityDescription):
-    """Describes a Bitcoin sensor."""
-
-    value_fn: Callable[[BitcoinData], StateType | datetime]
-    unit_from_currency: bool = False
-
-
-SENSOR_TYPES: tuple[BitcoinSensorEntityDescription, ...] = (
-    # No state class: reconfiguring the currency changes the unit, and
-    # currencies are not convertible, which would break long term statistics.
-    BitcoinSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="exchangerate",
-        translation_key="exchangerate",
-        suggested_display_precision=2,
-        unit_from_currency=True,
-        value_fn=lambda data: data.exchange_rate,
+        name="Exchange rate (1 BTC)",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="trade_volume_btc",
-        translation_key="trade_volume_btc",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda data: data.stats.trade_volume_btc,
+        name="Trade volume",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="miners_revenue_usd",
-        translation_key="miners_revenue_usd",
-        native_unit_of_measurement=USD,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        value_fn=lambda data: data.stats.miners_revenue_usd,
+        name="Miners revenue",
+        native_unit_of_measurement="USD",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="btc_mined",
-        translation_key="btc_mined",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.btc_mined * SATOSHI,
+        name="Mined",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="trade_volume_usd",
-        translation_key="trade_volume_usd",
-        native_unit_of_measurement=USD,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda data: data.stats.trade_volume_usd,
+        name="Trade volume",
+        native_unit_of_measurement="USD",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="difficulty",
-        translation_key="difficulty",
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        value_fn=lambda data: data.stats.difficulty,
+        name="Difficulty",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="minutes_between_blocks",
-        translation_key="minutes_between_blocks",
-        device_class=SensorDeviceClass.DURATION,
+        name="Time between Blocks",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.minutes_between_blocks,
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="number_of_transactions",
-        translation_key="number_of_transactions",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.stats.number_of_transactions,
+        name="No. of Transactions",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="hash_rate",
-        translation_key="hash_rate",
+        name="Hash rate",
         native_unit_of_measurement=f"PH/{UnitOfTime.SECONDS}",
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda data: data.stats.hash_rate * 1e-6,
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="timestamp",
-        translation_key="timestamp",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: dt_util.utc_from_timestamp(data.stats.timestamp / 1000),
+        name="Timestamp",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="mined_blocks",
-        translation_key="mined_blocks",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.stats.mined_blocks,
+        name="Mined Blocks",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="blocks_size",
-        translation_key="blocks_size",
-        device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.BYTES,
-        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda data: data.stats.blocks_size,
+        name="Block size",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="total_fees_btc",
-        translation_key="total_fees_btc",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.total_fees_btc * SATOSHI,
+        name="Total fees",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="total_btc_sent",
-        translation_key="total_btc_sent",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.total_btc_sent * SATOSHI,
+        name="Total sent",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="estimated_btc_sent",
-        translation_key="estimated_btc_sent",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.estimated_btc_sent * SATOSHI,
+        name="Estimated sent",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="total_btc",
-        translation_key="total_btc",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.total_btc * SATOSHI,
+        name="Total",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="total_blocks",
-        translation_key="total_blocks",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.stats.total_blocks,
+        name="Total Blocks",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="next_retarget",
-        translation_key="next_retarget",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.stats.next_retarget,
+        name="Next retarget",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="estimated_transaction_volume_usd",
-        translation_key="estimated_transaction_volume_usd",
-        native_unit_of_measurement=USD,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.estimated_transaction_volume_usd,
+        name="Est. Transaction volume",
+        native_unit_of_measurement="USD",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="miners_revenue_btc",
-        translation_key="miners_revenue_btc",
-        native_unit_of_measurement=BTC,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda data: data.stats.miners_revenue_btc * SATOSHI,
+        name="Miners revenue",
+        native_unit_of_measurement="BTC",
     ),
-    BitcoinSensorEntityDescription(
+    SensorEntityDescription(
         key="market_price_usd",
-        translation_key="market_price_usd",
-        native_unit_of_measurement=USD,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.stats.market_price_usd,
+        name="Market price",
+        native_unit_of_measurement="USD",
     ),
 )
 
-OPTION_KEYS = [description.key for description in SENSOR_TYPES]
+OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -279,45 +199,102 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: BitcoinConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bitcoin sensors from a config entry."""
-    coordinator = entry.runtime_data
+    data = BitcoinData()
+    try:
+        await hass.async_add_executor_job(data.update)
+    except API_ERRORS as err:
+        raise PlatformNotReady(f"Cannot reach blockchain.com: {err}") from err
+
+    currency = entry.data[CONF_CURRENCY]
+    if currency not in data.ticker:
+        _LOGGER.warning("Currency %s is not available. Using USD", currency)
+        currency = DEFAULT_CURRENCY
+
     async_add_entities(
-        BitcoinSensor(coordinator, description) for description in SENSOR_TYPES
+        (BitcoinSensor(data, currency, description) for description in SENSOR_TYPES),
+        True,
     )
 
 
-class BitcoinSensor(CoordinatorEntity[BitcoinDataUpdateCoordinator], SensorEntity):
+class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
     _attr_attribution = "Data provided by blockchain.com"
-    _attr_has_entity_name = True
-
-    entity_description: BitcoinSensorEntityDescription
+    _attr_icon = "mdi:currency-btc"
 
     def __init__(
-        self,
-        coordinator: BitcoinDataUpdateCoordinator,
-        description: BitcoinSensorEntityDescription,
+        self, data: BitcoinData, currency: str, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Blockchain.com",
-            name=INTEGRATION_TITLE,
-            configuration_url="https://www.blockchain.com/explorer",
-        )
-        if description.unit_from_currency:
-            self._attr_native_unit_of_measurement = coordinator.currency
+        self.data = data
+        self._currency = currency
 
-    @property
-    @override
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+    def update(self) -> None:
+        """Get the latest data and updates the states."""
+        self.data.update()
+        stats = self.data.stats
+        ticker = self.data.ticker
+
+        sensor_type = self.entity_description.key
+        if sensor_type == "exchangerate":
+            self._attr_native_value = ticker[self._currency].p15min
+            self._attr_native_unit_of_measurement = self._currency
+        elif sensor_type == "trade_volume_btc":
+            self._attr_native_value = f"{stats.trade_volume_btc:.1f}"
+        elif sensor_type == "miners_revenue_usd":
+            self._attr_native_value = f"{stats.miners_revenue_usd:.0f}"
+        elif sensor_type == "btc_mined":
+            self._attr_native_value = str(stats.btc_mined * 1e-8)
+        elif sensor_type == "trade_volume_usd":
+            self._attr_native_value = f"{stats.trade_volume_usd:.1f}"
+        elif sensor_type == "difficulty":
+            self._attr_native_value = f"{stats.difficulty:.0f}"
+        elif sensor_type == "minutes_between_blocks":
+            self._attr_native_value = f"{stats.minutes_between_blocks:.2f}"
+        elif sensor_type == "number_of_transactions":
+            self._attr_native_value = str(stats.number_of_transactions)
+        elif sensor_type == "hash_rate":
+            self._attr_native_value = f"{stats.hash_rate * 0.000001:.1f}"
+        elif sensor_type == "timestamp":
+            self._attr_native_value = stats.timestamp
+        elif sensor_type == "mined_blocks":
+            self._attr_native_value = str(stats.mined_blocks)
+        elif sensor_type == "blocks_size":
+            self._attr_native_value = f"{stats.blocks_size:.1f}"
+        elif sensor_type == "total_fees_btc":
+            self._attr_native_value = f"{stats.total_fees_btc * 1e-8:.2f}"
+        elif sensor_type == "total_btc_sent":
+            self._attr_native_value = f"{stats.total_btc_sent * 1e-8:.2f}"
+        elif sensor_type == "estimated_btc_sent":
+            self._attr_native_value = f"{stats.estimated_btc_sent * 1e-8:.2f}"
+        elif sensor_type == "total_btc":
+            self._attr_native_value = f"{stats.total_btc * 1e-8:.2f}"
+        elif sensor_type == "total_blocks":
+            self._attr_native_value = f"{stats.total_blocks:.0f}"
+        elif sensor_type == "next_retarget":
+            self._attr_native_value = f"{stats.next_retarget:.2f}"
+        elif sensor_type == "estimated_transaction_volume_usd":
+            self._attr_native_value = f"{stats.estimated_transaction_volume_usd:.2f}"
+        elif sensor_type == "miners_revenue_btc":
+            self._attr_native_value = f"{stats.miners_revenue_btc * 1e-8:.1f}"
+        elif sensor_type == "market_price_usd":
+            self._attr_native_value = f"{stats.market_price_usd:.2f}"
+
+
+class BitcoinData:
+    """Get the latest data and update the states."""
+
+    stats: statistics.Stats
+    ticker: dict[str, exchangerates.Currency]
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self) -> None:
+        """Get the latest data from blockchain.com."""
+
+        self.stats = statistics.get()
+        self.ticker = exchangerates.get_ticker()

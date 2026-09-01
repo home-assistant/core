@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from blockchain import exchangerates
+from blockchain.exceptions import APIException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,13 +17,19 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
-from .coordinator import API_ERRORS, get_currencies
+
+API_ERRORS = (APIException, OSError, ValueError)
+
+
+def _get_currencies() -> list[str]:
+    """Return the currency codes blockchain.com quotes Bitcoin in."""
+    return sorted(exchangerates.get_ticker())
 
 
 async def _async_get_currencies(hass: HomeAssistant) -> list[str] | None:
     """Return the currencies blockchain.com quotes, or None if it is unreachable."""
     try:
-        return await hass.async_add_executor_job(get_currencies)
+        return await hass.async_add_executor_job(_get_currencies)
     except API_ERRORS:
         return None
 

@@ -25,9 +25,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_statistics() -> Generator[MagicMock]:
     """Mock the blockchain.com network statistics."""
-    with patch(
-        "homeassistant.components.bitcoin.coordinator.statistics.get"
-    ) as mock_get:
+    with patch("homeassistant.components.bitcoin.sensor.statistics.get") as mock_get:
         mock_get.return_value = Stats(load_json_object_fixture("stats.json", DOMAIN))
         yield mock_get
 
@@ -36,7 +34,7 @@ def mock_statistics() -> Generator[MagicMock]:
 def mock_exchangerates() -> Generator[MagicMock]:
     """Mock the blockchain.com exchange rate ticker."""
     with patch(
-        "homeassistant.components.bitcoin.coordinator.exchangerates.get_ticker"
+        "homeassistant.components.bitcoin.sensor.exchangerates.get_ticker"
     ) as mock_get_ticker:
         mock_get_ticker.return_value = {
             "EUR": Currency(68512.4, 68515.9, 68508.9, "€", 68510.2),
