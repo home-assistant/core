@@ -333,3 +333,23 @@ async def test_reauth_flow_exception_then_recover(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_APP_SECRET] == NEW_APP_SECRET
     assert mock_imou_openapi_client.async_close.await_count == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_imou_openapi_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauth aborts when the unique ID does not match the existing entry."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="other-app-id")
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_APP_SECRET: NEW_APP_SECRET},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
