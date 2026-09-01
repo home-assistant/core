@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError
+from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import async_load_config_fixture, setup_integration
+from . import async_load_config_fixture, load_config_fixture, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -62,6 +62,50 @@ async def test_setting_value(
         blocking=True,
     )
     mock_airgradient_client.set_led_bar_brightness.assert_called_once()
+
+
+async def test_setting_measurement_interval(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the measurement interval."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 300},
+        target={ATTR_ENTITY_ID: "number.airgradient_measurement_interval"},
+        blocking=True,
+    )
+
+    mock_v1_airgradient_client.set_measurement_interval.assert_awaited_once_with(300)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_v1_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test V1 number entities."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("number.airgradient_measurement_interval")
+    assert state is not None
+    assert state.state == "10"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_cloud_creates_no_number(
