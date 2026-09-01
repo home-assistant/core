@@ -6,9 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: The config flow test should either result in an entry being created or an abort.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
