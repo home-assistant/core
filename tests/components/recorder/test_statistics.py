@@ -3846,6 +3846,46 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.validate_statistics.assert_called_once_with(hass, {})
 
 
+@pytest.mark.parametrize(
+    ("timezone", "period_start", "hour_start"),
+    [
+        (
+            "Australia/Adelaide",
+            "2026-01-01T13:25:00+00:00",
+            "2026-01-01T12:30:00+00:00",
+        ),
+        (
+            "Asia/Kathmandu",
+            "2026-01-01T18:10:00+00:00",
+            "2026-01-01T17:15:00+00:00",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_recorder")
+async def test_hourly_statistics_align_with_local_hour(
+    hass: HomeAssistant,
+    timezone: str,
+    period_start: str,
+    hour_start: str,
+) -> None:
+    """Test hourly statistics align with the local hour."""
+    await hass.config.async_set_time_zone(timezone)
+    instance = recorder.get_instance(hass)
+    start = dt_util.parse_datetime(period_start)
+    expected_start = dt_util.parse_datetime(hour_start)
+    assert start is not None
+    assert expected_start is not None
+
+    with patch(
+        "homeassistant.components.recorder.statistics._compile_hourly_statistics"
+    ) as compile_hourly_statistics:
+        await instance.async_add_executor_job(
+            statistics.compile_statistics, instance, start, False
+        )
+
+    compile_hourly_statistics.assert_called_once_with(ANY, expected_start)
+
+
 async def test_recorder_platform_without_statistics(
     hass: HomeAssistant,
     setup_recorder: None,
