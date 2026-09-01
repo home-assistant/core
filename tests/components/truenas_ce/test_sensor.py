@@ -12,7 +12,6 @@ from homeassistant.components.truenas_ce import sensor as sensor_mod
 from homeassistant.components.truenas_ce.const import CONF_DATA_UNIT
 from homeassistant.components.truenas_ce.sensor import (
     TrueNASAppStatsSensor,
-    TrueNASCertExpirySensor,
     TrueNASDiskSensor,
     TrueNASSensor,
     TrueNASSnapshotTaskSensor,
@@ -336,29 +335,6 @@ def test_init_does_not_scale_non_gb_suggested_unit() -> None:
     )
     sensor = _make_sensor(TrueNASSensor, {"value": 1}, desc=desc)
     assert sensor._attr_suggested_unit_of_measurement == "MB/s"
-
-
-# ---------------------------
-#   TrueNASCertExpirySensor
-# ---------------------------
-def test_cert_expiry_none_when_missing() -> None:
-    """A missing expiry value yields native_value of None."""
-    sensor = _make_sensor(TrueNASCertExpirySensor, {})
-    assert sensor.native_value is None
-
-
-def test_cert_expiry_days_when_under_a_year() -> None:
-    """An expiry under a year is reported in days."""
-    sensor = _make_sensor(TrueNASCertExpirySensor, {"value": 100})
-    assert sensor.native_value == 100
-    assert sensor.native_unit_of_measurement.value == "d"
-
-
-def test_cert_expiry_years_when_over_a_year() -> None:
-    """An expiry over a year is converted to and reported in years."""
-    sensor = _make_sensor(TrueNASCertExpirySensor, {"value": 730})
-    assert sensor.native_value == 2.0
-    assert sensor.native_unit_of_measurement.value == "y"
 
 
 # ---------------------------

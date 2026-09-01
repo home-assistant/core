@@ -307,7 +307,11 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         if not errors and isinstance(system_id, str) and system_id:
             await self.async_set_unique_id(system_id)
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: truenas_config[CONF_HOST]}
+                updates={
+                    CONF_HOST: truenas_config[CONF_HOST],
+                    CONF_API_KEY: truenas_config[CONF_API_KEY],
+                    CONF_VERIFY_SSL: truenas_config[CONF_VERIFY_SSL],
+                }
             )
 
         if not errors:

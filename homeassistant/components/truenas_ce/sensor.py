@@ -8,7 +8,7 @@ import re
 from typing import Any, cast, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import UnitOfInformation, UnitOfTime
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -75,7 +75,6 @@ async def async_setup_entry(
         "TrueNASUptimeSensor": TrueNASUptimeSensor,
         "TrueNASCloudsyncSensor": TrueNASCloudsyncSensor,
         "TrueNASDatasetSensor": TrueNASDatasetSensor,
-        "TrueNASCertExpirySensor": TrueNASCertExpirySensor,
         "TrueNASDiskSensor": TrueNASDiskSensor,
         "TrueNASRsyncSensor": TrueNASRsyncSensor,
         "TrueNASReplicationSensor": TrueNASReplicationSensor,
@@ -303,35 +302,6 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
             return self.entity_description.native_unit_of_measurement
 
         return None
-
-
-_DAYS_PER_YEAR = 365.25
-
-
-class TrueNASCertExpirySensor(TrueNASSensor):
-    """Certificate expiry sensor with adaptive unit (years ≥ 365 d, else days)."""
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return days or fractional years depending on magnitude."""
-        days: float | None = self._data.get(
-            self.entity_description.data_attribute or ""
-        )
-        if days is None:
-            return None
-        return round(days / _DAYS_PER_YEAR, 1) if days >= 365 else days
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> UnitOfTime:
-        """Switch unit between days and years based on the raw value."""
-        days: float | None = self._data.get(
-            self.entity_description.data_attribute or ""
-        )
-        if days is not None and days >= 365:
-            return UnitOfTime.YEARS
-        return UnitOfTime.DAYS
 
 
 _DISK_TYPE_ICONS = {

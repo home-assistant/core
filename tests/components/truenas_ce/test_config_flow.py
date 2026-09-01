@@ -238,6 +238,16 @@ async def test_user_flow_connection_error_maps_to_ha_error(hass: HomeAssistant) 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: ERR_INVALID_KEY}
 
+    with (
+        patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
+        patch(f"{_API_PATH}.query", AsyncMock(return_value=None)),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 # ---------------------------
 #   zeroconf step
