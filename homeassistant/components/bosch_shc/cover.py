@@ -33,6 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         ShutterControlCover(
+            hass=hass,
             device=cover,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,

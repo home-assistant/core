@@ -50,7 +50,7 @@ async def async_setup_entry(
     """Set up Russound RIO select entities based on a config entry."""
     client = entry.runtime_data
     async_add_entities(
-        RussoundSelectEntity(controller, zone_id, description)
+        RussoundSelectEntity(hass, controller, entry, zone_id, description)
         for controller in client.controllers.values()
         for zone_id in controller.zones
         for description in CONTROL_ENTITIES
@@ -64,12 +64,14 @@ class RussoundSelectEntity(RussoundBaseEntity, SelectEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         controller: Controller,
+        entry: RussoundConfigEntry,
         zone_id: int,
         description: RussoundZoneSelectEntityDescription,
     ) -> None:
         """Initialize Russound RIO select."""
-        super().__init__(controller, zone_id)
+        super().__init__(hass, controller, entry, zone_id)
         self.entity_description = description
         self._attr_unique_id = (
             f"{self._primary_mac_address}-{self._zone.device_str}-{description.key}"

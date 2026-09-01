@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import NoboHubConfigEntry
 from .const import (
     ATTR_HARDWARE_VERSION,
-    ATTR_SERIAL,
     ATTR_SOFTWARE_VERSION,
     CONF_OVERRIDE_TYPE,
     DOMAIN,
@@ -40,7 +39,9 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    async_add_entities([NoboGlobalSelector(hub, override_type)], True)
+    async_add_entities(
+        [NoboGlobalSelector(hass, hub, override_type, config_entry.entry_id)], True
+    )
 
     known_zones: set[str] = set()
 
@@ -56,7 +57,11 @@ async def async_setup_entry(
         new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
         known_zones.update(new_zones)
         async_add_entities(
-            (NoboProfileSelector(zone_id, hub) for zone_id in new_zones), True
+            (
+                NoboProfileSelector(hass, zone_id, hub, config_entry.entry_id)
+                for zone_id in new_zones
+            ),
+            True,
         )
 
     _add_profiles(hub)
@@ -77,9 +82,11 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     _attr_options = list(_modes.values())
     _attr_current_option: str | None = None
 
-    def __init__(self, hub: nobo, override_type: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, hub: nobo, override_type: str, entry_id: str
+    ) -> None:
         """Initialize the global override selector."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._attr_unique_id = hub.hub_serial
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
@@ -126,18 +133,21 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     _attr_translation_key = "week_profile"
     _attr_current_option: str | None = None
 
-    def __init__(self, zone_id: str, hub: nobo) -> None:
+    def __init__(
+        self, hass: HomeAssistant, zone_id: str, hub: nobo, entry_id: str
+    ) -> None:
         """Initialize the week profile selector."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._profiles: dict[str, str] = {}
         self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
+        zone_name = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=hub.zones[zone_id][ATTR_NAME],
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            suggested_area=hub.zones[zone_id][ATTR_NAME],
+            name=zone_name,
+            via_device_id=self._hub_device_id,
+            suggested_area=zone_name,
         )
 
     @override

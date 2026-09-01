@@ -3,6 +3,7 @@
 import asyncio
 import base64
 from functools import partial
+import json
 import logging
 import secrets
 import struct
@@ -29,6 +30,7 @@ from aioesphomeapi import (
     ZWaveProxyRequestType,
     parse_log_message,
 )
+import aiohttp
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
@@ -135,6 +137,9 @@ _LOGGER = logging.getLogger(__name__)
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
 
+# Dashboard responses that mean the encryption-key handoff landed.
+_DASHBOARD_KEY_SYNC_OK: Final = frozenset({"stored", "updated", "unchanged"})
+
 LOG_LEVEL_TO_LOGGER = {
     LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
     LogLevel.LOG_LEVEL_ERROR: logging.ERROR,
@@ -215,6 +220,7 @@ class ESPHomeManager:
 
     __slots__ = (
         "_cancel_subscribe_logs",
+        "_dashboard_key_sync_warned",
         "_log_level",
         "cli",
         "device_id",
@@ -250,6 +256,7 @@ class ESPHomeManager:
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
+        self._dashboard_key_sync_warned = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
 
     async def on_stop(self, event: Event) -> None:
@@ -765,14 +772,7 @@ class ESPHomeManager:
             expected_disconnect,
         )
         entry_data.async_on_disconnect()
-        entry_data.expected_disconnect = expected_disconnect
-        # Mark state as stale so that we will always dispatch
-        # the next state update of that type when the device reconnects
-        entry_data.stale_state = {
-            (type(entity_state), entity_state.device_id, key)
-            for state_dict in entry_data.state.values()
-            for key, entity_state in state_dict.items()
-        }
+        entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
@@ -882,6 +882,84 @@ class ESPHomeManager:
             await cli.disconnect(force=True)
         return False
 
+    @callback
+    def _async_schedule_dashboard_key_sync(
+        self, device_info: EsphomeDeviceInfo, key: str
+    ) -> None:
+        """Schedule the best-effort dashboard key sync off the connect path."""
+        self.entry.async_create_background_task(
+            self.hass,
+            self._async_sync_encryption_key_to_dashboard(device_info, key),
+            "esphome-sync-encryption-key",
+        )
+
+    async def _async_sync_encryption_key_to_dashboard(
+        self, device_info: EsphomeDeviceInfo, key: str
+    ) -> None:
+        """Best effort: tell the ESPHome dashboard about the provisioned key.
+
+        Without this the dashboard has no way to know the key HA set on
+        the device, so adopting the device generates a competing key and
+        the next flash locks HA out. Never fails the connect flow: a
+        dashboard without the endpoint (404/405) logs at debug, any
+        other failure warns once per manager.
+        """
+        if (dashboard := async_get_dashboard(self.hass)) is None:
+            return
+        try:
+            result = await dashboard.api.post_encryption_key(
+                device_info.name, key, mac=self.entry.unique_id
+            )
+        except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as err:
+            if isinstance(err, aiohttp.ClientResponseError) and err.status in (
+                404,
+                405,
+            ):
+                # Endpoint absent — an old dashboard, not a failed store.
+                _LOGGER.debug(
+                    "The ESPHome dashboard does not support the encryption key "
+                    "handoff for %s: %s",
+                    device_info.name,
+                    err,
+                )
+            else:
+                self._async_warn_dashboard_key_sync_failed(device_info, err)
+            return
+        result_value = result.get("result") if isinstance(result, dict) else None
+        reason = result.get("reason") if isinstance(result, dict) else None
+        if isinstance(result_value, str) and result_value in _DASHBOARD_KEY_SYNC_OK:
+            if reason:
+                # Partial success: a duplicate-name sibling refused the
+                # key and flashing it can still lock HA out.
+                self._async_warn_dashboard_key_sync_failed(device_info, reason)
+                return
+            _LOGGER.debug(
+                "Synced encryption key for %s to the ESPHome dashboard: %s",
+                device_info.name,
+                result,
+            )
+            return
+        self._async_warn_dashboard_key_sync_failed(
+            device_info, reason or f"unexpected response {result}"
+        )
+
+    @callback
+    def _async_warn_dashboard_key_sync_failed(
+        self, device_info: EsphomeDeviceInfo, cause: Exception | str
+    ) -> None:
+        """Warn once that the dashboard did not store the key."""
+        if self._dashboard_key_sync_warned:
+            return
+        self._dashboard_key_sync_warned = True
+        _LOGGER.warning(
+            "The ESPHome dashboard could not store the encryption key for "
+            "%s (%s), so installing that configuration may use a different "
+            "key and lock Home Assistant out: %s",
+            device_info.name,
+            self.entry.unique_id,
+            cause,
+        )
+
     async def _handle_dynamic_encryption_key(
         self, device_info: EsphomeDeviceInfo
     ) -> None:
@@ -892,7 +970,22 @@ class ESPHomeManager:
         """
         noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
         if noise_psk:
-            # we're already connected with a noise PSK - nothing to do
+            # We're already connected with this key, so it's proven valid;
+            # re-offer it so a dashboard that missed the original handoff
+            # (added later, upgraded, or temporarily unreachable) catches
+            # up. Deliberately re-offered on every connect (no success
+            # latch): the dashboard no-ops on an identical key, and a
+            # dashboard whose copy was deleted out from under it gets it
+            # back on the next connect.
+            # Only keys in our storage are ours to push — a user-authored
+            # YAML key is not (mirrors _async_clear_dynamic_encryption_key).
+            # Background task: this runs on every connect and must not
+            # delay entity setup.
+            storage = await async_get_encryption_key_storage(self.hass)
+            if self.entry.unique_id and (
+                await storage.async_get_key(self.entry.unique_id) == noise_psk
+            ):
+                self._async_schedule_dashboard_key_sync(device_info, noise_psk)
             return
 
         if not device_info.api_encryption_supported:
@@ -961,6 +1054,11 @@ class ESPHomeManager:
             self.entry,
             data={**self.entry.data, CONF_NOISE_PSK: new_key_str},
         )
+
+        # The dashboard must learn the key or its next adoption/flash of
+        # this device bakes in a competing key and locks HA out. Background
+        # task: an unreachable dashboard must not stall entity setup.
+        self._async_schedule_dashboard_key_sync(device_info, new_key_str)
 
         if from_storage:
             _LOGGER.info(
@@ -1042,7 +1140,9 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        infos, services = await entry_data.async_load_from_store()
+        infos, services = await entry_data.async_load_from_store(
+            restore_states=bool(entry.unique_id)
+        )
         if entry.unique_id:
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
@@ -1091,6 +1191,15 @@ class ESPHomeManager:
 
 
 @callback
+def async_get_manufacturer_model(device_info: EsphomeDeviceInfo) -> tuple[str, str]:
+    """Return the manufacturer and model to use for a device."""
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        return project_name[0], project_name[1]
+    return device_info.manufacturer or "espressif", device_info.model
+
+
+@callback
 def _async_setup_device_registry(
     hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
@@ -1136,14 +1245,8 @@ def _async_setup_device_registry(
     ):
         configuration_url = f"homeassistant://app/{dashboard.addon_slug}"
 
-    manufacturer = "espressif"
-    if device_info.manufacturer:
-        manufacturer = device_info.manufacturer
-    model = device_info.model
+    manufacturer, model = async_get_manufacturer_model(device_info)
     if device_info.project_name:
-        project_name = device_info.project_name.split(".")
-        manufacturer = project_name[0]
-        model = project_name[1]
         sw_version = (
             f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
         )
@@ -1467,11 +1570,18 @@ def _setup_services(
 async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
+    was_connected = data.available
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    await data.async_cleanup()
-    await data.client.disconnect()
+    try:
+        await data.client.disconnect()
+    finally:
+        if was_connected:
+            # on_disconnect runs in a background task that may not have
+            # persisted yet; the connection was closed by us, so it is expected
+            data.async_record_disconnect(expected_disconnect=True)
+        await data.async_cleanup()
     return data
 
 

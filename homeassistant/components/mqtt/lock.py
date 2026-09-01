@@ -8,7 +8,11 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components import lock
-from homeassistant.components.lock import LockEntity, LockEntityFeature
+from homeassistant.components.lock import (
+    LockEntity,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
@@ -68,8 +72,8 @@ DEFAULT_NAME = "MQTT Lock"
 
 MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
     {
-        lock.ATTR_CHANGED_BY,
-        lock.ATTR_CODE_FORMAT,
+        LockEntityStateAttribute.CHANGED_BY,
+        LockEntityStateAttribute.CODE_FORMAT,
     }
 )
 

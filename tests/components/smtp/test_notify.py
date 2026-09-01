@@ -28,24 +28,13 @@ from homeassistant.components.smtp.const import (
     ATTR_FILENAME,
     ATTR_HTML,
     ATTR_MEDIA_SOURCE,
-    CONF_ENCRYPTION,
-    CONF_SENDER_NAME,
-    CONF_SERVER,
+    ATTR_PRIORITY,
+    CONF_ENTRY,
     DOMAIN,
 )
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_RECIPIENT,
-    CONF_SENDER,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -64,20 +53,15 @@ class MockSMTP(MailNotificationService):
 
 
 @pytest.fixture
-def message():
+def message(
+    config_entry: MockConfigEntry,
+):
     """Return MockSMTP object with test data."""
     return MockSMTP(
         config={
-            CONF_SERVER: "localhost",
-            CONF_PORT: 25,
-            CONF_TIMEOUT: 5,
-            CONF_SENDER: "test@test.com",
-            CONF_ENCRYPTION: 1,
-            CONF_USERNAME: "testuser",
-            CONF_PASSWORD: "testpass",
+            CONF_NAME: config_entry.title,
+            CONF_ENTRY: config_entry,
             CONF_RECIPIENT: ["recip1@example.com", "testrecip@test.com"],
-            CONF_SENDER_NAME: "Home Assistant",
-            CONF_VERIFY_SSL: True,
         },
         ssl_context=create_client_context(),
     )
@@ -188,7 +172,7 @@ def test_send_text_message(hass: HomeAssistant, message) -> None:
         "Content-Transfer-Encoding: 7bit\n"
         "Subject: Home Assistant\n"
         "To: recip1@example.com,testrecip@test.com\n"
-        "From: Home Assistant <test@test.com>\n"
+        "From: Home Assistant <email@example.com>\n"
         "X-Mailer: Home Assistant\n"
         "Date: [^\n]+\n"
         "Message-Id: <[^@]+@[^>]+>\n"
@@ -417,7 +401,8 @@ async def test_smtp_send_message(
         {
             ATTR_ENTITY_ID: "notify.home_assistant_recipient",
             ATTR_MESSAGE: "Hello World",
-            ATTR_HTML: """<html><body><img src="cid:avatar.png"></body></html>""",
+            ATTR_HTML: """<html><body><img src="https://example.com/avatar.png"></body></html>""",
+            ATTR_PRIORITY: "highest",
         },
         blocking=True,
     )
@@ -554,12 +539,19 @@ async def test_smtp_send_message_image_source(
                         },
                         ATTR_FILENAME: "test.png",
                         ATTR_CONTENT_ID: "1312",
-                    }
+                    },
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://image/image.test",
+                            "media_content_type": "image/png",
+                        },
+                        ATTR_FILENAME: "attachment.png",
+                    },
                 ],
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_with(hass, "image.test")
     assert smtp.sendmail.call_args[0][0] == "email@example.com"
     assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
     assert smtp.sendmail.call_args[0][2] == snapshot
@@ -590,7 +582,7 @@ async def test_smtp_send_message_tts_source(
             {
                 ATTR_ENTITY_ID: "notify.home_assistant_recipient",
                 ATTR_MESSAGE: "Hello World",
-                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
+                ATTR_HTML: """<html><body>Hello World</body></html>""",
                 ATTR_ATTACHMENTS: [
                     {
                         ATTR_MEDIA_SOURCE: {

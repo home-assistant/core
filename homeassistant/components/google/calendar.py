@@ -179,6 +179,7 @@ def _get_entity_descriptions(
                     event_type=EventTypeEnum.BIRTHDAY,
                     name=None,
                     entity_id=None,
+                    ignore_availability=True,
                 )
             )
             # Create an optional disabled by default entity for Work Location
@@ -191,6 +192,7 @@ def _get_entity_descriptions(
                     name=None,
                     entity_id=None,
                     entity_registry_enabled_default=False,
+                    ignore_availability=True,
                 )
             )
     return entity_descriptions

@@ -85,7 +85,9 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
     assert device is not None
 
@@ -131,7 +133,9 @@ async def test_subentry_reconfigure_export_settings(
     await setup_helper(hass, suggested_values_from_schema)
 
     # Assert the subentry device was not effected by the exported configs
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
     assert device is not None
 
@@ -156,7 +160,9 @@ async def test_subentry_reconfigure_export_settings(
     assert data["type"] == "create_entry"
 
     # Assert the subentry is removed and no other entity has linked the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is None
 
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -169,6 +175,8 @@ async def test_subentry_reconfigure_export_settings(
 
     # The MQTT device was now set up from the new source
     await hass.async_block_till_done(wait_background_tasks=True)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device.config_entries_subentries[config_entry.entry_id] == {None}
     assert device is not None

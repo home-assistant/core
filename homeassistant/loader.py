@@ -406,9 +406,13 @@ class ComponentProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
-        """Remove a config entry device."""
+        """Remove a config entry device.
+
+        Only integrations that register child devices can receive a
+        ChildDeviceEntry. Removing a parent device also removes its child devices.
+        """
 
     async def async_reset_platform(
         self, hass: HomeAssistant, integration_name: str

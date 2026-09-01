@@ -2,8 +2,12 @@
 
 from typing import override
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.const import EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -12,69 +16,37 @@ from .entity import HomevoltEntity, homevolt_exception_handler
 
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 
+MAX_CONTROL_POWER = 11000
 
 NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="setpoint",
         translation_key="setpoint",
         native_min_value=0,
-        native_max_value=20000,
+        native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_charge",
-        translation_key="max_charge",
-        native_min_value=0,
-        native_max_value=20000,
-        native_step=100,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_discharge",
-        translation_key="max_discharge",
-        native_min_value=0,
-        native_max_value=20000,
-        native_step=100,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="min_soc",
-        translation_key="min_soc",
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_soc",
-        translation_key="max_soc",
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
         key="grid_import_limit",
         translation_key="grid_import_limit",
         native_min_value=0,
-        native_max_value=20000,
+        native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
         native_min_value=0,
-        native_max_value=20000,
+        native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -116,7 +88,11 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
     @override
     def available(self) -> bool:
         """Return whether the current manual schedule supports parameter writes."""
-        return super().available and self.coordinator.client.battery_parameters_writable
+        return (
+            super().available
+            and self.entity_description.key
+            in self.coordinator.client.writable_battery_parameters
+        )
 
     @property
     @override
@@ -131,4 +107,4 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
         """Set the value."""
         key = self.entity_description.key
         await self.coordinator.client.set_battery_parameters(**{key: int(value)})
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)

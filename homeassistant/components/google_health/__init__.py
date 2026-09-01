@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -113,6 +113,17 @@ async def async_setup_entry(
         device_coordinator=device_coordinator,
         nutrition_coordinator=nutrition_coordinator,
         sleep_coordinator=sleep_coordinator,
+    )
+
+    # Register the account device up front so the per-device sensors can resolve
+    # it as their via_device parent even when only the device scope is granted
+    # (the account-level sensors that would otherwise create it are gated on
+    # different scopes).
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Google",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

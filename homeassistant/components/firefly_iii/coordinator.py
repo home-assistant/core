@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -91,7 +92,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
     @override
     async def _async_update_data(self) -> FireflyCoordinatorData:
         """Fetch data from Firefly III API."""
-        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        now = dt_util.now()
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
 
