@@ -84,16 +84,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
 
     gateway.home_server.removeBusEventListener(gateway)
 
-    # HomeServer is a process-wide singleton also referenced by any
-    # in-progress config flow (see gateway.async_acquire_home_server), so
-    # release our reference via async_release_home_server() rather than
-    # shutting it down unconditionally. A shutdown failure there is
-    # terminal for the process (see that function's docstring) and
-    # pyhausbus has already cleared its listeners and singleton, so a
-    # retry of this unload would only fail again; this unload is left to
-    # succeed instead, while async_acquire_home_server() blocks the
-    # broken singleton from being handed out again until Home Assistant
-    # restarts.
+    # Release the process-wide HomeServer reference. A shutdown failure is terminal
+    # because pyhausbus already reset its singleton, so block future acquisitions.
     try:
         await async_release_home_server(hass, gateway.home_server)
     except Exception:
