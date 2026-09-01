@@ -162,7 +162,7 @@
       "name": "Player usage report"
     },
     "update_daily_restrictions": {
-      "description": "Update restrictions for a specific day of the week on the selected Nintendo Switch.",
+      "description": "Updates restrictions for a specific day of the week on the selected Nintendo Switch.",
       "fields": {
         "bedtime_end": {
           "description": "The time from which play is allowed. Must be between 05:00 and 09:00.",
