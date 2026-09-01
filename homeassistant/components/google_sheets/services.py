@@ -72,7 +72,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     sheet = client.open_by_key(entry.unique_id)
     worksheet = _get_worksheet(sheet, call.data.get(WORKSHEET))
-    columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
+    columns: list[str] = next(iter(worksheet.get_values("1:1")), [])
     add_created_column = call.data[ADD_CREATED_COLUMN]
     now = str(dt_util.now())
     rows = []
