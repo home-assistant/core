@@ -129,8 +129,12 @@ class GoogleConfig(AbstractConfig):
                 self.hass, MATCH_ALL, self._async_state_added
             )
         )
-        for state in self.hass.states.async_all():
-            self._async_update_legacy_exposure(state.entity_id)
+
+        entity_ids = set(self.hass.states.async_entity_ids())
+        entity_ids.update(er.async_get(self.hass).entities)
+        entity_ids.update(self.entity_config)
+        for entity_id in entity_ids:
+            self._async_update_legacy_exposure(entity_id)
 
         self.async_enable_local_sdk()
 
