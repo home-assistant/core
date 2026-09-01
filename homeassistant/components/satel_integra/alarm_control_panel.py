@@ -72,7 +72,6 @@ class SatelIntegraAlarmPanel(
 ):
     """Representation of a Satel Integra-based alarm panel."""
 
-    _attr_code_arm_required = True
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
