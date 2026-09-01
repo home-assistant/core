@@ -45,6 +45,27 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate credentials and close the temporary client."""
+        errors: dict[str, str] = {}
+        api_client = ImouOpenApiClient(
+            user_input[CONF_APP_ID],
+            user_input[CONF_APP_SECRET],
+            API_URLS[user_input[CONF_API_URL]],
+        )
+        try:
+            await api_client.async_get_token()
+        except InvalidAppIdOrSecretException:
+            errors["base"] = "invalid_auth"
+        except ConnectFailedException, RequestFailedException:
+            errors["base"] = "cannot_connect"
+        except ImouException as exception:
+            _LOGGER.debug("Imou error during config flow: %s", exception)
+            errors["base"] = "unknown"
+        finally:
+            await api_client.async_close()
+        return errors
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,21 +75,8 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_APP_ID])
             self._abort_if_unique_id_configured()
-            api_client = ImouOpenApiClient(
-                user_input[CONF_APP_ID],
-                user_input[CONF_APP_SECRET],
-                API_URLS[user_input[CONF_API_URL]],
-            )
-            try:
-                await api_client.async_get_token()
-            except InvalidAppIdOrSecretException:
-                errors["base"] = "invalid_auth"
-            except ConnectFailedException, RequestFailedException:
-                errors["base"] = "cannot_connect"
-            except ImouException as exception:
-                _LOGGER.debug("Imou error during config flow: %s", exception)
-                errors["base"] = "unknown"
-            else:
+            errors = await self._validate_input(user_input)
+            if not errors:
                 return self.async_create_entry(
                     title="Imou",
                     data={
@@ -108,27 +116,20 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            api_client = ImouOpenApiClient(
-                reauth_entry.data[CONF_APP_ID],
-                user_input[CONF_APP_SECRET],
-                API_URLS[reauth_entry.data[CONF_API_URL]],
+            errors = await self._validate_input(
+                {
+                    CONF_APP_ID: reauth_entry.data[CONF_APP_ID],
+                    CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                    CONF_API_URL: reauth_entry.data[CONF_API_URL],
+                }
             )
-            try:
-                await api_client.async_get_token()
-            except InvalidAppIdOrSecretException:
-                errors["base"] = "invalid_auth"
-            except ConnectFailedException, RequestFailedException:
-                errors["base"] = "cannot_connect"
-            except ImouException as exception:
-                _LOGGER.debug("Imou error during reauth: %s", exception)
-                errors["base"] = "unknown"
-            else:
+            if not errors:
+                await self.async_set_unique_id(reauth_entry.data[CONF_APP_ID])
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_APP_SECRET: user_input[CONF_APP_SECRET]},
                 )
-            finally:
-                await api_client.async_close()
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
