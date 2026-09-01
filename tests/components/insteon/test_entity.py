@@ -69,6 +69,12 @@ async def test_async_update_requests_status_for_mains_powered_device(
     try:
         lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
 
+        # Setup's own async_get_device_config background task already polled
+        # every non-battery device once (see homeassistant/components/insteon/
+        # __init__.py); reset so the assertion below only covers the explicit
+        # update_entity call this test is exercising.
+        devices["55.55.55"].async_status.reset_mock()
+
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
