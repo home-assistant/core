@@ -75,6 +75,12 @@ ATTR_BITRATE = "bit_rate"
 ATTR_DISCART_IMAGE = "discart_image"
 ATTR_FANART_IMAGE = "fanart_image"
 ATTR_USERNAME = "username"
+ATTR_DASHBOARD = "dashboard"
+ATTR_DASHBOARD_ID = "dashboard_id"
+ATTR_DASHBOARDS = "dashboards"
+ATTR_SUPPORTED_DASHBOARDS = "supported_dashboards"
+ATTR_ACTIVE_SESSION = "active_session"
+ATTR_PLAYER = "player"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 

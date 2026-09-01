@@ -280,6 +280,13 @@
         "unknown": "Unknown"
       }
     },
+    "dashboard": {
+      "options": {
+        "music_quiz": "Music quiz",
+        "now_playing": "Now playing",
+        "party": "Party"
+      }
+    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -325,6 +332,16 @@
     }
   },
   "services": {
+    "get_dashboards": {
+      "description": "Returns all display devices that can show a Music Assistant dashboard, including their active session.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Music Assistant instance to get the dashboards from.",
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
+        }
+      },
+      "name": "Get dashboards"
+    },
     "get_library": {
       "description": "Retrieves items from a Music Assistant library.",
       "fields": {
@@ -379,6 +396,20 @@
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
       "name": "Get playerQueue details"
+    },
+    "hide_dashboard": {
+      "description": "Hides the active Music Assistant dashboard on a display device.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::music_assistant::services::show_dashboard::fields::config_entry_id::description%]",
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
+        },
+        "dashboard_id": {
+          "description": "ID of the display device to hide the dashboard on. Use the 'Get dashboards' action to list the available display devices and their IDs.",
+          "name": "[%key:component::music_assistant::services::show_dashboard::fields::dashboard_id::name%]"
+        }
+      },
+      "name": "Hide dashboard"
     },
     "play_announcement": {
       "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
@@ -478,6 +509,28 @@
           "name": "Search options"
         }
       }
+    },
+    "show_dashboard": {
+      "description": "Shows a Music Assistant dashboard on a display device.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Music Assistant instance the display device belongs to.",
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
+        },
+        "dashboard": {
+          "description": "The dashboard to show.",
+          "name": "Dashboard"
+        },
+        "dashboard_id": {
+          "description": "ID of the display device to show the dashboard on. Use the 'Get dashboards' action to list the available display devices and their IDs.",
+          "name": "Display device"
+        },
+        "player": {
+          "description": "The Music Assistant player to show. Required for the now playing dashboard.",
+          "name": "Player"
+        }
+      },
+      "name": "Show dashboard"
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",
