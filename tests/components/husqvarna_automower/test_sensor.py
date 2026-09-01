@@ -174,13 +174,11 @@ async def test_work_area_sensor_creation(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get(
-        "sensor.garden_test_mower_1_new_systematic_work_area_progress"
-    )
+    state = hass.states.get("sensor.garden_new_systematic_work_area_progress")
     assert state is not None
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(
-        "sensor.garden_test_mower_1_new_systematic_work_area_last_time_completed"
+        "sensor.garden_new_systematic_work_area_last_time_completed"
     )
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -202,11 +200,9 @@ async def test_work_area_sensor_creation(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.garden_test_mower_1_new_random_work_area_progress")
+    state = hass.states.get("sensor.garden_new_random_work_area_progress")
     assert state is None
-    state = hass.states.get(
-        "sensor.garden_test_mower_1_new_random_work_area_last_time_completed"
-    )
+    state = hass.states.get("sensor.garden_new_random_work_area_last_time_completed")
     assert state is None
 
 

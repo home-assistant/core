@@ -453,10 +453,10 @@
         }
       },
       "work_area_last_time_completed": {
-        "name": "last time completed"
+        "name": "Last time completed"
       },
       "work_area_progress": {
-        "name": "progress"
+        "name": "Progress"
       }
     },
     "switch": {
