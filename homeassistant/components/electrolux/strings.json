@@ -222,6 +222,25 @@
           "temporary_locked": "Temporarily locked"
         }
       }
+    },
+    "vacuum": {
+      "rvc": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "energy_saving": "Energy saving",
+              "max": "Max",
+              "max_power": "Max power",
+              "power": "Power",
+              "powerful": "Powerful",
+              "quiet": "Quiet",
+              "silent": "Silent",
+              "smart": "Smart",
+              "standard": "Standard"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {

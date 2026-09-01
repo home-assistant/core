@@ -43,19 +43,19 @@ VACUUM_ACTIVITY_MAP = {
     "sleeping": VacuumActivity.DOCKED,
 }
 
-ELECTROLUX_TO_HA_MODES: dict[str | int, str] = {
-    1: "Silent",
-    2: "Smart",
-    3: "Power",
-    "energySaving": "Energy saving",
-    "powerful": "Powerful",
-    "quiet": "Quiet",
-    "standard": "Standard",
-    "maxPower": "Max power",
-    "max": "Max",
+ELECTROLUX_TO_HA_FAN_MODES: dict[str | int, str] = {
+    1: "silent",
+    2: "smart",
+    3: "power",
+    "energySaving": "energy_saving",
+    "powerful": "powerful",
+    "quiet": "quiet",
+    "standard": "standard",
+    "maxPower": "max_power",
+    "max": "max",
 }
 
-HA_TO_ELECTROLUX_MODES = {v: k for k, v in ELECTROLUX_TO_HA_MODES.items()}
+HA_TO_ELECTROLUX_MODES = {v: k for k, v in ELECTROLUX_TO_HA_FAN_MODES.items()}
 
 
 def build_entities_for_appliance(
@@ -106,7 +106,6 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     ) -> None:
         """Initialize the climate device."""
         super().__init__(appliance_data, coordinator, "rvc")
-        self._attr_name = "RVC"
 
         self._update_attr_state()
 
@@ -132,7 +131,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
 
     def _get_current_mode(self) -> str:
         raw_mode = self._appliance_data.get_current_mode()
-        mode = ELECTROLUX_TO_HA_MODES.get(raw_mode)
+        mode = ELECTROLUX_TO_HA_FAN_MODES.get(raw_mode)
         if mode is None:
             _LOGGER.warning("Unmapped RVC mode found: %s", raw_mode)
             return "unknown"
@@ -143,7 +142,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         mapped_modes = []
 
         for mode in modes:
-            readable = ELECTROLUX_TO_HA_MODES.get(mode)
+            readable = ELECTROLUX_TO_HA_FAN_MODES.get(mode)
             if readable is None:
                 _LOGGER.warning("Unmapped RVC mode found: %s", mode)
                 mapped_modes.append("unknown")
