@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "escape": {
+        "default": "mdi:reload-alert"
+      },
+      "sync_time": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
     "light": {
       "light": {
         "default": "mdi:lightbulb-off",

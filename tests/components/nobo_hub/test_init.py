@@ -443,7 +443,7 @@ async def test_disconnected_hub_does_not_remove_devices(
 
 @pytest.mark.parametrize(
     "platforms",
-    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]],
+    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]],
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")

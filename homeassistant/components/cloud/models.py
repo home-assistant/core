@@ -1,8 +1,6 @@
 """Models for the cloud integration."""
 
-import dataclasses
-
-from hass_nabucasa import AutoLoginController, LoginFailedReason
+from hass_nabucasa import LoginFailedReason
 
 # Spelled out rather than derived from the reason, so the keys stay greppable and
 # a reason hass_nabucasa adds later does not silently point at a missing string.
@@ -20,17 +18,3 @@ def auto_login_failure_key(reason: LoginFailedReason | None) -> str | None:
     return AUTO_LOGIN_FAILED_TRANSLATION_KEYS.get(
         reason, "auto_login_failed_unexpected_error"
     )
-
-
-@dataclasses.dataclass
-class PendingAutoLogin:
-    """A registration waiting for its email confirmation to log in."""
-
-    email: str
-    controller: AutoLoginController | None
-    failed_reason: LoginFailedReason | None = None
-
-    def mark_failed(self, reason: LoginFailedReason) -> None:
-        """Record that the retry loop gave up before logging in."""
-        self.controller = None
-        self.failed_reason = reason

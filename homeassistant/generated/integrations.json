@@ -3582,6 +3582,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "kaco_modbus": {
+      "name": "KACO Modbus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
       "integration_type": "virtual",
@@ -5497,6 +5503,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "persang_infrared": {
+      "name": "Persang Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",
@@ -6833,6 +6845,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "SolarEdge Local"
+        },
+        "solaredge_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "SolarEdge Modbus"
         }
       }
     },
@@ -7056,6 +7074,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sunsynk": {
+      "name": "Sunsynk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sunweg": {
       "name": "Sun WEG",
@@ -8491,7 +8515,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {
@@ -8527,6 +8551,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "zonneplan": {
+      "name": "Zonneplan",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "zooz": {
       "name": "Zooz",

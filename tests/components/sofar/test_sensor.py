@@ -20,6 +20,7 @@ from homeassistant.components.sofar.sensor import (
     SofarSensorDescription,
     SofarTotalSensor,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,9 +53,14 @@ async def test_all_entities(
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    with (
+        patch("homeassistant.components.sofar.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: connection.for_unit(
+                unit_id
+            ),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -96,13 +102,13 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 73, 23, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 71, 21, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            181,
-            39,
+            137,
+            44,
             id="hybrid",
         ),
     ],
@@ -130,7 +136,11 @@ async def test_enabled_by_default_partition(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entries = [
+        e
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if e.domain == SENSOR_DOMAIN
+    ]
     # Literal counts: an accidental flip has to be acknowledged here.
     assert len(entries) == created
     assert len([e for e in entries if e.disabled_by is None]) == enabled
@@ -153,15 +163,30 @@ async def test_enabled_by_default_partition(
 async def test_settings_backed_sensor_created_and_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test a settings-polled component reaches the sensor platform."""
-    serial_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_serial_number"
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
     )
-    assert serial_id is not None
-    assert (state := hass.states.get(serial_id)) is not None
-    assert state.state == MOCK_SERIAL
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    rtc_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_HYBRID_SERIAL}_sync_rtc_result"
+    )
+    assert rtc_id is not None
+    assert (state := hass.states.get(rtc_id)) is not None
+    assert state.state == "successful"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

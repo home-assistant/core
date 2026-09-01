@@ -14,7 +14,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import VEHICLE_VIN
 from .coordinator import SubaruConfigEntry
@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: SubaruConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: SubaruConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     coordinator = config_entry.runtime_data.coordinator
