@@ -1,9 +1,9 @@
-start_timer:
+create_timer:
   target:
     entity:
       domain: timer_list
       supported_features:
-        - timer_list.TimerListEntityFeature.START_TIMER
+        - timer_list.TimerListEntityFeature.CREATE_TIMER
   fields:
     name:
       example: "Pasta"
@@ -50,6 +50,18 @@ cancel_timer:
       example: "01HZ8ABCDEF0123456789ABCDE"
       selector:
         text:
+finish_timer:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.FINISH_TIMER
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
 add_time:
   target:
     entity:
@@ -67,7 +79,7 @@ add_time:
       example: "00:01:00"
       selector:
         duration:
-remove_time:
+subtract_time:
   target:
     entity:
       domain: timer_list
@@ -88,6 +100,8 @@ remove_timer:
   target:
     entity:
       domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.REMOVE_TIMER
   fields:
     timer_id:
       required: true

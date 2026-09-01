@@ -35,13 +35,16 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_CREATED_AT,
+    ATTR_CREATED_DURATION,
+    ATTR_DELTA,
     ATTR_DURATION,
-    ATTR_FINISHED_AT,
+    ATTR_ENDED_AT,
     ATTR_FINISHES_AT,
     ATTR_REMAINING,
     ATTR_STATUS,
     ATTR_TIMER_ID,
     ATTR_TIMERS,
+    ATTR_TOTAL_DURATION,
     DATA_COMPONENT,
     DOMAIN,
     TimerListEntityFeature,
@@ -70,27 +73,41 @@ class TimerItem:
     status: TimerStatus
     """Current status of the timer."""
 
-    duration: timedelta
-    """Original duration the timer was created with."""
+    created_duration: timedelta
+    """Duration the timer was created with. Never changes.
+
+    This is what voice commands disambiguate on, so "the 5 minute timer" keeps
+    referring to the same timer after time is added to it. For how long the
+    timer currently runs for, use ``total_duration``.
+    """
 
     created_at: datetime
-    """When the timer was (re)started, in UTC."""
+    """When the timer was created, in UTC. Never changes."""
+
+    total_duration: timedelta = timedelta(0)
+    """Longest the timer has ever had left to run, i.e. the denominator for a
+    progress display. Raised (never lowered) as time is added, and never less
+    than ``created_duration``."""
 
     finishes_at: datetime | None = None
     """Absolute time the timer will finish, in UTC. ``None`` unless active."""
 
-    remaining: timedelta | None = None
-    """Remaining time captured while paused. ``None`` unless paused."""
+    paused_remaining: timedelta | None = None
+    """Time left frozen at the moment of pausing. ``None`` unless paused."""
 
-    finished_at: datetime | None = None
-    """When the timer finished or was cancelled, in UTC."""
+    ended_at: datetime | None = None
+    """When the timer finished or was cancelled, in UTC. ``None`` until then."""
+
+    def __post_init__(self) -> None:
+        """Start the progress total at the created duration."""
+        self.total_duration = max(self.total_duration, self.created_duration)
 
     def remaining_at(self, now: datetime) -> timedelta:
         """Return the time left on the timer relative to ``now``."""
         if self.status == TimerStatus.ACTIVE and self.finishes_at is not None:
             return max(timedelta(0), self.finishes_at - now)
-        if self.status == TimerStatus.PAUSED and self.remaining is not None:
-            return self.remaining
+        if self.status == TimerStatus.PAUSED and self.paused_remaining is not None:
+            return self.paused_remaining
         return timedelta(0)
 
 
@@ -101,6 +118,12 @@ class TimerListEvent:
     event_type: TimerListEventType
     item: TimerItem
 
+    delta: timedelta | None = None
+    """Signed amount of time added, for ``TIME_CHANGED``. ``None`` otherwise.
+
+    The only part of a change not derivable from ``item`` alone.
+    """
+
 
 @callback
 def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
@@ -109,10 +132,11 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
         ATTR_TIMER_ID: item.timer_id,
         ATTR_NAME: item.name,
         ATTR_STATUS: item.status.value,
-        ATTR_DURATION: item.duration.total_seconds(),
+        ATTR_CREATED_DURATION: item.created_duration.total_seconds(),
+        ATTR_TOTAL_DURATION: item.total_duration.total_seconds(),
         ATTR_CREATED_AT: item.created_at.isoformat(),
         ATTR_FINISHES_AT: item.finishes_at.isoformat() if item.finishes_at else None,
-        ATTR_FINISHED_AT: item.finished_at.isoformat() if item.finished_at else None,
+        ATTR_ENDED_AT: item.ended_at.isoformat() if item.ended_at else None,
         ATTR_REMAINING: item.remaining_at(now).total_seconds(),
     }
 
@@ -157,13 +181,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_list)
 
     component.async_register_entity_service(
-        TimerListServices.START_TIMER,
+        TimerListServices.CREATE_TIMER,
         {
             vol.Optional(ATTR_NAME): cv.string,
             vol.Required(ATTR_DURATION): cv.positive_time_period,
         },
-        _async_start_timer,
-        required_features=[TimerListEntityFeature.START_TIMER],
+        _async_create_timer,
+        required_features=[TimerListEntityFeature.CREATE_TIMER],
         supports_response=SupportsResponse.OPTIONAL,
     )
     component.async_register_entity_service(
@@ -185,6 +209,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TimerListEntityFeature.CANCEL_TIMER],
     )
     component.async_register_entity_service(
+        TimerListServices.FINISH_TIMER,
+        {vol.Required(ATTR_TIMER_ID): cv.string},
+        "async_finish_timer",
+        required_features=[TimerListEntityFeature.FINISH_TIMER],
+    )
+    component.async_register_entity_service(
         TimerListServices.ADD_TIME,
         {
             vol.Required(ATTR_TIMER_ID): cv.string,
@@ -194,18 +224,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TimerListEntityFeature.ADD_TIME],
     )
     component.async_register_entity_service(
-        TimerListServices.REMOVE_TIME,
+        TimerListServices.SUBTRACT_TIME,
         {
             vol.Required(ATTR_TIMER_ID): cv.string,
             vol.Required(ATTR_DURATION): cv.positive_time_period,
         },
-        _async_remove_time,
+        _async_subtract_time,
         required_features=[TimerListEntityFeature.ADD_TIME],
     )
     component.async_register_entity_service(
         TimerListServices.REMOVE_TIMER,
         {vol.Required(ATTR_TIMER_ID): cv.string},
         "async_remove_timer",
+        required_features=[TimerListEntityFeature.REMOVE_TIMER],
     )
     component.async_register_entity_service(
         TimerListServices.GET_TIMERS,
@@ -253,8 +284,11 @@ class TimerListEntity(Entity):
         """Return the timers in the list."""
         raise NotImplementedError
 
-    async def async_start_timer(self, *, name: str | None, duration: timedelta) -> str:
-        """Create and start a new timer, returning its id."""
+    async def async_create_timer(self, *, name: str | None, duration: timedelta) -> str:
+        """Create a new timer, returning its id.
+
+        The timer starts counting down immediately.
+        """
         raise NotImplementedError
 
     async def async_pause_timer(self, timer_id: str) -> None:
@@ -266,11 +300,15 @@ class TimerListEntity(Entity):
         raise NotImplementedError
 
     async def async_cancel_timer(self, timer_id: str) -> None:
-        """Cancel a timer."""
+        """Cancel a timer without finishing it."""
+        raise NotImplementedError
+
+    async def async_finish_timer(self, timer_id: str) -> None:
+        """Finish a timer early, as if its remaining time had elapsed."""
         raise NotImplementedError
 
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
-        """Add (or, with a negative duration, remove) time on a timer."""
+        """Add (or, with a negative duration, subtract) time on a timer."""
         raise NotImplementedError
 
     async def async_remove_timer(self, timer_id: str) -> None:
@@ -297,9 +335,16 @@ class TimerListEntity(Entity):
 
     @final
     @callback
-    def _notify(self, event_type: TimerListEventType, timer: TimerItem) -> None:
+    def _notify(
+        self,
+        event_type: TimerListEventType,
+        timer: TimerItem,
+        delta: timedelta | None = None,
+    ) -> None:
         """Push a change event to subscribers and write entity state."""
-        event = TimerListEvent(event_type=event_type, item=copy.copy(timer))
+        event = TimerListEvent(
+            event_type=event_type, item=copy.copy(timer), delta=delta
+        )
         for listener in list(self._update_listeners):
             listener(event)
         self.async_write_ha_state()
@@ -309,11 +354,11 @@ class TimerListEntity(Entity):
 from .local import InMemoryTimerListEntity as InMemoryTimerListEntity  # noqa: E402
 
 
-async def _async_start_timer(
+async def _async_create_timer(
     entity: TimerListEntity, call: ServiceCall
 ) -> dict[str, Any]:
-    """Handle the start_timer service."""
-    timer_id = await entity.async_start_timer(
+    """Handle the create_timer service."""
+    timer_id = await entity.async_create_timer(
         name=call.data.get(ATTR_NAME),
         duration=call.data[ATTR_DURATION],
     )
@@ -325,8 +370,8 @@ async def _async_add_time(entity: TimerListEntity, call: ServiceCall) -> None:
     await entity.async_add_time(call.data[ATTR_TIMER_ID], call.data[ATTR_DURATION])
 
 
-async def _async_remove_time(entity: TimerListEntity, call: ServiceCall) -> None:
-    """Handle the remove_time service."""
+async def _async_subtract_time(entity: TimerListEntity, call: ServiceCall) -> None:
+    """Handle the subtract_time service."""
     await entity.async_add_time(call.data[ATTR_TIMER_ID], -call.data[ATTR_DURATION])
 
 
@@ -368,16 +413,14 @@ async def websocket_handle_subscribe(
     @callback
     def forward_event(event: TimerListEvent) -> None:
         """Forward a timer change event to the websocket connection."""
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                {
-                    "type": "change",
-                    "event_type": event.event_type.value,
-                    "timer": timer_to_dict(event.item, dt_util.utcnow()),
-                },
-            )
-        )
+        message: dict[str, Any] = {
+            "type": "change",
+            "event_type": event.event_type.value,
+            "timer": timer_to_dict(event.item, dt_util.utcnow()),
+        }
+        if event.delta is not None:
+            message[ATTR_DELTA] = event.delta.total_seconds()
+        connection.send_message(websocket_api.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(forward_event)
     connection.send_result(msg["id"])

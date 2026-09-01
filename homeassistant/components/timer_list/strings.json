@@ -35,7 +35,7 @@
       "name": "Add time"
     },
     "cancel_timer": {
-      "description": "Cancels a timer.",
+      "description": "Cancels a timer without finishing it.",
       "fields": {
         "timer_id": {
           "description": "The id of the timer to cancel.",
@@ -43,6 +43,30 @@
         }
       },
       "name": "Cancel timer"
+    },
+    "create_timer": {
+      "description": "Creates a new timer on a timer list and starts it counting down.",
+      "fields": {
+        "duration": {
+          "description": "How long the timer should run for.",
+          "name": "Duration"
+        },
+        "name": {
+          "description": "Optional name for the timer.",
+          "name": "Name"
+        }
+      },
+      "name": "Create timer"
+    },
+    "finish_timer": {
+      "description": "Finishes a timer early, as if its remaining time had elapsed.",
+      "fields": {
+        "timer_id": {
+          "description": "The id of the timer to finish.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Finish timer"
     },
     "get_timers": {
       "description": "Gets the timers on a timer list.",
@@ -64,20 +88,6 @@
       },
       "name": "Pause timer"
     },
-    "remove_time": {
-      "description": "Removes time from a timer.",
-      "fields": {
-        "duration": {
-          "description": "How much time to remove from the timer.",
-          "name": "Duration"
-        },
-        "timer_id": {
-          "description": "The id of the timer to remove time from.",
-          "name": "Timer ID"
-        }
-      },
-      "name": "Remove time"
-    },
     "remove_timer": {
       "description": "Removes a timer from a timer list.",
       "fields": {
@@ -88,19 +98,19 @@
       },
       "name": "Remove timer"
     },
-    "start_timer": {
-      "description": "Creates and starts a new timer on a timer list.",
+    "subtract_time": {
+      "description": "Subtracts time from a timer.",
       "fields": {
         "duration": {
-          "description": "How long the timer should run for.",
+          "description": "How much time to subtract from the timer.",
           "name": "Duration"
         },
-        "name": {
-          "description": "Optional name for the timer.",
-          "name": "Name"
+        "timer_id": {
+          "description": "The id of the timer to subtract time from.",
+          "name": "Timer ID"
         }
       },
-      "name": "Start timer"
+      "name": "Subtract time"
     },
     "unpause_timer": {
       "description": "Resumes a paused timer.",
@@ -119,17 +129,25 @@
       "description": "Triggers when a timer is cancelled on a timer list.",
       "name": "Timer cancelled"
     },
+    "timer_created": {
+      "description": "Triggers when a timer is created on a timer list.",
+      "name": "Timer created"
+    },
     "timer_finished": {
       "description": "Triggers when a timer finishes on a timer list.",
       "name": "Timer finished"
     },
-    "timer_started": {
-      "description": "Triggers when a timer is started on a timer list.",
-      "name": "Timer started"
+    "timer_paused": {
+      "description": "Triggers when a timer is paused on a timer list.",
+      "name": "Timer paused"
     },
-    "timer_updated": {
-      "description": "Triggers when a timer is paused, resumed, or has time added or removed.",
-      "name": "Timer updated"
+    "timer_time_changed": {
+      "description": "Triggers when time is added to or subtracted from a timer on a timer list.",
+      "name": "Timer time changed"
+    },
+    "timer_unpaused": {
+      "description": "Triggers when a timer is resumed on a timer list.",
+      "name": "Timer resumed"
     }
   }
 }

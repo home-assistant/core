@@ -94,7 +94,7 @@ def _normalize_start_time(
 @callback
 def _item_start_time(item: TimerItem) -> tuple[int, int, int]:
     """Return a timer's original duration as normalized (hours, minutes, seconds)."""
-    return _normalize_start_time(None, None, int(item.duration.total_seconds()))
+    return _normalize_start_time(None, None, int(item.created_duration.total_seconds()))
 
 
 class FindTimerFilter(StrEnum):
@@ -332,7 +332,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
             name = slots["name"]["value"]
 
         total_seconds = _get_total_seconds(slots)
-        timer_id = await entity.async_start_timer(
+        timer_id = await entity.async_create_timer(
             name=name, duration=timedelta(seconds=total_seconds)
         )
 

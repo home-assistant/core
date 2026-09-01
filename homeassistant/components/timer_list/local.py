@@ -20,7 +20,11 @@ from homeassistant.util import dt as dt_util, ulid as ulid_util
 from . import TimerItem, TimerListEntity
 from .const import DOMAIN, TimerListEntityFeature, TimerListEventType, TimerStatus
 
-_FINISHED_STATUSES = (TimerStatus.FINISHED, TimerStatus.CANCELLED)
+_ARCHIVE_EVENTS = {
+    TimerStatus.FINISHED: TimerListEventType.FINISHED,
+    TimerStatus.CANCELLED: TimerListEventType.CANCELLED,
+}
+_FINISHED_STATUSES = tuple(_ARCHIVE_EVENTS)
 MAX_ARCHIVED_TIMERS = 10
 
 
@@ -28,10 +32,12 @@ class InMemoryTimerListEntity(TimerListEntity):
     """A local, in-memory timer list."""
 
     _attr_supported_features = (
-        TimerListEntityFeature.START_TIMER
+        TimerListEntityFeature.CREATE_TIMER
         | TimerListEntityFeature.PAUSE_TIMER
         | TimerListEntityFeature.CANCEL_TIMER
+        | TimerListEntityFeature.FINISH_TIMER
         | TimerListEntityFeature.ADD_TIME
+        | TimerListEntityFeature.REMOVE_TIMER
     )
 
     def __init__(
@@ -56,21 +62,21 @@ class InMemoryTimerListEntity(TimerListEntity):
         return list(self._timers.values())
 
     @override
-    async def async_start_timer(self, *, name: str | None, duration: timedelta) -> str:
-        """Create and start a new timer, returning its id."""
+    async def async_create_timer(self, *, name: str | None, duration: timedelta) -> str:
+        """Create a new timer, returning its id."""
         now = dt_util.utcnow()
         timer_id = ulid_util.ulid_now()
         timer = TimerItem(
             timer_id=timer_id,
             name=name,
             status=TimerStatus.ACTIVE,
-            duration=duration,
+            created_duration=duration,
             created_at=now,
             finishes_at=now + duration,
         )
         self._timers[timer_id] = timer
         self._schedule(timer)
-        self._notify(TimerListEventType.STARTED, timer)
+        self._notify(TimerListEventType.CREATED, timer)
         return timer_id
 
     @override
@@ -79,23 +85,23 @@ class InMemoryTimerListEntity(TimerListEntity):
         timer = self._get_timer(timer_id)
         if timer.status != TimerStatus.ACTIVE or timer.finishes_at is None:
             return
-        timer.remaining = max(timedelta(0), timer.finishes_at - dt_util.utcnow())
+        timer.paused_remaining = max(timedelta(0), timer.finishes_at - dt_util.utcnow())
         timer.finishes_at = None
         timer.status = TimerStatus.PAUSED
         self._unschedule(timer_id)
-        self._notify(TimerListEventType.UPDATED, timer)
+        self._notify(TimerListEventType.PAUSED, timer)
 
     @override
     async def async_unpause_timer(self, timer_id: str) -> None:
         """Resume a paused timer."""
         timer = self._get_timer(timer_id)
-        if timer.status != TimerStatus.PAUSED or timer.remaining is None:
+        if timer.status != TimerStatus.PAUSED or timer.paused_remaining is None:
             return
-        timer.finishes_at = dt_util.utcnow() + timer.remaining
-        timer.remaining = None
+        timer.finishes_at = dt_util.utcnow() + timer.paused_remaining
+        timer.paused_remaining = None
         timer.status = TimerStatus.ACTIVE
         self._schedule(timer)
-        self._notify(TimerListEventType.UPDATED, timer)
+        self._notify(TimerListEventType.UNPAUSED, timer)
 
     @override
     async def async_cancel_timer(self, timer_id: str) -> None:
@@ -105,31 +111,40 @@ class InMemoryTimerListEntity(TimerListEntity):
             # Already archived (finished or cancelled); nothing to cancel.
             return
         self._unschedule(timer_id)
-        timer.status = TimerStatus.CANCELLED
-        timer.finishes_at = None
-        timer.remaining = None
-        timer.finished_at = dt_util.utcnow()
-        self._notify(TimerListEventType.CANCELLED, timer)
-        self._enforce_archive_limit()
+        self._archive(timer, TimerStatus.CANCELLED)
+
+    @override
+    async def async_finish_timer(self, timer_id: str) -> None:
+        """Finish a timer early, archiving it in the ``finished`` state."""
+        timer = self._get_timer(timer_id)
+        if timer.status in _FINISHED_STATUSES:
+            # Already archived (finished or cancelled); nothing to finish.
+            return
+        self._unschedule(timer_id)
+        self._archive(timer, TimerStatus.FINISHED)
 
     @override
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
-        """Add (or, with a negative duration, remove) time on a timer."""
+        """Add (or, with a negative duration, subtract) time on a timer."""
         timer = self._get_timer(timer_id)
+        now = dt_util.utcnow()
         if timer.status == TimerStatus.ACTIVE and timer.finishes_at is not None:
-            now = dt_util.utcnow()
             finishes_at = timer.finishes_at + duration
             if finishes_at <= now:
+                # Subtracted past the end; finish now rather than schedule the past.
                 self._unschedule(timer_id)
-                self._async_timer_finished(timer_id, now)
+                self._archive(timer, TimerStatus.FINISHED)
                 return
             timer.finishes_at = finishes_at
             self._schedule(timer)
-        elif timer.status == TimerStatus.PAUSED and timer.remaining is not None:
-            timer.remaining = max(timedelta(0), timer.remaining + duration)
+        elif timer.status == TimerStatus.PAUSED and timer.paused_remaining is not None:
+            timer.paused_remaining = max(
+                timedelta(0), timer.paused_remaining + duration
+            )
         else:
             return
-        self._notify(TimerListEventType.UPDATED, timer)
+        timer.total_duration = max(timer.total_duration, timer.remaining_at(now))
+        self._notify(TimerListEventType.TIME_CHANGED, timer, delta=duration)
 
     @override
     async def async_remove_timer(self, timer_id: str) -> None:
@@ -173,11 +188,16 @@ class InMemoryTimerListEntity(TimerListEntity):
         if (timer := self._timers.get(timer_id)) is None:
             return
 
-        timer.status = TimerStatus.FINISHED
+        self._archive(timer, TimerStatus.FINISHED)
+
+    @callback
+    def _archive(self, timer: TimerItem, status: TimerStatus) -> None:
+        """Move a timer to a terminal status and notify subscribers."""
+        timer.status = status
         timer.finishes_at = None
-        timer.remaining = None
-        timer.finished_at = dt_util.utcnow()
-        self._notify(TimerListEventType.FINISHED, timer)
+        timer.paused_remaining = None
+        timer.ended_at = dt_util.utcnow()
+        self._notify(_ARCHIVE_EVENTS[status], timer)
         self._enforce_archive_limit()
 
     @callback
@@ -189,7 +209,7 @@ class InMemoryTimerListEntity(TimerListEntity):
                 for timer in self._timers.values()
                 if timer.status in _FINISHED_STATUSES
             ),
-            key=lambda timer: timer.finished_at or dt_util.utcnow(),
+            key=lambda timer: timer.ended_at or dt_util.utcnow(),
         )
         excess = len(archived) - MAX_ARCHIVED_TIMERS
         if excess <= 0:

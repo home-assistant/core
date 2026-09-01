@@ -26,7 +26,7 @@ def async_handle_timer_event(
     if item.name:
         message = f"{item.name} finished"
     else:
-        duration = timedelta(seconds=int(item.duration.total_seconds()))
+        duration = timedelta(seconds=int(item.created_duration.total_seconds()))
         message = f"{duration} timer finished"
 
     entry.async_create_task(

@@ -51,6 +51,13 @@ from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+# Wyoming has a single "timer updated" event covering all of these.
+_TIMER_UPDATED_EVENT_TYPES = (
+    TimerListEventType.PAUSED,
+    TimerListEventType.UNPAUSED,
+    TimerListEventType.TIME_CHANGED,
+)
+
 _SAMPLES_PER_CHUNK: Final = 1024
 _RECONNECT_SECONDS: Final = 10
 _RESTART_SECONDS: Final = 3
@@ -918,13 +925,13 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         _LOGGER.debug("Timer event: %s", timer_event)
         item = timer_event.item
-        total_seconds = int(item.duration.total_seconds())
-        start_minutes, start_seconds = divmod(total_seconds, 60)
+        created_seconds = int(item.created_duration.total_seconds())
+        start_minutes, start_seconds = divmod(created_seconds, 60)
         start_hours, start_minutes = divmod(start_minutes, 60)
         seconds_left = round(item.remaining_at(dt_util.utcnow()).total_seconds())
 
         event: Event | None = None
-        if timer_event.event_type == TimerListEventType.STARTED:
+        if timer_event.event_type == TimerListEventType.CREATED:
             event = TimerStarted(
                 id=item.timer_id,
                 total_seconds=seconds_left,
@@ -933,7 +940,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 start_minutes=start_minutes,
                 start_seconds=start_seconds,
             ).event()
-        elif timer_event.event_type == TimerListEventType.UPDATED:
+        elif timer_event.event_type in _TIMER_UPDATED_EVENT_TYPES:
             event = TimerUpdated(
                 id=item.timer_id,
                 is_active=item.status == TimerStatus.ACTIVE,

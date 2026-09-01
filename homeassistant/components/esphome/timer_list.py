@@ -17,28 +17,31 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
-from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
 
-_TIMER_EVENT_TYPES: EsphomeEnumMapper[
-    VoiceAssistantTimerEventType, TimerListEventType
-] = EsphomeEnumMapper(
-    {
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
-            TimerListEventType.STARTED
-        ),
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
-            TimerListEventType.UPDATED
-        ),
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
-            TimerListEventType.CANCELLED
-        ),
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
-            TimerListEventType.FINISHED
-        ),
-    }
-)
+# Not an EsphomeEnumMapper: that builds a reverse map and so cannot express the
+# several Home Assistant events ESPHome collapses into a single UPDATED.
+_TIMER_EVENT_TYPES: dict[TimerListEventType, VoiceAssistantTimerEventType] = {
+    TimerListEventType.CREATED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED
+    ),
+    TimerListEventType.PAUSED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED
+    ),
+    TimerListEventType.UNPAUSED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED
+    ),
+    TimerListEventType.TIME_CHANGED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED
+    ),
+    TimerListEventType.CANCELLED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED
+    ),
+    TimerListEventType.FINISHED: (
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED
+    ),
+}
 
 
 async def async_setup_entry(
@@ -78,10 +81,8 @@ def _async_forward_timer_event(
         # Satellite disconnected, drop timer event
         return
 
-    try:
-        native_event_type = _TIMER_EVENT_TYPES.from_hass(event.event_type)
-    except KeyError:
-        # e.g. REMOVED, which ESPHome has no event for
+    # e.g. REMOVED, which ESPHome has no event for
+    if (native_event_type := _TIMER_EVENT_TYPES.get(event.event_type)) is None:
         return
 
     item = event.item
@@ -89,7 +90,7 @@ def _async_forward_timer_event(
         native_event_type,
         item.timer_id,
         item.name,
-        int(item.duration.total_seconds()),
+        int(item.total_duration.total_seconds()),
         round(item.remaining_at(dt_util.utcnow()).total_seconds()),
         item.status == TimerStatus.ACTIVE,
     )

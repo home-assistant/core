@@ -1119,12 +1119,12 @@ async def test_handle_timer_noop_when_client_disconnected(
         # Should not raise
         satellite.handle_timer_event(
             TimerListEvent(
-                event_type=TimerListEventType.STARTED,
+                event_type=TimerListEventType.CREATED,
                 item=TimerItem(
                     timer_id="test-timer",
                     name="test",
                     status=TimerStatus.ACTIVE,
-                    duration=timedelta(seconds=30),
+                    created_duration=timedelta(seconds=30),
                     created_at=dt_util.utcnow(),
                 ),
             )

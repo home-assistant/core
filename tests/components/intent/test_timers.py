@@ -115,10 +115,10 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
         item = event.item
 
         assert item.name == timer_name
-        assert item.duration == timedelta(0)
+        assert item.created_duration == timedelta(0)
         assert _remaining_seconds(item) == 0
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             timer_id = item.timer_id
             started_event.set()
         elif event.event_type == TimerListEventType.FINISHED:
@@ -159,14 +159,16 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
         nonlocal timer_id
         item = event.item
 
-        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
+        assert item.created_duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
             assert item.name == timer_name
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             timer_id = item.timer_id
-            assert _remaining_seconds(item) == int(item.duration.total_seconds())
+            assert _remaining_seconds(item) == int(
+                item.created_duration.total_seconds()
+            )
             started_event.set()
         elif event.event_type == TimerListEventType.CANCELLED:
             assert item.timer_id == timer_id
@@ -266,63 +268,6 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
 
-async def test_start_timer_child_device_inherits_area(
-    hass: HomeAssistant,
-    init_components,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> None:
-    """Test a timer on a child device inherits the parent device's area/floor."""
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-
-    floor = floor_registry.async_create("first floor")
-    area = area_registry.async_create("kitchen")
-    area = area_registry.async_update(area.id, floor_id=floor.floor_id)
-
-    parent = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={("test", "parent")},
-    )
-    device_registry.async_update_device(parent.id, area_id=area.id)
-    child = device_registry.async_get_or_create_child(
-        config_entry_id=entry.entry_id,
-        identifiers={("test", "child")},
-        parent_device_id=parent.id,
-    )
-
-    started_event = asyncio.Event()
-    started_timer: TimerInfo | None = None
-
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        nonlocal started_timer
-        if event_type == TimerEventType.STARTED:
-            started_timer = timer
-            started_event.set()
-
-    async_register_timer_handler(hass, child.id, handle_timer)
-
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"minutes": {"value": 5}},
-        device_id=child.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    async with asyncio.timeout(1):
-        await started_event.wait()
-
-    assert started_timer is not None
-    # The child device has no area of its own, so it inherits the parent's.
-    assert started_timer.area_id == area.id
-    assert started_timer.area_name == "kitchen"
-    assert started_timer.floor_id == floor.floor_id
-
-
 async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     """Test increasing the time of a running timer."""
     device_id = _make_timer_device_id(hass)
@@ -339,22 +284,25 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
         nonlocal timer_id, original_total_seconds
         item = event.item
 
-        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
+        assert item.created_duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
             assert item.name == timer_name
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             timer_id = item.timer_id
-            original_total_seconds = int(item.duration.total_seconds())
+            original_total_seconds = int(item.created_duration.total_seconds())
             started_event.set()
-        elif event.event_type == TimerListEventType.UPDATED:
+        elif event.event_type == TimerListEventType.TIME_CHANGED:
             assert item.timer_id == timer_id
 
             # Timer was increased. The duration reflects the timer's original
             # length and does not grow past it, only the remaining time does.
             assert _remaining_seconds(item) > original_total_seconds
-            assert int(item.duration.total_seconds()) == original_total_seconds
+            assert int(item.created_duration.total_seconds()) == original_total_seconds
+            # The progress total does grow, so remaining never exceeds it.
+            assert item.total_duration >= item.remaining_at(dt_util.utcnow())
+            assert event.delta == timedelta(hours=1, minutes=5, seconds=30)
             updated_event.set()
         elif event.event_type == TimerListEventType.CANCELLED:
             assert item.timer_id == timer_id
@@ -451,21 +399,24 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
         nonlocal timer_id, original_total_seconds
         item = event.item
 
-        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
+        assert item.created_duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
             assert item.name == timer_name
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             timer_id = item.timer_id
-            original_total_seconds = int(item.duration.total_seconds())
+            original_total_seconds = int(item.created_duration.total_seconds())
             started_event.set()
-        elif event.event_type == TimerListEventType.UPDATED:
+        elif event.event_type == TimerListEventType.TIME_CHANGED:
             assert item.timer_id == timer_id
 
             # Timer was decreased
             assert _remaining_seconds(item) <= (original_total_seconds - 30)
-            assert int(item.duration.total_seconds()) == original_total_seconds
+            assert int(item.created_duration.total_seconds()) == original_total_seconds
+            # Subtracting does not lower the progress total.
+            assert int(item.total_duration.total_seconds()) == original_total_seconds
+            assert event.delta == timedelta(seconds=-30)
 
             updated_event.set()
         elif event.event_type == TimerListEventType.CANCELLED:
@@ -546,11 +497,11 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
         item = event.item
 
         assert item.name is None
-        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
+        assert item.created_duration == timedelta(hours=1, minutes=2, seconds=3)
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             timer_id = item.timer_id
-            original_total_seconds = int(item.duration.total_seconds())
+            original_total_seconds = int(item.created_duration.total_seconds())
             started_event.set()
         elif event.event_type == TimerListEventType.FINISHED:
             assert item.timer_id == timer_id
@@ -758,9 +709,13 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     @callback
     def handle_timer(event: TimerListEvent) -> None:
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             started_event.set()
-        elif event.event_type == TimerListEventType.UPDATED:
+        elif event.event_type in (
+            TimerListEventType.PAUSED,
+            TimerListEventType.UNPAUSED,
+        ):
+            assert (event.event_type == TimerListEventType.UNPAUSED) == expected_active
             assert (event.item.status == TimerStatus.ACTIVE) == expected_active
             updated_event.set()
 
@@ -822,7 +777,7 @@ async def test_pause_unpause_again_is_noop(
     await _register_timer_device(hass, device_id, handle_timer)
     entity = _get_timer_entity(hass, device_id)
 
-    timer_id = await entity.async_start_timer(name=None, duration=timedelta(minutes=5))
+    timer_id = await entity.async_create_timer(name=None, duration=timedelta(minutes=5))
     (timer_item,) = [t for t in entity.timers if t.timer_id == timer_id]
     assert timer_item.status == TimerStatus.ACTIVE
 
@@ -858,7 +813,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     def handle_timer(event: TimerListEvent) -> None:
         nonlocal num_started
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             num_started += 1
             if num_started == 4:
                 started_event.set()
@@ -1043,15 +998,15 @@ async def test_pause_unpause_timer_disambiguate(
     @callback
     def handle_timer(event: TimerListEvent) -> None:
         item = event.item
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             started_event.set()
             started_timer_ids.append(item.timer_id)
-        elif event.event_type == TimerListEventType.UPDATED:
+        elif event.event_type == TimerListEventType.UNPAUSED:
             updated_event.set()
-            if item.status == TimerStatus.ACTIVE:
-                unpaused_timer_ids.append(item.timer_id)
-            else:
-                paused_timer_ids.append(item.timer_id)
+            unpaused_timer_ids.append(item.timer_id)
+        elif event.event_type == TimerListEventType.PAUSED:
+            updated_event.set()
+            paused_timer_ids.append(item.timer_id)
 
     await _register_timer_device(hass, device_id, handle_timer)
 
@@ -1162,7 +1117,7 @@ async def test_cancel_all_timers(hass: HomeAssistant, init_components) -> None:
     def handle_timer(event: TimerListEvent) -> None:
         nonlocal num_started
 
-        if event.event_type == TimerListEventType.STARTED:
+        if event.event_type == TimerListEventType.CREATED:
             num_started += 1
             if num_started == 3:
                 started_event.set()

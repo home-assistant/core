@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import TimerListEvent, timer_to_dict
-from .const import ATTR_TIMER, DATA_COMPONENT, DOMAIN, TimerListEventType
+from .const import ATTR_DELTA, ATTR_TIMER, DATA_COMPONENT, DOMAIN, TimerListEventType
 
 TRIGGER_SCHEMA = vol.Schema(
     {
@@ -114,28 +114,40 @@ class TimerEventTrigger(Trigger):
         def handle_event(entity_id: str, event: TimerListEvent) -> None:
             if event.event_type != self._event_type:
                 return
-            run_action(
-                {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_TIMER: timer_to_dict(event.item, dt_util.utcnow()),
-                },
-                f"timer {self._event_type.value} on {entity_id}",
-            )
+            variables: dict[str, Any] = {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TIMER: timer_to_dict(event.item, dt_util.utcnow()),
+            }
+            if event.delta is not None:
+                variables[ATTR_DELTA] = event.delta.total_seconds()
+            run_action(variables, f"timer {self._event_type.value} on {entity_id}")
 
         listener = TimerEventListener(self._hass, target_selection, handle_event)
         return await listener.async_setup()
 
 
-class TimerStartedTrigger(TimerEventTrigger):
-    """Trigger when a timer starts."""
+class TimerCreatedTrigger(TimerEventTrigger):
+    """Trigger when a timer is created."""
 
-    _event_type = TimerListEventType.STARTED
+    _event_type = TimerListEventType.CREATED
 
 
-class TimerUpdatedTrigger(TimerEventTrigger):
-    """Trigger when a timer is paused, resumed, or has time added/removed."""
+class TimerPausedTrigger(TimerEventTrigger):
+    """Trigger when a timer is paused."""
 
-    _event_type = TimerListEventType.UPDATED
+    _event_type = TimerListEventType.PAUSED
+
+
+class TimerUnpausedTrigger(TimerEventTrigger):
+    """Trigger when a timer is resumed."""
+
+    _event_type = TimerListEventType.UNPAUSED
+
+
+class TimerTimeChangedTrigger(TimerEventTrigger):
+    """Trigger when time is added to or subtracted from a timer."""
+
+    _event_type = TimerListEventType.TIME_CHANGED
 
 
 class TimerFinishedTrigger(TimerEventTrigger):
@@ -151,8 +163,10 @@ class TimerCancelledTrigger(TimerEventTrigger):
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "timer_started": TimerStartedTrigger,
-    "timer_updated": TimerUpdatedTrigger,
+    "timer_created": TimerCreatedTrigger,
+    "timer_paused": TimerPausedTrigger,
+    "timer_unpaused": TimerUnpausedTrigger,
+    "timer_time_changed": TimerTimeChangedTrigger,
     "timer_finished": TimerFinishedTrigger,
     "timer_cancelled": TimerCancelledTrigger,
 }
