@@ -14,6 +14,10 @@
           "password": "Password",
           "username": "Username"
         },
+        "data_description": {
+          "password": "Your VelaSmart account password",
+          "username": "Your VelaSmart account username"
+        },
         "description": "Update your VelaSmart account credentials.",
         "title": "Reauthenticate VelaSmart"
       },
@@ -21,6 +25,10 @@
         "data": {
           "password": "Password",
           "username": "Username"
+        },
+        "data_description": {
+          "password": "Your VelaSmart account password",
+          "username": "Your VelaSmart account username"
         },
         "description": "Enter your VelaSmart account credentials.",
         "title": "Connect to VelaSmart"
