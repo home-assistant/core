@@ -53,6 +53,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._self_heal_handle: asyncio.TimerHandle | None = None
         self._self_heal_task: asyncio.Task[None] | None = None
         self._push_connected = True
+        self._push_generation = 0
 
         super().__init__(
             hass,
@@ -65,6 +66,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
+        generation = self._push_generation
         try:
             data = await self.api.fetch_pool_data(self.pool_id)
         except AquariteError as err:
@@ -72,6 +74,11 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+        # A push that landed while this fetch was in flight is newer than
+        # anything the fetch read, and may have consumed pending writes
+        # the fetch result would need to be protected against.
+        if generation != self._push_generation:
+            return self.data
         # This fetch is as authoritative as a push: a pending self-heal
         # retry would only refetch and could mark recovered data
         # unavailable again on a transient failure.
@@ -103,6 +110,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         A snapshot is authoritative: its arrival proves the connection is
         up and supersedes any pending self-heal fetch.
         """
+        self._push_generation += 1
         if not self._push_connected:
             self._push_connected = True
             _LOGGER.info("Reconnected to %s, entities are available again", self.name)
