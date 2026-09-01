@@ -70,6 +70,7 @@ async def test_switch_turn_on_off(
         mock_homevolt_client.local_mode_enabled = service == SERVICE_TURN_ON
 
     client_method.side_effect = update_local_mode
+    mock_homevolt_client.update_info.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -79,6 +80,7 @@ async def test_switch_turn_on_off(
     )
 
     client_method.assert_called_once()
+    mock_homevolt_client.update_info.assert_not_awaited()
     state = hass.states.get(switch_entity_id)
     assert state is not None
     assert state == snapshot(name=f"state-after-{service}")

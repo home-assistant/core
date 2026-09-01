@@ -17,6 +17,7 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,6 +54,18 @@ async def test_number_entities(
 ) -> None:
     """Test all battery control number entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, init_integration.entry_id
+    )
+    assert {entry.entity_id for entry in entries} == {
+        "number.homevolt_ems_grid_export_limit",
+        "number.homevolt_ems_grid_import_limit",
+        "number.homevolt_ems_power_setpoint",
+    }
+    assert all(
+        entry.original_device_class is NumberDeviceClass.POWER for entry in entries
+    )
 
 
 async def test_power_numbers_use_documented_conservative_limit(
@@ -97,7 +110,7 @@ async def test_set_number_value(
     )
 
     mock_homevolt_client.set_battery_parameters.assert_awaited_once_with(**{key: value})
-    mock_homevolt_client.update_info.assert_awaited_once_with()
+    mock_homevolt_client.update_info.assert_not_awaited()
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
@@ -140,7 +153,11 @@ async def test_set_frequency_reserve_grid_limit(
     )
 
     mock_homevolt_client.set_battery_parameters.assert_awaited_once_with(**{key: value})
-    mock_homevolt_client.update_info.assert_awaited_once_with()
+    mock_homevolt_client.update_info.assert_not_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == str(float(value))
 
 
 async def test_number_unknown_value(
@@ -173,24 +190,6 @@ async def test_numbers_unavailable_without_writable_manual_schedule(
     state = hass.states.get("number.homevolt_ems_power_setpoint")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_number_availability_is_parameter_specific(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_homevolt_client: MagicMock,
-) -> None:
-    """Expose only parameters independently writable in the current mode."""
-    mock_homevolt_client.writable_battery_parameters = frozenset({"setpoint"})
-
-    await init_integration.runtime_data.async_request_refresh()
-
-    setpoint = hass.states.get("number.homevolt_ems_power_setpoint")
-    max_charge = hass.states.get("number.homevolt_ems_maximum_charge_power")
-    assert setpoint is not None
-    assert setpoint.state != STATE_UNAVAILABLE
-    assert max_charge is not None
-    assert max_charge.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

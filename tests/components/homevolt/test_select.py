@@ -81,7 +81,7 @@ async def test_select_option(
     )
 
     mock_homevolt_client.set_battery_mode.assert_awaited_once_with(mode=option)
-    mock_homevolt_client.update_info.assert_awaited_once_with()
+    mock_homevolt_client.update_info.assert_not_awaited()
     assert mock_homevolt_client.schedule["mode"] == mode
     state = hass.states.get(ENTITY_ID)
     assert state is not None

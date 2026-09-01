@@ -2,8 +2,12 @@
 
 from typing import override
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.const import EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,42 +26,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_charge",
-        translation_key="max_charge",
-        native_min_value=0,
-        native_max_value=MAX_CONTROL_POWER,
-        native_step=100,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_discharge",
-        translation_key="max_discharge",
-        native_min_value=0,
-        native_max_value=MAX_CONTROL_POWER,
-        native_step=100,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="min_soc",
-        translation_key="min_soc",
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    NumberEntityDescription(
-        key="max_soc",
-        translation_key="max_soc",
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
@@ -67,6 +36,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
@@ -76,6 +46,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         native_max_value=MAX_CONTROL_POWER,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -136,4 +107,4 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
         """Set the value."""
         key = self.entity_description.key
         await self.coordinator.client.set_battery_parameters(**{key: int(value)})
-        await self.coordinator.async_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)

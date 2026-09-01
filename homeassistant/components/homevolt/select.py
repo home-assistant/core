@@ -70,4 +70,4 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         await self.coordinator.client.set_battery_mode(mode=option)
-        await self.coordinator.async_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)
