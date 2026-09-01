@@ -132,7 +132,7 @@ async def test_lines_flow_creates_entry(hass: HomeAssistant) -> None:
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_STOP_ID: stop_id, CONF_LINE_IDS: ["A", "B"]}
+            result["flow_id"], {CONF_LINE_IDS: ["A", "B"]}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -169,7 +169,7 @@ async def test_lines_flow_with_single_line(hass: HomeAssistant) -> None:
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_STOP_ID: stop_id, CONF_LINE_IDS: ["X"]}
+            result["flow_id"], {CONF_LINE_IDS: ["X"]}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -202,8 +202,48 @@ async def test_lines_flow_displays_form(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "lines"
-        # Verify the form has the stop_id field
-        assert CONF_STOP_ID in result["data_schema"].schema
+        assert CONF_LINE_IDS in result["data_schema"].schema
+
+
+async def test_duplicate_stop_entry_is_blocked(hass: HomeAssistant) -> None:
+    """Test duplicate stops are rejected."""
+    stop_id = "1234"
+    line = SimpleNamespace(id="A", route="Route A")
+    timetable = SimpleNamespace(id="stop_1234", name="Central Station")
+
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_setup.return_value = True
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(return_value=True)
+        mock_api.GetLinesOnStop = AsyncMock(return_value=[line])
+        mock_api.GetTimetable = AsyncMock(return_value=timetable)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: stop_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: stop_id}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_reconfigure_step(hass: HomeAssistant) -> None:
@@ -215,10 +255,27 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": config_entry.entry_id}
-    )
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+    ):
+        mock_setup.return_value = True
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(return_value=True)
 
-    # The reconfigure step should show the user form
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": config_entry.entry_id},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"

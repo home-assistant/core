@@ -31,12 +31,20 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step of the config flow."""
+        errors: dict[str, str] = {}
+
         if user_input:
             self._stop_id = user_input[CONF_STOP_ID]
+
+            await self.async_set_unique_id(self._stop_id)
+            self._abort_if_unique_id_configured()
+
             api = BizkaibusAPI(BizkaibusLanguages.ES, self._stop_id)
 
             is_online = await api.TestConnection()
-            if is_online:
+            if not is_online:
+                errors["base"] = "cannot_connect"
+            else:
                 bizkaibus_lines = await api.GetLinesOnStop()
 
                 self._line_ids = [line.id for line in bizkaibus_lines]
@@ -51,7 +59,11 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_lines(user_input=user_input)
 
-        return self.async_show_form(step_id="user", data_schema=USER_DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=USER_DATA_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_lines(
         self, user_input: dict[str, Any] | None = None
@@ -79,7 +91,6 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="lines",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_STOP_ID, default=self._stop_id): cv.string,
                     vol.Required(CONF_LINE_IDS): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=options,
@@ -95,22 +106,42 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
         if user_input is not None:
-            await self.async_set_unique_id("user")
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates=user_input[CONF_STOP_ID],
-            )
+            stop_id = user_input[CONF_STOP_ID]
+            api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
+
+            if not await api.TestConnection():
+                errors["base"] = "cannot_connect"
+            else:
+                if stop_id != reconfigure_entry.data[CONF_STOP_ID]:
+                    await self.async_set_unique_id(stop_id)
+                    self._abort_if_unique_id_configured()
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_STOP_ID: stop_id},
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
-    async def async_step_import(self, info) -> ConfigFlowResult:
+    async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Handle the import step of the config flow."""
-        if info is not None:
-            pass
+        if not info or CONF_STOP_ID not in info:
+            return self.async_abort(reason="invalid_stop_id")
 
-        return self.async_show_form(step_id="import", data_schema=USER_DATA_SCHEMA)
+        stop_id = info[CONF_STOP_ID]
+        await self.async_set_unique_id(stop_id)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=stop_id,
+            data={CONF_STOP_ID: stop_id},
+        )
