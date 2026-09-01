@@ -28,9 +28,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_network() -> Generator[AsyncMock]:
-    """Mock the network connection check."""
+def mock_conexa_smgw() -> Generator[SimpleNamespace]:
+    """Mock the Theben Conexa API surface used by the integration."""
     mock_network = AsyncMock(return_value=None)
+    mock_create = AsyncMock()
+
+    mock_smgw = MagicMock()
+    mock_smgw.gatewayInfo.smgwID = "test-gateway-id"
+    mock_smgw.gatewayInfo.firmwareVersion = "test-gateway-fw-version"
+    mock_smgw.getLatestValues = AsyncMock(return_value={})
+    mock_create.return_value = mock_smgw
 
     with (
         patch("theben_conexa_smgw.checkNetworkConnection", mock_network),
@@ -42,16 +49,6 @@ def mock_network() -> Generator[AsyncMock]:
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection",
             mock_network,
         ),
-    ):
-        yield mock_network
-
-
-@pytest.fixture
-def mock_create() -> Generator[AsyncMock]:
-    """Mock the client creation call."""
-    mock_create = AsyncMock()
-
-    with (
         patch("theben_conexa_smgw.ConexaSMGW.create", mock_create),
         patch(
             "homeassistant.components.theben_conexa.coordinator.ConexaSMGW.create",
@@ -62,26 +59,11 @@ def mock_create() -> Generator[AsyncMock]:
             mock_create,
         ),
     ):
-        yield mock_create
-
-
-@pytest.fixture
-def mock_conexa_smgw(
-    mock_network: AsyncMock,
-    mock_create: AsyncMock,
-) -> SimpleNamespace:
-    """Mock the Theben Conexa API surface used by the integration."""
-    mock_smgw = MagicMock()
-    mock_smgw.gatewayInfo.smgwID = "test-gateway-id"
-    mock_smgw.gatewayInfo.firmwareVersion = "test-gateway-fw-version"
-    mock_smgw.getLatestValues = AsyncMock(return_value={})
-    mock_create.return_value = mock_smgw
-
-    return SimpleNamespace(
-        network=mock_network,
-        create=mock_create,
-        client=mock_smgw,
-    )
+        yield SimpleNamespace(
+            network=mock_network,
+            create=mock_create,
+            client=mock_smgw,
+        )
 
 
 @pytest.fixture

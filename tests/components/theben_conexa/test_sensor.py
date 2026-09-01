@@ -38,8 +38,9 @@ async def test_async_setup_entry_logs_unsupported_keys(
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-    device = device_registry.async_get_device(
-        {(DOMAIN, mock_conexa_smgw.client.gatewayInfo.smgwID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_conexa_smgw.client.gatewayInfo.smgwID),
+        mock_config_entry.entry_id,
     )
     assert device is not None
     assert device.sw_version == mock_conexa_smgw.client.gatewayInfo.firmwareVersion

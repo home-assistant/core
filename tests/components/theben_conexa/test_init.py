@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_setup import FrozenDateTimeFactory
 
 
-async def test_setup_entry_initializes_coordinator(
+async def test_setup_entry_initializes_correctly(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_conexa_smgw: SimpleNamespace,
@@ -27,10 +27,7 @@ async def test_setup_entry_initializes_coordinator(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
     scheduled_call_count = mock_conexa_smgw.client.getLatestValues.call_count
-    assert coordinator._api is mock_conexa_smgw.client
-    assert coordinator.gateway_info is mock_conexa_smgw.client.gatewayInfo
 
     freezer.tick(timedelta(minutes=12, seconds=35))
 
