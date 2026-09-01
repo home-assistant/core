@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 from aioaquarite import AquariteError, AuthenticationError
+import pytest
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -328,3 +329,50 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_auth: MagicMock,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test unloading releases the Firestore gRPC channels."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_vistapool_auth.close.assert_not_called()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vistapool_auth.close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("owner", "method", "exception"),
+    [
+        pytest.param("auth", "authenticate", AuthenticationError, id="auth_rejected"),
+        pytest.param("auth", "authenticate", AquariteError, id="auth_unreachable"),
+        pytest.param("client", "get_pools", AquariteError, id="pools_unreachable"),
+    ],
+)
+async def test_failed_setup_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_auth: MagicMock,
+    mock_vistapool_client: AsyncMock,
+    owner: str,
+    method: str,
+    exception: type[Exception],
+) -> None:
+    """Test a setup that never completes still releases the Firestore channels."""
+    mocks = {"auth": mock_vistapool_auth, "client": mock_vistapool_client}
+    getattr(mocks[owner], method).side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vistapool_auth.close.assert_called_once()
