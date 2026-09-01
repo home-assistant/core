@@ -109,3 +109,30 @@ async def test_device_identifiers_migration_when_unavailable(
     migrated = device_registry.async_get(device.id)
     assert migrated is not None
     assert migrated.identifiers == {(DOMAIN, mock_config_entry.entry_id)}
+
+
+async def test_device_identifiers_migration_with_duplicate(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_adguard: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device left behind by a downgrade is cleaned up."""
+    mock_config_entry.add_to_hass(hass)
+    current = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name="AdGuard Home",
+    )
+    duplicate = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "127.0.0.1", 3000, "/control")},  # type: ignore[arg-type]
+        name="AdGuard Home",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert device_registry.async_get(duplicate.id) is None
+    assert device_registry.async_get(current.id) is not None
