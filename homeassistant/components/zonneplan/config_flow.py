@@ -73,9 +73,10 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step: request an OTP for the given email."""
         errors: dict[str, str] | None = None
-        if user_input is not None:
-            if not (errors := await self._async_request_otp(user_input[CONF_EMAIL])):
-                return await self.async_step_otp()
+        if user_input is not None and not (
+            errors := await self._async_request_otp(user_input[CONF_EMAIL])
+        ):
+            return await self.async_step_otp()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -140,9 +141,10 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
         """Request a new OTP for the email of the entry being re-authenticated."""
         email = self._get_reauth_entry().data[CONF_EMAIL]
         errors: dict[str, str] | None = None
-        if user_input is not None:
-            if not (errors := await self._async_request_otp(user_input[CONF_EMAIL])):
-                return await self.async_step_otp()
+        if user_input is not None and not (
+            errors := await self._async_request_otp(user_input[CONF_EMAIL])
+        ):
+            return await self.async_step_otp()
 
         return self.async_show_form(
             step_id="reauth_confirm",
