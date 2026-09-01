@@ -13,47 +13,40 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import (
+from . import EnvisalinkConfigEntry
+from .const import (
+    CONF_ZONE_NUMBER,
     CONF_ZONENAME,
-    CONF_ZONES,
     CONF_ZONETYPE,
-    DATA_EVL,
     SIGNAL_ZONE_UPDATE,
-    ZONE_SCHEMA,
+    SUBENTRY_TYPE_ZONE,
 )
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EnvisalinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Envisalink binary sensor entities."""
-    if not discovery_info:
-        return
-    configured_zones: dict[int, dict[str, Any]] = discovery_info[CONF_ZONES]
+    """Set up the Envisalink binary sensor entities from a config entry."""
+    controller = entry.runtime_data
 
-    entities = []
-    for zone_num, zone_data in configured_zones.items():
-        entity_config_data = ZONE_SCHEMA(zone_data)
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
+        zone_number = subentry.data[CONF_ZONE_NUMBER]
         entity = EnvisalinkBinarySensor(
-            zone_num,
-            entity_config_data[CONF_ZONENAME],
-            entity_config_data[CONF_ZONETYPE],
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            zone_number,
+            subentry.data[CONF_ZONENAME],
+            subentry.data[CONF_ZONETYPE],
+            controller.alarm_state["zone"][zone_number],
+            controller,
         )
-        entities.append(entity)
-
-    async_add_entities(entities)
+        async_add_entities([entity], config_subentry_id=subentry.subentry_id)
 
 
 class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):

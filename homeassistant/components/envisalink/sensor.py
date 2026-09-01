@@ -8,52 +8,44 @@ from pyenvisalink import EnvisalinkAlarmPanel
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from . import EnvisalinkConfigEntry
+from .const import (
+    CONF_PARTITION_NUMBER,
     CONF_PARTITIONNAME,
-    CONF_PARTITIONS,
-    DATA_EVL,
-    PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
+    SUBENTRY_TYPE_PARTITION,
 )
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EnvisalinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Perform the setup for Envisalink sensor entities."""
-    if not discovery_info:
-        return
-    configured_partitions: dict[int, dict[str, Any]] = discovery_info[CONF_PARTITIONS]
+    """Set up the Envisalink sensor entities from a config entry."""
+    controller = entry.runtime_data
 
-    entities = []
-    for part_num, part_config in configured_partitions.items():
-        entity_config_data = PARTITION_SCHEMA(part_config)
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION):
+        partition_number = subentry.data[CONF_PARTITION_NUMBER]
         entity = EnvisalinkSensor(
-            entity_config_data[CONF_PARTITIONNAME],
-            part_num,
-            hass.data[DATA_EVL].alarm_state["partition"][part_num],
-            hass.data[DATA_EVL],
+            subentry.data[CONF_PARTITIONNAME],
+            partition_number,
+            controller.alarm_state["partition"][partition_number],
+            controller,
         )
-
-        entities.append(entity)
-
-    async_add_entities(entities)
+        async_add_entities([entity], config_subentry_id=subentry.subentry_id)
 
 
 class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
     """Representation of an Envisalink keypad."""
 
-    _attr_icon = "mdi:alarm"
+    _attr_icon = "mdi:message-text"
 
     def __init__(
         self,
@@ -84,7 +76,7 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the overall state."""
         return self._info["status"]["alpha"]
 

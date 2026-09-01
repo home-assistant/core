@@ -1897,8 +1897,9 @@
     "envisalink": {
       "name": "Envisalink",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "ephember": {
       "name": "EPH Controls",
