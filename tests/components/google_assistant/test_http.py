@@ -676,6 +676,37 @@ async def test_registry_update_triggers_sync_only_for_aliases(
     assert mock_sync.call_args_list == expected_calls
 
 
+async def test_registry_rename_transfers_yaml_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a YAML lock follows an entity through a rename."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # "light" is exposed by default; its YAML exposure is applied as soon
+    # as its state is added, since the listener is already active.
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    assert config.should_expose(entry.entity_id) is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        entity_registry.async_update_entity(
+            entry.entity_id, new_entity_id="light.new_kitchen"
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert config.should_expose("light.new_kitchen") is True
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

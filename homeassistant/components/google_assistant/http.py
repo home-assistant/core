@@ -179,6 +179,10 @@ class GoogleConfig(AbstractConfig):
             return
 
         exposure_changed = bool(changes & EXPOSURE_ATTRIBUTES)
+        if old_entity_id := event.data.get("old_entity_id"):
+            async_set_entity_locked(self.hass, DOMAIN, old_entity_id, None)
+            exposure_changed = True
+
         if exposure_changed:
             self._async_update_legacy_exposure(entity_id)
 
