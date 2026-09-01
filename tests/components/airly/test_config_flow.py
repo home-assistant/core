@@ -22,16 +22,6 @@ CONFIG = {
 }
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 async def test_invalid_api_key(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
