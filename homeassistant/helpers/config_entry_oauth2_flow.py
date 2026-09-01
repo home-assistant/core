@@ -207,7 +207,10 @@ class AbstractOAuth2Implementation(ABC):
             # failures, so callers would see a raw aiohttp error instead.
             _raise_mapped_token_error(err, self.service_domain)
         # Force int for non-compliant oauth2 providers
-        new_token["expires_in"] = int(new_token["expires_in"])
+        try:
+            new_token["expires_in"] = int(new_token["expires_in"])
+        except (KeyError, TypeError, ValueError) as err:
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain) from err
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
