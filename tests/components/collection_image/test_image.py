@@ -49,11 +49,11 @@ async def _verify_path_image(
     assert body == expected_data
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_media_source,
 ) -> None:
     """Test loading an image."""
     with (
@@ -101,11 +101,11 @@ async def test_image_during_startup(
     await _verify_path_image(hass, hass_client)
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_media_source: MediaSourceMocks,
     media_source_state: MediaSourceState,
 ) -> None:
     """Test loading an image, when media resolves to a URL."""
@@ -145,10 +145,10 @@ async def test_image_url(
     assert body == expected_data
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_no_images(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_media_source,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when there are no images in the media folder."""
@@ -164,7 +164,8 @@ async def test_no_images(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        "image.random_image: No valid images in media-source://mymedia" in caplog.text
+        f"image.random_image: No valid images in {MOCK_MEDIA_DIR_URI_EMPTY}"
+        in caplog.text
     )
 
     client = await hass_client()
@@ -172,10 +173,10 @@ async def test_no_images(
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_media_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_media_source,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when media browse throws an error."""
@@ -249,11 +250,11 @@ async def test_unresolvable(
     await _verify_path_image(hass, hass_client)
 
 
+@pytest.mark.usefixtures("mock_media_source")
 async def test_image_file_read_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     media_source_state: MediaSourceState,
-    mock_media_source: MediaSourceMocks,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that a file read error is surfaced when serving the image."""

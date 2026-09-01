@@ -36,9 +36,8 @@ def _data_from_uri(uri: str) -> dict:
     }
 
 
-async def test_config_flow(
-    hass: HomeAssistant, mock_media_source, mock_setup_entry
-) -> None:
+@pytest.mark.usefixtures("mock_media_source")
+async def test_config_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test the config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -73,9 +72,9 @@ async def test_config_flow(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_media_source")
 async def test_config_flow_error(
     hass: HomeAssistant,
-    mock_media_source,
     mock_setup_entry,
     uri: str,
     error: str,

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.collection_image.const import DOMAIN
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
 from homeassistant.core import HomeAssistant
 
@@ -64,6 +64,14 @@ def media_source_state() -> MediaSourceState:
         browse_results={
             MOCK_MEDIA_DIR_URI_1: directory(
                 "My pictures",
+                BrowseMedia(
+                    media_class=MediaClass.MUSIC,
+                    media_content_id="media-source://mymedia/music",
+                    media_content_type="audio/mp3",
+                    title="a music track",
+                    can_play=True,
+                    can_expand=False,
+                ),
                 image(MOCK_MEDIA_IMAGE_URI_1),
             ),
             MOCK_MEDIA_DIR_URI_EMPTY: directory("Empty folder"),
