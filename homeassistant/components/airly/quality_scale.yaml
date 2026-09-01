@@ -9,9 +9,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: The config flow test should either result in an entry being created or an abort.
-  config-flow:
-    status: todo
-    comment: Add data_description.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
