@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
 from datetime import timedelta
-from io import StringIO
+from io import BytesIO, StringIO
 import json
 from pathlib import Path
 import re
@@ -34,7 +34,7 @@ from homeassistant.components.backup import (
     LocalBackupAgent,
 )
 from homeassistant.components.backup.agent import BackupAgentError
-from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
 from homeassistant.components.backup.manager import (
     AddonErrorData,
     AddonInfo,
@@ -50,6 +50,7 @@ from homeassistant.components.backup.manager import (
     UploadBackupEvent,
     WrittenBackup,
 )
+from homeassistant.components.http.server import MAX_CLIENT_SIZE
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -2015,6 +2016,58 @@ async def test_receive_backup(
             backup_data += chunk
         assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
+
+
+@pytest.mark.parametrize(
+    ("upload_size", "min_chunk_count"),
+    [
+        pytest.param(1024, 1, id="small"),
+        pytest.param(MAX_CLIENT_SIZE + 1024, 2, id="above_max_client_size"),
+    ],
+)
+async def test_receive_large_backup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    upload_size: int,
+    min_chunk_count: int,
+) -> None:
+    """Test receiving a backup larger than the max request body size."""
+    await setup_backup_integration(hass)
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+    open_mock = mock_open()
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            BytesIO(b"\0" * upload_size),
+            filename="backup.tar",
+            content_type="application/octet-stream",
+        )
+        resp = await client.post("/api/backup/upload?agent_id=backup.local", data=data)
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
+    written_chunks = [
+        call.args[0] for call in open_mock.return_value.write.call_args_list
+    ]
+    assert sum(len(chunk) for chunk in written_chunks) == upload_size
+    # The file must be written in bounded chunks, not buffered into memory whole
+    assert len(written_chunks) >= min_chunk_count
+    assert max(len(chunk) for chunk in written_chunks) <= BUF_SIZE
 
 
 async def test_receive_backup_valid_filename(

@@ -72,8 +72,10 @@ from .store import BackupStore
 from .util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    iter_upload_chunks,
     make_backup_dir,
     read_backup,
+    receive_file,
     validate_password,
     validate_password_stream,
 )
@@ -1004,7 +1006,6 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> str:
         """Receive and store a backup file from upload."""
-        contents.chunk_size = BUF_SIZE
         suggested_filename = contents.filename or "backup.tar"
         safe_filename = PureWindowsPath(suggested_filename).name
         if (
@@ -1022,7 +1023,7 @@ class BackupManager:
         )
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
-            stream=contents,
+            stream=iter_upload_chunks(contents),
             suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
@@ -1971,12 +1972,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-        f = await async_add_executor_job(temp_file.open, "wb")
-        try:
-            async for chunk in stream:
-                await async_add_executor_job(f.write, chunk)
-        finally:
-            await async_add_executor_job(f.close)
+        await receive_file(self._hass, stream, temp_file)
 
         try:
             backup = await async_add_executor_job(read_backup, temp_file)
