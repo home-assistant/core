@@ -1216,3 +1216,81 @@ async def test_adjacent_events_stay_on(
         state = hass.states.get(TEST_ENTITY)
         assert state.state == STATE_ON
         assert state.attributes["message"] == "Second"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Bastille Day Party
+DTSTART:19970714
+DTEND:19970715
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_status"),
+    [
+        pytest.param(
+            ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_event_status(
+    get_events: GetEventsFn,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
+
+
+@pytest.mark.parametrize("ics_content", [ICS_WITH_STATUS.format(status="CANCELLED")])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_event_is_not_returned(get_events: GetEventsFn) -> None:
+    """Test that an event called off is not returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+
+    assert events == []
+
+
+ONGOING_CANCELLED_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260729T014500
+DTEND:20260729T021500
+SUMMARY:Called off
+UID:called-off
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [ONGOING_CANCELLED_ICS])
+async def test_cancelled_event_does_not_turn_the_entity_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an event called off is not picked up as the current event.
+
+    The event would be ongoing at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
+
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
