@@ -1994,31 +1994,31 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     await async_add_executor_job(f.write, chunk)
             finally:
                 await async_add_executor_job(f.close)
+
+            try:
+                backup = await async_add_executor_job(read_backup, temp_file)
+            except (
+                OSError,
+                tarfile.TarError,
+                json.JSONDecodeError,
+                KeyError,
+                InvalidBackupFilename,
+            ) as err:
+                LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
+                raise
+
+            manager = self._hass.data[DATA_MANAGER]
+            if self._local_agent_id in agent_ids:
+                local_agent = manager.local_backup_agents[self._local_agent_id]
+                tar_file_path = local_agent.get_new_backup_path(backup)
+                await async_add_executor_job(make_backup_dir, tar_file_path.parent)
+                await async_add_executor_job(shutil.move, temp_file, tar_file_path)
+            else:
+                tar_file_path = temp_file
         except Exception, asyncio.CancelledError:
-            # Don't leave a partially written file behind
+            # Don't leave a partially written or unusable file behind
             await async_add_executor_job(temp_file.unlink, True)
             raise
-
-        try:
-            backup = await async_add_executor_job(read_backup, temp_file)
-        except (
-            OSError,
-            tarfile.TarError,
-            json.JSONDecodeError,
-            KeyError,
-            InvalidBackupFilename,
-        ) as err:
-            LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
-            raise
-
-        manager = self._hass.data[DATA_MANAGER]
-        if self._local_agent_id in agent_ids:
-            local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_new_backup_path(backup)
-            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
-            await async_add_executor_job(shutil.move, temp_file, tar_file_path)
-        else:
-            tar_file_path = temp_file
 
         async def send_backup() -> AsyncIterator[bytes]:
             f = await async_add_executor_job(tar_file_path.open, "rb")

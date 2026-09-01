@@ -2017,6 +2017,33 @@ async def test_receive_backup(
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
+async def test_receive_backup_unparsable_file_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the temp file is removed when the uploaded backup can't be parsed."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    with (
+        patch("pathlib.Path.open", mock_open()),
+        patch("pathlib.Path.unlink") as unlink_mock,
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            side_effect=OSError("Boom!"),
+        ),
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 500
+    unlink_mock.assert_called_once()
+
+
 async def test_receive_backup_valid_filename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
