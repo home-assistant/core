@@ -920,6 +920,55 @@ async def test_self_heal_supersedes_in_flight_manual_refresh(
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
+async def test_stale_push_cannot_confirm_newer_write_after_prune(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a snapshot that pruned an expired write cannot confirm the next one.
+
+    With on and off queued at t=0 and t=4, a stale pre-write off snapshot
+    at t=11 prunes the expired on; letting it also confirm the fresh off
+    would clear the queue and let the delayed on echo flip the entity back.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+    ttl = vp_coordinator.OPTIMISTIC_TTL_SECONDS
+    clock = {"now": 100.0}
+
+    with patch.object(vp_coordinator, "monotonic", side_effect=lambda: clock["now"]):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+        clock["now"] = 104.0
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+        # A stale pre-write echo lands after the on write expired.
+        clock["now"] = 100.0 + ttl + 1.0
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+        # The delayed on echo must not flip the entity: the off write is
+        # newer and still within its TTL.
+        on_data({"light": {"status": 1}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
 async def test_refresh_preserves_other_pending_optimistic_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

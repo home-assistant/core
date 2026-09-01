@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_STATE_CHANGED,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     Platform,
@@ -583,6 +584,70 @@ async def test_light_mode_select_serialized_with_pulse(
         await hass.async_block_till_done()
         assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
         assert hass.states.get(_LIGHT_MODE_SELECT).state == "off"
+
+
+async def test_failed_pulse_rearms_expiry_for_remaining_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test discarding the pulse's writes re-arms expiry from the survivor.
+
+    The expiry timer was armed by the newer, discarded writes; left as-is,
+    an earlier light write would stay visible past its own TTL, extended
+    further by every failed pulse.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 0},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    ttl = vp_coordinator.OPTIMISTIC_TTL_SECONDS
+    clock = {"now": 100.0}
+
+    with (
+        patch(
+            "homeassistant.components.vistapool.PLATFORMS",
+            [Platform.BUTTON, Platform.LIGHT],
+        ),
+        patch.object(vp_coordinator, "monotonic", side_effect=lambda: clock["now"]),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+
+        clock["now"] = 104.0
+        mock_vistapool_client.set_value.side_effect = AquariteError("boom")
+
+        expiry_delays: list[float] = []
+        real_call_later = hass.loop.call_later
+
+        def _spy(delay: float, callback: Any, *args: Any) -> Any:
+            if getattr(callback, "__name__", "") == "_expire_optimistic":
+                expiry_delays.append(delay)
+            return real_call_later(delay, callback, *args)
+
+        with (
+            patch.object(hass.loop, "call_later", side_effect=_spy),
+            pytest.raises(HomeAssistantError),
+        ):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {ATTR_ENTITY_ID: _BUTTON},
+                blocking=True,
+            )
+
+    # Two records, then one re-arm per discard; the last one must run from
+    # the surviving write's own timestamp (t=100), not the pulse's (t=104).
+    assert expiry_delays == [ttl, ttl, ttl, ttl - 4.0]
 
 
 async def test_button_press_raises_on_api_error(

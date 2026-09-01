@@ -236,6 +236,17 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         writes.pop()
         if not writes:
             self._clear_optimistic(value_path)
+            return
+        # The expiry timer was armed by the newer, discarded write; re-arm
+        # it from the remaining tail or the older value would stay visible
+        # past its own TTL, extended further by every failed sequence.
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            max(0.0, writes[-1][1] + OPTIMISTIC_TTL_SECONDS - monotonic()),
+            self._expire_optimistic,
+            value_path,
+        )
 
     def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:
         """Overlay unconfirmed optimistic writes onto freshly fetched data."""
@@ -244,16 +255,20 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Coalesced snapshots may never match the oldest entries, so age
             # each write out on its own timestamp instead of keeping the
             # whole queue alive as long as the newest write is fresh.
+            pruned = False
             while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
                 writes.pop(0)
+                pruned = True
             if not writes:
                 self._clear_optimistic(path)
                 continue
             remote_value = AquariteClient.get_value(data, path)
             # A push can only confirm writes in order: with ON then OFF in
             # flight, a pre-ON echo carrying OFF must not lift protection,
-            # or the later ON confirmation would flip the entity back.
-            if _values_agree(remote_value, writes[0][0]):
+            # or the later ON confirmation would flip the entity back. A
+            # snapshot that just pruned an expired write may itself be such
+            # a pre-write echo, so it cannot confirm the new head either.
+            if not pruned and _values_agree(remote_value, writes[0][0]):
                 writes.pop(0)
                 if not writes:
                     self._clear_optimistic(path)
