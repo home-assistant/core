@@ -26,9 +26,10 @@ async def test_get_forecast_service(
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test fetching a forecast for a subentry."""
-    device = dr.async_get(hass).async_get_device_by_identifier(  # pylint: disable=home-assistant-tests-registry-fixtures
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{mock_config_entry.entry_id}_home-subentry-id"),
         mock_config_entry.entry_id,
     )

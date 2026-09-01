@@ -21,8 +21,9 @@ from .const import (
     DiscoveryInfo,
     SensorType,
 )
-from .entity import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity
 from .gateway import finish_setup, gw_stop, setup_gateway
+from .helpers import get_discovered_dev_ids, remove_gateway_dev_ids, remove_node_dev_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
     hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)
+    remove_gateway_dev_ids(hass, entry.entry_id)
 
     await gw_stop(hass, entry, gateway)
     return True
@@ -87,7 +89,8 @@ async def async_remove_config_entry_device(
     # remove node from discovered nodes
     hass.data[DOMAIN].setdefault(
         MYSENSORS_DISCOVERED_NODES.format(config_entry.entry_id), set()
-    ).remove(node_id)
+    ).discard(node_id)
+    remove_node_dev_ids(hass, config_entry.entry_id, node_id)
 
     return True
 
@@ -119,9 +122,9 @@ def setup_mysensors_platform(
         device_args = ()
     new_devices: list[MySensorsChildEntity] = []
     new_dev_ids: list[DevId] = discovery_info[ATTR_DEVICES]
+    dev_ids = get_discovered_dev_ids(hass, domain)
     for dev_id in new_dev_ids:
-        devices: dict[DevId, MySensorsChildEntity] = get_mysensors_devices(hass, domain)
-        if dev_id in devices:
+        if dev_id in dev_ids:
             _LOGGER.debug(
                 "Skipping setup of %s for platform %s as it already exists",
                 dev_id,
@@ -139,8 +142,8 @@ def setup_mysensors_platform(
             device_class_copy = device_class
 
         args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
-        devices[dev_id] = device_class_copy(*args_copy)
-        new_devices.append(devices[dev_id])
+        dev_ids.add(dev_id)
+        new_devices.append(device_class_copy(*args_copy))
     if new_devices:
         _LOGGER.debug("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
