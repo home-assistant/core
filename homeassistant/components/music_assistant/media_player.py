@@ -544,8 +544,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         announce_volume: int | None = None,
     ) -> None:
         """Send the play_announcement command to the media player."""
-        if message is not None:
+        if url is None:
             if TYPE_CHECKING:
+                assert message is not None
                 assert tts_entity_id is not None
             # a gone or unavailable entity would otherwise yield a url that plays nothing
             tts_state = self.hass.states.get(tts_entity_id)
@@ -561,8 +562,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 self.entity_id,
             )
             url = async_process_play_media_url(self.hass, sourced_media.url)
-        if TYPE_CHECKING:
-            assert url is not None
         await self.mass.players.play_announcement(
             self.player_id,
             url,

@@ -160,7 +160,7 @@ def register_actions(hass: HomeAssistant) -> None:
                     vol.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
                     vol.Inclusive(
                         ATTR_TTS_ENTITY_ID, "spoken_announcement"
-                    ): cv.entity_domain(TTS_DOMAIN),
+                    ): vol.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
                     vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
                     vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
                     vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
