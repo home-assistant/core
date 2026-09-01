@@ -1,8 +1,11 @@
 """Define tests for the Airly config flow."""
 
+from collections.abc import Generator
 from http import HTTPStatus
+from unittest.mock import AsyncMock
 
 from airly.exceptions import AirlyError
+import pytest
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -20,6 +23,15 @@ CONFIG = {
     CONF_LATITUDE: 12.3,
     CONF_LONGITUDE: 45.6,
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.airly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_invalid_api_key(
@@ -45,6 +57,22 @@ async def test_invalid_api_key(
     )
 
     assert result["errors"] == {"base": "invalid_api_key"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is False
 
 
 async def test_invalid_location(
@@ -73,6 +101,22 @@ async def test_invalid_location(
 
     assert result["errors"] == {"base": "wrong_location"}
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is False
+
 
 async def test_invalid_location_for_point_and_nearest(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -87,17 +131,16 @@ async def test_invalid_location_for_point_and_nearest(
         API_NEAREST_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
     )
 
-    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_location"
@@ -135,17 +178,16 @@ async def test_create_entry(
         API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
     )
 
-    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -169,17 +211,16 @@ async def test_create_entry_with_nearest_method(
         text=await async_load_fixture(hass, "valid_station.json", DOMAIN),
     )
 
-    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
