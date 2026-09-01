@@ -16,7 +16,14 @@ from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, EntityStateAttribute
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -281,7 +288,7 @@ class AbstractConfig(ABC):
     @callback
     def async_schedule_google_sync_all(self) -> None:
         """Schedule a sync for all registered agents."""
-        if not self.hass.is_running:
+        if self.hass.state is not CoreState.running:
             _LOGGER.debug("Sync skipped when not fully running")
             return
         for agent_user_id in self.async_get_agent_users():
