@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import tarfile
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 from aiohttp import BodyPartReader, web
 from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
@@ -316,6 +316,31 @@ async def test_uploading_a_large_backup_file(
         assert resp.status == 201
         assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
         assert async_receive_backup_mock.called
+
+
+async def test_uploading_a_backup_file_exceeding_max_size(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test uploading a backup file larger than the maximum upload size."""
+    await setup_backup_integration(hass)
+
+    client = await hass_client()
+
+    with (
+        patch("pathlib.Path.open", mock_open()),
+        patch("pathlib.Path.unlink") as unlink_mock,
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("homeassistant.components.backup.manager.MAX_UPLOAD_SIZE", 1024),
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": BytesIO(b"0" * 2048)},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 413
+    unlink_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(

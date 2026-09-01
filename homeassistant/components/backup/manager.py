@@ -18,6 +18,7 @@ import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
+from aiohttp.web import HTTPRequestEntityTooLarge
 from securetar import SecureTarArchive, atomic_contents_add
 
 from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RESULT_FILE
@@ -55,6 +56,7 @@ from .const import (
     EXCLUDE_DATABASE_FROM_BACKUP,
     EXCLUDE_FROM_BACKUP,
     LOGGER,
+    MAX_UPLOAD_SIZE,
     SECURETAR_CREATE_VERSION,
 )
 from .models import (
@@ -357,7 +359,14 @@ async def _iter_body_part_chunks(
     contents: aiohttp.BodyPartReader,
 ) -> AsyncIterator[bytes]:
     """Read a body part in chunks to avoid buffering it in memory."""
+    # BodyPartReader.read_chunk does not check client_max_size, enforce it here
+    bytes_read = 0
     while chunk := await contents.read_chunk(BUF_SIZE):
+        bytes_read += len(chunk)
+        if bytes_read > MAX_UPLOAD_SIZE:
+            raise HTTPRequestEntityTooLarge(
+                max_size=MAX_UPLOAD_SIZE, actual_size=bytes_read
+            )
         yield chunk
 
 
@@ -1978,12 +1987,17 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-        f = await async_add_executor_job(temp_file.open, "wb")
         try:
-            async for chunk in stream:
-                await async_add_executor_job(f.write, chunk)
-        finally:
-            await async_add_executor_job(f.close)
+            f = await async_add_executor_job(temp_file.open, "wb")
+            try:
+                async for chunk in stream:
+                    await async_add_executor_job(f.write, chunk)
+            finally:
+                await async_add_executor_job(f.close)
+        except Exception, asyncio.CancelledError:
+            # Don't leave a partially written file behind
+            await async_add_executor_job(temp_file.unlink, True)
+            raise
 
         try:
             backup = await async_add_executor_job(read_backup, temp_file)

@@ -19,11 +19,9 @@ from homeassistant.util.async_iterator import AsyncIteratorReader, AsyncIterator
 
 from . import util
 from .agent import BackupAgent
-from .const import DATA_MANAGER
+from .const import DATA_MANAGER, MAX_UPLOAD_SIZE
 from .manager import BackupManager
 from .models import AgentBackup, BackupNotFound, InvalidBackupFilename
-
-MAX_UPLOAD_SIZE = 1024**3 * 4  # 4 GiB
 
 
 @callback

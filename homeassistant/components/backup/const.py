@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .manager import BackupManager
 
 BUF_SIZE = 2**20 * 4  # 4MB
+MAX_UPLOAD_SIZE = 2**30 * 4  # 4GB
 DOMAIN = "backup"
 DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
