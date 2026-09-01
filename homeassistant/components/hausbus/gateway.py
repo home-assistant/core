@@ -32,13 +32,8 @@ LOGGER = logging.getLogger(__name__)
 # Serialize process-wide HomeServer reference-count updates.
 _home_server_lock = asyncio.Lock()
 
-# HomeServer is a process-wide singleton (see pyhausbus.HomeServer), not
-# something scoped to a single hass instance, and it must be reachable
-# from a config flow before any config entry - and its runtime_data -
-# exists. So its reference count is tracked here, keyed on the HomeServer
-# instance itself, rather than in hass.data. Using a WeakKeyDictionary
-# also means this needs no manual reset between tests: a mocked HomeServer
-# is a fresh object per test and simply starts out with no entry.
+# HomeServer is a process-wide singleton shared by config flows and the
+# active config entry, so its references must be counted outside runtime_data.
 _home_server_refs: WeakKeyDictionary[HomeServer, int] = WeakKeyDictionary()
 
 
