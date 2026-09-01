@@ -85,6 +85,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
     setup_integration_from_fixtures,
@@ -122,6 +123,7 @@ class MockSecondTTSEntity(MockTTSEntity):
 @pytest.fixture(name="tts_entities")
 async def tts_entities_fixture(hass: HomeAssistant) -> None:
     """Set up two text-to-speech entities, of which the first is the default engine."""
+    assert await async_setup_component(hass, "media_source", {})
     for test_domain, tts_entity in (
         ("test", MockTTSEntity(DEFAULT_LANG)),
         ("test2", MockSecondTTSEntity(DEFAULT_LANG)),
