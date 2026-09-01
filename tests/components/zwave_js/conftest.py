@@ -1442,7 +1442,7 @@ def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state) -> Node:
 
 
 @pytest.fixture(name="zooz_zse43")
-def zooz_zse43_fixture(client, zooz_zse43_state) -> Node:
+def zooz_zse43_fixture(client: MagicMock, zooz_zse43_state: NodeDataType) -> Node:
     """Mock a Zooz ZSE43 tilt/shock sensor node."""
     node = Node(client, copy.deepcopy(zooz_zse43_state))
     client.driver.controller.nodes[node.node_id] = node
