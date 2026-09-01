@@ -28,7 +28,7 @@ from .const import ImageProcessingEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "image_processing"
+DOMAIN: Final = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
 
 

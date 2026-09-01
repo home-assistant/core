@@ -107,7 +107,9 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        self.hue_group = self.controller.get_group(self.resource.id)
+        if (hue_group := self.controller.get_group(self.resource.id)) is None:
+            raise KeyError(self.resource.group.rid)
+        self.hue_group = hue_group
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(

@@ -3,17 +3,13 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import (
-    PARAM_HEADER_DETECT,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STATUS,
-)
+from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -82,11 +78,13 @@ async def test_switch_entities_snapshot(
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_ignores_unknown_switch_types(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown switch keys from the API are not turned into entities."""
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     switch_entries = [entry for entry in entries if entry.domain == SWITCH_DOMAIN]
     assert len(switch_entries) == 1
     assert switch_entries[0].translation_key == PARAM_MOTION_DETECT
@@ -98,10 +96,12 @@ async def test_turn_on_via_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Turning on a switch calls the vendor library through the coordinator."""
-    init_integration.async_switch_operation.side_effect = _apply_switch_operation
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = (
+        _apply_switch_operation
+    )
     motion_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -117,8 +117,8 @@ async def test_turn_on_via_service(
         blocking=True,
     )
 
-    init_integration.async_switch_operation.assert_awaited_once()
-    call = init_integration.async_switch_operation.await_args
+    mock_imou_ha_device_manager.async_switch_operation.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_switch_operation.await_args
     assert call is not None
     assert call.args[1] == PARAM_MOTION_DETECT
     assert call.args[2] is True
@@ -131,10 +131,12 @@ async def test_turn_off_via_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Turning off a switch calls the vendor library through the coordinator."""
-    init_integration.async_switch_operation.side_effect = _apply_switch_operation
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = (
+        _apply_switch_operation
+    )
     header_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -150,8 +152,8 @@ async def test_turn_off_via_service(
         blocking=True,
     )
 
-    init_integration.async_switch_operation.assert_awaited_once()
-    call = init_integration.async_switch_operation.await_args
+    mock_imou_ha_device_manager.async_switch_operation.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_switch_operation.await_args
     assert call is not None
     assert call.args[1] == PARAM_HEADER_DETECT
     assert call.args[2] is False
@@ -162,14 +164,18 @@ async def test_turn_off_via_service(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_service_propagates_api_error(
     hass: HomeAssistant,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Imou API errors from async_switch_operation surface to the service call."""
-    init_integration.async_switch_operation.side_effect = ImouException("cloud failure")
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = ImouException(
+        "cloud failure"
+    )
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -199,7 +205,6 @@ async def test_turn_off_unavailable_offline_device_via_service(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
-    init_integration: MagicMock,
 ) -> None:
     """Turning off an offline device does not call the vendor library."""
     motion_entry = next(
@@ -229,7 +234,7 @@ async def test_turn_off_unavailable_offline_device_via_service(
         blocking=True,
     )
 
-    init_integration.async_switch_operation.assert_not_called()
+    mock_imou_ha_device_manager.async_switch_operation.assert_not_called()
 
 
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)

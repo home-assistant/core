@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 
 from reolink_aio.api import (
+    AntiFlickerEnum,
     BinningModeEnum,
     Chime,
     ChimeToneEnum,
@@ -218,6 +219,19 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
+        key="anti_flicker",
+        cmd_key="GetIsp",
+        translation_key="anti_flicker",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in AntiFlickerEnum],
+        supported=lambda api, ch: api.supported(ch, "anti_flicker"),
+        value=lambda api, ch: AntiFlickerEnum(api.anti_flicker_mode(ch)).name,
+        method=lambda api, ch, name: api.set_anti_flicker(
+            ch, AntiFlickerEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="binning_mode",
         cmd_key="GetIsp",
         translation_key="binning_mode",
@@ -332,6 +346,26 @@ SELECT_ENTITIES = (
         value=lambda api, ch: api.post_recording_time(ch),
         method=lambda api, ch, value: api.set_post_recording_time(ch, value),
     ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_battery",
+        cmd_key="626",
+        translation_key="work_mode_battery",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_battery_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_battery"),
+        value=lambda api, ch: api.work_mode_battery(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_battery(ch, value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_powered",
+        cmd_key="771",
+        translation_key="work_mode_powered",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_powered_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_powered"),
+        value=lambda api, ch: api.work_mode_powered(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_powered(ch, value),
+    ),
 )
 
 HOST_SELECT_ENTITIES = (
@@ -434,7 +468,7 @@ async def async_setup_entry(
     entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(

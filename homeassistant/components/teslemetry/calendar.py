@@ -46,6 +46,16 @@ def _is_day_in_range(day_of_week: int, from_day: int, to_day: int) -> bool:
     return day_of_week >= from_day or day_of_week <= to_day
 
 
+def _period_datetime(base_day: datetime, hour: int, minute: int) -> datetime:
+    """Resolve a tariff hour/minute, normalising the hour-24 and minute-60 end-of-boundary encodings."""
+    # Tesla marks an end of day as hour 24 and an end of hour as minute 60, both of
+    # which datetime.replace rejects, so roll the overflow into the hour and day.
+    day_offset, hour = divmod(hour + minute // 60, 24)
+    return base_day.replace(
+        hour=hour, minute=minute % 60, second=0, microsecond=0
+    ) + timedelta(days=day_offset)
+
+
 def _parse_period_times(
     period_def: dict[str, Any],
     base_day: datetime,
@@ -62,18 +72,12 @@ def _parse_period_times(
     if not _is_day_in_range(base_day.weekday(), from_day, to_day):
         return None
 
-    # Hours are from 0-23, so 24 hours is 0-0
-    from_hour = period_def.get("fromHour", 0)
-    to_hour = period_def.get("toHour", 0)
-
-    # Minutes are from 0-59, so 60 minutes is 0-0
-    from_minute = period_def.get("fromMinute", 0)
-    to_minute = period_def.get("toMinute", 0)
-
-    start_time = base_day.replace(
-        hour=from_hour, minute=from_minute, second=0, microsecond=0
+    start_time = _period_datetime(
+        base_day, period_def.get("fromHour", 0), period_def.get("fromMinute", 0)
     )
-    end_time = base_day.replace(hour=to_hour, minute=to_minute, second=0, microsecond=0)
+    end_time = _period_datetime(
+        base_day, period_def.get("toHour", 0), period_def.get("toMinute", 0)
+    )
 
     if end_time <= start_time:
         end_time += timedelta(days=1)

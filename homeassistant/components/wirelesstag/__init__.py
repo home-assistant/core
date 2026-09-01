@@ -10,8 +10,8 @@ from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -121,7 +121,16 @@ class WirelessTagPlatform:
                         str(ex),
                     )
 
+        def _stop_monitoring(_event: Event) -> None:
+            """Stop cloud push monitoring on Home Assistant shutdown."""
+            self.stop_monitoring()
+
         self.api.start_monitoring(push_callback)
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
+
+    def stop_monitoring(self) -> None:
+        """Stop monitoring push events."""
+        self.api.stop_monitoring()
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

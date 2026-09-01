@@ -49,7 +49,7 @@ STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
+    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): vol.Coerce(int),
     vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
     vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
     vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
@@ -71,9 +71,9 @@ CONFIG_SCHEMA = vol.Schema(
                 _none_to_empty_dict,
                 {
                     vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(
-                        CONF_INITIAL, default=DEFAULT_INITIAL
-                    ): cv.positive_int,
+                    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): vol.Coerce(
+                        int
+                    ),
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
                         None, vol.Coerce(int)
@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_RESET, None, "async_reset")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(VALUE): cv.positive_int},
+        {vol.Required(VALUE): vol.Coerce(int)},
         "async_set_value",
     )
 

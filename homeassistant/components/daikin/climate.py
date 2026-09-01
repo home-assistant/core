@@ -392,7 +392,11 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = 1
 
     def __init__(self, coordinator: DaikinCoordinator, zone_id: int) -> None:
@@ -404,17 +408,25 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         self._attr_name = f"{zone_name} temperature"
 
     @property
+    def _main_hvac_mode(self) -> HVACMode:
+        """Return the main unit HVAC mode."""
+        daikin_mode = self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
+        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
+
+    @property
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the hvac modes (mirrors the main unit)."""
-        return [self.hvac_mode]
+        return [self._main_hvac_mode]
 
     @property
     @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
-        daikin_mode = self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
-        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
+        main_mode = self._main_hvac_mode
+        if main_mode == HVACMode.OFF or self.device.zones[self._zone_id][1] != "1":
+            return HVACMode.OFF
+        return main_mode
 
     @property
     @override
@@ -427,7 +439,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the zone target temperature for the active mode."""
         heating, cooling = _zone_temperature_lists(self.device)
-        mode = self.hvac_mode
+        mode = self._main_hvac_mode
         if mode == HVACMode.HEAT:
             return _zone_temperature_from_list(heating, self._zone_id)
         if mode == HVACMode.COOL:
@@ -499,7 +511,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         if target is None:
             raise _zone_error("zone_parameters_unavailable")
 
-        mode = self.hvac_mode
+        mode = self._main_hvac_mode
         if mode == HVACMode.HEAT:
             zone_key = DAIKIN_ZONE_TEMP_HEAT
         elif mode == HVACMode.COOL:
@@ -514,6 +526,26 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
             raise _zone_error("zone_set_failed") from err
 
         await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the zone on."""
+        await self.device.set_zone(self._zone_id, "zone_onoff", "1")
+        await self.coordinator.async_refresh()
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn the zone off."""
+        await self.device.set_zone(self._zone_id, "zone_onoff", "0")
+        await self.coordinator.async_refresh()
+
+    @override
+    async def async_toggle(self) -> None:
+        """Toggle the zone."""
+        if self.device.zones[self._zone_id][1] == "1":
+            await self.async_turn_off()
+        else:
+            await self.async_turn_on()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
