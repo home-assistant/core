@@ -17,13 +17,13 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SatelConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for the config entry."""
-    panel_info = await entry.runtime_data.client.controller.read_panel_info()
-    diag: dict[str, Any] = {}
-
-    diag["config_entry_data"] = async_redact_data(entry.data, TO_REDACT)
-    diag["config_entry_options"] = async_redact_data(entry.options, TO_REDACT)
-
-    diag["subentries"] = dict(entry.subentries)
-    diag["panel_info"] = asdict(panel_info)
-
-    return diag
+    return {
+        "config_entry_data": async_redact_data(entry.data, TO_REDACT),
+        "config_entry_options": async_redact_data(entry.options, TO_REDACT),
+        "subentries": dict(entry.subentries),
+        "panel_info": (
+            asdict(entry.runtime_data.panel_info)
+            if entry.runtime_data.panel_info
+            else None
+        ),
+    }
