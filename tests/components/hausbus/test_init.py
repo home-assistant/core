@@ -203,14 +203,15 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
 
     Regression test: async_unload_entry() has already removed both bus
     listeners and unloaded the cover platform by the time it calls
-    async_release_home_server() - if that final shutdown then fails, a
-    later acquirer (a config flow, or single_config_entry permitting, a
-    future setup) must not be handed a HomeServer at all, or a bare
-    removeBusDeviceListener() call on it would raise ValueError against a
-    listener list shutdown() already cleared. This models pyhausbus's real
-    singleton reset - shutdown() clears its singleton before raising, so
-    the next HomeServer() call returns a distinct object - to prove the
-    rejection does not depend on that object's identity.
+    async_release_home_server() - if that final shutdown then fails, the
+    entry unload still succeeds (retrying it would raise ValueError, since
+    a bare removeBusDeviceListener() call would run against a listener
+    list shutdown() already cleared), but a later acquirer (a config flow,
+    or single_config_entry permitting, a future setup) must not be handed
+    a HomeServer at all. This models pyhausbus's real singleton reset -
+    shutdown() clears its singleton before raising, so the next
+    HomeServer() call returns a distinct object - to prove the rejection
+    does not depend on that object's identity.
     """
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
@@ -219,7 +220,7 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
 
     mock_home_server.shutdown.side_effect = RuntimeError("DeviceWorker failed to stop")
 
-    assert not await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     # A fresh HomeServer() call returns a distinct object, as pyhausbus's
     # real singleton does after shutdown() clears it.
