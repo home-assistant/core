@@ -517,6 +517,12 @@ def switch_zooz_zen72_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("switch_zooz_zen72_state.json", DOMAIN)
 
 
+@pytest.fixture(name="zooz_zse43_state", scope="package")
+def zooz_zse43_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZSE43 tilt/shock sensor node state fixture data."""
+    return load_json_object_fixture("zooz_zse43_state.json", DOMAIN)
+
+
 @pytest.fixture(name="indicator_test_state", scope="package")
 def indicator_test_state_fixture() -> dict[str, Any]:
     """Load the indicator CC test node state fixture data."""
@@ -1431,6 +1437,14 @@ def lock_home_connect_620_fixture(client, lock_home_connect_620_state) -> Node:
 def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state) -> Node:
     """Mock a Zooz Zen72 switch node."""
     node = Node(client, copy.deepcopy(switch_zooz_zen72_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zooz_zse43")
+def zooz_zse43_fixture(client, zooz_zse43_state) -> Node:
+    """Mock a Zooz ZSE43 tilt/shock sensor node."""
+    node = Node(client, copy.deepcopy(zooz_zse43_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
