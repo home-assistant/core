@@ -1,0 +1,10 @@
+{
+  "domain": "velasmart",
+  "name": "VelaSmart",
+  "codeowners": ["@liulijun2019"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/velasmart",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "requirements": ["velasmart==0.1.0"]
+}
