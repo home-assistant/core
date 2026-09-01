@@ -52,9 +52,6 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
-    "oauth2_invalid_token": {
-      "message": "The stored credentials are incomplete, re-authentication required"
-    },
     "oauth2_unknown_implementation": {
       "message": "The configured authentication method is no longer available, re-authentication required"
     },

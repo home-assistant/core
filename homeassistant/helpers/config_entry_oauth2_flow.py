@@ -30,7 +30,6 @@ from homeassistant import config_entries
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
     ImplementationUnavailableError,
-    InvalidTokenError,
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -855,37 +854,28 @@ class OAuth2Session:
             > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC
         )
 
-    def _require_token_fields(self, *fields: str) -> dict:
-        """Return the stored token, checking it carries the given fields.
-
-        Only linking the account again can restore missing fields, so this starts
-        reauth instead of letting the caller retry. An expires_at of 0 is kept, so
-        an expired token is still refreshed rather than sent to the user.
-        """
-        token = self.config_entry.data.get("token")
-        if not isinstance(token, dict) or any(
-            token.get(field) in (None, "") for field in fields
-        ):
-            self.config_entry.async_start_reauth_if_available(self.hass)
-            raise InvalidTokenError
-        return token
-
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         async with self._token_lock:
-            # Callers read access_token off the token once this returns.
-            self._require_token_fields("access_token", "expires_at")
             if self.valid_token:
                 return
 
-            token = self._require_token_fields("refresh_token")
             try:
-                new_token = await self.implementation.async_refresh_token(token)
+                new_token = await self.implementation.async_refresh_token(self.token)
             except OAuth2TokenRequestReauthError:
                 # Start reauth here so it also happens for callers that map the
                 # error onto a recoverable one, which would retry indefinitely.
                 self.config_entry.async_start_reauth_if_available(self.hass)
                 raise
+
+            # Checked before storing, so reads can trust what is on the entry.
+            if any(
+                new_token.get(field) in (None, "")
+                for field in ("access_token", "expires_at")
+            ):
+                raise OAuth2TokenRequestConnectionError(
+                    domain=self.implementation.service_domain
+                )
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}

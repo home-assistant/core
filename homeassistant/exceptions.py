@@ -253,7 +253,15 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
+class OAuth2TokenRequestBaseError(ConfigEntryNotReady):
+    """Base class for the errors a failed OAuth 2.0 token request raises.
+
+    Catch this to handle every token request failure; the subclasses differ in
+    whether a status was received and what should happen to the config entry.
+    """
+
+
+class OAuth2TokenRequestError(ClientResponseError, OAuth2TokenRequestBaseError):
     """Error to indicate that the OAuth 2.0 flow could not refresh token.
 
     Inherits ConfigEntryNotReady so setup retries without the integration having to
@@ -279,7 +287,7 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
             message=message,
             headers=headers,
         )
-        ConfigEntryNotReady.__init__(self)
+        OAuth2TokenRequestBaseError.__init__(self)
         self.domain = domain
         self.translation_domain = "homeassistant"
         self.translation_key = "oauth2_helper_refresh_failed"
@@ -287,12 +295,16 @@ class OAuth2TokenRequestError(ClientResponseError, ConfigEntryNotReady):
         self.generate_message = True
 
 
-class OAuth2TokenRequestConnectionError(ClientError, ConfigEntryNotReady):
-    """Recoverable error to indicate the token request never got a response."""
+class OAuth2TokenRequestConnectionError(ClientError, OAuth2TokenRequestBaseError):
+    """Recoverable error to indicate the token request yielded no usable token.
+
+    Covers a request that never got a response and one whose response could not
+    be used, neither of which has a status to tell the causes apart.
+    """
 
     def __init__(self, *, domain: str) -> None:
         """Initialize OAuth2TokenRequestConnectionError."""
-        ConfigEntryNotReady.__init__(self)
+        OAuth2TokenRequestBaseError.__init__(self)
         self.domain = domain
         self.translation_domain = "homeassistant"
         self.translation_key = "oauth2_helper_refresh_transient"
@@ -300,7 +312,7 @@ class OAuth2TokenRequestConnectionError(ClientError, ConfigEntryNotReady):
         self.generate_message = True
 
 
-class OAuth2TokenRequestTransientError(OAuth2TokenRequestError, ConfigEntryNotReady):
+class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
     """Recoverable error to indicate flow could not refresh token.
 
     Inherits ConfigEntryNotReady so setup retries without the integration having to
@@ -345,22 +357,6 @@ class ImplementationUnavailableError(ConfigEntryNotReady):
             *args,
             translation_domain="homeassistant",
             translation_key="oauth2_implementation_unavailable",
-        )
-
-
-class InvalidTokenError(ConfigEntryAuthFailed):
-    """Raised when a stored OAuth 2.0 token is missing the fields needed to use it.
-
-    Inherits ConfigEntryAuthFailed because only linking the account again can
-    restore the missing fields.
-    """
-
-    def __init__(self, *args: object) -> None:
-        """Initialize the error."""
-        super().__init__(
-            *args,
-            translation_domain="homeassistant",
-            translation_key="oauth2_invalid_token",
         )
 
 

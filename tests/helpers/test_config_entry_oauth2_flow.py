@@ -24,7 +24,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    InvalidTokenError,
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -1169,55 +1168,6 @@ async def test_oauth_session_refresh_connection_error_is_transient(
 
 
 @pytest.mark.parametrize(
-    "token",
-    [
-        pytest.param(None, id="missing"),
-        pytest.param({}, id="empty"),
-        pytest.param({"expires_at": FUTURE_EXPIRES_AT}, id="no_access_token"),
-        pytest.param(
-            {"access_token": None, "expires_at": FUTURE_EXPIRES_AT},
-            id="null_access_token",
-        ),
-        pytest.param(
-            {"access_token": "", "expires_at": FUTURE_EXPIRES_AT},
-            id="blank_access_token",
-        ),
-        pytest.param({"access_token": ACCESS_TOKEN_1}, id="no_expires_at"),
-        pytest.param(
-            {"access_token": ACCESS_TOKEN_1, "expires_at": 0}, id="no_refresh_token"
-        ),
-        pytest.param(
-            {"access_token": ACCESS_TOKEN_1, "expires_at": 0, "refresh_token": None},
-            id="null_refresh_token",
-        ),
-    ],
-)
-async def test_oauth_session_incomplete_token_asks_for_reauth(
-    hass: HomeAssistant,
-    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
-    token: dict[str, Any] | None,
-) -> None:
-    """Test an incomplete stored token asks for reauth instead of raising KeyError."""
-    config_entry = MockConfigEntry(
-        domain=TEST_DOMAIN,
-        data={"auth_implementation": TEST_DOMAIN, "token": token},
-    )
-    config_entry.add_to_hass(hass)
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
-    with (
-        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
-        pytest.raises(InvalidTokenError) as err,
-    ):
-        await session.async_ensure_token_valid()
-
-    assert isinstance(err.value, ConfigEntryAuthFailed)
-    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
-    assert err.value.translation_key == "oauth2_invalid_token"
-    start_reauth.assert_called_once_with(hass)
-
-
-@pytest.mark.parametrize(
     "response",
     [
         pytest.param({"access_token": ACCESS_TOKEN_2}, id="missing_expires_in"),
@@ -1346,6 +1296,49 @@ async def test_oauth_session_custom_implementation_without_access_token(
         await session.async_ensure_token_valid()
 
     assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+
+
+@pytest.mark.parametrize(
+    "refreshed",
+    [
+        pytest.param({"expires_at": FUTURE_EXPIRES_AT}, id="no_access_token"),
+        pytest.param({"access_token": ACCESS_TOKEN_2}, id="no_expires_at"),
+    ],
+)
+async def test_oauth_session_never_stores_an_unusable_token(
+    hass: HomeAssistant,
+    refreshed: dict[str, Any],
+) -> None:
+    """Test the session checks the new token even when the refresh skips its own."""
+
+    class UncheckedImplementation(MockOAuth2Implementation):
+        """Implementation overriding the public refresh, so nothing maps for it."""
+
+        async def async_refresh_token(self, token: dict) -> dict:
+            """Refresh a token without the base class validation."""
+            return refreshed
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, config_entry, UncheckedImplementation()
+    )
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+    assert config_entry.data["token"]["expires_at"] == 0
 
 
 @pytest.mark.parametrize(
