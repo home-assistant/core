@@ -317,7 +317,7 @@ async def test_set_module_config_requires_advanced_mode(
             id="unknown_key",
         ),
         pytest.param(
-            {CONF_CHANNEL: 99, "key": "name", "value": "x"},
+            {CONF_CHANNEL: 2, "key": "name", "value": "x"},
             "not_found",
             id="missing_channel",
         ),
