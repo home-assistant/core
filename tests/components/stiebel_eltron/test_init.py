@@ -10,7 +10,12 @@ from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import StiebelEltronModbusError
 import pytest
 
-from homeassistant.components.stiebel_eltron.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.modbus import async_get_unit
+from homeassistant.components.stiebel_eltron.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    UNIT_ID,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -65,6 +70,29 @@ async def test_async_setup_entry_requests_unit(
 
     assert result is True
     mock_modbus_connection_class.assert_called_once_with(expected_params)
+
+
+async def test_async_setup_entry_conflicting_link_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails with a reason when the device is held over other settings."""
+    other_entry = MockConfigEntry(domain="modbus")
+    other_entry.add_to_hass(hass)
+    async_get_unit(
+        hass,
+        other_entry,
+        ModbusTcpParams(host="1.1.1.1", port=502, framer="rtu"),
+        UNIT_ID,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason is not None
+    assert "different link settings" in mock_config_entry.reason
 
 
 async def test_async_setup_entry_modbus_error(

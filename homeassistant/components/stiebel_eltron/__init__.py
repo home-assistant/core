@@ -6,7 +6,11 @@ from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
@@ -22,7 +26,14 @@ async def async_setup_entry(
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
-    unit = async_get_unit(hass, entry, ModbusTcpParams(host=host, port=port), UNIT_ID)
+    try:
+        unit = async_get_unit(
+            hass, entry, ModbusTcpParams(host=host, port=port), UNIT_ID
+        )
+    # Another integration already holds this host and port with link settings
+    # that cannot be honoured on one connection.
+    except HomeAssistantError as exception:
+        raise ConfigEntryError(str(exception)) from exception
 
     try:
         model = await get_controller_model(unit)
