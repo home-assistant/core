@@ -47,15 +47,10 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
-RECONFIGURE_DATA_SCHEMA = vol.Schema(
+# The private key is optional during reconfiguration; leaving it blank keeps
+# the currently configured key.
+RECONFIGURE_DATA_SCHEMA = DATA_SCHEMA.extend(
     {
-        vol.Required(CONF_LOCATION): LocationSelector(
-            LocationSelectorConfig(radius=False, icon="")
-        ),
-        # Auth
-        vol.Required(CONF_KEY_ID): str,
-        vol.Required(CONF_SERVICE_ID): str,
-        vol.Required(CONF_TEAM_ID): str,
         vol.Optional(CONF_KEY_PEM, default=""): TextSelector(
             TextSelectorConfig(
                 multiline=True,
