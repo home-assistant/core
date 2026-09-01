@@ -67,12 +67,13 @@ def mock_weather_response(
 
 async def init_integration(
     hass: HomeAssistant,
+    unique_id: str = "0123456",
 ) -> MockConfigEntry:
     """Set up the WeatherKit integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id="0123456",
+        unique_id=unique_id,
         data=EXAMPLE_CONFIG_DATA,
     )
 

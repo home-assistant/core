@@ -11,8 +11,9 @@ from apple_weatherkit.client import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     LocationSelector,
@@ -81,6 +82,13 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 self._flatten_location(user_input)
 
+                await self.async_set_unique_id(
+                    self._unique_id_for_location(
+                        user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+                    )
+                )
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
                     data=user_input,
@@ -116,10 +124,19 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 self._flatten_location(user_input)
 
+                new_unique_id = self._unique_id_for_location(
+                    user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+                )
+                await self.async_set_unique_id(new_unique_id)
+                self._abort_if_unique_id_configured()
+
+                self._migrate_unique_ids(reconfigure_entry, new_unique_id)
+
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
                     data=user_input,
+                    unique_id=new_unique_id,
                 )
 
         suggested_values: Mapping[str, Any] = {
@@ -160,6 +177,41 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.exception(exception)
             return {"base": "unknown"}
         return {}
+
+    def _unique_id_for_location(self, latitude: float, longitude: float) -> str:
+        """Return the unique ID for a given location."""
+        return f"{latitude}-{longitude}"
+
+    def _migrate_unique_ids(
+        self, reconfigure_entry: ConfigEntry, new_unique_id: str
+    ) -> None:
+        """Update entity/device unique IDs to match a new location-based unique ID."""
+        old_unique_id = reconfigure_entry.unique_id
+        if old_unique_id is None or old_unique_id == new_unique_id:
+            return
+
+        entity_registry = er.async_get(self.hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, reconfigure_entry.entry_id
+        ):
+            if entity_entry.unique_id == old_unique_id:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+            elif entity_entry.unique_id.startswith(f"{old_unique_id}_"):
+                suffix = entity_entry.unique_id.removeprefix(old_unique_id)
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id,
+                    new_unique_id=f"{new_unique_id}{suffix}",
+                )
+
+        device_registry = dr.async_get(self.hass)
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_unique_id), reconfigure_entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id, new_identifiers={(DOMAIN, new_unique_id)}
+            )
 
     def _flatten_location(self, user_input: dict[str, Any]) -> None:
         """Flatten the location selector value into latitude/longitude keys."""
