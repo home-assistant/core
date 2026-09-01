@@ -46,11 +46,11 @@ class HomevoltLocalModeSwitch(HomevoltEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable local mode."""
         await self.coordinator.client.enable_local_mode()
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)
 
     @homevolt_exception_handler
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable local mode."""
         await self.coordinator.client.disable_local_mode()
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)

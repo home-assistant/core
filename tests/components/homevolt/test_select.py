@@ -81,11 +81,39 @@ async def test_select_option(
     )
 
     mock_homevolt_client.set_battery_mode.assert_awaited_once_with(mode=option)
-    mock_homevolt_client.update_info.assert_awaited_once_with()
+    mock_homevolt_client.update_info.assert_not_awaited()
     assert mock_homevolt_client.schedule["mode"] == mode
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == option
+
+
+async def test_consecutive_select_options_refresh_state_immediately(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test consecutive commands publish the verified state before returning."""
+
+    async def set_battery_mode(mode: str) -> None:
+        mock_homevolt_client.schedule["mode"] = {
+            "inverter_charge": 1,
+            "idle": 0,
+        }[mode]
+
+    mock_homevolt_client.set_battery_mode.side_effect = set_battery_mode
+
+    for option in ("inverter_charge", "idle"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
+            blocking=True,
+        )
+
+        state = hass.states.get(ENTITY_ID)
+        assert state is not None
+        assert state.state == option
 
 
 async def test_select_unknown_mode(

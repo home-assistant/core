@@ -61,6 +61,8 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the current selected mode."""
         mode_int = self.coordinator.client.schedule.get("mode")
+        if mode_int is None:
+            return None
         return CONTROLLABLE_SCHEDULE_TYPE.get(mode_int)
 
     @homevolt_exception_handler
@@ -68,4 +70,4 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         await self.coordinator.client.set_battery_mode(mode=option)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.client)
