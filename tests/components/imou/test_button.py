@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,6 +13,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -118,27 +119,49 @@ async def test_press_ptz_button_passes_move_duration(
     assert call.args[2] == PTZ_MOVE_DURATION_MS
 
 
+@pytest.mark.parametrize(
+    ("exception", "message", "reauth_expected"),
+    [
+        (
+            ImouException("cloud failure"),
+            "Imou rejected the button press: cloud failure",
+            False,
+        ),
+        (
+            InvalidAppIdOrSecretException("fail"),
+            "Imou rejected the App ID and App secret",
+            True,
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_press_button_service_propagates_api_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
+    exception: Exception,
+    message: str,
+    reauth_expected: bool,
 ) -> None:
     """Imou API errors from async_press_button surface to the service call."""
-    mock_imou_ha_device_manager.async_press_button.side_effect = ImouException(
-        "cloud failure"
-    )
+    mock_imou_ha_device_manager.async_press_button.side_effect = exception
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
-    with pytest.raises(
-        HomeAssistantError, match="Imou rejected the button press: cloud failure"
-    ):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is reauth_expected
+    )
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import override
 
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
-from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.camera import (
@@ -13,12 +12,11 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, PARAM_HEADER_DETECT, imou_device_identifier
+from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
-from .entity import ImouEntity
+from .entity import ImouEntity, async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
@@ -89,37 +87,25 @@ class ImouCamera(ImouEntity, Camera):
         super().__init__(coordinator, description, device)
 
     @override
+    @async_wrap_imou_command("get_stream_failed")
     async def stream_source(self) -> str | None:
         """Return the live stream URL from the Imou cloud."""
-        try:
-            return await self.coordinator.device_manager.async_get_device_stream(
-                self.device,
-                self.entity_description.resolution,
-                PYIMOUAPI_LIVE_PROTOCOL,
-            )
-        except ImouException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="get_stream_failed",
-                translation_placeholders={"error": err.message},
-            ) from err
+        return await self.coordinator.device_manager.async_get_device_stream(
+            self.device,
+            self.entity_description.resolution,
+            PYIMOUAPI_LIVE_PROTOCOL,
+        )
 
     @override
+    @async_wrap_imou_command("get_image_failed")
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        try:
-            return await self.coordinator.device_manager.async_get_device_image(
-                self.device,
-                PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
-            )
-        except ImouException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="get_image_failed",
-                translation_placeholders={"error": err.message},
-            ) from err
+        return await self.coordinator.device_manager.async_get_device_image(
+            self.device,
+            PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
+        )
 
     @property
     @override
