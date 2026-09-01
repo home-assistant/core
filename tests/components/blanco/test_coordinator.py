@@ -1,14 +1,18 @@
 """Tests for coordinator.py — BlancoDataUpdateCoordinator and helpers."""
 
-from unittest.mock import MagicMock
+from collections.abc import Awaitable, Callable
+from unittest.mock import AsyncMock, MagicMock
 
-from blanco_smart_home_api_client import BlancoApiClient
+from blanco_smart_home_api_client import BlancoApiClient, BlancoConnectionError
 from blanco_smart_home_api_client.mask import mask_dev_id, mask_headers
 import pytest
 
+from homeassistant.components.blanco.const import CONF_APP_LOCALE
 from homeassistant.config_entries import ConfigEntryAuthFailed
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
+from homeassistant.core import Event
 
-from .conftest import make_coordinator, make_get_response
+from .conftest import make_coordinator, make_get_response, make_mock_entry
 
 # ── Sample API response payloads ───────────────────────────────────────────────
 
@@ -248,3 +252,91 @@ class TestAsyncUpdateData:
 
         with pytest.raises(ConfigEntryAuthFailed):
             await coord._async_update_data()
+
+
+# ── language listener ───────────────────────────────────────────────────────────
+
+
+class TestLanguageListener:
+    """Tests for the HA-language → BLANCO API locale sync listener."""
+
+    def _get_registered_callback(
+        self, hass: MagicMock
+    ) -> Callable[[Event], Awaitable[None]]:
+        """Return the callback the coordinator registered for EVENT_CORE_CONFIG_UPDATE."""
+        assert hass.bus.async_listen.call_count == 1
+        event_type, callback = hass.bus.async_listen.call_args[0]
+        assert event_type == EVENT_CORE_CONFIG_UPDATE
+        return callback
+
+    async def test_registers_listener_on_init(self, mock_hass: MagicMock) -> None:
+        """The coordinator registers exactly one EVENT_CORE_CONFIG_UPDATE listener."""
+        make_coordinator(mock_hass)
+        self._get_registered_callback(mock_hass)
+
+    async def test_ignores_event_without_language_key(
+        self, mock_hass: MagicMock
+    ) -> None:
+        """An event whose data has no 'language' key is ignored."""
+        coord = make_coordinator(mock_hass)
+        callback = self._get_registered_callback(mock_hass)
+        coord._api.update_app_locale = AsyncMock()
+
+        await callback(MagicMock(data={}))
+
+        coord._api.update_app_locale.assert_not_called()
+
+    async def test_ignores_unchanged_locale(self, mock_hass: MagicMock) -> None:
+        """No API call is made when the new locale matches the stored one."""
+        entry = make_mock_entry(data={CONF_APP_LOCALE: "de"})
+        mock_hass.config.language = "de-DE"
+        coord = make_coordinator(mock_hass, entry=entry)
+        callback = self._get_registered_callback(mock_hass)
+        coord._api.update_app_locale = AsyncMock()
+
+        await callback(MagicMock(data={"language": "de"}))
+
+        coord._api.update_app_locale.assert_not_called()
+
+    async def test_updates_locale_on_change(self, mock_hass: MagicMock) -> None:
+        """A changed locale is PUT to the API and persisted into entry.data."""
+        entry = make_mock_entry(data={CONF_APP_LOCALE: "en"})
+        mock_hass.config.language = "de-DE"
+        coord = make_coordinator(mock_hass, entry=entry)
+        callback = self._get_registered_callback(mock_hass)
+        coord._api.update_app_locale = AsyncMock(return_value=True)
+
+        await callback(MagicMock(data={"language": "de"}))
+
+        coord._api.update_app_locale.assert_awaited_once_with("de")
+        mock_hass.config_entries.async_update_entry.assert_called_once()
+        _, kwargs = mock_hass.config_entries.async_update_entry.call_args
+        assert kwargs["data"][CONF_APP_LOCALE] == "de"
+
+    async def test_does_not_persist_when_api_reports_failure(
+        self, mock_hass: MagicMock
+    ) -> None:
+        """entry.data is left untouched when the API reports a non-2xx status."""
+        entry = make_mock_entry(data={CONF_APP_LOCALE: "en"})
+        mock_hass.config.language = "de-DE"
+        coord = make_coordinator(mock_hass, entry=entry)
+        callback = self._get_registered_callback(mock_hass)
+        coord._api.update_app_locale = AsyncMock(return_value=False)
+
+        await callback(MagicMock(data={"language": "de"}))
+
+        mock_hass.config_entries.async_update_entry.assert_not_called()
+
+    async def test_swallows_connection_error(self, mock_hass: MagicMock) -> None:
+        """A BlancoConnectionError from the API call is swallowed, not raised."""
+        entry = make_mock_entry(data={CONF_APP_LOCALE: "en"})
+        mock_hass.config.language = "de-DE"
+        coord = make_coordinator(mock_hass, entry=entry)
+        callback = self._get_registered_callback(mock_hass)
+        coord._api.update_app_locale = AsyncMock(
+            side_effect=BlancoConnectionError("boom")
+        )
+
+        await callback(MagicMock(data={"language": "de"}))  # must not raise
+
+        mock_hass.config_entries.async_update_entry.assert_not_called()

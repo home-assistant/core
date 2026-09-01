@@ -50,6 +50,7 @@ def mock_hass() -> HomeAssistant:
     hass.config.components = set()
     hass.config_entries.async_update_entry = MagicMock()
     hass.config.time_zone = "UTC"
+    hass.bus = MagicMock()
     return hass  # type: ignore[return-value]
 
 
