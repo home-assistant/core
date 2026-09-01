@@ -19,6 +19,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    MOCK_ENTRY_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
     _entry_with_subentries,
     _transmitter_device_record,
@@ -44,6 +45,46 @@ async def _async_setup_entry(
     return entry
 
 
+async def test_easywave_button_press_a_trigger_ignores_non_string_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Trigger ignores Easywave events whose device_id is not a string."""
+    await _async_setup_entry(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
+    )
+    assert device is not None
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.button_press_a",
+                    "target": {"device_id": device.id},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": None,
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "a",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert service_calls == []
+
+
 async def test_easywave_button_press_a_trigger_fires(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -51,8 +92,8 @@ async def test_easywave_button_press_a_trigger_fires(
 ) -> None:
     """Purpose-specific easywave.button_press_a trigger fires on matching events."""
     await _async_setup_entry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -91,15 +132,16 @@ async def test_easywave_button_press_a_trigger_fires(
 async def test_easywave_button_press_a_trigger_fires_for_entity_target(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
     """Purpose-specific trigger fires when configured via entity target selector."""
     await _async_setup_entry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_TRANSMITTER_DEVICE_ID}_last_button"
     )
     assert entity_id is not None
@@ -144,8 +186,8 @@ async def test_easywave_button_press_a_trigger_fires_for_area_target(
 ) -> None:
     """Purpose-specific trigger fires when configured via area target selector."""
     await _async_setup_entry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
     area = area_registry.async_get_or_create("living_room")
@@ -186,15 +228,16 @@ async def test_easywave_button_press_a_trigger_fires_for_area_target(
 async def test_easywave_button_press_a_trigger_fires_for_group_target(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
     """Purpose-specific trigger fires when configured via a group entity target."""
     await _async_setup_entry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_TRANSMITTER_DEVICE_ID}_last_button"
     )
     assert entity_id is not None
@@ -209,6 +252,7 @@ async def test_easywave_button_press_a_trigger_fires_for_group_target(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.async_block_till_done()
 
@@ -251,7 +295,9 @@ async def test_easywave_gateway_connected_trigger_fires(
 ) -> None:
     """Purpose-specific easywave.gateway_connected trigger fires on matching events."""
     entry = await _async_setup_entry(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
 
     assert await async_setup_component(
@@ -289,8 +335,8 @@ async def test_easywave_button_press_a_trigger_ignores_non_matching_events(
 ) -> None:
     """Purpose-specific trigger ignores events with wrong type, device, or subtype."""
     await _async_setup_entry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -345,8 +391,8 @@ async def test_get_triggers_for_target_transmitter(
 ) -> None:
     """Target-based automation UI lists only configured transmitter button triggers."""
     await _async_setup_entry(hass, button_count=2)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -380,7 +426,9 @@ async def test_get_triggers_for_target_gateway(
 ) -> None:
     """Gateway devices list connection triggers but not transmitter button triggers."""
     entry = await _async_setup_entry(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
 
     client = await hass_ws_client(hass)

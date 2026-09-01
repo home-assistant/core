@@ -89,25 +89,27 @@ async def test_first_refresh_registers_gateway_versions(
     mock_transceiver.set_disconnect_callback.assert_called_once()
     mock_transceiver.set_connected_callback.assert_called_once()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, coordinator.config_entry.entry_id),
+        coordinator.config_entry.entry_id,
     )
     assert device is not None
     assert device.hw_version == "1.0"
     assert device.sw_version == "2.0"
 
 
-async def test_first_refresh_enters_offline_mode_when_connect_fails(
+async def test_first_refresh_raises_not_ready_when_connect_fails(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """First refresh enters offline mode when the transceiver cannot connect."""
+    """First refresh raises ConfigEntryNotReady when the transceiver cannot connect."""
     mock_transceiver.connect = AsyncMock(return_value=False)
     mock_transceiver.reconnect = AsyncMock(return_value=False)
 
-    await coordinator.async_config_entry_first_refresh()
+    with pytest.raises(ConfigEntryNotReady):
+        await coordinator.async_config_entry_first_refresh()
 
-    assert coordinator.is_offline is True
+    assert coordinator.last_update_success is False
     mock_transceiver.set_disconnect_callback.assert_not_called()
 
 
@@ -205,8 +207,9 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     assert coordinator.data["is_connected"] is True
     mock_transceiver.set_connected_callback.assert_called()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, coordinator.config_entry.entry_id),
+        coordinator.config_entry.entry_id,
     )
     assert device is not None
     assert device.hw_version == "RX11 v1.0"
@@ -322,8 +325,9 @@ async def test_transceiver_connected_updates_gateway_device(
     connected_callback()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, coordinator.config_entry.entry_id),
+        coordinator.config_entry.entry_id,
     )
     assert device is not None
     assert device.hw_version == "RX11 v2.0"
@@ -458,7 +462,13 @@ async def test_clear_listener_task_skips_foreign_running_task(
     coordinator: EasywaveCoordinator,
 ) -> None:
     """Listener cleanup does not drop a newer replacement task."""
-    replacement = hass.async_create_task(asyncio.Event().wait(), "replacement_listener")
+
+    async def _replacement_listener() -> None:
+        await asyncio.Event().wait()
+
+    replacement = hass.async_create_task(
+        _replacement_listener(), "replacement_listener"
+    )
     coordinator._listener_task = replacement
 
     async def old_finally() -> None:

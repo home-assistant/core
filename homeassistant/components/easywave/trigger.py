@@ -78,7 +78,6 @@ class EasywaveEventTrigger(Trigger, ABC):
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a bus listener for matching Easywave events."""
-        device_ids = self._device_ids_from_target()
         event_type = self._event_type
         subtype = self._subtype
 
@@ -88,7 +87,9 @@ class EasywaveEventTrigger(Trigger, ABC):
             if event.data.get("type") != event_type:
                 return
             device_id = event.data.get("device_id")
-            if not isinstance(device_id, str) or device_id not in device_ids:
+            if not isinstance(device_id, str):
+                return
+            if device_id not in self._device_ids_from_target():
                 return
             if subtype is not None and event.data.get(CONF_SUBTYPE) != subtype:
                 return

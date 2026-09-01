@@ -22,6 +22,7 @@ async def test_transmitter_entities_have_unique_ids_from_setup(
     entry = _entry_with_subentries(_transmitter_device_record(title="Test Transmitter"))
     await async_setup_easywave_entry(hass, entry)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, entry.entry_id)
     transmitter_entities = [
@@ -49,6 +50,7 @@ async def test_neo_sensor_entities_have_unique_ids_from_setup(
     )
     await async_setup_easywave_entry(hass, entry)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, entry.entry_id)
     sensor_entities = [

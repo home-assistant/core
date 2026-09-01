@@ -16,6 +16,7 @@ from homeassistant.components.easywave.devices import get_devices
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import (
     MOCK_ENTRY_DATA,
@@ -33,6 +34,36 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
+async def test_setup_entry_shutdown_when_first_refresh_raises_update_failed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Setup shuts down the coordinator when first refresh raises UpdateFailed."""
+    mock_config_entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+
+    with (
+        patch(
+            "homeassistant.components.easywave.RX11Transceiver",
+            return_value=transceiver,
+        ),
+        patch.object(
+            EasywaveCoordinator,
+            "async_config_entry_first_refresh",
+            AsyncMock(side_effect=UpdateFailed("setup failed")),
+        ),
+        patch.object(
+            EasywaveCoordinator,
+            "async_shutdown",
+            AsyncMock(),
+        ) as mock_shutdown,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert result is False
+    assert mock_shutdown.await_count >= 1
+
+
 async def test_setup_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -44,8 +75,9 @@ async def test_setup_entry_success(
     assert isinstance(coordinator, EasywaveCoordinator)
     transceiver.connect.assert_awaited_once()
 
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.hw_version == "1.0"
@@ -81,6 +113,7 @@ async def test_setup_entry_creates_repair_issue(
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
         DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
@@ -95,6 +128,7 @@ async def test_setup_entry_deletes_stale_repair_issue(
     """Test stale repair issue is removed on successful setup."""
     await async_setup_easywave_entry(hass, mock_config_entry)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
         DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
@@ -136,6 +170,7 @@ async def test_remove_config_entry_device_rejects_gateway(
     )
     entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     device_registry = dr.async_get(hass)
     gateway_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -158,6 +193,7 @@ async def test_remove_config_entry_device_removes_child(
     )
     entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     device_registry = dr.async_get(hass)
     child_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -167,9 +203,11 @@ async def test_remove_config_entry_device_removes_child(
 
     result = await async_remove_config_entry_device(hass, entry, child_device)
     assert result is True
-    entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry is not None
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)
+    reloaded_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert reloaded_entry is not None
+    subentries = reloaded_entry.get_subentries_of_type(
+        SUBENTRY_TYPE_EASYWAVE_TRANSMITTER
+    )
     assert len(subentries) == 1
     assert len(subentries[0].data[CONF_DEVICES]) == 1
     assert MOCK_TRANSMITTER_DEVICE_ID in subentries[0].data[CONF_DEVICES]
@@ -200,6 +238,7 @@ async def test_remove_config_entry_device_updates_bucket_when_devices_remain(
     )
     entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     device_registry = dr.async_get(hass)
     child_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -209,9 +248,11 @@ async def test_remove_config_entry_device_updates_bucket_when_devices_remain(
 
     result = await async_remove_config_entry_device(hass, entry, child_device)
     assert result is True
-    entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry is not None
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)
+    reloaded_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert reloaded_entry is not None
+    subentries = reloaded_entry.get_subentries_of_type(
+        SUBENTRY_TYPE_EASYWAVE_TRANSMITTER
+    )
     assert len(subentries) == 1
     assert subentries[0].data[CONF_DEVICES] == {
         second_device_id: {
@@ -268,6 +309,7 @@ async def test_remove_config_entry_device_rejects_unknown_identifier(
     )
     entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     device_registry = dr.async_get(hass)
     other_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -285,6 +327,7 @@ async def test_remove_config_entry_device_rejects_orphan_device(
     entry = _entry_with_subentries(_transmitter_device_record())
     entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     device_registry = dr.async_get(hass)
     orphan_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

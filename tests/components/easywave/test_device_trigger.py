@@ -26,6 +26,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    MOCK_ENTRY_ID,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
     _entry_with_subentries,
@@ -60,7 +61,9 @@ async def test_get_gateway_triggers(
 ) -> None:
     """Gateway device exposes connected and disconnected triggers."""
     entry = await _async_setup_entry(hass, _make_gateway_entry())
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
 
     expected = [
@@ -111,8 +114,8 @@ async def test_get_transmitter_triggers(
             )
         ),
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -172,8 +175,8 @@ async def test_get_neo_sensor_triggers_empty(
             )
         ),
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_NEO_SENSOR_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_NEO_SENSOR_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -199,8 +202,8 @@ async def test_if_fires_on_button_press(
             )
         ),
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -255,8 +258,8 @@ async def test_websocket_list_transmitter_triggers(
             )
         ),
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert device is not None
 
@@ -325,23 +328,22 @@ async def test_get_triggers_resolves_entry_via_gateway_parent(
         _transmitter_device_record(button_count=1, title="Stored Device Transmitter")
     )
     await async_setup_easywave_entry(hass, entry)
-    transmitter = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    transmitter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert transmitter is not None
     device_registry.async_remove_device(transmitter.id)
 
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name="Gateway",
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
     )
+    assert gateway is not None
     child = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id,
         identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
-        via_device=(DOMAIN, entry.entry_id),
+        via_device_id=gateway.id,
         name="Transmitter",
     )
 
@@ -359,8 +361,8 @@ async def test_get_triggers_resolves_stored_device_without_config_entry_link(
         _transmitter_device_record(button_count=1, title="Stored Device Transmitter")
     )
     await async_setup_easywave_entry(hass, entry)
-    transmitter = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    transmitter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
     )
     assert transmitter is not None
     device_registry.async_remove_device(transmitter.id)
@@ -385,7 +387,9 @@ async def test_get_gateway_triggers_without_config_entry_link(
     """Gateway identifiers resolve triggers without a direct config entry link."""
     entry = _make_gateway_entry()
     await async_setup_easywave_entry(hass, entry)
-    gateway = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert gateway is not None
     device_registry.async_remove_device(gateway.id)
 

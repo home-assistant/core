@@ -12,6 +12,9 @@ from easywave_home_control.codec import (
 from easywave_home_control.codec.events import EasywaveButton
 import pytest
 
+from homeassistant.components.easywave.config_flow_device import (
+    _normalize_learned_transmitter,
+)
 from homeassistant.components.easywave.const import (
     BUCKET_SUBENTRY_TITLES,
     CONF_BUTTON_COUNT,
@@ -31,7 +34,7 @@ from homeassistant.components.easywave.const import (
     TRANSMITTER_SWITCH_IMPULSE,
     bucket_subentry_unique_id,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SubentryFlowResult
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -51,7 +54,7 @@ from tests.common import MockConfigEntry
 
 async def _start_transmitter_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> dict:
+) -> SubentryFlowResult:
     """Start the subentry flow for adding a transmitter."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_TRANSMITTER),
@@ -67,7 +70,7 @@ async def _start_transmitter_flow(
 
 async def _start_neo_sensor_flow_until_intro(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> dict:
+) -> SubentryFlowResult:
     """Start the neo sensor subentry flow up to the learn intro step."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR),
@@ -79,7 +82,7 @@ async def _start_neo_sensor_flow_until_intro(
 
 async def _start_neo_sensor_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> dict:
+) -> SubentryFlowResult:
     """Start the subentry flow for adding a neo sensor."""
     result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
     result = await hass.config_entries.subentries.async_configure(
@@ -136,14 +139,23 @@ NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 
 def _make_transmitter_telegram(
     serial_hex: str = MOCK_TRANSMITTER_SERIAL,
+    *,
+    should_ignore: bool = False,
 ) -> ButtonPushEvent:
     """Return a mock button-press telegram."""
     return ButtonPushEvent(
         transmitter_serial=bytes.fromhex(serial_hex),
         button=EasywaveButton.A,
         function=ButtonFunction.DEFAULT,
-        should_ignore=False,
+        should_ignore=should_ignore,
     )
+
+
+def test_normalize_learned_transmitter_rejects_should_ignore() -> None:
+    """Control telegrams marked to ignore are not accepted during learning."""
+    telegram = _make_transmitter_telegram(should_ignore=True)
+
+    assert _normalize_learned_transmitter(telegram) is None
 
 
 def _make_sensor_learn_telegram(
@@ -349,9 +361,9 @@ async def test_neo_sensor_flow_full(
     result = await _start_neo_sensor_flow(hass, mock_config_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sensor_confirm"
-    assert (
-        result["description_placeholders"]["sensor_list"] == "• Temperature\n• Humidity"
-    )
+    placeholders = result["description_placeholders"]
+    assert placeholders is not None
+    assert placeholders["sensor_list"] == "• Temperature\n• Humidity"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Living Room Sensor"}

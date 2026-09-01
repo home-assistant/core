@@ -84,9 +84,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._register_transceiver_callbacks()
                 self._update_gateway_device()
             else:
-                _LOGGER.warning(
-                    "RX11 device not found, entering offline mode. "
-                    "Entities will be unavailable until device connects"
+                raise UpdateFailed(
+                    "RX11 device not found, setup deferred until device connects"
                 )
         except (OSError, TimeoutError) as err:
             raise UpdateFailed(f"Setup failed: {err}") from err
@@ -318,7 +317,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
-                entity.handle_telegram(event)
+                if not is_low_battery:
+                    entity.handle_telegram(event)
                 entity.handle_battery_status(is_low_battery)
                 matched_device_id = entity.device_id
         if matched_device_id is None:
@@ -366,6 +366,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 type(event.payload).__name__,
             )
             return
+        if event.payload.should_ignore:
+            return
 
         matched = False
         for entity in list(self._sensor_entities):
@@ -391,8 +393,9 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Fire a homeassistant event for device automations."""
         device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, easywave_device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, easywave_device_id),
+            self.config_entry.entry_id,
         )
         if device_entry is None:
             return

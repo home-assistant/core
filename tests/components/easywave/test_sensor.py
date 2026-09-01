@@ -19,6 +19,7 @@ async def test_sensor_setup_entry(
     """Test that sensor platform setup creates a gateway sensor entity."""
     await async_setup_easywave_entry(hass, mock_config_entry)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
@@ -41,6 +42,7 @@ async def test_gateway_sensor_reports_connected_after_coordinator_update(
     transceiver = mock_easywave_transceiver()
     await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
@@ -64,11 +66,11 @@ async def test_gateway_sensor_fires_connected_event_on_transition(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Gateway connected device event is fired when status becomes connected."""
-    transceiver = mock_easywave_transceiver(connected=False)
-    transceiver.reconnect = transceiver.connect
+    transceiver = mock_easywave_transceiver()
     await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
 
     coordinator = mock_config_entry.runtime_data.coordinator
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
@@ -78,14 +80,27 @@ async def test_gateway_sensor_fires_connected_event_on_transition(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "disconnected"
 
+    transceiver.is_connected = False
+    coordinator.is_offline = True
+    coordinator.async_set_updated_data(
+        {"is_connected": False, "device_path": "/dev/ttyACM0"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "disconnected"
+
+    events.clear()
     transceiver.is_connected = True
-    transceiver.reconnect = transceiver.connect = AsyncMock(return_value=True)
+    coordinator.is_offline = False
+    transceiver.reconnect = AsyncMock(return_value=True)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "connected"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "connected"
     assert len(events) == 1
     assert events[0].data["type"] == "gateway_connected"
 
@@ -101,16 +116,23 @@ async def test_gateway_sensor_waits_for_homeassistant_started(
     object.__setattr__(hass, "state", CoreState.not_running)
     await async_setup_easywave_entry(hass, mock_config_entry)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == "unknown"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "connected"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+
+    assert state.state == "connected"
 
 
 async def test_gateway_sensor_fires_disconnected_event_on_transition(
@@ -122,6 +144,7 @@ async def test_gateway_sensor_fires_disconnected_event_on_transition(
     await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
 
     coordinator = mock_config_entry.runtime_data.coordinator
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
@@ -131,7 +154,9 @@ async def test_gateway_sensor_fires_disconnected_event_on_transition(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "connected"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "connected"
 
     transceiver.is_connected = False
     coordinator.is_offline = False
@@ -140,7 +165,11 @@ async def test_gateway_sensor_fires_disconnected_event_on_transition(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "disconnected"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+
+    assert state.state == "disconnected"
     assert any(event.data["type"] == "gateway_disconnected" for event in events)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -156,6 +185,7 @@ async def test_gateway_sensor_reports_disconnected_when_link_is_down(
     await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
 
     coordinator = mock_config_entry.runtime_data.coordinator
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
@@ -172,4 +202,8 @@ async def test_gateway_sensor_reports_disconnected_when_link_is_down(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "disconnected"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+
+    assert state.state == "disconnected"

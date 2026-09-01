@@ -74,7 +74,7 @@ def _subentry_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | Non
 
 def _find_easywave_config_entry(
     hass: HomeAssistant,
-    device: dr.DeviceEntry,
+    device: dr.DeviceEntry | dr.ChildDeviceEntry,
     easywave_id: str,
 ) -> ConfigEntry | None:
     """Return the Easywave config entry linked to a device."""
@@ -86,8 +86,10 @@ def _find_easywave_config_entry(
         ):
             return entry
 
-    if device.via_device_id and (
-        via_device := device_registry.async_get(device.via_device_id)
+    if (
+        isinstance(device, dr.DeviceEntry)
+        and device.via_device_id
+        and (via_device := device_registry.async_get(device.via_device_id))
     ):
         for entry_id in via_device.config_entries:
             if (entry := hass.config_entries.async_get_entry(entry_id)) and (
@@ -106,7 +108,7 @@ def _find_easywave_config_entry(
 
 def _get_device_data(
     hass: HomeAssistant,
-    device: dr.DeviceEntry,
+    device: dr.DeviceEntry | dr.ChildDeviceEntry,
     easywave_id: str,
 ) -> dict[str, Any] | _GatewayMarker | None:
     """Return device data from config subentries, or gateway marker."""

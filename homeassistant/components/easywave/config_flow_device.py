@@ -39,6 +39,8 @@ def _normalize_learned_transmitter(telegram: Any) -> dict[str, Any] | None:
     """Return learned transmitter data from a codec event."""
     if not isinstance(telegram, ButtonPushEvent):
         return None
+    if telegram.should_ignore:
+        return None
     return {
         "serial": telegram.transmitter_serial,
         "button": telegram.button,

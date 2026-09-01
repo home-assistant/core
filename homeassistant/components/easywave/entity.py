@@ -1,8 +1,9 @@
 """Base entities for the Easywave integration."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -62,7 +63,29 @@ def _neo_sensor_model(data: dict[str, Any]) -> str:
     return ", ".join(parts)
 
 
-class EasywaveTransmitterEntity(Entity):
+class EasywaveChildEntity(Entity):
+    """Shared base for Easywave child device entities."""
+
+    _entry: EasywaveConfigEntry
+
+    def _link_device_to_gateway(self) -> None:
+        """Attach the gateway as the parent device once HA is available."""
+        if self.device_info is None:
+            return
+        device_info = dict(self.device_info)
+        device_info.pop("via_device", None)
+        if via_id := dr.async_get_device_id_by_identifier(
+            self.hass,
+            (DOMAIN, self._entry.entry_id),
+            config_entry_id=self._entry.entry_id,
+        ):
+            self._attr_device_info = cast(
+                DeviceInfo,
+                {**device_info, "via_device_id": via_id},
+            )
+
+
+class EasywaveTransmitterEntity(EasywaveChildEntity):
     """Base entity for an Easywave transmitter."""
 
     _attr_has_entity_name = True
@@ -85,7 +108,6 @@ class EasywaveTransmitterEntity(Entity):
             name=device.title,
             manufacturer="ELDAT",
             model=_transmitter_model(device.data),
-            via_device=(DOMAIN, entry.entry_id),
         )
 
     @property
@@ -97,6 +119,7 @@ class EasywaveTransmitterEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator updates and register for telegram dispatch."""
         await super().async_added_to_hass()
+        self._link_device_to_gateway()
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
@@ -128,7 +151,7 @@ class EasywaveTransmitterEntity(Entity):
         """
 
 
-class EasywaveNeoSensorEntity(Entity):
+class EasywaveNeoSensorEntity(EasywaveChildEntity):
     """Base entity for an Easywave neo sensor."""
 
     _attr_has_entity_name = True
@@ -151,7 +174,6 @@ class EasywaveNeoSensorEntity(Entity):
             name=device.title,
             manufacturer="ELDAT",
             model=_neo_sensor_model(device.data),
-            via_device=(DOMAIN, entry.entry_id),
         )
 
     @property
@@ -163,6 +185,7 @@ class EasywaveNeoSensorEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator updates and register for telegram dispatch."""
         await super().async_added_to_hass()
+        self._link_device_to_gateway()
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )

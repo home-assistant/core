@@ -65,7 +65,7 @@ def test_get_devices_skips_invalid_bucket_entries() -> None:
         _bucket_subentry_data(
             subentry_type=SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
             devices={
-                "invalid_device": "invalid",
+                "invalid_device": "invalid",  # type: ignore[dict-item]
                 MOCK_TRANSMITTER_DEVICE_ID: valid_device,
             },
         ),

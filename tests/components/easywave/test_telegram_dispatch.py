@@ -35,6 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
+    MOCK_ENTRY_ID,
     MOCK_NEO_SENSOR_SERIAL,
     MOCK_TRANSMITTER_SERIAL,
     _entry_with_subentries,
@@ -150,13 +151,16 @@ async def test_button_press_low_battery_skips_press_event(
         assert not any(
             event.data.get("type") == EVENT_TYPE_BUTTON_PRESS for event in events
         )
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "low"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "low"
 
     await _run_dispatch_test(
         hass,
@@ -253,13 +257,16 @@ async def test_neo_sensor_temperature_updates_from_telegram(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "26.3"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "26.3"
 
     await _run_dispatch_test(
         hass, entry, transceiver, _assert_state, _temperature_event()
@@ -280,13 +287,16 @@ async def test_neo_sensor_temperature_matches_serial_case_insensitively(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{upper_serial}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "26.3"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "26.3"
 
     await _run_dispatch_test(
         hass,
@@ -325,15 +335,20 @@ async def test_neo_sensor_humidity_updates_from_telegram(
     entry = _entry_with_subentries(_neo_sensor_device_record(capabilities=(1 << 5)))
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_humidity",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "55.0"
-        device = dr.async_get(hass).async_get_device(
-            identifiers={(DOMAIN, f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}")}
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "55.0"
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
+        device = dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"),
+            MOCK_ENTRY_ID,
         )
         assert device is not None
 
@@ -350,13 +365,16 @@ async def test_neo_sensor_learn_telegram_is_ignored_at_runtime(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
     learn_event = SensorTelegramEvent(
         sensor_serial=bytes.fromhex(MOCK_NEO_SENSOR_SERIAL),
@@ -380,13 +398,16 @@ async def test_neo_sensor_unknown_serial_is_ignored(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
     await _run_dispatch_test(
         hass,
@@ -413,13 +434,16 @@ async def test_neo_sensor_temperature_restores_last_known_state(
     ):
         await _setup_entry(hass, entry, transceiver)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor",
         DOMAIN,
         f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == "21.5"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "21.5"
 
     await _teardown_entry(hass, entry)
 
@@ -443,14 +467,19 @@ async def test_battery_sensor_clears_after_repeated_ok_telegrams(
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "ok"
-        assert hass.states.get(entity_id).attributes["icon"] == "mdi:battery"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "ok"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["icon"] == "mdi:battery"
         assert any(event.data["type"] == EVENT_TYPE_BATTERY_NORMAL for event in events)
 
     await _run_dispatch_test(
@@ -477,13 +506,16 @@ async def test_battery_sensor_ignores_ok_telegram_when_already_ok(
     entry = _entry_with_subentries(_transmitter_device_record())
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "ok"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "ok"
 
     await _run_dispatch_test(
         hass,
@@ -512,13 +544,16 @@ async def test_neo_sensor_temperature_ignores_humidity_only_measurement(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
     await _run_dispatch_test(hass, entry, transceiver, _assert_state, _humidity_event())
 
@@ -539,15 +574,58 @@ async def test_neo_sensor_humidity_restores_last_known_state(
     ):
         await _setup_entry(hass, entry, transceiver)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor",
         DOMAIN,
         f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_humidity",
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == "48.0"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "48.0"
 
     await _teardown_entry(hass, entry)
+
+
+async def test_coordinator_ignores_sensor_measurement_marked_should_ignore(
+    hass: HomeAssistant,
+) -> None:
+    """Sensor measurements flagged to ignore do not update entity state."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
+    )
+    ignored_event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(MOCK_NEO_SENSOR_SERIAL),
+        payload=SensorMeasurementPayload(
+            version=0,
+            has_battery=True,
+            battery_level=7,
+            wire_measurement_type=5,
+            measurement_type=MeasurementType.TEMPERATURE,
+            payload_format=SensorPayloadFormat.NEO,
+            should_ignore=True,
+            has_reference=False,
+            raw_value=2630,
+            reference_value=0,
+            max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
+        ),
+    )
+
+    async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, ignored_event)
 
 
 async def test_coordinator_ignores_unsupported_sensor_payload(
@@ -564,13 +642,16 @@ async def test_coordinator_ignores_unsupported_sensor_payload(
     )
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
     await _run_dispatch_test(hass, entry, transceiver, _assert_state, unsupported_event)
 
@@ -583,13 +664,16 @@ async def test_coordinator_ignores_unhandled_telegram_type(
     entry = _entry_with_subentries(_transmitter_device_record())
 
     async def _assert_state() -> None:
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",
             DOMAIN,
             f"transmitter_{MOCK_TRANSMITTER_SERIAL}_last_button",
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
     await _run_dispatch_test(hass, entry, transceiver, _assert_state, MagicMock())
 

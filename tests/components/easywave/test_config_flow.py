@@ -33,7 +33,7 @@ COMPORTS_PATH = (
 TRANSCEIVER_PATH = "homeassistant.components.easywave.config_flow.RX11Transceiver"
 
 
-def _patch_connecting_transceiver(*, connected: bool = True) -> patch:
+def _patch_connecting_transceiver(*, connected: bool = True):
     """Patch RX11Transceiver to simulate a successful or failed connection."""
     mock_transceiver = MagicMock()
     mock_transceiver.connect = AsyncMock(return_value=connected)
@@ -90,8 +90,8 @@ async def test_user_flow_ignores_non_rx11_ports(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_flow_select_port(hass: HomeAssistant) -> None:
-    """Test user flow shows port selection form and proceeds to confirm."""
+async def test_user_flow_single_port_skips_to_confirm(hass: HomeAssistant) -> None:
+    """Test user flow skips port selection when exactly one RX11 is found."""
     port = _make_port()
 
     with patch(COMPORTS_PATH, return_value=[port]):
@@ -100,9 +100,23 @@ async def test_user_flow_select_port(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+
+async def test_user_flow_select_port(hass: HomeAssistant) -> None:
+    """Test user flow shows port selection form when multiple RX11 sticks are found."""
+    port1 = _make_port()
+    port2 = _make_port(device="/dev/ttyACM1", serial_number="54321")
+
+    with patch(COMPORTS_PATH, return_value=[port1, port2]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ports"
 
-    with patch(COMPORTS_PATH, return_value=[port]):
+    with patch(COMPORTS_PATH, return_value=[port1, port2]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
@@ -122,12 +136,6 @@ async def test_user_flow_aborts_when_frequency_not_permitted(
     with patch(COMPORTS_PATH, return_value=[port]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    with patch(COMPORTS_PATH, return_value=[port]):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -161,11 +169,6 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
-        )
-
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
 
@@ -189,8 +192,69 @@ async def test_user_flow_cannot_connect_on_confirm(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_recovers_after_cannot_connect(hass: HomeAssistant) -> None:
+    """Test confirm step can create the entry after a failed connection attempt."""
+    port = _make_port()
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(side_effect=[False, True])
+    mock_transceiver.dispose = AsyncMock()
+
+    with (
+        patch(COMPORTS_PATH, return_value=[port]),
+        patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_PATH] == "/dev/ttyACM0"
+    assert mock_transceiver.connect.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "dispose_side_effect",
+    [
+        OSError("port busy"),
+        TimeoutError(),
+    ],
+    ids=["oserror", "timeout"],
+)
+async def test_user_flow_cannot_connect_when_dispose_fails(
+    hass: HomeAssistant,
+    dispose_side_effect: OSError | TimeoutError,
+) -> None:
+    """Test confirm step fails when transceiver cleanup raises after connect."""
+    port = _make_port()
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(return_value=True)
+    mock_transceiver.dispose = AsyncMock(side_effect=dispose_side_effect)
+
+    with (
+        patch(COMPORTS_PATH, return_value=[port]),
+        patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -199,6 +263,7 @@ async def test_user_flow_cannot_connect_on_confirm(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+    mock_transceiver.dispose.assert_awaited()
 
 
 @pytest.mark.parametrize(
@@ -225,10 +290,6 @@ async def test_user_flow_cannot_connect_on_connection_error(
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -397,11 +458,6 @@ async def test_confirm_unique_id_from_vid_pid(hass: HomeAssistant) -> None:
     with patch(COMPORTS_PATH, return_value=[port]), _patch_connecting_transceiver():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
         )
 
         assert result["step_id"] == "confirm"

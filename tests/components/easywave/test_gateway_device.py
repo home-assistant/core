@@ -34,7 +34,9 @@ async def test_update_gateway_device_registers_versions(
 
     update_gateway_device(hass, entry, transceiver)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
     assert device.hw_version == "RX11 v1.0"
     assert device.sw_version == "FW 2.3.4"
@@ -66,7 +68,9 @@ async def test_update_gateway_device_falls_back_to_entry_data(
 
     update_gateway_device(hass, entry, transceiver)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
     assert device.serial_number == MOCK_ENTRY_DATA["usb_serial_number"]
     assert device.hw_version is None
@@ -105,7 +109,9 @@ async def test_update_gateway_device_updates_existing_entry(
 
     update_gateway_device(hass, entry, transceiver)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
     assert device.hw_version == "RX11 v1.0"
     assert device.sw_version == "FW 2.3.4"

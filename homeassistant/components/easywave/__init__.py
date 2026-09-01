@@ -6,10 +6,11 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
-    CONF_DEVICE_PATH,
     CONF_USB_PID,
     DOMAIN,
     EasywaveGatewayFeature as EasywaveGatewayFeature,
@@ -68,9 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
 
-    transceiver = RX11Transceiver(hass, entry.data.get(CONF_DEVICE_PATH))
+    transceiver = RX11Transceiver(hass)
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except UpdateFailed as err:
+        await coordinator.async_shutdown()
+        raise ConfigEntryNotReady(str(err)) from err
 
     entry.runtime_data = EasywaveRuntimeData(coordinator=coordinator)
 
@@ -93,7 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     return unload_ok
 
 
-def _device_identifier(device: dr.DeviceEntry) -> str | None:
+def _device_identifier(device: dr.AnyDeviceEntry) -> str | None:
     """Return the Easywave identifier stored on a device registry entry."""
     for domain, identifier in device.identifiers:
         if domain == DOMAIN:
@@ -104,7 +109,7 @@ def _device_identifier(device: dr.DeviceEntry) -> str | None:
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: EasywaveConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Handle removal of a device via the three-dot menu.
 

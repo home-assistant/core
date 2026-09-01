@@ -15,6 +15,58 @@ from .conftest import async_setup_easywave_entry
 
 from tests.common import MockConfigEntry
 
+# CEPT member states (ISO 3166-1 alpha-2), per https://www.cept.org/cept/membership-and-observers
+CEPT_COUNTRIES_868MHZ: frozenset[str] = frozenset(
+    {
+        "AD",
+        "AL",
+        "AT",
+        "AZ",
+        "BA",
+        "BE",
+        "BG",
+        "CH",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "EE",
+        "ES",
+        "FI",
+        "FR",
+        "GB",
+        "GE",
+        "GR",
+        "HR",
+        "HU",
+        "IE",
+        "IS",
+        "IT",
+        "LI",
+        "LT",
+        "LU",
+        "LV",
+        "MC",
+        "MD",
+        "ME",
+        "MK",
+        "MT",
+        "NL",
+        "NO",
+        "PL",
+        "PT",
+        "RO",
+        "RS",
+        "SE",
+        "SI",
+        "SK",
+        "SM",
+        "TR",
+        "UA",
+        "VA",
+    }
+)
+
 
 def test_all_allowed_countries_in_frequency_list() -> None:
     """Test that all expected 868MHz countries are in the list."""
@@ -30,8 +82,7 @@ def test_all_allowed_countries_in_frequency_list() -> None:
 
     assert "GB" in allowed
 
-    cept_non_eu = {"CH", "IS", "LI"}
-    assert cept_non_eu.issubset(allowed)
+    assert CEPT_COUNTRIES_868MHZ.issubset(allowed)
 
 
 def test_country_code_case_insensitive() -> None:
@@ -105,6 +156,7 @@ async def test_repair_issue_created_on_disallowed_country(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
         DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
@@ -120,6 +172,7 @@ async def test_stale_repair_issue_deleted_on_allowed_country(
     """Test that stale repair issues are removed when country is allowed."""
     await async_setup_easywave_entry(hass, mock_config_entry, country="FR")
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
         DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
@@ -172,5 +225,35 @@ async def test_uk_and_post_brexit_aliases() -> None:
 
 async def test_cept_non_eu_members_allowed() -> None:
     """Test that non-EU CEPT members are allowed."""
-    for country in ("CH", "NO", "IS", "LI"):
+    eu_countries = {
+        "AT",
+        "BE",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "DK",
+        "EE",
+        "FI",
+        "FR",
+        "DE",
+        "GR",
+        "HU",
+        "IE",
+        "IT",
+        "LV",
+        "LT",
+        "LU",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SK",
+        "SI",
+        "ES",
+        "SE",
+    }
+    cept_non_eu = CEPT_COUNTRIES_868MHZ - eu_countries
+    for country in sorted(cept_non_eu):
         assert is_country_allowed_for_frequency(FREQUENCY_868MHZ, country) is True

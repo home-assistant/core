@@ -79,12 +79,16 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate_device_connection(self, device_path: str) -> bool:
         """Verify that an RX11 transceiver is reachable on the given port."""
         transceiver = RX11Transceiver(self.hass, device_path)
+        connected = False
         try:
-            return await transceiver.connect()
+            connected = await transceiver.connect()
+        except OSError, TimeoutError:
+            connected = False
+        try:
+            await transceiver.dispose()
         except OSError, TimeoutError:
             return False
-        finally:
-            await transceiver.dispose()
+        return connected
 
     @override
     async def async_step_user(
@@ -123,19 +127,33 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         if not port_list:
             return self.async_abort(reason="no_devices_found")
 
+        if user_input is None and len(ports) == 1:
+            port = ports[0]
+            self._device = {
+                "device": port.device,
+                "vid": port.vid,
+                "pid": port.pid,
+                "serial_number": port.serial_number or "unknown",
+                "manufacturer": port.manufacturer or "unknown",
+                "product": USB_DEVICE_NAMES[(port.vid, port.pid)]["product"],
+            }
+            return await self.async_step_confirm()
+
         if user_input is not None:
             selected_path = user_input[CONF_DEVICE_PATH]
-            port = next((p for p in ports if p.device == selected_path), None)
-            if port is None:
+            selected_port = next((p for p in ports if p.device == selected_path), None)
+            if selected_port is None:
                 errors["base"] = "device_no_longer_available"
             else:
                 self._device = {
-                    "device": port.device,
-                    "vid": port.vid,
-                    "pid": port.pid,
-                    "serial_number": port.serial_number or "unknown",
-                    "manufacturer": port.manufacturer or "unknown",
-                    "product": USB_DEVICE_NAMES[(port.vid, port.pid)]["product"],
+                    "device": selected_port.device,
+                    "vid": selected_port.vid,
+                    "pid": selected_port.pid,
+                    "serial_number": selected_port.serial_number or "unknown",
+                    "manufacturer": selected_port.manufacturer or "unknown",
+                    "product": USB_DEVICE_NAMES[(selected_port.vid, selected_port.pid)][
+                        "product"
+                    ],
                 }
                 return await self.async_step_confirm()
 

@@ -198,10 +198,11 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             # in the state machine before the write.
             self.hass.loop.call_soon(_on_ha_started)
         else:
+            # Use async_listen (not listen_once): listen_once auto-removes after
+            # fire, then entity unload via async_on_remove would error with
+            # "Unable to remove unknown job listener".
             self.async_on_remove(
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STARTED, _on_ha_started
-                )
+                self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
             )
 
     @override

@@ -1,6 +1,7 @@
 """Tests for the Easywave transmitter state-sensor entities."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control.codec import ButtonFunction, ButtonPushEvent
@@ -34,7 +35,7 @@ from tests.common import MockConfigEntry
 MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 
 
-def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
+def _make_gateway(extra_data: dict[str, Any]) -> MockConfigEntry:
     """Return a gateway entry with a transmitter device using given data."""
     record = _transmitter_device_record(
         title="Test Transmitter",
@@ -80,6 +81,7 @@ async def test_last_button_sensor_restores_state(hass: HomeAssistant) -> None:
     ):
         await async_setup_easywave_entry(hass, gateway)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button"
@@ -103,6 +105,7 @@ async def test_sensor_setup_skips_unsupported_transmitter_types(
     gateway = _make_gateway({CONF_OPERATING_TYPE: "2"})
     await async_setup_easywave_entry(hass, gateway)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     assert (
         registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button")
@@ -123,6 +126,7 @@ async def test_sensor_setup_skips_non_group_transmitters(
     gateway = _make_gateway({CONF_GROUPING_MODE: "individual"})
     await async_setup_easywave_entry(hass, gateway)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = er.async_get(hass)
     assert (
         registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button")
@@ -147,12 +151,17 @@ async def test_battery_sensor_restores_last_known_state(hass: HomeAssistant) -> 
     ):
         await async_setup_easywave_entry(hass, gateway)
 
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     entity_id = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_battery_warning"
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == "low"
-    assert hass.states.get(entity_id).attributes["icon"] == "mdi:battery-alert"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "low"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["icon"] == "mdi:battery-alert"
 
 
 async def _run_transmitter_telegram_test(
@@ -216,11 +225,14 @@ async def test_last_button_sensor_updates_from_telegram(
             ),
         )
 
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button"
         )
         assert entity_id is not None
-        assert hass.states.get(entity_id).state == "b"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "b"
     finally:
         await _teardown_transmitter_telegram_test(hass, gateway)
 
@@ -243,6 +255,7 @@ async def test_battery_sensor_shows_low_after_low_battery_telegram(
             ),
         )
 
+        # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_battery_warning"
         )
