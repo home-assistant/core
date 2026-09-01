@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/refoss",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["refoss-ha==1.2.5"],
+  "requirements": ["refoss-ha==1.2.6"],
   "single_config_entry": true
 }

@@ -10,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DISPATCH_DEVICE_DISCOVERED, LOGGER
 from .coordinator import RefossDataUpdateCoordinator
+from .util import configured_hosts
 
 type RefossConfigEntry = ConfigEntry[DiscoveryService]
 
@@ -23,6 +24,7 @@ class DiscoveryService(Listener):
         """Init discovery service."""
         self.hass = hass
         self.config_entry = config_entry
+        self.hosts = set(configured_hosts(config_entry.data))
 
         self.discovery = discovery
         self.discovery.add_listener(self)
@@ -31,6 +33,9 @@ class DiscoveryService(Listener):
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
+
+        if self.hosts and device_info.inner_ip not in self.hosts:
+            return
 
         device = await async_build_base_device(device_info)
         if device is None:
@@ -49,6 +54,9 @@ class DiscoveryService(Listener):
 
     async def device_update(self, device_info: DeviceInfo) -> None:
         """Handle updates in device information, update if ip has changed."""
+        if self.hosts and device_info.inner_ip not in self.hosts:
+            return
+
         for coordinator in self.coordinators:
             if coordinator.device.device_info.mac == device_info.mac:
                 LOGGER.debug(

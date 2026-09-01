@@ -2953,7 +2953,7 @@ raspyrfm-client==1.2.9
 redgtech-api==0.1.38
 
 # homeassistant.components.refoss
-refoss-ha==1.2.5
+refoss-ha==1.2.6
 
 # homeassistant.components.rainmachine
 regenmaschine==2024.03.0

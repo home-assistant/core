@@ -1,12 +1,32 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ipv4_address": "Enter a valid IPv4 address"
+    },
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "reconfigure": {
+        "description": "Add or remove Refoss devices, or leave the list empty to use automatic discovery.",
+        "data": {
+          "hosts": "IP addresses"
+        },
+        "data_description": {
+          "hosts": "Add the IPv4 address of each Refoss device on another network or VLAN."
+        }
+      },
+      "user": {
+        "description": "Add the IP address of each Refoss device, or leave the list empty to discover devices automatically.",
+        "data": {
+          "hosts": "IP addresses"
+        },
+        "data_description": {
+          "hosts": "The IPv4 addresses of Refoss devices on another network or VLAN."
+        }
       }
     }
   },

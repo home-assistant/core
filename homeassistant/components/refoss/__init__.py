@@ -9,7 +9,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .bridge import DiscoveryService, RefossConfigEntry
 from .const import DISCOVERY_SCAN_INTERVAL
-from .util import refoss_discovery_server
+from .util import configured_hosts, refoss_discovery_server
 
 PLATFORMS: Final = [
     Platform.SENSOR,
@@ -26,7 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
-        await refoss_discovery.discovery.broadcast_msg()
+        hosts = configured_hosts(entry.data)
+        if not hosts:
+            await refoss_discovery.discovery.broadcast_msg()
+            return
+        for host in hosts:
+            await refoss_discovery.discovery.broadcast_msg(host=host)
 
     await _async_scan_update()
 
