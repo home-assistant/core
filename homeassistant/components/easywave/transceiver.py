@@ -88,7 +88,7 @@ class RX11Transceiver:
                 transceiver_id="RX11",
                 port=None,
                 usb_ids=SUPPORTED_USB_IDS,
-                auto_reconnect=False,
+                auto_reconnect=True,
                 auto_listen=False,
             ),
             callbacks=GatewayCallbacks(

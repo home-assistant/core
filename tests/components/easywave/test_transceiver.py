@@ -204,6 +204,17 @@ def test_properties_proxy_gateway_state(mock_gateway: MagicMock) -> None:
     assert transceiver.fw_version == "2.5"
 
 
+def test_gateway_config_enables_library_auto_reconnect(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """The transceiver wrapper delegates reconnect handling to the library."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
+        RX11Transceiver(hass, device_path=DEVICE_PATH)
+
+    gateway_config = mock_gateway_cls.call_args.args[0]
+    assert gateway_config.auto_reconnect is True
+
+
 def test_resolve_gateway_port_prefers_usb_serial() -> None:
     """Port resolution matches the configured USB serial number."""
     port_a = MagicMock(

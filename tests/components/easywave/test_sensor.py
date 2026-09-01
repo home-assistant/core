@@ -1,7 +1,5 @@
 """Tests for the sensor platform of the Easywave Core integration."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.easywave.const import DOMAIN, EVENT_EASYWAVE
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
@@ -78,24 +76,22 @@ async def test_gateway_sensor_fires_connected_event_on_transition(
 
     events = async_capture_events(hass, EVENT_EASYWAVE)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await coordinator.async_refresh()
     await hass.async_block_till_done()
+    coordinator._gateway_last_status = "connected"
+    disconnect_callback = transceiver.set_disconnect_callback.call_args[0][0]
 
-    transceiver.is_connected = False
-    coordinator.is_offline = True
-    coordinator.async_set_updated_data(
-        {"is_connected": False, "device_path": "/dev/ttyACM0"}
-    )
+    disconnect_callback()
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "disconnected"
 
     events.clear()
+    coordinator._gateway_last_status = "disconnected"
+    coordinator.is_offline = True
     transceiver.is_connected = True
-    coordinator.is_offline = False
-    transceiver.reconnect = AsyncMock(return_value=True)
-    await coordinator.async_refresh()
+    connected_callback = transceiver.set_connected_callback.call_args[0][0]
+    connected_callback()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -158,11 +154,9 @@ async def test_gateway_sensor_fires_disconnected_event_on_transition(
     assert state is not None
     assert state.state == "connected"
 
-    transceiver.is_connected = False
-    coordinator.is_offline = False
-    coordinator.async_set_updated_data(
-        {"is_connected": False, "device_path": "/dev/ttyACM0"}
-    )
+    coordinator._gateway_last_status = "connected"
+    disconnect_callback = transceiver.set_disconnect_callback.call_args[0][0]
+    disconnect_callback()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

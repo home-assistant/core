@@ -1,4 +1,4 @@
-"""Coordinator for Easywave integration with automatic USB reconnect."""
+"""Coordinator for Easywave integration."""
 
 import asyncio
 import contextlib
@@ -15,7 +15,8 @@ from easywave_home_control.codec import (
 )
 from easywave_home_control.codec.sensors import SensorLearnPayload
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,8 +28,11 @@ from .const import (
     ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
+    EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
+    EVENT_TYPE_GATEWAY_CONNECTED,
+    EVENT_TYPE_GATEWAY_DISCONNECTED,
 )
 from .devices import get_devices
 from .entity import EasywaveDeviceEntry
@@ -39,6 +43,10 @@ if TYPE_CHECKING:
     from . import EasywaveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+_BATTERY_STATE_OK = "ok"
+_BATTERY_STATE_LOW = "low"
+_BATTERY_CLEAR_THRESHOLD = 2
 
 
 def _serial_hex_matches(device_serial: bytes, configured_serial: str) -> bool:
@@ -71,6 +79,11 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
         self._learning_lock = asyncio.Lock()
+        self._ha_started = self.hass.state is CoreState.running
+        self._gateway_last_status = "disconnected"
+        self._battery_ok_streak: dict[str, int] = {}
+        self._battery_state: dict[str, str] = {}
+        self._register_homeassistant_started_listener()
 
     def is_learning_busy(self) -> bool:
         """Return True when a device learning session holds the hardware lock."""
@@ -90,6 +103,53 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _update_gateway_device(self) -> None:
         """Update the gateway device in the device registry."""
         update_gateway_device(self.hass, self.config_entry, self.transceiver)
+
+    def _register_homeassistant_started_listener(self) -> None:
+        """Track when Home Assistant has started for device automation events."""
+        if self._ha_started:
+            self._gateway_last_status = self._gateway_connection_status()
+            return
+
+        @callback
+        def _on_ha_started(_event: Any) -> None:
+            self._ha_started = True
+            self._gateway_last_status = self._gateway_connection_status()
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
+        )
+
+    def _gateway_connection_status(self) -> str:
+        """Return the gateway connection status key."""
+        if self.is_offline:
+            return "disconnected"
+        if self.transceiver.is_connected:
+            return "connected"
+        return "disconnected"
+
+    @callback
+    def _sync_gateway_connection_events(self) -> None:
+        """Fire gateway device automation events on connection transitions."""
+        if not self._ha_started:
+            return
+        new_status = self._gateway_connection_status()
+        if new_status == self._gateway_last_status:
+            return
+        old_status = self._gateway_last_status
+        _LOGGER.debug("Gateway status: %s -> %s", old_status, new_status)
+        self._gateway_last_status = new_status
+        if new_status == "connected":
+            self.fire_device_event(
+                self.config_entry.entry_id,
+                EVENT_TYPE_GATEWAY_CONNECTED,
+                subtype="connected",
+            )
+        elif new_status == "disconnected":
+            self.fire_device_event(
+                self.config_entry.entry_id,
+                EVENT_TYPE_GATEWAY_DISCONNECTED,
+                subtype="disconnected",
+            )
 
     @override
     async def _async_setup(self) -> None:
@@ -120,8 +180,20 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _on_transceiver_connected(self) -> None:
-        """Update the gateway device registry when the transceiver connects."""
+        """Handle a successful transceiver connection from the library."""
+        was_offline = self.is_offline
+        self.is_offline = False
         self._update_gateway_device()
+        if self._has_telegram_listeners:
+            self._start_telegram_listener()
+        self.async_set_updated_data(
+            {
+                "is_connected": self.transceiver.is_connected,
+                "device_path": self.transceiver.device_path,
+            }
+        )
+        if was_offline:
+            self._sync_gateway_connection_events()
 
     @callback
     def _on_transceiver_disconnect(self) -> None:
@@ -147,44 +219,27 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "device_path": None,
             }
         )
+        self._sync_gateway_connection_events()
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update device data periodically.
 
-        This is called every DEVICE_SCAN_INTERVAL to:
-        - Check connection status
-        - Attempt reconnection if offline
-        - Detect disconnections of previously connected devices
+        Reconnection is handled by the easywave-home-control library. This
+        refresh only mirrors the current connection state and detects edge
+        cases the disconnect callback may miss.
         """
         try:
-            # If offline, attempt reconnect
             if self.is_offline:
-                connected = await self.transceiver.reconnect()
-                if connected:
-                    self.is_offline = False
-                    self._register_transceiver_callbacks()
-                    self._update_gateway_device()
-                    # Restart telegram listener if any entities need it
-                    if self._has_telegram_listeners:
-                        self._start_telegram_listener()
-                    # Return new device state; coordinator will notify listeners
-                    return {
-                        "is_connected": self.transceiver.is_connected,
-                        "device_path": self.transceiver.device_path,
-                    }
-                # Still offline, no need to log as error — offline mode is expected
                 return {
                     "is_connected": False,
                     "device_path": None,
                 }
-            # Verify transceiver still reports connected
-            # (disconnect callback handles immediate detection,
-            # this is a safety net for edge cases)
             if not self.transceiver.is_connected:
                 _LOGGER.warning("Connection lost, entering offline mode")
                 self.is_offline = True
                 self._stop_telegram_listener()
+                self._sync_gateway_connection_events()
                 return {
                     "is_connected": False,
                     "device_path": None,
@@ -231,15 +286,24 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return device.device_id
         return None
 
-    def _transmitter_battery_entity_registered(self, serial: bytes) -> bool:
-        """Return True when a battery sensor entity handles battery events."""
-        for entity in self._transmitter_entities:
-            if not _serial_hex_matches(serial, entity.transmitter_serial):
-                continue
-            unique_id = getattr(entity, "unique_id", None)
-            if unique_id and unique_id.endswith("_battery_warning"):
-                return True
-        return False
+    @callback
+    def _handle_transmitter_battery_status(self, device_id: str, is_low: bool) -> None:
+        """Fire battery device automation events for a configured transmitter."""
+        if is_low:
+            self._battery_ok_streak[device_id] = 0
+            if self._battery_state.get(device_id) != _BATTERY_STATE_LOW:
+                self._battery_state[device_id] = _BATTERY_STATE_LOW
+                self.fire_device_event(device_id, EVENT_TYPE_BATTERY_LOW, subtype="low")
+            return
+        if self._battery_state.get(device_id) == _BATTERY_STATE_OK:
+            return
+        self._battery_ok_streak[device_id] = (
+            self._battery_ok_streak.get(device_id, 0) + 1
+        )
+        if self._battery_ok_streak[device_id] >= _BATTERY_CLEAR_THRESHOLD:
+            self._battery_state[device_id] = _BATTERY_STATE_OK
+            self._battery_ok_streak[device_id] = 0
+            self.fire_device_event(device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok")
 
     @property
     def _has_telegram_listeners(self) -> bool:
@@ -377,11 +441,9 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
             return
         if is_low_battery:
-            if not self._transmitter_battery_entity_registered(
-                event.transmitter_serial
-            ):
-                self.fire_device_event(device_id, EVENT_TYPE_BATTERY_LOW, subtype="low")
+            self._handle_transmitter_battery_status(device_id, True)
             return
+        self._handle_transmitter_battery_status(device_id, False)
         button_letter = "abcd"[event.button] if event.button < 4 else None
         if button_letter is not None:
             self.fire_device_event(

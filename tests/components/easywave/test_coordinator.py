@@ -2,7 +2,7 @@
 
 import asyncio
 import contextlib
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 from easywave_home_control.codec import (
     ButtonFunction,
@@ -17,11 +17,15 @@ from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
+    EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
+    EVENT_TYPE_GATEWAY_CONNECTED,
+    EVENT_TYPE_GATEWAY_DISCONNECTED,
 )
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -36,7 +40,7 @@ from .conftest import (
     mock_easywave_transceiver,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture
@@ -193,36 +197,49 @@ async def test_refresh_returns_connected_data_when_online(
     }
 
 
-async def test_refresh_reconnects_and_updates_gateway_versions(
+async def test_refresh_returns_offline_data_without_coordinator_reconnect(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Periodic refresh does not reconnect while offline."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+
+    await coordinator.async_refresh()
+
+    assert coordinator.is_offline is True
+    assert coordinator.data == {"is_connected": False, "device_path": None}
+    mock_transceiver.reconnect.assert_not_called()
+
+
+async def test_connected_callback_restores_online_state(
+    hass: HomeAssistant,
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Periodic refresh reconnects from offline and updates gateway versions."""
+    """Library reconnect callbacks restore the coordinator online state."""
     device_registry.async_get_or_create(
         config_entry_id=coordinator.config_entry.entry_id,
         identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
         name="RX11 USB Transceiver",
     )
-
-    async def receive_side_effect(timeout: float = 30.0) -> None:
-        raise asyncio.CancelledError
-
-    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
-    coordinator.register_transmitter_entities([MagicMock()])
-    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
     coordinator.is_offline = True
-    mock_transceiver.reconnect = AsyncMock(return_value=True)
+    mock_transceiver.is_connected = True
+    mock_transceiver.device_path = "/dev/ttyACM0"
     mock_transceiver.hw_version = "RX11 v1.0"
     mock_transceiver.fw_version = "FW 2.3.4"
+    connected_callback = mock_transceiver.set_connected_callback.call_args[0][0]
 
-    await coordinator.async_refresh()
+    connected_callback()
+    await hass.async_block_till_done()
 
     assert coordinator.is_offline is False
-    assert coordinator.data["is_connected"] is True
-    mock_transceiver.set_connected_callback.assert_called()
-
+    assert coordinator.data == {
+        "is_connected": True,
+        "device_path": "/dev/ttyACM0",
+    }
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, coordinator.config_entry.entry_id),
         coordinator.config_entry.entry_id,
@@ -230,21 +247,6 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     assert device is not None
     assert device.hw_version == "RX11 v1.0"
     assert device.sw_version == "FW 2.3.4"
-
-
-async def test_refresh_stays_offline_when_reconnect_fails(
-    coordinator: EasywaveCoordinator,
-    mock_transceiver: MagicMock,
-) -> None:
-    """Periodic refresh stays offline when reconnect fails."""
-    await coordinator.async_config_entry_first_refresh()
-    coordinator.is_offline = True
-    mock_transceiver.reconnect = AsyncMock(return_value=False)
-
-    await coordinator.async_refresh()
-
-    assert coordinator.is_offline is True
-    assert coordinator.data == {"is_connected": False, "device_path": None}
 
 
 async def test_refresh_detects_lost_connection(
@@ -261,30 +263,13 @@ async def test_refresh_detects_lost_connection(
     assert coordinator.data == {"is_connected": False, "device_path": None}
 
 
-async def test_refresh_reraises_update_failed(
-    coordinator: EasywaveCoordinator,
-    mock_transceiver: MagicMock,
-) -> None:
-    """UpdateFailed from reconnect is recorded during refresh."""
-    await coordinator.async_config_entry_first_refresh()
-    coordinator.is_offline = True
-    mock_transceiver.reconnect = AsyncMock(side_effect=UpdateFailed("fail"))
-
-    await coordinator.async_refresh()
-
-    assert coordinator.is_offline is True
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-
-
 async def test_refresh_wraps_os_error_in_update_failed(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """OS errors during reconnect are wrapped in UpdateFailed."""
+    """OS errors while reading connection state are wrapped in UpdateFailed."""
     await coordinator.async_config_entry_first_refresh()
-    coordinator.is_offline = True
-    mock_transceiver.reconnect = AsyncMock(side_effect=OSError("boom"))
+    type(mock_transceiver).is_connected = PropertyMock(side_effect=OSError("boom"))
 
     await coordinator.async_refresh()
 
@@ -674,3 +659,107 @@ async def test_unregister_transmitter_entity_keeps_listener_for_configured_devic
 
     assert coordinator._listener_task is not None
     await coordinator.async_shutdown()
+
+
+async def test_dispatch_battery_normal_fires_event_without_battery_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Battery-normal device events fire without a battery sensor entity."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+    coordinator = EasywaveCoordinator(hass, transceiver, entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = []
+
+    def capture_event(event: object) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_EASYWAVE, capture_event)
+
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.LOW_BATTERY,
+            should_ignore=False,
+        )
+    )
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert any(event.data["type"] == EVENT_TYPE_BATTERY_NORMAL for event in events)
+
+
+async def test_gateway_connected_event_fires_from_coordinator_callback(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Gateway connected device events fire from coordinator callbacks."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+    await coordinator.async_config_entry_first_refresh()
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    coordinator._gateway_last_status = "disconnected"
+    coordinator.is_offline = True
+    mock_transceiver.is_connected = True
+    connected_callback = mock_transceiver.set_connected_callback.call_args[0][0]
+
+    connected_callback()
+    await hass.async_block_till_done()
+
+    assert any(event.data["type"] == EVENT_TYPE_GATEWAY_CONNECTED for event in events)
+
+
+async def test_gateway_disconnected_event_fires_from_coordinator_callback(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Gateway disconnected device events fire from coordinator callbacks."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+    await coordinator.async_config_entry_first_refresh()
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    coordinator._gateway_last_status = "connected"
+    disconnect_callback = mock_transceiver.set_disconnect_callback.call_args[0][0]
+
+    disconnect_callback()
+    await hass.async_block_till_done()
+
+    assert any(
+        event.data["type"] == EVENT_TYPE_GATEWAY_DISCONNECTED for event in events
+    )

@@ -37,10 +37,6 @@ from .const import (
     DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
-    EVENT_TYPE_BATTERY_LOW,
-    EVENT_TYPE_BATTERY_NORMAL,
-    EVENT_TYPE_GATEWAY_CONNECTED,
-    EVENT_TYPE_GATEWAY_DISCONNECTED,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
     EasywaveGatewayFeature,
@@ -155,23 +151,8 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         # initial None (unknown) → connected/disconnected transition intact.
         if self._ha_started:
             if new_status != self._last_status:
-                old_status = self._last_status
-                _LOGGER.debug("Gateway status: %s -> %s", old_status, new_status)
+                _LOGGER.debug("Gateway status: %s -> %s", self._last_status, new_status)
                 self._last_status = new_status
-
-                if new_status == "connected":
-                    self.coordinator.fire_device_event(
-                        self._entry.entry_id,
-                        EVENT_TYPE_GATEWAY_CONNECTED,
-                        subtype="connected",
-                    )
-                elif new_status == "disconnected":
-                    self.coordinator.fire_device_event(
-                        self._entry.entry_id,
-                        EVENT_TYPE_GATEWAY_DISCONNECTED,
-                        subtype="disconnected",
-                    )
-
             self._current_status = new_status
 
         super()._handle_coordinator_update()
@@ -414,9 +395,6 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             if self._native_value != _BATTERY_STATE_LOW:
                 self._native_value = _BATTERY_STATE_LOW
                 self.async_write_ha_state()
-                self._coordinator.fire_device_event(
-                    self._device_id, EVENT_TYPE_BATTERY_LOW, subtype="low"
-                )
             return
         if self._native_value == _BATTERY_STATE_OK:
             return
@@ -425,9 +403,6 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             self._native_value = _BATTERY_STATE_OK
             self._ok_streak = 0
             self.async_write_ha_state()
-            self._coordinator.fire_device_event(
-                self._device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok"
-            )
 
 
 class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor):
