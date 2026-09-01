@@ -22,9 +22,6 @@
       "fuel_type": {
         "default": "mdi:gas-station"
       },
-      "month_of_first_dvla_registration": {
-        "default": "mdi:calendar-month-outline"
-      },
       "month_of_first_registration": {
         "default": "mdi:calendar-month"
       },
