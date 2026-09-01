@@ -281,6 +281,9 @@ class AbstractConfig(ABC):
     @callback
     def async_schedule_google_sync_all(self) -> None:
         """Schedule a sync for all registered agents."""
+        if not self.hass.is_running:
+            _LOGGER.debug("Sync skipped when not fully running")
+            return
         for agent_user_id in self.async_get_agent_users():
             self.async_schedule_google_sync(agent_user_id)
 
