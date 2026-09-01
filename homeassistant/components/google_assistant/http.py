@@ -12,8 +12,6 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.homeassistant.exposed_entities import (
-    async_expose_entity,
-    async_is_entity_locked,
     async_listen_entity_updates,
     async_set_entity_locked,
     async_should_expose,
@@ -264,15 +262,15 @@ class GoogleConfig(AbstractConfig):
 
     @callback
     def _async_update_legacy_exposure(self, entity_id: str) -> None:
-        """Push the entity's YAML-configured exposure into the shared store.
+        """Set the entity's YAML-configured exposure in the shared store.
 
-        Also locks the entity, so websocket updates to its exposure setting
-        are rejected as long as YAML has an opinion on it.
+        Kept in memory only, so exposure reverts to the UI-driven store as
+        soon as YAML no longer has an opinion, including across a restart
+        with the domain, or the whole configuration, removed.
         """
         explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
         if explicit_expose is not None:
-            async_expose_entity(self.hass, DOMAIN, entity_id, explicit_expose)
-            async_set_entity_locked(self.hass, DOMAIN, entity_id, True)
+            async_set_entity_locked(self.hass, DOMAIN, entity_id, explicit_expose)
             return
 
         entity_registry = er.async_get(self.hass)
@@ -288,13 +286,9 @@ class GoogleConfig(AbstractConfig):
         should_expose_by_default = self._should_expose_by_default(
             entity_id, auxiliary_entity=auxiliary_entity
         )
-        was_locked = async_is_entity_locked(self.hass, DOMAIN, entity_id)
-        async_set_entity_locked(self.hass, DOMAIN, entity_id, should_expose_by_default)
-        if should_expose_by_default:
-            async_expose_entity(self.hass, DOMAIN, entity_id, True)
-        elif was_locked:
-            # Was locked, so the stored value is ours to clear.
-            async_expose_entity(self.hass, DOMAIN, entity_id, False)
+        async_set_entity_locked(
+            self.hass, DOMAIN, entity_id, True if should_expose_by_default else None
+        )
 
     @override
     def should_2fa(self, state):

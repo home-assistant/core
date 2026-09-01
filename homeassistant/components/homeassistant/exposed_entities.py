@@ -119,7 +119,7 @@ class ExposedEntities:
         """Initialize."""
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
-        self._locked_entities: dict[str, set[str]] = {}
+        self.locked_entities: dict[str, dict[str, bool]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -148,29 +148,36 @@ class ExposedEntities:
 
     @callback
     def async_set_entity_locked(
-        self, assistant: str, entity_id: str, locked: bool
+        self, assistant: str, entity_id: str, should_expose: bool | None
     ) -> None:
-        """Mark whether an entity's exposure is controlled outside the UI.
+        """Set an entity's exposure from an external source, such as YAML.
 
-        A locked entity's exposure is kept in sync with an external source,
-        such as YAML configuration, changes made through the websockets
-        will be rejected.
+        The value is kept in memory only, never persisted: it disappears,
+        handing control back to the UI-driven store, as soon as the source
+        stops providing it, including across a restart. Changes made
+        through the websocket API are rejected while an entity is locked.
+
+        Pass should_expose=None to release the entity back to the UI.
         """
-        locked_entities = self._locked_entities.setdefault(assistant, set())
-        if locked:
-            locked_entities.add(entity_id)
+        locked = self.locked_entities.get(entity_id, {})
+        if locked.get(assistant) == should_expose:
+            return
+
+        if should_expose is None:
+            del locked[assistant]
+            if not locked:
+                del self.locked_entities[entity_id]
         else:
-            locked_entities.discard(entity_id)
+            locked[assistant] = should_expose
+            self.locked_entities[entity_id] = locked
+
+        for listener in self._listeners.get(assistant, []):
+            listener()
 
     @callback
-    def async_is_entity_locked(self, assistant: str, entity_id: str) -> bool:
-        """Return True if an entity's exposure is locked for an assistant."""
-        return entity_id in self._locked_entities.get(assistant, ())
-
-    @callback
-    def async_get_locked_entities(self, assistant: str) -> set[str]:
-        """Return the entity_ids whose exposure is locked for an assistant."""
-        return self._locked_entities.get(assistant, set())
+    def async_get_entity_locked(self, assistant: str, entity_id: str) -> bool | None:
+        """Return the locked exposure value for an entity, or None if unlocked."""
+        return self.locked_entities.get(entity_id, {}).get(assistant)
 
     @callback
     def async_set_assistant_option(
@@ -279,6 +286,10 @@ class ExposedEntities:
     def async_should_expose(self, assistant: str, entity_id: str) -> bool:
         """Return True if an entity should be exposed to an assistant."""
         should_expose: bool
+
+        locked = self.async_get_entity_locked(assistant, entity_id)
+        if locked is not None:
+            return locked
 
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
@@ -443,7 +454,8 @@ def ws_expose_entity(
 
     for entity_id in entity_ids:
         for assistant in msg["assistants"]:
-            if exposed_entities.async_is_entity_locked(assistant, entity_id):
+            locked = exposed_entities.async_get_entity_locked(assistant, entity_id)
+            if locked is not None:
                 connection.send_error(
                     msg["id"],
                     websocket_api.ERR_NOT_ALLOWED,
@@ -470,7 +482,7 @@ def ws_list_exposed_entities(
 ) -> None:
     """List entities which are exposed to assistants."""
     result: dict[str, Any] = {}
-    locked_result: dict[str, Any] = {}
+    locked_entities: dict[str, Any] = {}
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     entity_registry = er.async_get(hass)
@@ -485,12 +497,21 @@ def ws_list_exposed_entities(
             continue
         result[entity_id] = exposed_to
 
-    for assistant in KNOWN_ASSISTANTS:
-        for entity_id in exposed_entities.async_get_locked_entities(assistant):
-            locked_result.setdefault(entity_id, {})[assistant] = True
+    # Locked (YAML-controlled) entities override
+    for entity_id, locked in exposed_entities.locked_entities.items():
+        exposed_to = result.setdefault(entity_id, {})
+        for assistant, should_expose in locked.items():
+            if should_expose:
+                exposed_to[assistant] = True
+            else:
+                exposed_to.pop(assistant, None)
+        if not exposed_to:
+            del result[entity_id]
+
+        locked_entities[entity_id] = dict.fromkeys(locked, True)
 
     connection.send_result(
-        msg["id"], {"exposed_entities": result, "locked_entities": locked_result}
+        msg["id"], {"exposed_entities": result, "locked_entities": locked_entities}
     )
 
 
@@ -540,18 +561,11 @@ def async_listen_entity_updates(
 
 @callback
 def async_set_entity_locked(
-    hass: HomeAssistant, assistant: str, entity_id: str, locked: bool
+    hass: HomeAssistant, assistant: str, entity_id: str, should_expose: bool | None
 ) -> None:
-    """Mark whether an entity's exposure is controlled outside the UI."""
+    """Set an entity's exposure from an external source, such as YAML."""
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_set_entity_locked(assistant, entity_id, locked)
-
-
-@callback
-def async_is_entity_locked(hass: HomeAssistant, assistant: str, entity_id: str) -> bool:
-    """Return True if an entity's exposure is locked for an assistant."""
-    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    return exposed_entities.async_is_entity_locked(assistant, entity_id)
+    exposed_entities.async_set_entity_locked(assistant, entity_id, should_expose)
 
 
 @callback

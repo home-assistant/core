@@ -27,11 +27,7 @@ from homeassistant.components.google_assistant.http import (
     async_get_users,
 )
 from homeassistant.components.homeassistant.const import DATA_EXPOSED_ENTITIES
-from homeassistant.components.homeassistant.exposed_entities import (
-    async_expose_entity,
-    async_get_entity_settings,
-    async_is_entity_locked,
-)
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -428,10 +424,6 @@ async def test_should_expose_applies_yaml_domain_exposure(
     await google_config.async_initialize()
 
     # Reconciled eagerly against YAML once Home Assistant has started.
-    assert (
-        async_get_entity_settings(hass, entry.entity_id)[DOMAIN]["should_expose"]
-        is True
-    )
     assert google_config.should_expose(entry.entity_id) is True
 
 
@@ -493,7 +485,6 @@ async def test_should_expose_defers_to_ui_when_yaml_has_no_opinion(
     # Not written by YAML reconciliation; falls through to (and is cached
     # by) the shared store's own generic fallback.
     assert google_config.should_expose(entry.entity_id) is False
-    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is False
 
 
 async def test_should_expose_locks_yaml_matched_entities(
@@ -511,7 +502,10 @@ async def test_should_expose_locks_yaml_matched_entities(
     await google_config.async_initialize()
 
     assert google_config.should_expose(entry.entity_id) is True
-    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is True
+
+    # A UI-driven change doesn't stick while YAML has an opinion.
+    async_expose_entity(hass, DOMAIN, entry.entity_id, False)
+    assert google_config.should_expose(entry.entity_id) is True
 
 
 async def test_should_expose_clears_stale_yaml_exposure_on_unlock(
@@ -529,14 +523,12 @@ async def test_should_expose_clears_stale_yaml_exposure_on_unlock(
     await google_config.async_initialize()
 
     assert google_config.should_expose(entry.entity_id) is True
-    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is True
 
     entity_registry.async_update_entity(
         entry.entity_id, entity_category=EntityCategory.DIAGNOSTIC
     )
     await hass.async_block_till_done()
 
-    assert async_is_entity_locked(hass, DOMAIN, entry.entity_id) is False
     assert google_config.should_expose(entry.entity_id) is False
 
 
@@ -596,7 +588,8 @@ async def test_new_entity_exposed_via_expose_new_triggers_sync(
     await google_config.async_initialize()
     await google_config.async_connect_agent_user("mock-user-id")
 
-    hass.data[DATA_EXPOSED_ENTITIES].async_set_expose_new_entities(DOMAIN, True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities(DOMAIN, True)
 
     with (
         patch.object(google_config, "async_sync_entities") as mock_sync,

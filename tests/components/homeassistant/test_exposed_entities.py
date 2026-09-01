@@ -594,6 +594,47 @@ async def test_expose_entity_locked(
     )
 
 
+async def test_set_entity_locked_noop_leaves_no_stray_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test unlocking an entity that was never locked doesn't leave an entry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+
+    assert exposed_entities.locked_entities == {}
+
+
+async def test_set_entity_locked(hass: HomeAssistant) -> None:
+    """Test locking, updating, and unlocking an entity's exposure."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    callbacks = []
+    exposed_entities.async_listen_entity_updates("test1", lambda: callbacks.append(1))
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", True)
+    assert exposed_entities.locked_entities == {"light.kitchen": {"test1": True}}
+    assert len(callbacks) == 1
+
+    # Setting the same value again is a no-op.
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", True)
+    assert len(callbacks) == 1
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", False)
+    assert exposed_entities.locked_entities == {"light.kitchen": {"test1": False}}
+    assert len(callbacks) == 2
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+    assert exposed_entities.locked_entities == {}
+    assert len(callbacks) == 3
+
+    # Unlocking again is a no-op.
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+    assert len(callbacks) == 3
+
+
 async def test_listeners(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
