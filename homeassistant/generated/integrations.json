@@ -2170,8 +2170,8 @@
       "name": "Flexit",
       "integrations": {
         "flexit": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Flexit"
         },
@@ -3486,6 +3486,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iseo_argo_ble": {
+      "name": "ISEO Argo BLE Lock",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "iskra": {
       "name": "iskra",
       "integration_type": "hub",
@@ -3572,6 +3578,12 @@
     },
     "jvc_projector": {
       "name": "JVC Projector",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "kaco_modbus": {
+      "name": "KACO Modbus",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3913,6 +3925,12 @@
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "librenms": {
+      "name": "LibreNMS",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4847,6 +4865,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "nexblue": {
+      "name": "NexBlue",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nexen": {
       "name": "Nexen",
       "integration_type": "virtual",
@@ -5479,6 +5503,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "persang_infrared": {
+      "name": "Persang Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",
@@ -6040,7 +6070,7 @@
       "name": "Remember The Milk",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "remote_calendar": {
       "integration_type": "service",
@@ -6570,6 +6600,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "silla_prism": {
+      "name": "Silla Prism",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "simplefin": {
       "name": "SimpleFin",
       "integration_type": "service",
@@ -6809,6 +6845,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "SolarEdge Local"
+        },
+        "solaredge_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "SolarEdge Modbus"
         }
       }
     },
@@ -6910,6 +6952,12 @@
       "name": "Vanderbilt SPC",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_push"
+    },
+    "specialized_turbo": {
+      "name": "Specialized Turbo",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "speedtestdotnet": {
@@ -7026,6 +7074,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sunsynk": {
+      "name": "Sunsynk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sunweg": {
       "name": "Sun WEG",
@@ -8461,7 +8515,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {
@@ -8497,6 +8551,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "zonneplan": {
+      "name": "Zonneplan",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "zooz": {
       "name": "Zooz",

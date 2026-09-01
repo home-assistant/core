@@ -151,9 +151,6 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
-# Disable fixtures overriding our beautiful policy
-asyncio.set_event_loop_policy = lambda policy: None
 
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
@@ -389,6 +386,18 @@ def long_repr_strings() -> Generator[None]:
     finally:
         arepr.maxstring = original_maxstring
         arepr.maxother = original_maxother
+
+
+@pytest.fixture(autouse=True)
+async def configure_event_loop() -> None:
+    """Configure the loop the way Home Assistant configures its own."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def configure_session_event_loop() -> None:
+    """Configure the session loop, which session scoped fixtures run on."""
+    runner.configure_event_loop(asyncio.get_running_loop())
 
 
 @pytest.fixture(autouse=True)

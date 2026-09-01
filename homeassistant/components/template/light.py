@@ -48,7 +48,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -134,13 +134,15 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(LightEntityCapabilityAttribute, LightEntityStateAttribute),
+)
+
 LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        LIGHT_DOMAIN,
-        DEFAULT_NAME,
-        (LightEntityCapabilityAttribute, LightEntityStateAttribute),
+        LIGHT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -221,7 +223,7 @@ def two_color_list(
     option_range = f"({min_1}-{max_1}, {min_2}-{max_2})"
 
     def convert(result: Any) -> list[int | float] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if isinstance(result, str):
@@ -235,7 +237,7 @@ def two_color_list(
         ):
             one, two = result
             if not (min_1 <= one <= max_1) or not (min_2 <= two <= max_2):
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -248,7 +250,7 @@ def two_color_list(
 
             return list(result)
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             entity,
             option,
             result,
@@ -267,7 +269,7 @@ def rgb_color_list(
     message = f"expected a list of {length} numbers between 0 and 255: {example}"
 
     def convert(result: Any) -> list[int] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if isinstance(result, str):
@@ -283,9 +285,7 @@ def rgb_color_list(
             if all(0 <= value <= 255 for value in result):
                 return list(result)
 
-        template_validators.log_validation_result_error(
-            entity, attribute, result, message
-        )
+        tcv.log_validation_result_error(entity, attribute, result, message)
         return None
 
     return convert
@@ -379,6 +379,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = LightExtraStoredData
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -391,13 +392,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         """Initialize the features."""
 
         # Setup state and brightness
-        self.setup_state_template(
-            "_attr_is_on", template_validators.boolean(self, CONF_STATE)
-        )
+        self.setup_state_template("_attr_is_on", tcv.boolean(self, CONF_STATE))
         self.setup_template(
             CONF_LEVEL,
             "_attr_brightness",
-            template_validators.number(self, CONF_LEVEL, 0, 255, int),
+            tcv.number(self, CONF_LEVEL, 0, 255, int),
         )
 
         # Setup Color temperature
@@ -444,15 +443,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_EFFECT_LIST,
             "_attr_effect_list",
-            template_validators.list_of_strings(
-                self, CONF_EFFECT_LIST, none_on_empty=True
-            ),
+            tcv.list_of_strings(self, CONF_EFFECT_LIST, none_on_empty=True),
             render_complex=True,
         )
         self.setup_template(
             CONF_EFFECT,
             "_attr_effect",
-            template_validators.item_in_list(
+            tcv.item_in_list(
                 self, "_attr_effect", "_attr_effect_list", CONF_EFFECT_LIST
             ),
         )
@@ -461,13 +458,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_MAX_MIREDS,
             "_attr_max_color_temp_kelvin",
-            template_validators.number(self, CONF_MAX_MIREDS),
+            tcv.number(self, CONF_MAX_MIREDS),
             self._update_max_mireds,
         )
         self.setup_template(
             CONF_MIN_MIREDS,
             "_attr_min_color_temp_kelvin",
-            template_validators.number(self, CONF_MIN_MIREDS),
+            tcv.number(self, CONF_MIN_MIREDS),
             self._update_min_mireds,
         )
 
@@ -475,7 +472,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_SUPPORTS_TRANSITION,
             "_supports_transition_template",
-            template_validators.boolean(self, CONF_SUPPORTS_TRANSITION),
+            tcv.boolean(self, CONF_SUPPORTS_TRANSITION),
             self._update_supports_transition,
         )
 
@@ -791,7 +788,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     @callback
     def _validate_temperature(self, result: Any) -> int | None:
         """Validate the temperature from the template."""
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
@@ -807,7 +804,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         if isinstance(result, (int, float)) and min_mireds <= result <= max_mireds:
             return color_util.color_temperature_mired_to_kelvin(result)
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             self,
             CONF_TEMPERATURE,
             result,
