@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import voluptuous as vol
 
+from homeassistant.components import usb
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -20,8 +21,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -44,17 +50,52 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-        vol.Required(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
-        vol.Optional(CONF_DATARATE): cv.positive_int,
-        vol.Optional(CONF_FREQUENCY): cv.positive_int,
-        vol.Optional(CONF_JEELINK_LED): cv.boolean,
-        vol.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
-        vol.Optional(CONF_TOGGLE_MASK): cv.positive_int,
-    }
-)
+
+async def _async_free_usb_ports(hass: HomeAssistant) -> list[SelectOptionDict]:
+    """Return the USB serial ports not already claimed by another integration."""
+    ports = [
+        port
+        for port in await usb.async_scan_serial_ports(hass)
+        if isinstance(port, usb.USBDevice)
+    ]
+    consumers = await usb.async_get_serial_port_consumers(hass, ports)
+    return [
+        SelectOptionDict(
+            value=port.device,
+            label=usb.human_readable_device_name(
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid,
+                port.pid,
+            ),
+        )
+        for port in ports
+        if not any(consumer.active for consumer in consumers.get(port.device, []))
+    ]
+
+
+def _step_user_data_schema(ports: list[SelectOptionDict]) -> vol.Schema:
+    """Return the schema for the receiver configuration step.
+
+    The device VID/PID can't be matched for USB discovery since most users rely
+    on a custom made adapter, so free USB ports are offered as a select instead.
+    """
+    return vol.Schema(
+        {
+            vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): SelectSelector(
+                SelectSelectorConfig(options=ports, custom_value=True, sort=True)
+            ),
+            vol.Required(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
+            vol.Optional(CONF_DATARATE): cv.positive_int,
+            vol.Optional(CONF_FREQUENCY): cv.positive_int,
+            vol.Optional(CONF_JEELINK_LED): cv.boolean,
+            vol.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
+            vol.Optional(CONF_TOGGLE_MASK): cv.positive_int,
+        }
+    )
+
 
 STEP_SENSOR_DATA_SCHEMA = vol.Schema(
     {
@@ -111,11 +152,17 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial receiver configuration step."""
         if user_input is not None:
+            user_input[CONF_DEVICE] = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, user_input[CONF_DEVICE]
+            )
             self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
             self._data = user_input
             return await self.async_step_sensor()
 
-        return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
+        ports = await _async_free_usb_ports(self.hass)
+        return self.async_show_form(
+            step_id="user", data_schema=_step_user_data_schema(ports)
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
