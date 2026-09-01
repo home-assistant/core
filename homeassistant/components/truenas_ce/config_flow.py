@@ -315,9 +315,12 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if not errors:
+            data_unit = truenas_config.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT)
+            data = {k: v for k, v in truenas_config.items() if k != CONF_DATA_UNIT}
             return self.async_create_entry(
                 title=truenas_config[CONF_NAME],
-                data=truenas_config,
+                data=data,
+                options={CONF_DATA_UNIT: data_unit},
             )
         return None
 

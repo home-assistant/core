@@ -108,6 +108,10 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "TrueNAS"
     assert result["data"][CONF_HOST] == "truenas.example.com"
+    # The data-unit display preference isn't needed to connect, so it belongs
+    # in options (mutable later) rather than the immutable connection data.
+    assert CONF_DATA_UNIT not in result["data"]
+    assert result["options"][CONF_DATA_UNIT] == DEFAULT_DATA_UNIT
 
 
 async def test_user_flow_creates_entry_with_system_id_as_unique_id(
