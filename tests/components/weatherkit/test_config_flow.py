@@ -25,7 +25,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import EXAMPLE_CONFIG_DATA
+from . import EXAMPLE_CONFIG_DATA, init_integration
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -178,3 +178,87 @@ async def test_auto_fix_key_input(
 
     assert result["data"][CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfiguring an existing WeatherKit entry."""
+    entry = await init_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    new_user_input = {
+        **EXAMPLE_USER_INPUT,
+        CONF_LOCATION: {
+            CONF_LATITUDE: 40.7128,
+            CONF_LONGITUDE: -74.006,
+        },
+        CONF_KEY_ID: "new-key-id",
+    }
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            new_user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_LATITUDE] == 40.7128
+    assert entry.data[CONF_LONGITUDE] == -74.006
+    assert entry.data[CONF_KEY_ID] == "new-key-id"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (WeatherKitApiClientAuthenticationError, "invalid_auth"),
+        (WeatherKitApiClientCommunicationError, "cannot_connect"),
+        (WeatherKitUnsupportedLocationError, "unsupported_location"),
+        (WeatherKitApiClientError, "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test that the reconfigure flow handles errors and can recover."""
+    entry = await init_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

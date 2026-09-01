@@ -63,28 +63,11 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                user_input[CONF_KEY_PEM] = self._fix_key_input(user_input[CONF_KEY_PEM])
-                await self._test_config(user_input)
-            except WeatherKitUnsupportedLocationError as exception:
-                LOGGER.error(exception)
-                errors["base"] = "unsupported_location"
-            except WeatherKitApiClientAuthenticationError as exception:
-                LOGGER.warning(exception)
-                errors["base"] = "invalid_auth"
-            except WeatherKitApiClientCommunicationError as exception:
-                LOGGER.error(exception)
-                errors["base"] = "cannot_connect"
-            except WeatherKitApiClientError as exception:
-                LOGGER.exception(exception)
-                errors["base"] = "unknown"
-            else:
-                # Flatten location
-                location = user_input.pop(CONF_LOCATION)
-                user_input[CONF_LATITUDE] = location[CONF_LATITUDE]
-                user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
+            errors = await self._validate_and_fix_input(user_input)
+            if not errors:
+                self._flatten_location(user_input)
 
                 return self.async_create_entry(
                     title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
@@ -104,6 +87,67 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a WeatherKit entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = await self._validate_and_fix_input(user_input)
+            if not errors:
+                self._flatten_location(user_input)
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                    data=user_input,
+                )
+
+        suggested_values: Mapping[str, Any] = {
+            **reconfigure_entry.data,
+            CONF_LOCATION: {
+                CONF_LATITUDE: reconfigure_entry.data[CONF_LATITUDE],
+                CONF_LONGITUDE: reconfigure_entry.data[CONF_LONGITUDE],
+            },
+        }
+
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, suggested_values)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def _validate_and_fix_input(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Validate user input, returning a dict of errors (if any)."""
+        try:
+            user_input[CONF_KEY_PEM] = self._fix_key_input(user_input[CONF_KEY_PEM])
+            await self._test_config(user_input)
+        except WeatherKitUnsupportedLocationError as exception:
+            LOGGER.error(exception)
+            return {"base": "unsupported_location"}
+        except WeatherKitApiClientAuthenticationError as exception:
+            LOGGER.warning(exception)
+            return {"base": "invalid_auth"}
+        except WeatherKitApiClientCommunicationError as exception:
+            LOGGER.error(exception)
+            return {"base": "cannot_connect"}
+        except WeatherKitApiClientError as exception:
+            LOGGER.exception(exception)
+            return {"base": "unknown"}
+        return {}
+
+    def _flatten_location(self, user_input: dict[str, Any]) -> None:
+        """Flatten the location selector value into latitude/longitude keys."""
+        location = user_input.pop(CONF_LOCATION)
+        user_input[CONF_LATITUDE] = location[CONF_LATITUDE]
+        user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
 
     def _fix_key_input(self, key_input: str) -> str:
         """Fix common user errors with the key input."""
