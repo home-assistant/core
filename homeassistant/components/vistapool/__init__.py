@@ -66,6 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     session = async_get_clientsession(hass)
 
     auth = AquariteAuth(session, user_config[CONF_USERNAME], user_config[CONF_PASSWORD])
+    # Home Assistant runs these callbacks on a failed setup as well, so
+    # registering before authenticating releases the Firestore gRPC channels
+    # on every path out of this function.
+    entry.async_on_unload(auth.close)
     try:
         await auth.authenticate()
     except AuthenticationError as exc:

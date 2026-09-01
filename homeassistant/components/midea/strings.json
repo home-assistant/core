@@ -139,6 +139,16 @@
       }
     },
     "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "full": "Full",
+              "silent": "Silent"
+            }
+          }
+        }
+      },
       "climate_zone1": {
         "name": "Zone 1 thermostat"
       },
