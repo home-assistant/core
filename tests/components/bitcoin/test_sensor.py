@@ -120,12 +120,62 @@ async def test_yaml_import_already_configured(
     """Test no second entry is created once one exists, but the issue still is."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, SENSOR_DOMAIN, YAML_CONFIG)
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {**YAML_CONFIG[SENSOR_DOMAIN], CONF_CURRENCY: "USD"}},
+    )
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_yaml_import_other_currency_dropped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML asking for another currency than the entry is reported."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, SENSOR_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_dropped_currency_EUR"
+    )
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_yaml_import_second_currency_dropped(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a second platform block asking for another currency is reported."""
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: [
+                YAML_CONFIG[SENSOR_DOMAIN],
+                {**YAML_CONFIG[SENSOR_DOMAIN], CONF_CURRENCY: "USD"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    dropped = "USD" if entries[0].data[CONF_CURRENCY] == "EUR" else "EUR"
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_dropped_currency_{dropped}"
     )
 
 

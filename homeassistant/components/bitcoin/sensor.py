@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -149,6 +149,28 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+@callback
+def _async_create_import_issue(
+    hass: HomeAssistant, issue_id: str, translation_key: str, currency: str
+) -> None:
+    """Tell the user why a YAML sensor platform block was not imported."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_import_issue_{issue_id}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{translation_key}",
+        translation_placeholders={
+            "currency": currency,
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -156,30 +178,25 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML sensor platform into a config entry."""
+    currency = config[CONF_CURRENCY].upper()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
 
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] != "single_instance_allowed"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-            translation_placeholders={
-                "currency": config[CONF_CURRENCY],
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
+    if result["type"] is FlowResultType.ABORT:
+        reason = result["reason"]
+        if reason != "single_instance_allowed":
+            _async_create_import_issue(hass, reason, reason, currency)
+            return
+
+        # Only one entry is allowed, so a second block asking for another
+        # currency is dropped. Say so instead of reporting a clean import.
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        if entry.data[CONF_CURRENCY] != currency:
+            _async_create_import_issue(
+                hass, f"dropped_currency_{currency}", "dropped_currency", currency
+            )
+            return
 
     ir.async_create_issue(
         hass,
