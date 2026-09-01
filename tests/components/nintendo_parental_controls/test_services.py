@@ -241,7 +241,7 @@ async def test_service_requires_admin(
     payload: dict[str, Any],
     func: str,
 ) -> None:
-    """Test admin only services actually requires administrator access."""
+    """Test that admin-only services require administrator access."""
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "testdevid"), mock_config_entry.entry_id
