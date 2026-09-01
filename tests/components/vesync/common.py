@@ -13,6 +13,9 @@ ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
+ENTITY_AIR_PURIFIER = "fan.air_purifier_400s"
+ENTITY_AIR_PURIFIER_FAN_LEVEL = "sensor.air_purifier_400s_fan_level"
+
 ENTITY_FAN = "fan.SmartTowerFan"
 ENTITY_PEDESTAL_FAN = "fan.corebreeze_432s"
 
