@@ -461,7 +461,8 @@ async def ws_get_channel_actions(
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(err))
         return
 
-    if module.get_action_table(channel) is None:
+    table = module.get_action_table(channel)
+    if table is None:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -469,9 +470,7 @@ async def ws_get_channel_actions(
         )
         return
 
-    slots = await module.get_channel_actions(
-        channel, refresh=msg["refresh"], include_empty=True
-    )
+    slots = await table.get_actions(refresh=msg["refresh"], include_empty=True)
     connection.send_result(
         msg["id"],
         {"slots": [slot.to_dict() for slot in slots]},
