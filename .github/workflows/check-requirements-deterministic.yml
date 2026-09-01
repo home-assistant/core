@@ -10,8 +10,11 @@ name: Check requirements (deterministic)
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches-ignore:
+      - master
     paths:
       - "requirements*.txt"
+      - "**/requirements*.txt"
       - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
@@ -36,11 +39,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -58,6 +61,7 @@ jobs:
           echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Run deterministic checks
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |

@@ -16,12 +16,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_SW_VERSION,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
@@ -61,7 +58,7 @@ class AwairSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
     key=API_SCORE,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     translation_key="score",
     unique_id_tag="score",  # matches legacy format
     state_class=SensorStateClass.MEASUREMENT,
@@ -71,7 +68,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_HUMID,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         unique_id_tag="HUMID",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -93,7 +90,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_VOC,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         unique_id_tag="VOC",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -107,7 +104,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_CO2,
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         unique_id_tag="CO2",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -123,7 +120,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_ABS_HUMID,
         device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
-        native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.GRAMS_PER_CUBIC_METER,
         unique_id_tag="absolute_humidity",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -134,14 +131,14 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_PM25,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         unique_id_tag="PM25",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_PM10,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         unique_id_tag="PM10",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),

@@ -96,6 +96,23 @@
       "remote_turned_counter_clockwise": "Device turned counterclockwise"
     }
   },
+  "exceptions": {
+    "configure_failed": {
+      "message": "Failed to configure device"
+    },
+    "device_refresh_failed": {
+      "message": "Failed to refresh devices"
+    },
+    "entity_not_found": {
+      "message": "Could not find entity {entity_id}"
+    },
+    "gateway_not_found": {
+      "message": "Could not find gateway {bridge_id}"
+    },
+    "no_master_gateway": {
+      "message": "No master gateway available"
+    }
+  },
   "options": {
     "step": {
       "deconz_devices": {

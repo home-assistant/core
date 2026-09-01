@@ -40,7 +40,7 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     def __init__(self, coordinator: AirGradientCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.serial_number}-update"
+        self._attr_unique_id = f"{coordinator.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @cached_property
     @override
@@ -66,7 +66,8 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
         try:
             self._attr_latest_version = (
                 await self.coordinator.client.get_latest_firmware_version(
-                    self.coordinator.serial_number
+                    self.coordinator.serial_number,
+                    model=self.coordinator.data.measures.model,
                 )
             )
         except AirGradientConnectionError:

@@ -1,7 +1,6 @@
 """Fixtures for Sonarr integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import (
@@ -33,36 +32,40 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 def sonarr_calendar() -> list[SonarrCalendar]:
     """Generate a response for the calendar method."""
-    results = json.loads(load_fixture("sonarr/calendar.json"))
+    results = load_json_array_fixture("sonarr/calendar.json")
     return [SonarrCalendar(result) for result in results]
 
 
 def sonarr_commands() -> list[Command]:
     """Generate a response for the commands method."""
-    results = json.loads(load_fixture("sonarr/command.json"))
+    results = load_json_array_fixture("sonarr/command.json")
     return [Command(result) for result in results]
 
 
 def sonarr_diskspace() -> list[Diskspace]:
     """Generate a response for the diskspace method."""
-    results = json.loads(load_fixture("sonarr/diskspace.json"))
+    results = load_json_array_fixture("sonarr/diskspace.json")
     return [Diskspace(result) for result in results]
 
 
 def sonarr_queue() -> SonarrQueue:
     """Generate a response for the queue method."""
-    results = json.loads(load_fixture("sonarr/queue.json"))
+    results = load_json_object_fixture("sonarr/queue.json")
     return SonarrQueue(results)
 
 
 def sonarr_queue_season_pack() -> SonarrQueue:
     """Generate a response for the queue method with a season pack."""
-    results = json.loads(load_fixture("sonarr/queue_season_pack.json"))
+    results = load_json_object_fixture("sonarr/queue_season_pack.json")
     return SonarrQueue(results)
 
 
@@ -75,25 +78,25 @@ def mock_sonarr_season_pack(mock_sonarr: MagicMock) -> MagicMock:
 
 def sonarr_series() -> list[SonarrSeries]:
     """Generate a response for the series method."""
-    results = json.loads(load_fixture("sonarr/series.json"))
+    results = load_json_array_fixture("sonarr/series.json")
     return [SonarrSeries(result) for result in results]
 
 
 def sonarr_system_status() -> SystemStatus:
     """Generate a response for the system status method."""
-    result = json.loads(load_fixture("sonarr/system-status.json"))
+    result = load_json_object_fixture("sonarr/system-status.json")
     return SystemStatus(result)
 
 
 def sonarr_wanted() -> SonarrWantedMissing:
     """Generate a response for the wanted method."""
-    results = json.loads(load_fixture("sonarr/wanted-missing.json"))
+    results = load_json_object_fixture("sonarr/wanted-missing.json")
     return SonarrWantedMissing(results)
 
 
 def sonarr_episodes() -> list[SonarrEpisode]:
     """Generate a response for the episodes method."""
-    results = json.loads(load_fixture("sonarr/episodes.json"))
+    results = load_json_array_fixture("sonarr/episodes.json")
     return [SonarrEpisode(result) for result in results]
 
 
@@ -118,6 +121,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
         },
         unique_id=None,
+        entry_id="01KWBTJ4XT0A69H6RJ5ES66CV7",
     )
 
 

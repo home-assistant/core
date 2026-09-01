@@ -1,6 +1,6 @@
 """SwitchBot via API integration."""
 
-from asyncio import gather
+from asyncio import Lock, gather
 from collections.abc import Awaitable, Callable
 import contextlib
 from dataclasses import dataclass, field
@@ -43,6 +43,7 @@ PLATFORMS: list[Platform] = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -64,6 +65,7 @@ class SwitchbotDevices:
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
+    selects: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
@@ -93,10 +95,12 @@ async def coordinator_for_device(
     manageable_by_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
-    coordinator = coordinators_by_id.setdefault(
-        device.device_id,
-        SwitchBotCoordinator(hass, entry, api, device, manageable_by_webhook),
-    )
+    coordinator = coordinators_by_id.get(device.device_id)
+    if coordinator is None:
+        coordinator = SwitchBotCoordinator(
+            hass, entry, api, device, manageable_by_webhook
+        )
+        coordinators_by_id[device.device_id] = coordinator
 
     if coordinator.data is None:
         await coordinator.async_config_entry_first_refresh()
@@ -186,24 +190,6 @@ async def make_device_data(
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Smart Lock",
-        "Smart Lock Lite",
-        "Smart Lock Pro",
-        "Smart Lock Ultra",
-        "Smart Lock Vision",
-        "Smart Lock Vision Pro",
-        "Smart Lock Pro Wifi",
-        "Lock Vision",
-        "Lock Vision Pro",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.locks.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -226,64 +212,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Water Detector":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Battery Circulator Fan",
-        "Standing Fan",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Circulator Fan":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
-        "Curtain",
-        "Curtain3",
-        "Roller Shade",
-        "Blind Tilt",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.covers.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Garage Door Opener":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.covers.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Strip Light",
-        "Strip Light 3",
-        "Floor Lamp",
-        "Color Bulb",
-        "RGBICWW Floor Lamp",
-        "RGBICWW Strip Light",
-        "Ceiling Light",
-        "Ceiling Light Pro",
-        "RGBIC Neon Rope Light",
-        "RGBIC Neon Wire Rope Light",
-        "Candle Warmer Lamp",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.lights.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type == "Humidifier2":
         coordinator = await coordinator_for_device(
@@ -297,13 +225,6 @@ async def make_device_data(
         )
         devices_data.humidifiers.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "AI Art Frame":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.buttons.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.images.append((device, coordinator))
 
     await make_new_device_data(
         hass, entry, api, device, devices_data, coordinators_by_id
@@ -342,6 +263,7 @@ async def make_new_device_data(
         Platform.IMAGE: devices_data.images,
         Platform.LIGHT: devices_data.lights,
         Platform.LOCK: devices_data.locks,
+        Platform.SELECT: devices_data.selects,
         Platform.SENSOR: devices_data.sensors,
         Platform.SWITCH: devices_data.switches,
         Platform.VACUUM: devices_data.vacuums,
@@ -388,9 +310,13 @@ async def async_setup_entry(
     )
     entry.runtime_data = SwitchbotCloudData(api=api, devices=switchbot_devices)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # One at a time, so the cloud connecting cannot register a webhook next to
+    # the one being registered here
+    webhook_lock = Lock()
 
-    await _initialize_webhook(hass, entry, api, coordinators_by_id)
+    async def _async_initialize_webhook() -> None:
+        async with webhook_lock:
+            await _initialize_webhook(hass, entry, api, coordinators_by_id)
 
     async def _handle_cloud_connection_change(
         state: cloud.CloudConnectionState,
@@ -402,11 +328,19 @@ async def async_setup_entry(
         and re-register it with SwitchBot's cloud so push devices work.
         """
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            await _initialize_webhook(hass, entry, api, coordinators_by_id)
+            await _async_initialize_webhook()
 
+    # Listening before the first attempt, so a cloud that connects while the
+    # entry is still setting up is not missed
     entry.async_on_unload(
         cloud.async_listen_connection_change(hass, _handle_cloud_connection_change)
     )
+
+    await _async_initialize_webhook()
+
+    # Forwarded last, so a failure above cannot leave the platforms set up for a
+    # retry to set up a second time
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -523,16 +457,16 @@ async def _async_get_webhook_url(
             return str(entry.data[CONF_CLOUDHOOK_URL])
         if cloud.async_is_connected(hass):
             webhook_id = entry.data[CONF_WEBHOOK_ID]
-            # A previous run may have left a cloudhook registered for this
-            # webhook id; delete it so we can create a fresh one.
+            # The cloud can go away between being asked and being used
             with contextlib.suppress(cloud.CloudNotAvailable):
-                await cloud.async_delete_cloudhook(hass, webhook_id)
-            cloudhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
-            hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
-            )
-            _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
-            return cloudhook_url
+                cloudhook_url = await cloud.async_get_or_create_cloudhook(
+                    hass, webhook_id
+                )
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
+                )
+                _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
+                return cloudhook_url
 
     return webhook.async_generate_url(
         hass,
@@ -596,7 +530,6 @@ def _create_handle_webhook(
                 data,
             )
             return
-
         coordinator = coordinators_by_id[device_mac]
         coordinator.webhook_subscription_listener(True)
         coordinator.async_set_updated_data(data["context"])

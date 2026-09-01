@@ -54,11 +54,11 @@ rules:
   discovery: done
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -69,7 +69,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt

@@ -40,6 +40,21 @@ AUTH_SCHEMA = vol.Schema(
     }
 )
 
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
+
 
 class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     """OpenEVSE config flow."""
@@ -226,4 +241,47 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input),
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            username = user_input.get(CONF_USERNAME) or None
+            password = user_input.get(CONF_PASSWORD) or None
+
+            self._async_abort_entries_match({CONF_HOST: host})
+
+            errors, serial = await self.check_status(host, username, password)
+            if errors:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self.add_suggested_values_to_schema(
+                        RECONFIGURE_SCHEMA, user_input
+                    ),
+                    errors=errors,
+                )
+
+            if serial is not None:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch()
+
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates={
+                    CONF_HOST: host,
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, reconfigure_entry.data
+            ),
         )

@@ -51,6 +51,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
         client: TractiveClient,
         item: Trackables,
         description: TractiveSensorEntityDescription,
@@ -63,6 +65,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         else:
             dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
         super().__init__(
+            hass,
+            entry,
             client,
             item.trackable,
             item.tracker_details,
@@ -156,7 +160,7 @@ async def async_setup_entry(
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveSensor(client, item, description)
+        TractiveSensor(hass, entry, client, item, description)
         for description in SENSOR_TYPES
         for item in trackables
     ]

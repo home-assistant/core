@@ -55,8 +55,8 @@ async def test_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the Bluetooth connection."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_ADDRESS)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_ADDRESS), mock_connected_snooz.entry.entry_id
     )
     assert device_entry == snapshot
 

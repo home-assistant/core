@@ -14,6 +14,13 @@
               'max': 8,
               'min': 2,
               'name': 'Fridge',
+              'set_temperature_steps': list([
+                2,
+                4,
+                6,
+                8,
+              ]),
+              'set_temperature_steps_enabled': True,
               'target': 4,
               'type': 'fridge',
               'unit': '°C',
@@ -25,6 +32,9 @@
               'max': -16,
               'min': -24,
               'name': 'Freezer',
+              'set_temperature_steps': list([
+              ]),
+              'set_temperature_steps_enabled': None,
               'target': -18,
               'type': 'freezer',
               'unit': '°C',
@@ -73,6 +83,7 @@
               'name': 'hydrobreeze',
               'type': 'HydroBreezeControl',
               'zone_id': 1,
+              'zone_position': 'top',
             }),
             dict({
               'current_mode': 'zero_zero',
@@ -86,12 +97,20 @@
               'temperature_unit': None,
               'type': 'BioFreshPlusControl',
               'zone_id': 1,
+              'zone_position': 'top',
             }),
             dict({
               'max': 5,
               'name': 'presentationlight',
               'type': 'PresentationLightControl',
               'value': 3,
+            }),
+            dict({
+              'name': 'autodoor',
+              'type': 'AutoDoorControl',
+              'value': 'closed',
+              'zone_id': 1,
+              'zone_position': 'top',
             }),
           ]),
           'device': dict({

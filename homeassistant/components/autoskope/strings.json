@@ -31,7 +31,7 @@
         },
         "description": "Enter your Autoskope credentials.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "host": "API endpoint"
             },

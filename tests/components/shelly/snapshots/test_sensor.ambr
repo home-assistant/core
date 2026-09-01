@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123456789ABC-blutrv:200-blutrv_battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_blu_trv_sensor_entity[sensor.trv_name_battery-state]
@@ -44,7 +44,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TRV-Name Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.trv_name_battery',
@@ -145,7 +145,7 @@
     'supported_features': 0,
     'translation_key': 'valve_position',
     'unique_id': '123456789ABC-blutrv:200-valve_position',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_blu_trv_sensor_entity[sensor.trv_name_valve_position-state]
@@ -153,7 +153,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TRV-Name Valve position',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.trv_name_valve_position',
@@ -199,7 +199,7 @@
     'supported_features': 0,
     'translation_key': 'left_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_left_level',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_cury_sensor_entity[sensor.test_name_left_slot_level-state]
@@ -207,7 +207,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_left_slot_level',
@@ -303,7 +303,7 @@
     'supported_features': 0,
     'translation_key': 'right_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_right_level',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_cury_sensor_entity[sensor.test_name_right_slot_level-state]
@@ -311,7 +311,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_right_slot_level',

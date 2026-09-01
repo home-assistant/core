@@ -50,9 +50,48 @@ async def test_state(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry == snapshot
         sub_device_entry = device_registry.async_get(entity_entry.device_id)
+        assert isinstance(sub_device_entry, dr.ChildDeviceEntry)
         assert sub_device_entry == snapshot
-        main_device_entry = device_registry.async_get(sub_device_entry.via_device_id)
+        main_device_entry = device_registry.async_get(sub_device_entry.parent_device_id)
         assert main_device_entry == snapshot
+
+
+async def test_via_device_relationships(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices linked to a hub through their via device."""
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+
+    # A standalone switch device linked to a hub through its via device.
+    hub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "hub"), config_entry_id
+    )
+    assert hub is not None
+    hub_switch = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "hub_switch"), config_entry_id
+    )
+    assert hub_switch is not None
+    assert hub_switch.via_device_id == hub.id
+
+    # A power strip that has child devices and is itself linked to a hub through
+    # its via device.
+    power_strip_hub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "power_strip_hub"), config_entry_id
+    )
+    assert power_strip_hub is not None
+    power_strip = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "2_ch_power_strip_via_hub"), config_entry_id
+    )
+    assert power_strip is not None
+    assert power_strip.via_device_id == power_strip_hub.id
+
+    for outlet_unique_id in ("outlet_3", "outlet_4"):
+        outlet = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, outlet_unique_id), config_entry_id
+        )
+        assert outlet is not None
+        assert outlet.parent_device_id == power_strip.id
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)

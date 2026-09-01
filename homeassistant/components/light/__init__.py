@@ -116,7 +116,9 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     This is the equivalent of entity helper get_supported_features.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        return state.attributes.get(
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+        )
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -124,7 +126,7 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     if not entry.capabilities:
         return None
 
-    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
+    return entry.capabilities.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
 
 
 # Float that represents transition time in seconds to make change.

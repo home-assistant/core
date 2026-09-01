@@ -9,6 +9,7 @@ from music_assistant_models.enums import (
     PlayerFeature,
     QueueOption,
 )
+from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import Track
 from music_assistant_models.player import PlayerMedia
 import pytest
@@ -18,6 +19,8 @@ from syrupy.filters import paths
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
@@ -28,6 +31,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
@@ -48,6 +52,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_USERNAME,
     DOMAIN,
 )
+from homeassistant.components.music_assistant.media_player import MusicAssistantPlayer
 from homeassistant.components.music_assistant.services import (
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
@@ -72,17 +77,18 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    create_players_from_fixture,
     setup_integration_from_fixtures,
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockUser
 
 MOCK_TRACK = Track(
     item_id="1",
@@ -90,6 +96,31 @@ MOCK_TRACK = Track(
     name="Test Track",
     provider_mappings={},
 )
+
+
+@pytest.mark.parametrize(
+    ("mass_icon", "mdi_icon"),
+    [
+        pytest.param("speaker", "mdi:speaker", id="speaker"),
+        pytest.param("speakers", "mdi:speaker-multiple", id="speakers"),
+        pytest.param("tv", "mdi:television", id="tv"),
+        pytest.param("smartphone", "mdi:cellphone", id="smartphone"),
+        pytest.param("google-nest", "mdi:speaker", id="fallback"),
+        pytest.param("mdi-speaker", "mdi:speaker", id="legacy-mdi-dash"),
+        pytest.param("mdi:speaker", "mdi:speaker", id="legacy-mdi-colon"),
+    ],
+)
+def test_player_icon(
+    music_assistant_client: MagicMock, mass_icon: str, mdi_icon: str
+) -> None:
+    """Test Music Assistant player icon mapping."""
+    player = create_players_from_fixture()[0]
+    player.icon = mass_icon
+    music_assistant_client.players._players[player.player_id] = player
+
+    entity = MusicAssistantPlayer(music_assistant_client, player.player_id)
+
+    assert entity.icon == mdi_icon
 
 
 async def test_media_player(
@@ -519,7 +550,7 @@ async def test_media_player_play_media_action_legacy(
         artist="artist",
         album="album",
         media_type=None,
-        username=None,
+        user=None,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
@@ -558,48 +589,6 @@ async def test_media_player_play_media_action_legacy(
         sort_by=None,
         username="user_user",
     )
-    # invalid username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PLAY_MEDIA_ADVANCED,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "non_existing_username",
-            },
-            blocking=True,
-        )
-    # disabled username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PLAY_MEDIA_ADVANCED,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "user_disabled",
-            },
-            blocking=True,
-        )
-    # guest username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PLAY_MEDIA_ADVANCED,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "party_guest",
-            },
-            blocking=True,
-        )
 
 
 async def test_media_player_play_media_action(
@@ -740,7 +729,7 @@ async def test_media_player_play_media_action(
         artist="artist",
         album="album",
         media_type=None,
-        username=None,
+        user=None,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
@@ -780,48 +769,206 @@ async def test_media_player_play_media_action(
         sort_by=None,
         username="user_user",
     )
-    # invalid username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
+
+
+async def test_media_player_play_media_default_user(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that play media defaults to the calling Home Assistant user.
+
+    The calling user is forwarded as a soft (required=False) provider-link user
+    reference; the server resolves it to a Music Assistant user by provider link
+    (or plays as the default account).
+    """
+    music_assistant_client.server_info.schema_version = 44
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = MockUser(is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        user={"provider": "homeassistant", "user_id": user.id, "required": False},
+    )
+
+
+async def test_media_player_play_media_default_user_older_server(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that older servers (no provider-link support) simply do not impersonate."""
+    # the provider-link user reference is only sent to schema >= 44 servers; being
+    # soft (required=False), it gracefully degrades to no impersonation at all
+    music_assistant_client.server_info.schema_version = 35
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = MockUser(is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+    )
+
+
+async def test_media_player_play_media_explicit_user_override(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that an explicit username takes precedence over the calling user."""
+    music_assistant_client.server_info.schema_version = 44
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = MockUser(is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_USERNAME: "user_admin",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        user="user_admin",
+    )
+
+
+async def test_media_player_play_media_unknown_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a username the server does not know raises a translated error."""
+    music_assistant_client.server_info.schema_version = 44
+    music_assistant_client.music.verify_item_uri = AsyncMock(
+        side_effect=UserNotFoundError(
+            "A user with user id or name nobody is not available."
+        )
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA_ADVANCED,
             {
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "non_existing_username",
+                ATTR_USERNAME: "nobody",
             },
             blocking=True,
         )
-    # disabled username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
+    assert err.value.translation_key == "invalid_username"
+    assert err.value.translation_placeholders == {"username": "nobody"}
+
+
+async def test_media_player_play_media_user_not_found_without_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a UserNotFoundError without an explicit username is not mislabeled."""
+    music_assistant_client.server_info.schema_version = 44
+    music_assistant_client.music.verify_item_uri = AsyncMock(
+        side_effect=UserNotFoundError(
+            "A user with user id or name nobody is not available."
+        )
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA_ADVANCED,
             {
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "user_disabled",
             },
             blocking=True,
         )
-    # guest username
-    music_assistant_client.send_command.reset_mock()
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PLAY_MEDIA_ADVANCED,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_ID: "spotify://track/1234",
-                ATTR_MEDIA_ENQUEUE: "add",
-                ATTR_USERNAME: "party_guest",
-            },
-            blocking=True,
-        )
+    assert not isinstance(err.value, ServiceValidationError)
+
+
+async def test_media_player_standard_play_media_default_user(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that the standard play_media action also defaults to the calling user."""
+    music_assistant_client.server_info.schema_version = 44
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = MockUser(is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_CONTENT_ID: "spotify://track/1234",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        user={"provider": "homeassistant", "user_id": user.id, "required": False},
+    )
 
 
 async def test_media_player_play_announcement_action(
@@ -849,11 +996,14 @@ async def test_media_player_play_announcement_action(
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/play_announcement",
+        require_schema=None,
         player_id=mass_player_id,
         url="http://blah.com/announcement.mp3",
         pre_announce=True,
         volume_level=50,
         pre_announce_url="http://blah.com/chime.mp3",
+        message=None,
+        tts_engine=None,
     )
 
 
