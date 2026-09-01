@@ -144,4 +144,5 @@ class SatelIntegraAlarmPanel(
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
         await self._controller.arm(code, [self._device_number], self._arm_home_mode)
