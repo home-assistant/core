@@ -353,6 +353,14 @@ class BackupManagerExceptionGroup(BackupManagerError, ExceptionGroup):
     error_code = "multiple_errors"
 
 
+async def _iter_body_part_chunks(
+    contents: aiohttp.BodyPartReader,
+) -> AsyncIterator[bytes]:
+    """Read a body part in chunks to avoid buffering it in memory."""
+    while chunk := await contents.read_chunk(BUF_SIZE):
+        yield chunk
+
+
 class BackupManager:
     """Define the format that backup managers can have."""
 
@@ -1004,7 +1012,6 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> str:
         """Receive and store a backup file from upload."""
-        contents.chunk_size = BUF_SIZE
         suggested_filename = contents.filename or "backup.tar"
         safe_filename = PureWindowsPath(suggested_filename).name
         if (
@@ -1022,7 +1029,7 @@ class BackupManager:
         )
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
-            stream=contents,
+            stream=_iter_body_part_chunks(contents),
             suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(

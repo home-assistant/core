@@ -10,7 +10,7 @@ import tarfile
 from typing import Any
 from unittest.mock import patch
 
-from aiohttp import web
+from aiohttp import BodyPartReader, web
 from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 import pytest
 
@@ -283,6 +283,35 @@ async def test_uploading_a_backup_file(
         resp = await client.post(
             "/api/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
+        )
+        assert resp.status == 201
+        assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
+        assert async_receive_backup_mock.called
+
+
+async def test_uploading_a_large_backup_file(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test uploading a backup file larger than the default request size limit."""
+    await setup_backup_integration(hass)
+
+    client = await hass_client()
+
+    async def mock_receive_backup(
+        *, agent_ids: list[str], contents: BodyPartReader
+    ) -> str:
+        async for _chunk in contents:
+            pass
+        return TEST_BACKUP_ABC123.backup_id
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
+        side_effect=mock_receive_backup,
+    ) as async_receive_backup_mock:
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": BytesIO(b"0" * (17 * 1024 * 1024))},
         )
         assert resp.status == 201
         assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}

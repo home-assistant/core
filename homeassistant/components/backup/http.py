@@ -23,6 +23,8 @@ from .const import DATA_MANAGER
 from .manager import BackupManager
 from .models import AgentBackup, BackupNotFound, InvalidBackupFilename
 
+MAX_UPLOAD_SIZE = 1024**3 * 4  # 4 GiB
+
 
 @callback
 def async_register_http_views(hass: HomeAssistant) -> None:
@@ -186,6 +188,8 @@ class UploadBackupView(HomeAssistantView):
         except KeyError:
             return Response(status=HTTPStatus.BAD_REQUEST)
         manager = request.app[KEY_HASS].data[DATA_MANAGER]
+        # Increase max payload; backups can be large
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
         reader = await request.multipart()
         contents = cast(BodyPartReader, await reader.next())
 
