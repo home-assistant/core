@@ -10,25 +10,13 @@ from homeassistant.core import HomeAssistant
 from . import WhirlpoolConfigEntry
 
 TO_REDACT = {
-    "SAID",
     "SERIAL_NUMBER",
-    "Serial",
-    "UserId",
-    "WifiMacAddress",
-    "_id",
     "macaddress",
+    "username",
     "password",
-    "said",
-    "serial",
-    "serialNumber",
-    "serial_number",
-    "thingName",
     "token",
     "unique_id",
-    "userId",
-    "username",
-    "wifiMacAddress",
-    "wifi_mac",
+    "SAID",
 }
 
 
@@ -42,7 +30,6 @@ async def async_get_config_entry_diagnostics(
         return {
             "category": appliance.appliance_info.category,
             "model_number": appliance.appliance_info.model_number,
-            "raw": appliance.get_raw_data(),
         }
 
     appliances_manager = config_entry.runtime_data
