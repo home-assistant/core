@@ -29,11 +29,24 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
     """Handle the Tonewinner config flow."""
 
     async def _async_probe_receiver(self, port: str) -> str | None:
-        """Verify a receiver answers on the port and return its model."""
+        """Verify a receiver answers on the port and return its model.
+
+        A receiver in standby ignores the identity query but still answers
+        power polls, so an answered power poll verifies the port with the
+        model left for a later reconfigure once the device is awake.
+        """
         receiver = TonewinnerReceiver(port)
         try:
             await receiver.connect()
-            info: ReceiverInfo | None = await receiver.query_info()
+            power = await receiver.query_power()
+            if power is None:
+                msg = "Receiver did not answer the power query"
+                raise ConnectionError(msg) from None
+            # Standby devices ignore the identity query; only an awake
+            # receiver can report its model.
+            info: ReceiverInfo | None = None
+            if power:
+                info = await receiver.query_info()
         finally:
             await receiver.disconnect()
         return info.model if info else None

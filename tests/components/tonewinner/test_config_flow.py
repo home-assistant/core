@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,12 +14,21 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-def _mock_receiver(model: str | None = "AT-500") -> MagicMock:
-    """Return a mock receiver that answers info queries."""
+def _mock_receiver(
+    model: str | None = "AT-500", power: bool | None = True
+) -> MagicMock:
+    """Return a mock receiver that answers info and power queries."""
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock()
     mock_receiver.disconnect = AsyncMock()
-    mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    if model is None:
+        # A standby receiver ignores the identity query.
+        mock_receiver.query_info = AsyncMock(
+            side_effect=ConnectionError("No response for VER query")
+        )
+    else:
+        mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    mock_receiver.query_power = AsyncMock(return_value=power)
     return mock_receiver
 
 
@@ -57,14 +68,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_form_unknown_model(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test setup falls back to a generic title when no model is reported."""
+    """Test setup falls back to a generic title for a standby receiver."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(model=None),
+        return_value=_mock_receiver(model=None, power=False),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -104,15 +115,27 @@ async def test_form_duplicate_serial_port(hass: HomeAssistant) -> None:
     mock_receiver_cls.assert_not_called()
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("connect_error", "answer_power"),
+    [
+        (OSError("Permission denied"), True),
+        (None, None),
+    ],
+    ids=["refused", "silent"],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    connect_error: OSError | None,
+    answer_power: bool | None,
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_receiver = MagicMock()
-    mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
-    mock_receiver.disconnect = AsyncMock()
+    mock_receiver = _mock_receiver(power=answer_power)
+    if connect_error is not None:
+        mock_receiver.connect = AsyncMock(side_effect=connect_error)
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
@@ -394,7 +417,7 @@ async def test_reconfigure_unknown_model(
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(model=None),
+        return_value=_mock_receiver(model=None, power=False),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
