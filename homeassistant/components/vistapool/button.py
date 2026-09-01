@@ -107,6 +107,9 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
             self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
             self.coordinator.start_self_heal()
             raise
+        # The on write was queued before the off send and the pulse delay;
+        # restart its TTL now so it covers the round trip of its own send.
+        self.coordinator.refresh_optimistic(_LIGHT_STATUS_PATH)
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def _async_write_status(self, value: int) -> None:

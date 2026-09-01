@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_STATE_CHANGED,
@@ -277,6 +278,59 @@ async def test_button_press_pulse_survives_stale_push(
         on_data({"light": {"status": 0}})
         await hass.async_block_till_done()
         assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
+async def test_button_press_pulse_ttl_covers_final_send(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the queued final on write is protected from its send, not from queueing.
+
+    The pulse queues off and on before the first send, but the on command
+    only goes out after the off send and the pulse delay. If its TTL ran
+    from queueing, a stale push arriving during the on echo's round trip
+    would age it out and flip the light off just before the confirmation.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    clock = {"now": 100.0}
+
+    def _send_costs_time(*args: Any) -> None:
+        """Each cloud send costs wall time, pushing the on send past queueing."""
+        clock["now"] += 3.0
+
+    mock_vistapool_client.set_value.side_effect = _send_costs_time
+
+    with (
+        patch(
+            "homeassistant.components.vistapool.PLATFORMS",
+            [Platform.BUTTON, Platform.LIGHT],
+        ),
+        patch.object(vp_coordinator, "monotonic", side_effect=lambda: clock["now"]),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: _BUTTON},
+            blocking=True,
+        )
+
+        # Past the queue-time TTL but within the TTL of the on send itself:
+        # a stale pre-pulse echo must still be overlaid with the final on.
+        clock["now"] = 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
 async def test_button_press_failed_pulse_discards_unsent_write(

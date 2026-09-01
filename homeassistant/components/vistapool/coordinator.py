@@ -194,6 +194,24 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.record_optimistic(value_path, value)
         self.async_set_updated_data(self.data)
 
+    def refresh_optimistic(self, value_path: str) -> None:
+        """Restart the newest pending write's protection window.
+
+        For a write queued ahead of time (the LED pulse's final on): its
+        TTL must cover the Firestore round trip from the actual send, not
+        from queueing, or expiry could publish stale data just before the
+        confirming push lands.
+        """
+        writes = self._pending_optimistic.get(value_path)
+        if not writes:
+            return
+        writes[-1] = (writes[-1][0], monotonic())
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            OPTIMISTIC_TTL_SECONDS, self._expire_optimistic, value_path
+        )
+
     def discard_optimistic(self, value_path: str) -> None:
         """Drop the newest pending write for a path.
 
