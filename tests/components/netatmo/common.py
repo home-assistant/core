@@ -18,8 +18,8 @@ from homeassistant.util.aiohttp import MockRequest
 
 from tests.common import (
     MockConfigEntry,
-    async_load_json_object_fixture,
     async_fire_time_changed,
+    async_load_json_object_fixture,
 )
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
