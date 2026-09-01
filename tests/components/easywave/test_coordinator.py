@@ -4,12 +4,21 @@ import asyncio
 import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
+from easywave_home_control.codec import (
+    ButtonFunction,
+    ButtonPushEvent,
+    ButtonReleaseEvent,
+)
+from easywave_home_control.codec.events import EasywaveButton
 import pytest
 
 from homeassistant.components.easywave.const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_LOW,
+    EVENT_TYPE_BUTTON_PRESS,
+    EVENT_TYPE_BUTTON_RELEASE,
 )
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -18,7 +27,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import MOCK_GATEWAY_TITLE, mock_easywave_transceiver
+from .conftest import (
+    MOCK_GATEWAY_TITLE,
+    MOCK_TRANSMITTER_DEVICE_ID,
+    MOCK_TRANSMITTER_SERIAL,
+    _entry_with_subentries,
+    _transmitter_device_record,
+    mock_easywave_transceiver,
+)
 
 from tests.common import MockConfigEntry
 
@@ -505,3 +521,156 @@ async def test_begin_learning_rejects_second_session(
     assert await coordinator.begin_learning() is False
     coordinator.end_learning()
     assert coordinator.is_learning_busy() is False
+
+
+async def test_listener_starts_for_configured_transmitter_without_entities(
+    hass: HomeAssistant,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Listener starts when transmitters are configured but entities are disabled."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    coordinator = EasywaveCoordinator(hass, mock_transceiver, entry)
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._listener_task is not None
+    await coordinator.async_shutdown()
+
+
+async def test_dispatch_button_press_fires_event_without_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Button press device events fire for configured transmitters without entities."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+    coordinator = EasywaveCoordinator(hass, transceiver, entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = []
+
+    def capture_event(event: object) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_EASYWAVE, capture_event)
+
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["type"] == EVENT_TYPE_BUTTON_PRESS
+    assert events[0].data["subtype"] == "a"
+
+
+async def test_dispatch_button_release_fires_event_without_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Button release device events fire for configured transmitters without entities."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+    coordinator = EasywaveCoordinator(hass, transceiver, entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = []
+
+    def capture_event(event: object) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_EASYWAVE, capture_event)
+
+    coordinator._dispatch_button_release(
+        ButtonReleaseEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["type"] == EVENT_TYPE_BUTTON_RELEASE
+    assert events[0].data["subtype"] == "released"
+
+
+async def test_dispatch_low_battery_fires_event_without_battery_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Battery-low device events fire without a battery sensor entity."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    transceiver = mock_easywave_transceiver()
+    coordinator = EasywaveCoordinator(hass, transceiver, entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = []
+
+    def capture_event(event: object) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_EASYWAVE, capture_event)
+
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.LOW_BATTERY,
+            should_ignore=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["type"] == EVENT_TYPE_BATTERY_LOW
+    assert events[0].data["subtype"] == "low"
+
+
+async def test_unregister_transmitter_entity_keeps_listener_for_configured_device(
+    hass: HomeAssistant,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Unregistering the last entity does not stop reception for configured transmitters."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    coordinator = EasywaveCoordinator(hass, mock_transceiver, entry)
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    entity = MagicMock()
+    coordinator.register_transmitter_entities([entity])
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator._listener_task is not None
+
+    coordinator.unregister_transmitter_entity(entity)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._listener_task is not None
+    await coordinator.async_shutdown()

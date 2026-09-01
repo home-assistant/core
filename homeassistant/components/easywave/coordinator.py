@@ -20,12 +20,18 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_ENTRY_TYPE,
+    CONF_TRANSMITTER_SERIAL,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
+    ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_LOW,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
 )
+from .devices import get_devices
+from .entity import EasywaveDeviceEntry
 from .gateway_device import update_gateway_device
 from .transceiver import RX11Transceiver
 
@@ -99,6 +105,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if connected:
                 self._register_transceiver_callbacks()
                 self._update_gateway_device()
+                self.ensure_telegram_listener()
             else:
                 raise UpdateFailed(
                     "RX11 device not found, setup deferred until device connects"
@@ -209,10 +216,39 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         finally:
             await super().async_shutdown()
 
+    def _configured_transmitters(self) -> list[EasywaveDeviceEntry]:
+        """Return transmitters configured on the gateway entry."""
+        return [
+            device
+            for device in get_devices(self.config_entry)
+            if device.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_TRANSMITTER
+        ]
+
+    def _transmitter_device_id_for_serial(self, serial: bytes) -> str | None:
+        """Return the configured transmitter device id for a telegram serial."""
+        for device in self._configured_transmitters():
+            if _serial_hex_matches(serial, device.data[CONF_TRANSMITTER_SERIAL]):
+                return device.device_id
+        return None
+
+    def _transmitter_battery_entity_registered(self, serial: bytes) -> bool:
+        """Return True when a battery sensor entity handles battery events."""
+        for entity in self._transmitter_entities:
+            if not _serial_hex_matches(serial, entity.transmitter_serial):
+                continue
+            unique_id = getattr(entity, "unique_id", None)
+            if unique_id and unique_id.endswith("_battery_warning"):
+                return True
+        return False
+
     @property
     def _has_telegram_listeners(self) -> bool:
-        """Return True if any entities need telegram listening."""
-        return bool(self._transmitter_entities or self._sensor_entities)
+        """Return True when runtime telegram reception is required."""
+        return bool(
+            self._transmitter_entities
+            or self._sensor_entities
+            or self._configured_transmitters()
+        )
 
     def register_transmitter_entities(self, entities: list[Any]) -> None:
         """Register transmitter event entities for telegram dispatching."""
@@ -241,7 +277,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._stop_telegram_listener()
 
     def ensure_telegram_listener(self) -> None:
-        """Start the telegram listener when entities are registered."""
+        """Start the telegram listener when reception is required."""
         if self._has_telegram_listeners and not self.is_offline:
             self._start_telegram_listener()
 
@@ -326,41 +362,44 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _dispatch_button_push(self, event: ButtonPushEvent) -> None:
-        """Dispatch a button push event to matching entities."""
+        """Dispatch a button push event to matching entities and automations."""
         serial_hex = event.transmitter_serial.hex()
         is_low_battery = event.function == ButtonFunction.LOW_BATTERY
-        matched_device_id: str | None = None
+        device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
 
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 if not is_low_battery:
                     entity.handle_telegram(event)
                 entity.handle_battery_status(is_low_battery)
-                matched_device_id = entity.device_id
-        if matched_device_id is None:
+
+        if device_id is None:
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
             return
-        if event.function == ButtonFunction.LOW_BATTERY:
+        if is_low_battery:
+            if not self._transmitter_battery_entity_registered(
+                event.transmitter_serial
+            ):
+                self.fire_device_event(device_id, EVENT_TYPE_BATTERY_LOW, subtype="low")
             return
         button_letter = "abcd"[event.button] if event.button < 4 else None
         if button_letter is not None:
             self.fire_device_event(
-                matched_device_id,
+                device_id,
                 EVENT_TYPE_BUTTON_PRESS,
                 subtype=button_letter,
             )
 
     @callback
     def _dispatch_button_release(self, event: ButtonReleaseEvent) -> None:
-        """Dispatch a button release event to matching entities."""
-        matched_device_id: str | None = None
+        """Dispatch a button release event to matching entities and automations."""
+        device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)
-                matched_device_id = entity.device_id
-        if matched_device_id is not None:
+        if device_id is not None:
             self.fire_device_event(
-                matched_device_id,
+                device_id,
                 EVENT_TYPE_BUTTON_RELEASE,
                 subtype="released",
             )
