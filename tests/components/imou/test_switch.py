@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STATUS
-from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
+from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_reauth_flow
 from .const import DEFAULT_SWITCHES, UNKNOWN_SWITCH_KEY, create_online_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -162,31 +161,20 @@ async def test_turn_off_via_service(
 
 
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
-@pytest.mark.parametrize(
-    ("error", "expect_reauth"),
-    [
-        pytest.param(ImouException("cloud failure"), False, id="cloud_error"),
-        pytest.param(
-            InvalidAppIdOrSecretException("fail"), True, id="invalid_credentials"
-        ),
-    ],
-)
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_service_propagates_api_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
-    error: ImouException,
-    expect_reauth: bool,
 ) -> None:
     """Imou API errors from async_switch_operation surface to the service call."""
-    mock_imou_ha_device_manager.async_switch_operation.side_effect = error
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = ImouException(
+        "cloud failure"
+    )
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 
     with pytest.raises(
-        HomeAssistantError,
-        match=f"Imou rejected the switch change: {error.message}",
+        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -194,9 +182,6 @@ async def test_turn_on_service_propagates_api_error(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    await hass.async_block_till_done()
-    assert_reauth_flow(hass, mock_config_entry, started=expect_reauth)
 
 
 @pytest.mark.parametrize(

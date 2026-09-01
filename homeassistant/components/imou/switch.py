@@ -12,9 +12,11 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DOMAIN,
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
     PARAM_CLOSE_CAMERA,
@@ -129,5 +131,9 @@ class ImouSwitch(ImouEntity, SwitchEntity):
                 enable,
             )
         except ImouException as e:
-            self._handle_imou_exception(e, translation_key="switch_operation_failed")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_operation_failed",
+                translation_placeholders={"error": e.message},
+            ) from e
         await self.coordinator.async_request_refresh()
