@@ -89,21 +89,28 @@ def _is_self_attr_target(target: nodes.NodeNG, attr_name: str) -> bool:
     return False
 
 
-def _class_body_sets_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
-    """Return True if the class body assigns *attr_name* to a non-None value."""
+def _class_body_attr_state(class_node: nodes.ClassDef, attr_name: str) -> bool | None:
+    """Return the effect of the class body's final assignment to *attr_name*.
+
+    ``True`` if the last source-order assignment sets a non-``None`` value,
+    ``False`` if it sets a literal ``None``, or ``None`` if the class body
+    does not assign *attr_name* at all. Later assignments win, matching
+    Python's class-body evaluation, so ``x = ColorMode.HS`` followed by
+    ``x = None`` resolves to ``False``. Annotation-only statements (``x: T``
+    with no value) are not assignments and are ignored.
+    """
+    state: bool | None = None
     for item in class_node.body:
         match item:
             case nodes.AnnAssign(target=nodes.AssignName(name=name), value=value) if (
-                name == attr_name and _is_non_none_value(value)
+                name == attr_name and value is not None
             ):
-                return True
-            case nodes.Assign(targets=targets, value=value) if _is_non_none_value(
-                value
-            ) and any(
+                state = _is_non_none_value(value)
+            case nodes.Assign(targets=targets, value=value) if any(
                 isinstance(t, nodes.AssignName) and t.name == attr_name for t in targets
             ):
-                return True
-    return False
+                state = _is_non_none_value(value)
+    return state
 
 
 def _method_sets_self_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
@@ -111,11 +118,15 @@ def _method_sets_self_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
 
     The assignment need not be unconditional: any assignment means the class
     reports the attribute and must therefore also report the paired value.
+    Assignments in nested functions or classes (which have their own
+    ``self``) are ignored — only the method's own scope counts.
     """
     for method in class_node.body:
         if not isinstance(method, nodes.FunctionDef | nodes.AsyncFunctionDef):
             continue
         for stmt in method.nodes_of_class((nodes.Assign, nodes.AnnAssign)):
+            if stmt.scope() is not method:
+                continue
             match stmt:
                 case nodes.Assign(targets=targets, value=value):
                     target_list = list(targets)
@@ -125,22 +136,6 @@ def _method_sets_self_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
                     continue
             if _is_non_none_value(value) and any(
                 _is_self_attr_target(t, attr_name) for t in target_list
-            ):
-                return True
-    return False
-
-
-def _class_body_nullifies_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
-    """Return True if the class body assigns *attr_name* to a literal ``None``."""
-    for item in class_node.body:
-        match item:
-            case nodes.AnnAssign(
-                target=nodes.AssignName(name=name),
-                value=nodes.Const(value=None),
-            ) if name == attr_name:
-                return True
-            case nodes.Assign(targets=targets, value=nodes.Const(value=None)) if any(
-                isinstance(t, nodes.AssignName) and t.name == attr_name for t in targets
             ):
                 return True
     return False
@@ -176,11 +171,7 @@ def _class_declaration(
         return True
     if _method_sets_self_attr(class_node, attr_name):
         return True
-    if _class_body_sets_attr(class_node, attr_name):
-        return True
-    if _class_body_nullifies_attr(class_node, attr_name):
-        return False
-    return None
+    return _class_body_attr_state(class_node, attr_name)
 
 
 def _mro(class_node: nodes.ClassDef) -> list[nodes.ClassDef]:

@@ -11,6 +11,9 @@ import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker
 
+_MISSING_COLOR_MODE = "home-assistant-light-missing-color-mode"
+_MISSING_SUPPORTED = "home-assistant-light-missing-supported-color-modes"
+
 
 @pytest.fixture(name="checker")
 def checker_fixture(linter: UnittestLinter) -> HassLightColorModeChecker:
@@ -46,10 +49,7 @@ def _find_class(root_node: nodes.Module, name: str) -> nodes.ClassDef:
     raise AssertionError(f"no class named {name} found")
 
 
-def _expect(
-    class_node: nodes.ClassDef,
-    msg_id: str = "home-assistant-light-missing-color-mode",
-) -> MessageTest:
+def _expect(class_node: nodes.ClassDef, msg_id: str) -> MessageTest:
     """Build the expected MessageTest for a flagged class."""
     pos = class_node.position
     return MessageTest(
@@ -63,11 +63,8 @@ def _expect(
     )
 
 
-_MISSING_SUPPORTED = "home-assistant-light-missing-supported-color-modes"
-
-
 @pytest.mark.parametrize(
-    "code",
+    ("code", "class_name"),
     [
         pytest.param(
             """
@@ -76,6 +73,7 @@ from homeassistant.components.light import ColorMode, LightEntity
 class MyLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
 """,
+            "MyLight",
             id="class_body_supported_no_color_mode",
         ),
         pytest.param(
@@ -87,6 +85,7 @@ class MyLight(LightEntity):
         modes = {ColorMode.HS}
         self._attr_supported_color_modes = modes
 """,
+            "MyLight",
             id="self_assign_supported_no_color_mode",
         ),
         pytest.param(
@@ -98,6 +97,7 @@ class MyLight(LightEntity):
     def supported_color_modes(self):
         return {ColorMode.HS}
 """,
+            "MyLight",
             id="supported_property_override_no_color_mode",
         ),
         pytest.param(
@@ -108,27 +108,106 @@ class MyLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_color_mode = None
 """,
-            id="color_mode_explicitly_none_still_fires",
+            "MyLight",
+            id="color_mode_explicitly_none",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+    _attr_color_mode = None
+""",
+            "MyLight",
+            id="color_mode_reassigned_none_wins",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+
+    def _factory(self):
+        class _Inner:
+            def run(self):
+                self._attr_color_mode = ColorMode.HS
+        return _Inner
+""",
+            "MyLight",
+            id="color_mode_only_in_nested_class_scope",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+
+class MyLight(MyBaseLight):
+    pass
+""",
+            "MyLight",
+            id="supported_inherited_color_mode_missing",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    _attr_color_mode = None
+""",
+            "MyLight",
+            id="subclass_nullifies_inherited_color_mode",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    pass
+
+class MyColorLight(MyBaseLight):
+    def __init__(self, status) -> None:
+        self._attr_supported_color_modes = {ColorMode.HS}
+
+    @property
+    def color_mode(self):
+        return ColorMode.HS
+
+class MySwitchLight(MyBaseLight):
+    def __init__(self, status) -> None:
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
+""",
+            "MySwitchLight",
+            id="two_subclasses_only_offender",
         ),
     ],
 )
-def test_fires(
+def test_fires_w7436(
     linter: UnittestLinter,
     checker: HassLightColorModeChecker,
     tmp_path: Path,
     code: str,
+    class_name: str,
 ) -> None:
     """W7436 fires when supported color modes are set but no color mode is reported."""
     integration_dir = _make_integration(tmp_path)
 
     root_node = _parse(code, integration_dir)
-    class_node = _find_class(root_node, "MyLight")
-    with assert_adds_messages(linter, _expect(class_node)):
+    class_node = _find_class(root_node, class_name)
+    with assert_adds_messages(linter, _expect(class_node, _MISSING_COLOR_MODE)):
         walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
-    "code",
+    ("code", "class_name"),
     [
         pytest.param(
             """
@@ -137,6 +216,7 @@ from homeassistant.components.light import ColorMode, LightEntity
 class MyLight(LightEntity):
     _attr_color_mode = ColorMode.ONOFF
 """,
+            "MyLight",
             id="class_body_color_mode_no_supported",
         ),
         pytest.param(
@@ -147,6 +227,7 @@ class MyLight(LightEntity):
     def __init__(self, status) -> None:
         self._attr_color_mode = ColorMode.HS
 """,
+            "MyLight",
             id="self_assign_color_mode_no_supported",
         ),
         pytest.param(
@@ -158,21 +239,50 @@ class MyLight(LightEntity):
     def color_mode(self):
         return ColorMode.HS
 """,
+            "MyLight",
             id="color_mode_property_override_no_supported",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    pass
+""",
+            "MyLight",
+            id="color_mode_inherited_supported_missing",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    _attr_supported_color_modes = None
+""",
+            "MyLight",
+            id="subclass_nullifies_inherited_supported",
         ),
     ],
 )
-def test_missing_supported_fires(
+def test_fires_w7437(
     linter: UnittestLinter,
     checker: HassLightColorModeChecker,
     tmp_path: Path,
     code: str,
+    class_name: str,
 ) -> None:
     """W7437 fires when a color mode is reported but no supported modes are set."""
     integration_dir = _make_integration(tmp_path)
 
     root_node = _parse(code, integration_dir)
-    class_node = _find_class(root_node, "MyLight")
+    class_node = _find_class(root_node, class_name)
     with assert_adds_messages(linter, _expect(class_node, _MISSING_SUPPORTED)):
         walk_checker(linter, checker, root_node)
 
@@ -201,7 +311,7 @@ class MyLight(LightEntity):
     def color_mode(self):
         return ColorMode.HS
 """,
-            id="color_mode_property_override",
+            id="supported_attr_and_color_mode_property",
         ),
         pytest.param(
             """
@@ -216,14 +326,14 @@ class MyLight(LightEntity):
         ),
         pytest.param(
             """
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import LightEntity
 
 class MyLight(LightEntity):
     @property
     def is_on(self) -> bool:
         return True
 """,
-            id="no_supported_color_modes_set",
+            id="neither_set",
         ),
         pytest.param(
             """
@@ -234,32 +344,8 @@ class MyLight(LightEntity):
 """,
             id="supported_explicitly_none",
         ),
-    ],
-)
-def test_does_not_fire(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-    code: str,
-) -> None:
-    """W7436 does not fire when color mode is reported or supported modes are unset."""
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(code, integration_dir)
-    with assert_no_messages(linter):
-        walk_checker(linter, checker, root_node)
-
-
-def test_color_mode_from_base_class(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """No fire when a base supplies color_mode and the subclass supplies supported."""
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
+        pytest.param(
+            """
 from homeassistant.components.light import ColorMode, LightEntity
 
 class MyBaseLight(LightEntity):
@@ -268,26 +354,10 @@ class MyBaseLight(LightEntity):
 class MyLight(MyBaseLight):
     _attr_supported_color_modes = {ColorMode.HS}
 """,
-        integration_dir,
-    )
-    with assert_no_messages(linter):
-        walk_checker(linter, checker, root_node)
-
-
-def test_supported_from_base_subclass_supplies_color_mode(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """No fire when a base supplies supported and the subclass supplies color_mode.
-
-    The base is exempt as a same-module ancestor; the concrete subclass
-    resolves color_mode from its own body.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
+            id="color_mode_from_base_supported_from_subclass",
+        ),
+        pytest.param(
+            """
 from homeassistant.components.light import ColorMode, LightEntity
 
 class MyBaseLight(LightEntity):
@@ -296,146 +366,10 @@ class MyBaseLight(LightEntity):
 class MyLight(MyBaseLight):
     _attr_color_mode = ColorMode.HS
 """,
-        integration_dir,
-    )
-    with assert_no_messages(linter):
-        walk_checker(linter, checker, root_node)
-
-
-def test_supported_from_base_subclass_missing_color_mode(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """Fire on the concrete subclass when supported is inherited but color_mode is absent.
-
-    The abstract base that sets supported is exempt as a same-module
-    ancestor; the concrete subclass is flagged.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
-from homeassistant.components.light import ColorMode, LightEntity
-
-class MyBaseLight(LightEntity):
-    _attr_supported_color_modes = {ColorMode.HS}
-
-class MyLight(MyBaseLight):
-    pass
-""",
-        integration_dir,
-    )
-    class_node = _find_class(root_node, "MyLight")
-    with assert_adds_messages(linter, _expect(class_node)):
-        walk_checker(linter, checker, root_node)
-
-
-def test_color_mode_from_base_subclass_missing_supported(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """Fire W7437 on the concrete subclass when color_mode is inherited but supported is absent.
-
-    The abstract base that sets color_mode is exempt as a same-module
-    ancestor; the concrete subclass is flagged for the missing supported
-    color modes.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
-from homeassistant.components.light import ColorMode, LightEntity
-
-class MyBaseLight(LightEntity):
-    _attr_color_mode = ColorMode.HS
-
-class MyLight(MyBaseLight):
-    pass
-""",
-        integration_dir,
-    )
-    class_node = _find_class(root_node, "MyLight")
-    with assert_adds_messages(linter, _expect(class_node, _MISSING_SUPPORTED)):
-        walk_checker(linter, checker, root_node)
-
-
-def test_subclass_nullifies_inherited_color_mode(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """Fire W7436 when a subclass shadows an inherited color_mode with None.
-
-    The base reports both, but the subclass resets `_attr_color_mode` to
-    None, so at runtime the subclass reports no color mode.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
-from homeassistant.components.light import ColorMode, LightEntity
-
-class MyBaseLight(LightEntity):
-    _attr_supported_color_modes = {ColorMode.HS}
-    _attr_color_mode = ColorMode.HS
-
-class MyLight(MyBaseLight):
-    _attr_color_mode = None
-""",
-        integration_dir,
-    )
-    class_node = _find_class(root_node, "MyLight")
-    with assert_adds_messages(linter, _expect(class_node)):
-        walk_checker(linter, checker, root_node)
-
-
-def test_subclass_nullifies_inherited_supported(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """Fire W7437 when a subclass shadows inherited supported modes with None.
-
-    The base reports both, but the subclass resets
-    `_attr_supported_color_modes` to None, so at runtime the subclass sets
-    no supported color modes.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
-from homeassistant.components.light import ColorMode, LightEntity
-
-class MyBaseLight(LightEntity):
-    _attr_supported_color_modes = {ColorMode.HS}
-    _attr_color_mode = ColorMode.HS
-
-class MyLight(MyBaseLight):
-    _attr_supported_color_modes = None
-""",
-        integration_dir,
-    )
-    class_node = _find_class(root_node, "MyLight")
-    with assert_adds_messages(linter, _expect(class_node, _MISSING_SUPPORTED)):
-        walk_checker(linter, checker, root_node)
-
-
-def test_subclass_reassigns_inherited_color_mode_via_init(
-    linter: UnittestLinter,
-    checker: HassLightColorModeChecker,
-    tmp_path: Path,
-) -> None:
-    """No fire when a subclass nullifies the class attr but sets it in __init__.
-
-    A runtime `self._attr_color_mode = ...` assignment wins over the
-    class-body None, so the pair is still reported.
-    """
-    integration_dir = _make_integration(tmp_path)
-
-    root_node = _parse(
-        """
+            id="supported_from_base_color_mode_from_subclass",
+        ),
+        pytest.param(
+            """
 from homeassistant.components.light import ColorMode, LightEntity
 
 class MyBaseLight(LightEntity):
@@ -448,43 +382,27 @@ class MyLight(MyBaseLight):
     def __init__(self) -> None:
         self._attr_color_mode = ColorMode.HS
 """,
-        integration_dir,
-    )
-    with assert_no_messages(linter):
-        walk_checker(linter, checker, root_node)
-
-
-def test_two_subclasses_only_offender_fires(
+            id="subclass_reassigns_inherited_color_mode_via_init",
+        ),
+    ],
+)
+def test_good(
     linter: UnittestLinter,
     checker: HassLightColorModeChecker,
     tmp_path: Path,
+    code: str,
 ) -> None:
-    """Mirror the xthings_cloud shape: only the class without color_mode fires."""
+    """No message when a light reports both halves, or neither.
+
+    Covers the both-reported cases (directly or via inheritance, including a
+    runtime ``self._attr_...`` assignment that wins over a class-body
+    ``None``) and the both-missing case (legacy/abstract, deliberately not
+    flagged).
+    """
     integration_dir = _make_integration(tmp_path)
 
-    root_node = _parse(
-        """
-from homeassistant.components.light import ColorMode, LightEntity
-
-class MyBaseLight(LightEntity):
-    pass
-
-class MyColorLight(MyBaseLight):
-    def __init__(self, status) -> None:
-        self._attr_supported_color_modes = {ColorMode.HS}
-
-    @property
-    def color_mode(self):
-        return ColorMode.HS
-
-class MySwitchLight(MyBaseLight):
-    def __init__(self, status) -> None:
-        self._attr_supported_color_modes = {ColorMode.ONOFF}
-""",
-        integration_dir,
-    )
-    class_node = _find_class(root_node, "MySwitchLight")
-    with assert_adds_messages(linter, _expect(class_node)):
+    root_node = _parse(code, integration_dir)
+    with assert_no_messages(linter):
         walk_checker(linter, checker, root_node)
 
 

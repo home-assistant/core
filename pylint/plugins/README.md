@@ -1011,7 +1011,7 @@ data = await async_load_json_object_fixture(hass, "data.json", DOMAIN)
 
 A `LightEntity` must report **both** `supported_color_modes` and a current
 `color_mode`; setting one without the other raises `HomeAssistantError` at
-runtime . These two checks flag each half of that inconsistency. A light
+runtime. These two checks flag each half of that inconsistency. A light
 that sets *neither* is deliberately not flagged: the realistic both-missing
 class is an abstract base, so flagging it would false-positive; the tradeoff
 is that a concrete both-missing light, which also raises, is not caught.
