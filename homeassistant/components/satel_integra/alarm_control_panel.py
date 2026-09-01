@@ -72,6 +72,7 @@ class SatelIntegraAlarmPanel(
 ):
     """Representation of a Satel Integra-based alarm panel."""
 
+    _attr_code_arm_required = True
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -140,13 +141,8 @@ class SatelIntegraAlarmPanel(
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-
-        if code:
-            await self._controller.arm(code, [self._device_number])
+        await self._controller.arm(code, [self._device_number])
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-
-        if code:
-            await self._controller.arm(code, [self._device_number], self._arm_home_mode)
+        await self._controller.arm(code, [self._device_number], self._arm_home_mode)
