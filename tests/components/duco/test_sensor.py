@@ -258,7 +258,7 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the filter timer sensor is not created when unsupported."""
+    """Test a missing filter timer does not create the sensor but is retried."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
 
     mock_duco_client.async_get_time_filter_remaining = AsyncMock(
@@ -273,7 +273,10 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+    assert mock_duco_client.async_get_time_filter_remaining.await_count == 2
+    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "180"
 
 
 async def test_empty_ventilation_temperatures_are_retried(
