@@ -251,7 +251,7 @@ async def test_lan_info_failures_keep_node_entities_available(
     assert state.state == "-60"
 
 
-async def test_time_filter_remaining_missing_skips_sensor_creation(
+async def test_time_filter_remaining_missing_is_retried(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
