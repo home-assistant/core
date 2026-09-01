@@ -1,5 +1,6 @@
 """Config flow for Imou."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.selector import (
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_APP_SECRET): str})
 
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -77,5 +80,44 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new App secret."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            api_client = ImouOpenApiClient(
+                reauth_entry.data[CONF_APP_ID],
+                user_input[CONF_APP_SECRET],
+                API_URLS[reauth_entry.data[CONF_API_URL]],
+            )
+            try:
+                await api_client.async_get_token()
+            except InvalidAppIdOrSecretException:
+                errors["base"] = "invalid_auth"
+            except ConnectFailedException, RequestFailedException:
+                errors["base"] = "cannot_connect"
+            except ImouException as exception:
+                _LOGGER.debug("Imou error during reauth: %s", exception)
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_APP_SECRET: user_input[CONF_APP_SECRET]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={"app_id": reauth_entry.data[CONF_APP_ID]},
             errors=errors,
         )
