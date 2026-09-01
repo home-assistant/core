@@ -93,11 +93,13 @@ async def test_camera_entities_snapshot(
 @pytest.mark.usefixtures("init_integration")
 async def test_no_camera_without_channel(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Devices without a channel do not get a camera entity."""
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert not any(entry.domain == "camera" for entry in entries)
 
 
