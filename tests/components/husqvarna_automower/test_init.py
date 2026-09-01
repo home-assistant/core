@@ -538,6 +538,45 @@ async def test_add_and_remove_work_area(
     assert child_devices_after_deletion == 2
 
 
+async def test_rename_work_area(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test adding a work area in runtime."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+    child_device = next(
+        device
+        for device in child_devices
+        if (DOMAIN, f"{TEST_MOWER_ID}_123456") in device.identifiers
+    )
+    assert child_device.name == "Front lawn"
+    values[TEST_MOWER_ID].work_areas[123456].name = "New name"
+    values[TEST_MOWER_ID].work_area_names = ["New name"]
+    values[TEST_MOWER_ID].work_area_dict = {123456: "New name"}
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+    child_device = next(
+        device
+        for device in child_devices
+        if (DOMAIN, f"{TEST_MOWER_ID}_123456") in device.identifiers
+    )
+    assert child_device.name == "New name"
+
+
 async def test_dynamic_polling(
     hass: HomeAssistant,
     mock_automower_client,
