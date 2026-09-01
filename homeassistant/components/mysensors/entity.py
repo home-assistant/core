@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import CHILD_CALLBACK, DOMAIN, NODE_CALLBACK, UPDATE_DELAY, DevId, GatewayId
+from .models import MySensorsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,11 @@ class MySensorNodeEntity(Entity):
 
     hass: HomeAssistant
 
-    def __init__(
-        self, gateway_id: GatewayId, gateway: BaseAsyncGateway, node_id: int
-    ) -> None:
+    def __init__(self, config_entry: MySensorsConfigEntry, node_id: int) -> None:
         """Set up the MySensors node entity."""
-        self.gateway_id: GatewayId = gateway_id
-        self.gateway: BaseAsyncGateway = gateway
+        self.config_entry = config_entry
+        self.gateway_id: GatewayId = config_entry.entry_id
+        self.gateway: BaseAsyncGateway = config_entry.runtime_data.gateway
         self.node_id: int = node_id
         self._debouncer: Debouncer | None = None
 
@@ -127,14 +127,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
 
     def __init__(
         self,
-        gateway_id: GatewayId,
-        gateway: BaseAsyncGateway,
+        config_entry: MySensorsConfigEntry,
         node_id: int,
         child_id: int,
         value_type: int,
     ) -> None:
         """Set up the MySensors child entity."""
-        super().__init__(gateway_id, gateway, node_id)
+        super().__init__(config_entry, node_id)
         self.child_id: int = child_id
         # value_type as int. string variant can be looked up in gateway consts
         self.value_type: int = value_type
@@ -181,8 +180,7 @@ class MySensorsChildEntity(MySensorNodeEntity):
         """Return entity and device specific state attributes."""
         attr = super().extra_state_attributes
 
-        assert self.platform.config_entry
-        attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
+        attr[ATTR_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         attr[ATTR_CHILD_ID] = self.child_id
         attr[ATTR_DESCRIPTION] = self._child.description
