@@ -1,7 +1,6 @@
 """Support for Satel Integra alarm, using ETHM module."""
 
 import asyncio
-import logging
 from typing import override
 
 from satel_integra import AlarmState
@@ -14,9 +13,15 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_ARM_HOME_MODE, CONF_PARTITION_NUMBER, SUBENTRY_TYPE_PARTITION
+from .const import (
+    CONF_ARM_HOME_MODE,
+    CONF_PARTITION_NUMBER,
+    DOMAIN,
+    SUBENTRY_TYPE_PARTITION,
+)
 from .coordinator import SatelConfigEntry, SatelIntegraPartitionsCoordinator
 from .entity import SatelIntegraEntity
 
@@ -31,8 +36,6 @@ ALARM_STATE_MAP = {
     AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.ARMING,
     AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.ARMING,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -118,8 +121,10 @@ class SatelIntegraAlarmPanel(
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not code:
-            _LOGGER.debug("Code was empty or None")
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_alarm_access_code",
+            )
 
         clear_alarm_necessary = (
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
