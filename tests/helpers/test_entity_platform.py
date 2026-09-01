@@ -3050,11 +3050,11 @@ async def test_device_info_child_device(
                     unique_id="power",
                     has_entity_name=True,
                     name="Power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": parent.id,
-                    },
+                    device_info=dr.ChildDeviceInfo(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id=parent.id,
+                    ),
                 ),
             ]
         )
@@ -3108,11 +3108,11 @@ async def test_device_info_child_device_invalid(
             [
                 MockEntity(
                     unique_id="power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": "nonexistent-device-id",
-                    },
+                    device_info=dr.ChildDeviceInfo(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id="nonexistent-device-id",
+                    ),
                 ),
             ]
         )
@@ -3130,15 +3130,14 @@ async def test_device_info_child_device_invalid(
     assert "Not adding entity, error adding device" in caplog.text
 
 
-async def test_device_info_parent_device_id_routing(
+async def test_device_info_type_routing(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test parent_device_id in device info routes to a child or a main device.
+    """Test the device info type routes to a child or a main device.
 
-    A device info carrying a parent_device_id creates a child device, while one
-    without a parent_device_id creates a main device.
+    A ChildDeviceInfo creates a child device, a DeviceInfo a main device.
     """
     config_entry = MockConfigEntry(entry_id="super-mock-id")
     config_entry.add_to_hass(hass)
@@ -3158,26 +3157,18 @@ async def test_device_info_parent_device_id_routing(
             [
                 MockEntity(
                     unique_id="child",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "child")},
-                        "name": "Child",
-                        "parent_device_id": parent.id,
-                    },
+                    device_info=dr.ChildDeviceInfo(
+                        identifiers={(config_entry.domain, "child")},
+                        name="Child",
+                        parent_device_id=parent.id,
+                    ),
                 ),
                 MockEntity(
                     unique_id="main",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "main")},
-                        "name": "Main",
-                    },
-                ),
-                MockEntity(
-                    unique_id="main_explicit_none",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "main_none")},
-                        "name": "Main explicit none",
-                        "parent_device_id": None,
-                    },
+                    device_info=dr.DeviceInfo(
+                        identifiers={(config_entry.domain, "main")},
+                        name="Main",
+                    ),
                 ),
             ]
         )
@@ -3190,7 +3181,7 @@ async def test_device_info_parent_device_id_routing(
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
-    # A parent_device_id routes to a child device, not a main device
+    # A ChildDeviceInfo routes to a child device, not a main device
     child_device = device_registry.async_get_child_device_by_identifier(
         (config_entry.domain, "child"), config_entry.entry_id
     )
@@ -3203,7 +3194,7 @@ async def test_device_info_parent_device_id_routing(
         is None
     )
 
-    # A device info without a parent_device_id routes to a main device, not a child
+    # A DeviceInfo routes to a main device, not a child device
     main_device = device_registry.async_get_device_by_identifier(
         (config_entry.domain, "main"), config_entry.entry_id
     )
@@ -3211,18 +3202,6 @@ async def test_device_info_parent_device_id_routing(
     assert (
         device_registry.async_get_child_device_by_identifier(
             (config_entry.domain, "main"), config_entry.entry_id
-        )
-        is None
-    )
-
-    # An explicit parent_device_id=None routes to a main device, not a child
-    main_none_device = device_registry.async_get_device_by_identifier(
-        (config_entry.domain, "main_none"), config_entry.entry_id
-    )
-    assert isinstance(main_none_device, dr.DeviceEntry)
-    assert (
-        device_registry.async_get_child_device_by_identifier(
-            (config_entry.domain, "main_none"), config_entry.entry_id
         )
         is None
     )

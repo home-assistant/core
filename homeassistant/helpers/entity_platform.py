@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -1024,29 +1024,24 @@ class EntityPlatform:
                 if device_info := entity.device_info:
                     dev_reg = dr.async_get(self.hass)
                     try:
-                        # A device info carrying a parent_device_id registers a child
-                        # device. An explicit None (as a dynamically built device info
-                        # may carry) means a main device, so check `is not None`.
-                        if device_info.get("parent_device_id") is not None:
+                        if isinstance(device_info, dr.ChildDeviceInfo):
                             device = dev_reg.async_get_or_create_child(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast("dr.ChildDeviceInfo", device_info),
+                                identifiers=device_info.identifiers,
+                                name=device_info.name,
+                                parent_device_id=device_info.parent_device_id,
+                                suggested_area=device_info.suggested_area,
+                                translation_key=device_info.translation_key,
+                                translation_placeholders=(
+                                    device_info.translation_placeholders
+                                ),
                             )
                         else:
-                            # An explicit parent_device_id=None means a main device;
-                            # drop the key as async_get_or_create is main-only.
                             device = dev_reg.async_get_or_create(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast(
-                                    "dr.DeviceInfo",
-                                    {
-                                        key: value
-                                        for key, value in device_info.items()
-                                        if key != "parent_device_id"
-                                    },
-                                ),
+                                **device_info,
                             )
                     except (HomeAssistantError, TypeError) as exc:
                         # A TypeError signals a bad key in the device info passed as
