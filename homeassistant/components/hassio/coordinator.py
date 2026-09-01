@@ -34,7 +34,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -85,6 +85,7 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_ADDON,
     EVENT_HEALTH_CHANGED,
     EVENT_ISSUE_CHANGED,
     EVENT_ISSUE_REMOVED,
@@ -1361,8 +1362,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
     @callback
     def _supervisor_event(self, event: dict[str, Any]) -> None:
-        """Refresh add-on data when Supervisor reloads the store."""
-        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+        """Handle Supervisor store reload and add-on state change events."""
+        ws_event = event.get(ATTR_WS_EVENT)
+        if ws_event == EVENT_ADDON:
+            self._update_addon_state_from_event(event)
+            return
+        if ws_event != EVENT_STORE_RELOADED:
             return
         # Without listeners there are no add-on entities to keep in sync.
         # Scheduled polling is paused in that case as well, so don't let
@@ -1371,6 +1376,40 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             return
         self.config_entry.async_create_task(
             self.hass, self.async_refresh_after_store_reload()
+        )
+
+    @callback
+    def _update_addon_state_from_event(self, event: dict[str, Any]) -> None:
+        """Update cached add-on state from a Supervisor state change event."""
+        if self.data is None:
+            return
+        if (slug := event.get(ATTR_SLUG)) is None or (
+            addon_data := self.data.addons.get(slug)
+        ) is None:
+            return
+        try:
+            state = AddonState(event[ATTR_STATE])
+        except KeyError, ValueError:
+            return
+        if addon_data.addon.state == state:
+            return
+        updated_addon = replace(addon_data.addon, state=state)
+
+        # Keep the addon list used by legacy accessors and the stats
+        # coordinator in sync
+        addons_list: list[InstalledAddon] | None = self.hass.data.get(DATA_ADDONS_LIST)
+        if addons_list is not None:
+            self.hass.data[DATA_ADDONS_LIST] = [
+                updated_addon if addon.slug == slug else addon for addon in addons_list
+            ]
+
+        self.async_set_updated_data(
+            HassioAddonData(
+                addons={
+                    **self.data.addons,
+                    slug: replace(addon_data, addon=updated_addon),
+                }
+            )
         )
 
     @override
