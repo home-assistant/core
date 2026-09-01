@@ -20,12 +20,9 @@ async def async_setup_entry(
     """Set up STIEBEL ELTRON from a config entry."""
 
     host = entry.data[CONF_HOST]
-    unit = async_get_unit(
-        hass,
-        entry,
-        ModbusTcpParams(host=host, port=entry.data.get(CONF_PORT, DEFAULT_PORT)),
-        UNIT_ID,
-    )
+    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+
+    unit = async_get_unit(hass, entry, ModbusTcpParams(host=host, port=port), UNIT_ID)
 
     try:
         model = await get_controller_model(unit)
