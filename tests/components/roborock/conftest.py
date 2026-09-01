@@ -102,18 +102,22 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
+DYAD_VALUES: dict[RoborockDyadDataProtocol, Any] = {
+    RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
+    RoborockDyadDataProtocol.POWER: 100,
+    RoborockDyadDataProtocol.MESH_LEFT: 111,
+    RoborockDyadDataProtocol.BRUSH_LEFT: 222,
+    RoborockDyadDataProtocol.ERROR: DyadError.none.name,
+    RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
+}
+
+
 def create_dyad_trait() -> Mock:
     """Create dyad trait for A01 devices."""
     dyad_trait = AsyncMock()
-    dyad_trait.add_listener.return_value = Mock()
-    dyad_trait.query_values.return_value = {
-        RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
-        RoborockDyadDataProtocol.POWER: 100,
-        RoborockDyadDataProtocol.MESH_LEFT: 111,
-        RoborockDyadDataProtocol.BRUSH_LEFT: 222,
-        RoborockDyadDataProtocol.ERROR: DyadError.none.name,
-        RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
-    }
+    dyad_trait.add_update_listener = Mock(return_value=Mock())
+    dyad_trait.values = dict(DYAD_VALUES)
+    dyad_trait.last_message_time = None
     return dyad_trait
 
 
