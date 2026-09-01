@@ -24,6 +24,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    InvalidTokenError,
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -1163,6 +1164,41 @@ async def test_oauth_session_refresh_connection_error_is_transient(
     assert err.value.translation_key == "oauth2_helper_refresh_transient"
     assert f"Token request for {TEST_DOMAIN} got no response" in caplog.text
     assert str(raised) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"access_token": ACCESS_TOKEN_1}, id="no_expires_at"),
+        pytest.param(
+            {"access_token": ACCESS_TOKEN_1, "expires_at": 0}, id="no_refresh_token"
+        ),
+    ],
+)
+async def test_oauth_session_incomplete_token_asks_for_reauth(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    token: dict[str, Any],
+) -> None:
+    """Test an incomplete stored token asks for reauth instead of raising KeyError."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={"auth_implementation": TEST_DOMAIN, "token": token},
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(InvalidTokenError) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    assert isinstance(err.value, ConfigEntryAuthFailed)
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "oauth2_invalid_token"
+    start_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.parametrize(

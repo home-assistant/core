@@ -30,6 +30,7 @@ from homeassistant import config_entries
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
     ImplementationUnavailableError,
+    InvalidTokenError,
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -847,16 +848,20 @@ class OAuth2Session:
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         async with self._token_lock:
-            if self.valid_token:
-                return
-
             try:
+                if self.valid_token:
+                    return
+
                 new_token = await self.implementation.async_refresh_token(self.token)
             except OAuth2TokenRequestReauthError:
                 # Start reauth here so it also happens for callers that map the
                 # error onto a recoverable one, which would retry indefinitely.
                 self.config_entry.async_start_reauth_if_available(self.hass)
                 raise
+            except KeyError as err:
+                # A token missing fields stays broken until the account is linked again.
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise InvalidTokenError from err
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}

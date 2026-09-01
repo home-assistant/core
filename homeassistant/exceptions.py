@@ -348,6 +348,22 @@ class ImplementationUnavailableError(ConfigEntryNotReady):
         )
 
 
+class InvalidTokenError(ConfigEntryAuthFailed):
+    """Raised when a stored OAuth 2.0 token is missing the fields needed to use it.
+
+    Inherits ConfigEntryAuthFailed because only linking the account again can
+    restore the missing fields.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(
+            *args,
+            translation_domain="homeassistant",
+            translation_key="oauth2_invalid_token",
+        )
+
+
 class UnknownImplementationError(ConfigEntryAuthFailed, ValueError):
     """Raised when a config entry references an implementation that is not registered.
 
