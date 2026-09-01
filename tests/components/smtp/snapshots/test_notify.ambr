@@ -59,7 +59,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
@@ -78,7 +77,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
@@ -109,7 +107,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
@@ -154,7 +151,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
@@ -213,7 +209,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
@@ -244,7 +239,6 @@
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
   Reply-To: Reply To Name <replyto@example.com>
-  Return-Path: bounce@example.com
   X-Mailer: Home Assistant
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>

@@ -63,7 +63,6 @@ from .const import (
     CONF_ENTRY,
     CONF_REPLY_TO,
     CONF_REPLY_TO_NAME,
-    CONF_RETURN_PATH,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
@@ -310,9 +309,6 @@ class MailNotifyEntity(NotifyEntity):
                     (self._entry.options.get(CONF_REPLY_TO_NAME), reply_to)
                 ),
             )
-
-        if return_path := self._entry.options.get(CONF_RETURN_PATH):
-            msg.add_header("Return-Path", return_path)
 
         msg.add_header("X-Mailer", "Home Assistant")
         msg.add_header("Date", email.utils.format_datetime(dt_util.now()))

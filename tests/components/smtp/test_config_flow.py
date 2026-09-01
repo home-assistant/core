@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.smtp.const import (
     CONF_REPLY_TO,
     CONF_REPLY_TO_NAME,
-    CONF_RETURN_PATH,
     CONF_SENDER_NAME,
     DOMAIN,
     SECTION_OPTIONS,
@@ -60,7 +59,6 @@ async def test_form(
                 CONF_TIMEOUT: 60,
                 CONF_REPLY_TO: "replyto@example.com",
                 CONF_REPLY_TO_NAME: "Reply To Name",
-                CONF_RETURN_PATH: "bounce@example.com",
             },
         },
     )
@@ -73,7 +71,6 @@ async def test_form(
         CONF_TIMEOUT: 60,
         CONF_REPLY_TO: "replyto@example.com",
         CONF_REPLY_TO_NAME: "Reply To Name",
-        CONF_RETURN_PATH: "bounce@example.com",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

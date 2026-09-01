@@ -9,7 +9,6 @@ from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
     CONF_REPLY_TO,
     CONF_REPLY_TO_NAME,
-    CONF_RETURN_PATH,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
@@ -124,7 +123,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TIMEOUT: 1312,
             CONF_REPLY_TO: "replyto@example.com",
             CONF_REPLY_TO_NAME: "Reply To Name",
-            CONF_RETURN_PATH: "bounce@example.com",
         },
         entry_id="123456789",
         subentries_data=[

@@ -51,7 +51,6 @@ from .const import (
     CONF_OLD_RECIPIENT,
     CONF_REPLY_TO,
     CONF_REPLY_TO_NAME,
-    CONF_RETURN_PATH,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_ENCRYPTION,
@@ -87,12 +86,6 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Optional(CONF_REPLY_TO_NAME): cv.string,
-        vol.Optional(CONF_RETURN_PATH): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.EMAIL,
-                autocomplete="email",
-            ),
-        ),
     }
 )
 

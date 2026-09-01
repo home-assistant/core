@@ -32,4 +32,3 @@ CONF_OLD_RECIPIENT: Final = "old_recipient"
 
 CONF_REPLY_TO: Final = "reply_to"
 CONF_REPLY_TO_NAME: Final = "reply_to_name"
-CONF_RETURN_PATH: Final = "return_path"
