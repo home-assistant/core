@@ -85,7 +85,7 @@ async def test_migrate_entity_unique_id(
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=0,
+        minor_version=1,
         unique_id="aa:bb:cc:dd:ee:ff",
     )
     entry.add_to_hass(hass)
@@ -101,7 +101,7 @@ async def test_migrate_entity_unique_id(
     await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 1
+    assert entry.minor_version == 2
 
     migrated_entity = entity_registry.async_get(entity.entity_id)
     assert migrated_entity is not None
@@ -116,7 +116,7 @@ async def test_migrate_entry_no_unique_id(
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=0,
+        minor_version=1,
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -125,7 +125,7 @@ async def test_migrate_entry_no_unique_id(
     await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 0
+    assert entry.minor_version == 1
 
 
 async def test_migrate_entry_future_version(
@@ -135,7 +135,7 @@ async def test_migrate_entry_future_version(
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
-        minor_version=0,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
