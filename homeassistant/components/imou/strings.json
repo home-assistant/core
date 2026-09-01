@@ -143,6 +143,9 @@
     "get_stream_failed": {
       "message": "Could not get the live stream URL from Imou: {error}"
     },
+    "invalid_auth": {
+      "message": "Imou rejected the App ID and App secret"
+    },
     "press_button_failed": {
       "message": "Imou rejected the button press: {error}"
     },
