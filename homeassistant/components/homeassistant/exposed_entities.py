@@ -153,8 +153,8 @@ class ExposedEntities:
         """Mark whether an entity's exposure is controlled outside the UI.
 
         A locked entity's exposure is kept in sync with an external source,
-        such as YAML configuration, so changes made through the UI or the
-        websocket API are temporary and will be reverted.
+        such as YAML configuration, changes made through the websockets
+        will be rejected.
         """
         locked_entities = self._locked_entities.setdefault(assistant, set())
         if locked:
