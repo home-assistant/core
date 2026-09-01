@@ -18,6 +18,7 @@ from pyzonneplan.const import PriceChart
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -83,7 +84,7 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
                         PriceChart.GAS_DAILY
                     )
         except ZonneplanAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
