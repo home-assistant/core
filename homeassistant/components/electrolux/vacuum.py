@@ -106,6 +106,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     ) -> None:
         """Initialize the climate device."""
         super().__init__(appliance_data, coordinator, "rvc")
+        self._attr_name = None
 
         self._update_attr_state()
 
