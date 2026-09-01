@@ -1,4 +1,4 @@
-"""Select platform for LG IR integration — LG AC energy-limit cap."""
+"""Select platform for LG IR integration."""
 
 from typing import override
 
