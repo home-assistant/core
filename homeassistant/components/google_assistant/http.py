@@ -140,8 +140,16 @@ class GoogleConfig(AbstractConfig):
 
     @callback
     def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
-        """Push YAML exposure for a newly added entity and schedule a sync."""
+        """Push YAML exposure for a newly added entity and schedule a sync.
+
+        This only need to handle states not registered in entity registry.
+        """
         entity_id = event.data["entity_id"]
+        entity_registry = er.async_get(self.hass)
+
+        if entity_registry.async_get(entity_id):
+            return
+
         self._async_update_legacy_exposure(entity_id)
         if self.should_expose(entity_id):
             self.async_schedule_google_sync_all()
@@ -155,6 +163,10 @@ class GoogleConfig(AbstractConfig):
 
         if event.data["action"] == "remove":
             self.async_schedule_google_sync_all()
+            return
+
+        if event.data["action"] == "create":
+            self._async_update_legacy_exposure(entity_id)
             return
 
         if event.data["action"] != "update":
