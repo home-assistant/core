@@ -328,9 +328,10 @@ async def test_uploading_a_backup_file_exceeding_max_size(
     client = await hass_client()
 
     with (
-        patch("pathlib.Path.open", mock_open()),
+        patch("pathlib.Path.open", mock_open()) as open_mock,
         patch("pathlib.Path.unlink") as unlink_mock,
         patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("homeassistant.components.backup.manager.BUF_SIZE", 1024),
         patch("homeassistant.components.backup.manager.MAX_UPLOAD_SIZE", 1024),
     ):
         resp = await client.post(
@@ -340,6 +341,8 @@ async def test_uploading_a_backup_file_exceeding_max_size(
         await hass.async_block_till_done()
 
     assert resp.status == 413
+    # At least one chunk was written before the limit was exceeded
+    assert open_mock.return_value.write.called
     unlink_mock.assert_called_once()
 
 
