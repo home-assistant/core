@@ -47,13 +47,7 @@ type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 async def async_fetch_garage(
     client: AbrpClient,
 ) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
-    """Fetch the garage once at setup, pairing each vehicle with its display.
-
-    A display-metadata failure degrades only that vehicle's card, so unlike the
-    garage fetch itself it is logged rather than escalated. It is caught as
-    ``BaseException`` so that ``CancelledError`` / ``SystemExit`` propagate
-    instead of degrading to "no display".
-    """
+    """Fetch the garage once at setup, pairing each vehicle with its display."""
     try:
         raw_vehicles = await client.async_get_vehicles()
     except AbrpAuthError as err:
@@ -78,8 +72,8 @@ async def async_fetch_garage(
     for raw, result in zip(raw_vehicles, results, strict=True):
         if isinstance(result, AbrpAuthError):
             _LOGGER.debug(
-                "Display metadata for typecode %s rejected (%s); device "
-                "card falls back to the raw typecode",
+                "Display metadata for typecode %s rejected (%s); the device "
+                "falls back to the raw typecode",
                 raw.vehicle_model,
                 result,
             )
@@ -87,8 +81,8 @@ async def async_fetch_garage(
             continue
         if isinstance(result, (AbrpApiError, TimeoutError)):
             _LOGGER.debug(
-                "Display metadata for typecode %s failed (%s); device "
-                "card falls back to the raw typecode",
+                "Display metadata for typecode %s failed (%s); the device "
+                "falls back to the raw typecode",
                 raw.vehicle_model,
                 result,
             )

@@ -199,7 +199,6 @@ SENSORS: tuple[
     AbrpNumericSensorEntityDescription(
         key="soh",
         translation_key="soh",
-        # No ``device_class``: BATTERY means state of charge, not state of health.
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,

@@ -308,7 +308,7 @@ async def test_first_refresh_api_error_setup_retry(
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_succeeds_with_degraded_device_card(
+async def test_setup_succeeds_with_degraded_device(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,

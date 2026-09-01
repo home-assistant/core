@@ -1,10 +1,4 @@
-"""Constants for the A Better Routeplanner integration.
-
-``OAUTH2_SCOPES`` spells the OIDC scope ``oidc`` rather than the usual
-``openid`` because that is what the ABRP discovery document advertises, and
-``offline_access`` is what yields a refresh token. ``ABRP_APP_KEY`` is the
-partner API key ABRP (Iternio) issued for the Home Assistant integration.
-"""
+"""Constants for the A Better Routeplanner integration."""
 
 DOMAIN = "abetterrouteplanner"
 

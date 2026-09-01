@@ -50,13 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
-    """Set up A Better Routeplanner from a config entry.
-
-    Devices are created, and the stream's teardown registered, before the
-    platform forward: a vehicle that never reports telemetry still gets a card,
-    and a setup failure — which never reaches ``async_unload_entry`` — still
-    stops the stream.
-    """
+    """Set up A Better Routeplanner from a config entry."""
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -95,7 +89,7 @@ async def async_setup_entry(
         scope = f"{entry.unique_id}_{raw.vehicle_id}"
         if display is None:
             _LOGGER.info(
-                "No display metadata for vehicle %d (typecode %s); device card "
+                "No display metadata for vehicle %d (typecode %s); the device "
                 "shows the raw typecode until the entry is reloaded",
                 raw.vehicle_id,
                 raw.vehicle_model,
