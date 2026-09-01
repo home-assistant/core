@@ -22,9 +22,10 @@ from homeassistant.components.weatherkit.const import (
     CONF_TEAM_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import EXAMPLE_CONFIG_DATA
 
@@ -181,6 +182,82 @@ async def test_auto_fix_key_input(
 
     assert result["data"][CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_of_disabled_v1_entry_migrates_old_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that reconfiguring a disabled, not-yet-migrated entry doesn't orphan its entities.
+
+    A disabled config entry is never set up, so `async_migrate_entry` (which
+    only runs as part of setup) never gets a chance to move its entities off
+    their lat/lon-based unique ids before reconfigure changes the location.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data=EXAMPLE_CONFIG_DATA,
+        version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    entry.add_to_hass(hass)
+
+    old_unique_id = (
+        f"{EXAMPLE_CONFIG_DATA[CONF_LATITUDE]}-{EXAMPLE_CONFIG_DATA[CONF_LONGITUDE]}"
+    )
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, old_unique_id)},
+    )
+    weather_entity = entity_registry.async_get_or_create(
+        Platform.WEATHER,
+        DOMAIN,
+        old_unique_id,
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    new_user_input = {
+        CONF_LOCATION: {
+            CONF_LATITUDE: 40.7127753,
+            CONF_LONGITUDE: -74.0059728,
+        },
+        CONF_KEY_ID: EXAMPLE_CONFIG_DATA[CONF_KEY_ID],
+        CONF_SERVICE_ID: EXAMPLE_CONFIG_DATA[CONF_SERVICE_ID],
+        CONF_TEAM_ID: EXAMPLE_CONFIG_DATA[CONF_TEAM_ID],
+        CONF_KEY_PEM: "",
+    }
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], new_user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Simulate the user later re-enabling the entry, which reloads (and thus
+    # migrates) it the way it normally would be if it were never disabled.
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, entry.entry_id)}
+
+    assert (
+        entity_registry.async_get(weather_entity.entity_id).unique_id == entry.entry_id
+    )
 
 
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:

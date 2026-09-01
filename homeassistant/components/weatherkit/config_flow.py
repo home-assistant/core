@@ -21,6 +21,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
 )
 
+from . import async_migrate_entry
 from .const import (
     CONF_KEY_ID,
     CONF_KEY_PEM,
@@ -123,6 +124,12 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
+                # A disabled or not-yet-set-up entry may still be on the old
+                # lat/lon-based unique id scheme, since migration only runs
+                # during setup. Migrate it now, before its location changes,
+                # so the migration can still find the old registry records.
+                await async_migrate_entry(self.hass, reconfigure_entry)
+
                 location = user_input.pop(CONF_LOCATION)
                 user_input[CONF_LATITUDE] = location[CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
