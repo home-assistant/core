@@ -143,7 +143,12 @@ class InMemoryTimerListEntity(TimerListEntity):
             )
         else:
             return
-        timer.total_duration = max(timer.total_duration, timer.remaining_at(now))
+        # Rounded to whole seconds: timers are second-granularity, and the
+        # sub-second age of the timer would otherwise shorten the total.
+        new_remaining = timedelta(
+            seconds=round(timer.remaining_at(now).total_seconds())
+        )
+        timer.total_duration = max(timer.total_duration, new_remaining)
         self._notify(TimerListEventType.TIME_CHANGED, timer, delta=duration)
 
     @override
