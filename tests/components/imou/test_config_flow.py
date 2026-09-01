@@ -288,6 +288,7 @@ async def test_reauth_flow_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_APP_SECRET] == NEW_APP_SECRET
+    mock_imou_openapi_client.async_close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -331,3 +332,4 @@ async def test_reauth_flow_exception_then_recover(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_APP_SECRET] == NEW_APP_SECRET
+    assert mock_imou_openapi_client.async_close.await_count == 2

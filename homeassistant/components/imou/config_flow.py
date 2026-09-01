@@ -127,6 +127,8 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data_updates={CONF_APP_SECRET: user_input[CONF_APP_SECRET]},
                 )
+            finally:
+                await api_client.async_close()
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
