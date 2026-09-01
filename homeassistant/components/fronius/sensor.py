@@ -325,12 +325,12 @@ def _modbus_mppt_descriptions(
             translation_placeholders={"mppt_no": str(mppt_no)},
         ),
         FroniusSensorEntityDescription(
-            key=f"mppt_{mppt_no}_energy_dc",
+            key=f"mppt_{mppt_no}_energy",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             invalid_when_falsy=True,
-            translation_key="modbus_mppt_energy_dc",
+            translation_key="modbus_mppt_energy",
             translation_placeholders={"mppt_no": str(mppt_no)},
         ),
     ]
