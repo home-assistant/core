@@ -51,7 +51,7 @@
         "name": "AI mode"
       },
       "audio": {
-        "name": "Beep"
+        "name": "Toggle beep"
       },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
@@ -63,7 +63,7 @@
         "name": "[%key:common::entity::button::down::name%]"
       },
       "eco": {
-        "name": "Eco"
+        "name": "Eco mode"
       },
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
@@ -93,13 +93,13 @@
         "name": "[%key:common::entity::button::input::name%]"
       },
       "jet": {
-        "name": "Jet"
+        "name": "Jet mode"
       },
       "left": {
         "name": "[%key:common::entity::button::left::name%]"
       },
       "light": {
-        "name": "Light"
+        "name": "Toggle light"
       },
       "menu": {
         "name": "[%key:common::entity::button::menu::name%]"
@@ -150,16 +150,16 @@
         "name": "[%key:common::entity::button::right::name%]"
       },
       "swing_v_toggle": {
-        "name": "Vertical swing toggle"
+        "name": "Toggle vertical swing"
       },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
       },
       "viraat": {
-        "name": "Viraat"
+        "name": "Viraat mode"
       },
       "wifi": {
-        "name": "Wi-Fi"
+        "name": "Start Wi-Fi pairing"
       }
     },
     "climate": {

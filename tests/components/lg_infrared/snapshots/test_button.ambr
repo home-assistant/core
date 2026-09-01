@@ -49,56 +49,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[ac][button.lg_ac_beep-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.lg_ac_beep',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Beep',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Beep',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio',
-    'unique_id': '01JTEST0000000000000000000_audio',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_beep-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Beep',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_ac_beep',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_entities[ac][button.lg_ac_diagnose-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -149,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[ac][button.lg_ac_eco-entry]
+# name: test_entities[ac][button.lg_ac_eco_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -163,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lg_ac_eco',
+    'entity_id': 'button.lg_ac_eco_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,12 +121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Eco',
+    'object_id_base': 'Eco mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Eco',
+    'original_name': 'Eco mode',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -186,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[ac][button.lg_ac_eco-state]
+# name: test_entities[ac][button.lg_ac_eco_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Eco',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Eco mode',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_ac_eco',
+    'entity_id': 'button.lg_ac_eco_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[ac][button.lg_ac_jet-entry]
+# name: test_entities[ac][button.lg_ac_jet_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lg_ac_jet',
+    'entity_id': 'button.lg_ac_jet_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -221,12 +171,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Jet',
+    'object_id_base': 'Jet mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Jet',
+    'original_name': 'Jet mode',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -236,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[ac][button.lg_ac_jet-state]
+# name: test_entities[ac][button.lg_ac_jet_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Jet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Jet mode',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_ac_jet',
+    'entity_id': 'button.lg_ac_jet_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[ac][button.lg_ac_light-entry]
+# name: test_entities[ac][button.lg_ac_start_wi_fi_pairing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +213,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.lg_ac_light',
+    'entity_id': 'button.lg_ac_start_wi_fi_pairing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,162 +221,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Light',
+    'object_id_base': 'Start Wi-Fi pairing',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': '01JTEST0000000000000000000_light',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_light-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Light',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_ac_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_vertical_swing_toggle-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_ac_vertical_swing_toggle',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Vertical swing toggle',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Vertical swing toggle',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'swing_v_toggle',
-    'unique_id': '01JTEST0000000000000000000_swing_v_toggle',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_vertical_swing_toggle-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Vertical swing toggle',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_ac_vertical_swing_toggle',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_viraat-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_ac_viraat',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Viraat',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Viraat',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'viraat',
-    'unique_id': '01JTEST0000000000000000000_viraat',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_viraat-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Viraat',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_ac_viraat',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[ac][button.lg_ac_wi_fi-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.lg_ac_wi_fi',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Wi-Fi',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Start Wi-Fi pairing',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -436,13 +236,213 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[ac][button.lg_ac_wi_fi-state]
+# name: test_entities[ac][button.lg_ac_start_wi_fi_pairing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Wi-Fi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Start Wi-Fi pairing',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_ac_wi_fi',
+    'entity_id': 'button.lg_ac_start_wi_fi_pairing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_beep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.lg_ac_toggle_beep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle beep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle beep',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio',
+    'unique_id': '01JTEST0000000000000000000_audio',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_beep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle beep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_beep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.lg_ac_toggle_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle light',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': '01JTEST0000000000000000000_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_vertical_swing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_toggle_vertical_swing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle vertical swing',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle vertical swing',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'swing_v_toggle',
+    'unique_id': '01JTEST0000000000000000000_swing_v_toggle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_vertical_swing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle vertical swing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_vertical_swing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_viraat_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_viraat_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Viraat mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Viraat mode',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'viraat',
+    'unique_id': '01JTEST0000000000000000000_viraat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_viraat_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Viraat mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_viraat_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

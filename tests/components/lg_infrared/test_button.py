@@ -113,15 +113,15 @@ async def test_button_availability_follows_ir_entity(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.lg_ac_jet", LGACCode.JET),
-        ("button.lg_ac_eco", LGACCode.ECO),
-        ("button.lg_ac_viraat", LGACCode.VIRAAT),
+        ("button.lg_ac_jet_mode", LGACCode.JET),
+        ("button.lg_ac_eco_mode", LGACCode.ECO),
+        ("button.lg_ac_viraat_mode", LGACCode.VIRAAT),
         ("button.lg_ac_ai_mode", LGACCode.AI_CONVERTIBLE),
-        ("button.lg_ac_light", LGACCode.LIGHT_TOGGLE),
-        ("button.lg_ac_wi_fi", LGACCode.WIFI_TOGGLE),
-        ("button.lg_ac_beep", LGACCode.AUDIO_TOGGLE),
+        ("button.lg_ac_toggle_light", LGACCode.LIGHT_TOGGLE),
+        ("button.lg_ac_start_wi_fi_pairing", LGACCode.WIFI_TOGGLE),
+        ("button.lg_ac_toggle_beep", LGACCode.AUDIO_TOGGLE),
         ("button.lg_ac_diagnose", LGACCode.DIAGNOSE),
-        ("button.lg_ac_vertical_swing_toggle", LGACCode.SWING_V_TOGGLE),
+        ("button.lg_ac_toggle_vertical_swing", LGACCode.SWING_V_TOGGLE),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
