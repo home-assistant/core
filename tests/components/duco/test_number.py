@@ -95,9 +95,12 @@ async def test_bypass_supply_temperature_targets_missing_skips_number_creation(
 @pytest.mark.usefixtures("init_integration")
 async def test_set_bypass_supply_temperature_target(
     hass: HomeAssistant,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test setting a bypass target refreshes the number from the box."""
+    target = mock_bypass_supply_temperature_targets[1]
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -106,7 +109,7 @@ async def test_set_bypass_supply_temperature_target(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -126,6 +129,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
         increment=0.5,
         maximum=25.5,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -137,7 +141,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
 
     with pytest.raises(
@@ -166,6 +170,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         increment=0.5,
         maximum=25.5,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -177,7 +182,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5
+        1, 20.5, target=target
     )
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -198,6 +203,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
         increment=0.5,
         maximum=24.8,
     )
+    target = mock_bypass_supply_temperature_targets[1]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
@@ -209,7 +215,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
     )
 
     mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 24.5
+        1, 24.5, target=target
     )
 
 
