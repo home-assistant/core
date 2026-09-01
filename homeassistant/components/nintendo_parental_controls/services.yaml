@@ -75,11 +75,11 @@ update_daily_restrictions:
             - "saturday"
             - "sunday"
     bedtime_start:
-      example: "07:00:00"
+      example: "20:00:00"
       selector:
         time:
     bedtime_end:
-      example: "20:00:00"
+      example: "07:00:00"
       selector:
         time:
     max_play_time:

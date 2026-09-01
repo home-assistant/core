@@ -84,8 +84,14 @@
     "bedtime_end_time_out_of_range": {
       "message": "{value} not accepted. Bedtime End Time must be between {bedtime_end_time_min} and {bedtime_end_time_max}. To disable, set to {bedtime_alarm_disable}."
     },
+    "bedtime_out_of_range": {
+      "message": "The specified bedtime start or end time is outside of the allowed range. Please ensure this is between {bedtime_alarm_min} and {bedtime_alarm_max} for bedtime start, and between {bedtime_end_time_min} and {bedtime_end_time_max} for bedtime end."
+    },
     "config_entry_not_found": {
       "message": "Config entry not found."
+    },
+    "extra_playing_time_active": {
+      "message": "Extra playing time is currently active. Please wait until it expires before updating daily restrictions."
     },
     "invalid_device": {
       "message": "The specified device is not a Nintendo device."

@@ -6,7 +6,11 @@ import logging
 from pynintendoparental.const import DAYS_OF_WEEK
 from pynintendoparental.device import Device
 from pynintendoparental.enum import SafeLaunchSetting
-from pynintendoparental.exceptions import InvalidDeviceStateError
+from pynintendoparental.exceptions import (
+    BedtimeOutOfRangeError,
+    ExtraPlayingTimeActiveError,
+    InvalidDeviceStateError,
+)
 from pynintendoparental.player import Player
 import voluptuous as vol
 
@@ -26,6 +30,10 @@ from .const import (
     ATTR_BONUS_TIME,
     ATTR_DAY_OF_WEEK,
     ATTR_MAX_PLAY_TIME,
+    BEDTIME_ALARM_MAX,
+    BEDTIME_ALARM_MIN,
+    BEDTIME_END_TIME_MAX,
+    BEDTIME_END_TIME_MIN,
     DOMAIN,
 )
 from .coordinator import NintendoParentalControlsConfigEntry
@@ -234,4 +242,20 @@ async def async_set_per_day_controls(call: ServiceCall) -> None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="requires_daily_restrictions",
+        ) from err
+    except ExtraPlayingTimeActiveError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="extra_playing_time_active",
+        ) from err
+    except BedtimeOutOfRangeError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="bedtime_out_of_range",
+            translation_placeholders={
+                "bedtime_alarm_min": BEDTIME_ALARM_MIN,
+                "bedtime_alarm_max": BEDTIME_ALARM_MAX,
+                "bedtime_end_time_min": BEDTIME_END_TIME_MIN,
+                "bedtime_end_time_max": BEDTIME_END_TIME_MAX,
+            },
         ) from err
