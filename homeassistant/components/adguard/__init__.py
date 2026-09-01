@@ -138,6 +138,8 @@ def _async_migrate_device_identifiers(
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
+    _async_migrate_device_identifiers(hass, entry)
+
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
         entry.data[CONF_HOST],
@@ -155,8 +157,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
         raise ConfigEntryNotReady from exception
 
     entry.runtime_data = AdGuardData(adguard, version)
-
-    _async_migrate_device_identifiers(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

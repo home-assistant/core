@@ -83,3 +83,29 @@ async def test_device_identifiers_migration(
     migrated = device_registry.async_get(device.id)
     assert migrated is not None
     assert migrated.identifiers == {(DOMAIN, mock_config_entry.entry_id)}
+
+
+async def test_device_identifiers_migration_when_unavailable(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_adguard: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the device is migrated even when the instance cannot be reached."""
+    mock_adguard.version.side_effect = AdGuardHomeConnectionError("Connection error")
+
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "127.0.0.1", 3000, "/control")},  # type: ignore[arg-type]
+        name="AdGuard Home",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    migrated = device_registry.async_get(device.id)
+    assert migrated is not None
+    assert migrated.identifiers == {(DOMAIN, mock_config_entry.entry_id)}
