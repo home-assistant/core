@@ -10,6 +10,7 @@ from elkm1_lib.elk import Elk
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -45,6 +46,23 @@ def create_elk_entities(
 
         entities.append(class_(element, elk, elk_data))
     return entities
+
+
+def create_elk_system_device_info(elk: Elk, prefix: str, mac: str | None) -> DeviceInfo:
+    """Return the device info for the ElkM1 system device."""
+    device_name = "ElkM1"
+    if prefix:
+        device_name += f" {prefix}"
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{prefix}_system")},
+        manufacturer="ELK Products, Inc.",
+        model="M1",
+        name=device_name,
+        sw_version=elk.panel.elkm1_version,
+    )
+    if mac:
+        device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
+    return device_info
 
 
 def generate_unique_id(prefix: str, element: Element) -> str:
@@ -128,10 +146,16 @@ class ElkEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
+        config_entry = self.platform.config_entry
+        assert config_entry
         return DeviceInfo(
             name=self._element.name,
             identifiers={(DOMAIN, self._unique_id)},
-            via_device=(DOMAIN, f"{self._prefix}_system"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{self._prefix}_system"),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
 
 
@@ -142,16 +166,4 @@ class ElkAttachedEntity(ElkEntity):
     @override
     def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
-        device_name = "ElkM1"
-        if self._prefix:
-            device_name += f" {self._prefix}"
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._prefix}_system")},
-            manufacturer="ELK Products, Inc.",
-            model="M1",
-            name=device_name,
-            sw_version=self._elk.panel.elkm1_version,
-        )
-        if self._mac:
-            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return device_info
+        return create_elk_system_device_info(self._elk, self._prefix, self._mac)

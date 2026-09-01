@@ -36,6 +36,7 @@ from .const import (
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
     SUPPORTED_PLATFORMS_UI,
+    UI_DEVICE_ID_PREFIX,
 )
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
@@ -103,6 +104,7 @@ async def register_panel(hass: HomeAssistant) -> None:
             module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
+            handle_safe_area=True,
         )
 
 
@@ -699,7 +701,7 @@ def ws_create_device(
     msg: dict,
 ) -> None:
     """Create a new KNX device."""
-    identifier = f"knx_vdev_{ulid_now()}"
+    identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
     device_registry = dr.async_get(hass)
     _device = device_registry.async_get_or_create(
         config_entry_id=knx.entry.entry_id,

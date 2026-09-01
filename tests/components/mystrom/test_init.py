@@ -79,7 +79,9 @@ async def test_device_registry_bulb(
     """Test the bulb device registry entry, including the network MAC connection."""
     await init_integration(hass, config_entry, 102)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_MAC)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_MAC), config_entry.entry_id
+    )
     assert device_entry == snapshot
 
 
