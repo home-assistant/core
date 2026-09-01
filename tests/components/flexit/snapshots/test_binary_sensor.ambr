@@ -62,7 +62,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.flexit_filter_alarm',
     'has_entity_name': True,
     'hidden_by': None,

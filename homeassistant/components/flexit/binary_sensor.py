@@ -31,6 +31,7 @@ BINARY_SENSORS: tuple[FlexitBinarySensorEntityDescription, ...] = (
         key="filter_alarm",
         translation_key="filter_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda measurements: measurements.filter_alarm,
     ),
     FlexitBinarySensorEntityDescription(
