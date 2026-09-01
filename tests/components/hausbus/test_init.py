@@ -5,7 +5,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
-from homeassistant.components.hausbus.gateway import async_acquire_home_server
+from homeassistant.components.hausbus.gateway import (
+    HomeServerUnavailable,
+    async_acquire_home_server,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -216,6 +219,25 @@ async def test_setup_releases_home_server_if_platform_setup_fails(
     mock_home_server.shutdown.assert_called_once()
 
 
+async def test_setup_fails_permanently_if_home_server_is_unavailable(
+    hass: HomeAssistant,
+    mock_home_server_class: MagicMock,
+) -> None:
+    """Setup does not retry a HomeServer left broken by a prior shutdown failure.
+
+    Unlike OSError/TimeoutError (a transient connection problem), this
+    only clears on a Home Assistant restart, so async_setup_entry() must
+    surface it as a permanent failure instead of scheduling a retry.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
+    config_entry.add_to_hass(hass)
+    mock_home_server_class.side_effect = HomeServerUnavailable("connection broken")
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_unload_shutdown_failure_is_not_handed_out_again(
     hass: HomeAssistant,
     mock_home_server: MagicMock,
@@ -235,5 +257,5 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
     # real singleton does after shutdown() clears it.
     mock_home_server_class.return_value = MagicMock()
 
-    with pytest.raises(OSError):
+    with pytest.raises(HomeServerUnavailable):
         await async_acquire_home_server(hass)

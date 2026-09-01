@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "home_server_unavailable": "The Haus-Bus network connection failed to shut down cleanly earlier and cannot be reopened until Home Assistant restarts."
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },

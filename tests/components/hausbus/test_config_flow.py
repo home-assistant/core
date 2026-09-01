@@ -6,6 +6,7 @@ from typing import NoReturn
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.hausbus.const import DOMAIN
+from homeassistant.components.hausbus.gateway import HomeServerUnavailable
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -171,6 +172,51 @@ async def test_user_flow_os_error_shows_search_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"
+
+
+async def test_user_flow_aborts_if_home_server_is_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """A HomeServer left broken by a prior shutdown failure aborts the flow.
+
+    Unlike OSError/TimeoutError, this only clears on a Home Assistant
+    restart, so it must not be offered the same search_timeout retry.
+    """
+    construction_started = threading.Event()
+    release_construction = threading.Event()
+
+    def _blocking_unavailable() -> NoReturn:
+        construction_started.set()
+        assert release_construction.wait(timeout=5), "test did not release in time"
+        raise HomeServerUnavailable("connection broken")
+
+    # `new=` rather than `side_effect=`: see test_user_flow_os_error_shows_search_timeout.
+    with patch(
+        "homeassistant.components.hausbus.gateway.HomeServer",
+        new=_blocking_unavailable,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "wait_for_device"
+
+        assert await hass.async_add_executor_job(construction_started.wait, 5)
+        release_construction.set()
+
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "home_server_unavailable"
 
 
 async def test_single_instance_allowed(

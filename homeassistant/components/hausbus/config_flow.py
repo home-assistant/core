@@ -11,7 +11,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
-from .gateway import async_acquire_home_server, async_release_home_server
+from .gateway import (
+    HomeServerUnavailable,
+    async_acquire_home_server,
+    async_release_home_server,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +94,9 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._search_task
+
+        except HomeServerUnavailable:
+            return self.async_abort(reason="home_server_unavailable")
 
         except TimeoutError, OSError:
             return self.async_show_progress_done(next_step_id="search_timeout")

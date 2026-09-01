@@ -18,6 +18,7 @@ from pyhausbus.IBusDeviceListener import IBusDeviceListener
 from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -60,6 +61,15 @@ class _HomeServerBrokenState:
 _home_server_broken_state = _HomeServerBrokenState()
 
 
+class HomeServerUnavailable(HomeAssistantError):
+    """The shared HomeServer failed to shut down and cannot be reopened.
+
+    Distinct from OSError/TimeoutError, which async_setup_entry() retries:
+    this condition only clears on a Home Assistant restart, so it must be
+    surfaced as a permanent setup failure instead.
+    """
+
+
 async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     """Acquire a reference to the shared HomeServer, creating it on first use.
 
@@ -71,16 +81,17 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     finish first - otherwise one flow being aborted could tear down the
     HomeServer that another flow, or the config entry, is still using.
 
-    Raises OSError if a previous release left this singleton unable to
-    fully shut down (see async_release_home_server) - it cannot be handed
-    out again until Home Assistant restarts and starts a fresh process.
+    Raises HomeServerUnavailable if a previous release left this singleton
+    unable to fully shut down (see async_release_home_server) - it cannot
+    be handed out again until Home Assistant restarts and starts a fresh
+    process.
 
     Always pair a call to this with async_release_home_server(), passing
     back the exact object this returned.
     """
     async with _home_server_lock:
         if _home_server_broken_state.broken:
-            raise OSError(
+            raise HomeServerUnavailable(
                 "The Haus-Bus network connection failed to shut down "
                 "cleanly earlier and cannot be reopened until Home "
                 "Assistant restarts"

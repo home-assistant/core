@@ -6,9 +6,9 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .gateway import HausbusGateway, async_release_home_server
+from .gateway import HausbusGateway, HomeServerUnavailable, async_release_home_server
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
@@ -24,6 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     """Set up Haus-Bus integration from a config entry."""
     try:
         gateway = await HausbusGateway.async_create(hass, entry)
+    except HomeServerUnavailable as err:
+        # Terminal: pyhausbus already reset its singleton after a failed
+        # shutdown, so retrying setup cannot succeed before a restart.
+        raise ConfigEntryError(str(err)) from err
     except (OSError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             "Unable to open the Haus-Bus network connection"
