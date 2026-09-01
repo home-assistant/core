@@ -30,14 +30,20 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_home_server() -> Generator[MagicMock]:
-    """Mock the pyhausbus HomeServer singleton used by the gateway."""
+def mock_home_server_class() -> Generator[MagicMock]:
+    """Mock the pyhausbus HomeServer class used by the gateway."""
     with patch(
         "homeassistant.components.hausbus.gateway.HomeServer", autospec=True
     ) as mock_home_server_class:
-        home_server = mock_home_server_class.return_value
-        home_server.is_any_device_found.return_value = True
-        yield home_server
+        yield mock_home_server_class
+
+
+@pytest.fixture
+def mock_home_server(mock_home_server_class: MagicMock) -> MagicMock:
+    """Mock the pyhausbus HomeServer singleton used by the gateway."""
+    home_server = mock_home_server_class.return_value
+    home_server.is_any_device_found.return_value = True
+    return home_server
 
 
 @pytest.fixture

@@ -195,7 +195,9 @@ async def test_setup_releases_home_server_if_platform_setup_fails(
 
 
 async def test_unload_shutdown_failure_is_not_handed_out_again(
-    hass: HomeAssistant, mock_home_server: MagicMock
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
+    mock_home_server_class: MagicMock,
 ) -> None:
     """A HomeServer whose shutdown fails during unload is not reused.
 
@@ -219,12 +221,9 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
 
     assert not await hass.config_entries.async_unload(config_entry.entry_id)
 
-    with (
-        patch(
-            "homeassistant.components.hausbus.gateway.HomeServer",
-            autospec=True,
-            return_value=MagicMock(),
-        ),
-        pytest.raises(OSError),
-    ):
+    # A fresh HomeServer() call returns a distinct object, as pyhausbus's
+    # real singleton does after shutdown() clears it.
+    mock_home_server_class.return_value = MagicMock()
+
+    with pytest.raises(OSError):
         await async_acquire_home_server(hass)
