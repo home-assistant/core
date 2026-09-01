@@ -1,7 +1,7 @@
 """Config flow for zcc integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zcc import (
@@ -46,6 +46,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     api_descriptions: list[ControlPointDescription]
     data: dict[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

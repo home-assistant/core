@@ -39,8 +39,8 @@
 # name: test_binary_sensors[sensor_payload0-expected0-config_entry_options0][binary_sensor.alarm_10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Alarm 10',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm 10',
       'on': True,
       'temperature': 26.0,
     }),
@@ -92,8 +92,8 @@
 # name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Cave CO',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cave CO',
       'on': True,
     }),
     'context': <ANY>,
@@ -144,8 +144,8 @@
 # name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_low_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Cave CO Low Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cave CO Low Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cave_co_low_battery',
@@ -195,8 +195,8 @@
 # name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_tampered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Cave CO Tampered',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cave CO Tampered',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cave_co_tampered',
@@ -247,8 +247,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'dark': False,
-      'device_class': 'motion',
-      'friendly_name': 'Presence sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor',
       'on': True,
       'temperature': 0.1,
     }),
@@ -300,8 +300,8 @@
 # name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_low_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Presence sensor Low Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Low Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.presence_sensor_low_battery',
@@ -351,8 +351,8 @@
 # name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_tampered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Presence sensor Tampered',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Tampered',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.presence_sensor_tampered',
@@ -402,8 +402,8 @@
 # name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'sensor_kitchen_smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'sensor_kitchen_smoke',
       'on': True,
     }),
     'context': <ANY>,
@@ -454,8 +454,8 @@
 # name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'sensor_kitchen_smoke Test Mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'sensor_kitchen_smoke Test Mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
@@ -505,8 +505,8 @@
 # name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'sensor_kitchen_smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'sensor_kitchen_smoke',
       'on': True,
     }),
     'context': <ANY>,
@@ -557,8 +557,8 @@
 # name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'sensor_kitchen_smoke Test Mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'sensor_kitchen_smoke Test Mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
@@ -608,7 +608,7 @@
 # name: test_binary_sensors[sensor_payload4-expected4-config_entry_options0][binary_sensor.kitchen_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch',
       'on': True,
     }),
     'context': <ANY>,
@@ -659,8 +659,8 @@
 # name: test_binary_sensors[sensor_payload5-expected5-config_entry_options0][binary_sensor.back_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'Back Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door',
       'on': True,
       'temperature': 33.0,
     }),
@@ -713,8 +713,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'dark': False,
-      'device_class': 'motion',
-      'friendly_name': 'Motion sensor 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor 4',
       'on': True,
     }),
     'context': <ANY>,
@@ -765,8 +765,8 @@
 # name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'water2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'water2',
       'on': True,
       'temperature': 25.0,
     }),
@@ -818,8 +818,8 @@
 # name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_low_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'water2 Low Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'water2 Low Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water2_low_battery',
@@ -869,8 +869,8 @@
 # name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_tampered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'water2 Tampered',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'water2 Tampered',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water2_tampered',
@@ -920,8 +920,8 @@
 # name: test_binary_sensors[sensor_payload8-expected8-config_entry_options0][binary_sensor.vibration_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'vibration',
-      'friendly_name': 'Vibration 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'vibration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vibration 1',
       'on': True,
       'orientation': list([
         10,
@@ -981,8 +981,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'dark': False,
-      'device_class': 'motion',
-      'friendly_name': 'Presence sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor',
       'on': True,
       'temperature': 0.1,
     }),
@@ -1034,8 +1034,8 @@
 # name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_low_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Presence sensor Low Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Low Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.presence_sensor_low_battery',
@@ -1085,8 +1085,8 @@
 # name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_tampered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Presence sensor Tampered',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Tampered',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.presence_sensor_tampered',

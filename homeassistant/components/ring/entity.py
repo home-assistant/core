@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Concatenate, Generic, TypeVar, cast
+from typing import Any, Concatenate, Generic, TypeVar, cast, override
 
 from ring_doorbell import (
     AuthenticationError,
@@ -191,6 +191,7 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
         return self.coordinator.data
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._device = cast(
             RingDeviceT,

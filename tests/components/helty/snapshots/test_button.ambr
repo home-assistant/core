@@ -39,7 +39,7 @@
 # name: test_all_entities[button.vmc_soggiorno_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'VMC Soggiorno Reset filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VMC Soggiorno Reset filter',
     }),
     'context': <ANY>,
     'entity_id': 'button.vmc_soggiorno_reset_filter',

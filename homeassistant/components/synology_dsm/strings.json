@@ -81,6 +81,17 @@
         "name": "Shut down"
       }
     },
+    "select": {
+      "fan_speed_mode": {
+        "name": "Fan speed mode",
+        "state": {
+          "cool": "Cool mode",
+          "full_speed": "Full-speed mode",
+          "low_power": "Low-Power mode",
+          "quiet": "Quiet mode"
+        }
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "name": "CPU load average (15 min)"
@@ -230,6 +241,9 @@
     }
   },
   "options": {
+    "abort": {
+      "entry_not_loaded": "The integration is not loaded, so the shares to back up to cannot be listed."
+    },
     "step": {
       "init": {
         "data": {

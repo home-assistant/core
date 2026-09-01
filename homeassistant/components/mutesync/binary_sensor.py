@@ -1,5 +1,7 @@
 """mütesync binary sensor entities."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -48,6 +50,7 @@ class MuteStatus(CoordinatorEntity[MutesyncUpdateCoordinator], BinarySensorEntit
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.coordinator.data[self._sensor_type]

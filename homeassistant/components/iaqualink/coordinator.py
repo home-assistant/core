@@ -1,7 +1,7 @@
 """Data update coordinator for iaqualink."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 from iaqualink.exception import (
@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
     ) -> None:
@@ -40,6 +42,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.system = system
 
+    @override
     async def _async_update_data(self) -> None:
         """Refresh internal state for a system."""
         try:

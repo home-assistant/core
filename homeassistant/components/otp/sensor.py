@@ -1,6 +1,7 @@
 """Support for One-Time Password (OTP)."""
 
 import time
+from typing import override
 
 import pyotp
 
@@ -52,6 +53,7 @@ class TOTPSensor(SensorEntity):
             identifiers={(DOMAIN, entry_id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._call_loop()

@@ -1,7 +1,7 @@
 """Config flow to configure the honeywell integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiosomecomfort
 import voluptuous as vol
@@ -80,6 +80,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": "Honeywell"},
         )
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Create config entry. Show the setup form to the user."""
         errors: dict[str, str] = {}
@@ -127,6 +128,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HoneywellOptionsFlowHandler:

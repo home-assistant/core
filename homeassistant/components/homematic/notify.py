@@ -1,6 +1,6 @@
 """Notification support for Homematic."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -60,6 +60,7 @@ class HomematicNotificationService(BaseNotificationService):
         self.hass = hass
         self.data = data
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a notification to the device."""
         data = {**self.data, **kwargs.get(ATTR_DATA, {})}

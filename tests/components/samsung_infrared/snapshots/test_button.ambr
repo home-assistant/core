@@ -39,7 +39,7 @@
 # name: test_entities[button.samsung_tv_ad_subtitle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV AD/Subtitle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV AD/Subtitle',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_ad_subtitle',
@@ -89,7 +89,7 @@
 # name: test_entities[button.samsung_tv_blue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Blue',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Blue',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_blue',
@@ -139,7 +139,7 @@
 # name: test_entities[button.samsung_tv_browser-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Browser',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Browser',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_browser',
@@ -189,7 +189,7 @@
 # name: test_entities[button.samsung_tv_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Down',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_down',
@@ -239,7 +239,7 @@
 # name: test_entities[button.samsung_tv_e_manual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV E-Manual',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV E-Manual',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_e_manual',
@@ -289,7 +289,7 @@
 # name: test_entities[button.samsung_tv_exit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Exit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Exit',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_exit',
@@ -339,7 +339,7 @@
 # name: test_entities[button.samsung_tv_fast_forward-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Fast forward',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Fast forward',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_fast_forward',
@@ -389,7 +389,7 @@
 # name: test_entities[button.samsung_tv_green-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Green',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Green',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_green',
@@ -439,7 +439,7 @@
 # name: test_entities[button.samsung_tv_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Home',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_home',
@@ -489,7 +489,7 @@
 # name: test_entities[button.samsung_tv_info-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Info',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Info',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_info',
@@ -539,7 +539,7 @@
 # name: test_entities[button.samsung_tv_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Left',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_left',
@@ -589,7 +589,7 @@
 # name: test_entities[button.samsung_tv_number_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 0',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_0',
@@ -639,7 +639,7 @@
 # name: test_entities[button.samsung_tv_number_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_1',
@@ -689,7 +689,7 @@
 # name: test_entities[button.samsung_tv_number_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_2',
@@ -739,7 +739,7 @@
 # name: test_entities[button.samsung_tv_number_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 3',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_3',
@@ -789,7 +789,7 @@
 # name: test_entities[button.samsung_tv_number_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 4',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_4',
@@ -839,7 +839,7 @@
 # name: test_entities[button.samsung_tv_number_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 5',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_5',
@@ -889,7 +889,7 @@
 # name: test_entities[button.samsung_tv_number_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 6',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_6',
@@ -939,7 +939,7 @@
 # name: test_entities[button.samsung_tv_number_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 7',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 7',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_7',
@@ -989,7 +989,7 @@
 # name: test_entities[button.samsung_tv_number_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 8',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_8',
@@ -1039,7 +1039,7 @@
 # name: test_entities[button.samsung_tv_number_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Number 9',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Number 9',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_number_9',
@@ -1089,7 +1089,7 @@
 # name: test_entities[button.samsung_tv_ok-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV OK',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV OK',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_ok',
@@ -1139,7 +1139,7 @@
 # name: test_entities[button.samsung_tv_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Power',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_power',
@@ -1189,7 +1189,7 @@
 # name: test_entities[button.samsung_tv_previous_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Previous channel',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Previous channel',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_previous_channel',
@@ -1239,7 +1239,7 @@
 # name: test_entities[button.samsung_tv_record-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Record',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Record',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_record',
@@ -1289,7 +1289,7 @@
 # name: test_entities[button.samsung_tv_red-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Red',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Red',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_red',
@@ -1339,7 +1339,7 @@
 # name: test_entities[button.samsung_tv_return-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Return',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Return',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_return',
@@ -1389,7 +1389,7 @@
 # name: test_entities[button.samsung_tv_rewind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Rewind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Rewind',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_rewind',
@@ -1439,7 +1439,7 @@
 # name: test_entities[button.samsung_tv_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Right',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_right',
@@ -1489,7 +1489,7 @@
 # name: test_entities[button.samsung_tv_settings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Settings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Settings',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_settings',
@@ -1539,7 +1539,7 @@
 # name: test_entities[button.samsung_tv_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Source',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Source',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_source',
@@ -1589,7 +1589,7 @@
 # name: test_entities[button.samsung_tv_tools-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Tools',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Tools',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_tools',
@@ -1639,7 +1639,7 @@
 # name: test_entities[button.samsung_tv_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Up',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Up',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_up',
@@ -1689,7 +1689,7 @@
 # name: test_entities[button.samsung_tv_yellow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Yellow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Samsung TV Yellow',
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_yellow',

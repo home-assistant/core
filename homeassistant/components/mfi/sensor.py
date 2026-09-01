@@ -1,6 +1,7 @@
 """Support for Ubiquiti mFi sensors."""
 
 import logging
+from typing import override
 
 from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
@@ -100,11 +101,13 @@ class MfiSensor(SensorEntity):
         self._port = port
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._port.label
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         try:
@@ -119,6 +122,7 @@ class MfiSensor(SensorEntity):
         return round(self._port.value, digits)
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         try:
@@ -132,6 +136,7 @@ class MfiSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         try:

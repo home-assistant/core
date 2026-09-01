@@ -8,19 +8,14 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import webhook
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -59,7 +54,7 @@ def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[
     er.RegistryEntry | None,
-    dr.DeviceEntry | None,
+    dr.AnyDeviceEntry | None,
     ar.AreaEntry | None,
 ]:
     """Get registry entries."""
@@ -68,16 +63,13 @@ def _get_registry_entries(
     area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
-        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        device_entry = dev_reg.async_get(entity_entry.device_id)
     else:
         device_entry = None
 
-    if entity_entry and entity_entry.area_id:
-        area_id = entity_entry.area_id
-    elif device_entry and device_entry.area_id:
-        area_id = device_entry.area_id
-    else:
-        area_id = None
+    area_id = (
+        er.async_get_effective_area_id(hass, entity_entry) if entity_entry else None
+    )
 
     if area_id is not None:
         area_entry = area_reg.async_get_area(area_id)
@@ -497,7 +489,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
     """Return all supported traits for state."""
     domain = state.domain
     attributes = state.attributes
-    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     if not isinstance(features, int):
         _LOGGER.warning(
@@ -507,7 +499,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
         )
         return []
 
-    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
     return [
         Trait
         for Trait in trait.TRAITS
@@ -530,6 +522,7 @@ class GoogleEntity:
         self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
@@ -557,7 +550,8 @@ class GoogleEntity:
         return (
             self.should_expose()
             and get_google_type(
-                self.state.domain, self.state.attributes.get(ATTR_DEVICE_CLASS)
+                self.state.domain,
+                self.state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
             )
             not in NOT_EXPOSE_LOCAL
             and not self.might_2fa()
@@ -581,8 +575,8 @@ class GoogleEntity:
         """Return if the entity might encounter 2FA based on just traits."""
         state = self.state
         domain = state.domain
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
@@ -609,7 +603,7 @@ class GoogleEntity:
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
             "type": get_google_type(
-                state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+                state.domain, state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             ),
         }
         # Add name and aliases.
@@ -667,18 +661,19 @@ class GoogleEntity:
                 device["matterOriginalVendorId"] = matter_info["vendor_id"]
                 device["matterOriginalProductId"] = matter_info["product_id"]
 
-        # Add deviceInfo
-        device_info = {}
+        # Add deviceInfo (child devices carry no hardware/firmware fields)
+        if isinstance(device_entry, dr.DeviceEntry):
+            device_info = {}
 
-        if device_entry.manufacturer:
-            device_info["manufacturer"] = device_entry.manufacturer
-        if device_entry.model:
-            device_info["model"] = device_entry.model
-        if device_entry.sw_version:
-            device_info["swVersion"] = device_entry.sw_version
+            if device_entry.manufacturer:
+                device_info["manufacturer"] = device_entry.manufacturer
+            if device_entry.model:
+                device_info["model"] = device_entry.model
+            if device_entry.sw_version:
+                device_info["swVersion"] = device_entry.sw_version
 
-        if device_info:
-            device["deviceInfo"] = device_info
+            if device_info:
+                device["deviceInfo"] = device_info
 
         return device
 
@@ -769,7 +764,7 @@ def async_get_google_entity_if_supported_cached(
     """
     entity_id = state.entity_id
     is_supported_cache = config.is_supported_cache
-    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    features: int | None = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
     if result := is_supported_cache.get(entity_id):
         cached_features, supported = result
         if cached_features == features:
@@ -786,7 +781,7 @@ def async_get_google_entity_if_supported(
 
     This function will update the cache, but it does not check the cache first.
     """
-    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    features: int | None = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
     entity = GoogleEntity(hass, config, state)
     is_supported = bool(entity.traits())
     config.is_supported_cache[state.entity_id] = (features, is_supported)
@@ -805,7 +800,9 @@ def async_get_entities(
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here
-        features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        features: int | None = state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES
+        )
         if result := is_supported_cache.get(entity_id):
             cached_features, supported = result
             if cached_features == features:

@@ -1,5 +1,7 @@
 """Sensor for the OMIE - Spain and Portugal electricity prices integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -52,12 +54,14 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         self._attr_unique_id = pyomie_series_name
         self._pyomie_series_name = pyomie_series_name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update this sensor's state from the coordinator results."""
         value = self._get_current_quarter_hour_value()
@@ -66,6 +70,7 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._attr_available

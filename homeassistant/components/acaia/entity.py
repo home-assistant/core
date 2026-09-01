@@ -1,6 +1,7 @@
 """Base class for Acaia entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -41,6 +42,7 @@ class AcaiaEntity(CoordinatorEntity[AcaiaCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Returns whether entity is available."""
         return super().available and self._scale.connected

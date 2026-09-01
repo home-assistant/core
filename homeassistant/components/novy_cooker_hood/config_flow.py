@@ -1,7 +1,7 @@
 """Config flow for the Novy Cooker Hood integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 import voluptuous as vol
@@ -44,6 +44,7 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
         self._transmitter_id: str | None = None
         self._code: int = DEFAULT_CODE
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -3,7 +3,7 @@
 import asyncio
 from asyncio import Future
 from asyncio.exceptions import CancelledError
-from typing import Any
+from typing import Any, override
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.errors import AddressInUseError, EndpointError, ListenerError
@@ -45,6 +45,7 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

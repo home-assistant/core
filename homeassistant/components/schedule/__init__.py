@@ -3,11 +3,11 @@
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -40,7 +40,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
@@ -50,6 +50,8 @@ from .const import (
     LOGGER,
     SERVICE_GET,
     WEEKDAY_TO_CONF,
+    ScheduleEntityCapabilityAttribute,
+    ScheduleEntityStateAttribute,
 )
 
 STORAGE_VERSION = 1
@@ -225,22 +227,26 @@ class ScheduleStorageCollection(DictStorageCollection):
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         self.SCHEMA(data)
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         name: str = info[CONF_NAME]
         return name
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
 
+    @override
     async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
         if data := await super()._async_load_data():
@@ -252,7 +258,10 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+        {
+            ScheduleEntityCapabilityAttribute.EDITABLE,
+            ScheduleEntityStateAttribute.NEXT_EVENT,
+        }
     )
 
     _attr_has_entity_name = True
@@ -265,7 +274,9 @@ class Schedule(CollectionEntity):
     def __init__(self, config: ConfigType, editable: bool) -> None:
         """Initialize a schedule."""
         self._config = ENTITY_SCHEMA(config)
-        self._attr_capability_attributes = {ATTR_EDITABLE: editable}
+        self._attr_capability_attributes = {
+            ScheduleEntityCapabilityAttribute.EDITABLE: editable
+        }
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
@@ -278,17 +289,20 @@ class Schedule(CollectionEntity):
         )
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
         return cls(config, editable=True)
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from yaml."""
         schedule = cls(config, editable=False)
         schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         return schedule
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = ENTITY_SCHEMA(config)
@@ -304,6 +318,7 @@ class Schedule(CollectionEntity):
             self._unsub_update()
             self._unsub_update = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._clean_up_listener)
@@ -372,7 +387,7 @@ class Schedule(CollectionEntity):
                 break
 
         self._attr_extra_state_attributes = {
-            ATTR_NEXT_EVENT: next_event,
+            ScheduleEntityStateAttribute.NEXT_EVENT: next_event,
         }
 
         if current_data:

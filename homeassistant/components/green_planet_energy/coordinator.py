@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from greenplanet_energy_api import (
     GreenPlanetEnergyAPI,
@@ -39,6 +39,7 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = GreenPlanetEnergyAPI(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

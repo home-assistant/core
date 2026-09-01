@@ -2,6 +2,7 @@
 
 from ftplib import FTP, error_perm
 import logging
+from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
@@ -85,16 +86,19 @@ class XiaomiCamera(Camera):
         self.passwd = config[CONF_PASSWORD]
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name
 
     @property
+    @override
     def brand(self):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
     @property
+    @override
     def model(self):
         """Return the camera model."""
         return self._model
@@ -148,6 +152,7 @@ class XiaomiCamera(Camera):
 
         return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -173,6 +178,7 @@ class XiaomiCamera(Camera):
 
         return self._last_image
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
 

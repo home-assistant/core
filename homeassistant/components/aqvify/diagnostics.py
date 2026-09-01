@@ -17,14 +17,19 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    device_list_raw_data = entry.runtime_data.data.devices.raw
+    device_list_raw_data = entry.runtime_data.coordinator.data.devices.raw
     device_data_raw_data = {
         key: device.raw_data
-        for key, device in entry.runtime_data.data.device_data.items()
+        for key, device in entry.runtime_data.coordinator.data.device_data.items()
+    }
+    device_aggr_raw_data = {
+        key: device.raw_data
+        for key, device in entry.runtime_data.aggr_data_coordinator.data.items()
     }
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
         "devices": async_redact_data(device_list_raw_data, TO_REDACT_AQVIFY),
         "device_data": device_data_raw_data,
+        "device_aggregated_data": device_aggr_raw_data,
     }

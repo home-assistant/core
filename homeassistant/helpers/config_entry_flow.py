@@ -2,11 +2,11 @@
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 
 from .typing import DiscoveryInfoType
 
@@ -41,6 +41,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
         self._title = title
         self._discovery_function = discovery_function
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -72,7 +73,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
                     has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(
+                    reason="no_devices_found",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             # Cancel the discovered one.
             for flow in in_progress:
@@ -83,6 +87,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return self.async_create_entry(title=self._title, data={})
 
+    @override
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> config_entries.ConfigFlowResult:
@@ -94,6 +99,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> config_entries.ConfigFlowResult:
@@ -105,6 +111,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -116,6 +123,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -127,6 +135,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -138,6 +147,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -149,6 +159,7 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -209,6 +220,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._description_placeholder = description_placeholder
         self._allow_multiple = allow_multiple
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -250,7 +262,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             self.hass
         ):
             if not async_is_connected(self.hass):
-                return self.async_abort(reason="cloud_not_connected")
+                return self.async_abort(
+                    reason="cloud_not_connected",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True

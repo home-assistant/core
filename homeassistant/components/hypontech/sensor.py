@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from hyponcloud import OverviewData, PlantData
 
@@ -183,6 +184,7 @@ class HypontechOverviewSensor(HypontechEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.account_id}_{description.key}"
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self.entity_description.unit_fn is not None:
@@ -190,6 +192,7 @@ class HypontechOverviewSensor(HypontechEntity, SensorEntity):
         return super().native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.overview)
@@ -212,6 +215,7 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
         self._attr_unique_id = f"{plant_id}_{description.key}"
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self.entity_description.unit_fn is not None:
@@ -219,6 +223,7 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
         return super().native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.plant)

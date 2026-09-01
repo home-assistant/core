@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_diagnostics[generic_10_key]
+  dict({
+    'device_type': 'generic_10_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
+# name: test_diagnostics[generic_13_key]
+  dict({
+    'device_type': 'generic_13_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
+# name: test_diagnostics[generic_24_key]
+  dict({
+    'device_type': 'generic_24_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
+# name: test_diagnostics[generic_40_key]
+  dict({
+    'device_type': 'generic_40_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
+# name: test_diagnostics[generic_44_key]
+  dict({
+    'device_type': 'generic_44_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---

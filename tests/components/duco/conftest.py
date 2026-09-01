@@ -1,6 +1,7 @@
 """Fixtures for Duco tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -10,6 +11,10 @@ from duco_connectivity import (
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
+    BypassSupplyTemperatureTarget,
+    ConfigNode,
+    ConfigNodeOverview,
+    ConfigValueString,
     DiagComponent,
     KnownActionName,
     LanInfo,
@@ -20,6 +25,7 @@ from duco_connectivity import (
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
+    VentilationTemperatureInfo,
 )
 import pytest
 
@@ -103,6 +109,19 @@ def load_nodes_fixture(filename: str) -> list[Node]:
     return [_node_from_dict(node) for node in load_json_array_fixture(filename, DOMAIN)]
 
 
+def node_configs_from_nodes(nodes: list[Node]) -> ConfigNodeOverview:
+    """Build node config names from node fixtures."""
+    return ConfigNodeOverview(
+        nodes=[
+            ConfigNode(
+                node_id=node.node_id,
+                name=ConfigValueString(node.general.name),
+            )
+            for node in nodes
+        ]
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -163,6 +182,40 @@ def mock_lan_info() -> LanInfo:
 
 
 @pytest.fixture
+def mock_ventilation_temperature_info() -> VentilationTemperatureInfo:
+    """Return mock ventilation temperatures in Celsius."""
+    return VentilationTemperatureInfo(
+        temp_oda=5.5,
+        temp_sup=18.2,
+        temp_eta=21.4,
+        temp_eha=8.1,
+    )
+
+
+@pytest.fixture
+def mock_bypass_supply_temperature_targets() -> dict[
+    int, BypassSupplyTemperatureTarget
+]:
+    """Return mock bypass supply temperature targets in Celsius."""
+    return {
+        1: BypassSupplyTemperatureTarget(
+            zone_id=1,
+            value=20.0,
+            minimum=15.0,
+            increment=0.1,
+            maximum=25.0,
+        ),
+        2: BypassSupplyTemperatureTarget(
+            zone_id=2,
+            value=21.0,
+            minimum=15.0,
+            increment=0.1,
+            maximum=25.0,
+        ),
+    }
+
+
+@pytest.fixture
 def mock_nodes() -> list[Node]:
     """Return a list of nodes covering all supported types."""
     return load_nodes_fixture("nodes.json")
@@ -216,11 +269,25 @@ def dynamic_sensor_nodes() -> dict[int, Node]:
 def mock_duco_client(
     mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
     mock_node_actions: NodeListActionItemList,
+    mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
+
+    def set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+        *,
+        target: BypassSupplyTemperatureTarget,
+    ) -> None:
+        target.validate_value(temperature)
+        mock_bypass_supply_temperature_targets[zone_id] = replace(
+            target, value=temperature
+        )
+
     with (
         patch(
             "homeassistant.components.duco.DucoClient",
@@ -236,7 +303,18 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_time_filter_remaining.return_value = 180
+        client.async_get_ventilation_temperature_info.return_value = (
+            mock_ventilation_temperature_info
+        )
+        client.async_get_bypass_supply_temperature_targets.side_effect = (
+            mock_bypass_supply_temperature_targets.copy
+        )
+        client.async_set_bypass_supply_temperature_target.side_effect = (
+            set_bypass_supply_temperature_target
+        )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]

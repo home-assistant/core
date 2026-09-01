@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 
@@ -56,6 +57,7 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
         self.pyload = pyload
         self.version: str | None = None
 
+    @override
     async def _async_update_data(self) -> PyLoadData:
         """Fetch data from API endpoint."""
         try:
@@ -79,6 +81,7 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
                 translation_key="setup_parse_exception",
             ) from e
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 

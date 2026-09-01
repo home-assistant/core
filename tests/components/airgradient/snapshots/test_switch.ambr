@@ -39,10 +39,110 @@
 # name: test_all_entities[switch.airgradient_post_data_to_airgradient-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Post data to Airgradient',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Post data to Airgradient',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airgradient_post_data_to_airgradient',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_v1_entities[switch.airgradient_buzzer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airgradient_buzzer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Buzzer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buzzer',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'buzzer_enabled',
+    'unique_id': '84fce612f5b8-buzzer_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_v1_entities[switch.airgradient_buzzer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Buzzer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.airgradient_buzzer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_v1_entities[switch.airgradient_cloud_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airgradient_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cloud connection',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': '84fce612f5b8-cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_v1_entities[switch.airgradient_cloud_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Cloud connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.airgradient_cloud_connection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,7 @@
 """Tests for the Edifier Infrared media player platform."""
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
-from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
+from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -32,7 +32,7 @@ from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
-MEDIA_PLAYER_ENTITY_ID = "media_player.edifier_r1700bt"
+MEDIA_PLAYER_ENTITY_ID = "media_player.edifier_r1700bts"
 
 
 @pytest.fixture
@@ -55,15 +55,15 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_code"),
     [
-        (SERVICE_TURN_ON, {}, EdifierR1700BTCode.POWER),
-        (SERVICE_TURN_OFF, {}, EdifierR1700BTCode.POWER),
-        (SERVICE_VOLUME_UP, {}, EdifierR1700BTCode.VOLUME_UP),
-        (SERVICE_VOLUME_DOWN, {}, EdifierR1700BTCode.VOLUME_DOWN),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, EdifierR1700BTCode.MUTE),
-        (SERVICE_MEDIA_PLAY, {}, EdifierR1700BTCode.PLAY_PAUSE),
-        (SERVICE_MEDIA_PAUSE, {}, EdifierR1700BTCode.PLAY_PAUSE),
-        (SERVICE_MEDIA_NEXT_TRACK, {}, EdifierR1700BTCode.FORWARD),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, EdifierR1700BTCode.BACK),
+        (SERVICE_TURN_ON, {}, EdifierR1700BTsCode.POWER),
+        (SERVICE_TURN_OFF, {}, EdifierR1700BTsCode.POWER),
+        (SERVICE_VOLUME_UP, {}, EdifierR1700BTsCode.VOLUME_UP),
+        (SERVICE_VOLUME_DOWN, {}, EdifierR1700BTsCode.VOLUME_DOWN),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, EdifierR1700BTsCode.MUTE),
+        (SERVICE_MEDIA_PLAY, {}, EdifierR1700BTsCode.PLAY_PAUSE),
+        (SERVICE_MEDIA_PAUSE, {}, EdifierR1700BTsCode.PLAY_PAUSE),
+        (SERVICE_MEDIA_NEXT_TRACK, {}, EdifierR1700BTsCode.FORWARD),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, EdifierR1700BTsCode.BACK),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -72,7 +72,7 @@ async def test_media_player_action_sends_correct_code(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
     service_data: dict[str, bool],
-    expected_code: EdifierR1700BTCode,
+    expected_code: EdifierR1700BTsCode,
 ) -> None:
     """Test each media player action sends the correct IR code."""
     await hass.services.async_call(

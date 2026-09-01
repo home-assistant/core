@@ -1,6 +1,6 @@
 """Data update coordinator for the Webmin integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_HOST
@@ -57,6 +57,7 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             self.unique_id = self.config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         data = await self.instance.update()
         data["disk_fs"] = {item["dir"]: item for item in data["disk_fs"]}

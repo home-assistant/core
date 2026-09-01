@@ -315,7 +315,6 @@ DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
-DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
 DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
@@ -400,6 +399,7 @@ ENTITY_PLATFORMS = [
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LAWN_MOWER,
     Platform.LOCK,
@@ -435,6 +435,7 @@ SUPPORTED_COMPONENTS = (
     "fan",
     "humidifier",
     "image",
+    "infrared",
     "lawn_mower",
     "light",
     "lock",

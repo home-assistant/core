@@ -1,7 +1,7 @@
 """Update platform for ESPHome."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aioesphomeapi import (
     DeviceInfo as ESPHomeDeviceInfo,
@@ -145,6 +145,7 @@ class ESPHomeDashboardUpdateEntity(
         self._attr_latest_version = device["current_version"]
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs()
@@ -157,6 +158,7 @@ class ESPHomeDashboardUpdateEntity(
         return self._entry_data.device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return if update is available.
 
@@ -184,6 +186,7 @@ class ESPHomeDashboardUpdateEntity(
         self._update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
@@ -195,6 +198,7 @@ class ESPHomeDashboardUpdateEntity(
             entry_data.async_subscribe_device_updated(self._handle_device_update)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity about to be removed from Home Assistant."""
         if self._available_future and not self._available_future.done():
@@ -213,6 +217,7 @@ class ESPHomeDashboardUpdateEntity(
         finally:
             self._available_future = None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -228,21 +233,27 @@ class ESPHomeDashboardUpdateEntity(
 
         # Ensure only one OTA per device at a time
         async with self._install_lock:
-            # Ensure only one compile at a time for ALL devices
-            async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-                coordinator = self.coordinator
-                api = coordinator.api
-                device = coordinator.data.get(self._device_info.name)
-                assert device is not None
-                configuration = device["configuration"]
-                if not await api.compile(configuration):
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="error_compiling",
-                        translation_placeholders={
-                            "configuration": configuration,
-                        },
-                    )
+            coordinator = self.coordinator
+            api = coordinator.api
+            device = coordinator.data.get(self._device_info.name)
+            assert device is not None
+            configuration = device["configuration"]
+            if coordinator.supports_build_queue:
+                # The dashboard has its own build queue
+                # and can handle concurrent compile requests
+                compiled = await api.compile(configuration)
+            else:
+                # Ensure only one compile at a time for ALL devices
+                async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
+                    compiled = await api.compile(configuration)
+            if not compiled:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_compiling",
+                    translation_placeholders={
+                        "configuration": configuration,
+                    },
+                )
 
             # If the device uses deep sleep, there's a small chance it goes
             # to sleep right after the dashboard connects but before the OTA
@@ -276,6 +287,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     )
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -284,6 +296,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
             UpdateDeviceClass, static_info.device_class
         )
 
+    @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version.
 
@@ -299,23 +312,27 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
+    @override
     def installed_version(self) -> str:
         """Return the installed version."""
         return self._state.current_version
 
     @property
     @esphome_state_property
+    @override
     def in_progress(self) -> bool:
         """Return if the update is in progress."""
         return self._state.in_progress
 
     @property
     @esphome_state_property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version."""
         return self._state.latest_version
 
     @async_esphome_state_property
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         if self._state.release_summary:
@@ -324,18 +341,21 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
+    @override
     def release_url(self) -> str:
         """Return the release URL."""
         return self._state.release_url
 
     @property
     @esphome_state_property
+    @override
     def title(self) -> str:
         """Return the title of the update."""
         return self._state.title
 
     @property
     @esphome_state_property
+    @override
     def update_percentage(self) -> int | None:
         """Return if the update is in progress."""
         if self._state.has_progress:
@@ -353,6 +373,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
             )
 
     @convert_api_error_ha_error
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

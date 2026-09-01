@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <TextMode.TEXT: 'text'>,
-      'pattern': None,
+      <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
+      <TextEntityCapabilityAttribute.PATTERN: 'pattern'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,11 +44,11 @@
 # name: test_text_entities[text.test_player_1_network_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Network name',
-      'max': 255,
-      'min': 0,
-      'mode': <TextMode.TEXT: 'text'>,
-      'pattern': None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Network name',
+      <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
+      <TextEntityCapabilityAttribute.PATTERN: 'pattern'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'text.test_player_1_network_name',

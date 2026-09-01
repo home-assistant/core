@@ -94,8 +94,6 @@
       ]),
       'chimes': list([
       ]),
-      'doorlocks': list([
-      ]),
       'groups': list([
         dict({
           'id': '**REDACTED_ID**',
@@ -605,7 +603,7 @@
         'uptime': 1191516000,
         'vaultCameras': list([
         ]),
-        'version': '6.0.0',
+        'version': '7.2.105',
         'wanIp': None,
       }),
       'ringtones': list([

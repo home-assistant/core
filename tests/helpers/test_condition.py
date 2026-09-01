@@ -86,7 +86,6 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import WebSocketGenerator
 
 
 async def _create_primary_and_diagnostic_entities_in_area(
@@ -2135,10 +2134,43 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
+                {
+                    "condition": "zone",
+                    "options": {
+                        "entity_id": [
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese",
+                        ],
+                        "zone": ["zone.home"],
+                    },
+                },
+                {
+                    "condition": "zone.in_zone",
+                    "target": {"entity_id": "person.paulus"},
+                    "options": {"zone": "zone.work", "behavior": "any"},
+                },
+                {
+                    "condition": "zone.occupancy_is_detected",
+                    "options": {"zone": "zone.school"},
+                },
+                {
+                    "condition": "time",
+                    "after": "input_datetime.start",
+                    "before": "sensor.end",
+                },
+                {
+                    "condition": "time",
+                    "after": "08:00:00",
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
+        "device_tracker.anne_therese",
+        "device_tracker.paulus",
+        "input_datetime.start",
+        "person.paulus",
+        "sensor.end",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",
@@ -2149,6 +2181,29 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "sensor.temperature_8",
         "sensor.temperature_9",
         "sensor.temperature_10",
+        "zone.home",
+        "zone.school",
+        "zone.work",
+    }
+
+
+async def test_extract_entities_zone_condition_validated(hass: HomeAssistant) -> None:
+    """Test extracting entities from a validated legacy zone condition.
+
+    Validation moves the top level entity_id and zone fields into options.
+    """
+    assert await async_setup_component(hass, "zone", {})
+    config = await condition.async_validate_condition_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": "device_tracker.paulus",
+            "zone": "zone.home",
+        },
+    )
+    assert condition.async_extract_entities(config) == {
+        "device_tracker.paulus",
+        "zone.home",
     }
 
 
@@ -2742,6 +2797,22 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     )
 
 
+_MODERN_SUN_CONDITIONS = (
+    "sun.elevation",
+    "sun.is_ascending",
+    "sun.is_blue_hour",
+    "sun.is_descending",
+    "sun.is_evening_twilight",
+    "sun.is_golden_hour",
+    "sun.is_midnight_sun",
+    "sun.is_morning_twilight",
+    "sun.is_night",
+    "sun.is_polar_night",
+    "sun.is_set",
+    "sun.is_up",
+)
+
+
 @pytest.mark.parametrize(
     "sun_condition_descriptions",
     [
@@ -2791,7 +2862,6 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
 )
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sun_condition_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
@@ -2820,8 +2890,6 @@ async def test_async_get_all_descriptions(
             entity:
               domain: light
         """
-
-    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, SUN_DOMAIN, {})
     assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
@@ -2887,7 +2955,9 @@ async def test_async_get_all_descriptions(
                 },
                 "before_offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun conditions have no entry in the mocked conditions.yaml.
+        **dict.fromkeys(_MODERN_SUN_CONDITIONS),
     }
     assert descriptions == expected_descriptions
 
@@ -2946,39 +3016,6 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No light conditions added, they are gated by the
-    # automation.new_triggers_conditions
-    # labs flag
-    assert new_descriptions == expected_descriptions
-
-    # Verify the cache returns the same object
-    assert await condition.async_get_all_descriptions(hass) is new_descriptions
-
-    # Enable the new_triggers_conditions flag and verify light conditions are loaded
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_conditions", return_value=True),
-    ):
-        new_descriptions = await condition.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
     # The light conditions should now be present
     assert new_descriptions == expected_descriptions | {
         "light.is_off": {
@@ -3022,37 +3059,6 @@ async def test_async_get_all_descriptions(
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is new_descriptions
 
-    # Disable the new_triggers_conditions flag and verify light conditions are removed
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": False,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_conditions", return_value=True),
-    ):
-        new_descriptions = await condition.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
-    # The light conditions should no longer be present
-    assert new_descriptions == expected_descriptions
-
-    # Verify the cache returns the same object
-    assert await condition.async_get_all_descriptions(hass) is new_descriptions
-
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
@@ -3091,7 +3097,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert expected_message in caplog.text
 
@@ -3124,11 +3130,11 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {"sun": None}
+    assert descriptions == {"sun": None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
@@ -3187,72 +3193,10 @@ async def test_subscribe_conditions(
 
     assert await async_setup_component(hass, "sun", {})
 
-    assert condition_events == [{"sun"}]
+    assert condition_events == [{"sun", *_MODERN_SUN_CONDITIONS}]
     assert "Error while notifying condition platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
-
-
-@patch("annotatedyaml.loader.load_yaml")
-@patch.object(Integration, "has_conditions", return_value=True)
-@pytest.mark.parametrize(
-    ("new_triggers_conditions_enabled", "expected_events"),
-    [
-        (True, [{"light.is_off", "light.is_on", "light.is_brightness"}]),
-        (False, []),
-    ],
-)
-async def test_subscribe_conditions_experimental_conditions(
-    mock_has_conditions: Mock,
-    mock_load_yaml: Mock,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    new_triggers_conditions_enabled: bool,
-    expected_events: list[set[str]],
-) -> None:
-    """Test async_subscribe_platform_events skips disabled conditions."""
-    # Return empty conditions.yaml for light integration, the actual condition
-    # descriptions are irrelevant for this test
-    light_condition_descriptions = ""
-
-    def _load_yaml(fname, secrets=None):
-        if fname.endswith("light/conditions.yaml"):
-            condition_descriptions = light_condition_descriptions
-        else:
-            raise FileNotFoundError
-        with io.StringIO(condition_descriptions) as file:
-            return parse_yaml(file)
-
-    mock_load_yaml.side_effect = _load_yaml
-
-    condition_events = []
-
-    async def good_subscriber(new_conditions: set[str]):
-        """Simulate a working subscriber."""
-        condition_events.append(new_conditions)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": new_triggers_conditions_enabled,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    condition.async_subscribe_platform_events(hass, good_subscriber)
-
-    assert await async_setup_component(hass, "light", {})
-    await hass.async_block_till_done()
-    assert condition_events == expected_events
 
 
 @patch("annotatedyaml.loader.load_yaml")
@@ -3265,7 +3209,6 @@ async def test_subscribe_conditions_no_conditions(
     mock_has_conditions: Mock,
     mock_load_yaml: Mock,
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_subscribe_platform_events skips platforms without conditions."""
@@ -3289,22 +3232,6 @@ async def test_subscribe_conditions_no_conditions(
         """Simulate a working subscriber."""
         condition_events.append(new_conditions)
 
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
     condition.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "light", {})
@@ -3320,7 +3247,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3583,7 +3510,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | None | UndefinedType,
+    valid_unit: str | UndefinedType | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -6431,3 +6358,18 @@ async def test_async_unload_invokes_async_unload_hook(
 
     unload_hook.assert_called_once()
     assert checker._unloaded is True
+
+
+async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
+    """Test that async_from_config does not raise an error for an empty state value."""
+    hass.states.async_set("sensor.temperature", "100")
+
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": [],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert not test.async_check()

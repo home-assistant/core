@@ -1,7 +1,7 @@
 """Update entities for Reolink devices."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.software_version import NewSoftwareVersion, SoftwareVersion
@@ -115,11 +115,13 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
         self._reolink_data = reolink_data
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return self._host.api.camera_sw_version(self._channel)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
@@ -132,16 +134,19 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
         return new_firmware.version_string
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation progress."""
         return self._host.api.sw_upload_progress(self._channel) < 100
 
     @property
+    @override
     def update_percentage(self) -> int:
         """Update installation progress."""
         return self._host.api.sw_upload_progress(self._channel)
 
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         supported_features = UpdateEntityFeature.INSTALL
@@ -152,12 +157,14 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
         return supported_features
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self._installing or self._cancel_update is not None:
             return True
         return super().available
 
+    @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version."""
         try:
@@ -169,6 +176,7 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
 
         return latest > installed
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
@@ -182,6 +190,7 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
         )
 
     @raise_translated_error
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -242,11 +251,13 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
         finally:
             self._cancel_update = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
         self._host.firmware_ch_list.append(self._channel)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         await super().async_will_remove_from_hass()

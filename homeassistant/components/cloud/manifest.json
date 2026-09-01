@@ -13,6 +13,12 @@
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["acme", "hass_nabucasa", "snitun"],
-  "requirements": ["hass-nabucasa==2.2.0", "openai==2.21.0"],
+  "preview_features": {
+    "stt_v2": {
+      "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5",
+      "learn_more_url": "https://support.nabucasa.com/hc/en-us/articles/29718084245149-Speech-to-text-STT"
+    }
+  },
+  "requirements": ["hass-nabucasa==2.7.0", "openai==2.45.0"],
   "single_config_entry": true
 }

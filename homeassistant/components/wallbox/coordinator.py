@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import requests
 from wallbox import Wallbox
@@ -236,6 +236,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from wallbox_connection_error
 
     @_require_authentication
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
 

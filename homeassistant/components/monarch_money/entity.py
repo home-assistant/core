@@ -1,5 +1,7 @@
 """Monarch money entity definition."""
 
+from typing import override
+
 from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -75,6 +77,7 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (

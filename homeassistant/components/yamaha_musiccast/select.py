@@ -1,5 +1,7 @@
 """The select entities for musiccast."""
 
+from typing import override
+
 from aiomusiccast.capabilities import OptionSetter
 
 from homeassistant.components.select import SelectEntity
@@ -51,6 +53,7 @@ class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
         self._attr_options = list(capability.options.values())
         self._attr_translation_key = TRANSLATION_KEY_MAPPING.get(capability.id)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select the given option."""
         value = {val: key for key, val in self.capability.options.items()}[option]
@@ -58,6 +61,7 @@ class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
         self._attr_translation_key = TRANSLATION_KEY_MAPPING.get(self.capability.id)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         return self.capability.options.get(self.capability.current)

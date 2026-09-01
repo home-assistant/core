@@ -41,8 +41,8 @@ async def test_binary_sensor_device_assignment(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.BINARY_SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-    tracker_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "device_id_123")}
+    tracker_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_id_123"), mock_config_entry.entry_id
     )
     assert tracker_device is not None
 

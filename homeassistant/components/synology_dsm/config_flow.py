@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from ipaddress import ip_address as ip
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
@@ -20,6 +20,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -128,6 +129,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
@@ -272,6 +274,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             title=friendly_name or host, data=config_data, options=config_options
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -281,6 +284,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -296,6 +300,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
         return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -459,6 +464,10 @@ class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        # The shares to pick from come from the running connection
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

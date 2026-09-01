@@ -127,15 +127,30 @@ async def target_entities(
 
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
-    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
-    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    device1 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device1",
+        identifiers={("test", "device1")},
+    )
+    device2 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device2",
+        identifiers={("test", "device2")},
+    )
     area_device = dr.DeviceEntry(
-        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+        config_entry_id=config_entry.entry_id,
+        id="area_device",
+        identifiers={("test", "device3")},
+        area_id=kitchen_area.id,
     )
     label2_device = dr.DeviceEntry(
-        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+        config_entry_id=config_entry.entry_id,
+        id="label_device",
+        identifiers={("test", "device4")},
+        labels={label2.label_id},
     )
     diag_only_device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
         id="diag_only_device",
         identifiers={("test", "device5")},
         area_id=garage_area.id,
@@ -296,7 +311,8 @@ async def target_entities(
     }
     assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
     assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
-    assert set(dr.async_get(hass).devices) == {
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    assert {device.id for device in dr.async_get(hass).devices} == {
         "device1",
         "device2",
         "area_device",
@@ -1230,6 +1246,17 @@ async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == "pong"
+
+
+async def test_slugify(websocket_client: MockHAClientWebSocket) -> None:
+    """Test slugify command."""
+    await websocket_client.send_json_auto_id(
+        {"type": "slugify", "text": "Living room Thermostat Temperature"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"] == {"slug": "living_room_thermostat_temperature"}
 
 
 async def test_call_service_context_with_user(
@@ -2761,7 +2788,7 @@ async def test_subscribe_trigger(
             {"platform": "numeric_state"},
             {
                 "code": "invalid_format",
-                "message": "required key not provided @ data['entity_id']",
+                "message": "required key not provided at 'entity_id'",
             },
         ),
         # Unknown device, raised as a HomeAssistantError by the platform validator
@@ -2962,10 +2989,7 @@ async def test_test_condition_template_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "must contain at least one of before, after. for dictionary value "
-                    "@ data['options']"
-                ),
+                "message": ("must contain at least one of before, after. at 'options'"),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3177,8 +3201,8 @@ async def test_subscribe_condition_template_error(
                 "code": "invalid_format",
                 "message": (
                     "Unexpected value for condition: 'None'. Expected a condition, "
-                    "a list of conditions or a valid template for dictionary value "
-                    "@ data['condition']. Got {'blaba': 'invalid'}"
+                    "a list of conditions or a valid template at 'condition'. Got "
+                    "{'blaba': 'invalid'}"
                 ),
             },
         ),
@@ -3186,9 +3210,7 @@ async def test_subscribe_condition_template_error(
             {"condition": "state", "entity_id": "hello.world"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "required key not provided @ data['condition']['state']. Got None"
-                ),
+                "message": ("required key not provided at 'condition.state'. Got None"),
             },
         ),
     ],
@@ -3220,10 +3242,7 @@ async def test_subscribe_condition_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": (
-                    "must contain at least one of before, after. for dictionary value "
-                    "@ data['options']"
-                ),
+                "message": ("must contain at least one of before, after. at 'options'"),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3587,7 +3606,7 @@ async def test_validate_config_works(
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
-            "Unable to determine action @ data[0]",
+            "Unable to determine action at '[0]'",
         ),
     ],
 )
@@ -4260,7 +4279,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(

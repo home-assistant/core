@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from bring_api import BringList, BringUserSettingsResponse
 from bring_api.const import BRING_SUPPORTED_LOCALES
@@ -133,6 +134,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 

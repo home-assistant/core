@@ -1,8 +1,9 @@
 """Config flow for the AWS S3 integration."""
 
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
 import voluptuous as vol
@@ -46,6 +47,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -76,6 +78,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                         endpoint_url=user_input.get(CONF_ENDPOINT_URL),
                         aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
                         aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
+                        config=AioConfig(warm_up_loader_caches=True),
                     ) as client:
                         await client.head_bucket(Bucket=user_input[CONF_BUCKET])
                 except ClientError:

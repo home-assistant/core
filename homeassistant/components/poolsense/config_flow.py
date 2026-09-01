@@ -1,7 +1,7 @@
 """Config flow for PoolSense integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from poolsense import PoolSense
 import voluptuous as vol
@@ -20,6 +20,7 @@ class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

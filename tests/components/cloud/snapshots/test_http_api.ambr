@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -42,6 +42,7 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
+  llm | LLM
   media_source | Media Source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
@@ -74,11 +75,6 @@
   
   </details>
   
-  <details><summary>mock_no_info_integration</summary>
-  
-  No information available
-  </details>
-  
   <details><summary>cloud</summary>
   
   logged_in | True
@@ -100,6 +96,11 @@
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Latency by location
@@ -156,7 +157,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -177,6 +178,7 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
+  llm | LLM
   media_source | Media Source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
@@ -191,11 +193,6 @@
   ## Custom Themes
   
   Custom themes: 0
-  
-  <details><summary>mock_no_info_integration</summary>
-  
-  No information available
-  </details>
   
   <details><summary>cloud</summary>
   
@@ -218,6 +215,11 @@
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Installed packages
@@ -274,11 +276,6 @@
   
   Custom themes: 0
   
-  <details><summary>mock_no_info_integration</summary>
-  
-  No information available
-  </details>
-  
   <details><summary>cloud</summary>
   
   logged_in | True
@@ -300,6 +297,11 @@
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Installed packages

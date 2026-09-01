@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import (
@@ -147,12 +147,14 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_confirm_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         return await self._async_handle_discovery(discovery_info.ip, DEFAULT_PORT)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -182,6 +184,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

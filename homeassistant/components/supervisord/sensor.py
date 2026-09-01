@@ -1,7 +1,7 @@
 """Sensor for Supervisord process status."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import xmlrpc.client
 
 import voluptuous as vol
@@ -60,21 +60,25 @@ class SupervisorProcessSensor(SensorEntity):
         self._available = True
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._info.get("name")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._info.get("statename")
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

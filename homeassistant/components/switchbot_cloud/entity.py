@@ -1,6 +1,6 @@
 """Base class for SwitchBot via API entities."""
 
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Commands, Device, Remote, SwitchBotAPI
 from switchbot_api.exceptions import (
@@ -88,6 +88,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             ) from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._set_attributes()
@@ -96,6 +97,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
         await super().async_added_to_hass()

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 from roborock.data import (
     B01Props,
@@ -18,6 +19,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
+from roborock.data.v1.v1_containers import StatusField, StatusV2
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -28,15 +30,25 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    Platform,
+    UnitOfArea,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
@@ -93,7 +105,7 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
-    ) is not None and state.status.dock_type != RoborockDockTypeCode.no_dock:
+    ) is not None and state.status.dock_type != RoborockDockTypeCode.o0_dock:
         return status.name
 
     return None
@@ -135,7 +147,9 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.consumable.cleaning_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
-        support_fn=lambda api: api.wash_towel_mode is not None,
+        support_fn=lambda api: (
+            api.device_features.dock_features.is_cleaning_brush_supported
+        ),
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -256,9 +270,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
         is_dock_entity=True,
-        # Only available with more than just the basic dock. Dust collection
-        # mode is a proxy for any more complex dock type (e.g. Auto-empty).
-        support_fn=lambda api: api.dust_collection_mode is not None,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DOCK_ERROR_STATUS
+        ),
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
@@ -537,49 +551,62 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
-    entities: list[RoborockEntity] = [
-        RoborockSensorEntity(
-            coordinator,
-            description,
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[RoborockEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            for description in SENSOR_DESCRIPTIONS:
+                unique_id = f"{description.key}_{coordinator.duid_slug}"
+                if description.support_fn(coordinator.properties_api):
+                    entities.append(
+                        RoborockSensorEntity(unique_id, coordinator, description)
+                    )
+                elif entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR,
+                    DOMAIN,
+                    unique_id,
+                ):
+                    entity_registry.async_remove(entity_id)
+            entities.append(RoborockCurrentRoom(coordinator))
+        elif isinstance(coordinator, RoborockWetDryVacUpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityA01(coordinator, description)
+                for description in DYAD_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityA01(coordinator, description)
+                for description in ZEO_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityB01Q7(coordinator, description)
+                for description in Q7_B01_SENSOR_DESCRIPTIONS
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityB01Q10(coordinator, description)
+                for description in Q10_B01_SENSOR_DESCRIPTIONS
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in coordinators.v1
-        for description in SENSOR_DESCRIPTIONS
-        if description.support_fn(coordinator.properties_api)
-    ]
-    entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
-    entities.extend(
-        RoborockSensorEntityA01(
-            coordinator,
-            description,
-        )
-        for coordinator in coordinators.a01
-        if isinstance(coordinator, RoborockWetDryVacUpdateCoordinator)
-        for description in DYAD_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
     )
-    entities.extend(
-        RoborockSensorEntityA01(
-            coordinator,
-            description,
-        )
-        for coordinator in coordinators.a01
-        if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
-        for description in ZEO_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
-    )
-    entities.extend(
-        RoborockSensorEntityB01Q7(coordinator, description)
-        for coordinator in coordinators.b01_q7
-        for description in Q7_B01_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
-    )
-    entities.extend(
-        RoborockSensorEntityB01Q10(coordinator, description)
-        for coordinator in coordinators.b01_q10
-        for description in Q10_B01_SENSOR_DESCRIPTIONS
-    )
-    async_add_entities(entities)
 
 
 class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
@@ -589,18 +616,20 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(
-            f"{description.key}_{coordinator.duid_slug}",
+            unique_id,
             coordinator,
             is_dock_entity=description.is_dock_entity,
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime.datetime:
         """Return the value reported by the sensor."""
         if self.coordinator.data is None:
@@ -629,6 +658,7 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         self._map_content_trait = coordinator.properties_api.map_content
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the currently valid rooms."""
         if self._home_trait.current_map_data is not None:
@@ -636,6 +666,7 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         return []
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         if (
@@ -664,6 +695,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self.entity_description.data_protocol]
@@ -684,6 +716,7 @@ class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -703,6 +736,7 @@ class RoborockSensorEntityB01Q10(RoborockCoordinatedEntityB01Q10, SensorEntity):
         self.entity_description = description
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
@@ -711,6 +745,7 @@ class RoborockSensorEntityB01Q10(RoborockCoordinatedEntityB01Q10, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.api.status)
