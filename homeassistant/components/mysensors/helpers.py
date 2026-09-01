@@ -22,9 +22,11 @@ from .const import (
     ATTR_NODE_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
+    MYSENSORS_DISCOVERED_DEV_IDS,
     MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
     MYSENSORS_NODE_DISCOVERY,
+    PLATFORM_TYPES,
     TYPE_TO_PLATFORMS,
     DevId,
     GatewayId,
@@ -75,6 +77,43 @@ def discover_mysensors_node(
                 ATTR_GATEWAY_ID: gateway_id,
                 ATTR_NODE_ID: node_id,
             },
+        )
+
+
+@callback
+def get_discovered_dev_ids(hass: HomeAssistant, platform: Platform) -> set[DevId]:
+    """Return the dev ids that have been set up for a hass platform."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
+    dev_ids = hass.data[DOMAIN].setdefault(
+        MYSENSORS_DISCOVERED_DEV_IDS.format(platform), set()
+    )
+    return cast(set[DevId], dev_ids)
+
+
+@callback
+def remove_gateway_dev_ids(hass: HomeAssistant, gateway_id: GatewayId) -> None:
+    """Remove all discovered dev ids belonging to a gateway."""
+    for platform in PLATFORM_TYPES:
+        dev_ids = get_discovered_dev_ids(hass, platform)
+        dev_ids.difference_update(
+            {dev_id for dev_id in dev_ids if dev_id[0] == gateway_id}
+        )
+
+
+@callback
+def remove_node_dev_ids(
+    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
+) -> None:
+    """Remove all discovered dev ids belonging to a node."""
+    for platform in PLATFORM_TYPES:
+        dev_ids = get_discovered_dev_ids(hass, platform)
+        dev_ids.difference_update(
+            {
+                dev_id
+                for dev_id in dev_ids
+                if dev_id[0] == gateway_id and dev_id[1] == node_id
+            }
         )
 
 

@@ -1,5 +1,4 @@
 """Handle MySensors devices."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import abstractmethod
 import logging
@@ -8,28 +7,14 @@ from typing import Any, override
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    CONF_DEVICE,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_DEVICE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    CHILD_CALLBACK,
-    DOMAIN,
-    NODE_CALLBACK,
-    PLATFORM_TYPES,
-    UPDATE_DELAY,
-    DevId,
-    GatewayId,
-)
+from .const import CHILD_CALLBACK, DOMAIN, NODE_CALLBACK, UPDATE_DELAY, DevId, GatewayId
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +23,6 @@ ATTR_DESCRIPTION = "description"
 ATTR_DEVICE = "device"
 ATTR_NODE_ID = "node_id"
 ATTR_HEARTBEAT = "heartbeat"
-MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
 class MySensorNodeEntity(Entity):
@@ -136,18 +120,6 @@ class MySensorNodeEntity(Entity):
         self._async_update_callback()
 
 
-def get_mysensors_devices(
-    hass: HomeAssistant, domain: Platform
-) -> dict[DevId, MySensorsChildEntity]:
-    """Return MySensors devices for a hass platform name."""
-    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    devices: dict[DevId, MySensorsChildEntity] = hass.data[DOMAIN][
-        MYSENSORS_PLATFORM_DEVICES.format(domain)
-    ]
-    return devices
-
-
 class MySensorsChildEntity(MySensorNodeEntity):
     """Representation of a MySensors entity."""
 
@@ -196,17 +168,6 @@ class MySensorsChildEntity(MySensorNodeEntity):
         if child.description:
             return str(child.description)
         return f"{self.node_name} {self.child_id}"
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove this entity from home assistant."""
-        for platform in PLATFORM_TYPES:
-            platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
-            if platform_str in self.hass.data[DOMAIN]:
-                platform_dict = self.hass.data[DOMAIN][platform_str]
-                if self.dev_id in platform_dict:
-                    del platform_dict[self.dev_id]
-                    _LOGGER.debug("Deleted %s from platform %s", self.dev_id, platform)
 
     @property
     @override
