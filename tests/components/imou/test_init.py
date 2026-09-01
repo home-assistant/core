@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -42,44 +42,34 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (
+            InvalidAppIdOrSecretException("bad credentials"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (ImouException("cloud failure"), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
+        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
-async def test_setup_entry_failed_on_refresh(
+async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: AsyncMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Device fetch failure during coordinator setup surfaces as setup retry."""
-    mock_imou_ha_device_manager.async_get_devices.side_effect = RuntimeError(
-        "Setup failed"
-    )
+    """Test the coordinator errors while listing devices during setup."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
-async def test_setup_entry_auth_failed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_ha_device_manager: AsyncMock,
-) -> None:
-    """Rejected credentials while listing devices start reauthentication."""
-    mock_imou_ha_device_manager.async_get_devices.side_effect = (
-        InvalidAppIdOrSecretException("fail")
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
