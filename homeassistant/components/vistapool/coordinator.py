@@ -180,7 +180,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # grow the queue without bound; the newest write keeps its full TTL.
         while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
             writes.pop(0)
-        writes.append((value, now))
+        if writes and writes[-1][0] == value:
+            # An idempotent repeat causes no second document transition, so
+            # a second entry would wait for a confirmation Firestore never
+            # emits, suppressing the next real push until the TTL.
+            writes[-1] = (value, now)
+        else:
+            writes.append((value, now))
         _set_path(self.data, value_path, value)
         if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
             handle.cancel()

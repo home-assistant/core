@@ -920,6 +920,43 @@ async def test_self_heal_supersedes_in_flight_manual_refresh(
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
+async def test_repeated_identical_write_coalesces(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test two identical commands hold a single pending entry.
+
+    The idempotent repeat causes no second document transition, so a second
+    queue entry would wait for a confirmation Firestore never emits and
+    suppress the next real push until the TTL.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    for _ in range(2):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+
+    # The single coalesced snapshot confirms the write.
+    on_data({"light": {"status": 1}})
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+    # A real off push must then apply immediately, not wait out the TTL.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
 async def test_stale_push_cannot_confirm_newer_write_after_prune(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
