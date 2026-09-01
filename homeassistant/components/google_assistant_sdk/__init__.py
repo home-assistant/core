@@ -2,19 +2,13 @@
 
 from typing import override
 
-from aiohttp import ClientError
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -61,14 +55,7 @@ async def async_setup_entry(
             translation_key="oauth2_implementation_unavailable",
         ) from err
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="reauth_required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     mem_storage = InMemoryStorage(hass)
     hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))

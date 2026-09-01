@@ -1,15 +1,9 @@
 """The Google Photos integration."""
 
-from aiohttp import ClientError
 from google_photos_library_api.api import GooglePhotosLibraryApi
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -51,14 +45,7 @@ async def async_setup_entry(
     web_session = async_get_clientsession(hass)
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
-    try:
-        await auth.async_get_access_token()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth session is not valid, reauth required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await auth.async_get_access_token()
     coordinator = GooglePhotosUpdateCoordinator(
         hass, entry, GooglePhotosLibraryApi(auth)
     )

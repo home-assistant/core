@@ -2,17 +2,11 @@
 
 from typing import cast
 
-from aiohttp.client_exceptions import ClientError
 from twitchAPI.twitch import Twitch
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     LocalOAuth2Implementation,
@@ -37,14 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
             translation_key="oauth2_implementation_unavailable",
         ) from err
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth session is not valid, reauth required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     client = Twitch(

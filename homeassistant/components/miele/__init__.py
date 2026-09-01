@@ -1,16 +1,10 @@
 """The Miele integration."""
 
-from aiohttp import ClientError
 from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -64,16 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
 
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
-    try:
-        await auth.async_get_access_token()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="config_entry_auth_failed"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="config_entry_not_ready"
-        ) from err
+    await auth.async_get_access_token()
 
     # Setup MieleAPI and coordinator for data fetch
     _api = MieleAPI(auth)
