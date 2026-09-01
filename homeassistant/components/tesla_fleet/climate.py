@@ -1,9 +1,7 @@
 """Climate platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from itertools import chain
-from typing import Any, cast
+from typing import Any, cast, override
 
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
 
@@ -94,6 +92,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             side,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         value = self.get("climate_state_is_climate_on")
@@ -104,7 +103,8 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
-        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        # If not scoped, prevent the user from changing the
+        # HVAC mode by making it the only option
         if self._attr_hvac_mode and self.read_only:
             self._attr_hvac_modes = [self._attr_hvac_mode]
 
@@ -118,6 +118,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             float, self.get("climate_state_max_avail_temp", DEFAULT_MAX_TEMP)
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
 
@@ -127,6 +128,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self._attr_hvac_mode = HVACMode.HEAT_COOL
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
 
@@ -137,6 +139,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self._attr_preset_mode = self._attr_preset_modes[0]
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
 
@@ -162,6 +165,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         else:
             self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
         if hvac_mode == HVACMode.OFF:
@@ -169,6 +173,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         else:
             await self.async_turn_on()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
         await self.wake_up_if_asleep()
@@ -237,6 +242,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
         super().__init__(data, "climate_state_cabin_overheat_protection")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
@@ -245,7 +251,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         else:
             self._attr_hvac_mode = COP_MODES.get(state)
 
-        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        # If not scoped, prevent the user from changing the
+        # HVAC mode by making it the only option
         if self._attr_hvac_mode and self.read_only:
             self._attr_hvac_modes = [self._attr_hvac_mode]
 
@@ -257,6 +264,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         self._attr_current_temperature = self.get("climate_state_inside_temp")
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if not self.read_only and self.get(
@@ -267,14 +275,17 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             )
         return self._attr_supported_features
 
+    @override
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
         await self.async_set_hvac_mode(HVACMode.COOL)
 
+    @override
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
 
@@ -300,6 +311,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
         await self.wake_up_if_asleep()

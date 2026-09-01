@@ -21,10 +21,12 @@ async def test_create_doorbell(hass: HomeAssistant) -> None:
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     await _create_yale_with_devices(hass, [doorbell_one])
 
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state is not None
     assert motion_state.state == STATE_UNKNOWN
-    doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
+    doorbell_state = hass.states.get(
+        "event.k98gidt45gul_name_k98gidt45gul_name_doorbell"
+    )
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN
 
@@ -33,10 +35,10 @@ async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     """Test creation of a doorbell that is offline."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_yale_with_devices(hass, [doorbell_one])
-    motion_state = hass.states.get("event.tmt100_name_motion")
+    motion_state = hass.states.get("event.tmt100_name_tmt100_name_motion")
     assert motion_state is not None
     assert motion_state.state == STATE_UNAVAILABLE
-    doorbell_state = hass.states.get("event.tmt100_name_doorbell")
+    doorbell_state = hass.states.get("event.tmt100_name_tmt100_name_doorbell")
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNAVAILABLE
 
@@ -51,18 +53,20 @@ async def test_create_doorbell_with_motion(
     )
     await _create_yale_with_devices(hass, [doorbell_one], activities=activities)
 
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state is not None
     assert motion_state.state != STATE_UNKNOWN
     isotime = motion_state.state
-    doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
+    doorbell_state = hass.states.get(
+        "event.k98gidt45gul_name_k98gidt45gul_name_doorbell"
+    )
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN
 
     freezer.tick(40)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state.state == isotime
 
 
@@ -75,10 +79,12 @@ async def test_doorbell_update_via_socketio(
     _, socketio = await _create_yale_with_devices(hass, [doorbell_one])
     assert doorbell_one.pubsub_channel == "7c7a6672-59c8-3333-ffff-dcd98705cccc"
 
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state is not None
     assert motion_state.state == STATE_UNKNOWN
-    doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
+    doorbell_state = hass.states.get(
+        "event.k98gidt45gul_name_k98gidt45gul_name_doorbell"
+    )
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN
 
@@ -112,7 +118,7 @@ async def test_doorbell_update_via_socketio(
 
     await hass.async_block_till_done()
 
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state is not None
     assert motion_state.state != STATE_UNKNOWN
     isotime = motion_state.state
@@ -121,7 +127,7 @@ async def test_doorbell_update_via_socketio(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    motion_state = hass.states.get("event.k98gidt45gul_name_motion")
+    motion_state = hass.states.get("event.k98gidt45gul_name_k98gidt45gul_name_motion")
     assert motion_state is not None
     assert motion_state.state != STATE_UNKNOWN
 
@@ -135,7 +141,9 @@ async def test_doorbell_update_via_socketio(
 
     await hass.async_block_till_done()
 
-    doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
+    doorbell_state = hass.states.get(
+        "event.k98gidt45gul_name_k98gidt45gul_name_doorbell"
+    )
     assert doorbell_state is not None
     assert doorbell_state.state != STATE_UNKNOWN
     isotime = motion_state.state
@@ -144,7 +152,9 @@ async def test_doorbell_update_via_socketio(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
+    doorbell_state = hass.states.get(
+        "event.k98gidt45gul_name_k98gidt45gul_name_doorbell"
+    )
     assert doorbell_state is not None
     assert doorbell_state.state != STATE_UNKNOWN
     assert motion_state.state == isotime
@@ -156,7 +166,7 @@ async def test_create_lock_with_doorbell(hass: HomeAssistant) -> None:
     await _create_yale_with_devices(hass, [lock_one])
 
     doorbell_state = hass.states.get(
-        "event.a6697750d607098bae8d6baa11ef8063_name_doorbell"
+        "event.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_doorbell"
     )
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN

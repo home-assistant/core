@@ -1,7 +1,7 @@
 """Platform for switch integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from smarttub import SpaPump
 
@@ -61,10 +61,12 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the pump is on."""
         return self.pump.state != SpaPump.PumpState.OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the pump on."""
 
@@ -72,6 +74,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         if not self.is_on:
             await self.async_toggle()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the pump off."""
 
@@ -79,6 +82,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         if self.is_on:
             await self.async_toggle()
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
         async with asyncio.timeout(API_TIMEOUT):

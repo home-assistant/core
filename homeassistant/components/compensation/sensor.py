@@ -1,20 +1,17 @@
 """Support for compensation sensor."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import numpy as np
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_MAXIMUM,
@@ -25,6 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -33,7 +31,10 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,6 +44,7 @@ from .const import (
     CONF_PRECISION,
     DATA_COMPENSATION,
     DEFAULT_NAME,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +62,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Compensation sensor."""
     if discovery_info is None:
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/compensation/",
+            logger=_LOGGER,
+        )
         return
 
     compensation: str = discovery_info[CONF_COMPENSATION]
@@ -110,6 +120,7 @@ class CompensationSensor(SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -121,6 +132,7 @@ class CompensationSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         ret = {
@@ -159,16 +171,18 @@ class CompensationSensor(SensorEntity):
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
             self._attr_native_unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._attr_device_class is None and (
-            device_class := new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class := new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         ):
             self._attr_device_class = device_class
 
         if self._attr_state_class is None and (
-            state_class := new_state.attributes.get(ATTR_STATE_CLASS)
+            state_class := new_state.attributes.get(
+                SensorEntityCapabilityAttribute.STATE_CLASS
+            )
         ):
             self._attr_state_class = state_class
 

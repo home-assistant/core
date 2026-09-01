@@ -1,7 +1,5 @@
 """Expose Home Assistant entity states to KNX."""
 
-from __future__ import annotations
-
 from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -119,6 +117,7 @@ class KnxExposeOptions:
     dpt: type[DPTBase]
     respond_to_read: bool
     cooldown: float
+    send_on_init: bool
     periodic_send: float
     default: Any | None
     value_template: Template | None
@@ -129,10 +128,13 @@ def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
     value_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
     dpt: type[DPTBase]
     if value_type == "binary":
-        # HA yaml expose flag for DPT-1 (no explicit DPT 1 definitions in xknx back then)
+        # HA yaml expose flag for DPT-1
+        # (no explicit DPT 1 definitions in xknx back then)
         dpt = DPTSwitch
     else:
-        dpt = DPTBase.parse_transcoder(config[ExposeSchema.CONF_KNX_EXPOSE_TYPE])  # type: ignore[assignment]  # checked by schema validation
+        dpt = DPTBase.parse_transcoder(  # type: ignore[assignment]
+            config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+        )
     ga = parse_device_group_address(config[KNX_ADDRESS])
     cooldown_seconds = config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN].total_seconds()
     periodic_send_seconds = config[
@@ -144,6 +146,7 @@ def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
         dpt=dpt,
         respond_to_read=config[CONF_RESPOND_TO_READ],
         cooldown=cooldown_seconds,
+        send_on_init=config[ExposeSchema.CONF_KNX_EXPOSE_SEND_ON_INIT],
         periodic_send=periodic_send_seconds,
         default=config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT),
         value_template=config.get(CONF_VALUE_TEMPLATE),
@@ -196,22 +199,24 @@ class KnxExposeEntity:
         )
         for _option, xknx_expose in self._exposures:
             self.xknx.devices.async_add(xknx_expose)
-        self._init_expose_state()
+
+        self.hass.async_create_task(
+            self._async_handle_state(self.hass.states.get(self.entity_id))
+        )
 
     @callback
-    def _init_expose_state(self) -> None:
-        """Initialize state of all exposures."""
-        init_state = self.hass.states.get(self.entity_id)
-        for option, xknx_expose in self._exposures:
-            state_value = self._get_expose_value(init_state, option)
-            try:
-                xknx_expose.sensor_value.value = state_value
-            except ConversionError:
-                _LOGGER.exception(
-                    "Error setting value %s for expose sensor %s",
-                    state_value,
-                    xknx_expose.name,
-                )
+    def _initialize_expose_value(
+        self, xknx_expose: ExposeSensor, expose_value: StateType
+    ) -> None:
+        """Initialize an expose value without sending to KNX."""
+        try:
+            xknx_expose.initialize_value(expose_value)
+        except ConversionError:
+            _LOGGER.exception(
+                "Error setting value %s for expose sensor %s",
+                expose_value,
+                xknx_expose.name,
+            )
 
     @callback
     def async_remove(self) -> None:
@@ -263,8 +268,8 @@ class KnxExposeEntity:
                 if issubclass(option.dpt, DPTNumeric):
                     return float(value)
                 if issubclass(option.dpt, DPTString):
-                    # DPT 16.000 only allows up to 14 Bytes
-                    return str(value)[:14]
+                    # DPT 16 only allows up to 14 chars, DPT 4 a single char
+                    return str(value)[: option.dpt.payload_length]
             except (ValueError, TypeError) as err:
                 _LOGGER.warning(
                     'Could not expose %s %s value "%s" to KNX: Conversion failed: %s',
@@ -277,17 +282,27 @@ class KnxExposeEntity:
         return value  # type: ignore[no-any-return]
 
     async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
-        """Handle entity change for all options."""
-        new_state = event.data["new_state"]
+        """Handle entity change."""
+        await self._async_handle_state(event.data["new_state"])
+
+    async def _async_handle_state(self, state: State | None) -> None:
+        """Handle a Home Assistant state for all exposures."""
         async with TaskGroup() as tg:
             for option, xknx_expose in self._exposures:
-                expose_value = self._get_expose_value(new_state, option)
+                expose_value = self._get_expose_value(state, option)
                 if expose_value is None:
                     continue
+
+                if xknx_expose.sensor_value.value is None and not option.send_on_init:
+                    self._initialize_expose_value(xknx_expose, expose_value)
+                    continue
+
                 tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
-        self, xknx_expose: ExposeSensor, value: StateType
+        self,
+        xknx_expose: ExposeSensor,
+        value: StateType,
     ) -> None:
         """Set new value on xknx ExposeSensor."""
         try:

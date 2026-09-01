@@ -1,32 +1,29 @@
 """Sensor platform for motionEye."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
-from .coordinator import MotionEyeUpdateCoordinator
+from .const import TYPE_MOTIONEYE_ACTION_SENSOR
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -73,11 +70,13 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return len(self._camera.get(KEY_ACTIONS, [])) if self._camera else 0
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Add actions as attribute."""
         if actions := (self._camera.get(KEY_ACTIONS) if self._camera else None):
@@ -85,6 +84,7 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)

@@ -1,9 +1,14 @@
 """Support for Switchbot humidifier."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
-from switchbot_api import CommonCommands, HumidifierCommands, HumidifierV2Commands
+from switchbot_api import (
+    CommonCommands,
+    Humidifier2Mode,
+    HumidifierCommands,
+    HumidifierV2Commands,
+)
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -12,13 +17,12 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import AFTER_COMMAND_REFRESH, DOMAIN, HUMIDITY_LEVELS, Humidifier2Mode
+from . import SwitchbotCloudConfigEntry
+from .const import AFTER_COMMAND_REFRESH, HUMIDITY_LEVELS
 from .entity import SwitchBotCloudEntity
 
 PARALLEL_UPDATES = 0
@@ -26,11 +30,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot based on a config entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(
         SwitchBotHumidifier(data.api, device, coordinator)
         if device.device_type == "Humidifier"
@@ -50,6 +54,7 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
     _attr_name = None
     _attr_target_humidity = 50
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
@@ -57,6 +62,7 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
             self._attr_mode = MODE_AUTO if coord_data.get("auto") else MODE_NORMAL
             self._attr_current_humidity = coord_data.get("humidity")
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         self.target_humidity, parameters = self._map_humidity_to_supported_level(
@@ -68,6 +74,7 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target humidity."""
         if mode == MODE_AUTO:
@@ -79,12 +86,14 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_api_command(CommonCommands.OFF)
@@ -110,6 +119,7 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
     _attr_name = None
     _attr_target_humidity = 50
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
@@ -125,6 +135,7 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
                 else None
             )
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         assert self.coordinator.data is not None
@@ -134,6 +145,7 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target mode."""
         assert self.coordinator.data is not None
@@ -142,12 +154,14 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_api_command(CommonCommands.OFF)

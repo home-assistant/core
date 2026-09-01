@@ -10,7 +10,11 @@ from pytest_unordered import unordered
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import (
@@ -24,6 +28,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockUser,
     RegistryEntryWithDefaults,
     mock_registry,
 )
@@ -57,6 +62,15 @@ async def test_list_entities(
                 entity_id="test_domain.no_name",
                 unique_id="6789",
                 platform="test_platform",
+            ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                has_entity_name=False,
+                original_name="Device Bla Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="AAAA",
             ),
         },
     )
@@ -107,6 +121,29 @@ async def test_list_entities(
             "name": None,
             "options": {},
             "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": ANY,
+        },
+        {
+            "area_id": None,
+            "categories": {},
+            "config_entry_id": None,
+            "config_subentry_id": None,
+            "created_at": utcnow().timestamp(),
+            "device_id": "device123",
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.unprefixed",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "labels": [],
+            "modified_at": utcnow().timestamp(),
+            "name": None,
+            "options": {},
+            "original_name": "Sensor",
             "platform": "test_platform",
             "translation_key": None,
             "unique_id": ANY,
@@ -213,10 +250,19 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="3456",
             ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                original_name="Device Name Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="4567",
+            ),
             "test_domain.boring": RegistryEntryWithDefaults(
                 entity_id="test_domain.boring",
                 platform="test_platform",
-                unique_id="4567",
+                unique_id="5678",
             ),
             "test_domain.disabled": RegistryEntryWithDefaults(
                 disabled_by=RegistryEntryDisabler.USER,
@@ -289,6 +335,14 @@ async def test_list_entities_for_display(
                 "ei": "test_domain.renamed",
                 "en": "User name",
                 "hn": True,
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.unprefixed",
+                "en": "Sensor",
                 "lb": [],
                 "pl": "test_platform",
             },
@@ -558,9 +612,14 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
 
 
 async def test_update_entity(
-    hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test updating entity."""
+    label_registry.async_create("label1")
+    label_registry.async_create("label2")
     created = datetime.fromisoformat("2024-02-14T12:00:00.900075+00:00")
     freezer.move_to(created)
     registry = mock_registry(
@@ -950,6 +1009,55 @@ async def test_update_entity(
     }
 
 
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
+    ],
+)
+async def test_update_entity_strips_unknown_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the entity is cleaned up when the entity
+    is next saved, even if the client sends it back.
+    """
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntryWithDefaults(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                platform="test_platform",
+                labels={"stale_label"},  # not in the label registry
+            )
+        },
+    )
+    label_registry.async_create("label1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert set(msg["result"]["entity_entry"]["labels"]) == expected_labels
+    assert registry.entities["test_domain.world"].labels == expected_labels
+
+
 async def test_update_entity_require_restart(
     hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -1021,7 +1129,7 @@ async def test_enable_entity_disabled_device(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test enabling entity of disabled device."""
-    entity_id = "test_domain.test_platform_1234"
+    entity_id = "test_domain.test_device"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
 
@@ -1031,6 +1139,7 @@ async def test_enable_entity_disabled_device(
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+        name="Test Device",
         disabled_by=DeviceEntryDisabler.USER,
     )
     device_info = {
@@ -1526,3 +1635,108 @@ async def test_get_automatic_entity_ids(
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
+
+
+async def test_get_settings(client: MockHAClientWebSocket) -> None:
+    """Test get settings."""
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}
+
+
+async def test_update_settings(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test update settings."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": ["floor", "area", "device", "entity"],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": ["floor", "area", "device", "entity"]}
+    assert entity_registry.settings.entity_id_parts == (
+        er.EntityNamePart.FLOOR,
+        er.EntityNamePart.AREA,
+        er.EntityNamePart.DEVICE,
+        er.EntityNamePart.ENTITY,
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": ["floor", "area", "device", "entity"]}
+
+    # Clear the override
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/settings/update", "entity_id_parts": None}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}
+    assert entity_registry.settings.entity_id_parts is None
+
+
+@pytest.mark.parametrize(
+    "entity_id_parts",
+    [
+        pytest.param(["entity", "device", "bad_part"], id="unknown_part"),
+        pytest.param(["entity", "device", "entity"], id="duplicate"),
+        pytest.param(["entity"], id="missing_device"),
+        pytest.param(["device"], id="missing_entity"),
+        pytest.param([], id="empty"),
+    ],
+)
+async def test_update_settings_invalid(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    entity_id_parts: list[str],
+) -> None:
+    """Test update settings with an invalid parts list."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": entity_id_parts,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert entity_registry.settings.entity_id_parts is None
+
+
+async def test_update_settings_requires_admin(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test update settings fails for non admin."""
+    hass_admin_user.groups = []
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/settings/update",
+            "entity_id_parts": ["device", "entity"],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+    assert entity_registry.settings.entity_id_parts is None
+
+    # Reading settings is not restricted
+    await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"entity_id_parts": None}

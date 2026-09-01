@@ -102,6 +102,9 @@
     "identifier_unresolvable": {
       "message": "Could not parse identifier: {identifier}"
     },
+    "missing_api_permission": {
+      "message": "Missing API permission ({msg})."
+    },
     "not_configured": {
       "message": "Immich is not configured."
     },

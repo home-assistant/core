@@ -1,10 +1,8 @@
 """AI Task integration for Anthropic."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
@@ -12,10 +10,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import DOMAIN
 from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class AnthropicTaskEntity(
     )
     _attr_translation_key = "ai_task_data"
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -60,7 +62,7 @@ class AnthropicTaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN, translation_key="response_not_found"
             )
 
         text = chat_log.content[-1].content or ""
@@ -78,7 +80,9 @@ class AnthropicTaskEntity(
                 err,
                 text,
             )
-            raise HomeAssistantError("Error with Claude structured response") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="json_parse_error"
+            ) from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,

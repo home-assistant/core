@@ -1,6 +1,6 @@
 """Hue binary sensor entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 
@@ -33,18 +33,20 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HuePresence(GenericZLLSensor, BinarySensorEntity):
     """The presence sensor entity for a Hue motion sensor device."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.sensor.presence
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes

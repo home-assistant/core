@@ -34,11 +34,9 @@ async def test_single_instance(
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_devices_with_mocks(
-    hass: HomeAssistant,
-    mock_start: AsyncMock,
-    mock_stop: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_start: AsyncMock, mock_stop: AsyncMock
 ) -> None:
     """Test getting user input."""
 
@@ -60,11 +58,11 @@ async def test_devices_with_mocks(
         (AddressInUseError, ERROR_MSG_ADDRESS_IN_USE),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_devices_with_various_mocks_errors(
     hass: HomeAssistant,
     mock_start: AsyncMock,
     mock_stop: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error_msg: str,
 ) -> None:

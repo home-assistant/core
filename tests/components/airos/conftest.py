@@ -1,6 +1,7 @@
 """Common fixtures for the Ubiquiti airOS tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from airos.airos6 import AirOS6Data
@@ -9,6 +10,7 @@ from airos.helpers import DetectDeviceData
 import pytest
 
 from homeassistant.components.airos.const import DEFAULT_USERNAME, DOMAIN
+from homeassistant.components.airos.coordinator import AirOSUpdateData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from . import AirOSData
@@ -17,7 +19,16 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def ap_fixture(request: pytest.FixtureRequest) -> AirOSData:
+def ap_firmware_fixture(request: pytest.FixtureRequest) -> AirOSUpdateData:
+    """Return fixture for AP firmware data."""
+    available = getattr(request, "param", False)
+    if available:
+        return load_json_object_fixture("firmware_update_available.json", DOMAIN)
+    return load_json_object_fixture("firmware_update_latest.json", DOMAIN)
+
+
+@pytest.fixture
+def ap_status_fixture(request: pytest.FixtureRequest) -> AirOSData:
     """Load fixture data for airOS device."""
     json_data = load_json_object_fixture("airos_loco5ac_ap-ptp.json", DOMAIN)
     if hasattr(request, "param"):
@@ -61,11 +72,14 @@ def mock_airos_class() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_airos_client(
-    mock_airos_class: MagicMock, ap_fixture: AirOSData
+    mock_airos_class: MagicMock,
+    ap_status_fixture: AirOSData,
+    ap_firmware_fixture: dict[str, Any],
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
     client = mock_airos_class.return_value
-    client.status.return_value = ap_fixture
+    client.status.return_value = ap_status_fixture
+    client.update_check.return_value = ap_firmware_fixture
     client.login.return_value = True
     client.reboot.return_value = True
     return client
@@ -97,13 +111,13 @@ def mock_discovery_method() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_async_get_firmware_data(ap_fixture: AirOSData):
+def mock_async_get_firmware_data(ap_status_fixture: AirOSData):
     """Fixture to mock async_get_firmware_data to not do a network call."""
-    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     return_value = DetectDeviceData(
         fw_major=fw_major,
-        mac=ap_fixture.derived.mac,
-        hostname=ap_fixture.host.hostname,
+        mac=ap_status_fixture.derived.mac,
+        hostname=ap_status_fixture.host.hostname,
     )
 
     mock = AsyncMock(return_value=return_value)

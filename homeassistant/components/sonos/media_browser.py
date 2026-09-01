@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
@@ -19,8 +17,11 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -48,9 +49,11 @@ type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
 def fix_image_url(url: str) -> str:
-    """Update the image url to fully encode characters to allow image display in media_browser UI.
+    """Update the image url to fully encode characters.
 
-    Images whose file path contains characters such as ',()+ are not loaded without escaping them.
+    This allows image display in media_browser UI. Images
+    whose file path contains characters such as ',()+ are
+    not loaded without escaping them.
     """
 
     # Before parsing encode the plus sign; otherwise it'll be interpreted as a space.
@@ -110,7 +113,8 @@ def _get_title(id_string: str) -> str:
     """Extract a suitable title from the content id string."""
     if id_string.startswith("S:"):
         # Format is S://server/share/folder
-        # If just S: this will be in the mappings; otherwise use the last folder in path.
+        # If just S: this will be in the mappings;
+        # otherwise use the last folder in path.
         title = LIBRARY_TITLES_MAPPING.get(
             id_string, urllib.parse.unquote(id_string.rsplit("/", maxsplit=1)[-1])
         )
@@ -208,6 +212,49 @@ async def async_browse_media(
     return response
 
 
+async def async_search_media(
+    hass: HomeAssistant,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
+    query: SearchMediaQuery,
+) -> SearchMedia:
+    """Search media."""
+    media_content_type = query.media_content_type or MediaType.TRACK
+    search_type = MEDIA_TYPES_TO_SONOS.get(media_content_type)
+    if search_type is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_content_type",
+            translation_placeholders={
+                "media_content_type": media_content_type,
+            },
+        )
+    items = await hass.async_add_executor_job(
+        partial(
+            media.library.get_music_library_information,
+            search_type,
+            search_term=query.search_query,
+            full_album_art_uri=True,
+            complete_result=True,
+        )
+    )
+    result = []
+    for item in items:
+        with suppress(UnknownMediaType):
+            result.append(
+                item_payload(
+                    item,
+                    get_thumbnail_url=partial(
+                        get_thumbnail_url_full,
+                        media,
+                        is_internal_request(hass),
+                        get_browse_image_url,
+                    ),
+                )
+            )
+    return SearchMedia(result=result)
+
+
 def build_item_response(
     media_library: MusicLibrary, payload: dict[str, str], get_thumbnail_url=None
 ) -> BrowseMedia | None:
@@ -241,6 +288,9 @@ def build_item_response(
 
     thumbnail = None
     title = None
+    # Library listings such as Albums and Artists are browsed, not played; only a
+    # single album resolved below can be played as a whole.
+    playable = False
 
     # Fetch album info for titles and thumbnails
     # Can't be extracted from track info
@@ -256,7 +306,12 @@ def build_item_response(
         item = get_media(media_library, idstring, search_type)
 
         title = getattr(item, "title", None)
-        thumbnail = get_thumbnail_url(search_type, payload["idstring"])
+        # The browse image proxy round-trips this back to async_get_browse_image,
+        # which matches on MediaType, not on the Sonos search type.
+        thumbnail = get_thumbnail_url(
+            SONOS_TO_MEDIA_TYPES[search_type], payload["idstring"]
+        )
+        playable = can_play(search_type)
 
     if not title:
         title = _get_title(id_string=payload["idstring"])
@@ -281,7 +336,7 @@ def build_item_response(
         media_content_id=payload["idstring"],
         media_content_type=payload["search_type"],
         children=children,
-        can_play=can_play(payload["search_type"]),
+        can_play=playable,
         can_expand=can_expand(payload["search_type"]),
     )
 
@@ -623,9 +678,10 @@ def get_media(
         )
         matches = [result]
     else:
-        # When requesting media by album_artist, composer, genre use the browse interface
-        # to navigate the hierarchy. This occurs when invoked from media browser or service
-        # calls
+        # When requesting media by album_artist, composer,
+        # genre use the browse interface to navigate the
+        # hierarchy. This occurs when invoked from media
+        # browser or service calls
         # Example: A:ALBUMARTIST/Neil Young/Greatest Hits - get specific album
         # Example: A:ALBUMARTIST/Neil Young - get all albums
         # Others: composer, genre

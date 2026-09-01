@@ -1,10 +1,8 @@
 """Support for exposing Concord232 elements as sensors."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from concord232 import client as concord232_client
 import requests
@@ -122,11 +120,13 @@ class Concord232ZoneSensor(BinarySensorEntity):
         self._attr_device_class = zone_type
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"

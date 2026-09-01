@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test config flow when Omnilogic component is already setup."""
-    MockConfigEntry(domain="omnilogic", data=DATA).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=DATA).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

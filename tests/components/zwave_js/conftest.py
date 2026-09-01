@@ -188,6 +188,12 @@ def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm6_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_heatit_z_trm7_state", scope="package")
+def climate_heatit_z_trm7_state_fixture() -> dict[str, Any]:
+    """Load the climate HEATIT Z-TRM7 thermostat node state fixture data."""
+    return load_json_object_fixture("climate_heatit_z_trm7_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="package")
 def climate_heatit_z_trm3_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -210,6 +216,14 @@ def climate_heatit_z_trm3_no_value_state_fixture() -> dict[str, Any]:
 def ring_keypad_state_fixture() -> dict[str, Any]:
     """Load the Ring keypad state fixture data."""
     return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
+
+
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator_state")
+def zooz_zac36_titan_valve_actuator_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZAC36 Titan valve actuator node state fixture data."""
+    return load_json_object_fixture(
+        "zooz_zac36_titan_valve_actuator_state.json", DOMAIN
+    )
 
 
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
@@ -246,6 +260,12 @@ def hs_fc200_state_fixture() -> dict[str, Any]:
 def leviton_zw4sf_state_fixture() -> dict[str, Any]:
     """Load the Leviton ZW4SF node state fixture data."""
     return load_json_object_fixture("leviton_zw4sf_state.json", DOMAIN)
+
+
+@pytest.fixture(name="leviton_vrf01_state", scope="package")
+def leviton_vrf01_state_fixture() -> dict[str, Any]:
+    """Load the Leviton VRF01 node state fixture data."""
+    return load_json_object_fixture("leviton_vrf01_state.json", DOMAIN)
 
 
 @pytest.fixture(name="fan_honeywell_39358_state", scope="package")
@@ -346,6 +366,12 @@ def jasco_14314_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
 
 
+@pytest.fixture(name="enbrighten_55258_zw4002_state", scope="package")
+def enbrighten_55258_zw4002_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 55258/ZW4002 node state fixture data."""
+    return load_json_object_fixture("enbrighten_55258_zw4002_state.json", DOMAIN)
+
+
 @pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
 def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
     """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
@@ -394,12 +420,13 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
     ),
     scope="package",
 )
-def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
-    """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
+def climate_radio_thermostat_ct100_mode_setpoint_diff_endpoints_state_fixture() -> dict[
+    str, Any
+]:
+    """Load climate with mode+setpoint on different endpoints."""
     return load_json_object_fixture(
-        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json",
+        "climate_radio_thermostat_ct100_mode_and_setpoint"
+        "_on_different_endpoints_state.json",
         DOMAIN,
     )
 
@@ -534,7 +561,7 @@ def basic_cc_sensor_state_fixture() -> dict[str, Any]:
 
 @pytest.fixture(name="window_covering_outbound_bottom_state", scope="package")
 def window_covering_outbound_bottom_state_fixture() -> dict[str, Any]:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     return load_json_object_fixture("window_covering_outbound_bottom.json", DOMAIN)
 
 
@@ -592,6 +619,17 @@ def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="fibaro_fgms001_v2_8_state")
+def fibaro_fgms001_v2_8_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Fibaro FGMS001 on firmware 2.8."""
+    return cast(
+        NodeDataType,
+        # Note: this fixture was created from a simulated device.
+        # If necessary, replace it with one created from a real FGMS001
+        load_json_object_fixture("fibaro_fgms001_v2_8_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -610,9 +648,12 @@ def mock_client_fixture(
     listen_block: asyncio.Event,
 ):
     """Mock a client."""
-    with patch(
-        "homeassistant.components.zwave_js.ZwaveClient", autospec=True
-    ) as client_class:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.ZwaveClient", autospec=True
+        ) as client_class,
+        patch("homeassistant.components.zwave_js.config_flow.Client", client_class),
+    ):
         client = client_class.return_value
 
         async def connect():
@@ -884,6 +925,16 @@ def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     return node
 
 
+@pytest.fixture(name="climate_heatit_z_trm7")
+def climate_heatit_z_trm7_fixture(
+    client: MagicMock, climate_heatit_z_trm7_state: dict[str, Any]
+) -> Node:
+    """Mock a climate HEATIT Z-TRM7 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm7_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_no_value")
 def climate_heatit_z_trm3_no_value_fixture(
     client, climate_heatit_z_trm3_no_value_state
@@ -960,6 +1011,16 @@ def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> N
     return node
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator")
+def zooz_zac36_titan_valve_actuator_fixture(
+    client: MagicMock, zooz_zac36_titan_valve_actuator_state: NodeDataType
+) -> Node:
+    """Mock a Zooz ZAC36 Titan valve actuator node."""
+    node = Node(client, zooz_zac36_titan_valve_actuator_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -969,7 +1030,7 @@ async def integration_fixture(
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org"},
         unique_id=str(client.driver.controller.home_id),
     )
@@ -983,7 +1044,13 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Only check loggers relevant to this integration to avoid flaky failures
+    # from unrelated log sources (e.g. sqlalchemy pool cleanup on other threads).
+    _error_loggers = ("homeassistant", "zwave_js_server")
+    assert not any(
+        record.levelno == logging.ERROR and record.name.startswith(_error_loggers)
+        for record in caplog.records
+    )
 
     return entry
 
@@ -1022,6 +1089,14 @@ def hs_fc200_fixture(client, hs_fc200_state) -> Node:
 def leviton_zw4sf_fixture(client, leviton_zw4sf_state) -> Node:
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(leviton_zw4sf_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="leviton_vrf01")
+def leviton_vrf01_fixture(client, leviton_vrf01_state) -> Node:
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(leviton_vrf01_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1162,6 +1237,14 @@ def ge_12730_fixture(client, ge_12730_state) -> Node:
 def jasco_14314_fixture(client, jasco_14314_state) -> Node:
     """Mock a Jasco 14314 fan controller node."""
     node = Node(client, copy.deepcopy(jasco_14314_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="enbrighten_55258_zw4002")
+def enbrighten_55258_zw4002_fixture(client, enbrighten_55258_zw4002_state) -> Node:
+    """Mock a Enbrighten_55258/ZW4002 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_55258_zw4002_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1414,7 +1497,7 @@ def basic_cc_sensor_fixture(client, basic_cc_sensor_state) -> Node:
 def window_covering_outbound_bottom_fixture(
     client, window_covering_outbound_bottom_state
 ) -> Node:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
@@ -1476,5 +1559,27 @@ def hoppe_ehandle_connectsense_fixture(
 ) -> Node:
     """Load node for Hoppe eHandle ConnectSense."""
     node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_v2_8")
+def fibaro_fgms001_v2_8_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load node for Fibaro FGMS001 on firmware 2.8."""
+    node = Node(client, fibaro_fgms001_v2_8_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_unknown_firmware")
+def fibaro_fgms001_unknown_firmware_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load FGMS001 node with no reported firmware version."""
+    state = copy.deepcopy(fibaro_fgms001_v2_8_state)
+    state.pop("firmwareVersion", None)
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node

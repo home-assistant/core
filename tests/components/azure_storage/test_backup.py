@@ -1,7 +1,5 @@
 """Test the backups for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import ANY, Mock, patch
@@ -283,7 +281,11 @@ async def test_agents_error_on_download_not_found(
     [
         (
             HttpResponseError("http error"),
-            "Error during backup operation in async_delete_backup: Status None, message: http error",
+            (
+                "Error during backup operation in"
+                " async_delete_backup:"
+                " Status None, message: http error"
+            ),
         ),
         (
             ServiceRequestError("timeout"),

@@ -39,7 +39,7 @@
 # name: test_mop_attached[binary_sensor.ozmo_950_mop_attached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Mop attached',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Mop attached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ozmo_950_mop_attached',

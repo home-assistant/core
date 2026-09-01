@@ -1,5 +1,7 @@
 """Provides button entities for Home Connect."""
 
+from typing import override
+
 from aiohomeconnect.model import CommandKey
 from aiohomeconnect.model.error import HomeConnectError
 
@@ -87,6 +89,7 @@ class HomeConnectButtonEntity(HomeConnectEntity, ButtonEntity):
         """Initialize the entity."""
         super().__init__(appliance_coordinator, desc, context_override=True)
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
 
@@ -96,6 +99,7 @@ class HomeConnectCommandButtonEntity(HomeConnectButtonEntity):
 
     entity_description: HomeConnectCommandButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -128,6 +132,7 @@ class HomeConnectStopProgramButtonEntity(HomeConnectButtonEntity):
             ),
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:

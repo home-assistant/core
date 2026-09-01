@@ -84,9 +84,6 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
-      "shelter_alarm": {
-        "name": "Shelter alarm"
-      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },

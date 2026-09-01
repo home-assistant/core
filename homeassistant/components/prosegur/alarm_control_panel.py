@@ -1,8 +1,7 @@
 """Support for Prosegur alarm control panels."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from pyprosegur.auth import Auth
 from pyprosegur.installation import Installation, Status
@@ -12,12 +11,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import ProsegurConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +30,12 @@ STATE_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ProsegurConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Prosegur alarm control panel platform."""
     async_add_entities(
-        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])],
+        [ProsegurAlarm(entry.data["contract"], entry.runtime_data)],
         update_before_add=True,
     )
 
@@ -83,14 +82,17 @@ class ProsegurAlarm(AlarmControlPanelEntity):
         self._attr_alarm_state = STATE_MAPPING.get(self._installation.status)
         self._attr_available = True
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._installation.disarm(self._auth)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm_partially(self._auth)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm(self._auth)

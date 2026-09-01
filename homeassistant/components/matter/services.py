@@ -1,7 +1,5 @@
 """Services for Matter devices."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -113,7 +111,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(SERVICE_CREDENTIAL_TYPES),
-            vol.Required(ATTR_CREDENTIAL_DATA): str,
+            vol.Required(ATTR_CREDENTIAL_DATA): cv.string,
             vol.Optional(ATTR_CREDENTIAL_INDEX): vol.All(
                 vol.Coerce(int), vol.Range(min=0)
             ),

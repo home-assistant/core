@@ -274,7 +274,7 @@
             'instance_id': '0a123c',
           }),
         }),
-        "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        'CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> collections.abc.AsyncIterator[bytes]',
         987,
       ),
       dict({
@@ -378,7 +378,7 @@
             'instance_id': '0a123c',
           }),
         }),
-        "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        'CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> collections.abc.AsyncIterator[bytes]',
         987,
       ),
       dict({

@@ -1,9 +1,7 @@
 """Config flow for Rituals Perfume Genie integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from pyrituals import Account, AuthenticationException
@@ -28,6 +26,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

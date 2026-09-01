@@ -1,7 +1,5 @@
 """Test the Nord Pool config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -96,6 +94,39 @@ async def test_cannot_connect(
         )
 
     assert result["errors"] == {"base": p_error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nord Pool"
+    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
+
+
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_missing_areas(
+    hass: HomeAssistant,
+    get_client: NordPoolClient,
+) -> None:
+    """Test cannot connect error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CURRENCY: "SEK",
+        },
+    )
+
+    assert result["errors"] == {CONF_AREAS: "no_areas"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

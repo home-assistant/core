@@ -1,7 +1,6 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
-from datetime import date
 
 from aiomealie import (
     MealieConnectionError,
@@ -23,11 +22,13 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_MEALPLAN_ID,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
@@ -109,6 +110,39 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
         }
     ),
 )
+SERVICE_DELETE_MEALPLAN = "delete_mealplan"
+SERVICE_DELETE_MEALPLAN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_MEALPLAN_ID): str,
+    }
+)
+SERVICE_UPDATE_MEALPLAN = "update_mealplan"
+SERVICE_UPDATE_MEALPLAN_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Required(ATTR_MEALPLAN_ID): str,
+            vol.Required(ATTR_DATE): cv.date,
+            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            vol.Required(ATTR_RECIPE_ID): str,
+        }
+    ),
+    vol.Schema(
+        {
+            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Required(ATTR_MEALPLAN_ID): str,
+            vol.Required(ATTR_DATE): cv.date,
+            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            vol.Required(ATTR_NOTE_TITLE): str,
+            vol.Optional(ATTR_NOTE_TEXT): str,
+        }
+    ),
+)
 
 
 def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
@@ -137,8 +171,8 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    start_date = call.data.get(ATTR_START_DATE, date.today())
-    end_date = call.data.get(ATTR_END_DATE, date.today())
+    start_date = call.data.get(ATTR_START_DATE, dt_util.now().date())
+    end_date = call.data.get(ATTR_END_DATE, dt_util.now().date())
     if end_date < start_date:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -278,6 +312,69 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     return None
 
 
+async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
+    """Delete a mealplan."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    mealplan_id = call.data[ATTR_MEALPLAN_ID]
+    client = entry.runtime_data.client
+
+    try:
+        await client.delete_mealplan(
+            mealplan_id,
+        )
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    except MealieNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mealplan_not_found",
+            translation_placeholders={"mealplan_id": mealplan_id},
+        ) from err
+    return None
+
+
+async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
+    """Update a mealplan."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    mealplan_id = call.data[ATTR_MEALPLAN_ID]
+    mealplan_date = call.data[ATTR_DATE]
+    entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
+    client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
+    try:
+        mealplan = await client.update_mealplan(
+            mealplan_id,
+            mealplan_date,
+            entry_type,
+            recipe_id=call.data.get(ATTR_RECIPE_ID),
+            note_title=call.data.get(ATTR_NOTE_TITLE),
+            note_text=call.data.get(ATTR_NOTE_TEXT),
+        )
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    except MealieNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mealplan_not_found",
+            translation_placeholders={"mealplan_id": mealplan_id},
+        ) from err
+    if call.return_response:
+        return {"mealplan": asdict(mealplan)}
+    return None
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mealie integration."""
@@ -322,6 +419,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_MEALPLAN,
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE_MEALPLAN,
+        _async_delete_mealplan,
+        schema=SERVICE_DELETE_MEALPLAN_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_MEALPLAN,
+        _async_update_mealplan,
+        schema=SERVICE_UPDATE_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     service.async_register_platform_entity_service(

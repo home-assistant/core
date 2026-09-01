@@ -1,15 +1,43 @@
 """Tests for the BSBLan integration."""
 
+import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock
 
-from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
+from bsblan import (
+    BSBLANAuthError,
+    BSBLANConnectionError,
+    BSBLANError,
+    BSBLANUnsupportedFeatureError,
+    BSBLANVersionError,
+    State,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+CLIMATE_ENTITY_ID = "climate.heating_circuit_1"
 
 
 async def test_load_unload_config_entry(
@@ -29,6 +57,106 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_minimal_mode_creates_outdated_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a device below JSON-API v2 loads in minimal mode and raises a repair."""
+    mock_bsblan.json_api_version = "1.0"
+    mock_bsblan.device.return_value.version = "1.0.38-20200730234859"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The library still operates with a reduced feature set, so setup succeeds
+    # but a repair issue recommends upgrading the firmware.
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "outdated_firmware"
+
+
+async def test_setup_minimal_mode_restricts_to_single_circuit(
+    hass: HomeAssistant,
+    mock_config_entry_dual_circuit: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test a dual-circuit entry restricts to circuit 1 on a reduced-mode device.
+
+    A device previously configured with circuit 2 may later report a JSON-API
+    version below v2 (reduced single-circuit mode). Setup must restrict to
+    circuit 1 instead of failing on the now-unsupported circuit.
+    """
+    mock_bsblan.json_api_version = "1.0"
+
+    def _state(include: list[str] | None = None, circuit: int = 1) -> State:
+        if circuit != 1:
+            raise BSBLANError(
+                "None of the requested parameters are valid for this section"
+            )
+        return mock_bsblan.state.return_value
+
+    mock_bsblan.state.side_effect = _state
+
+    mock_config_entry_dual_circuit.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_dual_circuit.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_dual_circuit.state is ConfigEntryState.LOADED
+    assert mock_config_entry_dual_circuit.runtime_data.available_circuits == [1]
+
+
+async def test_setup_full_mode_no_outdated_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a device at JSON-API v2 or higher does not raise a repair issue."""
+    mock_bsblan.json_api_version = "2.0"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is None
+
+
+async def test_setup_version_error_raises_config_entry_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setup fails when no supported JSON-API version can be retrieved."""
+    mock_bsblan.initialize.side_effect = BSBLANVersionError("unsupported", version=None)
+    mock_bsblan.device_info = mock_bsblan.device.return_value
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # A hard version error fails setup rather than creating a repair issue.
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
+    )
+    assert issue is None
 
 
 async def test_config_entry_not_ready(
@@ -131,7 +259,7 @@ async def test_config_entry_setup_errors(
 
     assert mock_config_entry.state is expected_state
     if assert_static_fallback:
-        assert mock_config_entry.runtime_data.static is None
+        assert mock_config_entry.runtime_data.static == {1: None}
 
 
 async def test_coordinator_dhw_config_update_error(
@@ -140,7 +268,7 @@ async def test_coordinator_dhw_config_update_error(
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator handling when DHW config update fails but keeps existing data."""
+    """Test coordinator when DHW config update fails but keeps existing data."""
     # First, set up the integration successfully
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -148,9 +276,11 @@ async def test_coordinator_dhw_config_update_error(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Mock DHW config methods to fail, but keep state/sensor working
+    mock_bsblan.hot_water_config.reset_mock()
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    # Mock the DHW config method to fail, but keep state/sensor working
     mock_bsblan.hot_water_config.side_effect = BSBLANConnectionError("Config failed")
-    mock_bsblan.hot_water_schedule.side_effect = BSBLANAuthError("Schedule failed")
 
     # Advance time by 5+ minutes to trigger config update (slow polling)
     freezer.tick(delta=301)  # 5 minutes + 1 second
@@ -162,6 +292,169 @@ async def test_coordinator_dhw_config_update_error(
 
     # Verify the error handling paths were executed
     assert mock_bsblan.hot_water_config.called
+    assert not mock_bsblan.hot_water_schedule.called
+
+
+async def test_slow_interval_poll_preserves_cached_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls preserve the cached schedule without refetching it."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    cached_schedule = slow_coordinator.data.dhw_schedule
+    assert cached_schedule is not None
+
+    # Reset call counts recorded during the startup refresh so we only observe
+    # what the interval poll does.
+    mock_bsblan.hot_water_config.reset_mock()
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    # Advance time to trigger a slow interval poll.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The interval poll refreshes the config but never fetches the schedule.
+    assert mock_bsblan.hot_water_config.called
+    assert not mock_bsblan.hot_water_schedule.called
+
+    # The cached schedule is preserved across the interval poll.
+    assert slow_coordinator.data.dhw_schedule == cached_schedule
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        BSBLANConnectionError("Schedule failed"),
+        BSBLANAuthError("Authentication failed"),
+        TimeoutError,
+    ],
+    ids=["connection-error", "auth-error", "timeout"],
+)
+async def test_slow_interval_poll_retries_missing_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test interval polls retry transient schedule failures until success."""
+    schedule_value = mock_bsblan.hot_water_schedule.return_value
+    mock_bsblan.hot_water_schedule.side_effect = [exception, schedule_value]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    # The startup fetch failed, so no schedule is cached yet.
+    assert slow_coordinator.data.dhw_schedule is None
+
+    # The next interval poll retries the schedule fetch, which now succeeds.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+    # Once cached, later polls carry the schedule forward without re-fetching.
+    mock_bsblan.hot_water_schedule.reset_mock()
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not mock_bsblan.hot_water_schedule.called
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+
+async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls do not retry an unsupported schedule."""
+    mock_bsblan.hot_water_schedule.side_effect = BSBLANUnsupportedFeatureError(
+        "No hot water schedule parameters available"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+
+async def test_slow_interval_poll_stops_retrying_unsupported_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending retry stops when the schedule is unsupported."""
+    mock_bsblan.hot_water_schedule.side_effect = [
+        BSBLANConnectionError("Schedule failed"),
+        BSBLANUnsupportedFeatureError("No hot water schedule parameters available"),
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.call_count == 2
+
+
+async def test_setup_does_not_block_on_slow_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test setup does not wait for the background slow-data fetch."""
+    release = asyncio.Event()
+    config_value = mock_bsblan.hot_water_config.return_value
+
+    async def _blocking_config(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return config_value
+
+    mock_bsblan.hot_water_config.side_effect = _blocking_config
+
+    mock_config_entry.add_to_hass(hass)
+    try:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Setup finished even though the slow-data fetch is still pending.
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert not mock_bsblan.hot_water_schedule.called
+    finally:
+        # Release the fetch so it can complete and clean up.
+        release.set()
+        await hass.async_block_till_done()
+
     assert mock_bsblan.hot_water_schedule.called
 
 
@@ -201,6 +494,100 @@ async def test_config_entry_timeout_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_fast_no_dhw_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test fast coordinator when device does not support DHW."""
+    mock_bsblan.hot_water_state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should still load even if DHW is not supported
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # DHW data should be None in the fast coordinator
+    assert mock_config_entry.runtime_data.fast_coordinator.data.dhw is None
+
+    # No water heater entities should be registered for this config entry
+    water_heater_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.domain == "water_heater"
+    ]
+    assert not water_heater_entities
+
+
+async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator preserves last DHW state when DHW fails on refresh."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # DHW should be available initially
+    coordinator = mock_config_entry.runtime_data.fast_coordinator
+    initial_dhw = coordinator.data.dhw
+    assert initial_dhw is not None
+
+    # Now make DHW fail on the next refresh
+    mock_bsblan.hot_water_state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Last known DHW state should be preserved
+    assert coordinator.data.dhw is initial_dhw
+
+
+async def test_coordinator_fast_state_error_marks_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator fails the update when fetching circuit state errors."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # A generic error while fetching a circuit's state should fail the update
+    mock_bsblan.state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_coordinator_slow_no_dhw_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -221,3 +608,220 @@ async def test_coordinator_slow_no_dhw_support(
 
     # Verify slow coordinator handled the AttributeError gracefully
     assert mock_bsblan.hot_water_config.called
+
+
+async def test_configuration_url_default_port(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test configuration_url omits port 80 (HTTP default)."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.configuration_url == "http://127.0.0.1"
+
+
+async def test_configuration_url_non_default_port(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test configuration_url includes port when it differs from the default."""
+    config_entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.configuration_url == "http://192.168.1.100:8080"
+
+
+def _legacy_entry_data() -> dict:
+    """Return config entry data as stored before CONF_HEATING_CIRCUITS existed."""
+    return {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 80,
+        CONF_PASSKEY: "1234",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "admin1234",
+    }
+
+
+async def test_migrate_entry_discovers_circuits(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration from 1.1 to 1.2 discovers available circuits."""
+    mock_bsblan.get_available_circuits.return_value = [1, 2]
+
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data=_legacy_entry_data(),
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1, 2]
+
+
+async def test_migrate_entry_empty_discovery_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration falls back to [1] when discovery returns no circuits."""
+    mock_bsblan.get_available_circuits.return_value = []
+
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data=_legacy_entry_data(),
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_migrate_entry_discovery_failure_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration falls back to [1] when circuit discovery fails."""
+    mock_bsblan.get_available_circuits.side_effect = BSBLANError("boom")
+
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data=_legacy_entry_data(),
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_migrate_entry_discovery_timeout_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration falls back to [1] when circuit discovery times out."""
+    mock_bsblan.get_available_circuits.side_effect = TimeoutError
+
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data=_legacy_entry_data(),
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_migrate_entry_stored_empty_circuits_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration repairs stored empty heating circuits."""
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={**_legacy_entry_data(), CONF_HEATING_CIRCUITS: []},
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+    assert entry.runtime_data.available_circuits == [1]
+    assert mock_bsblan.get_available_circuits.call_count == 0
+
+
+async def test_migrate_entry_future_version_aborts(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration refuses to downgrade from a future major version."""
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={**_legacy_entry_data(), CONF_HEATING_CIRCUITS: [1]},
+        unique_id="00:80:41:19:69:90",
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migrate_entry_already_current(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test that an up-to-date entry is loaded without re-running discovery."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_bsblan.get_available_circuits.call_count == 0
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]

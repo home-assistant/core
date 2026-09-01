@@ -1,13 +1,12 @@
 """Support for SleepIQ from SleepNumber."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
+    SleepIQBed,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
@@ -18,11 +17,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from .coordinator import (
+    SleepIQConfigEntry,
     SleepIQData,
     SleepIQDataUpdateCoordinator,
     SleepIQPauseUpdateCoordinator,
@@ -64,13 +64,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Set up the SleepIQ config entry."""
     conf = entry.data
     email = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client_session = async_get_clientsession(hass)
+    client_session = async_create_clientsession(hass)
 
     gateway = AsyncSleepIQ(client_session=client_session)
 
@@ -93,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
+    _filter_duplicate_beds(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -104,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await pause_coordinator.async_config_entry_first_refresh()
     await sleep_data_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
+    entry.runtime_data = SleepIQData(
         data_coordinator=coordinator,
         pause_coordinator=pause_coordinator,
         sleep_data_coordinator=sleep_data_coordinator,
@@ -116,11 +117,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Unload the config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def _foundation_feature_count(bed: SleepIQBed) -> int:
+    """Count foundation features on a bed."""
+    f = bed.foundation
+    return (
+        len(f.lights)
+        + len(f.actuators)
+        + len(f.presets)
+        + len(f.foot_warmers)
+        + len(f.core_climates)
+    )
+
+
+def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
+    """Remove duplicate bed objects that share sleeper IDs.
+
+    Groups beds whose sleeper-ID sets overlap and keeps the one with
+    the most foundation features so the real bed survives regardless
+    of API ordering.
+    """
+    groups: dict[frozenset[str], list[str]] = {}
+    for bed_id, bed in gateway.beds.items():
+        bed_sleeper_ids = frozenset(s.sleeper_id for s in bed.sleepers if s.sleeper_id)
+        if not bed_sleeper_ids:
+            continue
+        matched = None
+        for key in groups:
+            if key & bed_sleeper_ids:
+                matched = key
+                break
+        if matched is not None:
+            groups[matched].append(bed_id)
+        else:
+            groups[bed_sleeper_ids] = [bed_id]
+
+    for bed_ids in groups.values():
+        if len(bed_ids) < 2:
+            continue
+        best = max(
+            bed_ids, key=lambda bid: _foundation_feature_count(gateway.beds[bid])
+        )
+        for bed_id in bed_ids:
+            if bed_id != best:
+                _LOGGER.debug(
+                    "Removing duplicate bed '%s' (id=%s), keeping '%s' (id=%s)"
+                    " which has more foundation features",
+                    gateway.beds[bed_id].name,
+                    bed_id,
+                    gateway.beds[best].name,
+                    best,
+                )
+                del gateway.beds[bed_id]
 
 
 async def _async_migrate_unique_ids(

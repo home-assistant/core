@@ -1,10 +1,8 @@
 """Config flow for Electric Kiwi."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException
@@ -27,11 +25,13 @@ class ElectricKiwiOauth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": SCOPE_VALUES}
@@ -53,6 +53,7 @@ class ElectricKiwiOauth2FlowHandler(
             )
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for Electric Kiwi."""
         ek_api = ElectricKiwiApi(

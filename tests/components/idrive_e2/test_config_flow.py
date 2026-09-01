@@ -1,7 +1,5 @@
 """Test the IDrive e2 config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -47,29 +45,42 @@ async def test_flow(
     mock_client: AsyncMock,
 ) -> None:
     """Test config flow success path."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    create_client = AsyncMock(name="create_client")
+    create_client.__aenter__.return_value.list_buckets.return_value = {
+        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
+    }
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
-            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bucket"
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
+        return_value=create_client,
+    ) as patched_create_client:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_BUCKET: USER_INPUT[CONF_BUCKET]},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+                CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+            },
+        )
+
+        assert patched_create_client.called
+        assert patched_create_client.call_args.kwargs["config"].warm_up_loader_caches
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "bucket"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BUCKET: USER_INPUT[CONF_BUCKET]},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "test"
+        assert result["data"] == USER_INPUT
 
 
 @pytest.mark.parametrize(

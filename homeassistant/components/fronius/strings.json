@@ -17,25 +17,51 @@
       },
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "modbus_port": "[%key:component::fronius::config::step::user::data::modbus_port%]"
         },
         "data_description": {
-          "host": "[%key:component::fronius::config::step::user::data_description::host%]"
+          "host": "[%key:component::fronius::config::step::user::data_description::host%]",
+          "modbus_port": "[%key:component::fronius::config::step::user::data_description::modbus_port%]"
         },
         "description": "Update your configuration information for {device}."
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "modbus_port": "Modbus port"
         },
         "data_description": {
-          "host": "The IP address or hostname of your Fronius device."
+          "host": "The IP address or hostname of your Fronius device.",
+          "modbus_port": "Port of the device's Modbus TCP interface. Only used when Modbus is enabled on the device's web interface."
         },
         "description": "Configure your Fronius SolarAPI device."
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "backup_mode": {
+        "name": "Backup mode"
+      },
+      "battery_standby": {
+        "name": "Battery standby"
+      }
+    },
+    "number": {
+      "ac_power_limit": {
+        "name": "AC power limit"
+      },
+      "battery_charge_power_limit": {
+        "name": "Battery charge power limit"
+      },
+      "battery_discharge_power_limit": {
+        "name": "Battery discharge power limit"
+      },
+      "battery_minimum_reserve": {
+        "name": "Battery minimum reserve"
+      }
+    },
     "sensor": {
       "capacity_designed": {
         "name": "Designed capacity"
@@ -47,7 +73,7 @@
         "name": "Grid export tariff"
       },
       "co2_factor": {
-        "name": "CO₂ factor"
+        "name": "CO\u2082 factor"
       },
       "current_ac": {
         "name": "AC current"
@@ -96,6 +122,9 @@
       },
       "energy_total": {
         "name": "Total energy"
+      },
+      "energy_total_pv": {
+        "name": "PV energy total"
       },
       "energy_year": {
         "name": "Energy year"
@@ -147,8 +176,8 @@
           "hardware_id_problem": "Hardware ID problem",
           "hid_range_error": "HID range error",
           "initialisation_error_file_system_error_on_usb": "Initialization error in file system on USB flash drive",
-          "initialisation_error_usb_flash_drive_not_supported": "Initialization error – USB flash drive is not supported",
-          "initialisation_error_usb_stick_over_current": "Initialization error – Overcurrent on USB stick",
+          "initialisation_error_usb_flash_drive_not_supported": "Initialization error \u2013 USB flash drive is not supported",
+          "initialisation_error_usb_stick_over_current": "Initialization error \u2013 Overcurrent on USB stick",
           "insulation_error_on_solar_panels": "Insulation error on the solar panels",
           "insulation_fault": "Insulation fault",
           "insulation_measurement_triggered": "Insulation measurement triggered",
@@ -231,6 +260,18 @@
       },
       "meter_mode": {
         "name": "Meter mode"
+      },
+      "modbus_mppt_current_dc": {
+        "name": "MPPT {mppt_no} DC current"
+      },
+      "modbus_mppt_energy": {
+        "name": "MPPT {mppt_no} energy"
+      },
+      "modbus_mppt_power_dc": {
+        "name": "MPPT {mppt_no} DC power"
+      },
+      "modbus_mppt_voltage_dc": {
+        "name": "MPPT {mppt_no} DC voltage"
       },
       "power_ac": {
         "name": "AC power"
@@ -346,6 +387,12 @@
           "startup": "Startup"
         }
       },
+      "storage_energy_charged_total": {
+        "name": "Battery charging energy total"
+      },
+      "storage_energy_discharged_total": {
+        "name": "Battery discharging energy total"
+      },
       "temperature_cell": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -382,11 +429,31 @@
       "voltage_dc_mppt_no": {
         "name": "DC voltage {mppt_no}"
       }
+    },
+    "switch": {
+      "ac_power_limit_enabled": {
+        "name": "AC power limiting"
+      },
+      "battery_charge_power_limit_enabled": {
+        "name": "Battery charge power limiting"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "name": "Battery discharge power limiting"
+      },
+      "battery_grid_charging": {
+        "name": "Battery grid charging"
+      }
     }
   },
   "exceptions": {
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+    },
+    "modbus_model_unavailable": {
+      "message": "The inverter no longer exposes the model this setting lives in"
+    },
+    "modbus_write_failed": {
+      "message": "Could not write the setting to the inverter: {error}"
     },
     "update_failed": {
       "message": "An error occurred while attempting to fetch data: {fronius_error}"

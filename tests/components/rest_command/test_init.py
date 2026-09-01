@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
+from multidict import CIMultiDict
 import pytest
 from yarl import URL
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL, ComponentSetup
 
@@ -123,12 +125,90 @@ async def test_rest_command_auth(
     await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
 
     assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+    encoded = base64.b64encode("tøst:123456".encode("latin-1")).decode()
+    assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
 
 
-async def test_rest_command_digest_auth(
+async def test_rest_command_auth_username_with_colon(hass: HomeAssistant) -> None:
+    """Call a rest command configured with a colon in the username."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "user:name",
+            "password": "123456",
+        }
+    }
+    # RFC 7617 forbids the colon, and it must be rejected while setting up
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+    assert not hass.services.has_service(DOMAIN, "auth_test")
+
+
+async def test_rest_command_auth_outside_latin_1(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Call a rest command with a credential latin-1 cannot encode."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "用户",
+            "password": "123456",
+        }
+    }
+    # Setting up must not fail, only the call that needs the credential
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    with pytest.raises(UnicodeEncodeError):
+        await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_rest_command_configured_authorization_header_wins(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Call a rest command that configures its own Authorization header."""
+    config = {
+        "auth_header_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "test",
+            "password": "123456",
+            "headers": {header_name: "Bearer configured"},
+        }
+    }
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    await hass.services.async_call(DOMAIN, "auth_header_test", {}, blocking=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+
+    # The generated basic auth must not be sent as a second Authorization header
+    assert CIMultiDict(headers).getall("Authorization") == ["Bearer configured"]
+
+
+@pytest.mark.usefixtures("aioclient_mock")
+async def test_rest_command_digest_auth(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
 ) -> None:
     """Call a rest command with HTTP digest authentication."""
     config = {
@@ -143,10 +223,9 @@ async def test_rest_command_digest_auth(
 
     await setup_component(config)
 
-    # Mock the digest auth behavior - the request will be called with DigestAuthMiddleware
     with patch("aiohttp.ClientSession.get") as mock_get:
 
-        async def async_iter_chunks(self, chunk_size):
+        async def async_iter_chunks(self, chunk_size: int):
             yield b"success"
 
         mock_response = type(
@@ -165,13 +244,14 @@ async def test_rest_command_digest_auth(
         mock_get.return_value.__aenter__.return_value = mock_response
 
         await hass.services.async_call(DOMAIN, "digest_auth_test", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "digest_auth_test", {}, blocking=True)
 
-        # Verify that the request was made with DigestAuthMiddleware
-        assert mock_get.called
-        call_kwargs = mock_get.call_args[1]
-        assert "middlewares" in call_kwargs
-        assert len(call_kwargs["middlewares"]) == 1
-        assert isinstance(call_kwargs["middlewares"][0], aiohttp.DigestAuthMiddleware)
+        assert len(mock_get.call_args_list) == 2
+        first_middleware = mock_get.call_args_list[0].kwargs["middlewares"][0]
+        second_middleware = mock_get.call_args_list[1].kwargs["middlewares"][0]
+        assert isinstance(first_middleware, aiohttp.DigestAuthMiddleware)
+        assert isinstance(second_middleware, aiohttp.DigestAuthMiddleware)
+        assert first_middleware is not second_middleware
 
 
 async def test_rest_command_form_data(
@@ -367,6 +447,39 @@ async def test_rest_command_get_response_json(
     assert response["content"]["number"] == 42
     assert response["status"] == 200
     assert response["headers"] == {"content-type": "application/json"}
+
+
+async def test_rest_command_get_response_multiple_headers(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Get rest_command response with multiple headers of the same name."""
+    await setup_component()
+
+    aioclient_mock.get(
+        TEST_URL,
+        content=b"success",
+        headers=CIMultiDict(
+            [
+                ("content-type", "text/plain"),
+                ("set-cookie", "foo=bar; Path=/"),
+                ("set-cookie", "baz=qux; Path=/"),
+            ]
+        ),
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN, "get_test", {}, blocking=True, return_response=True
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert response["content"] == "success"
+    assert response["status"] == 200
+    assert response["headers"] == {
+        "content-type": "text/plain",
+        "set-cookie": ["foo=bar; Path=/", "baz=qux; Path=/"],
+    }
 
 
 async def test_rest_command_get_response_malformed_json(

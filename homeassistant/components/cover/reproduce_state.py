@@ -1,7 +1,5 @@
 """Reproduce an Cover state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine, Iterable
 from functools import partial
@@ -10,24 +8,23 @@ from typing import Any, Final
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, State
 from homeassistant.util.enum import try_parse_enum
 
 from . import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 
@@ -45,13 +42,13 @@ FULL_CLOSE: Final = 0
 def _determine_features(current_attrs: dict[str, Any]) -> CoverEntityFeature:
     """Determine supported features based on current attributes."""
     features = CoverEntityFeature(0)
-    if ATTR_CURRENT_POSITION in current_attrs:
+    if CoverEntityStateAttribute.CURRENT_POSITION in current_attrs:
         features |= (
             CoverEntityFeature.SET_POSITION
             | CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
         )
-    if ATTR_CURRENT_TILT_POSITION in current_attrs:
+    if CoverEntityStateAttribute.CURRENT_TILT_POSITION in current_attrs:
         features |= (
             CoverEntityFeature.SET_TILT_POSITION
             | CoverEntityFeature.OPEN_TILT
@@ -185,12 +182,20 @@ async def _async_reproduce_state(
     current_attrs = cur_state.attributes
     target_attrs = state.attributes
 
-    current_position: int | None = current_attrs.get(ATTR_CURRENT_POSITION)
-    target_position: int | None = target_attrs.get(ATTR_CURRENT_POSITION)
+    current_position: int | None = current_attrs.get(
+        CoverEntityStateAttribute.CURRENT_POSITION
+    )
+    target_position: int | None = target_attrs.get(
+        CoverEntityStateAttribute.CURRENT_POSITION
+    )
     position_matches = current_position == target_position
 
-    current_tilt_position: int | None = current_attrs.get(ATTR_CURRENT_TILT_POSITION)
-    target_tilt_position: int | None = target_attrs.get(ATTR_CURRENT_TILT_POSITION)
+    current_tilt_position: int | None = current_attrs.get(
+        CoverEntityStateAttribute.CURRENT_TILT_POSITION
+    )
+    target_tilt_position: int | None = target_attrs.get(
+        CoverEntityStateAttribute.CURRENT_TILT_POSITION
+    )
     tilt_position_matches = current_tilt_position == target_tilt_position
 
     state_matches = cur_state.state == target_state
@@ -199,7 +204,7 @@ async def _async_reproduce_state(
         return
 
     features = try_parse_enum(
-        CoverEntityFeature, current_attrs.get(ATTR_SUPPORTED_FEATURES)
+        CoverEntityFeature, current_attrs.get(EntityStateAttribute.SUPPORTED_FEATURES)
     )
     if features is None:
         # Backwards compatibility for integrations that

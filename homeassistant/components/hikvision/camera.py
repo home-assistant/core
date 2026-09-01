@@ -1,6 +1,6 @@
 """Support for Hikvision cameras."""
 
-from __future__ import annotations
+from typing import override
 
 from pyhik.hikvision import VideoChannel
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     if data.channels:
         # NVR with video channels from get_video_channels()
         async_add_entities(
-            HikvisionCamera(entry, channel)
+            HikvisionCamera(hass, entry, channel)
             for channel in data.channels.values()
             if channel.enabled
         )
@@ -36,6 +36,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 HikvisionCamera(
+                    hass,
                     entry,
                     VideoChannel(id=1, name=data.device_name, enabled=True),
                 )
@@ -51,16 +52,18 @@ class HikvisionCamera(HikvisionEntity, Camera):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         channel: VideoChannel,
     ) -> None:
         """Initialize the camera."""
-        super().__init__(entry, channel.id)
+        super().__init__(hass, entry, channel.id)
         self._video_channel = channel
 
         # Build unique ID (unique per platform per integration)
         self._attr_unique_id = f"{self._data.device_id}_{channel.id}"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -74,6 +77,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
                 f"Error getting image from {self._video_channel.name}: {err}"
             ) from err
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source URL."""
         return self._camera.get_stream_url(self._channel)

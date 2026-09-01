@@ -1,14 +1,12 @@
 """DataUpdateCoordinator for Nice G.O."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+import time
+from typing import TYPE_CHECKING, Any, override
 
 from nice_go import (
     BARRIER_STATUS,
@@ -141,23 +139,16 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             vacation_mode=vacation_mode,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, NiceGODevice]:
         return self.data
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with asyncio.timeout(10):
-            expiry_time = (
-                self.refresh_token_creation_time
-                + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
-            )
             try:
-                if datetime.now().timestamp() >= expiry_time:
-                    await self.update_refresh_token()
-                else:
-                    await self.api.authenticate_refresh(
-                        self.refresh_token, async_get_clientsession(self.hass)
-                    )
+                await self.authenticate()
                 _LOGGER.debug("Authenticated with Nice G.O. API")
 
                 barriers = await self.api.get_all_barriers()
@@ -171,12 +162,30 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                     barrier.id: barrier for barrier in parsed_barriers if barrier
                 }
                 self.organization_id = await barriers[0].get_attr("organization")
-            except AuthFailedError as e:
-                raise ConfigEntryAuthFailed from e
             except ApiError as e:
                 raise UpdateFailed from e
             else:
                 self.async_set_updated_data(devices)
+
+    async def authenticate(self) -> None:
+        """Authenticate with the Nice G.O. API."""
+        _LOGGER.debug("Authenticating with Nice G.O. API")
+        expiry_time = (
+            self.refresh_token_creation_time + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
+        )
+        try:
+            if time.time() >= expiry_time:
+                await self.update_refresh_token()
+            else:
+                await self.api.authenticate_refresh(
+                    self.refresh_token, async_get_clientsession(self.hass)
+                )
+        except AuthFailedError as e:
+            _LOGGER.exception("Authentication failed")
+            raise ConfigEntryAuthFailed from e
+        except ApiError as e:
+            _LOGGER.exception("API error")
+            raise UpdateFailed from e
 
     async def update_refresh_token(self) -> None:
         """Update the refresh token with Nice G.O. API."""
@@ -196,7 +205,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
         }
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 
@@ -214,6 +223,12 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
             try:
                 await self.api.connect(reconnect=True)
+            except AuthFailedError:
+                # Try reauthenticating otherwise start reauth flow
+                _LOGGER.debug(
+                    "Got auth failed when connecting to websocket, trying to reauthenticate"
+                )
+                await self.authenticate()
             except ApiError:
                 _LOGGER.exception("API error")
             else:
@@ -235,7 +250,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         parsed_data = await self._parse_barrier(
             self.data[
                 raw_data["deviceId"]
-            ].type,  # Device type is not sent in device state update, and it can't change, so we just reuse the existing one
+            ].type,  # Device type is not sent in device state
+            # update, and it can't change, so we just reuse
+            # the existing one
             BarrierState(
                 deviceId=raw_data["deviceId"],
                 reported=json.loads(raw_data["reported"]),
@@ -268,7 +285,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             self.async_set_updated_data(self.data)
 
     async def on_connection_lost(self, data: dict[str, Exception]) -> None:
-        """Handle the websocket connection loss. Don't need to do much since the library will automatically reconnect."""
+        """Handle the websocket connection loss.
+
+        Don't need to do much since the library will
+        automatically reconnect.
+        """
         _LOGGER.debug("Connection lost to the websocket")
         self.connected = False
 

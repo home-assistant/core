@@ -56,9 +56,11 @@ async def test_empty_calendar(
     # manually create a new token and clients since the token created by
     # the fixtures would not be valid.
     #
-    # Ideally we would use pytest.mark.freeze_time before the fixtures, but that does not
-    # work with the ical library and freezegun because
-    # `TypeError: '<' not supported between instances of 'FakeDatetimeMeta' and 'FakeDateMeta'`
+    # Ideally we would use pytest.mark.freeze_time before the
+    # fixtures, but that does not work with the ical library and
+    # freezegun because
+    # `TypeError: '<' not supported between instances of
+    # 'FakeDatetimeMeta' and 'FakeDateMeta'`
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )
@@ -85,9 +87,11 @@ async def test_api_date_time_event(
     # manually create a new token and clients since the token created by
     # the fixtures would not be valid.
     #
-    # Ideally we would use pytest.mark.freeze_time before the fixtures, but that does not
-    # work with the ical library and freezegun because
-    # `TypeError: '<' not supported between instances of 'FakeDatetimeMeta' and 'FakeDateMeta'`
+    # Ideally we would use pytest.mark.freeze_time before the
+    # fixtures, but that does not work with the ical library and
+    # freezegun because
+    # `TypeError: '<' not supported between instances of
+    # 'FakeDatetimeMeta' and 'FakeDateMeta'`
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )

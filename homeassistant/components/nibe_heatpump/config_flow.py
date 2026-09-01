@@ -1,8 +1,6 @@
 """Config flow for Nibe Heat Pump integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW
@@ -180,6 +178,7 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

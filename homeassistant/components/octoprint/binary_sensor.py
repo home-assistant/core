@@ -1,30 +1,25 @@
 """Support for monitoring OctoPrint binary sensors."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import override
 
 from pyoctoprintapi import OctoprintPrinterInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OctoprintConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint binary sensors."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]["coordinator"]
+    coordinator = config_entry.runtime_data
     device_id = config_entry.unique_id
 
     assert device_id is not None
@@ -56,6 +51,7 @@ class OctoPrintBinarySensorBase(
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if binary sensor is on."""
         if not (printer := self.coordinator.data["printer"]):
@@ -64,6 +60,7 @@ class OctoPrintBinarySensorBase(
         return bool(self._get_flag_state(printer))
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
@@ -82,6 +79,7 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing", device_id)
 
+    @override
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
         return bool(printer_info.state.flags.printing)
 
@@ -95,5 +93,6 @@ class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing Error", device_id)
 
+    @override
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
         return bool(printer_info.state.flags.error)

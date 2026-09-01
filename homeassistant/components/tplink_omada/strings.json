@@ -85,6 +85,9 @@
       },
       "mem_usage": {
         "name": "Memory usage"
+      },
+      "poe_power": {
+        "name": "Port {port_name} PoE power"
       }
     },
     "switch": {
@@ -97,6 +100,44 @@
       "wan_connect_ipv6": {
         "name": "Port {port_name} Internet connected (IPv6)"
       }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Failed to communicate with the Omada controller."
+    },
+    "auth_failed": {
+      "message": "Omada controller refused login attempt."
+    },
+    "cannot_connect": {
+      "message": "Omada controller could not be reached."
+    },
+    "controller_not_found": {
+      "message": "Specified TP-Link Omada controller not found"
+    },
+    "controller_unavailable": {
+      "message": "The TP-Link Omada integration is not currently available"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to send firmware update request. Check the controller is online."
+    },
+    "firmware_update_rejected": {
+      "message": "Firmware update request rejected"
+    },
+    "no_controllers": {
+      "message": "No active TP-Link Omada controllers found"
+    },
+    "reconnect_failed": {
+      "message": "Failed to reconnect client with MAC {mac}"
+    },
+    "switch_action_failed": {
+      "message": "Failed to update the switch."
+    },
+    "unexpected_error": {
+      "message": "Unexpected error connecting to Omada controller."
+    },
+    "unsupported_controller": {
+      "message": "Omada controller version not supported."
     }
   },
   "services": {

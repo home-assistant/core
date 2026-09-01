@@ -1,12 +1,10 @@
 """Number for ViCare."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -32,7 +30,7 @@ from .types import (
     ViCareDevice,
     ViCareRequiredKeysMixin,
 )
-from .utils import get_circuits, get_device_serial, is_supported
+from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -361,7 +359,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -372,7 +370,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
                 circuit,
@@ -418,10 +416,12 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_native_value is not None
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:

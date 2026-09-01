@@ -2,13 +2,24 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "different_device": "The configured Elgato device is not the same as the one at this address.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{serial_number}",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::elgato::config::step::user::data_description::host%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -25,6 +36,23 @@
     }
   },
   "entity": {
+    "number": {
+      "power_on_brightness": {
+        "name": "Power-on brightness"
+      },
+      "power_on_temperature": {
+        "name": "Power-on color temperature"
+      }
+    },
+    "select": {
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "restore_last": "Restore last state",
+          "use_defaults": "Use defaults"
+        }
+      }
+    },
     "sensor": {
       "charge_power": {
         "name": "Charging power"
@@ -37,6 +65,12 @@
       },
       "voltage": {
         "name": "Battery voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {
@@ -46,6 +80,23 @@
       "energy_saving": {
         "name": "Energy saving"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Elgato device."
+    },
+    "firmware_communication_error": {
+      "message": "An error occurred while downloading the firmware from Elgato."
+    },
+    "firmware_install_error": {
+      "message": "The Elgato device did not accept the firmware: {error}"
+    },
+    "firmware_unknown_error": {
+      "message": "An unknown error occurred while downloading the firmware from Elgato."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Elgato device."
     }
   },
   "services": {

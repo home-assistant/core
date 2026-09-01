@@ -1258,7 +1258,7 @@ async def test_manual_port_override_invalid(
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
-    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    """Test we get the form with discovery and abort for dhcp source."""
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         result = await hass.config_entries.flow.async_init(
@@ -2135,9 +2135,9 @@ async def test_pick_device_errors(
             {CONF_DEVICE: MAC_ADDRESS},
         )
         await hass.async_block_till_done()
-    assert result3["type"] == expected_flow
+    assert result3["type"] is expected_flow
 
-    if expected_flow != FlowResultType.ABORT:
+    if expected_flow is not FlowResultType.ABORT:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             user_input={

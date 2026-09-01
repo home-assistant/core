@@ -43,7 +43,7 @@ async def test_availability_api_error(
     mock_gios: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    """Ensure entities are marked unavailable when service errors."""
     state = hass.states.get("sensor.home_pm2_5")
     assert state
     assert state.state == "4"

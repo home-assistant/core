@@ -161,9 +161,8 @@ async def test_form_cannot_connect(
     assert result["reason"] == reason
 
 
-async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(
         domain=DOMAIN,

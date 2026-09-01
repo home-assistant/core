@@ -1,1 +1,1 @@
-"""The opple component."""
+"""The Opple integration."""

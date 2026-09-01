@@ -1,8 +1,6 @@
 """Config flow for SRP Energy."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from srpenergy.client import SrpEnergyClient
 import voluptuous as vol
@@ -45,6 +43,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -78,6 +77,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reconfigure_entry(),
                     data=user_input,
                 )
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -88,6 +88,8 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             if self.source == SOURCE_USER
                             else self._get_reconfigure_entry().data[CONF_ID]
                         ),
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,

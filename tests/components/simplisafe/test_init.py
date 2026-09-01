@@ -33,7 +33,6 @@ async def test_base_station_migration(
 ) -> None:
     """Test that old integer-based device identifiers are migrated to strings."""
     old_identifiers = {(DOMAIN, 12345)}
-    new_identifiers = {(DOMAIN, "12345")}
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -45,8 +44,35 @@ async def test_base_station_migration(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers=old_identifiers) is None
-    assert device_registry.async_get_device(identifiers=new_identifiers) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, 12345), config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "12345"), config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_base_station_model_is_string(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+) -> None:
+    """Test that the base station model is stored as a string in the device registry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345"), config_entry.entry_id
+    )
+    assert device is not None
+    assert isinstance(device.model, str)
 
 
 async def test_coordinator_update_triggers_reauth_on_invalid_credentials(
@@ -85,7 +111,7 @@ async def test_coordinator_update_failure_keeps_entity_available(
     freezer: FrozenDateTimeFactory,
     exc: type[SimplipyError],
 ) -> None:
-    """Test that a single coordinator failure does not immediately mark entities unavailable."""
+    """Test single coordinator failure doesn't mark entities unavailable."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -99,6 +125,32 @@ async def test_coordinator_update_failure_keeps_entity_available(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("lock.front_door_lock").state != STATE_UNAVAILABLE
+
+
+async def test_camera_device_registration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+) -> None:
+    """Test that camera devices are registered in the device registry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    camera_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890"), config_entry.entry_id
+    )
+    assert camera_device is not None
+    assert camera_device.manufacturer == "SimpliSafe"
+    assert camera_device.model == "Camera"
+    assert camera_device.name == "Camera Camera"
+
+    # Verify via_device points to the base station:
+    base_station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345"), config_entry.entry_id
+    )
+    assert base_station is not None
+    assert camera_device.via_device_id == base_station.id
 
 
 async def test_websocket_event_updates_entity_state(
@@ -117,8 +169,9 @@ async def test_websocket_event_updates_entity_state(
 
     assert hass.states.get("lock.front_door_lock").state == "locked"
 
-    # Fire an "unlock" websocket event for the test lock (system_id=12345, serial="987").
-    # CID 9700 maps to EVENT_LOCK_UNLOCKED in the simplipy event mapping.
+    # Fire an "unlock" websocket event for the test lock
+    # (system_id=12345, serial="987").
+    # CID 9700 maps to EVENT_LOCK_UNLOCKED in simplipy event mapping.
     event_callback(
         WebsocketEvent(
             event_cid=9700,

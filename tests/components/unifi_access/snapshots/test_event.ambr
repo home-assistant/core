@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -44,12 +44,12 @@
 # name: test_event_entities[event.back_door_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
-      'friendly_name': 'Back Door Access',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Access',
     }),
     'context': <ANY>,
     'entity_id': 'event.back_door_access',
@@ -66,8 +66,8 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'ring',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -103,12 +103,12 @@
 # name: test_event_entities[event.back_door_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'doorbell',
-      'event_type': None,
-      'event_types': list([
-        'ring',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
-      'friendly_name': 'Back Door Doorbell',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Doorbell',
     }),
     'context': <ANY>,
     'entity_id': 'event.back_door_doorbell',
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -163,12 +163,12 @@
 # name: test_event_entities[event.front_door_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
-      'friendly_name': 'Front Door Access',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Access',
     }),
     'context': <ANY>,
     'entity_id': 'event.front_door_access',
@@ -185,8 +185,8 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'ring',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -222,12 +222,12 @@
 # name: test_event_entities[event.front_door_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'doorbell',
-      'event_type': None,
-      'event_types': list([
-        'ring',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
-      'friendly_name': 'Front Door Doorbell',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Doorbell',
     }),
     'context': <ANY>,
     'entity_id': 'event.front_door_doorbell',

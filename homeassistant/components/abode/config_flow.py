@@ -1,10 +1,8 @@
 """Config flow for the Abode Security System component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any, cast, override
 
 from jaraco.abode.client import Client as Abode
 from jaraco.abode.exceptions import (
@@ -15,7 +13,7 @@ from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
@@ -101,6 +99,12 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         existing_entry = await self.async_set_unique_id(self._username)
 
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=config_data
+            )
+
         if existing_entry:
             return self.async_update_reload_and_abort(existing_entry, data=config_data)
 
@@ -108,6 +112,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
             title=cast(str, self._username), data=config_data
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

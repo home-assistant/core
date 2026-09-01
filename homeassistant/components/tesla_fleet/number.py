@@ -1,11 +1,9 @@
 """Number platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
@@ -52,7 +50,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
         mode=NumberMode.AUTO,
         max_key="charge_state_charge_current_request_max",
         func=lambda api, value: api.set_charging_amps(value),
-        scopes=[Scope.VEHICLE_CHARGING_CMDS],
+        scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
     ),
     TeslaFleetNumberVehicleEntityDescription(
         key="charge_state_charge_limit_soc",
@@ -144,6 +142,7 @@ class TeslaFleetVehicleNumberEntity(TeslaFleetVehicleEntity, NumberEntity):
             description.key,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
@@ -161,6 +160,7 @@ class TeslaFleetVehicleNumberEntity(TeslaFleetVehicleEntity, NumberEntity):
             self.entity_description.native_max_value,
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)
@@ -192,11 +192,13 @@ class TeslaFleetEnergyInfoNumberSensorEntity(TeslaFleetEnergyInfoEntity, NumberE
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
         self._attr_icon = icon_for_battery_level(self.native_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)

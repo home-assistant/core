@@ -1,10 +1,8 @@
 """Data coordinator for the OpenWeatherMap (OWM) service."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyopenweathermap import (
     CurrentAirPollution,
@@ -107,6 +105,7 @@ class OWMUpdateCoordinator(DataUpdateCoordinator):
 class WeatherUpdateCoordinator(OWMUpdateCoordinator):
     """Weather data update coordinator."""
 
+    @override
     async def _async_update_data(self):
         """Update the data."""
         try:
@@ -271,6 +270,7 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
 class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
     """Air Pollution data update coordinator."""
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the data."""
         try:

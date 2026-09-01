@@ -1,7 +1,5 @@
 """The test for the Coolmaster sensor platform."""
 
-from __future__ import annotations
-
 import logging
 from unittest.mock import patch
 

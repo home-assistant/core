@@ -1,23 +1,17 @@
 """The template component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 import logging
 from typing import Any
 
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
+
 from homeassistant import config as conf_util
-from homeassistant.components.automation import (
-    DOMAIN as AUTOMATION_DOMAIN,
-    NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-)
-from homeassistant.components.labs import (
-    EventLabsUpdatedData,
-    async_subscribe_preview_feature,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ACTIONS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_TRIGGERS,
@@ -26,34 +20,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery, issue_registry as ir
-from homeassistant.helpers.device import (
-    async_remove_stale_devices_links_keep_current_device,
-)
-from homeassistant.helpers.helper_integration import (
-    async_remove_helper_config_entry_from_source_device,
-)
+from homeassistant.helpers import device_registry as dr, discovery, issue_registry as ir
+from homeassistant.helpers.helper_integration import async_remove_helper_devices
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ADDITIONAL_OPTIONS,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_STEP,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import DATA_DEPRECATION, async_get_blueprints
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
-
-
-def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
-    if (found_issues := hass.data.pop(DATA_DEPRECATION, None)) is not None:
-        issue_registry = ir.async_get(hass)
-        for domain, issue_id in set(issue_registry.issues):
-            if domain != DOMAIN or issue_id in found_issues:
-                continue
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -74,14 +62,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
-        hass.data.pop(DATA_DEPRECATION, None)
 
         await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_reload_template_entities",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         integration = await async_get_integration(hass, DOMAIN)
         conf = await conf_util.async_process_component_and_handle_errors(
@@ -96,25 +86,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if DOMAIN in conf:
             await _process_config(hass, conf)
 
-        _clean_up_legacy_template_deprecations(hass)
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
-    async def _handle_new_triggers_conditions(
-        _event_data: EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
-
-    async_subscribe_preview_feature(
-        hass,
-        AUTOMATION_DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        _handle_new_triggers_conditions,
-    )
 
     return True
 
@@ -122,12 +96,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    # This can be removed in HA Core 2026.7
-    async_remove_stale_devices_links_keep_current_device(
+    device_id = entry.options.get(CONF_DEVICE_ID)
+
+    # Clean up devices this helper created for previously selected source devices;
+    # this can be removed in HA Core 2027.8.
+    async_remove_helper_devices(
         hass,
-        entry.entry_id,
-        entry.options.get(CONF_DEVICE_ID),
+        helper_config_entry_id=entry.entry_id,
+        source_device_id=device_id,
+        remove_all_devices=True,
     )
+
+    device_registry = dr.async_get(hass)
+    if (
+        device_id is not None
+        and device_registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
+    ):
+        # The device was split into one device per config entry; ask the user to
+        # select a device again
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"composite_device_id_{entry.entry_id}",
+            data={"entry_id": entry.entry_id},
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="composite_device_id",
+            translation_placeholders={"name": entry.title},
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
 
     for key in (CONF_MAX, CONF_MIN, CONF_STEP):
         if key not in entry.options:
@@ -142,18 +143,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (entry.options["template_type"],)
     )
 
-    async def _handle_entry_reload(_event_data: EventLabsUpdatedData) -> None:
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    entry.async_on_unload(
-        async_subscribe_preview_feature(
-            hass,
-            AUTOMATION_DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-            _handle_entry_reload,
-        )
-    )
-
     return True
 
 
@@ -162,6 +151,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, (entry.options["template_type"],)
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -173,15 +167,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
             # Remove the template config entry from the source device
             if source_device_id := config_entry.options.get(CONF_DEVICE_ID):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
@@ -189,6 +179,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             hass.config_entries.async_update_entry(
                 config_entry, version=1, minor_version=2
             )
+
+        options = {**config_entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := options.pop("advanced_options", None)) is not None:
+            options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=2, minor_version=1
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
@@ -199,6 +197,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
+def _humanize(err: Exception, data: Any) -> str:
+    """Humanize vol.Invalid, stringify other exceptions."""
+    if isinstance(err, vol.Invalid):
+        return humanize_error(data, err)
+    return str(err)
+
+
 async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
     coordinators = hass.data.pop(DATA_COORDINATORS, None)
@@ -206,7 +211,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
-            coordinator.async_remove()
+            await coordinator.async_shutdown()
 
     async def init_coordinator(
         hass: HomeAssistant, conf_section: dict[str, Any]
@@ -219,6 +224,24 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
 
     for conf_section in hass_config[DOMAIN]:
         if CONF_TRIGGERS in conf_section:
+            if actions_config := conf_section.get(CONF_ACTIONS):
+                try:
+                    conf_section[CONF_ACTIONS] = await async_validate_actions_config(
+                        hass, actions_config
+                    )
+                except (vol.Invalid, HomeAssistantError) as err:
+                    breadcrumb = "template section"
+                    if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
+                        breadcrumb = f"template section with unique_id: {unique_id}"
+
+                    _LOGGER.error(
+                        "The 'actions' for %s failed to setup: %s",
+                        breadcrumb,
+                        _humanize(err, actions_config),
+                    )
+
+                    continue
+
             coordinator_tasks.append(init_coordinator(hass, conf_section))
             continue
 
@@ -234,7 +257,9 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                             "entities": [
                                 {
                                     **entity_conf,
-                                    "raw_blueprint_inputs": conf_section.raw_blueprint_inputs,
+                                    "raw_blueprint_inputs": (
+                                        conf_section.raw_blueprint_inputs
+                                    ),
                                     "raw_configs": conf_section.raw_config,
                                 }
                                 for entity_conf in conf_section[platform_domain]

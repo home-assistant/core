@@ -5,20 +5,24 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "wrong_location": "Location Sweden only"
+      "wrong_location": "Only locations in Sweden are supported"
     },
     "step": {
       "reconfigure": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Choose a location in Sweden."
         },
         "title": "Reconfigure your location in Sweden"
       },
       "user": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "[%key:component::smhi::config::step::reconfigure::data_description::location%]"
         },
         "title": "Location in Sweden"
       }
@@ -95,13 +99,19 @@
       "precipitation_category": {
         "name": "Precipitation category",
         "state": {
-          "0": "No precipitation",
-          "1": "Snow",
-          "2": "Snow and rain",
-          "3": "Rain",
-          "4": "Drizzle",
-          "5": "Freezing rain",
-          "6": "Freezing drizzle"
+          "drizzle": "Drizzle",
+          "freezing_drizzle": "Freezing drizzle",
+          "freezing_rain": "Freezing rain",
+          "graupel": "Graupel",
+          "hail": "Hail",
+          "ice_pellets": "Ice pellets",
+          "mixed_ice": "Mixed/ice",
+          "no_precipitation": "No precipitation",
+          "rain": "Rain",
+          "rain_snow_mixed": "Mixture of rain and snow",
+          "snow": "Snow",
+          "thunderstorm": "Thunderstorm",
+          "wet_snow": "Wet snow"
         }
       },
       "rate_of_spread": {

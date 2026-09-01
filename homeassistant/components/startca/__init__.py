@@ -1,1 +1,1 @@
-"""The startca component."""
+"""The Start.ca integration."""

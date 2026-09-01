@@ -45,17 +45,43 @@ async def test_entry_diagnostics(
             "subentries": [],
         },
         "client": {
-            "version": "api_version='0.2.0' hostname='scb' name='PUCK RESTful API' sw_version='01.16.05025'",
-            "me": "is_locked=False is_active=True is_authenticated=True permissions=[] is_anonymous=False role='USER'",
+            "version": (
+                "api_version='0.2.0' hostname='scb'"
+                " name='PUCK RESTful API'"
+                " sw_version='01.16.05025'"
+            ),
+            "me": (
+                "is_locked=False is_active=True"
+                " is_authenticated=True permissions=[]"
+                " is_anonymous=False role='USER'"
+            ),
             "available_process_data": {"devices:local": ["HomeGrid_P", "HomePv_P"]},
             "available_settings_data": {
                 "devices:local": [
-                    "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'",
-                    "min='50' max='38000' default=None access='readwrite' unit='W' id='Battery:MinHomeComsumption' type='byte'",
-                    "min='0' max='10000' default=None access='readwrite' unit='W' id='Inverter:ActivePowerLimitation' type='byte'",
+                    (
+                        "min='5' max='100' default=None"
+                        " access='readwrite' unit='%'"
+                        " id='Battery:MinSoc' type='byte'"
+                    ),
+                    (
+                        "min='50' max='38000' default=None"
+                        " access='readwrite' unit='W'"
+                        " id='Battery:MinHomeComsumption'"
+                        " type='byte'"
+                    ),
+                    (
+                        "min='0' max='10000' default=None"
+                        " access='readwrite' unit='W'"
+                        " id='Inverter:ActivePowerLimitation'"
+                        " type='byte'"
+                    ),
                 ],
                 "scb:network": [
-                    "min='1' max='63' default=None access='readwrite' unit=None id='Hostname' type='string'"
+                    (
+                        "min='1' max='63' default=None"
+                        " access='readwrite' unit=None"
+                        " id='Hostname' type='string'"
+                    )
                 ],
             },
         },

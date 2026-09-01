@@ -1,8 +1,6 @@
 """Support for ADS covers."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import pyads
 import voluptuous as vol
@@ -124,6 +122,7 @@ class AdsCover(AdsEntity, CoverEntity):
         if ads_var_pos_set is not None:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         if self._ads_var is not None:
@@ -135,6 +134,7 @@ class AdsCover(AdsEntity, CoverEntity):
             )
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._ads_var is not None:
@@ -144,15 +144,18 @@ class AdsCover(AdsEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         return self._state_dict[STATE_KEY_POSITION]
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         if self._ads_var_stop:
             self._ads_hub.write_by_name(self._ads_var_stop, True, pyads.PLCTYPE_BOOL)
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         position = kwargs[ATTR_POSITION]
@@ -161,6 +164,7 @@ class AdsCover(AdsEntity, CoverEntity):
                 self._ads_var_pos_set, position, pyads.PLCTYPE_BYTE
             )
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
         if self._ads_var_open is not None:
@@ -168,6 +172,7 @@ class AdsCover(AdsEntity, CoverEntity):
         elif self._ads_var_pos_set is not None:
             self.set_cover_position(position=100)
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         if self._ads_var_close is not None:
@@ -176,6 +181,7 @@ class AdsCover(AdsEntity, CoverEntity):
             self.set_cover_position(position=0)
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
         if self._ads_var is not None or self._ads_var_position is not None:

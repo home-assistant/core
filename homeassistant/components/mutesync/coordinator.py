@@ -1,10 +1,8 @@
 """Coordinator for the mütesync integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import mutesync
 
@@ -15,18 +13,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, UPDATE_INTERVAL_IN_MEETING, UPDATE_INTERVAL_NOT_IN_MEETING
 
+type MutesyncConfigEntry = ConfigEntry[MutesyncUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class MutesyncUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for the mütesync integration."""
 
-    config_entry: ConfigEntry
+    config_entry: MutesyncConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MutesyncConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -42,6 +42,7 @@ class MutesyncUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get data from the mütesync client."""
         async with asyncio.timeout(2.5):

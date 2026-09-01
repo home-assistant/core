@@ -1,14 +1,19 @@
 """Expose Radio Browser as a media source."""
 
-from __future__ import annotations
-
 import mimetypes
+from typing import override
 
 from aiodns.error import DNSError
 import pycountry
 from radios import FilterBy, Order, RadioBrowser, RadioBrowserError, Station
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    MediaType,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -55,10 +60,11 @@ class RadioMediaSource(MediaSource):
         """Return the radio browser."""
         return self.entry.runtime_data
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
@@ -82,13 +88,14 @@ class RadioMediaSource(MediaSource):
 
         return PlayMedia(station.url_resolved, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
@@ -104,6 +111,7 @@ class RadioMediaSource(MediaSource):
                 title=self.entry.title,
                 can_play=False,
                 can_expand=True,
+                can_search=True,
                 children_media_class=MediaClass.DIRECTORY,
                 children=[
                     *await self._async_build_popular(radios, item),
@@ -112,6 +120,32 @@ class RadioMediaSource(MediaSource):
                     *await self._async_build_local(radios, item),
                     *await self._async_build_by_country(radios, item),
                 ],
+            )
+        except (DNSError, RadioBrowserError) as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="radio_browser_error",
+            ) from e
+
+    @override
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media."""
+
+        if self.entry.state is not ConfigEntryState.LOADED:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+            )
+        radios = self.radios
+
+        try:
+            return SearchMedia(
+                result=self._async_build_stations(
+                    radios,
+                    await radios.search(name=query.search_query, hide_broken=True),
+                )
             )
         except (DNSError, RadioBrowserError) as e:
             raise BrowseError(
@@ -173,7 +207,8 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
-            # Trigger the lazy loading of the country database to happen inside the executor
+            # Trigger the lazy loading of the country database
+            # to happen inside the executor
             await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [

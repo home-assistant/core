@@ -66,14 +66,46 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "kill_container": {
+        "name": "Kill container"
+      },
       "pause_container": {
         "name": "Pause container"
+      },
+      "recreate_container": {
+        "name": "Recreate container"
       },
       "restart_container": {
         "name": "Restart container"
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "volumes_prune": {
+        "name": "Prune unused volumes"
+      }
+    },
+    "event": {
+      "docker_event": {
+        "name": "Docker event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "die": "Died",
+              "health_status_healthy": "Health check passed",
+              "health_status_starting": "Health check starting",
+              "health_status_unhealthy": "Health check failed",
+              "kill": "Killed",
+              "oom": "Out of memory",
+              "pause": "Paused",
+              "restart": "Restarted",
+              "start": "Started",
+              "stop": "Stopped",
+              "unpause": "Unpaused",
+              "update": "Updated"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -89,6 +121,14 @@
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
       },
+      "container_health_state": {
+        "name": "Health",
+        "state": {
+          "healthy": "Healthy",
+          "starting": "Starting",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "container_state": {
         "name": "State",
         "state": {
@@ -96,6 +136,7 @@
           "dead": "Dead",
           "exited": "Exited",
           "paused": "Paused",
+          "removing": "Removing",
           "restarting": "Restarting",
           "running": "Running"
         }
@@ -124,11 +165,17 @@
       "image": {
         "name": "Image"
       },
+      "image_created": {
+        "name": "Image created"
+      },
       "image_disk_usage_reclaimable": {
         "name": "Image disk usage reclaimable"
       },
       "image_disk_usage_total_size": {
         "name": "Image disk usage total size"
+      },
+      "image_version": {
+        "name": "Image version"
       },
       "images_count": {
         "name": "Image count"
@@ -168,6 +215,12 @@
       },
       "volume_disk_usage_total_size": {
         "name": "Volume disk usage total size"
+      },
+      "volume_driver": {
+        "name": "Volume driver"
+      },
+      "volume_size": {
+        "name": "Volume size"
       }
     },
     "switch": {
@@ -177,28 +230,24 @@
       "stack": {
         "name": "Stack"
       }
+    },
+    "update": {
+      "container_image_update": {
+        "name": "Image update available"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while trying to connect to the Portainer instance: {error}"
-    },
-    "cannot_connect_no_details": {
       "message": "An error occurred while trying to connect to the Portainer instance."
     },
     "invalid_auth": {
-      "message": "An error occurred while trying to authenticate: {error}"
-    },
-    "invalid_auth_no_details": {
       "message": "An error occurred while trying to authenticate."
     },
     "invalid_target": {
       "message": "Invalid device targeted."
     },
     "timeout_connect": {
-      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
-    },
-    "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Portainer instance."
     }
   },
@@ -220,6 +269,29 @@
         }
       },
       "name": "Prune unused images"
+    },
+    "recreate_container": {
+      "description": "Recreates a container on a Portainer endpoint. This is more disruptive than a restart as the container will be stopped, removed, and then re-created with the same configuration. Use with caution.",
+      "fields": {
+        "container_device_id": {
+          "description": "The container to recreate.",
+          "name": "Container"
+        },
+        "pull_image": {
+          "description": "Whether to pull the image before recreating the container. This can be used to update the container to the latest version of the image.",
+          "name": "Pull image"
+        },
+        "timeout": {
+          "description": "The time to wait for the container to stop before killing it. If not provided, a default of 5 minutes will be used.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Recreate container"
+    }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach Portainer server"
     }
   }
 }

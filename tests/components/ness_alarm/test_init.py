@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
+import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -599,8 +600,9 @@ async def test_alarm_panel_home_mode_enabled_by_default(
     assert supported & AlarmControlPanelEntityFeature.TRIGGER
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_import_triggers_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test that YAML configuration triggers import flow."""
     with patch(

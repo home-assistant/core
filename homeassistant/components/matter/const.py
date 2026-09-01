@@ -1,6 +1,7 @@
 """Constants for the Matter integration."""
 
 import logging
+from typing import Final
 
 from chip.clusters import Objects as clusters
 
@@ -114,3 +115,5 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FACE,
 ]
+
+CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"

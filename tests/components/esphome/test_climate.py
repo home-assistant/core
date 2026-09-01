@@ -510,7 +510,7 @@ async def test_climate_set_temperature_unsupported_mode(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test setting temperature in unsupported mode with two-point temperature support."""
+    """Test setting temp in unsupported mode with two-point support."""
     entity_info = [
         ClimateInfo(
             object_id="myclimate",
@@ -685,3 +685,180 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
     state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
+async def test_climate_entity_single_setpoint_target_temp_in_auto_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a single-setpoint climate entity target temperature in auto mode."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supports_current_temperature=True,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supported_modes=[ClimateMode.COOL, ClimateMode.HEAT, ClimateMode.AUTO],
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.AUTO,
+            current_temperature=26.5,
+            target_temperature=24.0,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_TEMPERATURE] == 24.0
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 22.5},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, target_temperature=22.5, device_id=0)]
+    )
+
+
+async def test_climate_entity_two_point_target_temp_in_auto_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a two point climate entity exposes the range in auto mode."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supported_modes=[
+                ClimateMode.HEAT,
+                ClimateMode.COOL,
+                ClimateMode.HEAT_COOL,
+                ClimateMode.AUTO,
+            ],
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.AUTO,
+            current_temperature=22.0,
+            target_temperature_low=20.0,
+            target_temperature_high=26.0,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    # The device uses both set points in auto mode, so the range is exposed
+    # and no single set point is reported
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 20.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 26.0
+
+
+async def test_climate_entity_two_point_target_temp_in_heat_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a two point climate entity reports a single set point in heat mode."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supported_modes=[
+                ClimateMode.HEAT,
+                ClimateMode.COOL,
+                ClimateMode.HEAT_COOL,
+                ClimateMode.AUTO,
+            ],
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.HEAT,
+            current_temperature=22.0,
+            target_temperature_low=20.0,
+            target_temperature_high=26.0,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+
+
+async def test_climate_entity_requires_two_point_keeps_range(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a climate entity that requires two set points keeps the range."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE,
+            visual_min_temperature=-1.0,
+            visual_max_temperature=10.0,
+            supported_modes=[ClimateMode.COOL],
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.COOL,
+            current_temperature=5.2,
+            target_temperature_low=3.5,
+            target_temperature_high=4.0,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    # Devices that require two set points never expose a single one
+    assert ATTR_TEMPERATURE not in state.attributes
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 3.5
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 4.0

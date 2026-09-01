@@ -153,7 +153,8 @@ async def test_sensor(
             212,
             253,
         ),
-        # The unique_id doesn't match that of the mobile app's battery temperature sensor
+        # The unique_id doesn't match that of the mobile app's
+        # battery temperature sensor
         (
             "battery_temp",
             US_CUSTOMARY_SYSTEM,
@@ -736,7 +737,7 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # Check sensor was created
-    assert hass.states.get("sensor.test_before_unload") is not None
+    assert hass.states.get("sensor.test_1_test_before_unload") is not None
 
     # Unload the config entry
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -759,7 +760,7 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # The sensor should not be created because dispatcher was cleaned up
-    assert hass.states.get("sensor.test_after_unload") is None
+    assert hass.states.get("sensor.test_1_test_after_unload") is None
 
     # Reload the config entry
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -782,5 +783,5 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # This sensor should be created successfully after reload
-    assert hass.states.get("sensor.test_after_reload") is not None
-    assert hass.states.get("sensor.test_after_reload").state == "123"
+    assert hass.states.get("sensor.test_1_test_after_reload") is not None
+    assert hass.states.get("sensor.test_1_test_after_reload").state == "123"

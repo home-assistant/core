@@ -1,0 +1,11 @@
+{
+  "domain": "samsung_infrared",
+  "name": "Samsung Infrared",
+  "codeowners": ["@lmaertin"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/samsung_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}

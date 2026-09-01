@@ -38,7 +38,7 @@ async def test_level_control_config_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test number entities are created for the LevelControl cluster (config) attributes."""
+    """Test number entities are created for LevelControl cluster attributes."""
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     assert state.state == "255"
@@ -208,7 +208,7 @@ async def test_matter_exception_on_write_attribute(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError by using a dimmable_light fixture."""
+    """Test MatterError converts to HomeAssistantError for dimmable_light."""
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     matter_client.write_attribute.side_effect = MatterError("Boom")
@@ -253,15 +253,12 @@ async def test_pump_level(
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 1
-    assert (
-        matter_client.send_device_command.call_args
-        == call(
-            node_id=matter_node.node_id,
-            endpoint_id=1,
-            command=clusters.LevelControl.Commands.MoveToLevel(
-                level=150
-            ),  # 75 * 2 = 150, as the value is multiplied by 2 in the HA to native value conversion
-        )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # 75 * 2 = 150, value is multiplied by 2 in HA to
+        # native value conversion
+        command=clusters.LevelControl.Commands.MoveToLevel(level=150),
     )
 
 
@@ -342,6 +339,81 @@ async def test_thermostat_occupied_setback(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
+async def test_thermostat_temperature_offset(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat temperature offset number entity."""
+
+    entity_id = "number.floor_heating_thermostat_temperature_offset"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+
+    # Setting value to 0.3 °C writes 3 to LocalTemperatureCalibration (scale x10),
+    # a value only reachable with the 0.1 °C step
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 0.3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        value=3,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_multi_state_p100"])
+async def test_boolean_state_configuration_current_sensitivity_level(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test sensitivity level number entity for Aqara P100."""
+    entity_id = "number.multi_state_sensor_p100_sensitivity"
+
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 1,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=(
+                clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel
+            ),
+        ),
+        value=0,
+    )
+
+    set_node_attribute(matter_node, 1, 128, 0, 4)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_attributes(
     hass: HomeAssistant,
@@ -395,3 +467,248 @@ async def test_matter_exception_on_door_lock_write_attribute(
         )
 
     assert str(exc_info.value) == "Boom!"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
+async def test_valve_default_open_duration_nullable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the DefaultOpenDuration number entity when the attribute is null."""
+    entity_id = "number.mock_valve_default_open_duration"
+    state = hass.states.get(entity_id)
+    assert state
+    # null on the device (no default duration configured) is represented
+    # as 0 in HA, since the attribute's minimum value on the wire is 1.
+    assert state.state == "0"
+
+    set_node_attribute(matter_node, 1, 129, 1, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "30"
+
+    # Setting a concrete (non-zero) value writes it as-is to the device.
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 45,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+        ),
+        value=45,
+    )
+    matter_client.write_attribute.reset_mock()
+
+    # Setting the value back to 0 in HA clears the default duration
+    # (null) on the device.
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 0,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+        ),
+        value=None,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor_pir"])
+async def test_occupancy_sensing_pir_attributes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test PIR occupancy sensor attributes."""
+    # PIRUnoccupiedToOccupiedDelay
+    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_delay")
+    assert state
+    assert state.state == "10"
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 65534
+    assert state.attributes["unit_of_measurement"] == "s"
+
+    set_node_attribute(matter_node, 1, 1030, 17, 20)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_delay")
+    assert state
+    assert state.state == "20"
+
+    # PIRUnoccupiedToOccupiedThreshold
+    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_threshold")
+    assert state
+    assert state.state == "1"
+    assert state.attributes["min"] == 1
+    assert state.attributes["max"] == 254
+
+    set_node_attribute(matter_node, 1, 1030, 18, 5)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_threshold")
+    assert state
+    assert state.state == "5"
+
+    # Test set value for delay
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_pir_occupancy_sensor_detection_delay",
+            "value": 15,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
+        ),
+        value=15,
+    )
+
+    # Test set value for threshold
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_pir_occupancy_sensor_detection_threshold",
+            "value": 3,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedThreshold,
+        ),
+        value=3,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+@pytest.mark.parametrize(
+    ("entity_id", "attribute", "initial_state", "updated_raw", "updated_state"),
+    [
+        pytest.param(
+            "number.home_blind_wi_fi_travel_time_up",
+            clusters.WindowCovering.Attributes.WagoTravelTimeUp,
+            "49.0",
+            5000,
+            "50.0",
+            id="travel_time_up",
+        ),
+        pytest.param(
+            "number.home_blind_wi_fi_travel_time_down",
+            clusters.WindowCovering.Attributes.WagoTravelTimeDown,
+            "46.0",
+            4550,
+            "45.5",
+            id="travel_time_down",
+        ),
+        pytest.param(
+            "number.home_blind_wi_fi_slat_rotation_time",
+            clusters.WindowCovering.Attributes.WagoSlatRotationTime,
+            "1.3",
+            500,
+            "0.5",
+            id="slat_rotation_time",
+        ),
+    ],
+)
+async def test_wago_window_covering_numbers(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute: type[clusters.ClusterAttributeDescriptor],
+    initial_state: str,
+    updated_raw: int,
+    updated_state: str,
+) -> None:
+    """Test number entities for the WAGO WindowCovering extension attributes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial_state
+
+    # the device re-measures the travel times itself, so verify updates are picked up
+    set_node_attribute(matter_node, 1, 258, attribute.attribute_id, updated_raw)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == updated_state
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+@pytest.mark.parametrize(
+    ("entity_id", "attribute", "ha_value", "written_value"),
+    [
+        pytest.param(
+            "number.home_blind_wi_fi_travel_time_up",
+            clusters.WindowCovering.Attributes.WagoTravelTimeUp,
+            30.5,
+            3050,
+            id="travel_time_up",
+        ),
+        pytest.param(
+            "number.home_blind_wi_fi_travel_time_down",
+            clusters.WindowCovering.Attributes.WagoTravelTimeDown,
+            12.3,
+            1230,
+            id="travel_time_down",
+        ),
+        pytest.param(
+            "number.home_blind_wi_fi_slat_rotation_time",
+            clusters.WindowCovering.Attributes.WagoSlatRotationTime,
+            0.5,
+            500,
+            id="slat_rotation_time",
+        ),
+    ],
+)
+async def test_wago_window_covering_numbers_set_value(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute: type[clusters.ClusterAttributeDescriptor],
+    ha_value: float,
+    written_value: int,
+) -> None:
+    """Test writing the WAGO WindowCovering extension attributes."""
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": entity_id, "value": ha_value},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=attribute,
+        ),
+        value=written_value,
+    )

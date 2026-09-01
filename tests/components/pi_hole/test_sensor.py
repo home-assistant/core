@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_bad_data_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test handling of bad data. Mostly for code coverage, rather than simulating known error states."""
+    """Test handling of bad data for code coverage."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )
@@ -51,7 +51,7 @@ async def test_bad_data_type(
 async def test_bad_data_key(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test handling of bad data. Mostly for code coverage, rather than simulating known error states."""
+    """Test handling of bad data for code coverage."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )

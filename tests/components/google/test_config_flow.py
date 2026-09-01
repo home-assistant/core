@@ -1,11 +1,10 @@
 """Test the google config flow."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import datetime
 from http import HTTPStatus
+import time
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -175,11 +174,7 @@ async def test_full_flow_application_creds(
     data = result["data"]
     assert "token" in data
     assert 0 < data["token"]["expires_in"] < 8 * 86400
-    assert (
-        datetime.datetime.now().timestamp()
-        <= data["token"]["expires_at"]
-        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()
-    )
+    assert time.time() <= data["token"]["expires_at"] < time.time() + 8 * 86400
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {
@@ -743,6 +738,59 @@ async def test_web_auth_compatibility(
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_scope"),
+    [
+        ({}, "https://www.googleapis.com/auth/calendar"),
+        (
+            {CONF_CALENDAR_ACCESS: FeatureAccess.read_write.name},
+            "https://www.googleapis.com/auth/calendar",
+        ),
+        (
+            {CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name},
+            "https://www.googleapis.com/auth/calendar.readonly",
+        ),
+    ],
+)
+async def test_web_reauth_flow_asks_for_configured_access(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    options: dict[str, Any],
+    expected_scope: str,
+) -> None:
+    """Test reauth asks for the access the entry is configured for."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CREDENTIAL_TYPE: CredentialType.WEB_AUTH,
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+        options=options,
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.google.api.OAuth2WebServerFlow.step1_get_device_and_user_codes",
+        side_effect=OAuth2DeviceCodeError(
+            "Invalid response 401. Error: invalid_client"
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"],
+            user_input={},
+        )
+
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
+    assert f"&scope={expected_scope}&" in result["url"]
 
 
 @pytest.mark.parametrize(

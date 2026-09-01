@@ -1,8 +1,7 @@
 """Test Litter-Robot setup process."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,7 +16,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -46,6 +49,34 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
     mock_account.robots[0].start_cleaning.assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_shutdown_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test the account is disconnected when Home Assistant stops."""
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
+
+
+async def test_shutdown_during_first_refresh_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test a stop during the first refresh still disconnects the account."""
+
+    async def _stop_during_refresh(**kwargs: Any) -> None:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    mock_account.load_robots.side_effect = _stop_during_refresh
+
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -169,7 +200,7 @@ async def test_unique_id_migration_conflict(
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
 ) -> None:
-    """Test that migration fails when the API is unreachable during unique_id backfill."""
+    """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
@@ -206,14 +237,14 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-serial", "remove-serial")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 

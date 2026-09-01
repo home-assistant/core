@@ -1,7 +1,5 @@
 """Support for PlayStation 4 consoles."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import os
@@ -18,7 +16,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCKED, CONF_REGION, CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -103,39 +101,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     country,
                 )
 
-    # Migrate Version 2 -> Version 3: Update identifier format.
+    # Migrate Version 2 -> Version 3: Update unique_id format.
     if version == 2:
-        # Prevent changing entity_id. Updates entity registry.
+        # Update the unique_id.
         registry = er.async_get(hass)
 
         for e_entry in registry.entities.get_entries_for_config_entry_id(
             entry.entry_id
         ):
-            unique_id = e_entry.unique_id
-            entity_id = e_entry.entity_id
-
-            # Remove old entity entry.
-            registry.async_remove(entity_id)
-
-            # Format old unique_id.
-            unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
-
-            # Create new entry with old entity_id.
-            new_id = split_entity_id(entity_id)[1]
-            registry.async_get_or_create(
-                "media_player",
-                DOMAIN,
-                unique_id,
-                config_entry=entry,
-                device_id=e_entry.device_id,
-                object_id_base=new_id,
+            registry.async_update_entity(
+                e_entry.entity_id,
+                new_unique_id=format_unique_id(
+                    entry.data[CONF_TOKEN], e_entry.unique_id
+                ),
             )
             _LOGGER.debug(
-                "PlayStation 4 identifier for entity: %s has changed",
-                entity_id,
+                "PlayStation 4 unique_id for entity %s has been updated",
+                e_entry.entity_id,
             )
-            config_entries.async_update_entry(entry, version=3)
-            return True
+        config_entries.async_update_entry(entry, version=3)
+        return True
 
     msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure

@@ -7,7 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.velbus import VelbusConfigEntry
+from homeassistant.components.velbus import (
+    VelbusConfigEntry,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
@@ -38,7 +41,7 @@ async def test_setup_start_failed(
     controller: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the setup that fails during velbus start task, should result in no entries."""
+    """Test setup fails during velbus start task, should result in no entries."""
     controller.return_value.start.side_effect = ConnectionError()
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -71,29 +74,38 @@ async def test_device_identifier_migration(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test being able to unload an entry."""
-    original_identifiers = {(DOMAIN, "module_address", "module_serial")}
-    target_identifiers = {(DOMAIN, "module_address")}
+    original_identifier = (DOMAIN, "module_address", "module_serial")
+    target_identifier = (DOMAIN, "module_address")
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers=original_identifiers,  # type: ignore[arg-type]
+        identifiers={original_identifier},  # type: ignore[arg-type]
         name="channel_name",
         manufacturer="Velleman",
         model="module_type_name",
         sw_version="module_sw_version",
     )
-    assert device_registry.async_get_device(
-        identifiers=original_identifiers  # type: ignore[arg-type]
+    assert device_registry.async_get_device_by_identifier(
+        original_identifier,  # type: ignore[arg-type]
+        config_entry.entry_id,
     )
-    assert not device_registry.async_get_device(identifiers=target_identifiers)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            target_identifier, config_entry.entry_id
+        )
+        is None
+    )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device(
-        identifiers=original_identifiers  # type: ignore[arg-type]
+    assert not device_registry.async_get_device_by_identifier(
+        original_identifier,  # type: ignore[arg-type]
+        config_entry.entry_id,
     )
-    device_entry = device_registry.async_get_device(identifiers=target_identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        target_identifier, config_entry.entry_id
+    )
     assert device_entry
     assert device_entry.name == "channel_name"
     assert device_entry.manufacturer == "Velleman"
@@ -213,11 +225,294 @@ async def test_device_registry(
     # Sort by identifier to ensure consistent order in snapshot
     assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
-    device_parent = device_registry.async_get_device(identifiers={(DOMAIN, "88")})
+    device_parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "88"), config_entry.entry_id
+    )
     assert device_parent.via_device_id is None
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "88-9")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "88-9"), config_entry.entry_id
+    )
     assert device.via_device_id == device_parent.id
 
-    device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
+    device_no_sub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "2"), config_entry.entry_id
+    )
     assert device_no_sub.via_device_id is None
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that any Velbus device can be removed."""
+    await init_integration(hass, config_entry)
+
+    # Active device (found on bus) can be removed; scan will recreate it
+    active_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
+    assert active_device is not None
+    result = await async_remove_config_entry_device(hass, config_entry, active_device)
+    assert result is True
+
+    # Stale device (not on bus) can also be removed
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    result = await async_remove_config_entry_device(hass, config_entry, stale_device)
+    assert result is True
+    device_registry.async_remove_device(stale_device.id)
+
+    stale_device_after = device_registry.async_get(stale_device.id)
+    assert (
+        stale_device_after is None
+        or config_entry.entry_id not in stale_device_after.config_entries
+    )
+
+
+async def test_remove_config_entry_device_detaches_subdevices(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that removing a device also detaches its sub-devices."""
+    await init_integration(hass, config_entry)
+
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    sub_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999-1")},
+        name="Missing Module Channel 1",
+        manufacturer="Velleman",
+        model="VMBX",
+        via_device_id=stale_device.id,
+    )
+
+    result = await async_remove_config_entry_device(hass, config_entry, stale_device)
+    assert result is True
+
+    sub_device_after = device_registry.async_get(sub_device.id)
+    assert sub_device_after is None or (
+        config_entry.entry_id not in sub_device_after.config_entries
+        and sub_device_after.via_device_id is None
+    )
+
+
+# velbus-aio maps both the spec key and the display name to the class name, because
+# Property.get_name() returned the spec key before velbus-aio 2026.4.1 and the display
+# name from that release onwards; both forms exist as original_name in the wild.
+_PROPERTY_KEY_MAP = {
+    "selected_program": "SelectedProgram",
+    "Selected program": "SelectedProgram",
+    "light_value": "LightValue",
+    "Light value": "LightValue",
+}
+
+
+@pytest.mark.parametrize(
+    ("domain", "device_serial", "old_unique_id", "original_name", "expected_unique_id"),
+    [
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-0-program_select",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="rename_select_spec_key",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-0-program_select",
+            "Selected program",
+            "test_serial-SelectedProgram",
+            id="rename_select_display_name",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-5-program_select",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="rename_select_legacy_channel",
+        ),
+        pytest.param(
+            "sensor",
+            "test_serial",
+            "test_serial-0",
+            "light_value",
+            "test_serial-LightValue",
+            id="rename_sensor",
+        ),
+        pytest.param(
+            "sensor",
+            "overwritten_serial",
+            "test_serial-0",
+            "light_value",
+            "test_serial-LightValue",
+            id="serial_taken_from_unique_id_not_device",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-SelectedProgram",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="already_correct",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-old_format",
+            None,
+            "test_serial-old_format",
+            id="skipped_without_name",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-old_format",
+            "not_a_property",
+            "test_serial-old_format",
+            id="skipped_unknown_name",
+        ),
+        pytest.param(
+            "sensor",
+            "test_serial",
+            "test_serial-3",
+            "light_value",
+            "test_serial-3",
+            id="skipped_colliding_channel",
+        ),
+    ],
+)
+async def test_migrate_property_unique_ids(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+    domain: str,
+    device_serial: str,
+    old_unique_id: str,
+    original_name: str | None,
+    expected_unique_id: str,
+) -> None:
+    """Test the property unique_id migration for every legacy and skip case."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number=device_serial,
+    )
+    entity = entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        old_unique_id,
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name=original_name,
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated
+    assert migrated.unique_id == expected_unique_id
+
+
+async def test_migrate_property_unique_ids_remove_stale(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a stale property entity is removed when the correct one already exists."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-SelectedProgram",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-0-program_select",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert not entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-0-program_select"
+    )
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+
+
+async def test_migrate_property_unique_ids_preserves_entity_id(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a migrated property keeps its entity_id once the bus scan registers it."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "2")},
+        serial_number="a1b2c3d4e5f6",
+    )
+    # Same serial as the scanned LightValue property, so migrating before the scan makes
+    # the scan reuse this entry instead of registering a second one.
+    legacy_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "a1b2c3d4e5f6-0",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="light_value",
+        suggested_object_id="legacy_light_value",
+    )
+    assert legacy_entity.entity_id == "sensor.legacy_light_value"
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "a1b2c3d4e5f6-LightValue")
+        == "sensor.legacy_light_value"
+    )

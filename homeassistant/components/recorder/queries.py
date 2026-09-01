@@ -1,7 +1,5 @@
 """Queries for the recorder."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import datetime
 
@@ -423,7 +421,8 @@ def find_entity_ids_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
 
 def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find entity_id to cleanup."""
-    # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
+    # Self join because this version of MariaDB doesn't yet
+    # support 'LIMIT & IN/ALL/ANY/SOME subquery'
     return lambda_stmt(
         lambda: (
             update(States)

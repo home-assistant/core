@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["icmplib"],
   "quality_scale": "internal",
-  "requirements": ["icmplib==3.0"]
+  "requirements": ["icmplib==3.0.4"]
 }

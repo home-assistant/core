@@ -1,7 +1,5 @@
 """The Fing integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform
@@ -23,10 +21,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) 
 
     if coordinator.data.network_id is None:
         _LOGGER.warning(
-            "Skip setting up Fing integration; Received an empty NetworkId from the request - Check if the API version is the latest"
+            "Skip setting up Fing integration; Received an empty"
+            " NetworkId from the request - Check if the API"
+            " version is the latest"
         )
         raise ConfigEntryError(
-            "The Agent's API version is outdated. Please update the agent to the latest version."
+            "The Agent's API version is outdated."
+            " Please update the agent to the latest version."
         )
 
     config_entry.runtime_data = coordinator

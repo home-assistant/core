@@ -46,7 +46,8 @@ def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
     if episode := getattr(item, "episode", None):
         result["episode_number"] = getattr(episode, "episodeNumber", None)
         result["episode_title"] = getattr(episode, "title", None)
-        # Add formatted identifier like the sensor uses (if we have both season and episode)
+        # Add formatted identifier like the sensor uses
+        # (if we have both season and episode)
         if result["season_number"] is not None and result["episode_number"] is not None:
             result["episode_identifier"] = (
                 f"S{result['season_number']:02d}E{result['episode_number']:02d}"
@@ -197,7 +198,8 @@ def format_diskspace(
 
     Args:
         disks: List of disk space objects from Sonarr.
-        space_unit: Unit for space values (bytes, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib).
+        space_unit: Unit for space values
+            (bytes, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib).
 
     Returns:
         Dictionary of disk information keyed by path.
@@ -244,7 +246,9 @@ def format_upcoming_item(
         "series_id": episode.seriesId,
         "season_number": episode.seasonNumber,
         "episode_number": episode.episodeNumber,
-        "episode_identifier": f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}",
+        "episode_identifier": (
+            f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+        ),
         "title": episode.title,
         "air_date": str(getattr(episode, "airDate", None)),
         "air_date_utc": str(getattr(episode, "airDateUtc", None)),
@@ -276,7 +280,7 @@ def format_upcoming(
 
     for episode in calendar:
         # Create a unique key combining series title and episode identifier
-        series_title = episode.series.title if hasattr(episode, "series") else "Unknown"
+        series_title = episode.series.title if hasattr(episode, "series") else "Unknown"  # type: ignore[misc]
         identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
         key = f"{series_title} {identifier}"
         episodes[key] = format_upcoming_item(episode, base_url)
@@ -324,7 +328,7 @@ def format_wanted(
     for item in wanted.records:
         # Create a unique key combining series title and episode identifier
         series_title = (
-            item.series.title if hasattr(item, "series") and item.series else "Unknown"
+            item.series.title if hasattr(item, "series") and item.series else "Unknown"  # type: ignore[misc]
         )
         identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
         key = f"{series_title} {identifier}"
@@ -341,7 +345,9 @@ def format_episode(episode: SonarrEpisode) -> dict[str, Any]:
         "tvdb_id": getattr(episode, "tvdbId", None),
         "season_number": episode.seasonNumber,
         "episode_number": episode.episodeNumber,
-        "episode_identifier": f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}",
+        "episode_identifier": (
+            f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+        ),
         "title": episode.title,
         "air_date": str(getattr(episode, "airDate", None)),
         "air_date_utc": str(getattr(episode, "airDateUtc", None)),

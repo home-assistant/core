@@ -1,8 +1,6 @@
 """WiZ integration light platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass, BulbType, Features
@@ -94,6 +92,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         state = self._device.state
@@ -117,6 +116,13 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         elif ColorMode.RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
             self._attr_color_mode = ColorMode.RGBW
             self._attr_rgbw_color = rgbw
+        elif len(color_modes) == 1:
+            self._attr_color_mode = next(iter(color_modes))
+        else:
+            # The bulb reports none of the values a color mode is picked from,
+            # so with more than one to choose from it cannot be told which is
+            # active.
+            self._attr_color_mode = ColorMode.UNKNOWN
 
         self._attr_effect = effect = state.get_scene()
         if effect is not None:
@@ -127,6 +133,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
         super()._async_update_attrs()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._device.turn_on(_async_pilot_builder(**kwargs))

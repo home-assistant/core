@@ -67,7 +67,6 @@ def fixture_mock_whirlpool_setup_entry():
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
 async def test_user_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
@@ -118,7 +117,6 @@ async def test_user_flow_invalid_auth(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api")
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
@@ -163,7 +161,6 @@ async def test_user_flow_auth_error(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
 async def test_already_configured(
     hass: HomeAssistant, region: tuple[str, Region], brand: tuple[str, Brand]
 ) -> None:
@@ -193,7 +190,6 @@ async def test_already_configured(
 @pytest.mark.parametrize(
     "appliance_type", ["aircons", "washers", "dryers", "ovens", "refrigerators"]
 )
-@pytest.mark.usefixtures("mock_auth_api")
 async def test_no_appliances_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
@@ -236,9 +232,7 @@ async def test_no_appliances_flow(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures(
-    "mock_auth_api", "mock_appliances_manager_api", "mock_whirlpool_setup_entry"
-)
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant, region: tuple[str, Region], brand: tuple[str, Brand]
 ) -> None:
@@ -263,7 +257,7 @@ async def test_reauth_flow(
     assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant,
     region: tuple[str, Region],
@@ -302,7 +296,7 @@ async def test_reauth_flow_invalid_auth(
     assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [

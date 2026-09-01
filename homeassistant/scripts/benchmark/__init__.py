@@ -1,7 +1,5 @@
 """Script to run benchmarks."""
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 from collections.abc import Callable
@@ -17,6 +15,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.runner import create_event_loop
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -36,11 +35,11 @@ def run(args):
     args = parser.parse_args()
 
     bench = BENCHMARKS[args.name]
-    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)  # type: ignore[deprecated]
+    print("Using event loop:", asyncio.EventLoop.__name__)
 
     with suppress(KeyboardInterrupt):
         while True:
-            asyncio.run(run_benchmark(bench))
+            asyncio.run(run_benchmark(bench), loop_factory=create_event_loop)
 
 
 async def run_benchmark(bench):

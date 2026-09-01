@@ -1,9 +1,7 @@
 """Config flow for the html5 component."""
 
-from __future__ import annotations
-
 import binascii
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -68,6 +66,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             flow_result = self.async_create_entry(title="HTML5", data=config)
         return errors, flow_result
 
+    @override
     async def async_step_user(
         self: HTML5ConfigFlow, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

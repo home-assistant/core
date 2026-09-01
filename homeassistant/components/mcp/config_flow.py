@@ -1,13 +1,10 @@
 """Config flow for the Model Context Protocol integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import logging
-import re
-from typing import Any, cast
+from typing import Any, cast, override
 
 import httpx
 import voluptuous as vol
@@ -15,24 +12,20 @@ from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
     async_get_implementations,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_AUTHORIZATION_URL,
-    CONF_SCOPE,
-    CONF_TOKEN_URL,
-    DOMAIN,
-)
+from .auth import AuthenticateHeader
+from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,35 +36,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# Headers and regex for WWW-Authenticate parsing for rfc9728
-WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
-RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 OAUTH_PROTECTED_RESOURCE_ENDPOINT = "/.well-known/oauth-protected-resource"
-SCOPES_REGEXP = r'scope="([^"]+)"'
-
-
-@dataclass
-class AuthenticateHeader:
-    """Class to hold info from the WWW-Authenticate header for supporting rfc9728."""
-
-    resource_metadata_url: str
-    scopes: list[str] | None = None
-
-    @classmethod
-    def from_header(
-        cls, url: str, error_response: httpx.Response
-    ) -> AuthenticateHeader | None:
-        """Create AuthenticateHeader from WWW-Authenticate header."""
-        if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (
-            match := re.search(RESOURCE_METADATA_REGEXP, header)
-        ):
-            return None
-        resource_metadata_url = str(URL(url).join(URL(match.group(1))))
-        scope_match = re.search(SCOPES_REGEXP, header)
-        return cls(
-            resource_metadata_url=resource_metadata_url,
-            scopes=scope_match.group(1).split(" ") if scope_match else None,
-        )
 
 
 @dataclass
@@ -189,7 +154,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.oauth_config: OAuthConfig | None = None
         self.auth_header: AuthenticateHeader | None = None
+        self.addon_name: str = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -224,6 +191,59 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             description_placeholders={"example_url": EXAMPLE_URL},
         )
 
+    @override
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery of an MCP server provided by an app."""
+        url = discovery_info.config.get(CONF_URL)
+        try:
+            # An unparsable URL, such as an unmatched IPv6 bracket, raises ValueError
+            url = cv.url(url)
+        except vol.Invalid, ValueError:
+            _LOGGER.debug(
+                "Ignoring discovery from app %s with invalid URL: %s",
+                discovery_info.slug,
+                url,
+            )
+            return self.async_abort(reason="invalid_discovery_info")
+
+        await self.async_set_unique_id(discovery_info.uuid)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._async_abort_entries_match({CONF_URL: url})
+        self.data[CONF_URL] = url
+        self.data[CONF_SLUG] = discovery_info.slug
+        self.addon_name = discovery_info.name
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the MCP server provided by an app."""
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                description_placeholders={"addon": self.addon_name},
+            )
+
+        try:
+            info = await validate_input(self.hass, self.data)
+        except TimeoutConnectError:
+            return self.async_abort(reason="timeout_connect")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth as err:
+            self.auth_header = err.metadata
+            return await self.async_step_auth_discovery()
+        except MissingCapabilities:
+            return self.async_abort(reason="missing_capabilities")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        return self.async_create_entry(title=info["title"], data=self.data)
+
     async def async_step_auth_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -246,13 +266,16 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.debug("Protected resource metadata: %s", resource_metadata)
                 oauth_config = await async_discover_authorization_server(
                     self.hass,
-                    # Use the first authorization server from the resource metadata as it
-                    # is the most common to have only one and there is not a defined strategy.
+                    # Use the first authorization server from the
+                    # resource metadata as it is the most common to
+                    # have only one and there is not a defined
+                    # strategy.
                     resource_metadata.authorization_servers[0],
                 )
             else:
                 _LOGGER.debug(
-                    "Discovering authorization server without protected resource metadata"
+                    "Discovering authorization server without"
+                    " protected resource metadata"
                 )
                 oauth_config = await async_discover_authorization_server(
                     self.hass,
@@ -270,7 +293,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.oauth_config = oauth_config
             self.data.update(
                 {
-                    CONF_AUTHORIZATION_URL: oauth_config.authorization_server.authorize_url,
+                    CONF_AUTHORIZATION_URL: (
+                        oauth_config.authorization_server.authorize_url
+                    ),
                     CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
                     CONF_SCOPE: _select_scopes(
                         self.auth_header, oauth_config, resource_metadata
@@ -287,9 +312,14 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        data = {}
+        data = {
+            # Add params to ensure we get back a refresh token
+            "access_type": "offline",
+            "prompt": "consent",
+        }
         if self.data and (scopes := self.data[CONF_SCOPE]) is not None:
             data[CONF_SCOPE] = " ".join(scopes)
         data.update(super().extra_authorize_data)
@@ -317,6 +347,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Step to take the frontend flow to enter new credentials."""
         return self.async_abort(reason="missing_credentials")
 
+    @override
     async def async_step_pick_implementation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -328,6 +359,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         with authorization_server_context(self.authorization_server()):
             return await super().async_step_pick_implementation(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow.
 
@@ -353,12 +385,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # Unique id based on the application credentials OAuth Client ID
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        await self.async_set_unique_id(config_entry_data["auth_implementation"])
+        if self.unique_id is None:
+            # Unique id based on the application credentials OAuth Client ID. A
+            # discovered server keeps the Supervisor uuid instead, so that the
+            # entry is removed together with the app.
+            await self.async_set_unique_id(config_entry_data["auth_implementation"])
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -368,6 +403,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        if entry_data and "auth_header" in entry_data:
+            self.auth_header = entry_data["auth_header"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -378,9 +415,20 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
-        self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
-            self.hass, config_entry
-        )
+        if "auth_implementation" not in self.data:
+            # For entries configured without authentication (no-auth), any authentication
+            # failure (from a tool call or coordinator update) requires upgrading to OAuth.
+            # We bypass validate_input connection handshake (which might succeed if the server
+            # doesn't restrict the connection handshake itself) and proceed directly to OAuth discovery.
+            return await self.async_step_auth_discovery()
+
+        try:
+            self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
+                self.hass, config_entry
+            )
+        except UnknownImplementationError:
+            # The credentials were removed, let the user pick or create new ones
+            return await self.async_step_auth_discovery()
         return await self.async_step_auth()
 
 
@@ -432,11 +480,12 @@ async def async_discover_protected_resource(
     auth_url: str,
     mcp_server_url: str,
 ) -> ResourceMetadata:
-    """Discover the OAuth configuration for a protected resource for MCP spec version 2025-11-25+.
+    """Discover the OAuth configuration for a protected resource.
 
-    This implements the functionality in the MCP spec for discovery. We use the information
-    from the WWW-Authenticate header to fetch the resource metadata implementing
-    RFC9728.
+    This is for MCP spec version 2025-11-25+. It implements the
+    functionality in the MCP spec for discovery. We use the information
+    from the WWW-Authenticate header to fetch the resource metadata
+    implementing RFC9728.
 
     For the url https://example.com/public/mcp we attempt these urls:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp

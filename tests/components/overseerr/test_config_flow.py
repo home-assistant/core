@@ -1,5 +1,6 @@
 """Tests for the Overseerr config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -27,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def patch_webhook_id() -> None:
+def patch_webhook_id() -> Generator[None]:
     """Patch webhook ID generation."""
     with patch(
         "homeassistant.components.overseerr.config_flow.async_generate_id",
@@ -36,11 +37,8 @@ def patch_webhook_id() -> None:
         yield
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_overseerr_client: AsyncMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -71,10 +69,10 @@ async def test_full_flow(
         (OverseerrConnectionError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -105,10 +103,9 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_invalid_host(
-    hass: HomeAssistant,
-    mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_overseerr_client: AsyncMock
 ) -> None:
     """Test flow invalid host."""
     result = await hass.config_entries.flow.async_init(
@@ -133,10 +130,9 @@ async def test_flow_invalid_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test duplicate flow."""
     mock_config_entry.add_to_hass(hass)
@@ -157,10 +153,10 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow."""
@@ -189,10 +185,10 @@ async def test_reauth_flow(
         (OverseerrConnectionError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -228,10 +224,10 @@ async def test_reauth_flow_errors(
     assert mock_config_entry.data[CONF_API_KEY] == "new-test-key"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -265,10 +261,10 @@ async def test_reconfigure_flow(
         (OverseerrConnectionError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,

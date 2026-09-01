@@ -1,16 +1,14 @@
 """API calls to manage Insteon configuration changes."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict
 
+from probatio import to_field_list
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
 from pyinsteon.aldb.aldb_record import ALDBRecord
 from pyinsteon.constants import LinkStatus
 from pyinsteon.managers.link_manager import get_broken_links
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -139,12 +137,16 @@ def remove_device_override(hass: HomeAssistant, address: Address):
 
 
 async def async_link_to_dict(
-    address: Address, record: ALDBRecord, dev_registry: dr.DeviceRegistry, status=None
+    address: Address,
+    record: ALDBRecord,
+    dev_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    status=None,
 ) -> dict[str, str | int]:
     """Convert a link to a dictionary."""
     link_dict: dict[str, str | int] = {}
-    device_name = await async_device_name(dev_registry, address)
-    target_name = await async_device_name(dev_registry, record.target)
+    device_name = await async_device_name(dev_registry, address, config_entry_id)
+    target_name = await async_device_name(dev_registry, record.target, config_entry_id)
     link_dict["address"] = str(address)
     link_dict["device_name"] = device_name or str(address)
     link_dict["mem_addr"] = record.mem_addr
@@ -214,12 +216,10 @@ async def websocket_get_modem_schema(
     config_data = config_entry.data
     if device := config_data.get(CONF_DEVICE):
         ports = await async_get_usb_ports(hass=hass)
-        plm_schema = voluptuous_serialize.convert(
-            build_plm_schema(ports=ports, device=device)
-        )
+        plm_schema = to_field_list(build_plm_schema(ports=ports, device=device))
         connection.send_result(msg[ID], plm_schema)
     else:
-        hub_schema = voluptuous_serialize.convert(build_hub_schema(**config_data))
+        hub_schema = to_field_list(build_hub_schema(**config_data))
         connection.send_result(msg[ID], hub_schema)
 
 
@@ -313,8 +313,9 @@ async def websocket_get_broken_links(
     """Get any broken links between devices."""
     broken_links = get_broken_links(devices=devices)
     dev_registry = dr.async_get(hass)
+    config_entry_id = get_insteon_config_entry(hass).entry_id
     broken_links_list = [
-        await async_link_to_dict(address, record, dev_registry, status)
+        await async_link_to_dict(address, record, dev_registry, config_entry_id, status)
         for address, record, status in broken_links
         if status != LinkStatus.MISSING_TARGET
     ]

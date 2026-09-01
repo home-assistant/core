@@ -1,7 +1,7 @@
 """Base entity for Hikvision integration."""
 
-from __future__ import annotations
-
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -16,6 +16,7 @@ class HikvisionEntity(Entity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         channel: int,
     ) -> None:
@@ -25,12 +26,13 @@ class HikvisionEntity(Entity):
         self._camera = self._data.camera
         self._channel = channel
 
-        # Device info for device registry
         if self._data.device_type == "NVR":
-            # NVR channels get their own device linked to the NVR via via_device
+            # NVR channels get their own device linked to the NVR via via_device_id
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
-                via_device=(DOMAIN, self._data.device_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, self._data.device_id), config_entry_id=entry.entry_id
+                ),
                 translation_key="nvr_channel",
                 translation_placeholders={
                     "device_name": self._data.device_name,

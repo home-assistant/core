@@ -33,5 +33,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "dst": {
+        "name": "Daylight Saving Time"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Failed to execute {command}: {message}"
+    },
+    "connection_error": {
+      "message": "Failed to execute {command}: could not connect to device"
+    }
   }
 }

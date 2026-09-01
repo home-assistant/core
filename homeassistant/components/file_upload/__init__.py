@@ -1,7 +1,5 @@
 """The File Upload integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -38,7 +36,11 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
-    File is removed at the end of the context.
+    File is removed at the end of the context. Should be run on the executor thread pool.
+    Create a wrapper function and call that wrapper function using
+    hass.async_add_executor_job. Running this function directly by scheduling an executor
+    job will result in loop blocking teardown code not running on the executor but
+    rather in the loop.
     """
     if DOMAIN not in hass.data:
         raise ValueError("File does not exist")
@@ -76,7 +78,8 @@ class FileUploadData:
             """Create temporary directory."""
             temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
 
-            # If it exists, it's an old one and Home Assistant didn't shut down correctly.
+            # If it exists, it's an old one and Home Assistant
+            # didn't shut down correctly.
             if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 

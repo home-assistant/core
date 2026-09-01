@@ -1,8 +1,7 @@
 """Sensors for LIFX lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -56,6 +55,7 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -66,6 +66,7 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
         """Handle coordinator updates."""
         self._attr_native_value = self.coordinator.rssi
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Enable RSSI updates."""
         self.async_on_remove(self.coordinator.async_enable_rssi_updates())

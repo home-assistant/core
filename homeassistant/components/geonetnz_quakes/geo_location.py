@@ -1,10 +1,8 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_geonetnz_quakes.feed_entry import GeonetnzQuakesFeedEntry
 
@@ -92,6 +90,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         if self.hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -107,6 +106,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
             self._update_callback,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         self._remove_signal_delete()
@@ -154,6 +154,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._time = feed_entry.time
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

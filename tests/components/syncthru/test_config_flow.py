@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysyncthru import SyncThruAPINotSupported
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.syncthru.const import DOMAIN
@@ -27,9 +28,8 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_syncthru: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -62,9 +62,14 @@ async def test_already_configured_by_url(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -79,9 +84,14 @@ async def test_syncthru_not_supported(
     """Test we show user form on unsupported device."""
     mock_syncthru.update.side_effect = SyncThruAPINotSupported
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -119,9 +129,8 @@ async def test_unknown_state(hass: HomeAssistant, mock_syncthru: AsyncMock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_ssdp(
-    hass: HomeAssistant, mock_syncthru: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_ssdp(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
     """Test SSDP discovery initiates config properly."""
 
     url = "http://192.168.1.2/"

@@ -1,11 +1,13 @@
 """The tests for the Template update platform."""
 
+from enum import StrEnum
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, update
+from homeassistant.components.template.update import DEFAULT_NAME, SCRIPT_FIELDS
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -23,7 +25,14 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -45,7 +54,6 @@ TEST_LATEST_TEMPLATE = "{{ '2.0' }}"
 
 TEST_UPDATE = TemplatePlatformSetup(
     update.DOMAIN,
-    None,
     "template_update",
     make_test_trigger(TEST_INSTALLED_SENSOR, TEST_LATEST_SENSOR, TEST_SENSOR_ID),
 )
@@ -55,17 +63,13 @@ TEST_UPDATE_CONFIG = {
     "latest_version": TEST_LATEST_TEMPLATE,
 }
 
-INSTALL_ACTION = {
-    "install": {
-        "action": "test.automation",
-        "data": {
-            "caller": "{{ this.entity_id }}",
-            "action": "install",
-            "backup": "{{ backup }}",
-            "specific_version": "{{ specific_version }}",
-        },
-    }
-}
+INSTALL_ACTION = make_test_action(
+    "install",
+    {
+        "backup": "{{ backup }}",
+        "specific_version": "{{ specific_version }}",
+    },
+)
 
 
 @pytest.fixture
@@ -125,21 +129,6 @@ async def setup_single_attribute_update(
             {attribute: attribute_template} if attribute and attribute_template else {}
         ),
     )
-
-
-async def test_legacy_platform_config(hass: HomeAssistant) -> None:
-    """Test a legacy platform does not create update entities."""
-    with assert_setup_component(1, update.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            update.DOMAIN,
-            {"update": {"platform": "template", "updates": {"anything": {}}}},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-    assert hass.states.async_all("update") == []
 
 
 async def test_setup_config_entry(
@@ -202,7 +191,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get(TEST_UPDATE.entity_id)
+    template_entity = entity_registry.async_get("update.mock_title_template_update")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -425,9 +414,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
+    assert_action(TEST_UPDATE, calls, 1, "install")
 
     hass.states.async_set(TEST_INSTALLED_SENSOR, "2.0")
     hass.states.async_set(TEST_LATEST_SENSOR, "2.0")
@@ -444,9 +431,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
+    assert_action(TEST_UPDATE, calls, 1, "install")
 
 
 @pytest.mark.parametrize(
@@ -467,7 +452,10 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
         ),
         (
             "icon",
-            "{% if is_state('sensor.installed_update', 'on') %}mdi:something{% endif %}",
+            (
+                "{% if is_state('sensor.installed_update', 'on') %}"
+                "mdi:something{% endif %}"
+            ),
             ATTR_ICON,
             "mdi:something",
         ),
@@ -707,7 +695,10 @@ async def test_update_percent_template(
             TEST_INSTALLED_TEMPLATE,
             TEST_LATEST_TEMPLATE,
             "update_percentage",
-            "{% set e = 'sensor.test_update' %}{{ states(e) if e | has_value else None }}",
+            (
+                "{% set e = 'sensor.test_update' %}"
+                "{{ states(e) if e | has_value else None }}"
+            ),
         )
     ],
 )
@@ -813,12 +804,14 @@ async def test_supported_features(
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    data = calls[-1].data
-    assert data["action"] == "install"
-    assert data["caller"] == TEST_UPDATE.entity_id
-    assert data["backup"] == expected_backup
-    assert data["specific_version"] == expected_version
+    assert_action(
+        TEST_UPDATE,
+        calls,
+        1,
+        "install",
+        backup=expected_backup,
+        specific_version=expected_version,
+    )
 
 
 @pytest.mark.parametrize(
@@ -994,3 +987,120 @@ async def test_flow_preview(
     assert state["state"] == STATE_ON
     assert state["attributes"]["installed_version"] == "1.0"
     assert state["attributes"]["latest_version"] == "2.0"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_UPDATE, style, TEST_UPDATE_CONFIG, action, caplog
+    )
+
+
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_UPDATE, TEST_UPDATE_CONFIG, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_UPDATE,
+        style,
+        TEST_UPDATE_CONFIG,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(update.UpdateEntityStateAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_UPDATE,
+        style,
+        0,
+        {
+            **TEST_UPDATE_CONFIG,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_UPDATE, style, TEST_UPDATE_CONFIG, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(update.UpdateEntityStateAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum | str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_UPDATE,
+        style,
+        1,
+        {
+            **TEST_UPDATE_CONFIG,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_UPDATE.entity_id}: {attribute}"
+    assert error in caplog.text

@@ -1,7 +1,5 @@
 """Diagnostics platform for Traccar Server."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
@@ -70,7 +68,7 @@ async def async_get_config_entry_diagnostics(
 async def async_get_device_diagnostics(
     hass: HomeAssistant,
     entry: TraccarServerConfigEntry,
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
 ) -> dict[str, Any]:
     """Return device diagnostics."""
     coordinator = entry.runtime_data

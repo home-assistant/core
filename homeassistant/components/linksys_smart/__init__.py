@@ -1,1 +1,1 @@
-"""The linksys_smart component."""
+"""The Linksys Smart Wi-Fi integration."""

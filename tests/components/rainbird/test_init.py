@@ -1,15 +1,15 @@
 """Tests for rainbird initialization."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -42,6 +42,24 @@ async def test_init_success(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the controller device registry entry, including the network MAC connection."""
+    # Load a platform so the controller device is registered.
+    with patch("homeassistant.components.rainbird.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
+    )
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
@@ -333,8 +351,8 @@ async def test_fix_entity_unique_ids(
     assert entity_entry
     assert entity_entry.unique_id == expected_unique_id
 
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, expected_device_identifier)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, expected_device_identifier), config_entry.entry_id
     )
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, expected_device_identifier)}
@@ -451,7 +469,9 @@ async def test_fix_duplicate_device_ids(
     )
     assert len(device_entries) == 1
 
-    device_entry = device_registry.async_get_device({(DOMAIN, MAC_ADDRESS_UNIQUE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
+    )
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
     assert device_entry.name_by_user == expected_device_name
@@ -510,8 +530,8 @@ async def test_reload_migration_with_leading_zero_mac(
     await hass.async_block_till_done()
 
     # Verify the device and entity were migrated to the new format
-    migrated_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mac_address_unique_id}-1")}
+    migrated_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mac_address_unique_id}-1"), config_entry.entry_id
     )
     assert migrated_device_entry is not None
     migrated_entity_entry = entity_registry.async_get(entity_entry.entity_id)
@@ -522,7 +542,8 @@ async def test_reload_migration_with_leading_zero_mac(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the device and entity still have the correct identifiers and were not duplicated
+    # Verify the device and entity still have the correct identifiers
+    # and were not duplicated
     reloaded_device_entry = device_registry.async_get(migrated_device_entry.id)
     assert reloaded_device_entry is not None
     assert reloaded_device_entry.identifiers == {(DOMAIN, f"{mac_address_unique_id}-1")}
@@ -530,11 +551,33 @@ async def test_reload_migration_with_leading_zero_mac(
     assert reloaded_entity_entry is not None
     assert reloaded_entity_entry.unique_id == f"{mac_address_unique_id}-1-zone1"
 
+    # Two devices: the controller (registered at setup) and the migrated zone
+    # device. Neither was duplicated by the reload.
     assert (
         len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
-        == 1
+        == 2
     )
     assert (
         len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 1
     )
+
+
+async def test_options_listener(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options update listener reloading the config entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Changing options triggers reload
+    with patch(
+        "homeassistant.components.rainbird.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
+        await hass.async_block_till_done()
+
+    # The entry should have been reloaded
+    assert len(mock_setup_entry.mock_calls) == 1

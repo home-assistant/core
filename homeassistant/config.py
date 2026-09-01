@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Hashable, Iterable, Sequence
@@ -18,6 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 from awesomeversion import AwesomeVersion
+from probatio import Undefined
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 from yaml.error import MarkedYAMLError
@@ -480,7 +479,7 @@ def stringify_invalid(
     if annotation := find_annotation(config, exc.path):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in exc.path)
-    if exc.error_message == "extra keys not allowed":
+    if exc.code == "extra_keys_not_allowed":
         return (
             f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
@@ -610,9 +609,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
-    if hasattr(key, "default") and not isinstance(
-        key.default, vol.schema_builder.Undefined
-    ):
+    if hasattr(key, "default") and not isinstance(key.default, Undefined):
         default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
             module.DOMAIN
         ]
@@ -1041,7 +1038,7 @@ def extract_platform_integrations(
                 platform = item.get(CONF_PLATFORM)
             except AttributeError:
                 continue
-            if platform and isinstance(platform, Hashable):
+            if platform and isinstance(platform, str):
                 platform_integrations.setdefault(domain, set()).add(platform)
     return platform_integrations
 

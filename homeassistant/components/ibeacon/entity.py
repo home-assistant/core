@@ -1,8 +1,7 @@
 """Support for iBeacon device sensors."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import override
 
 from ibeacon_ble import iBeaconAdvertisement
 
@@ -38,6 +37,7 @@ class IBeaconEntity(Entity):
         )
 
     @property
+    @override
     def extra_state_attributes(
         self,
     ) -> dict[str, str | int]:
@@ -63,6 +63,7 @@ class IBeaconEntity(Entity):
     def _async_unavailable(self) -> None:
         """Set unavailable."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callbacks."""
         await super().async_added_to_hass()

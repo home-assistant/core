@@ -140,7 +140,7 @@ async def test_entities_unavailable_on_update_failure(
 
     state = hass.states.get("sensor.test_ghost_total_members")
     assert state is not None
-    assert state.state == "1000"
+    assert state.state == "1025"
 
     mock_ghost_api.get_site.side_effect = GhostError("Update failed")
 

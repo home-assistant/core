@@ -1,7 +1,5 @@
 """The Vogel's MotionMount integration."""
 
-from __future__ import annotations
-
 import socket
 
 import motionmount
@@ -47,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) 
         # and update the config entry so we do not mix up devices.
         await mm.disconnect()
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+            f"Unexpected device found at {host};"
+            f" expected {entry.unique_id}, found {found_mac}"
         )
 
     # Check we're properly authenticated or be able to become so

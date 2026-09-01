@@ -11,7 +11,8 @@ CONF_FOLDER_ID: Final = "folder_id"
 
 CONF_DELETE_PERMANENTLY: Final = "delete_permanently"
 
-# replace "consumers" with "common", when adding SharePoint or OneDrive for Business support
+# replace "consumers" with "common", when adding
+# SharePoint or OneDrive for Business support
 OAUTH2_AUTHORIZE: Final = (
     "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"
 )

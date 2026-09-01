@@ -47,7 +47,6 @@ async def access_token(hass: HomeAssistant) -> str:
     "current_request_with_host",
     "use_cloud",
     "mock_setup_entry",
-    "mock_aladdin_connect_api",
 )
 async def test_full_flow(
     hass: HomeAssistant,
@@ -109,7 +108,6 @@ async def test_full_flow(
     "current_request_with_host",
     "use_cloud",
     "mock_setup_entry",
-    "mock_aladdin_connect_api",
 )
 async def test_full_dhcp_flow(
     hass: HomeAssistant,
@@ -180,9 +178,7 @@ async def test_full_dhcp_flow(
     assert result["result"].unique_id == USER_ID
 
 
-@pytest.mark.usefixtures(
-    "current_request_with_host", "use_cloud", "mock_aladdin_connect_api"
-)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -256,7 +252,6 @@ async def test_duplicate_dhcp_entry(
     "current_request_with_host",
     "use_cloud",
     "mock_setup_entry",
-    "mock_aladdin_connect_api",
 )
 async def test_flow_reauth(
     hass: HomeAssistant,
@@ -317,9 +312,7 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures(
-    "current_request_with_host", "use_cloud", "mock_aladdin_connect_api"
-)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_flow_wrong_account_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

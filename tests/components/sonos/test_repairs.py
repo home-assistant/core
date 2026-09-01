@@ -40,13 +40,12 @@ async def test_subscription_repair_issues(
 
     # Ensure the issue still exists after reload
     assert await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
 
     # Ensure the issue has been removed after a successful subscription callback
     variables = {"ZoneGroupState": zgs_discovery}
     event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
     sub_callback(event)
-    await hass.async_block_till_done()
-    assert not issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert not issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)

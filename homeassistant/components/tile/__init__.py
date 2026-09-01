@@ -1,7 +1,5 @@
 """The Tile component."""
 
-from __future__ import annotations
-
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
 

@@ -1,7 +1,5 @@
 """Area functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -101,17 +99,20 @@ class AreaExtension(BaseTemplateExtension):
                 # If entity has an area ID, get the area name for that
                 if entity.area_id:
                     return self._get_area_name(area_reg, entity.area_id)
-                # If entity has a device ID and the device exists with an area ID, get the
-                # area name for that
+                # If entity has a device ID and the device
+                # exists with an area ID, get the area name
+                # for that
                 if (
                     entity.device_id
                     and (device := dev_reg.async_get(entity.device_id))
-                    and device.area_id
+                    and (area_id := dr.async_get_effective_area_id(self.hass, device))
                 ):
-                    return self._get_area_name(area_reg, device.area_id)
+                    return self._get_area_name(area_reg, area_id)
 
-        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-            return self._get_area_name(area_reg, device.area_id)
+        if (device := dev_reg.async_get(lookup_value)) and (
+            area_id := dr.async_get_effective_area_id(self.hass, device)
+        ):
+            return self._get_area_name(area_reg, area_id)
 
         return None
 
@@ -131,8 +132,9 @@ class AreaExtension(BaseTemplateExtension):
             entry.entity_id for entry in er.async_entries_for_area(ent_reg, _area_id)
         ]
         dev_reg = dr.async_get(self.hass)
-        # We also need to add entities tied to a device in the area that don't themselves
-        # have an area specified since they inherit the area from the device.
+        # We also need to add entities tied to a device in the
+        # area that don't themselves have an area specified
+        # since they inherit the area from the device.
         entity_ids.extend(
             [
                 entity.entity_id

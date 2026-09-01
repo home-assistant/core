@@ -1,11 +1,11 @@
 """Button platform for the UniFi Access integration."""
 
-from __future__ import annotations
+from typing import override
 
 from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,10 +23,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access button entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UnifiAccessUnlockButton(coordinator, door)
-        for door in coordinator.data.doors.values()
-    )
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_new_doors() -> None:
+        new_door_ids = sorted(set(coordinator.data.doors) - added_doors)
+        if not new_door_ids:
+            return
+        async_add_entities(
+            UnifiAccessUnlockButton(coordinator, coordinator.data.doors[door_id])
+            for door_id in new_door_ids
+        )
+        added_doors.update(new_door_ids)
+
+    _async_add_new_doors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_doors))
 
 
 class UnifiAccessUnlockButton(UnifiAccessEntity, ButtonEntity):
@@ -42,6 +53,7 @@ class UnifiAccessUnlockButton(UnifiAccessEntity, ButtonEntity):
         """Initialize the button entity."""
         super().__init__(coordinator, door, "unlock")
 
+    @override
     async def async_press(self) -> None:
         """Unlock the door."""
         try:

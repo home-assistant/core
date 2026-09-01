@@ -1,14 +1,12 @@
 """Diagnostics support for Husqvarna Automower."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
@@ -32,9 +30,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: AutomowerConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: AutomowerConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
+    if TYPE_CHECKING:
+        # husqvarna_automower does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     coordinator = entry.runtime_data
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN:

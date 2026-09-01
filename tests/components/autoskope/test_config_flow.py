@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.autoskope.const import (
     DEFAULT_HOST,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,17 +20,14 @@ from tests.common import MockConfigEntry
 USER_INPUT = {
     CONF_USERNAME: "test_user",
     CONF_PASSWORD: "test_password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_HOST: DEFAULT_HOST,
     },
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_autoskope_client: AsyncMock) -> None:
     """Test full user config flow from form to entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -60,10 +57,10 @@ async def test_full_flow(
         (CannotConnect("Connection failed"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -91,10 +88,9 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_invalid_url(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_autoskope_client: AsyncMock
 ) -> None:
     """Test config flow rejects invalid URL with recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -106,7 +102,7 @@ async def test_flow_invalid_url(
         {
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_HOST: "not-a-valid-url",
             },
         },
@@ -142,10 +138,9 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_custom_host(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_autoskope_client: AsyncMock
 ) -> None:
     """Test config flow with a custom white-label host."""
     result = await hass.config_entries.flow.async_init(
@@ -156,7 +151,7 @@ async def test_custom_host(
         {
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_HOST: "https://custom.autoskope.server",
             },
         },
@@ -165,3 +160,72 @@ async def test_custom_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "https://custom.autoskope.server"
     assert result["result"].unique_id == "test_user@https://custom.autoskope.server"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_autoskope_client: AsyncMock,
+) -> None:
+    """Test reauth flow updates password and reloads entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "new_password",
+        CONF_HOST: DEFAULT_HOST,
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (InvalidAuth("Invalid credentials"), "invalid_auth"),
+        (CannotConnect("Connection failed"), "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_autoskope_client: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauth flow error handling with recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_autoskope_client.__aenter__.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "wrong_password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Recovery: clear the error and retry
+    mock_autoskope_client.__aenter__.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

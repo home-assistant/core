@@ -1,16 +1,13 @@
 """Support MySensors IR transceivers."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     RemoteEntity,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,11 +16,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -32,11 +30,11 @@ async def async_setup_entry(
     def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors remote."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.REMOTE,
             discovery_info,
             MySensorsRemote,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(
@@ -54,6 +52,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
     _current_command: str | None = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if remote is on."""
         set_req = self.gateway.const.SetReq
@@ -63,6 +62,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
         return value == "1"
 
     @property
+    @override
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         features = RemoteEntityFeature(0)
@@ -71,6 +71,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
             features = features | RemoteEntityFeature.LEARN_COMMAND
         return features
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
         for cmd in command:
@@ -79,6 +80,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
                 self.node_id, self.child_id, self.value_type, cmd, ack=1
             )
 
+    @override
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
         set_req = self.gateway.const.SetReq
@@ -91,6 +93,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
                 self.node_id, self.child_id, set_req.V_IR_RECORD, command, ack=1
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the IR transceiver on."""
         set_req = self.gateway.const.SetReq
@@ -106,6 +109,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
             self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the IR transceiver off."""
         set_req = self.gateway.const.SetReq
@@ -114,6 +118,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
         )
 
     @callback
+    @override
     def _async_update(self) -> None:
         """Update the controller with the latest value from a device."""
         super()._async_update()

@@ -1,8 +1,6 @@
 """Support for MQTT scenes."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -67,20 +65,25 @@ class MqttScene(
     _entity_id_format = scene.DOMAIN + ".{}"
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 

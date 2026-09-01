@@ -1,6 +1,5 @@
 """Webhook handlers for mobile_app."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -15,6 +14,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import (
     camera,
@@ -23,28 +23,31 @@ from homeassistant.components import (
     notify as hass_notify,
     tag,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.device_tracker import (
-    ATTR_BATTERY,
-    ATTR_GPS,
-    ATTR_LOCATION_NAME,
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_GPS_ACCURACY,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -58,16 +61,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
 
 from .const import (
-    ATTR_ALTITUDE,
     ATTR_APP_DATA,
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
-    ATTR_COURSE,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -82,11 +81,9 @@ from .const import (
     ATTR_SENSOR_TYPE_SENSOR,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
-    ATTR_SPEED,
     ATTR_SUPPORTS_ENCRYPTION,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
-    ATTR_VERTICAL_ACCURACY,
     ATTR_WEBHOOK_DATA,
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
@@ -94,6 +91,7 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -108,7 +106,9 @@ from .const import (
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
+from .device_tracker import LOCATION_UPDATE_SCHEMA
 from .helpers import (
+    async_is_local_only_user,
     decrypt_payload,
     decrypt_payload_legacy,
     empty_okay_response,
@@ -167,7 +167,7 @@ def validate_schema(schema):
             try:
                 data = schema(data)
             except vol.Invalid as ex:
-                err = vol.humanize.humanize_error(data, ex)
+                err = humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
                 return empty_okay_response()
 
@@ -208,7 +208,7 @@ async def handle_webhook(
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
     except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(req_data, ex)
+        err = humanize_error(req_data, ex)
         _LOGGER.error(
             "Received invalid webhook from %s with payload: %s", device_name, err
         )
@@ -360,7 +360,10 @@ async def webhook_stream_camera(
         "mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"
     }
 
-    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
+    if (
+        camera_state.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
+        & CameraEntityFeature.STREAM
+    ):
         try:
             resp["hls_path"] = await camera.async_request_stream(
                 hass, camera_state.entity_id, "hls"
@@ -404,23 +407,7 @@ async def webhook_render_template(
 
 
 @WEBHOOK_COMMANDS.register("update_location")
-@validate_schema(
-    vol.All(
-        cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
-        vol.Schema(
-            {
-                vol.Optional(ATTR_LOCATION_NAME): cv.string,
-                vol.Optional(ATTR_GPS): cv.gps,
-                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
-                vol.Optional(ATTR_BATTERY): cv.positive_int,
-                vol.Optional(ATTR_SPEED): cv.positive_int,
-                vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-                vol.Optional(ATTR_COURSE): cv.positive_int,
-                vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-            },
-        ),
-    )
-)
+@validate_schema(LOCATION_UPDATE_SCHEMA)
 async def webhook_update_location(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
@@ -672,7 +659,7 @@ async def webhook_update_sensor_states(
         try:
             sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
-            err_msg = vol.humanize.humanize_error(sensor, err)
+            err_msg = humanize_error(sensor, err)
             _LOGGER.error(
                 "Received invalid sensor payload from %s for %s: %s",
                 device_name,
@@ -713,8 +700,9 @@ def _async_update_sensor_entity(
     # Replace existing pending update with the latest sensor data.
     hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type][unique_store_key] = data
 
-    # The signal might not be handled if the entity was just enabled, but the data is stored
-    # in pending updates and will be applied on entity initialization.
+    # The signal might not be handled if the entity was
+    # just enabled, but the data is stored in pending updates
+    # and will be applied on entity initialization.
     async_dispatcher_send(
         hass, f"{SIGNAL_SENSOR_UPDATE}-{entity_type}-{unique_store_key}"
     )
@@ -756,7 +744,9 @@ async def webhook_get_config(
         "theme_color": MANIFEST_JSON["theme_color"],
     }
 
-    if cloud.async_active_subscription(hass):
+    if cloud.async_active_subscription(hass) and not await async_is_local_only_user(
+        hass, config_entry.data[CONF_USER_ID]
+    ):
         if CONF_CLOUDHOOK_URL in config_entry.data:
             resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
@@ -768,7 +758,7 @@ async def webhook_get_config(
     for entry in er.async_entries_for_config_entry(
         er.async_get(hass), config_entry.entry_id
     ):
-        if entry.domain in ("binary_sensor", "sensor"):
+        if entry.domain in (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN):
             unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
         else:
             unique_id = entry.unique_id

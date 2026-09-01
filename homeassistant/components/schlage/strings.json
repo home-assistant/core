@@ -1,4 +1,8 @@
 {
+  "common": {
+    "data_description_password": "The password of your Schlage account.",
+    "data_description_username": "The email address of your Schlage account."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -14,6 +18,9 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "[%key:component::schlage::common::data_description_password%]"
+        },
         "description": "The Schlage integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -21,6 +28,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::schlage::common::data_description_password%]",
+          "username": "[%key:component::schlage::common::data_description_username%]"
         }
       }
     }
@@ -42,7 +53,9 @@
           "60": "1 minute",
           "120": "2 minutes",
           "240": "4 minutes",
-          "300": "5 minutes"
+          "300": "5 minutes",
+          "360": "6 minutes",
+          "600": "10 minutes"
         }
       }
     },
@@ -83,6 +96,10 @@
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
+        },
+        "notify_on_use": {
+          "description": "Whether the native Schlage notification should be sent when this PIN is used.",
+          "name": "Notify when PIN is used"
         }
       },
       "name": "Add PIN code"

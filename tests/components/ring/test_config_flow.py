@@ -232,10 +232,9 @@ async def test_reauth_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_account_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_added_config_entry: Mock,
+    hass: HomeAssistant, mock_added_config_entry: Mock
 ) -> None:
     """Test that user cannot configure the same account twice."""
 
@@ -254,11 +253,9 @@ async def test_account_configured(
     assert result2["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_ring_client: Mock,
-    device_registry: dr.DeviceRegistry,
+    hass: HomeAssistant, mock_ring_client: Mock, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test discovery by dhcp."""
     mac_address = "1234567890abcd"
@@ -306,9 +303,9 @@ async def test_dhcp_discovery(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_ring_client: Mock,
     mock_added_config_entry: MockConfigEntry,
 ) -> None:

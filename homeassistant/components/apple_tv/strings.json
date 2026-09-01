@@ -17,6 +17,7 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "Invalid PIN",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -34,7 +35,7 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
-        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen. Leading zeros shall be omitted, i.e. enter 123 if the displayed code is 0123.",
+        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen, including any leading zeros.",
         "title": "Pairing"
       },
       "password": {
@@ -69,6 +70,26 @@
       }
     }
   },
+  "exceptions": {
+    "keyboard_error": {
+      "message": "An error occurred while sending text to the Apple TV"
+    },
+    "keyboard_not_available": {
+      "message": "Keyboard input is not supported by this device"
+    },
+    "keyboard_not_focused": {
+      "message": "No text input field is currently focused on the Apple TV"
+    },
+    "not_connected": {
+      "message": "Apple TV is not connected"
+    },
+    "stream_failed": {
+      "message": "Failed to stream media to the Apple TV"
+    },
+    "streaming_not_supported": {
+      "message": "Streaming the requested media is not supported"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -77,6 +98,46 @@
         },
         "description": "Configure general device settings"
       }
+    }
+  },
+  "services": {
+    "append_keyboard_text": {
+      "description": "Appends text to the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::name%]"
+        },
+        "text": {
+          "description": "The text to append.",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::text::name%]"
+        }
+      },
+      "name": "Append keyboard text"
+    },
+    "clear_keyboard_text": {
+      "description": "Clears the text in the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::name%]"
+        }
+      },
+      "name": "Clear keyboard text"
+    },
+    "set_keyboard_text": {
+      "description": "Sets the text in the currently focused text input field on an Apple TV.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Apple TV to send text to.",
+          "name": "Apple TV"
+        },
+        "text": {
+          "description": "The text to set.",
+          "name": "Text"
+        }
+      },
+      "name": "Set keyboard text"
     }
   }
 }

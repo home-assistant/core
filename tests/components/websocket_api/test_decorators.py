@@ -109,9 +109,7 @@ async def test_async_response_request_context(
     assert msg["id"] == 8
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
-    assert (
-        msg["error"]["message"] == "required key not provided @ data['arg']. Got None"
-    )
+    assert msg["error"]["message"] == "required key not provided at 'arg'. Got None"
 
     await websocket_client.send_json(
         {

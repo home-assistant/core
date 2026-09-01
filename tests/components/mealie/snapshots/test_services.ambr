@@ -18,9 +18,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
-          'recipe_yield': None,
+          'recipe_servings': 4.0,
+          'recipe_yield': '4 servings',
+          'recipe_yield_quantity': 4.0,
           'slug': 'tu6y',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -40,9 +44,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -62,9 +70,13 @@
           'prep_time': None,
           'rating': 5.0,
           'recipe_id': '90097c8b-9d80-468a-b497-73957ac0cd8b',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'patates-douces-au-four-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -84,9 +96,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
-          'recipe_yield': '',
+          'recipe_servings': None,
+          'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'sweet-potatoes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -106,9 +122,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '40c227e0-3c7e-41f7-866d-5de04eaecdd7',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -128,7 +148,9 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
           'tags': list([
             dict({
@@ -192,6 +214,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -210,7 +234,9 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': 'fc42c7d1-7b0f-4e04-b88a-dbd80b81540b',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'boeuf-bourguignon-la-vraie-recette-1',
           'tags': list([
             dict({
@@ -274,6 +300,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -292,9 +320,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '89e63d72-7a51-4cef-b162-2e45035d0a91',
+          'recipe_servings': None,
           'recipe_yield': '14 servings',
+          'recipe_yield_quantity': None,
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -314,9 +346,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'eab64457-97ba-4d6c-871c-cb1c724ccb51',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -336,9 +372,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '12439e3d-3c1c-4dcc-9c6e-4afcea2a0542',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test123',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -358,9 +398,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '6567f6ec-e410-49cb-a1a5-d08517184e78',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'bureeto',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -380,9 +424,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'f7737d17-161c-4008-88d4-dd2616778cd0',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'subway-double-cookies',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -402,9 +450,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '1904b717-4a8b-4de9-8909-56958875b5f4',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'qwerty12345',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -424,7 +476,9 @@
           'prep_time': '8 Minutes',
           'rating': 5.0,
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
+          'recipe_servings': None,
           'recipe_yield': '24 servings',
+          'recipe_yield_quantity': None,
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
           'tags': list([
             dict({
@@ -437,6 +491,8 @@
               'slug': 'sliders',
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -456,9 +512,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '8a30d31d-aa14-411e-af0c-6b61a94f5291',
+          'recipe_servings': None,
           'recipe_yield': '4',
+          'recipe_yield_quantity': None,
           'slug': 'meatloaf',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -478,9 +538,13 @@
           'prep_time': '1 Hour',
           'rating': 3.0,
           'recipe_id': 'f2f7880b-1136-436f-91b7-129788d8c117',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'richtig-rheinischer-sauerbraten',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -500,7 +564,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': 'cf634591-0f82-4254-8e00-2f7e8b0c9022',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'orientalischer-gemuse-hahnchen-eintopf',
           'tags': list([
             dict({
@@ -544,6 +610,8 @@
               'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -562,9 +630,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '05208856-d273-4cc9-bcfa-e0215d57108d',
+          'recipe_servings': None,
           'recipe_yield': '4',
+          'recipe_yield_quantity': None,
           'slug': 'test-20240121',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -584,9 +656,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '145eeb05-781a-4eb0-a656-afa8bc8c0164',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'loempia-bowl',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -606,9 +682,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '5c6532aa-ad84-424c-bc05-c32d50430fe4',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': '5-ingredient-chocolate-mousse',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -628,7 +708,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': 'f2e684f2-49e0-45ee-90de-951344472f1c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'der-perfekte-pfannkuchen-gelingt-einfach-immer',
           'tags': list([
             dict({
@@ -662,6 +744,8 @@
               'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -685,13 +769,22 @@
           'prep_time': '1h',
           'rating': None,
           'recipe_id': 'cf239441-b75d-4dea-a48e-9d99b7cb5842',
+          'recipe_servings': None,
           'recipe_yield': '1',
+          'recipe_yield_quantity': None,
           'slug': 'dinkel-sauerteigbrot',
           'tags': list([
             dict({
               'name': 'Sourdough',
               'slug': 'sourdough',
               'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
+            }),
+          ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
             }),
           ]),
           'total_time': '24h',
@@ -712,9 +805,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '2673eb90-6d78-4b95-af36-5db8c8a6da37',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test-234234',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -734,9 +831,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '0a723c54-af53-40e9-a15f-c87aae5ac688',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test-243',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -756,7 +857,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
           'tags': list([
             dict({
@@ -764,6 +867,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -794,9 +899,13 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': '9d3cb303-a996-4144-948a-36afaeeef554',
+          'recipe_servings': None,
           'recipe_yield': '8 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tarta-cytrynowa-z-beza',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -816,9 +925,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '77f05a49-e869-4048-aa62-0d8a1f5a8f1c',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'martins-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -838,7 +951,9 @@
           'prep_time': '25 Minutes',
           'rating': None,
           'recipe_id': '75a90207-9c10-4390-a265-c47a4b67fd69',
+          'recipe_servings': None,
           'recipe_yield': '12',
+          'recipe_yield_quantity': None,
           'slug': 'muffinki-czekoladowe',
           'tags': list([
             dict({
@@ -862,6 +977,8 @@
               'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -880,9 +997,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '4320ba72-377b-4657-8297-dce198f24cdf',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'my-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -902,9 +1023,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '98dac844-31ee-426a-b16c-fb62a5dd2816',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'my-test-receipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -924,9 +1049,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'c3c8f207-c704-415d-81b1-da9f032cf52f',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'patates-douces-au-four',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -946,9 +1075,13 @@
           'prep_time': '2 Hours 15 Minutes',
           'rating': None,
           'recipe_id': '1edb2f6e-133c-4be0-b516-3c23625a97ec',
+          'recipe_servings': None,
           'recipe_yield': '2 servings',
+          'recipe_yield_quantity': None,
           'slug': 'easy-homemade-pizza-dough',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -968,7 +1101,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'all-american-beef-stew-recipe',
           'tags': list([
             dict({
@@ -976,6 +1111,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -995,7 +1132,9 @@
           'prep_time': '20 Minutes',
           'rating': 5.0,
           'recipe_id': '6530ea6e-401e-4304-8a7a-12162ddf5b9c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'serious-eats-halal-cart-style-chicken-and-rice-with-white-sauce',
           'tags': list([
             dict({
@@ -1044,6 +1183,8 @@
               'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1062,9 +1203,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': 'c496cf9c-1ece-448a-9d3f-ef772f078a4e',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'schnelle-kasespatzle',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1084,9 +1229,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '49aa6f42-6760-4adf-b6cd-59592da485c3',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'taco',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1106,9 +1255,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '6402a253-2baa-460d-bf4f-b759bb655588',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'vodkapasta',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1128,9 +1281,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '4f54e9e1-f21d-40ec-a135-91e633dfb733',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'vodkapasta2',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1150,9 +1307,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e1a3edb0-49a0-49a3-83e3-95554e932670',
+          'recipe_servings': None,
           'recipe_yield': '1',
+          'recipe_yield_quantity': None,
           'slug': 'rub',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1172,7 +1333,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '1a0f4e54-db5b-40f1-ab7e-166dab5f6523',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'banana-bread-chocolate-chip-cookies',
           'tags': list([
             dict({
@@ -1211,6 +1374,8 @@
               'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1229,9 +1394,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '447acae6-3424-4c16-8c26-c09040ad8041',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1251,9 +1420,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '864136a3-27b0-4f3b-a90f-486f42d6df7a',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'prova',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1273,9 +1446,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'c7ccf4c7-c5f4-4191-a79b-1a49d068f6a4',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1295,9 +1472,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'd01865c3-0f18-4e8d-84c0-c14c345fdf9c',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1317,9 +1498,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '2cec2bb2-19b6-40b8-a36c-1a76ea29c517',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'sous-vide-cheesecake-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1339,9 +1524,13 @@
           'prep_time': '30 Minutes',
           'rating': None,
           'recipe_id': '8e0e4566-9caf-4c2e-a01c-dcead23db86b',
+          'recipe_servings': None,
           'recipe_yield': '10 servings',
+          'recipe_yield_quantity': None,
           'slug': 'the-bomb-mini-cheesecakes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1361,7 +1550,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': 'a051eafd-9712-4aee-a8e5-0cd10a6772ee',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tagliatelle-al-salmone',
           'tags': list([
             dict({
@@ -1420,6 +1611,8 @@
               'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1438,9 +1631,13 @@
           'prep_time': '25 Minutes',
           'rating': None,
           'recipe_id': '093d51e9-0823-40ad-8e0e-a1d5790dd627',
+          'recipe_servings': None,
           'recipe_yield': '1 serving',
+          'recipe_yield_quantity': None,
           'slug': 'death-by-chocolate',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1460,7 +1657,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '2d1f62ec-4200-4cfd-987e-c75755d7607c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'palak-dal-rezept-aus-indien',
           'tags': list([
             dict({
@@ -1484,6 +1683,8 @@
               'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1502,7 +1703,9 @@
           'prep_time': '30 Minutes',
           'rating': None,
           'recipe_id': '973dc36d-1661-49b4-ad2d-0b7191034fb3',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tortelline-a-la-romana',
           'tags': list([
             dict({
@@ -1520,6 +1723,8 @@
               'slug': 'nudeln',
               'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1547,9 +1752,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
-          'recipe_yield': None,
+          'recipe_servings': 4.0,
+          'recipe_yield': '4 servings',
+          'recipe_yield_quantity': 4.0,
           'slug': 'tu6y',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1569,9 +1778,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1591,9 +1804,13 @@
           'prep_time': None,
           'rating': 5.0,
           'recipe_id': '90097c8b-9d80-468a-b497-73957ac0cd8b',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'patates-douces-au-four-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1613,9 +1830,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
-          'recipe_yield': '',
+          'recipe_servings': None,
+          'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'sweet-potatoes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1635,9 +1856,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '40c227e0-3c7e-41f7-866d-5de04eaecdd7',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1657,7 +1882,9 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
           'tags': list([
             dict({
@@ -1721,6 +1948,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1739,7 +1968,9 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': 'fc42c7d1-7b0f-4e04-b88a-dbd80b81540b',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'boeuf-bourguignon-la-vraie-recette-1',
           'tags': list([
             dict({
@@ -1803,6 +2034,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1821,9 +2054,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '89e63d72-7a51-4cef-b162-2e45035d0a91',
+          'recipe_servings': None,
           'recipe_yield': '14 servings',
+          'recipe_yield_quantity': None,
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1843,9 +2080,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'eab64457-97ba-4d6c-871c-cb1c724ccb51',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1865,9 +2106,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '12439e3d-3c1c-4dcc-9c6e-4afcea2a0542',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test123',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1887,9 +2132,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '6567f6ec-e410-49cb-a1a5-d08517184e78',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'bureeto',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1909,9 +2158,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'f7737d17-161c-4008-88d4-dd2616778cd0',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'subway-double-cookies',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1931,9 +2184,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '1904b717-4a8b-4de9-8909-56958875b5f4',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'qwerty12345',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1953,7 +2210,9 @@
           'prep_time': '8 Minutes',
           'rating': 5.0,
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
+          'recipe_servings': None,
           'recipe_yield': '24 servings',
+          'recipe_yield_quantity': None,
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
           'tags': list([
             dict({
@@ -1966,6 +2225,8 @@
               'slug': 'sliders',
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1985,9 +2246,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '8a30d31d-aa14-411e-af0c-6b61a94f5291',
+          'recipe_servings': None,
           'recipe_yield': '4',
+          'recipe_yield_quantity': None,
           'slug': 'meatloaf',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2007,9 +2272,13 @@
           'prep_time': '1 Hour',
           'rating': 3.0,
           'recipe_id': 'f2f7880b-1136-436f-91b7-129788d8c117',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'richtig-rheinischer-sauerbraten',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2029,7 +2298,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': 'cf634591-0f82-4254-8e00-2f7e8b0c9022',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'orientalischer-gemuse-hahnchen-eintopf',
           'tags': list([
             dict({
@@ -2073,6 +2344,8 @@
               'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2091,9 +2364,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '05208856-d273-4cc9-bcfa-e0215d57108d',
+          'recipe_servings': None,
           'recipe_yield': '4',
+          'recipe_yield_quantity': None,
           'slug': 'test-20240121',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2113,9 +2390,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '145eeb05-781a-4eb0-a656-afa8bc8c0164',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'loempia-bowl',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2135,9 +2416,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '5c6532aa-ad84-424c-bc05-c32d50430fe4',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': '5-ingredient-chocolate-mousse',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2157,7 +2442,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': 'f2e684f2-49e0-45ee-90de-951344472f1c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'der-perfekte-pfannkuchen-gelingt-einfach-immer',
           'tags': list([
             dict({
@@ -2191,6 +2478,8 @@
               'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2214,13 +2503,22 @@
           'prep_time': '1h',
           'rating': None,
           'recipe_id': 'cf239441-b75d-4dea-a48e-9d99b7cb5842',
+          'recipe_servings': None,
           'recipe_yield': '1',
+          'recipe_yield_quantity': None,
           'slug': 'dinkel-sauerteigbrot',
           'tags': list([
             dict({
               'name': 'Sourdough',
               'slug': 'sourdough',
               'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
+            }),
+          ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
             }),
           ]),
           'total_time': '24h',
@@ -2241,9 +2539,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '2673eb90-6d78-4b95-af36-5db8c8a6da37',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test-234234',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2263,9 +2565,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '0a723c54-af53-40e9-a15f-c87aae5ac688',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'test-243',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2285,7 +2591,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
           'tags': list([
             dict({
@@ -2293,6 +2601,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2323,9 +2633,13 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': '9d3cb303-a996-4144-948a-36afaeeef554',
+          'recipe_servings': None,
           'recipe_yield': '8 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tarta-cytrynowa-z-beza',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2345,9 +2659,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '77f05a49-e869-4048-aa62-0d8a1f5a8f1c',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'martins-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2367,7 +2685,9 @@
           'prep_time': '25 Minutes',
           'rating': None,
           'recipe_id': '75a90207-9c10-4390-a265-c47a4b67fd69',
+          'recipe_servings': None,
           'recipe_yield': '12',
+          'recipe_yield_quantity': None,
           'slug': 'muffinki-czekoladowe',
           'tags': list([
             dict({
@@ -2391,6 +2711,8 @@
               'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2409,9 +2731,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '4320ba72-377b-4657-8297-dce198f24cdf',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'my-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2431,9 +2757,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '98dac844-31ee-426a-b16c-fb62a5dd2816',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'my-test-receipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2453,9 +2783,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'c3c8f207-c704-415d-81b1-da9f032cf52f',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'patates-douces-au-four',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2475,9 +2809,13 @@
           'prep_time': '2 Hours 15 Minutes',
           'rating': None,
           'recipe_id': '1edb2f6e-133c-4be0-b516-3c23625a97ec',
+          'recipe_servings': None,
           'recipe_yield': '2 servings',
+          'recipe_yield_quantity': None,
           'slug': 'easy-homemade-pizza-dough',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2497,7 +2835,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'all-american-beef-stew-recipe',
           'tags': list([
             dict({
@@ -2505,6 +2845,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2524,7 +2866,9 @@
           'prep_time': '20 Minutes',
           'rating': 5.0,
           'recipe_id': '6530ea6e-401e-4304-8a7a-12162ddf5b9c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'serious-eats-halal-cart-style-chicken-and-rice-with-white-sauce',
           'tags': list([
             dict({
@@ -2573,6 +2917,8 @@
               'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2591,9 +2937,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': 'c496cf9c-1ece-448a-9d3f-ef772f078a4e',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'schnelle-kasespatzle',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2613,9 +2963,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '49aa6f42-6760-4adf-b6cd-59592da485c3',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'taco',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2635,9 +2989,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '6402a253-2baa-460d-bf4f-b759bb655588',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'vodkapasta',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2657,9 +3015,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '4f54e9e1-f21d-40ec-a135-91e633dfb733',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'vodkapasta2',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2679,9 +3041,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e1a3edb0-49a0-49a3-83e3-95554e932670',
+          'recipe_servings': None,
           'recipe_yield': '1',
+          'recipe_yield_quantity': None,
           'slug': 'rub',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2701,7 +3067,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '1a0f4e54-db5b-40f1-ab7e-166dab5f6523',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'banana-bread-chocolate-chip-cookies',
           'tags': list([
             dict({
@@ -2740,6 +3108,8 @@
               'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2758,9 +3128,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '447acae6-3424-4c16-8c26-c09040ad8041',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2780,9 +3154,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': '864136a3-27b0-4f3b-a90f-486f42d6df7a',
+          'recipe_servings': None,
           'recipe_yield': '',
+          'recipe_yield_quantity': None,
           'slug': 'prova',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2802,9 +3180,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'c7ccf4c7-c5f4-4191-a79b-1a49d068f6a4',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2824,9 +3206,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'd01865c3-0f18-4e8d-84c0-c14c345fdf9c',
+          'recipe_servings': None,
           'recipe_yield': None,
+          'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2846,9 +3232,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '2cec2bb2-19b6-40b8-a36c-1a76ea29c517',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'sous-vide-cheesecake-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2868,9 +3258,13 @@
           'prep_time': '30 Minutes',
           'rating': None,
           'recipe_id': '8e0e4566-9caf-4c2e-a01c-dcead23db86b',
+          'recipe_servings': None,
           'recipe_yield': '10 servings',
+          'recipe_yield_quantity': None,
           'slug': 'the-bomb-mini-cheesecakes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2890,7 +3284,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': 'a051eafd-9712-4aee-a8e5-0cd10a6772ee',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tagliatelle-al-salmone',
           'tags': list([
             dict({
@@ -2949,6 +3345,8 @@
               'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2967,9 +3365,13 @@
           'prep_time': '25 Minutes',
           'rating': None,
           'recipe_id': '093d51e9-0823-40ad-8e0e-a1d5790dd627',
+          'recipe_servings': None,
           'recipe_yield': '1 serving',
+          'recipe_yield_quantity': None,
           'slug': 'death-by-chocolate',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2989,7 +3391,9 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '2d1f62ec-4200-4cfd-987e-c75755d7607c',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'palak-dal-rezept-aus-indien',
           'tags': list([
             dict({
@@ -3013,6 +3417,8 @@
               'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3031,7 +3437,9 @@
           'prep_time': '30 Minutes',
           'rating': None,
           'recipe_id': '973dc36d-1661-49b4-ad2d-0b7191034fb3',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'tortelline-a-la-romana',
           'tags': list([
             dict({
@@ -3049,6 +3457,8 @@
               'slug': 'nudeln',
               'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3217,6 +3627,9 @@
       ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
+      'extras': dict({
+        'Energy Consumption': '5',
+      }),
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
       'household_id': None,
       'image': 'SuPW',
@@ -3447,7 +3860,9 @@
       'prep_time': '1 hour 30 minutes',
       'rating': None,
       'recipe_id': 'fada9582-709b-46aa-b384-d5952123ad93',
+      'recipe_servings': 4.0,
       'recipe_yield': '4 servings',
+      'recipe_yield_quantity': 4.0,
       'slug': 'original-sacher-torte-2',
       'tags': list([
         dict({
@@ -3486,6 +3901,23 @@
           'tag_id': 'd530b8e4-275a-4093-804b-6d0de154c206',
         }),
       ]),
+      'tools': list([
+        dict({
+          'name': 'Backofen',
+          'slug': 'backofen',
+          'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+        }),
+        dict({
+          'name': 'Magimix blender',
+          'slug': 'magimix-blender',
+          'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+        }),
+        dict({
+          'name': 'Alluminio',
+          'slug': 'alluminio',
+          'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+        }),
+      ]),
       'total_time': '2 hours 30 minutes',
       'user_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0',
     }),
@@ -3516,9 +3948,13 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+          'recipe_servings': None,
           'recipe_yield': '2 servings',
+          'recipe_yield_quantity': None,
           'slug': 'zoete-aardappel-curry-traybake',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3548,9 +3984,13 @@
           'prep_time': '15 Minutes',
           'rating': 5.0,
           'recipe_id': '5b055066-d57d-4fd0-8dfd-a2c2f07b36f1',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'roast-chicken',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3580,9 +4020,28 @@
           'prep_time': '3 Minutes',
           'rating': None,
           'recipe_id': 'e360a0cc-18b0-4a84-a91b-8aa59e2451c9',
+          'recipe_servings': None,
           'recipe_yield': '2 servings',
+          'recipe_yield_quantity': None,
           'slug': 'receta-de-pollo-al-curry-en-10-minutos-con-video-incluido',
           'tags': list([
+          ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+            }),
+            dict({
+              'name': 'Magimix blender',
+              'slug': 'magimix-blender',
+              'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+            }),
+            dict({
+              'name': 'Alluminio',
+              'slug': 'alluminio',
+              'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+            }),
           ]),
           'total_time': '10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3612,7 +4071,9 @@
           'prep_time': '1 Hour',
           'rating': None,
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
+          'recipe_servings': 4.0,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': 4.0,
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
           'tags': list([
             dict({
@@ -3676,6 +4137,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3704,9 +4167,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3736,9 +4203,13 @@
           'prep_time': '40 Minutes',
           'rating': None,
           'recipe_id': '47595e4c-52bc-441d-b273-3edf4258806d',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3756,7 +4227,7 @@
         'recipe': dict({
           'categories': list([
           ]),
-          'date_added': HAFakeDate(2024, 1, 21),
+          'date_added': None,
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
@@ -3768,7 +4239,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
           'tags': list([
             dict({
@@ -3776,6 +4249,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3805,7 +4280,9 @@
           'prep_time': '15 Minutes',
           'rating': 3.0,
           'recipe_id': '92635fd0-f2dc-4e78-a6e4-ecd556ad361f',
+          'recipe_servings': None,
           'recipe_yield': '12 servings',
+          'recipe_yield_quantity': None,
           'slug': 'pampered-chef-double-chocolate-mocha-trifle',
           'tags': list([
             dict({
@@ -3818,6 +4295,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3847,7 +4326,9 @@
           'prep_time': '8 Minutes',
           'rating': 5.0,
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
+          'recipe_servings': None,
           'recipe_yield': '24 servings',
+          'recipe_yield_quantity': None,
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
           'tags': list([
             dict({
@@ -3860,6 +4341,8 @@
               'slug': 'sliders',
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3889,7 +4372,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'all-american-beef-stew-recipe',
           'tags': list([
             dict({
@@ -3897,6 +4382,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3926,7 +4413,9 @@
           'prep_time': '5 Minutes',
           'rating': None,
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
+          'recipe_servings': None,
           'recipe_yield': '6 servings',
+          'recipe_yield_quantity': None,
           'slug': 'all-american-beef-stew-recipe',
           'tags': list([
             dict({
@@ -3934,6 +4423,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3963,7 +4454,9 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
+          'recipe_servings': None,
           'recipe_yield': '4 servings',
+          'recipe_yield_quantity': None,
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
           'tags': list([
             dict({
@@ -3971,6 +4464,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4000,9 +4495,13 @@
           'prep_time': '10 Minutes',
           'rating': None,
           'recipe_id': '25b814f2-d9bf-4df0-b40d-d2f2457b4317',
+          'recipe_servings': None,
           'recipe_yield': '2 servings',
+          'recipe_yield_quantity': None,
           'slug': 'miso-udon-noodles-with-spinach-and-tofu',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4032,9 +4531,13 @@
           'prep_time': '15 Minutes',
           'rating': None,
           'recipe_id': '55c88810-4cf1-4d86-ae50-63b15fd173fb',
+          'recipe_servings': None,
           'recipe_yield': '12 servings',
+          'recipe_yield_quantity': None,
           'slug': 'mousse-de-saumon',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '17 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4063,6 +4566,9 @@
       ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
+      'extras': dict({
+        'Energy Consumption': '5',
+      }),
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
       'household_id': None,
       'image': 'SuPW',
@@ -4293,7 +4799,9 @@
       'prep_time': '1 hour 30 minutes',
       'rating': None,
       'recipe_id': 'fada9582-709b-46aa-b384-d5952123ad93',
+      'recipe_servings': 4.0,
       'recipe_yield': '4 servings',
+      'recipe_yield_quantity': 4.0,
       'slug': 'original-sacher-torte-2',
       'tags': list([
         dict({
@@ -4332,6 +4840,23 @@
           'tag_id': 'd530b8e4-275a-4093-804b-6d0de154c206',
         }),
       ]),
+      'tools': list([
+        dict({
+          'name': 'Backofen',
+          'slug': 'backofen',
+          'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+        }),
+        dict({
+          'name': 'Magimix blender',
+          'slug': 'magimix-blender',
+          'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+        }),
+        dict({
+          'name': 'Alluminio',
+          'slug': 'alluminio',
+          'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+        }),
+      ]),
       'total_time': '2 hours 30 minutes',
       'user_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0',
     }),
@@ -4361,9 +4886,13 @@
         'prep_time': None,
         'rating': None,
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
         'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4397,9 +4926,13 @@
         'prep_time': None,
         'rating': None,
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
         'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4433,9 +4966,13 @@
         'prep_time': None,
         'rating': None,
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
         'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4469,9 +5006,133 @@
         'prep_time': None,
         'rating': None,
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
         'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload0-kwargs0]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload1-kwargs1]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload2-kwargs2]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',

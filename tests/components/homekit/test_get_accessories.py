@@ -4,20 +4,26 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import ATTR_CURRENT_HUMIDITY, ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.homekit import TYPE_AIR_PURIFIER
-from homeassistant.components.homekit.accessories import TYPES, get_accessory
+from homeassistant.components.homekit.accessories import (
+    TYPES,
+    climate_supports_heater_cooler,
+    get_accessory,
+)
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_sensors import (
@@ -246,6 +252,13 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.RECEIVER},
             {},
         ),
+        (
+            "TelevisionMediaPlayer",
+            "media_player.projector",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.PROJECTOR},
+            {},
+        ),
     ],
 )
 def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:
@@ -445,6 +458,239 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs"),
+    [
+        # Basic climate without fan/swing support -> Thermostat
+        ("Thermostat", "climate.basic", "heat", {}),
+        # Climate with only FAN_MODE feature but no fan_modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.fan_feature_only",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE},
+        ),
+        # Climate with only SWING_MODE feature but no swing_modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.swing_feature_only",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE},
+        ),
+        # Climate with FAN_MODE feature and fan_modes list -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_fan",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["low", "medium", "high"],
+            },
+        ),
+        # Timing fan modes (auto/on/off/circulate) are not predefined speeds, so
+        # an entity exposing only those has zero speeds -> Thermostat
+        (
+            "Thermostat",
+            "climate.timing_fan_modes_only",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["off", "auto", "on", "circulate"],
+            },
+        ),
+        # Those timing modes plus a single predefined speed still count as one
+        # speed, which cannot drive the slider -> Thermostat
+        (
+            "Thermostat",
+            "climate.single_fan_speed",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["off", "auto", "on", "circulate", "high"],
+            },
+        ),
+        # Timing modes are ignored, but two real speeds among them qualify
+        (
+            "HeaterCooler",
+            "climate.two_speeds_with_timing_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["off", "auto", "on", "circulate", "low", "high"],
+            },
+        ),
+        # A single predefined fan speed plus a swing mode -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.single_fan_speed_with_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["auto", "high"],
+                "swing_modes": ["on", "off"],
+            },
+        ),
+        # Climate with SWING_MODE feature and swing_modes list -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": ["on", "off"],
+            },
+        ),
+        # Climate with both FAN_MODE and SWING_MODE features and modes -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_fan_and_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["low", "high"],
+                "swing_modes": ["on", "off"],
+            },
+        ),
+        # Climate with FAN_MODE feature and empty fan_modes list -> Thermostat
+        (
+            "Thermostat",
+            "climate.empty_fan_modes",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE, "fan_modes": []},
+        ),
+        # Climate with SWING_MODE feature and empty swing_modes list -> Thermostat
+        (
+            "Thermostat",
+            "climate.empty_swing_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": [],
+            },
+        ),
+        # Climate with only custom (non-predefined) fan modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.custom_fan_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["quiet", "turbo"],
+            },
+        ),
+        # Climate with only custom (non-predefined) swing modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.custom_swing_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": ["off", "custom"],
+            },
+        ),
+        # Swing without an advertised off mode -> Thermostat (off writes
+        # would be rejected by the entity)
+        (
+            "Thermostat",
+            "climate.swing_without_off",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": ["vertical"],
+            },
+        ),
+        # Climate with other features but no fan/swing -> Thermostat
+        (
+            "Thermostat",
+            "climate.other_features",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    ClimateEntityFeature.TARGET_TEMPERATURE
+                    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                )
+            },
+        ),
+        # Fan speeds with a humidity setpoint -> Thermostat (controls humidity)
+        (
+            "Thermostat",
+            "climate.fan_and_target_humidity",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TARGET_HUMIDITY,
+                "fan_modes": ["low", "high"],
+            },
+        ),
+        # Fan speeds with display-only humidity -> HeaterCooler (kept via sensor)
+        (
+            "HeaterCooler",
+            "climate.fan_and_current_humidity",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["low", "high"],
+                ATTR_CURRENT_HUMIDITY: 45,
+            },
+        ),
+    ],
+)
+def test_climate_supports_heater_cooler(
+    type_name: str, entity_id: str, state: str, attrs: dict[str, object]
+) -> None:
+    """Test the capability predicate behind automatic HeaterCooler routing."""
+    entity_state = State(entity_id, state, attrs)
+    assert climate_supports_heater_cooler(entity_state) is (type_name == "HeaterCooler")
+
+
+def test_climate_without_configured_type_is_thermostat() -> None:
+    """Test a climate entity without a configured type gets the Thermostat."""
+    attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+        "fan_modes": ["low", "high"],
+    }
+    mock_type = Mock()
+    with patch.dict(TYPES, {"Thermostat": mock_type}):
+        entity_state = State("climate.test", "heat", attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("config_type", "attrs", "type_name"),
+    [
+        # Would auto-route to Thermostat, but the config forces HeaterCooler
+        (
+            TYPE_HEATER_COOLER,
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE},
+            "HeaterCooler",
+        ),
+        # Would auto-route to HeaterCooler, but the config forces Thermostat
+        (
+            TYPE_THERMOSTAT,
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["low", "high"],
+                "swing_modes": ["on", "off"],
+            },
+            "Thermostat",
+        ),
+    ],
+)
+def test_climate_accessory_type_override(
+    config_type: str, attrs: dict[str, object], type_name: str
+) -> None:
+    """Test a configured type overrides the capability based routing."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State("climate.test", "heat", attrs)
+        get_accessory(None, None, entity_state, 2, {CONF_TYPE: config_type})
     assert mock_type.called
 
 

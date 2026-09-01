@@ -97,5 +97,10 @@
         "name": "Static target energy"
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find LD2410B device with address {address}: {reason}"
+    }
   }
 }

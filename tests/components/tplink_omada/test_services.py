@@ -21,15 +21,15 @@ async def test_service_reconnect_no_config_entries(
     async_setup_services(hass)
 
     mac = "AA:BB:CC:DD:EE:FF"
-    with pytest.raises(
-        ServiceValidationError, match="No active TP-Link Omada controllers found"
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "reconnect_client",
             {"mac": mac},
             blocking=True,
         )
+    assert err.value.translation_key == "no_controllers"
+    assert err.value.translation_domain == DOMAIN
 
 
 async def test_service_reconnect_client(
@@ -68,15 +68,15 @@ async def test_service_reconnect_failed_with_invalid_entry(
     await hass.async_block_till_done()
 
     mac = "AA:BB:CC:DD:EE:FF"
-    with pytest.raises(
-        ServiceValidationError, match="Specified TP-Link Omada controller not found"
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "reconnect_client",
             {"config_entry_id": "invalid_entry_id", "mac": mac},
             blocking=True,
         )
+    assert err.value.translation_key == "controller_not_found"
+    assert err.value.translation_domain == DOMAIN
 
 
 async def test_service_reconnect_without_config_entry_id(
@@ -122,16 +122,15 @@ async def test_service_reconnect_entry_not_loaded(
     unloaded_entry.add_to_hass(hass)
 
     mac = "AA:BB:CC:DD:EE:FF"
-    with pytest.raises(
-        ServiceValidationError,
-        match="The TP-Link Omada integration is not currently available",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "reconnect_client",
             {"config_entry_id": unloaded_entry.entry_id, "mac": mac},
             blocking=True,
         )
+    assert err.value.translation_key == "controller_unavailable"
+    assert err.value.translation_domain == DOMAIN
 
 
 async def test_service_reconnect_failed_raises_homeassistanterror(
@@ -140,7 +139,7 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconnect client service raises the right kind of exception on service failure."""
+    """Test reconnect client service raises correct exception on failure."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -149,12 +148,15 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
 
     mac = "AA:BB:CC:DD:EE:FF"
     mock_omada_site_client.reconnect_client.side_effect = OmadaClientException
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             "reconnect_client",
             {"config_entry_id": mock_config_entry.entry_id, "mac": mac},
             blocking=True,
         )
+    assert err.value.translation_key == "reconnect_failed"
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_placeholders == {"mac": mac}
 
     mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)

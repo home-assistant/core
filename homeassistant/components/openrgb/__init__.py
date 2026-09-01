@@ -1,11 +1,9 @@
 """The OpenRGB integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
@@ -53,7 +51,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: OpenRGBConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, entry: OpenRGBConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Allows removal of device if it is no longer connected."""
     coordinator = entry.runtime_data

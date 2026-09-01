@@ -18,7 +18,8 @@
     "step": {
       "init": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "id": "Hue bridge"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hue bridge."
@@ -75,6 +76,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "entertainment_area": {
+        "name": "Entertainment area {area_name}"
+      }
+    },
     "event": {
       "button": {
         "name": "Button {button_id}",
@@ -140,6 +146,9 @@
       "light_sensor_enabled": {
         "name": "Light sensor enabled"
       },
+      "motion_aware": {
+        "name": "MotionAware"
+      },
       "motion_sensor_enabled": {
         "name": "Motion sensor enabled"
       }
@@ -184,7 +193,12 @@
           "name": "Transition"
         }
       },
-      "name": "Activate Hue scene"
+      "name": "Activate Hue scene",
+      "sections": {
+        "scene_customization": {
+          "name": "Scene customization"
+        }
+      }
     },
     "hue_activate_scene": {
       "description": "Activates a Hue scene stored in the Hue hub.",

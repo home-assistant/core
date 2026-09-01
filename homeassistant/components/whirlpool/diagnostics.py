@@ -1,7 +1,5 @@
 """Diagnostics support for Whirlpool."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from whirlpool.appliance import Appliance

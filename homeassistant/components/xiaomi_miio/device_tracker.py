@@ -1,8 +1,7 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from miio import DeviceException, WifiRepeater
 import voluptuous as vol
@@ -62,6 +61,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.device = device
 
+    @override
     async def async_scan_devices(self):
         """Scan for devices and return a list containing found device IDs."""
         try:
@@ -73,6 +73,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
         return [device["mac"] for device in station_info.associated_stations]
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Return None.
 

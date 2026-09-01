@@ -1,7 +1,5 @@
 """Coordinator for the Tesla Powerwall integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -12,6 +10,7 @@ from tesla_powerwall import (
     DeviceType,
     GridStatus,
     MetersAggregatesResponse,
+    OperationMode,
     Powerwall,
     PowerwallStatusResponse,
     SiteInfoResponse,
@@ -37,12 +36,14 @@ class PowerwallBaseInfo:
     """Base information for the powerwall integration."""
 
     gateway_din: str
-    site_info: SiteInfoResponse
-    status: PowerwallStatusResponse
-    device_type: DeviceType
+    site_name: str
+    site_info: SiteInfoResponse | None
+    status: PowerwallStatusResponse | None
+    device_type: DeviceType | None
     serial_numbers: list[str]
     url: str
     batteries: dict[str, BatteryResponse]
+    restricted: bool = False
 
 
 @dataclass
@@ -50,11 +51,14 @@ class PowerwallData:
     """Point in time data for the powerwall integration."""
 
     charge: float
-    site_master: SiteMasterResponse
+    site_master: SiteMasterResponse | None
     meters: MetersAggregatesResponse
     grid_services_active: bool
     grid_status: GridStatus
     backup_reserve: float | None
+    max_charge_power: int | None
+    max_discharge_power: int | None
+    operation_mode: OperationMode | None
     batteries: dict[str, BatteryResponse]
 
 

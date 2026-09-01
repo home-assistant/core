@@ -55,7 +55,7 @@
           "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter."
         },
         "menu_options": {
-          "migration_strategy_advanced": "Advanced migration",
+          "migration_strategy_advanced": "Migrate manually",
           "migration_strategy_recommended": "Migrate automatically (recommended)"
         },
         "title": "Migrate to a new adapter"
@@ -74,7 +74,7 @@
           "setup_strategy_recommended": "This is the quickest option to create a new network and get started."
         },
         "menu_options": {
-          "setup_strategy_advanced": "Advanced setup",
+          "setup_strategy_advanced": "Set up manually",
           "setup_strategy_recommended": "Set up automatically (recommended)"
         },
         "title": "Set up Zigbee"
@@ -294,8 +294,14 @@
       "ias_zone": {
         "name": "IAS zone"
       },
+      "interconnectable": {
+        "name": "Interconnectable"
+      },
       "led_indicator": {
         "name": "LED indicator"
+      },
+      "lifecycle": {
+        "name": "Lifecycle"
       },
       "linkage_alarm_state": {
         "name": "Linkage alarm state"
@@ -303,8 +309,14 @@
       "mounting_mode_active": {
         "name": "Mounting mode active"
       },
+      "muted": {
+        "name": "Muted"
+      },
       "open_window_detection_status": {
         "name": "Open window detection status"
+      },
+      "preheat": {
+        "name": "Preheat"
       },
       "preheat_active": {
         "name": "Preheat active"
@@ -312,11 +324,23 @@
       "preheat_status": {
         "name": "Pre-heat status"
       },
+      "rain_detected": {
+        "name": "Rain detected"
+      },
       "replace_filter": {
         "name": "Replace filter"
       },
+      "self_test_state": {
+        "name": "Self-test"
+      },
       "silence_alarm": {
         "name": "Silence alarm"
+      },
+      "test": {
+        "name": "Test"
+      },
+      "tilt": {
+        "name": "Tilt"
       },
       "valve_alarm": {
         "name": "Valve alarm"
@@ -335,14 +359,26 @@
       }
     },
     "button": {
+      "allow_remote_binding": {
+        "name": "Allow remote binding"
+      },
       "boost_mode": {
         "name": "Boost mode"
+      },
+      "calibrate_sensor": {
+        "name": "Calibrate sensor"
+      },
+      "calibrate_tvoc_sensor": {
+        "name": "Calibrate TVOC sensor"
       },
       "calibrate_valve": {
         "name": "Calibrate valve"
       },
       "calibrate_z_axis": {
         "name": "Calibrate Z axis"
+      },
+      "configure_limits": {
+        "name": "Configure cover limits"
       },
       "delete_all_limits": {
         "name": "Delete all limits"
@@ -368,8 +404,14 @@
       "prepare_manual_calibration": {
         "name": "Prepare manual calibration"
       },
+      "remote_test": {
+        "name": "Remote test"
+      },
       "reset_alarm": {
         "name": "Reset alarm"
+      },
+      "reset_energy": {
+        "name": "Reset energy"
       },
       "reset_frost_lock": {
         "name": "Frost lock reset"
@@ -385,6 +427,21 @@
       },
       "reset_summation_delivered_right": {
         "name": "Reset right summation delivered"
+      },
+      "reset_total_energy": {
+        "name": "Reset total energy"
+      },
+      "reset_total_energy_bottom": {
+        "name": "Reset bottom total energy"
+      },
+      "reset_total_energy_left": {
+        "name": "Reset left total energy"
+      },
+      "reset_total_energy_right": {
+        "name": "Reset right total energy"
+      },
+      "reset_total_energy_top": {
+        "name": "Reset top total energy"
       },
       "restart_device": {
         "name": "Restart device"
@@ -460,6 +517,9 @@
     "number": {
       "additional_steps": {
         "name": "Additional steps"
+      },
+      "air_threshold": {
+        "name": "Air threshold"
       },
       "alarm_duration": {
         "name": "Alarm duration"
@@ -550,6 +610,36 @@
       },
       "compensation_speed": {
         "name": "Compensation speed"
+      },
+      "countdown_to_turn_off": {
+        "name": "Countdown to turn off"
+      },
+      "countdown_to_turn_off_bottom": {
+        "name": "Countdown to turn off bottom"
+      },
+      "countdown_to_turn_off_left": {
+        "name": "Countdown to turn off left"
+      },
+      "countdown_to_turn_off_right": {
+        "name": "Countdown to turn off right"
+      },
+      "countdown_to_turn_off_top": {
+        "name": "Countdown to turn off top"
+      },
+      "countdown_to_turn_on": {
+        "name": "Countdown to turn on"
+      },
+      "countdown_to_turn_on_bottom": {
+        "name": "Countdown to turn on bottom"
+      },
+      "countdown_to_turn_on_left": {
+        "name": "Countdown to turn on left"
+      },
+      "countdown_to_turn_on_right": {
+        "name": "Countdown to turn on right"
+      },
+      "countdown_to_turn_on_top": {
+        "name": "Countdown to turn on top"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
@@ -677,6 +767,9 @@
       "installation_height": {
         "name": "Height from sensor to tank bottom"
       },
+      "integral_factor": {
+        "name": "Integral factor"
+      },
       "interval_time": {
         "name": "Interval time"
       },
@@ -706,6 +799,9 @@
       },
       "led_intensity_when_on": {
         "name": "Default all LED on intensity"
+      },
+      "length": {
+        "name": "Length"
       },
       "lift_drive_down_time": {
         "name": "Lift drive down time"
@@ -785,6 +881,27 @@
       "minimum_on_level": {
         "name": "Minimum on level"
       },
+      "mmwave_depth_maximum_far": {
+        "name": "mmWave depth maximum (far)"
+      },
+      "mmwave_depth_minimum_near": {
+        "name": "mmWave depth minimum (near)"
+      },
+      "mmwave_height_maximum_ceiling": {
+        "name": "mmWave height maximum (ceiling)"
+      },
+      "mmwave_height_minimum_floor": {
+        "name": "mmWave height minimum (floor)"
+      },
+      "mmwave_hold_time": {
+        "name": "mmWave hold time"
+      },
+      "mmwave_width_maximum_right": {
+        "name": "mmWave width maximum (right)"
+      },
+      "mmwave_width_minimum_left": {
+        "name": "mmWave width minimum (left)"
+      },
       "motion_detection_sensitivity": {
         "name": "Motion detection sensitivity"
       },
@@ -863,14 +980,29 @@
       "portion_weight": {
         "name": "Portion weight"
       },
+      "power_drop_threshold": {
+        "name": "Power drop threshold"
+      },
+      "power_rise_threshold": {
+        "name": "Power rise threshold"
+      },
       "presence_detection_timeout": {
         "name": "Presence detection timeout"
       },
       "presence_sensitivity": {
         "name": "Presence sensitivity"
       },
+      "presence_sensor_sensitivity": {
+        "name": "Presence sensor sensitivity"
+      },
       "presence_timeout": {
         "name": "Fade time"
+      },
+      "proportional_gain": {
+        "name": "Proportional gain (Kp)"
+      },
+      "proportional_shift": {
+        "name": "Proportional shift (N)"
       },
       "pulse_configuration": {
         "name": "Pulse configuration"
@@ -896,6 +1028,9 @@
       "ramp_rate_on_to_off_remote": {
         "name": "Remote ramp rate on to off"
       },
+      "red_led_brightness": {
+        "name": "Red LED brightness"
+      },
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
       },
@@ -910,6 +1045,9 @@
       },
       "sensitivity_level": {
         "name": "Sensitivity level"
+      },
+      "sensor_sensitivity": {
+        "name": "Sensor sensitivity"
       },
       "serving_size": {
         "name": "Serving to dispense"
@@ -938,6 +1076,9 @@
       "sound_volume": {
         "name": "Sound volume"
       },
+      "speed": {
+        "name": "Speed"
+      },
       "start_up_color_temperature": {
         "name": "Start-up color temperature"
       },
@@ -955,6 +1096,9 @@
       },
       "static_detection_sensitivity": {
         "name": "Static detection sensitivity"
+      },
+      "summer_backup_heating_demand": {
+        "name": "Summer backup heating demand"
       },
       "sustain_time": {
         "name": "Sustain time"
@@ -997,6 +1141,9 @@
       },
       "timer_time_left": {
         "name": "Timer time left"
+      },
+      "total_cycle_times": {
+        "name": "Total cycle times"
       },
       "transmit_power": {
         "name": "Transmit power"
@@ -1052,6 +1199,9 @@
       "valve_opening_degree": {
         "name": "Valve opening degree"
       },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "valve_state_auto_shutdown": {
         "name": "Valve state auto-shutdown"
       },
@@ -1060,6 +1210,9 @@
       },
       "water_interval": {
         "name": "Water interval"
+      },
+      "winter_backup_heating_demand": {
+        "name": "Winter backup heating demand"
       }
     },
     "select": {
@@ -1087,6 +1240,15 @@
       "approach_distance": {
         "name": "Approach distance"
       },
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_effect": {
+        "name": "Audio effect"
+      },
+      "audio_sensitivity": {
+        "name": "Audio sensitivity"
+      },
       "backlight_mode": {
         "name": "Backlight mode"
       },
@@ -1104,6 +1266,9 @@
       },
       "click_mode": {
         "name": "Click mode"
+      },
+      "color_temperature_channel": {
+        "name": "Color temperature channel"
       },
       "control_type": {
         "name": "Control type"
@@ -1125,6 +1290,9 @@
       },
       "default_strobe_level": {
         "name": "Default strobe level"
+      },
+      "detach_relay": {
+        "name": "Detach relay"
       },
       "detection_distance": {
         "name": "Detection distance"
@@ -1207,11 +1375,23 @@
       "led_scaling_mode": {
         "name": "LED scaling mode"
       },
+      "light_on_presence_behavior": {
+        "name": "Light on presence behavior"
+      },
       "liquid_state": {
         "name": "Liquid state"
       },
       "local_temperature_source": {
         "name": "Local temperature source"
+      },
+      "mmwave_detect_sensitivity": {
+        "name": "mmWave sensitivity"
+      },
+      "mmwave_detect_trigger": {
+        "name": "mmWave target speed"
+      },
+      "mmwave_room_size_preset": {
+        "name": "mmWave room size preset"
       },
       "mode": {
         "name": "Mode"
@@ -1303,8 +1483,17 @@
       "status_indication": {
         "name": "Status indication"
       },
+      "switch_action_l1": {
+        "name": "Switch action L1"
+      },
+      "switch_action_l2": {
+        "name": "Switch action L2"
+      },
       "switch_actions": {
         "name": "Switch actions"
+      },
+      "switch_actions_id": {
+        "name": "{id} switch actions"
       },
       "switch_indication": {
         "name": "Switch indication"
@@ -1314,6 +1503,15 @@
       },
       "switch_type": {
         "name": "Switch type"
+      },
+      "switch_type_id": {
+        "name": "{id} switch type"
+      },
+      "switch_type_l1": {
+        "name": "Switch type L1"
+      },
+      "switch_type_l2": {
+        "name": "Switch type L2"
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"
@@ -1401,6 +1599,12 @@
       "brightness_level": {
         "name": "Brightness level"
       },
+      "calibrated": {
+        "name": "Calibrated"
+      },
+      "chamber_contamination": {
+        "name": "Chamber contamination"
+      },
       "control_status": {
         "name": "Control status"
       },
@@ -1463,6 +1667,9 @@
       },
       "formaldehyde": {
         "name": "Formaldehyde concentration"
+      },
+      "gust_speed": {
+        "name": "Gust speed"
       },
       "heating_demand": {
         "name": "Heating demand"
@@ -1532,6 +1739,9 @@
       "last_pin_code": {
         "name": "Last PIN code"
       },
+      "last_remaining_battery_percentage": {
+        "name": "Last remaining battery percentage"
+      },
       "last_valve_open_duration": {
         "name": "Last valve open duration"
       },
@@ -1543,6 +1753,9 @@
       },
       "lifetime": {
         "name": "Lifetime"
+      },
+      "light_level": {
+        "name": "Light level"
       },
       "liquid_depth": {
         "name": "Liquid depth"
@@ -1607,8 +1820,17 @@
       "preheat_time": {
         "name": "Pre-heat time"
       },
+      "rebooted_count": {
+        "name": "Rebooted count"
+      },
+      "rejoined_count": {
+        "name": "Rejoined count"
+      },
       "remaining_watering_time": {
         "name": "Remaining watering time"
+      },
+      "reported_packages": {
+        "name": "Reported packages"
       },
       "rms_current_ph_b": {
         "name": "Current phase B"
@@ -1645,6 +1867,9 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "smoke_level": {
+        "name": "Smoke level"
       },
       "software_error": {
         "name": "Software error",
@@ -1742,6 +1967,12 @@
       "total_power_factor": {
         "name": "Total power factor"
       },
+      "total_volatile_organic_compounds": {
+        "name": "Total volatile organic compounds"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
       "valve_adapt_status": {
         "name": "Valve adaptation status"
       },
@@ -1771,6 +2002,9 @@
       },
       "window_covering_type": {
         "name": "Window covering type"
+      },
+      "work_mode": {
+        "name": "Work mode"
       }
     },
     "switch": {
@@ -1779,6 +2013,9 @@
       },
       "adaptive_mode": {
         "name": "Adaptive mode"
+      },
+      "alarm_switch": {
+        "name": "Alarm switch"
       },
       "auto_clean": {
         "name": "Autoclean"
@@ -1810,6 +2047,9 @@
       "detach_relay": {
         "name": "Detach relay"
       },
+      "detach_relay_id": {
+        "name": "Detach relay {id}"
+      },
       "detached": {
         "name": "Detached mode"
       },
@@ -1821,6 +2061,9 @@
       },
       "disable_clear_notifications_double_tap": {
         "name": "Disable config 2x tap to clear notifications"
+      },
+      "disable_double_click": {
+        "name": "Disable double click"
       },
       "disable_led": {
         "name": "Disable LED"
@@ -1912,14 +2155,26 @@
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
+      "local_control_id": {
+        "name": "{id} local control"
+      },
       "local_protection": {
         "name": "Local protection"
+      },
+      "manual_mode": {
+        "name": "Manual mode"
+      },
+      "metering_only_mode": {
+        "name": "Metering only mode"
       },
       "mounting_mode": {
         "name": "Mounting mode"
       },
       "mute_siren": {
         "name": "Mute siren"
+      },
+      "network_led": {
+        "name": "Network LED"
       },
       "on_only_when_dark": {
         "name": "On only when dark"
@@ -1941,6 +2196,9 @@
       },
       "relay_click_in_on_off_mode": {
         "name": "Disable relay click in on off mode"
+      },
+      "remote_protection": {
+        "name": "Remote protection"
       },
       "scale_protection": {
         "name": "Scale protection"
@@ -1971,6 +2229,9 @@
       },
       "sound_enabled": {
         "name": "Sound enabled"
+      },
+      "summer_mode": {
+        "name": "Summer mode"
       },
       "switch": {
         "name": "[%key:component::switch::title%]"

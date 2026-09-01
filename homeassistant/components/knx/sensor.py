@@ -1,12 +1,10 @@
 """Support for KNX sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
@@ -22,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -46,6 +43,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
@@ -158,7 +156,7 @@ async def async_setup_entry(
             KnxYamlSensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SENSOR):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SENSOR):
         entities.extend(
             KnxUiSensor(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -171,6 +169,7 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
 
     _device: XknxSensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         if (
@@ -182,9 +181,12 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
             )
         ):
             self._attr_native_value = last_sensor_data.native_value
-            self._attr_extra_state_attributes.update(last_state.attributes)
+            # only restore KNX specific attributes - others may have changed
+            if (source := last_state.attributes.get(ATTR_SOURCE)) is not None:
+                self._attr_extra_state_attributes[ATTR_SOURCE] = source
         await super().async_added_to_hass()
 
+    @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_native_value = self._device.resolve_state()
@@ -202,16 +204,20 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
+        self._device = XknxSensor(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+            sync_state=config[CONF_SYNC_STATE],
+            always_callback=True,
+            value_type=config[CONF_TYPE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxSensor(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-                sync_state=config[CONF_SYNC_STATE],
-                always_callback=True,
-                value_type=config[CONF_TYPE],
+            unique_id=build_yaml_unique_id(
+                self._device.sensor_value.group_address_state
             ),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]
@@ -220,7 +226,6 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
             CONF_DEVICE_CLASS,
             dpt_info["sensor_device_class"],
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_extra_state_attributes = {}
         self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
         self._attr_native_unit_of_measurement = config.get(
@@ -231,7 +236,6 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
             CONF_STATE_CLASS,
             dpt_info["sensor_state_class"],
         )
-        self._attr_unique_id = str(self._device.sensor_value.group_address_state)
 
 
 class KnxUiSensor(_KnxSensor, KnxUiEntity):
@@ -304,11 +308,13 @@ class KNXSystemSensor(SensorEntity):
         self._attr_unique_id = f"_{knx.entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.knx)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -319,6 +325,7 @@ class KNXSystemSensor(SensorEntity):
         """Call after device was updated."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
         self.knx.xknx.connection_manager.register_connection_state_changed_cb(

@@ -1,6 +1,6 @@
 """Support for Xiaomi binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
@@ -76,9 +76,11 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ExtendedBinarySensorDeviceClass.CHILDLOCK: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.CHILDLOCK,
     ),
-    ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: BinarySensorEntityDescription(
-        key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+    ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: (
+        BinarySensorEntityDescription(
+            key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        )
     ),
     ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN,
@@ -118,7 +120,9 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
                 description.device_class
             ]
-            for device_key, description in sensor_update.binary_entity_descriptions.items()
+            for device_key, description in (
+                sensor_update.binary_entity_descriptions.items()
+            )
             if description.device_class
         },
         entity_data={
@@ -159,11 +163,13 @@ class XiaomiBluetoothSensorEntity(
     """Representation of a Xiaomi binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

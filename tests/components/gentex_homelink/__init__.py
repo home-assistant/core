@@ -32,7 +32,7 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
 async def update_callback(
     hass: HomeAssistant, mock: AsyncMock, update_type: str, data: dict[str, Any]
 ) -> None:
-    """Invoke the MQTT provider's message callback with the specified update type and data."""
+    """Invoke the MQTT provider's message callback."""
     for call in mock.listen.call_args_list:
         call[0][0](
             "topic",

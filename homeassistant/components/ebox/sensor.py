@@ -3,8 +3,6 @@
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

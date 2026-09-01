@@ -3,8 +3,6 @@
 Legacy group support will not be extended for new domains.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Protocol
 

@@ -1,11 +1,19 @@
 """Tests for the Anglian Water coordinator."""
 
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    InvalidGrantError,
+    UnknownEndpointError,
+)
 from pyanglianwater.meter import SmartMeter
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.anglian_water.coordinator import (
     AnglianWaterUpdateCoordinator,
 )
@@ -15,9 +23,12 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ACCOUNT_NUMBER
+from .const import ACCOUNT_NUMBER, CONSENT_REQUIRED_ISSUE_ID
 
 from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
@@ -162,3 +173,183 @@ async def test_coordinator_invalid_readings(
         "Could not parse read_at time also-invalid-date, skipping reading"
         in caplog.text
     )
+
+
+async def test_coordinator_subsequent_run_missing_period_statistics(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smart_meter: SmartMeter,
+    mock_anglian_water_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the coordinator handles missing period lookup statistics."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # Correct the latest already-stored reading. Fallback should still update
+    # this hour instead of skipping it.
+    mock_smart_meter.readings[-1] = {
+        "read_at": "2024-06-01T14:00:00",
+        "consumption": 35,
+        "read": 70,
+    }
+
+    # Add a new later reading to ensure fallback also accepts newer entries.
+    mock_smart_meter.readings.append(
+        {"read_at": "2024-06-01T15:00:00", "consumption": 20, "read": 90}
+    )
+
+    with patch(
+        "homeassistant.components.anglian_water.coordinator.statistics_during_period",
+        return_value={},
+    ):
+        await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    assert "Could not find existing statistics during period lookup" in caplog.text
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_usage"
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert stats[statistic_id][0]["sum"] >= 70
+
+    parsed_read_at = dt_util.parse_datetime("2024-06-01T14:00:00")
+    assert parsed_read_at is not None
+    corrected_start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
+
+    corrected_stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        corrected_start,
+        corrected_start + timedelta(seconds=1),
+        {
+            statistic_id,
+        },
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert corrected_stats[statistic_id][0]["sum"] == 70
+
+
+async def test_coordinator_period_statistics_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test period lookup records without sum are handled safely."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_usage"
+    with patch(
+        "homeassistant.components.anglian_water.coordinator.statistics_during_period",
+        return_value={statistic_id: [{"start": 0.0}]},
+    ):
+        await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert stats[statistic_id]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "retry_after"),
+    [
+        pytest.param(
+            UnknownEndpointError(status=500, response="Service Unavailable"),
+            "service_unavailable",
+            60.0,
+            id="service_unavailable",
+        ),
+    ],
+)
+async def test_coordinator_update_failed_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+    retry_after: float,
+) -> None:
+    """Test the coordinator maps transient API errors to UpdateFailed."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = side_effect
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.retry_after == retry_after
+
+
+async def test_coordinator_consent_required_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test the coordinator maps consent errors to UpdateFailed and creates a repair issue."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = ConsentRequiredError
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "consent_required"
+    assert exc_info.value.retry_after == 900.0
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+
+    mock_anglian_water_client.update.side_effect = None
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(
+            ExpiredAccessTokenError, "auth_expired", id="expired_access_token"
+        ),
+        pytest.param(InvalidGrantError, "auth_expired", id="invalid_grant"),
+    ],
+)
+async def test_coordinator_auth_failed_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Test the coordinator maps auth errors to ConfigEntryAuthFailed."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = side_effect
+
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key

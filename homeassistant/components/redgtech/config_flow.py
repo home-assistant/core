@@ -1,9 +1,7 @@
 """Config flow for the Redgtech integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 import voluptuous as vol
@@ -19,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Flow for Redgtech integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

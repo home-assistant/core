@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_MORE_OPTIONS,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -489,6 +490,7 @@ async def test_options(hass: HomeAssistant) -> None:
             user_input={
                 CONF_WEBHOOK_SET: True,
                 CONF_WEBHOOK_SET_OVERWRITE: True,
+                CONF_MORE_OPTIONS: {},
             },
         )
         await hass.async_block_till_done()
@@ -498,8 +500,8 @@ async def test_options(hass: HomeAssistant) -> None:
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
 
 
-async def test_advanced_options(hass: HomeAssistant) -> None:
-    """Check an options flow with advanced options."""
+async def test_more_options(hass: HomeAssistant) -> None:
+    """Check an options flow with the more options section."""
 
     config_entry = create_mock_motioneye_config_entry(hass)
 
@@ -516,14 +518,13 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
     ):
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(
-            config_entry.entry_id, context={"show_advanced_options": True}
-        )
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_WEBHOOK_SET: True,
                 CONF_WEBHOOK_SET_OVERWRITE: True,
+                CONF_MORE_OPTIONS: {},
             },
         )
         await hass.async_block_till_done()
@@ -534,15 +535,15 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         assert len(mock_setup.mock_calls) == 0
         assert len(mock_setup_entry.mock_calls) == 1
 
-        result = await hass.config_entries.options.async_init(
-            config_entry.entry_id, context={"show_advanced_options": True}
-        )
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_WEBHOOK_SET: True,
                 CONF_WEBHOOK_SET_OVERWRITE: True,
-                CONF_STREAM_URL_TEMPLATE: "http://moo",
+                CONF_MORE_OPTIONS: {
+                    CONF_STREAM_URL_TEMPLATE: "http://moo",
+                },
             },
         )
         await hass.async_block_till_done()

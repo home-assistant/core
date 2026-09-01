@@ -1,6 +1,7 @@
 """Coordinator for Rova."""
 
 from datetime import datetime, timedelta
+from typing import override
 
 from rova.rova import Rova
 
@@ -11,16 +12,18 @@ from homeassistant.util.dt import get_time_zone
 
 from .const import DOMAIN, LOGGER
 
+type RovaConfigEntry = ConfigEntry[RovaCoordinator]
+
 EUROPE_AMSTERDAM_ZONE_INFO = get_time_zone("Europe/Amsterdam")
 
 
 class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Class to manage fetching Rova data."""
 
-    config_entry: ConfigEntry
+    config_entry: RovaConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Rova
+        self, hass: HomeAssistant, config_entry: RovaConfigEntry, api: Rova
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -32,6 +35,7 @@ class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, datetime]:
         """Fetch data from Rova API."""
 

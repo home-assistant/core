@@ -1,57 +1,58 @@
 """Support for ZhongHong HVAC Controller."""
 
-from __future__ import annotations
-
-import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
-from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_MIDDLE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from . import DeviceAddress, ZhongHongConfigEntry, device_unique_id
+from .const import (
+    ALL_FAN_MODES,
+    BREAKS_IN_HA_VERSION,
+    CONF_GATEWAY_ADDRESS,
+    DEFAULT_GATEWAY_ADDRESS,
+    DEFAULT_PORT,
+    DOMAIN,
+    FAN_MODE_MAP,
+    FAN_MODE_REVERSE_MAP,
+    INTEGRATION_TITLE,
+    LOGGER,
+)
 
-CONF_GATEWAY_ADDRRESS = "gateway_address"
-
-DEFAULT_PORT = 9999
-DEFAULT_GATEWAY_ADDRRESS = 1
-
-SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
-SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
+# The gateway serializes everything onto a single socket, so there is nothing
+# to gain from issuing commands in parallel.
+PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(
-            CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS
+            CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
     }
 )
@@ -69,72 +70,100 @@ MODE_TO_STATE = {
     ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
 
-# HA → zhong_hong
-FAN_MODE_MAP = {
-    FAN_LOW: "LOW",
-    FAN_MEDIUM: "MID",
-    FAN_HIGH: "HIGH",
-    FAN_MIDDLE: "MID",
-    "medium_high": "MIDHIGH",
-    "medium_low": "MIDLOW",
-}
-FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
+
+def _send_failed(command: str) -> HomeAssistantError:
+    """Return the error raised when a command cannot be sent."""
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="send_command_failed",
+        translation_placeholders={"command": command},
+    )
 
 
-def setup_platform(
+def _create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
+    """Tell the user their YAML configuration has been imported."""
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+def _create_import_failed_issue(hass: HomeAssistant, reason: str, host: str) -> None:
+    """Tell the user which part of their YAML the gateway did not answer."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_import_issue_{reason}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{reason}",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+            "host": host,
+        },
+    )
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ZhongHong HVAC platform."""
+    """Import the YAML configuration of the ZhongHong HVAC platform."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+            CONF_GATEWAY_ADDRESS: config[CONF_GATEWAY_ADDRESS],
+        },
+    )
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
-    hub = ZhongHongGateway(host, port, gw_addr)
-    devices = [
-        ZhongHongClimate(hub, addr_out, addr_in)
-        for (addr_out, addr_in) in hub.discovery_ac()
-    ]
+    # Only a configuration that made it into an entry may be asked to be
+    # removed. Telling the user to delete YAML that was never imported would
+    # leave the integration with nothing at all.
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) != "already_configured"
+    ):
+        _create_import_failed_issue(hass, reason, config[CONF_HOST])
+        return
 
-    _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
+    _create_deprecated_yaml_issue(hass)
 
-    hub_is_initialized = False
 
-    def _start_hub():
-        """Start the hub socket and query status of all devices."""
-        hub.start_listen()
-        hub.query_all_status()
-
-    async def startup():
-        """Start hub socket after all climate entity is set up."""
-        nonlocal hub_is_initialized
-        if not all(device.is_initialized for device in devices):
-            return
-
-        if hub_is_initialized:
-            return
-
-        _LOGGER.debug("zhong_hong hub start listen event")
-        await hass.async_add_executor_job(_start_hub)
-        hub_is_initialized = True
-
-    async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
-
-    # add devices after SIGNAL_DEVICE_SETTED_UP event is listened
-    add_entities(devices)
-
-    def stop_listen(event):
-        """Stop ZhongHongHub socket."""
-        hub.stop_listen()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ZhongHongConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the ZhongHong climate entities from a config entry."""
+    async_add_entities(
+        ZhongHongClimate(entry, address, device)
+        for address, device in entry.runtime_data.devices.items()
+    )
 
 
 class ZhongHongClimate(ClimateEntity):
-    """Representation of a ZhongHong controller support HVAC."""
+    """Representation of an air conditioner behind a ZhongHong gateway."""
 
+    _attr_fan_modes = ALL_FAN_MODES
     _attr_hvac_modes = [
         HVACMode.COOL,
         HVACMode.HEAT,
@@ -142,6 +171,8 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
+    # The gateway reports every change on its own socket, so there is nothing
+    # to poll for.
     _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -152,44 +183,53 @@ class ZhongHongClimate(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hub, addr_out, addr_in):
-        """Set up the ZhongHong climate devices."""
+    def __init__(
+        self,
+        entry: ZhongHongConfigEntry,
+        address: DeviceAddress,
+        device: ZhongHongHVAC,
+    ) -> None:
+        """Set up a ZhongHong climate device."""
+        self._device = device
+        addr_out, addr_in = address
+        self._attr_name = f"AC {addr_out}-{addr_in}"
+        self._attr_unique_id = device_unique_id(entry, address)
 
-        self._device = ZhongHongHVAC(hub, addr_out, addr_in)
-        self._hub = hub
-        self._current_operation = None
-        self._current_fan_mode = None
-        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"
-        self._attr_name = self._attr_unique_id
-        self.is_initialized = False
-
+    @override
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self._device.register_update_callback(self._after_update)
-        self.is_initialized = True
-        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
+        """Take the state the gateway pushes for this air conditioner."""
+        self._device.register_update_callback(self._handle_device_update)
 
-    def _after_update(self, climate):
-        """Handle state update."""
-        _LOGGER.debug("async update ha state")
-        if self._device.current_operation:
-            self._current_operation = MODE_TO_STATE[
-                self._device.current_operation.lower()
-            ]
-        if self._device.current_temperature:
-            self._attr_current_temperature = self._device.current_temperature
-        if self._device.current_fan_mode:
-            self._current_fan_mode = self._device.current_fan_mode
-        if self._device.target_temperature:
-            self._attr_target_temperature = self._device.target_temperature
+    def _handle_device_update(self, device: ZhongHongHVAC) -> None:
+        """Handle a state push from the gateway.
+
+        The library writes the new state into the device object before calling
+        this, and it does so on its own listener thread, so all that is left is
+        to ask for the entity to be written from that thread.
+        """
         self.schedule_update_ha_state()
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    @override
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._device.current_temperature
+
+    @property
+    @override
+    def target_temperature(self) -> float | None:
+        """Return the temperature the device is set to."""
+        return self._device.target_temperature
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        if self.is_on:
-            return self._current_operation
-        return HVACMode.OFF
+        if not self.is_on:
+            return HVACMode.OFF
+        if (operation := self._device.current_operation) is None:
+            return None
+        return MODE_TO_STATE.get(operation.lower())
 
     @property
     def is_on(self) -> bool:
@@ -197,45 +237,54 @@ class ZhongHongClimate(ClimateEntity):
         return self._device.is_on
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        if not self._current_fan_mode:
+        if not (fan_mode := self._device.current_fan_mode):
             return None
-        return FAN_MODE_REVERSE_MAP.get(self._current_fan_mode, self._current_fan_mode)
+        return FAN_MODE_REVERSE_MAP.get(fan_mode, fan_mode)
 
     @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        if not self._device.fan_list:
-            return []
-        return list({FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list})
-
-    @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temp
 
+    def _command(self, sent: bool, command: str) -> None:
+        """Fail if the command did not go out.
+
+        Nothing is written here on success: the unit reports the state it
+        actually reached, which is not always the one it was asked for.
+        """
+        if not sent:
+            raise _send_failed(command)
+
+    @override
     def turn_on(self) -> None:
         """Turn on ac."""
-        return self._device.turn_on()
+        self._command(self._device.turn_on(), "turn-on")
 
+    @override
     def turn_off(self) -> None:
         """Turn off ac."""
-        return self._device.turn_off()
+        self._command(self._device.turn_off(), "turn-off")
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._device.set_temperature(temperature)
+            self._command(self._device.set_temperature(temperature), "temperature")
 
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -246,11 +295,14 @@ class ZhongHongClimate(ClimateEntity):
         if not self.is_on:
             self.turn_on()
 
-        self._device.set_operation_mode(hvac_mode.upper())
+        self._command(self._device.set_operation_mode(hvac_mode.upper()), "mode")
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         mapped_mode = FAN_MODE_MAP.get(fan_mode)
         if not mapped_mode:
-            _LOGGER.error("Unsupported fan mode: %s", fan_mode)
-        self._device.set_fan_mode(mapped_mode)
+            LOGGER.error("Unsupported fan mode: %s", fan_mode)
+            return
+
+        self._command(self._device.set_fan_mode(mapped_mode), "fan")

@@ -6,7 +6,7 @@
     "unifi",
     "unifi_access",
     "unifi_direct",
-    "unifiled",
+    "unifi_discovery",
     "unifiprotect"
   ]
 }

@@ -1,9 +1,7 @@
 """Support for EnOcean light sources."""
 
-from __future__ import annotations
-
 import math
-from typing import Any
+from typing import Any, override
 
 from enocean_async import ERP1Telegram
 from enocean_async.esp3.packet import ESP3PacketType
@@ -65,6 +63,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._attr_unique_id = str(combine_hex(dev_id))
         self._attr_name = dev_name
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light source on or sets a specific dimmer value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -80,6 +79,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], packet_type)
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light source off."""
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
@@ -89,6 +89,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], packet_type)
         self._attr_is_on = False
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of this device.
 

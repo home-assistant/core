@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -65,13 +66,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        new_data = {**entry.data, CONF_URL: entry.data[CONF_URL].rstrip("/")}
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: JellyfinConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data

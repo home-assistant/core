@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -46,8 +46,8 @@
 # name: test_select_empty[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -109,8 +109,8 @@
 # name: test_select_errors[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -132,7 +132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -172,8 +172,8 @@
 # name: test_selects[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',

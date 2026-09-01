@@ -66,7 +66,8 @@ async def test_read_current_mode(
         hass, get_next_aid(), create_service_with_ecobee_mode
     )
 
-    # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the service. Make a helper for the
+    # sensor.
     ecobee_mode = Helper(
         hass,
         "select.testdevice_current_mode",
@@ -109,7 +110,8 @@ async def test_write_current_mode(
     )
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
-    # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the service. Make a helper for the
+    # sensor.
     current_mode = Helper(
         hass,
         "select.testdevice_current_mode",
@@ -160,7 +162,8 @@ async def test_read_select(
         hass, get_next_aid(), create_service_with_temperature_units
     )
 
-    # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the service. Make a helper for the
+    # sensor.
     select_entity = Helper(
         hass,
         "select.testdevice_temperature_display_units",
@@ -195,7 +198,8 @@ async def test_write_select(
     )
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
-    # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the service. Make a helper for the
+    # sensor.
     current_mode = Helper(
         hass,
         "select.testdevice_temperature_display_units",

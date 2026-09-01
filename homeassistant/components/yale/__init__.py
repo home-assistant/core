@@ -1,7 +1,5 @@
 """Support for Yale devices."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import cast
 
@@ -86,7 +84,7 @@ async def async_setup_yale(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: YaleConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: YaleConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove yale config entry from a device if its no longer present."""
     return not any(

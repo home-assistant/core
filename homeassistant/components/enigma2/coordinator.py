@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from openwebif.api import OpenWebIfDevice, OpenWebIfStatus
 from yarl import URL
@@ -79,6 +80,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
         # for devices that don't report a MAC address
         self.unique_id = config_entry.unique_id
 
+    @override
     async def _async_setup(self) -> None:
         """Provide needed data to the device info."""
 
@@ -93,7 +95,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
                 if "mac" in iface and iface["mac"] is not None
             }
             self.device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(iface["mac"]))
+                (CONNECTION_NETWORK_MAC, iface["mac"])
                 for iface in about["info"]["ifaces"]
                 if "mac" in iface and iface["mac"] is not None
             }
@@ -101,6 +103,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
         elif self.unique_id is not None:
             self.device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
 
+    @override
     async def _async_update_data(self) -> OpenWebIfStatus:
         await self.device.update()
         return self.device.status

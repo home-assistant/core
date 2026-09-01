@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +15,12 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -25,6 +30,14 @@ from .const import SITE_INFO, SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
 
 ENTITY_BUY = "calendar.energy_site_buy_tariff"
 ENTITY_SELL = "calendar.energy_site_sell_tariff"
+ENTITY_OPERATION_MODE = "select.energy_site_operation_mode"
+
+TARIFF_V2 = SITE_INFO["response"]["tariff_content_v2"]
+SLIM_SITE_INFO = {
+    key: value
+    for key, value in SITE_INFO["response"].items()
+    if key != "tariff_content_v2"
+}
 
 
 @pytest.fixture
@@ -71,6 +84,31 @@ def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
         "Invalid": {"someKey": "value"},
     }
     site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_site_info_end_of_day(
+    request: pytest.FixtureRequest, mock_site_info
+) -> Generator[AsyncMock]:
+    """Mock site_info with a real end-of-day tariff period ending at the day boundary."""
+    site_info = deepcopy(SITE_INFO)
+    tariff = site_info["response"]["tariff_content_v2"]
+    # 23:30->24:00 period taken verbatim from a PowerSync Flow Power tariff,
+    # where Tesla encodes the end of the day as hour 24 or minute 60.
+    tariff["energy_charges"]["Summer"]["rates"] = {"PERIOD_23_30": 0.3561}
+    tariff["seasons"]["Summer"]["tou_periods"] = {
+        "PERIOD_23_30": {
+            "periods": [
+                {"toDayOfWeek": 6, "fromHour": 23, "fromMinute": 30, **request.param}
+            ]
+        }
+    }
+    tariff["sell_tariff"]["seasons"] = {}
     with patch(
         "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
         side_effect=lambda: deepcopy(site_info),
@@ -344,7 +382,7 @@ async def test_calendar_midnight_crossing_local_start(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
-    """Test async_get_events includes overnight period when query starts at local midnight."""
+    """Test async_get_events includes overnight period at local midnight."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
@@ -382,6 +420,51 @@ async def test_calendar_midnight_crossing_local_start(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "mock_site_info_end_of_day",
+    [
+        pytest.param({"toHour": 24}, id="hour_24"),
+        pytest.param({"toHour": 23, "toMinute": 60}, id="minute_60"),
+    ],
+    indirect=True,
+)
+async def test_calendar_end_of_day_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_end_of_day: AsyncMock,
+) -> None:
+    """Test a tariff period ending at the day boundary parses instead of crashing."""
+    tz = dt_util.get_default_time_zone()
+    # Sunday 23:45, inside the 23:30->24:00 end-of-day period
+    freezer.move_to(datetime(2024, 1, 7, 23, 45, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "on"
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_BUY],
+            EVENT_START_DATETIME: datetime(2024, 1, 7, 0, 0, 0, tzinfo=tz),
+            EVENT_END_DATETIME: datetime(2024, 1, 8, 0, 0, 0, tzinfo=tz),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[ENTITY_BUY]["events"]
+    assert len(events) == 1
+    # The day boundary normalises to the following midnight
+    assert dt_util.parse_datetime(events[0]["end"]) == datetime(
+        2024, 1, 8, 0, 0, 0, tzinfo=tz
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_calendar_invalid_price(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -399,3 +482,100 @@ async def test_calendar_invalid_price(
     assert state
     assert state.state == "on"
     assert "Unknown Price" in state.attributes["message"]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "order",
+    [
+        pytest.param(("site_info", "tariff"), id="site_info_first"),
+        pytest.param(("tariff", "site_info"), id="tariff_first"),
+    ],
+)
+async def test_energy_stream_site_info_and_tariff_compose(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_energy_info_stream: MagicMock,
+    mock_energy_tariff_stream: MagicMock,
+    order: tuple[str, str],
+) -> None:
+    """Slim site_info and tariff events are independently replaceable partitions."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR, Platform.SELECT])
+
+    # The REST cold read populated both partitions.
+    assert hass.states.get(ENTITY_OPERATION_MODE).state == "self_consumption"
+    buy = hass.states.get(ENTITY_BUY)
+    assert buy.state == "on"
+    assert "0.20/kWh" in buy.attributes["message"]
+
+    slim = deepcopy(SLIM_SITE_INFO)
+    slim["default_real_mode"] = "autonomous"
+    # A distinct OFF_PEAK price proves the streamed tariff replaced the cold read.
+    streamed_tariff = deepcopy(TARIFF_V2)
+    streamed_tariff["energy_charges"]["Summer"]["rates"]["OFF_PEAK"] = 0.99
+    events = {
+        "site_info": lambda: mock_energy_info_stream.send(slim),
+        "tariff": lambda: mock_energy_tariff_stream.send(streamed_tariff),
+    }
+
+    for name in order:
+        events[name]()
+        await hass.async_block_till_done()
+
+    # Both partitions survive regardless of arrival order.
+    assert hass.states.get(ENTITY_OPERATION_MODE).state == "autonomous"
+    buy = hass.states.get(ENTITY_BUY)
+    assert buy.state == "on"
+    assert "0.99/kWh" in buy.attributes["message"]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_energy_stream_tariff_removal_clears_calendar(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_energy_tariff_stream: MagicMock,
+) -> None:
+    """A tariff_content_v2 removal marks the tariff calendar unavailable."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    assert hass.states.get(ENTITY_BUY).state != STATE_UNAVAILABLE
+
+    mock_energy_tariff_stream.send(None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_BUY).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_energy_stream_slim_site_info_drops_removed_field(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_energy_info_stream: MagicMock,
+) -> None:
+    """A replacement site_info event drops a removed field without touching tariff."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR, Platform.SELECT])
+
+    assert hass.states.get(ENTITY_OPERATION_MODE).state == "self_consumption"
+    assert hass.states.get(ENTITY_BUY).state != STATE_UNAVAILABLE
+
+    slim = deepcopy(SLIM_SITE_INFO)
+    slim.pop("default_real_mode")
+    mock_energy_info_stream.send(slim)
+    await hass.async_block_till_done()
+
+    # The removed field no longer lingers in the site_info-derived entity.
+    assert hass.states.get(ENTITY_OPERATION_MODE).state == STATE_UNKNOWN
+    # The tariff partition is untouched by a site_info replacement.
+    assert hass.states.get(ENTITY_BUY).state != STATE_UNAVAILABLE

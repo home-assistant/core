@@ -38,12 +38,11 @@ async def test_config_not_ready(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id="123-456",
+        unique_id="12.3-45.6",
         data={
             "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
+            "latitude": 12.3,
+            "longitude": 45.6,
             "use_nearest": True,
         },
     )
@@ -63,9 +62,8 @@ async def test_config_without_unique_id(
         title="Home",
         data={
             "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
+            "latitude": 12.3,
+            "longitude": 45.6,
         },
     )
 
@@ -75,7 +73,7 @@ async def test_config_without_unique_id(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "123-456"
+    assert entry.unique_id == "12.3-45.6"
 
 
 async def test_config_with_turned_off_station(
@@ -85,12 +83,11 @@ async def test_config_with_turned_off_station(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id="123-456",
+        unique_id="12.3-45.6",
         data={
             "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
+            "latitude": 12.3,
+            "longitude": 45.6,
         },
     )
 
@@ -117,12 +114,11 @@ async def test_update_interval(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id="123-456",
+        unique_id="12.3-45.6",
         data={
             "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
+            "latitude": 12.3,
+            "longitude": 45.6,
         },
     )
 
@@ -157,7 +153,6 @@ async def test_update_interval(
             "api_key": "foo",
             "latitude": 66.66,
             "longitude": 111.11,
-            "name": "Work",
         },
     )
 
@@ -216,7 +211,6 @@ async def test_migrate_device_entry(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -247,7 +241,7 @@ async def test_remove_air_quality_entities(
     entity_registry.async_get_or_create(
         AIR_QUALITY_DOMAIN,
         DOMAIN,
-        "123-456",
+        "12.3-45.6",
         suggested_object_id="home",
         disabled_by=None,
     )

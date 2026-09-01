@@ -1,26 +1,22 @@
 """Platform allowing several cover to be grouped into one cover."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -34,6 +30,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -136,6 +133,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_unique_id = unique_id
 
     @callback
+    @override
     def async_update_supported_features(
         self,
         entity_id: str,
@@ -149,7 +147,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
@@ -177,6 +175,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         else:
             self._tilts[KEY_POSITION].discard(entity_id)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
@@ -184,6 +183,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             COVER_DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the covers down."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
@@ -195,6 +195,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
@@ -202,6 +203,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             COVER_DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set covers position."""
         data = {
@@ -216,6 +218,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt covers open."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
@@ -227,6 +230,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt covers closed."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
@@ -238,6 +242,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
@@ -249,6 +254,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set tilt position."""
         data = {
@@ -264,6 +270,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
         states = [
@@ -305,14 +312,14 @@ class CoverGroup(GroupEntity, CoverEntity):
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, ATTR_CURRENT_POSITION
+            position_states, CoverEntityStateAttribute.CURRENT_POSITION
         )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, ATTR_CURRENT_TILT_POSITION
+            tilt_states, CoverEntityStateAttribute.CURRENT_TILT_POSITION
         )
 
         supported_features = CoverEntityFeature(0)

@@ -1,7 +1,5 @@
 """Test the common control usage prediction."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 import uuid
 
@@ -138,19 +136,20 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
+async def test_multiple_entities_in_one_call(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test handling of service calls with multiple entity IDs."""
     user_id = str(uuid.uuid4())
 
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "test",
         "living_room",
         suggested_object_id="living_room",
         hidden_by=er.RegistryEntryHider.USER,
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "test",
         "kitchen",

@@ -33,14 +33,14 @@
     'supported_features': 0,
     'translation_key': 'cl',
     'unique_id': 'TEST123456789_cl',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_chlorine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine',
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_chlorine',
@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -95,9 +95,9 @@
 # name: test_all_sensors[sensor.pool_device_chlorine_dosing_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device Chlorine dosing type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine dosing type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -117,11 +117,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
         'timed',
+        'cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -157,13 +158,14 @@
 # name: test_all_sensors[sensor.pool_device_chlorine_peristaltic_dosing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device Chlorine peristaltic dosing',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine peristaltic dosing',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
         'timed',
+        'cycle',
       ]),
     }),
     'context': <ANY>,
@@ -172,6 +174,66 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_device_configuration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ph_orp',
+        'ph_orp_chlorine',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_device_configuration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device configuration',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device configuration',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_config',
+    'unique_id': 'TEST123456789_device_config',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_device_configuration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Device configuration',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ph_orp',
+        'ph_orp_chlorine',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_device_configuration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ph_orp',
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_flow_rate-entry]
@@ -217,9 +279,9 @@
 # name: test_all_sensors[sensor.pool_device_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Pool Device Flow rate',
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Flow rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_flow_rate',
@@ -272,9 +334,9 @@
 # name: test_all_sensors[sensor.pool_device_orp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_orp',
@@ -327,9 +389,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_calibration_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP calibration offset',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP calibration offset',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_orp_calibration_offset',
@@ -382,9 +444,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_calibration_slope-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP calibration slope',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP calibration slope',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_orp_calibration_slope',
@@ -401,7 +463,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'reference',
         '1_point',
@@ -440,9 +502,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_calibration_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device ORP calibration type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP calibration type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'reference',
         '1_point',
@@ -463,7 +525,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -501,9 +563,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_dosing_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device ORP dosing type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP dosing type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -559,9 +621,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_overfeed_alert_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device ORP overfeed alert time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP overfeed alert time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_orp_overfeed_alert_time',
@@ -578,7 +640,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -618,9 +680,9 @@
 # name: test_all_sensors[sensor.pool_device_orp_peristaltic_dosing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device ORP peristaltic dosing',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP peristaltic dosing',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -675,8 +737,8 @@
 # name: test_all_sensors[sensor.pool_device_ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Pool Device pH',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_ph',
@@ -729,9 +791,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_calibration_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device pH calibration offset',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH calibration offset',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_ph_calibration_offset',
@@ -784,9 +846,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_calibration_slope-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device pH calibration slope',
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH calibration slope',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_ph_calibration_slope',
@@ -803,7 +865,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'reference',
         '1_point',
@@ -843,9 +905,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_calibration_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device pH calibration type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH calibration type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'reference',
         '1_point',
@@ -867,7 +929,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -905,9 +967,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_dosing_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device pH dosing type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH dosing type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -963,9 +1025,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_overfeed_alert_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device pH overfeed alert time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH overfeed alert time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_ph_overfeed_alert_time',
@@ -982,7 +1044,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'proportional',
         'on_off',
         'timed',
@@ -1021,9 +1083,9 @@
 # name: test_all_sensors[sensor.pool_device_ph_peristaltic_dosing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Pool Device pH peristaltic dosing',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH peristaltic dosing',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'proportional',
         'on_off',
         'timed',
@@ -1080,9 +1142,9 @@
 # name: test_all_sensors[sensor.pool_device_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Pool Device Temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Temperature',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_temperature',
@@ -1092,6 +1154,66 @@
     'state': '25',
   })
 # ---
+# name: test_all_sensors[sensor.pool_device_temperature_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_temperature_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature unit',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Temperature unit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_unit',
+    'unique_id': 'TEST123456789_temperature_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_temperature_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Temperature unit',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_temperature_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'celsius',
+  })
+# ---
 # name: test_all_sensors[sensor.pool_device_totalizer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1099,7 +1221,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1137,10 +1259,10 @@
 # name: test_all_sensors[sensor.pool_device_totalizer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume',
-      'friendly_name': 'Pool Device Totalizer',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Totalizer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_totalizer',

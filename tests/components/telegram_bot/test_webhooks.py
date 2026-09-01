@@ -1,10 +1,11 @@
 """Tests for webhooks."""
 
 from ipaddress import IPv4Network
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from telegram.error import TimedOut
 
+from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
 from homeassistant.components.telegram_bot.const import DOMAIN
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
@@ -31,6 +32,10 @@ async def test_set_webhooks_failed(
         patch(
             "homeassistant.components.telegram_bot.webhooks.Bot.set_webhook",
         ) as mock_set_webhook,
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.Application.start",
+            AsyncMock(),
+        ) as mock_start,
     ):
         mock_set_webhook.side_effect = [TimedOut("mock timeout"), False]
 
@@ -41,7 +46,8 @@ async def test_set_webhooks_failed(
         # first fail with exception, second fail with False
         assert mock_set_webhook.call_count == 2
 
-        # SETUP_ERROR is result of RuntimeError("Failed to register webhook with Telegram") in webhooks.py
+        # SETUP_ERROR is result of RuntimeError(
+        # "Failed to register webhook with Telegram") in webhooks.py
         assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
 
         # test fail after retries
@@ -58,6 +64,8 @@ async def test_set_webhooks_failed(
         assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
         await hass.async_block_till_done()
 
+        assert mock_start.call_count == 0
+
 
 async def test_set_webhooks(
     hass: HomeAssistant,
@@ -68,11 +76,47 @@ async def test_set_webhooks(
 ) -> None:
     """Test set webhooks success."""
     mock_webhooks_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+
+    with patch(
+        "homeassistant.components.telegram_bot.webhooks.Application.start", AsyncMock()
+    ) as mock_start:
+        await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
 
     await hass.async_block_till_done()
 
     assert mock_webhooks_config_entry.state is ConfigEntryState.LOADED
+    mock_start.assert_called_once()
+
+
+async def test_set_webhooks_allowed_updates(
+    hass: HomeAssistant,
+    mock_webhooks_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    mock_register_webhook: None,
+    mock_generate_secret_token: str,
+) -> None:
+    """Test the webhook is registered for the updates the integration handles.
+
+    Telegram keeps the setting per bot and reuses the last one it was given
+    when it is omitted, so it has to be sent on every registration.
+    """
+    mock_webhooks_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.Application.start",
+            AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.Bot.set_webhook",
+            return_value=True,
+        ) as mock_set_webhook,
+    ):
+        await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_webhooks_config_entry.state is ConfigEntryState.LOADED
+    assert mock_set_webhook.call_args.kwargs["allowed_updates"] == ALLOWED_UPDATES
 
 
 async def test_webhooks_update_invalid_json(

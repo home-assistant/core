@@ -1,10 +1,11 @@
 """Base classes for Hydrawise entities."""
 
-from __future__ import annotations
+from typing import override
 
 from pydrawise.schema import Controller, Sensor, Zone
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,8 +47,17 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             ),
             manufacturer=MANUFACTURER,
         )
-        if zone_id is not None or sensor_id is not None:
-            self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
+        if zone_id is not None:
+            # Only zones get their own device; sensor entities share the
+            # controller device, so linking them to the controller would create
+            # a self-referential via_device.
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, str(controller.id)),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
         self._update_attrs()
 
     @property
@@ -67,13 +77,24 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         return  # pragma: no cover
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
-        self.controller = self.coordinator.data.controllers[self.controller.id]
+        # Guard against updates arriving after what the entity reads on has gone
+        # but before the entity has been unsubscribed from the coordinator.
+        data = self.coordinator.data
+        if (
+            self.controller.id not in data.controllers
+            or (self.zone_id is not None and self.zone_id not in data.zones)
+            or (self.sensor_id is not None and self.sensor_id not in data.sensors)
+        ):
+            return
+        self.controller = data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Set the entity availability."""
         return super().available and self.controller.online

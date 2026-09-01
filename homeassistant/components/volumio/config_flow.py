@@ -1,9 +1,7 @@
 """Config flow for Volumio integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyvolumio import CannotConnectError, Volumio
 import voluptuous as vol
@@ -67,6 +65,7 @@ class VolumioConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,6 +95,7 @@ class VolumioConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

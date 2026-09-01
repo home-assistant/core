@@ -178,7 +178,6 @@ async def test_set_temperature(
     # Put areas on different floors:
     # first floor => living room and office
     # upstairs => bedroom
-    floor_registry = fr.async_get(hass)
     first_floor = floor_registry.async_create("First floor")
     living_room_area = area_registry.async_update(
         living_room_area.id, floor_id=first_floor.floor_id
@@ -201,7 +200,7 @@ async def test_set_temperature(
             {"temperature": {"value": 20}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
 
     # Select by area explicitly (climate_2)
     response = await intent.async_handle(
@@ -211,7 +210,7 @@ async def test_set_temperature(
         {"area": {"value": bedroom_area.name}, "temperature": {"value": 20.1}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
@@ -228,7 +227,7 @@ async def test_set_temperature(
         },
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
@@ -242,7 +241,7 @@ async def test_set_temperature(
         {"floor": {"value": second_floor.name}, "temperature": {"value": 20.3}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
@@ -259,7 +258,7 @@ async def test_set_temperature(
         },
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
@@ -273,7 +272,7 @@ async def test_set_temperature(
         {"name": {"value": "Climate 2"}, "temperature": {"value": 20.5}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
@@ -291,7 +290,7 @@ async def test_set_temperature(
 
     # Exception should contain details of what we tried to match
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.AREA
     constraints = error.value.constraints
     assert constraints.name is None
     assert constraints.area_name == office_area.name
@@ -310,7 +309,7 @@ async def test_set_temperature(
             },
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
 
 
 async def test_set_temperature_no_entities(
@@ -330,11 +329,11 @@ async def test_set_temperature_no_entities(
             {"temperature": {"value": 20}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.DOMAIN
 
 
 async def test_set_temperature_not_supported(hass: HomeAssistant) -> None:
-    """Test HassClimateSetTemperature intent when climate entity doesn't support required feature."""
+    """Test HassClimateSetTemperature intent without support."""
     assert await async_setup_component(hass, "homeassistant", {})
     await climate_intent.async_setup_intents(hass)
 
@@ -357,4 +356,4 @@ async def test_set_temperature_not_supported(hass: HomeAssistant) -> None:
 
     # Exception should contain details of what we tried to match
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.FEATURE

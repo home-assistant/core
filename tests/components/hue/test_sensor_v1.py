@@ -337,10 +337,10 @@ async def test_sensors(
     assert presence_sensor_1.state == "on"
     assert light_level_sensor_1 is not None
     assert light_level_sensor_1.state == "1.0"
-    assert light_level_sensor_1.name == "Living room sensor light level"
+    assert light_level_sensor_1.name == "Living room sensor Light level"
     assert temperature_sensor_1 is not None
     assert temperature_sensor_1.state == "17.75"
-    assert temperature_sensor_1.name == "Living room sensor temperature"
+    assert temperature_sensor_1.name == "Living room sensor Temperature"
 
     presence_sensor_2 = hass.states.get("binary_sensor.kitchen_sensor_motion")
     light_level_sensor_2 = hass.states.get("sensor.kitchen_sensor_light_level")
@@ -349,15 +349,15 @@ async def test_sensors(
     assert presence_sensor_2.state == "off"
     assert light_level_sensor_2 is not None
     assert light_level_sensor_2.state == "10.0"
-    assert light_level_sensor_2.name == "Kitchen sensor light level"
+    assert light_level_sensor_2.name == "Kitchen sensor Light level"
     assert temperature_sensor_2 is not None
     assert temperature_sensor_2.state == "18.75"
-    assert temperature_sensor_2.name == "Kitchen sensor temperature"
+    assert temperature_sensor_2.name == "Kitchen sensor Temperature"
 
     battery_remote_1 = hass.states.get("sensor.hue_dimmer_switch_1_battery_level")
     assert battery_remote_1 is not None
     assert battery_remote_1.state == "100"
-    assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
+    assert battery_remote_1.name == "Hue dimmer switch 1 Battery level"
 
     assert (
         entity_registry.async_get(
@@ -485,9 +485,16 @@ async def test_hue_events(
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
-    hue_tap_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+    hue_tap_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "00:00:00:00:00:44:23:08"),
+        mock_bridge_v1.config_entry.entry_id,
     )
+    # The sensor device is linked to the bridge device as its via_device.
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, mock_bridge_v1.api.config.bridgeid),
+        mock_bridge_v1.config_entry.entry_id,
+    )
+    assert hue_tap_device.via_device_id == bridge_device.id
 
     mock_bridge_v1.api.sensors["7"].last_event = {"type": "button"}
     mock_bridge_v1.api.sensors["8"].last_event = {"type": "button"}
@@ -516,8 +523,9 @@ async def test_hue_events(
         "last_updated": "2019-12-28T22:58:03",
     }
 
-    hue_dimmer_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+    hue_dimmer_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "00:17:88:01:10:3e:3a:dc"),
+        mock_bridge_v1.config_entry.entry_id,
     )
 
     new_sensor_response = dict(new_sensor_response)
@@ -615,8 +623,9 @@ async def test_hue_events(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    hue_aurora_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+    hue_aurora_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7"),
+        mock_bridge_v1.config_entry.entry_id,
     )
 
     assert len(mock_bridge_v1.mock_requests) == 6

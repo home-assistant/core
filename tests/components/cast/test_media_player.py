@@ -1,7 +1,5 @@
 """The tests for the Cast Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import json
@@ -16,7 +14,11 @@ import pytest
 import yarl
 
 from homeassistant.components import media_player, tts
-from homeassistant.components.cast import media_player as cast
+from homeassistant.components.cast import (
+    CastRuntimeData,
+    _process_cast_platform,
+    media_player as cast_media_player,
+)
 from homeassistant.components.cast.const import (
     DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -41,6 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -126,7 +129,7 @@ async def async_setup_cast(
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -225,7 +228,7 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
         ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -486,22 +489,32 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     info = get_fake_chromecast_info(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
-    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
+    added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is not None
     assert info.uuid in added_casts
 
     # Sending second time should not create new entity
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
@@ -809,7 +822,6 @@ async def test_device_registry(
     chromecast, _ = await async_setup_media_player_cast(hass, info)
     chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
-    cast_entry = hass.config_entries.async_entries("cast")[0]
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
@@ -832,7 +844,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1040,6 +1052,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1053,6 +1066,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1112,6 +1126,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1256,9 +1271,14 @@ async def test_entity_play_media_cast_invalid(
 
     # Play_media - media_type cast with unsupported app
     quick_play_mock.side_effect = NotImplementedError()
-    await common.async_play_media(hass, "cast", '{"app_name": "unknown"}', entity_id)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await common.async_play_media(
+            hass, "cast", '{"app_name": "unknown"}', entity_id
+        )
+    assert exc_info.value.translation_domain == "cast"
+    assert exc_info.value.translation_key == "app_not_supported"
+    assert exc_info.value.translation_placeholders == {"app_name": "unknown"}
     quick_play_mock.assert_called_once_with(ANY, "unknown", {})
-    assert "App unknown not supported" in caplog.text
 
 
 async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) -> None:
@@ -2096,7 +2116,7 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")
@@ -2118,6 +2138,10 @@ async def test_invalid_cast_platform(
 
     info = get_fake_chromecast_info()
     await async_setup_media_player_cast(hass, info)
+
+    # Cast platforms are loaded lazily on first use
+    entry = hass.config_entries.async_entries("cast")[0]
+    await entry.runtime_data.cast_platforms.async_get_platforms()
 
     assert "Invalid cast platform <Mock id" in caplog.text
 
@@ -2265,6 +2289,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2290,6 +2315,7 @@ async def test_cast_platform_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

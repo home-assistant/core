@@ -170,6 +170,7 @@ class RoonServer:
         new_dict["zone_name"] = zone["display_name"]
         new_dict["display_name"] = output["display_name"]
         new_dict["last_changed"] = utcnow()
-        # we don't use the zone_id or output_id for now as unique id as I've seen cases were it changes for some reason
+        # we don't use the zone_id or output_id for now as
+        # unique id as I've seen cases where it changes
         new_dict["dev_id"] = f"roon_{self.roon_id}_{output['display_name']}"
         return new_dict

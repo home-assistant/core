@@ -1,11 +1,10 @@
 """Support for Jewish calendar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 import logging
+from typing import override
 
 from hdate import HDateInfo, Zmanim
 from hdate.holidays import HolidayDatabase
@@ -90,6 +89,9 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
                 dict.fromkeys(_holiday.type.name for _holiday in info.holidays)
             ),
         },
+        next_update_fn=lambda zmanim: (
+            zmanim.candle_lighting or zmanim.havdalah or zmanim.shkia.local
+        ),
     ),
     JewishCalendarSensorDescription(
         key="omer_count",
@@ -234,6 +236,7 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
 
     entity_description: JewishCalendarBaseSensorDescription
 
+    @override
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
         """Return a list of times to update the sensor."""
         if self.entity_description.next_update_fn is None:
@@ -273,11 +276,13 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
             )
 
     @property
+    @override
     def native_value(self) -> str | int | dt.datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get_dateinfo())
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         if self.entity_description.attr_fn is None:
@@ -292,6 +297,7 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     entity_description: JewishCalendarTimestampSensorDescription
 
     @property
+    @override
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
         if self.entity_description.value_fn is None:

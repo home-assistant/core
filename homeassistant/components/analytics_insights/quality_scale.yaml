@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -45,7 +51,7 @@ rules:
     status: done
     comment: |
       The coordinator handles this.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |

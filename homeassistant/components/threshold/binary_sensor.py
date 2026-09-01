@@ -1,10 +1,8 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 import voluptuous as vol
 
@@ -32,6 +30,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -110,7 +109,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                hass,
                 entity_id=entity_id,
                 name=name,
                 lower=lower,
@@ -118,6 +116,7 @@ async def async_setup_entry(
                 hysteresis=hysteresis,
                 device_class=device_class,
                 unique_id=unique_id,
+                device=async_entity_id_to_device(hass, entity_id),
             )
         ]
     )
@@ -140,7 +139,6 @@ async def async_setup_platform(
     async_add_entities(
         [
             ThresholdSensor(
-                hass,
                 entity_id=entity_id,
                 name=name,
                 lower=lower,
@@ -172,7 +170,6 @@ class ThresholdSensor(BinarySensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         entity_id: str,
         name: str,
@@ -181,15 +178,12 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
         self._attr_unique_id = unique_id
-        if entity_id:  # Guard against empty entity_id in preview mode
-            self.device_entry = async_entity_id_to_device(
-                hass,
-                entity_id,
-            )
+        self.device_entry = device
         self._entity_id = entity_id
         self._attr_name = name
         if lower is not None:
@@ -202,6 +196,7 @@ class ThresholdSensor(BinarySensorEntity):
         self._state_position = POSITION_UNKNOWN
         self.sensor_value: float | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_sensor()
@@ -252,6 +247,7 @@ class ThresholdSensor(BinarySensorEntity):
         _update_sensor_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {

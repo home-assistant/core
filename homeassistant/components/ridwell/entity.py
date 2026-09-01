@@ -1,13 +1,10 @@
 """Define a base Ridwell entity."""
 
-from __future__ import annotations
-
-from datetime import date
-
 from aioridwell.model import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import RidwellDataUpdateCoordinator
@@ -41,5 +38,5 @@ class RidwellEntity(CoordinatorEntity[RidwellDataUpdateCoordinator]):
         return next(
             event
             for event in self.coordinator.data[self._account.account_id]
-            if event.pickup_date >= date.today()
+            if event.pickup_date >= dt_util.now().date()
         )

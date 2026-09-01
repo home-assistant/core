@@ -1,7 +1,5 @@
 """Test Tuya button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -18,8 +16,14 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON]):
+        yield
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -34,7 +38,6 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sd_lr33znaodtyarrrz"],

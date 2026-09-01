@@ -1,11 +1,9 @@
 """Select platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import (
     BioFreshPlusControl,
@@ -186,32 +184,32 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
             self._attr_options = description.options_fn(control)
 
         # Add zone suffix only for multi-zone devices
-        if has_multiple_zones:
-            temp_controls = coordinator.data.get_temperature_controls()
-            if (
-                (tc := temp_controls.get(zone_id))
-                and isinstance(tc.zone_position, ZonePosition)
-                and (zone_key := ZONE_POSITION_MAP.get(tc.zone_position))
-            ):
-                self._attr_translation_key = f"{description.translation_key}_{zone_key}"
+        if (
+            has_multiple_zones
+            and control is not None
+            and isinstance(control.zone_position, ZonePosition)
+            and (zone_key := ZONE_POSITION_MAP.get(control.zone_position))
+        ):
+            self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
     @property
     def _select_control(self) -> SelectControl | None:
         """Get the select control for this entity."""
         for control in self.coordinator.data.controls:
+            if not isinstance(
+                control,
+                IceMakerControl | HydroBreezeControl | BioFreshPlusControl,
+            ):
+                continue
             if (
                 isinstance(control, self.entity_description.control_type)
                 and control.zone_id == self._zone_id
             ):
-                if TYPE_CHECKING:
-                    assert isinstance(
-                        control,
-                        IceMakerControl | HydroBreezeControl | BioFreshPlusControl,
-                    )
                 return control
         return None
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         control = self._select_control
@@ -226,10 +224,12 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._select_control is not None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         mode = self.entity_description.mode_enum(option)

@@ -1,9 +1,8 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
@@ -85,6 +84,7 @@ class DevoloBinarySensorEntity(
         super().__init__(entry, coordinator)
 
     @property
+    @override
     def is_on(self) -> bool:
         """State of the binary sensor."""
         return self.entity_description.value_func(self)

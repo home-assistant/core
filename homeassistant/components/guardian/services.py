@@ -1,7 +1,5 @@
 """Support for Guardian services."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
@@ -17,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import CONF_UID, DOMAIN
 
@@ -60,19 +58,11 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 @callback
 def async_get_entry_id_for_service_call(call: ServiceCall) -> GuardianConfigEntry:
     """Get the entry ID related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(call.hass)
-
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid Guardian device ID: {device_id}")
-
-    for entry_id in device_entry.config_entries:
-        if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return entry
-
-    raise ValueError(f"No config entry for device ID: {device_id}")
+    config_entry: GuardianConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[CONF_DEVICE_ID]
+    )
+    return config_entry
 
 
 @callback

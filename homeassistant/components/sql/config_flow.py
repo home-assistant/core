@@ -1,9 +1,7 @@
 """Adds config flow for SQL integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import sqlalchemy
 from sqlalchemy.engine import Engine, Result
@@ -12,11 +10,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -28,13 +22,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import selector
 
-from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
     EmptyQueryError,
     InvalidSqlQuery,
@@ -52,22 +47,13 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_QUERY): selector.TemplateSelector(),
         vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
-        vol.Required(CONF_ADVANCED_OPTIONS): section(
+        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
             vol.Schema(
                 {
                     vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                            translation_key="device_class",
-                            sort=True,
-                        )
+                    vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                        selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
                         selector.SelectSelectorConfig(
@@ -86,6 +72,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
+        # Approved exemption: user names the SQL query sensor
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
         vol.Optional(CONF_DB_URL): selector.TextSelector(),
     }
@@ -164,18 +152,20 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
-    VERSION = 2
+    VERSION = 3
 
     data: dict[str, Any]
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -237,12 +227,12 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
-            mod_advanced_options = {
+            mod_additional_options = {
                 k: v
-                for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                for k, v in user_input[CONF_ADDITIONAL_OPTIONS].items()
                 if v is not None
             }
-            user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
+            user_input[CONF_ADDITIONAL_OPTIONS] = mod_additional_options
 
             if not errors:
                 name = self.data[CONF_NAME]
@@ -303,12 +293,12 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
                     recorder_db,
                 )
 
-                mod_advanced_options = {
+                mod_additional_options = {
                     k: v
-                    for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                    for k, v in user_input[CONF_ADDITIONAL_OPTIONS].items()
                     if v is not None
                 }
-                user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
+                user_input[CONF_ADDITIONAL_OPTIONS] = mod_additional_options
 
                 return self.async_create_entry(
                     data=user_input,

@@ -1,8 +1,6 @@
 """Support for Modbus switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
@@ -32,6 +30,7 @@ async def async_setup_platform(
 class ModbusSwitch(ModbusToggleEntity, SwitchEntity):
     """Base class representing a Modbus switch."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set switch on."""
         await self.async_turn(self.command_on)

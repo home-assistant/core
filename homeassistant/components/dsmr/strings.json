@@ -8,35 +8,28 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_communicate": "Failed to communicate",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_key": "Failed to decrypt the telegram, check the encryption key"
     },
     "step": {
-      "setup_network": {
+      "encryption_key": {
         "data": {
-          "dsmr_version": "Select DSMR version",
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "encryption_key": "Encryption key"
         },
-        "title": "Select connection address"
-      },
-      "setup_serial": {
-        "data": {
-          "dsmr_version": "[%key:component::dsmr::config::step::setup_network::data::dsmr_version%]",
-          "port": "Select device"
+        "data_description": {
+          "encryption_key": "The encryption key of your meter, provided by your grid operator (32 hexadecimal characters)"
         },
-        "title": "[%key:common::config_flow::data::device%]"
-      },
-      "setup_serial_manual_path": {
-        "data": {
-          "port": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "title": "[%key:common::config_flow::data::path%]"
+        "title": "Encryption key"
       },
       "user": {
         "data": {
-          "type": "Connection type"
+          "dsmr_version": "Select DSMR version",
+          "port": "Select device"
         },
-        "title": "Select connection type"
+        "data_description": {
+          "port": "Select a serial device, or enter a network address such as socket://host:port"
+        },
+        "title": "[%key:common::config_flow::data::device%]"
       }
     }
   },

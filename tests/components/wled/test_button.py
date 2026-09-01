@@ -34,7 +34,6 @@ def override_platforms() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_snapshots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -45,7 +44,6 @@ async def test_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_device_snapshot(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

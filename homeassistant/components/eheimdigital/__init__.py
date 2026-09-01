@@ -1,13 +1,17 @@
 """The EHEIM Digital integration."""
 
-from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from eheimdigital.device import EheimDigitalDevice
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .entity import async_device_info
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -30,6 +34,17 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
+    main = coordinator.hub.main
+    if TYPE_CHECKING:
+        # After the first refresh at least one device is found and so there is
+        # always a main device set.
+        assert isinstance(main, EheimDigitalDevice)
+    # Register the main device up front so child devices can resolve their
+    # via_device_id link during concurrent platform setup.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **async_device_info(coordinator, main)
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -46,7 +61,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: EheimDigitalConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return not any(

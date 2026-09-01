@@ -1,10 +1,9 @@
 """Platform for Kostal Plenticore numbers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pykoplenti import SettingsData
 
@@ -183,6 +182,7 @@ class PlenticoreDataNumber(
         return self.entity_description.data_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -192,6 +192,7 @@ class PlenticoreDataNumber(
             and self.data_id in self.coordinator.data[self.module_id]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
@@ -199,12 +200,14 @@ class PlenticoreDataNumber(
             self.coordinator.start_fetch_data(self.module_id, self.data_id)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
         self.coordinator.stop_fetch_data(self.module_id, self.data_id)
         await super().async_will_remove_from_hass()
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if self.available:
@@ -213,6 +216,7 @@ class PlenticoreDataNumber(
 
         return None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         str_value = self._formatter_back(value)

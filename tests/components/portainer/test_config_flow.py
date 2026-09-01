@@ -111,10 +111,10 @@ async def test_form_exceptions(
     assert result["data"] == MOCK_TEST_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""
@@ -262,7 +262,7 @@ async def test_full_flow_reconfigure_unique_id_mismatch(
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfigure aborts when credentials point to a different Portainer instance."""
+    """Test reconfigure aborts on different Portainer instance."""
     mock_config_entry.add_to_hass(hass)
     mock_portainer_client.portainer_system_status.return_value = PortainerSystemStatus(
         instance_id="different-instance-id", version="2.0.0"

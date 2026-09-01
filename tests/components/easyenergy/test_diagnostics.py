@@ -19,7 +19,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -33,7 +33,7 @@ async def test_diagnostics(
     )
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_diagnostics_no_gas_today(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

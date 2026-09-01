@@ -1,10 +1,9 @@
 """Support for WLED sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from wled import Device as WLEDDevice
 
@@ -50,7 +49,9 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
-        exists_fn=lambda device: bool(device.info.leds.max_power),
+        # The power budget is only reported for a global current limit, while
+        # the estimate itself is also reported when limiting per output.
+        exists_fn=lambda device: bool(device.info.leds.power),
     ),
     WLEDSensorEntityDescription(
         key="info_leds_count",
@@ -70,7 +71,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: utcnow() - device.info.uptime,
@@ -157,6 +158,7 @@ class WLEDSensorEntity(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

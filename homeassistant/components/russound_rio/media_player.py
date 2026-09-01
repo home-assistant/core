@@ -1,15 +1,13 @@
 """Support for Russound multizone controllers using RIO Protocol."""
 
-from __future__ import annotations
-
 import asyncio
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from aiorussound import Controller
 from aiorussound.const import FeatureFlag
-from aiorussound.models import PlayStatus, Source
+from aiorussound.rio import Controller, Source
+from aiorussound.rio.models import PlayStatus
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
@@ -25,7 +23,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RussoundConfigEntry, media_browser
-from .const import DOMAIN, RUSSOUND_MEDIA_TYPE_PRESET, SELECT_SOURCE_DELAY
+from .const import (
+    CONF_ZONE_SOURCE_EXCLUSION,
+    DOMAIN,
+    RUSSOUND_MEDIA_TYPE_PRESET,
+    SELECT_SOURCE_DELAY,
+)
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +45,15 @@ async def async_setup_entry(
     client = entry.runtime_data
     sources = client.sources
 
+    zone_source_exclusion = entry.options.get(
+        CONF_ZONE_SOURCE_EXCLUSION,
+        True,
+    )
+
     async_add_entities(
-        RussoundZoneDevice(controller, zone_id, sources)
+        RussoundZoneDevice(
+            hass, controller, entry, zone_id, sources, zone_source_exclusion
+        )
         for controller in client.controllers.values()
         for zone_id in controller.zones
     )
@@ -79,19 +89,27 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, controller: Controller, zone_id: int, sources: dict[int, Source]
+        self,
+        hass: HomeAssistant,
+        controller: Controller,
+        entry: RussoundConfigEntry,
+        zone_id: int,
+        sources: dict[int, Source],
+        zone_source_exclusion: bool,
     ) -> None:
         """Initialize the zone device."""
-        super().__init__(controller, zone_id)
+        super().__init__(hass, controller, entry, zone_id)
         _zone = self._zone
         self._sources = sources
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
+        self._zone_source_exclusion = zone_source_exclusion
 
     @property
     def _source(self) -> Source:
         return self._zone.fetch_current_source()
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         status = self._zone.status
@@ -109,11 +127,13 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         return MediaPlayerState.ON
 
     @property
+    @override
     def source(self) -> str:
         """Get the currently selected source."""
         return self._source.name
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """Return a list of available input sources."""
         if TYPE_CHECKING:
@@ -124,49 +144,60 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                 for source_id, source in self._sources.items()
                 if source_id in self._zone.enabled_sources
             ]
-            if is_feature_supported(
-                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            if (
+                is_feature_supported(
+                    self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+                )
+                and self._zone_source_exclusion
             )
             else self._sources.values()
         )
         return [x.name for x in available_sources]
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._source.song_name or self._source.channel
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._source.artist_name
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._source.album_name
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self._source.cover_art_url
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of the current media."""
         return self._source.track_time
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of the current media."""
         return self._source.play_time
 
     @property
+    @override
     def media_position_updated_at(self) -> dt.datetime:
         """Last time the media position was updated."""
         return self._source.position_last_updated
 
     @property
+    @override
     def volume_level(self) -> float:
         """Volume level of the media player (0..1).
 
@@ -176,27 +207,32 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         return self._zone.volume / 50.0
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Return whether zone is muted."""
         return self._zone.is_mute
 
     @command
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
         await self._zone.zone_off()
 
     @command
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
         await self._zone.zone_on()
 
     @command
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
         await self._zone.set_volume(str(rvol))
 
     @command
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, src in self._sources.items():
@@ -206,16 +242,19 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
             break
 
     @command
+    @override
     async def async_volume_up(self) -> None:
         """Step the volume up."""
         await self._zone.volume_up()
 
     @command
+    @override
     async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self._zone.volume_down()
 
     @command
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the media player."""
         if FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON in self._client.supported_features:
@@ -229,11 +268,13 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
             await self._zone.toggle_mute()
 
     @command
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position in the current media."""
         await self._zone.set_seek_time(int(position))
 
     @command
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -267,6 +308,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
             )
         await self._zone.restore_preset(preset_id)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

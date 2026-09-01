@@ -1,15 +1,14 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.properties import Property as VelbusProperty
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -33,24 +32,15 @@ class VelbusEntity(Entity):
         self._channel = channel
         self._module_address = str(channel.get_module_address())
         self._attr_name = channel.get_name()
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self._get_identifier()),
-            },
-            manufacturer="Velleman",
-            model=channel.get_module_type_name(),
-            model_id=str(channel.get_module_type()),
-            name=channel.get_full_name(),
-            sw_version=channel.get_module_sw_version(),
-            serial_number=channel.get_module_serial(),
-        )
-        if self._channel.is_sub_device():
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                self._module_address,
-            )
-        serial = channel.get_module_serial() or self._module_address
-        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+        serial = channel.get_module_serial()
+        # Modules like the VMB4RY report a serial of "0"; fall back to the module
+        # address so entities on multiple such modules keep distinct unique ids.
+        if serial in (None, "", "0"):
+            serial = self._module_address
+        if isinstance(channel, VelbusProperty):
+            self._attr_unique_id = f"{serial}-{channel.get_property_key()}"
+        else:
+            self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""
@@ -58,10 +48,37 @@ class VelbusEntity(Entity):
             return self._module_address
         return f"{self._module_address}-{self._channel.get_channel_number()}"
 
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device info, linking a sub-device to its module device."""
+        channel = self._channel
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._get_identifier())},
+            manufacturer="Velleman",
+            model=channel.get_module_type_name(),
+            model_id=str(channel.get_module_type()),
+            name=channel.get_full_name(),
+            sw_version=channel.get_module_sw_version(),
+            serial_number=channel.get_module_serial(),
+        )
+        if channel.is_sub_device():
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._module_address),
+                config_entry_id=config_entry.entry_id,
+            )
+        return device_info
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listener for state changes."""
         self._channel.remove_on_status_update(self._on_update)
@@ -71,6 +88,7 @@ class VelbusEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._channel.is_connected()

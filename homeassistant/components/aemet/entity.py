@@ -1,7 +1,5 @@
 """Entity classes for the AEMET OpenData integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aemet_opendata.helpers import dict_nested_value

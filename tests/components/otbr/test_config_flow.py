@@ -2,12 +2,14 @@
 
 import asyncio
 from http import HTTPStatus
+import re
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
 import pytest
 import python_otbr_api
+from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
 from homeassistant.components.homeassistant_hardware import (
@@ -21,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -49,13 +52,34 @@ HASSIO_DATA_OTBR = HassioServiceInfo(
         "host": "core-openthread-border-router",
         "port": 8081,
         "device": "/dev/ttyUSB1",
-        "firmware": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r",
+        "firmware": (
+            "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r"
+        ),
         "addon": "OpenThread Border Router",
     },
     name="OpenThread Border Router",
     slug="core_openthread_border_router",
     uuid="c58ba80fc88548008776bf8da903ef21",
 )
+
+
+def _expected_dataset_body(pan_id: int, key_format: KeyFormat) -> dict[str, Any]:
+    """Return the expected JSON body for a default-channel dataset PUT.
+
+    python_otbr_api emits camelCase by default and rewrites to PascalCase only
+    when the /api/actions probe returns 404.
+    """
+    if key_format is KeyFormat.PASCAL_CASE:
+        return {
+            "Channel": 15,
+            "NetworkName": f"ha-thread-{pan_id:04x}",
+            "PanId": pan_id,
+        }
+    return {
+        "channel": 15,
+        "networkName": f"ha-thread-{pan_id:04x}",
+        "panId": pan_id,
+    }
 
 
 @pytest.fixture(name="otbr_addon_info")
@@ -153,6 +177,7 @@ async def test_user_flow_additional_entry_fail_get_address(
 
     # Do a user flow
     aioclient_mock.clear_requests()
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=HTTPStatus.NOT_FOUND)
     aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
     aioclient_mock.get(f"{url2}/node/ba-id", status=HTTPStatus.NOT_FOUND)
     await _finish_user_flow(hass)
@@ -239,9 +264,12 @@ async def test_user_flow_additional_entry_same_address(
     assert result["errors"] == {"base": "already_configured"}
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    key_format: KeyFormat,
 ) -> None:
     """Test the user flow when the border router has no dataset.
 
@@ -278,12 +306,9 @@ async def test_user_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -671,9 +696,14 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
+    otbr_addon_info,
+    key_format: KeyFormat,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -701,12 +731,9 @@ async def test_hassio_discovery_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -731,7 +758,10 @@ async def test_hassio_discovery_flow_router_not_setup(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
+    otbr_addon_info,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -782,12 +812,14 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     multiprotocol_addon_manager_mock,
     otbr_addon_info,
+    key_format: KeyFormat,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -818,12 +850,9 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
-    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
-    assert aioclient_mock.mock_calls[-2][2] == {
-        "Channel": 15,
-        "NetworkName": f"ha-thread-{pan_id:04x}",
-        "PanId": pan_id,
-    }
+    body = aioclient_mock.mock_calls[-2][2]
+    pan_id = body["PanId" if key_format is KeyFormat.PASCAL_CASE else "panId"]
+    assert body == _expected_dataset_body(pan_id, key_format)
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -861,26 +890,62 @@ async def test_hassio_discovery_flow_404(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.parametrize(
+    ("entry_url", "entry_unique_id", "entry_state"),
+    [
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
+            HASSIO_DATA.uuid,
+            ConfigEntryState.NOT_LOADED,
+            id="new_port",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
+            None,
+            ConfigEntryState.NOT_LOADED,
+            id="new_port_missing_unique_id",
+        ),
+        pytest.param(
+            f"http://core-silabs-multiprotocol-old:{HASSIO_DATA.config['port']}",
+            HASSIO_DATA.uuid,
+            ConfigEntryState.NOT_LOADED,
+            id="new_host",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+            None,
+            ConfigEntryState.NOT_LOADED,
+            id="same_url_missing_unique_id",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+            None,
+            ConfigEntryState.LOADED,
+            id="same_url_missing_unique_id_loaded",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("get_border_agent_id")
-async def test_hassio_discovery_flow_new_port_missing_unique_id(
+async def test_hassio_discovery_flow_updates_entry(
     hass: HomeAssistant,
+    entry_url: str,
+    entry_unique_id: str | None,
+    entry_state: ConfigEntryState,
 ) -> None:
-    """Test the port can be updated when the unique id is missing."""
+    """Test the URL and the unique id of the existing entry are updated."""
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={
-            "url": (
-                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
-            )
-        },
+        data={"url": entry_url},
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
         title="Open Thread Border Router",
+        unique_id=entry_unique_id,
     )
     config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, entry_state)
 
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -892,22 +957,39 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
     assert config_entry.data == expected_data
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_border_agent_id")
-async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
-    """Test the port can be updated."""
+@pytest.mark.usefixtures(
+    "otbr_addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
+async def test_hassio_discovery_flow_entry_without_unique_id_kept(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry without a unique id is left alone when the uuid is taken.
+
+    An entry created by the first version of the integration next to a newer entry
+    for the same add-on is the state older versions could leave behind.
+    """
     mock_integration(hass, MockModule("hassio"))
 
-    # Setup the config entry
+    url = f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}"
+    legacy_entry = MockConfigEntry(
+        data={"url": url},
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=None,
+    )
+    legacy_entry.add_to_hass(hass)
     config_entry = MockConfigEntry(
-        data={
-            "url": (
-                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
-            )
-        },
+        data={"url": url},
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
@@ -922,12 +1004,11 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
-    assert config_entry.data == expected_data
+    assert legacy_entry.unique_id is None
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [
+        legacy_entry,
+        config_entry,
+    ]
 
 
 @pytest.mark.usefixtures(
@@ -965,6 +1046,60 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     }
     config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    ("entry_state", "expected_reloads"),
+    [
+        (ConfigEntryState.NOT_LOADED, 0),
+        (ConfigEntryState.SETUP_RETRY, 1),
+    ],
+)
+@pytest.mark.usefixtures(
+    "otbr_addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
+async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
+    hass: HomeAssistant, entry_state: ConfigEntryState, expected_reloads: int
+) -> None:
+    """Test no duplicate entry is created when the add-on restarts while unloaded.
+
+    The config entry is unloaded while the ZBT-1 or ZBT-2 firmware is updated, and
+    the add-on is restarted before the entry is set up again. An entry which is
+    retrying its setup is reloaded, the discovery means the add-on is back.
+    """
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}"
+        },
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=HASSIO_DATA.uuid,
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, entry_state)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
+    assert (
+        mock_schedule_reload.mock_calls
+        == [call(config_entry.entry_id)] * expected_reloads
+    )
 
 
 @pytest.mark.parametrize(

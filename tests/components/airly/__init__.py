@@ -6,9 +6,9 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
+API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=12.300000&lng=45.600000&maxDistanceKM=5.000000"
 API_POINT_URL = (
-    "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000"
+    "https://airapi.airly.eu/v2/measurements/point?lat=12.300000&lng=45.600000"
 )
 HEADERS = {
     "X-RateLimit-Limit-day": "100",
@@ -24,12 +24,11 @@ async def init_integration(
         domain=DOMAIN,
         title="Home",
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
-        unique_id="123-456",
+        unique_id="12.3-45.6",
         data={
             "api_key": "foo",
-            "latitude": 123,
-            "longitude": 456,
-            "name": "Home",
+            "latitude": 12.3,
+            "longitude": 45.6,
         },
     )
 

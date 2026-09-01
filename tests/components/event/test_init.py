@@ -1,6 +1,7 @@
 """The tests for the event integration."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 
 from freezegun import freeze_time
@@ -10,6 +11,7 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     DOMAIN,
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -34,6 +36,7 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
 
 
@@ -78,12 +81,14 @@ async def test_event() -> None:
         assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
         assert not event.extra_state_attributes
 
-    # Test triggering an event, with extra attribute data
-    now = dt_util.utcnow()
-    with freeze_time(now):
+    # Test triggering an event, with extra attribute data. Use a later time so
+    # the assertion is not affected by the strictly-increasing timestamp
+    # guarantee (which only kicks in within the same millisecond).
+    later = now + timedelta(seconds=1)
+    with freeze_time(later):
         event._trigger_event("short_press", {"hello": "world"})
 
-        assert event.state == now.isoformat(timespec="milliseconds")
+        assert event.state == later.isoformat(timespec="milliseconds")
         assert event.state_attributes == {
             ATTR_EVENT_TYPE: "short_press",
             "hello": "world",
@@ -94,6 +99,36 @@ async def test_event() -> None:
         ValueError, match="^Invalid event type unknown_event for event.doorbell$"
     ):
         event._trigger_event("unknown_event")
+
+
+async def test_trigger_event_strictly_increasing_timestamp() -> None:
+    """Test events within the same millisecond get strictly increasing states.
+
+    The event state is a millisecond timestamp; state triggers such as
+    event.received detect a new event by the state value changing. Multiple
+    events fired within one millisecond (e.g. several items handled in a single
+    coordinator poll) must therefore not collapse onto one timestamp.
+    """
+    event = EventEntity()
+    event.entity_id = "event.test"
+    event._attr_event_types = ["ping"]
+
+    states: list[str | None] = []
+    with freeze_time("2026-01-01T00:00:00+00:00"):
+        for _ in range(3):
+            event._trigger_event("ping")
+            states.append(event.state)
+
+    assert states == [
+        "2026-01-01T00:00:00.000+00:00",
+        "2026-01-01T00:00:00.001+00:00",
+        "2026-01-01T00:00:00.002+00:00",
+    ]
+
+    # A later real event keeps its true timestamp rather than an artificial bump.
+    with freeze_time("2026-01-01T00:00:05+00:00"):
+        event._trigger_event("ping")
+    assert event.state == "2026-01-01T00:00:05.000+00:00"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
@@ -344,3 +379,71 @@ async def test_name(hass: HomeAssistant) -> None:
         "device_class": "doorbell",
         "friendly_name": "Doorbell",
     }
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_doorbell_missing_ring_event_type(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when doorbell entity lacks the ring event type."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.EVENT]
+        )
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Doorbell entity WITHOUT the standard "ring" event type
+    entity_without_ring = EventEntity()
+    entity_without_ring._attr_event_types = ["ding"]
+    entity_without_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_without_ring._attr_has_entity_name = True
+    entity_without_ring.entity_id = "event.doorbell_without_ring"
+
+    # Doorbell entity WITH the standard "ring" event type
+    entity_with_ring = EventEntity()
+    entity_with_ring._attr_event_types = [DoorbellEventType.RING, "ding"]
+    entity_with_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_with_ring._attr_has_entity_name = True
+    entity_with_ring.entity_id = "event.doorbell_with_ring"
+
+    # Non-doorbell entity should not warn
+    entity_button = EventEntity()
+    entity_button._attr_event_types = ["press"]
+    entity_button._attr_device_class = EventDeviceClass.BUTTON
+    entity_button._attr_has_entity_name = True
+    entity_button.entity_id = "event.button"
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [entity_without_ring, entity_with_ring, entity_button],
+        from_config_entry=True,
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def get_error_message(entity_id: str) -> str:
+        return (
+            f"Entity {entity_id} is a doorbell event entity but does not support "
+            "the 'ring' event type"
+        )
+
+    assert get_error_message("event.doorbell_without_ring") in caplog.text
+    assert get_error_message("event.doorbell_with_ring") not in caplog.text
+    assert get_error_message("event.button") not in caplog.text

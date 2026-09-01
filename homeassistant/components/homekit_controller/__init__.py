@@ -1,7 +1,5 @@
 """Support for Homekit device discovery."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging
@@ -125,7 +123,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove homekit_controller config entry from a device."""
     hkid = config_entry.data["AccessoryPairingID"]

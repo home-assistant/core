@@ -1,7 +1,5 @@
 """Common fixtures for the jewish_calendar tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime as dt
 from typing import Any, NamedTuple
@@ -9,17 +7,26 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from hdate.translator import set_language
+from hdate.translator import get_language, set_language
 import pytest
 
+from homeassistant.components.calendar import (
+    DOMAIN as CALENDAR_DOMAIN,
+    EVENT_END_DATETIME,
+    EVENT_START_DATETIME,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DAILY_EVENTS,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    CONF_LEARNING_SCHEDULE,
+    CONF_YEARLY_EVENTS,
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
+from homeassistant.const import ATTR_ENTITY_ID, CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -82,10 +89,13 @@ def _test_time(
 @pytest.fixture
 def results(
     request: pytest.FixtureRequest, tz_info: dt.tzinfo, language: str
-) -> Iterable:
+) -> Generator[Iterable | None]:
     """Return localized results."""
     if not hasattr(request, "param"):
-        return None
+        yield None
+        return
+
+    previous_language = get_language()
 
     # If results are generated, by using the HDate library, we need to set the language
     set_language(language)
@@ -102,8 +112,11 @@ def results(
                 key: value() if callable(value) else value
                 for key, value in result["attr"].items()
             }
-        return result
-    return request.param
+        yield result
+    else:
+        yield request.param
+
+    set_language(previous_language)
 
 
 @pytest.fixture
@@ -116,6 +129,12 @@ def havdalah_offset() -> int | None:
 def language() -> str:
     """Return default language value, unless language is parametrized."""
     return "en"
+
+
+@pytest.fixture
+def calendar_events() -> dict[str, list[str]] | None:
+    """Return default calendar events, unless calendar events are parametrized."""
+    return None
 
 
 @pytest.fixture(autouse=True)
@@ -133,6 +152,7 @@ def config_entry(
     location_data: _LocationData | None,
     language: str,
     havdalah_offset: int | None,
+    calendar_events: dict[str, list[str]] | None,
 ) -> MockConfigEntry:
     """Set up the jewish_calendar integration for testing."""
     param_data = {}
@@ -148,9 +168,21 @@ def config_entry(
     if havdalah_offset:
         param_options[CONF_HAVDALAH_OFFSET_MINUTES] = havdalah_offset
 
+    if calendar_events is not None:
+        # Merge calendar events config for all three calendars
+        if CONF_DAILY_EVENTS in calendar_events:
+            param_options[CONF_DAILY_EVENTS] = calendar_events[CONF_DAILY_EVENTS]
+        if CONF_LEARNING_SCHEDULE in calendar_events:
+            param_options[CONF_LEARNING_SCHEDULE] = calendar_events[
+                CONF_LEARNING_SCHEDULE
+            ]
+        if CONF_YEARLY_EVENTS in calendar_events:
+            param_options[CONF_YEARLY_EVENTS] = calendar_events[CONF_YEARLY_EVENTS]
+
     return MockConfigEntry(
         title=DEFAULT_NAME,
         domain=DOMAIN,
+        entry_id="01JJJJJJJJJJJJJJJJJJJJJJJJ",
         data={CONF_LANGUAGE: language, **param_data},
         options=param_options,
     )
@@ -166,6 +198,50 @@ async def setup_at_time(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the jewish_calendar integration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def get_calendar_events():
+    """Fixture that returns a function to get calendar events for a date range."""
+
+    async def _get_events(
+        hass: HomeAssistant,
+        entity_id: str,
+        start_date: dt.datetime,
+        end_date: dt.datetime | None = None,
+    ) -> list[dict[str, str]]:
+        """Get calendar events for a date range."""
+        if start_date.tzinfo is None:
+            start_date = start_date.replace(tzinfo=dt_util.UTC)
+        if end_date is None:
+            end_date = dt.datetime.combine(
+                start_date, dt.time.max, tzinfo=start_date.tzinfo
+            )
+        if end_date.tzinfo is None:
+            end_date = end_date.replace(tzinfo=dt_util.UTC)
+        response = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                EVENT_START_DATETIME: start_date.isoformat(),
+                EVENT_END_DATETIME: end_date.isoformat(),
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+        return response[entity_id]["events"]  # type: ignore[return-value]
+
+    return _get_events
 
 
 @pytest.fixture

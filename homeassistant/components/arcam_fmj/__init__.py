@@ -2,14 +2,15 @@
 
 import asyncio
 from asyncio import timeout
+from contextlib import AsyncExitStack
 import logging
-from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
@@ -28,6 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     for zone in (1, 2):
         coordinator = ArcamFmjCoordinator(hass, entry, client, zone)
         coordinators[zone] = coordinator
+
+    # Register the zone 1 device before forwarding platforms so the other zones'
+    # entities can link to it via via_device_id.
+    device_registry = dr.async_get(hass)
+    zone1_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **coordinators[1].device_info,
+    )
+    for zone, coordinator in coordinators.items():
+        if zone != 1:
+            coordinator.device_info["via_device_id"] = zone1_device.id
 
     entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 
@@ -54,36 +66,31 @@ async def _run_client(
     client = runtime_data.client
     coordinators = runtime_data.coordinators
 
-    def _listen(_: Any) -> None:
-        for coordinator in coordinators.values():
-            coordinator.async_notify_data_updated()
-
     while True:
         try:
-            async with timeout(interval):
-                await client.start()
+            async with AsyncExitStack() as stack:
+                async with timeout(interval):
+                    await client.start()
+                stack.push_async_callback(client.stop)
 
-            _LOGGER.debug("Client connected %s", client.host)
+                _LOGGER.debug("Client connected %s", client.host)
 
-            try:
-                for coordinator in coordinators.values():
-                    await coordinator.state.start()
-
-                with client.listen(_listen):
+                try:
                     for coordinator in coordinators.values():
-                        coordinator.async_notify_connected()
-                    await client.process()
-            finally:
-                await client.stop()
+                        await stack.enter_async_context(
+                            coordinator.async_monitor_client()
+                        )
 
-                _LOGGER.debug("Client disconnected %s", client.host)
-                for coordinator in coordinators.values():
-                    coordinator.async_notify_disconnected()
+                    await client.process()
+                finally:
+                    _LOGGER.debug("Client disconnected %s", client.host)
 
         except ConnectionFailed:
-            await asyncio.sleep(interval)
+            pass
         except TimeoutError:
             continue
         except Exception:
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return
+
+        await asyncio.sleep(interval)

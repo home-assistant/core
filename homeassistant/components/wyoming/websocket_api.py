@@ -9,7 +9,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +29,14 @@ def websocket_info(
     msg: dict[str, Any],
 ) -> None:
     """List service information for Wyoming all config entries."""
-    entry_items: dict[str, DomainDataItem] = hass.data.get(DOMAIN, {})
+    entries: list[WyomingConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
 
     connection.send_result(
         msg["id"],
         {
             "info": {
-                entry_id: item.service.info.to_dict()
-                for entry_id, item in entry_items.items()
+                entry.entry_id: entry.runtime_data.service.info.to_dict()
+                for entry in entries
             }
         },
     )

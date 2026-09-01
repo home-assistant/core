@@ -6,34 +6,34 @@ This module exists of the following parts:
 
 """
 
-from __future__ import annotations
-
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
 import base64
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 import hashlib
 from http import HTTPStatus
 import json
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, web
+from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
-    HomeAssistantError,
+    ImplementationUnavailableError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
+    UnknownImplementationError,
 )
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
@@ -46,6 +46,27 @@ from .service_info.ssdp import SsdpServiceInfo
 from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "AUTH_CALLBACK_PATH",
+    "HEADER_FRONTEND_BASE",
+    "MY_AUTH_CALLBACK_PATH",
+    "AbstractOAuth2FlowHandler",
+    "AbstractOAuth2Implementation",
+    # Re-exported since integrations imported it from here before it moved
+    # to homeassistant.exceptions.
+    "ImplementationUnavailableError",
+    "LocalOAuth2Implementation",
+    "LocalOAuth2ImplementationWithPkce",
+    "OAuth2AuthorizeCallbackView",
+    "OAuth2Session",
+    "async_add_implementation_provider",
+    "async_get_config_entry_implementation",
+    "async_get_implementations",
+    "async_get_redirect_uri",
+    "async_oauth2_request",
+    "async_register_implementation",
+]
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_IMPLEMENTATIONS: HassKey[dict[str, dict[str, AbstractOAuth2Implementation]]] = (
@@ -67,9 +88,21 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
 
-
-class ImplementationUnavailableError(HomeAssistantError):
-    """Raised when an underlying implementation is unavailable."""
+# Abort reasons shared by all OAuth2 config flows. They are translated by the
+# homeassistant integration so each flow does not repeat them in its strings.json.
+_SHARED_ABORT_REASONS = frozenset(
+    {
+        "authorize_url_timeout",
+        "missing_credentials",
+        "no_url_available",
+        "oauth_error",
+        "oauth_failed",
+        "oauth_implementation_unavailable",
+        "oauth_timeout",
+        "oauth_unauthorized",
+        "user_rejected_authorize",
+    }
+)
 
 
 @callback
@@ -167,11 +200,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.token_url = token_url
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Local application credentials"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain providing the implementation."""
         return self._domain
@@ -191,6 +226,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Extra data for the token resolve request."""
         return {}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         redirect_uri = self.redirect_uri
@@ -209,6 +245,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             .update_query(self.extra_authorize_data)
         )
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         request_data: dict = {
@@ -219,6 +256,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
 
@@ -331,6 +369,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url.
 
@@ -353,6 +392,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         }
 
     @property
+    @override
     def extra_token_resolve_data(self) -> dict:
         """Extra data that needs to be included in the token resolve request.
 
@@ -414,6 +454,26 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self.external_data: Any = None
         self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
 
+    @callback
+    @override
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
+        next_flow: tuple[config_entries.FlowType, str] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Abort the flow, translating shared OAuth2 reasons centrally."""
+        if translation_domain is None and reason in _SHARED_ABORT_REASONS:
+            translation_domain = HOMEASSISTANT_DOMAIN
+        return super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+            translation_domain=translation_domain,
+            next_flow=next_flow,
+        )
+
     @property
     @abstractmethod
     def logger(self) -> logging.Logger:
@@ -443,8 +503,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_abort(reason="oauth_implementation_unavailable")
 
         if user_input is not None:
-            self.flow_impl = implementations[user_input["implementation"]]
-            return await self.async_step_auth()
+            # Reauth and reconfigure steps pass the stored implementation, which is
+            # gone when its credentials were removed. Fall through to let the user
+            # pick or create credentials instead of failing the flow.
+            if (
+                implementation := implementations.get(user_input["implementation"])
+            ) is not None:
+                self.flow_impl = implementation
+                return await self.async_step_auth()
 
         if not implementations:
             if self.DOMAIN in await async_get_application_credentials(self.hass):
@@ -556,36 +622,42 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -618,23 +690,30 @@ def async_register_implementation(
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
 
-async def async_get_implementations(
+async def _async_get_implementations(
     hass: HomeAssistant, domain: str
-) -> dict[str, AbstractOAuth2Implementation]:
-    """Return OAuth2 implementations for specified domain."""
-    registered = hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {})
+) -> tuple[
+    dict[str, AbstractOAuth2Implementation], list[ImplementationUnavailableError]
+]:
+    """Return OAuth2 implementations for specified domain and any provider failures."""
+    registered = dict(hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}))
+    exceptions: list[ImplementationUnavailableError] = []
 
-    if DATA_PROVIDERS not in hass.data:
-        return registered
-
-    registered = dict(registered)
-    exceptions = []
-    for get_impl in list(hass.data[DATA_PROVIDERS].values()):
+    for get_impl in list(hass.data.get(DATA_PROVIDERS, {}).values()):
         try:
             for impl in await get_impl(hass, domain):
                 registered[impl.domain] = impl
         except ImplementationUnavailableError as err:
             exceptions.append(err)
+
+    return registered, exceptions
+
+
+async def async_get_implementations(
+    hass: HomeAssistant, domain: str
+) -> dict[str, AbstractOAuth2Implementation]:
+    """Return OAuth2 implementations for specified domain."""
+    registered, exceptions = await _async_get_implementations(hass, domain)
 
     if not registered and exceptions:
         raise ImplementationUnavailableError(*exceptions)
@@ -646,13 +725,20 @@ async def async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> AbstractOAuth2Implementation:
     """Return the implementation for this config entry."""
-    implementations = await async_get_implementations(hass, config_entry.domain)
+    implementations, exceptions = await _async_get_implementations(
+        hass, config_entry.domain
+    )
     implementation = implementations.get(config_entry.data["auth_implementation"])
 
-    if implementation is None:
-        raise ValueError("Implementation not available")
+    if implementation is not None:
+        return implementation
 
-    return implementation
+    if exceptions:
+        # A provider is down, so the configured implementation may still come back.
+        # Retry instead of asking the user to link the account again.
+        raise ImplementationUnavailableError(*exceptions)
+
+    raise UnknownImplementationError
 
 
 @callback
@@ -750,7 +836,13 @@ class OAuth2Session:
             if self.valid_token:
                 return
 
-            new_token = await self.implementation.async_refresh_token(self.token)
+            try:
+                new_token = await self.implementation.async_refresh_token(self.token)
+            except OAuth2TokenRequestReauthError:
+                # Start reauth here so it also happens for callers that map the
+                # error onto a recoverable one, which would retry indefinitely.
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
@@ -774,16 +866,9 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-    headers = kwargs.pop("headers", {})
-    return await session.request(
-        method,
-        url,
-        **kwargs,
-        headers={
-            **headers,
-            "authorization": f"Bearer {token['access_token']}",
-        },
-    )
+    headers = CIMultiDict(kwargs.pop("headers", {}))
+    headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
+    return await session.request(method, url, **kwargs, headers=headers)
 
 
 @callback
@@ -804,6 +889,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
+        return jwt.decode(encoded, secret, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None

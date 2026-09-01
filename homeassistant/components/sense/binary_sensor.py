@@ -1,6 +1,7 @@
 """Support for monitoring a Sense energy sensor device."""
 
 import logging
+from typing import override
 
 from sense_energy.sense_api import SenseDevice
 
@@ -60,6 +61,7 @@ class SenseBinarySensor(SenseDeviceEntity, BinarySensorEntity):
         return self._id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.is_on

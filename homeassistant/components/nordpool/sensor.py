@@ -1,10 +1,9 @@
 """Sensor platform for Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -304,7 +303,8 @@ async def async_setup_entry(
         )
         for block_prices in entry.runtime_data.get_data_current_day().block_prices:
             LOGGER.debug(
-                "Setting up block price sensors for area %s with currency %s in block %s",
+                "Setting up block price sensors for"
+                " area %s with currency %s in block %s",
                 area,
                 currency,
                 block_prices.name,
@@ -324,6 +324,7 @@ class NordpoolSensor(NordpoolBaseEntity, SensorEntity):
     entity_description: NordpoolDefaultSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | float | datetime | None:
         """Return value of sensor."""
         return self.entity_description.value_fn(self)
@@ -346,11 +347,13 @@ class NordpoolPriceSensor(NordpoolBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = f"{currency}/kWh"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of sensor."""
         return self.entity_description.value_fn(self)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the extra state attributes."""
         return self.entity_description.extra_fn(self)
@@ -378,6 +381,7 @@ class NordpoolBlockPriceSensor(NordpoolBaseEntity, SensorEntity):
         self._attr_translation_placeholders = {"block": block_name}
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return value of sensor."""
         return self.entity_description.value_fn(
@@ -402,6 +406,7 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = f"{currency}/kWh"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of sensor."""
         data = self.coordinator.get_data_current_day()

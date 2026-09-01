@@ -1,7 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -14,24 +12,57 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
-from homeassistant.components.lawn_mower import LawnMowerEntityFeature
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.remote import RemoteEntityFeature
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityFeature,
+)
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
+    CoverEntityFeature,
+)
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    LawnMowerEntityFeature,
+)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
+)
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_SW_VERSION,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
     LIGHT_LUX,
@@ -39,6 +70,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
     __version__,
 )
@@ -53,10 +85,17 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
+from .aidmanager import AccessoryAidStorage
+from .climate_util import (
+    get_fan_modes_and_speeds,
+    get_swing_on_mode,
+    has_swing_off_mode,
+)
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
@@ -88,10 +127,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from .iidmanager import AccessoryIIDStorage
@@ -118,13 +159,113 @@ FAN_TYPES = {
     TYPE_AIR_PURIFIER: "AirPurifier",
     TYPE_FAN: "Fan",
 }
+CLIMATE_TYPES = {
+    TYPE_HEATER_COOLER: "HeaterCooler",
+    TYPE_THERMOSTAT: "Thermostat",
+}
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 RELOAD_ON_CHANGE_ATTRS = (
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute.SUPPORTED_FEATURES,
+    EntityStateAttribute.DEVICE_CLASS,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT,
 )
+
+
+def climate_controls_target_humidity(state: State) -> bool:
+    """Return True when a climate entity exposes a humidity setpoint.
+
+    HeaterCooler cannot control a humidity setpoint; entities that
+    expose one (e.g. econet) stay on the Thermostat, which can.
+    """
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+    return bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+
+
+def climate_supports_heater_cooler(state: State) -> bool:
+    """Return True when a climate entity fits the HeaterCooler accessory."""
+    attributes = state.attributes
+    features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+    # Timing fan modes like auto or circulate do not count as speeds.
+    has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
+        len(get_fan_modes_and_speeds(attributes)[1]) >= 2
+    )
+    # The binary swing control writes the off mode back, so automatic
+    # routing requires the entity to advertise one.
+    has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
+        get_swing_on_mode(attributes) is not None and has_swing_off_mode(attributes)
+    )
+    return (has_fan or has_swing) and not (
+        features & ClimateEntityFeature.TARGET_HUMIDITY
+    )
+
+
+@ha_callback
+def async_resolve_accessory_type(
+    aid_storage: AccessoryAidStorage,
+    state: State,
+    conf: dict[str, Any],
+    *,
+    allow_auto: bool,
+) -> str | None:
+    """Resolve which accessory an entity uses into conf.
+
+    Some domains can be represented by more than one HomeKit accessory;
+    climate is the only such domain today. Returns the accessory type the
+    caller must record with async_set_accessory_type once the accessory is
+    successfully created, so a failed creation is not sticky across
+    restarts; a stored routing the entity can no longer support is dropped
+    immediately instead.
+    """
+    if state.domain != CLIMATE_DOMAIN:
+        return None
+    return _async_resolve_climate_type(aid_storage, state, conf, allow_auto=allow_auto)
+
+
+@ha_callback
+def _async_resolve_climate_type(
+    aid_storage: AccessoryAidStorage,
+    state: State,
+    conf: dict[str, Any],
+    *,
+    allow_auto: bool,
+) -> str | None:
+    """Resolve which accessory a climate entity uses into conf.
+
+    An explicit type in the entity config always wins, even for entities
+    with a humidity setpoint, and updates the stored routing, so switching
+    back to automatic keeps the accessory the entity already uses. In
+    bridge mode an entity that has never been bridged gets the HeaterCooler
+    when capable. Anything else keeps the Thermostat; the accessory type
+    can be changed at any time from the bridge options.
+    """
+    entity_id = state.entity_id
+    if climate_type := conf.get(CONF_TYPE):
+        # The explicit type is recorded by the caller like the automatic
+        # one, so every path that sets a type defers persistence until
+        # the accessory exists.
+        return cast(str, climate_type)
+    stored_type = aid_storage.get_accessory_type(entity_id)
+    if stored_type == TYPE_HEATER_COOLER:
+        if not climate_controls_target_humidity(state):
+            conf[CONF_TYPE] = TYPE_HEATER_COOLER
+            return None
+        # A humidity setpoint gained since the choice was stored cannot
+        # be represented by the HeaterCooler, so the routing is dropped.
+        aid_storage.async_set_accessory_type(entity_id, None)
+    if not climate_supports_heater_cooler(state):
+        return None
+    if (
+        stored_type is None
+        and allow_auto
+        and not aid_storage.entity_is_allocated(entity_id)
+    ):
+        # A stored Thermostat choice survives even when the entity looks
+        # new again, like an accessory mode pairing reset, so Automatic
+        # keeps the accessory the entity already uses.
+        conf[CONF_TYPE] = TYPE_HEATER_COOLER
+        return TYPE_HEATER_COOLER
+    return None
 
 
 def get_accessory(  # noqa: C901
@@ -143,19 +284,20 @@ def get_accessory(  # noqa: C901
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
-    if state.domain == "alarm_control_panel":
+    if state.domain == ALARM_CONTROL_PANEL_DOMAIN:
         a_type = "SecuritySystem"
 
-    elif state.domain in ("binary_sensor", "device_tracker", "person"):
+    elif state.domain in (BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN):
         a_type = "BinarySensor"
 
-    elif state.domain == "climate":
-        a_type = "Thermostat"
+    elif state.domain == CLIMATE_DOMAIN:
+        # The type is resolved by the bridge before the accessory is created.
+        a_type = CLIMATE_TYPES[config.get(CONF_TYPE, TYPE_THERMOSTAT)]
 
-    elif state.domain == "cover":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    elif state.domain == COVER_DOMAIN:
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         if device_class in (
             CoverDeviceClass.GARAGE,
@@ -183,35 +325,38 @@ def get_accessory(  # noqa: C901
             # and CoverEntityFeature.CLOSE
             a_type = "WindowCovering"
 
-    elif state.domain == "fan":
+    elif state.domain == FAN_DOMAIN:
         if fan_type := config.get(CONF_TYPE):
             a_type = FAN_TYPES[fan_type]
         else:
             a_type = "Fan"
 
-    elif state.domain == "humidifier":
+    elif state.domain == HUMIDIFIER_DOMAIN:
         a_type = "HumidifierDehumidifier"
 
-    elif state.domain == "light":
+    elif state.domain == LIGHT_DOMAIN:
         a_type = "Light"
 
-    elif state.domain == "lock":
+    elif state.domain == LOCK_DOMAIN:
         a_type = "Lock"
 
-    elif state.domain == "media_player":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    elif state.domain == MEDIA_PLAYER_DOMAIN:
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
         if device_class == MediaPlayerDeviceClass.RECEIVER:
             a_type = "ReceiverMediaPlayer"
-        elif device_class == MediaPlayerDeviceClass.TV:
+        elif device_class in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.PROJECTOR,
+        ):
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
-    elif state.domain == "sensor":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    elif state.domain == SENSOR_DOMAIN:
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
             UnitOfTemperature.CELSIUS,
@@ -255,48 +400,51 @@ def get_accessory(  # noqa: C901
                 unit,
             )
 
-    elif state.domain == "switch":
+    elif state.domain == SWITCH_DOMAIN:
         if switch_type := config.get(CONF_TYPE):
             a_type = SWITCH_TYPES[switch_type]
-        elif state.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET:
+        elif (
+            state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            == SwitchDeviceClass.OUTLET
+        ):
             a_type = "Outlet"
         else:
             a_type = "Switch"
 
-    elif state.domain == "valve":
+    elif state.domain == VALVE_DOMAIN:
         a_type = "Valve"
 
-    elif state.domain == "vacuum":
+    elif state.domain == VACUUM_DOMAIN:
         a_type = "Vacuum"
 
     elif (
-        state.domain == "lawn_mower"
+        state.domain == LAWN_MOWER_DOMAIN
         and features & LawnMowerEntityFeature.DOCK
         and features & LawnMowerEntityFeature.START_MOWING
     ):
         a_type = "LawnMower"
 
-    elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
+    elif state.domain == REMOTE_DOMAIN and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
 
     elif state.domain in (
-        "automation",
-        "button",
-        "input_boolean",
-        "input_button",
-        "remote",
-        "scene",
-        "script",
+        AUTOMATION_DOMAIN,
+        BUTTON_DOMAIN,
+        INPUT_BOOLEAN_DOMAIN,
+        INPUT_BUTTON_DOMAIN,
+        REMOTE_DOMAIN,
+        SCENE_DOMAIN,
+        SCRIPT_DOMAIN,
     ):
         a_type = "Switch"
 
-    elif state.domain in ("input_select", "select"):
+    elif state.domain in (INPUT_SELECT_DOMAIN, SELECT_DOMAIN):
         a_type = "SelectSwitch"
 
-    elif state.domain == "water_heater":
+    elif state.domain == WATER_HEATER_DOMAIN:
         a_type = "WaterHeater"
 
-    elif state.domain == "camera":
+    elif state.domain == CAMERA_DOMAIN:
         a_type = "Camera"
 
     if a_type is None:
@@ -333,7 +481,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
-        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self._reload_on_change_attrs: list[str] = list(RELOAD_ON_CHANGE_ATTRS)
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -529,7 +677,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             for attr in self._reload_on_change_attrs:
                 if old_attributes.get(attr) != new_attributes.get(attr):
                     _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        "%s: Reloading HomeKit accessory since"
+                        " %s has changed from %s -> %s",
                         self.entity_id,
                         attr,
                         old_attributes.get(attr),
@@ -634,6 +783,25 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         value: Any | None = None,
     ) -> None:
         """Fire event and call service for changes from HomeKit."""
+        self.hass.async_create_task(
+            self.async_call_service_and_wait(domain, service, service_data, value),
+            eager_start=True,
+        )
+
+    async def async_call_service_and_wait(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any],
+        value: Any | None = None,
+    ) -> bool:
+        """Fire event and call service, returning True when it succeeded.
+
+        blocking=True so the handler's exception reaches us (the
+        non-blocking path swallows it); on failure we resync so pyhap's
+        optimistic target characteristic doesn't strand the tile on the
+        requested action.
+        """
         event_data = {
             ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
@@ -643,16 +811,48 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                domain, service, service_data, context=context
-            ),
-            eager_start=True,
-        )
+
+        try:
+            await self.hass.services.async_call(
+                domain, service, service_data, blocking=True, context=context
+            )
+        except HomeAssistantError as err:
+            _LOGGER.warning(
+                "%s: %s.%s failed (%s); re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+                err,
+            )
+        except Exception:
+            _LOGGER.exception(
+                "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+            )
+        else:
+            return True
+        # This coroutine often runs fire-and-forget, so failures must be
+        # logged here instead of by the loop's default task handler.
+        try:
+            if (state := self.hass.states.get(self.entity_id)) is not None:
+                self.async_update_state(state)
+            else:
+                _LOGGER.debug(
+                    "%s: cannot re-sync HomeKit state; entity has no state",
+                    self.entity_id,
+                )
+        except Exception:
+            _LOGGER.exception("%s: re-syncing HomeKit state failed", self.entity_id)
+        return False
 
     @ha_callback
     def async_reload(self) -> None:
-        """Reload and recreate an accessory and update the c# value in the mDNS record."""
+        """Reload and recreate an accessory.
+
+        Update the c# value in the mDNS record.
+        """
         async_dispatcher_send(
             self.hass,
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),

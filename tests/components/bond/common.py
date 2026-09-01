@@ -1,7 +1,5 @@
 """Common methods used across tests for Bond."""
 
-from __future__ import annotations
-
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any

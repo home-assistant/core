@@ -1,12 +1,13 @@
 """The tests for the go2rtc component."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 import logging
 from pathlib import Path
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from aiohttp import BasicAuth, UnixConnector
+from aiohttp import UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
@@ -42,7 +43,10 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     RECOMMENDED_VERSION,
 )
-from homeassistant.components.go2rtc.util import get_go2rtc_unix_socket_path
+from homeassistant.components.go2rtc.util import (
+    get_camera_identifier,
+    get_go2rtc_unix_socket_path,
+)
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -60,6 +64,20 @@ from tests.common import MockConfigEntry, load_fixture_bytes
 # and is only a pass through.
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
+
+
+async def _setup_camera_prefs(
+    hass: HomeAssistant,
+    entity_id: str,
+    settings: DynamicStreamSettings,
+) -> CameraPreferences:
+    """Set up camera preferences with optional orientation and preload_stream."""
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+
+    prefs._dynamic_stream_settings_by_entity_id[entity_id] = settings
+    return prefs
 
 
 @pytest.fixture(name="has_go2rtc_entry")
@@ -87,7 +105,7 @@ async def _test_setup_and_signaling(
     camera: MockCamera,
 ) -> None:
     """Test the go2rtc config entry."""
-    entity_id = camera.entity_id
+    identifier = get_camera_identifier(camera)
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
@@ -124,17 +142,17 @@ async def _test_setup_and_signaling(
     await test("sesion_1")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # Stream exists but the source is different
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://different")])
+        identifier: Stream([Producer("rtsp://different")])
     }
 
     receive_message_callback.reset_mock()
@@ -142,17 +160,17 @@ async def _test_setup_and_signaling(
     await test("session_2")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://stream")])
+        identifier: Stream([Producer("rtsp://stream")])
     }
 
     receive_message_callback.reset_mock()
@@ -160,9 +178,9 @@ async def _test_setup_and_signaling(
     await test("session_3")
 
     rest_client.streams.add.assert_not_called()
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
-    provider = camera._webrtc_provider
+    provider = camera.webrtc_provider
     for session in sessions:
         assert session in provider._sessions
 
@@ -177,20 +195,30 @@ async def _test_setup_and_signaling(
         receive_message_callback.assert_called_once_with(
             WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
         )
-        teardown.assert_called_once()
+        # Only the sessions of the failing camera are closed, the provider stays up
+        teardown.assert_not_called()
         # We use one ws_client mock for all sessions
         assert ws_client.close.call_count == len(sessions)
+        assert not provider._sessions
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
-        assert teardown.call_count == 2
+        teardown.assert_called_once()
 
 
 @pytest.mark.usefixtures(
     "mock_get_binary",
     "mock_is_docker_env",
     "mock_go2rtc_entry",
+)
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "camera_unique_id",
+        None,
+    ],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     ("config", "ui_enabled", "expected_username", "expected_password"),
@@ -283,6 +311,14 @@ async def test_setup_go_binary(
 
 
 @pytest.mark.usefixtures("mock_go2rtc_entry")
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "camera_unique_id",
+        None,
+    ],
+    indirect=True,
+)
 @pytest.mark.parametrize(
     ("go2rtc_binary", "is_docker_env"),
     [
@@ -433,8 +469,7 @@ async def test_close_session(
     session_id = "session_id"
 
     # Session doesn't exist
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
     # Store session
@@ -452,11 +487,181 @@ async def test_close_session(
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_called_once()
 
-    # Close again should raise an error
+    # Closing an already closed session is a no-op
     ws_client.reset_mock()
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
+
+
+async def _fail_with_offer(hass: HomeAssistant, camera: MockCamera, error: str) -> None:
+    """Update the stream source via a new WebRTC offer, expecting an error."""
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "new_session", send_message)
+    send_message.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", error)
+    )
+
+
+async def _fail_with_image_request(
+    hass: HomeAssistant, camera: MockCamera, error: str
+) -> None:
+    """Update the stream source via a snapshot request, expecting an error."""
+    with pytest.raises(HomeAssistantError, match=error):
+        await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("stream_source", "error"),
+    [
+        (
+            None,
+            "Camera has no stream source",
+        ),
+        (
+            "invalid://not_supported",
+            "Stream source is not supported by go2rtc",
+        ),
+    ],
+    ids=["no_stream_source", "unsupported_stream_source"],
+)
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        _fail_with_offer,
+        _fail_with_image_request,
+    ],
+    ids=["offer", "image_request"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_invalid_stream_source_closes_only_sessions_of_that_camera(
+    hass: HomeAssistant,
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+    caplog: pytest.LogCaptureFixture,
+    trigger: Callable[[HomeAssistant, MockCamera, str], Awaitable[None]],
+    stream_source: str | None,
+    error: str,
+) -> None:
+    """Test an invalid stream source only closes the sessions of that camera."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    ws_client_1.reset_mock()
+    ws_client_2.reset_mock()
+    caplog.clear()
+
+    camera_1.set_stream_source(stream_source)
+    await trigger(hass, camera_1, error)
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_not_called()
+
+    # The session of camera 1 is gone
+    await camera_1.async_on_webrtc_candidate(
+        "session_1", RTCIceCandidateInit("candidate")
+    )
+    assert (
+        "homeassistant.components.go2rtc",
+        logging.DEBUG,
+        "Unknown session session_1. Ignoring candidate",
+    ) in caplog.record_tuples
+    ws_client_1.send.assert_not_called()
+
+    # Closing the already closed session, e.g. by the frontend, is a no-op
+    camera_1.close_webrtc_session("session_1")
+    ws_client_1.close.assert_called_once()
+
+    # The session of camera 2 is untouched
+    await camera_2.async_on_webrtc_candidate(
+        "session_2", RTCIceCandidateInit("candidate")
+    )
+    ws_client_2.send.assert_called_once_with(WebRTCCandidate("candidate"))
+    camera_2.close_webrtc_session("session_2")
+    ws_client_2.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unregister_camera_closes_only_sessions_of_that_camera(
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+) -> None:
+    """Test removing a camera closes only the sessions of that camera."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    ws_client_1.reset_mock()
+    ws_client_2.reset_mock()
+
+    await camera_1.async_remove()
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_not_called()
+
+    # The session of camera 2 is untouched
+    await camera_2.async_on_webrtc_candidate(
+        "session_2", RTCIceCandidateInit("candidate")
+    )
+    ws_client_2.send.assert_called_once_with(WebRTCCandidate("candidate"))
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_teardown_while_a_camera_is_removed(
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+) -> None:
+    """Test tearing down the provider while a camera is removed."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    assert isinstance(camera_1.webrtc_provider, WebRTCProvider)
+    provider = camera_1.webrtc_provider
+
+    async def yield_control() -> None:
+        """Let the camera removal run while the teardown is in progress."""
+        await asyncio.sleep(0)
+
+    ws_client_1.close.side_effect = yield_control
+    ws_client_2.close.side_effect = yield_control
+
+    await asyncio.gather(provider.teardown(), camera_2.async_remove())
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_called_once()
+    assert not provider._sessions
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_camera_removed_while_a_snapshot_fails(
+    hass: HomeAssistant,
+    ws_clients: list[Mock],
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a camera being removed while a snapshot closes the same session."""
+    camera = init_test_integration
+
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    (ws_client,) = ws_clients
+
+    async def yield_control() -> None:
+        """Let the camera removal run while the snapshot is still failing."""
+        await asyncio.sleep(0)
+
+    ws_client.close.side_effect = yield_control
+    camera.set_stream_source(None)
+
+    async def failing_snapshot() -> None:
+        with pytest.raises(HomeAssistantError, match="Camera has no stream source"):
+            await async_get_image(hass, camera.entity_id)
+
+    await asyncio.gather(failing_snapshot(), camera.async_remove())
+
+    ws_client.close.assert_called_once()
 
 
 ERR_BINARY_NOT_FOUND = "Could not find go2rtc docker binary"
@@ -470,8 +675,8 @@ _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
 ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
 ERR_AUTH_WITHOUT_URL_OR_UI = (
-    _INVALID_CONFIG
-    + "Username and password can only be set when a URL is configured or debug_ui is true"
+    _INVALID_CONFIG + "Username and password can only be set when a URL is configured"
+    " or debug_ui is true"
 )
 ERR_AUTH_INCOMPLETE = (
     _INVALID_CONFIG
@@ -594,8 +799,11 @@ async def test_setup_with_setup_error(
     caplog: pytest.LogCaptureFixture,
     has_go2rtc_entry: bool,
     expected_log_message: str,
+    rest_client: AsyncMock,
 ) -> None:
     """Test setup integration fails."""
+    # The cases that get as far as starting the server expect it to fail
+    rest_client.validate_server_version.side_effect = Go2RtcClientError()
 
     assert not await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -660,7 +868,7 @@ async def test_setup_with_retryable_setup_entry_error_custom_server(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -697,7 +905,7 @@ async def test_setup_with_retryable_setup_entry_error_default_server(
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == has_go2rtc_entry
     for config_entry in config_entries:
-        assert config_entry.state == expected_config_entry_state
+        assert config_entry.state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -731,7 +939,7 @@ async def test_setup_with_version_error(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -779,12 +987,12 @@ async def test_async_get_image(
 ) -> None:
     """Test getting snapshot from go2rtc."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
 
     rest_client.get_jpeg_snapshot.return_value = image_bytes
-    assert await camera._webrtc_provider.async_get_image(camera) == image_bytes
+    assert await camera.webrtc_provider.async_get_image(camera) == image_bytes
 
     image = await async_get_image(hass, camera.entity_id)
     assert image.content == image_bytes
@@ -805,7 +1013,7 @@ async def test_generic_workaround(
 ) -> None:
     """Test workaround for generic integration cameras."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
 
@@ -816,13 +1024,14 @@ async def test_generic_workaround(
         image = await async_get_image(hass, camera.entity_id)
         assert image.content == image_bytes
 
-    rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
-        [
-            "ffmpeg:https://my_stream_url.m3u8",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-        ],
-    )
+        identifier = get_camera_identifier(camera)
+        rest_client.streams.add.assert_called_once_with(
+            identifier,
+            [
+                "ffmpeg:https://my_stream_url.m3u8",
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        )
 
 
 async def _test_camera_orientation(
@@ -835,25 +1044,22 @@ async def _test_camera_orientation(
 ) -> None:
     """Test camera orientation handling in go2rtc provider."""
     # Ensure go2rtc provider is initialized
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-
-    prefs = CameraPreferences(hass)
-    await prefs.async_load()
-    hass.data[DATA_CAMERA_PREFS] = prefs
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     # Set the specific orientation for this test by directly setting the dynamic stream settings
     test_settings = DynamicStreamSettings(orientation=orientation, preload_stream=False)
-    prefs._dynamic_stream_settings_by_entity_id[camera.entity_id] = test_settings
+    await _setup_camera_prefs(hass, camera.entity_id, test_settings)
 
     # Call the camera function that should trigger stream update
     await camera_fn(hass, camera)
 
     # Verify the stream was configured correctly
+    identifier = get_camera_identifier(camera)
     rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
+        identifier,
         [
             expected_stream_source,
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -986,7 +1192,10 @@ async def test_stream_orientation_stream_source_starts_ffmpeg(
         [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
     ],
 ) -> None:
-    """Test WebRTC provider applies correct orientation filters when a stream source already starts with ffmpeg."""
+    """Test WebRTC provider applies correct orientation filters.
+
+    Specifically when a stream source already starts with ffmpeg.
+    """
     camera = init_test_integration
     camera.set_stream_source("ffmpeg:rtsp://test.stream")
 
@@ -1061,12 +1270,11 @@ async def test_unix_socket_connection(hass: HomeAssistant, server_dir: Path) -> 
         assert isinstance(connector, UnixConnector)
         assert connector.path == get_go2rtc_unix_socket_path(server_dir)
         # Auth should be auto-generated when credentials are not explicitly configured
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        # Verify auto-generated credentials match our mocked values
-        assert auth.login == "mock_username_token"
-        assert auth.password == "mock_password_token"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth(
+                "mock_username_token", "mock_password_token"
+            )
+        }
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -1094,7 +1302,7 @@ async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("rest_client", "server")
 async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
-    """Test BasicAuth session is created when username and password are provided with custom URL."""
+    """Test an auth header session is created with username/password and URL."""
     config = {
         DOMAIN: {
             CONF_URL: "http://localhost:1984/",
@@ -1112,19 +1320,17 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Verify async_create_clientsession was called with BasicAuth
+        # Verify async_create_clientsession was called with an auth header
         mock_create_session.assert_called_once()
         call_kwargs = mock_create_session.call_args[1]
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        assert auth.login == "test_user"
-        assert auth.password == "test_pass"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth("test_user", "test_pass")
+        }
 
 
 @pytest.mark.usefixtures("rest_client")
 async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
-    """Test BasicAuth session is created when username and password are provided with debug_ui."""
+    """Test an auth header session is created with username/password and debug_ui."""
     config = {
         DOMAIN: {
             CONF_DEBUG_UI: True,
@@ -1155,21 +1361,173 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Verify ClientSession was created with BasicAuth and UnixConnector
+        # Verify ClientSession was created with an auth header and UnixConnector
         mock_session_cls.assert_called_once()
         call_kwargs = mock_session_cls.call_args[1]
         assert "connector" in call_kwargs
         connector = call_kwargs["connector"]
         assert isinstance(connector, UnixConnector)
         assert connector.path == get_go2rtc_unix_socket_path(server_dir)
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        assert auth.login == "test_user"
-        assert auth.password == "test_pass"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth("test_user", "test_pass")
+        }
 
         # Verify Server was called with username and password
         mock_server_cls.assert_called_once()
         call_kwargs = mock_server_cls.call_args[1]
         assert call_kwargs["username"] == "test_user"
         assert call_kwargs["password"] == "test_pass"
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize("preload", [True, False])
+async def test_preload_settings_is_applied_on_register(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    preload: bool,
+) -> None:
+    """Test preload settings are applied when camera is registered."""
+    camera = init_test_integration
+    test_settings = DynamicStreamSettings(
+        orientation=Orientation.NO_TRANSFORM, preload_stream=preload
+    )
+    await _setup_camera_prefs(hass, camera.entity_id, test_settings)
+    provider = camera.webrtc_provider
+    await provider.async_register_camera(camera)
+    if preload:
+        rest_client.preload.enable.assert_called_once_with(
+            get_camera_identifier(camera)
+        )
+    else:
+        rest_client.preload.enable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_disabled_on_unregister(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test async_unregister_camera disables preload when it is enabled."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
+    identifier = get_camera_identifier(camera)
+    rest_client.preload.list.return_value = {identifier}
+    # The preference stays enabled, but go2rtc must not keep preloading a
+    # camera the provider no longer handles
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
+
+    await provider.async_unregister_camera(camera)
+
+    rest_client.preload.disable.assert_called_once_with(identifier)
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_not_disabled_when_not_enabled(
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test async_unregister_camera doesn't disable preload when it is not enabled."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
+
+    await provider.async_unregister_camera(camera)
+
+    rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_toggle_on_preference_update(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test preload is toggled when camera preferences are updated."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
+    identifier = get_camera_identifier(camera)
+    test_settings = DynamicStreamSettings(
+        orientation=Orientation.NO_TRANSFORM, preload_stream=True
+    )
+    prefs = await _setup_camera_prefs(hass, camera.entity_id, test_settings)
+
+    # Trigger preference update
+    await provider.async_on_camera_prefs_update(camera)
+
+    # Verify preload was enabled
+    rest_client.preload.enable.assert_called_once_with(identifier)
+    rest_client.preload.disable.assert_not_called()
+
+    # Now disable preload preference
+    rest_client.preload.list.return_value = {identifier}
+    rest_client.preload.enable.reset_mock()
+    rest_client.preload.disable.reset_mock()
+
+    test_settings = DynamicStreamSettings(
+        orientation=Orientation.NO_TRANSFORM, preload_stream=False
+    )
+    prefs._dynamic_stream_settings_by_entity_id[camera.entity_id] = test_settings
+
+    # Trigger preference update
+    await provider.async_on_camera_prefs_update(camera)
+
+    # Verify preload was disabled
+    rest_client.preload.disable.assert_called_once_with(identifier)
+    rest_client.preload.enable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_no_change_when_already_enabled(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test preload enable is not called when already enabled."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
+    rest_client.preload.list.return_value = {get_camera_identifier(camera)}
+    test_settings = DynamicStreamSettings(
+        orientation=Orientation.NO_TRANSFORM, preload_stream=True
+    )
+    await _setup_camera_prefs(hass, camera.entity_id, test_settings)
+
+    # Trigger preference update
+    await provider.async_on_camera_prefs_update(camera)
+
+    # Verify preload enable/disable were not called
+    rest_client.preload.enable.assert_not_called()
+    rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_no_change_when_already_disabled(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test preload disable is not called when already disabled."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
+    test_settings = DynamicStreamSettings(
+        orientation=Orientation.NO_TRANSFORM, preload_stream=False
+    )
+    await _setup_camera_prefs(hass, camera.entity_id, test_settings)
+
+    # Trigger preference update
+    await provider.async_on_camera_prefs_update(camera)
+
+    # Verify preload enable/disable were not called
+    rest_client.preload.enable.assert_not_called()
+    rest_client.preload.disable.assert_not_called()

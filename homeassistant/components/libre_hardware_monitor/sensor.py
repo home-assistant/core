@@ -1,9 +1,7 @@
 """Support for LibreHardwareMonitor Sensor Platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from librehardwaremonitor_api.model import DeviceId, LibreHardwareMonitorSensorData
 from librehardwaremonitor_api.sensor_type import SensorType
@@ -114,6 +112,7 @@ class LibreHardwareMonitorSensor(
         self._attr_native_unit_of_measurement = unit
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if sensor_data := self.coordinator.data.sensor_data.get(self._sensor_id):

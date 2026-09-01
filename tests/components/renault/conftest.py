@@ -56,12 +56,9 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
         MOCK_ACCOUNT_ID,
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with (
-        patch("renault_api.renault_session.RenaultSession.login"),
-        patch(
-            "renault_api.renault_client.RenaultClient.get_api_account",
-            return_value=renault_account,
-        ),
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_account",
+        return_value=renault_account,
     ):
         yield renault_account
 
@@ -253,7 +250,9 @@ def patch_fixtures_with_invalid_upstream_exception() -> Generator[dict[str, Asyn
     """Mock fixtures."""
     invalid_upstream_exception = exceptions.InvalidUpstreamException(
         "err.tech.500",
-        "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
+        "Invalid response from the upstream server"
+        " (The request sent to the GDC is erroneous)"
+        " ; 502 Bad Gateway",
     )
 
     with patch_get_vehicle_data() as patches:

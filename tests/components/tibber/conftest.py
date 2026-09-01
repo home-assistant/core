@@ -18,6 +18,7 @@ from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 from tests.typing import RecorderInstanceContextManager
@@ -58,7 +59,8 @@ def create_tibber_device(
         charging_status: Charging status (for binary sensors).
         device_status: Device on/off status (for binary sensors).
         is_online: Device online status (for binary sensors).
-        sensor_values: Dictionary mapping sensor IDs to their values for additional sensors.
+        sensor_values: Dictionary mapping sensor IDs to their values
+            for additional sensors.
     """
     capabilities = []
 
@@ -145,6 +147,57 @@ def create_tibber_device(
     return tibber.data_api.TibberDevice(device_data, home_id=home_id)
 
 
+def create_tibber_home(
+    *,
+    current_price: float | None = 1.25,
+    price_total: dict[str, float] | None = None,
+) -> MagicMock:
+    """Create a mocked Tibber home with an active subscription."""
+    home = MagicMock()
+    home.home_id = "home-id"
+    home.name = "Home"
+    home.currency = "NOK"
+    home.price_unit = "NOK/kWh"
+    home.price_total = price_total or {}
+    home.has_active_subscription = True
+    home.has_real_time_consumption = False
+    home.last_data_timestamp = None
+    home.update_info = AsyncMock(return_value=None)
+    home.update_info_and_price_info = AsyncMock(return_value=None)
+    home.current_price_data = MagicMock(
+        return_value=(current_price, dt_util.utcnow(), 0.4)
+    )
+    home.current_attributes = MagicMock(
+        return_value={
+            "max_price": 1.8,
+            "avg_price": 1.2,
+            "min_price": 0.8,
+            "off_peak_1": 0.9,
+            "peak": 1.7,
+            "off_peak_2": 1.0,
+        }
+    )
+    home.month_cost = 111.1
+    home.peak_hour = 2.5
+    home.peak_hour_time = dt_util.utcnow()
+    home.month_cons = 222.2
+    home.hourly_consumption_data = []
+    home.hourly_production_data = []
+    home.info = {
+        "viewer": {
+            "home": {
+                "appNickname": "Home",
+                "address": {"address1": "Street 1"},
+                "meteringPointData": {
+                    "gridCompany": "GridCo",
+                    "estimatedAnnualConsumption": 12000,
+                },
+            }
+        }
+    }
+    return home
+
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Tibber config entry."""
@@ -167,8 +220,8 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def tibber_mock() -> AsyncGenerator[MagicMock]:
-    """Patch the Tibber libraries used by the integration."""
+def tibber_client_cls() -> AsyncGenerator[MagicMock]:
+    """Patch the Tibber class used by the integration."""
     unique_user_id = "unique_user_id"
     title = "title"
 
@@ -183,7 +236,9 @@ def tibber_mock() -> AsyncGenerator[MagicMock]:
         tibber_mock.send_notification = AsyncMock()
         tibber_mock.rt_disconnect = AsyncMock()
         tibber_mock.get_homes = MagicMock(return_value=[])
-        tibber_mock.set_access_token = MagicMock()
+        tibber_mock.fetch_consumption_data_active_homes = AsyncMock(return_value=None)
+        tibber_mock.fetch_production_data_active_homes = AsyncMock(return_value=None)
+        tibber_mock.set_access_token = AsyncMock()
 
         data_api_mock = MagicMock()
         data_api_mock.get_all_devices = AsyncMock(return_value={})
@@ -191,7 +246,13 @@ def tibber_mock() -> AsyncGenerator[MagicMock]:
         data_api_mock.get_userinfo = AsyncMock()
         tibber_mock.data_api = data_api_mock
 
-        yield tibber_mock
+        yield mock_tibber
+
+
+@pytest.fixture
+def tibber_mock(tibber_client_cls: MagicMock) -> MagicMock:
+    """Return the patched Tibber client instance."""
+    return tibber_client_cls.return_value
 
 
 @pytest.fixture

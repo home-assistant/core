@@ -1,6 +1,6 @@
 """Intents for the climate integration."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -37,6 +37,7 @@ class SetTemperatureIntent(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
