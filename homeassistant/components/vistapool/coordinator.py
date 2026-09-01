@@ -70,6 +70,10 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = await self.api.fetch_pool_data(self.pool_id)
         except AquariteError as err:
+            # A late failure must not mark data unavailable that a push or
+            # self-heal delivered while this fetch was in flight.
+            if generation != self._data_generation:
+                return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

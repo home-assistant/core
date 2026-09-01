@@ -798,6 +798,59 @@ async def test_push_supersedes_in_flight_manual_refresh(
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
+async def test_push_supersedes_failed_in_flight_manual_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a manual refresh failing after a push does not mark data unavailable.
+
+    The push already supplied fresh data; letting the late failure through
+    would flip the entities to unavailable right after they updated.
+    """
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    release = asyncio.Event()
+
+    async def _slow_failing_fetch(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        await release.wait()
+        raise AquariteError("late failure")
+
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    mock_vistapool_client.fetch_pool_data.side_effect = _slow_failing_fetch
+    refresh = hass.async_create_task(
+        hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert mock_vistapool_client.fetch_pool_data.called
+
+    on_data({"light": {"status": 1}})
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+    # The fetch fails only after the push; the fresh data must stay available.
+    release.set()
+    await refresh
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+
 async def test_self_heal_supersedes_in_flight_manual_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
