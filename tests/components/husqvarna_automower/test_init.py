@@ -547,7 +547,7 @@ async def test_rename_work_area(
     device_registry: dr.DeviceRegistry,
     values: dict[str, MowerAttributes],
 ) -> None:
-    """Test adding a work area in runtime."""
+    """Test changing a work area name in runtime."""
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     child_devices = dr.async_child_entries_for_config_entry(
