@@ -209,15 +209,39 @@ async def test_update_pin_code(
     assert len(mock_nintendo_device.set_new_pin.mock_calls) == 1
 
 
-async def test_update_pin_code_requires_admin(
+@pytest.mark.parametrize(
+    ("service", "payload", "func"),
+    [
+        (
+            NintendoParentalServices.UPDATE_PIN_CODE,
+            {
+                CONF_PIN: "1234",
+            },
+            "set_new_pin",
+        ),
+        (
+            NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+            {
+                ATTR_DAY_OF_WEEK: "monday",
+                ATTR_BEDTIME_START: "20:00",
+                ATTR_BEDTIME_END: "22:00",
+            },
+            "set_daily_restrictions",
+        ),
+    ],
+)
+async def test_service_requires_admin(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_read_only_user: MockUser,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_client: AsyncMock,
     mock_nintendo_device: AsyncMock,
+    service: NintendoParentalServices,
+    payload: dict[str, Any],
+    func: str,
 ) -> None:
-    """Test updating the PIN code requires administrator access."""
+    """Test admin only services actually requires administrator access."""
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "testdevid"), mock_config_entry.entry_id
@@ -226,15 +250,12 @@ async def test_update_pin_code_requires_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            NintendoParentalServices.UPDATE_PIN_CODE,
-            {
-                ATTR_DEVICE_ID: device_entry.id,
-                CONF_PIN: "1234",
-            },
+            service,
+            {**payload, ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
-    mock_nintendo_device.set_new_pin.assert_not_called()
+    getattr(mock_nintendo_device, func).assert_not_called()
 
 
 async def test_get_player_application_report(

@@ -83,11 +83,12 @@ def async_setup_services(
             }
         ),
     )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service=NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
-        service_func=async_set_per_day_controls,
-        schema=vol.Schema(
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+        async_set_per_day_controls,
+        vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): cv.string,
                 vol.Required(ATTR_DAY_OF_WEEK): vol.In(DAYS_OF_WEEK),
