@@ -199,20 +199,7 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
     mock_home_server: MagicMock,
     mock_home_server_class: MagicMock,
 ) -> None:
-    """A HomeServer whose shutdown fails during unload is not reused.
-
-    Regression test: async_unload_entry() has already removed both bus
-    listeners and unloaded the cover platform by the time it calls
-    async_release_home_server() - if that final shutdown then fails, the
-    entry unload still succeeds (retrying it would raise ValueError, since
-    a bare removeBusDeviceListener() call would run against a listener
-    list shutdown() already cleared), but a later acquirer (a config flow,
-    or single_config_entry permitting, a future setup) must not be handed
-    a HomeServer at all. This models pyhausbus's real singleton reset -
-    shutdown() clears its singleton before raising, so the next
-    HomeServer() call returns a distinct object - to prove the rejection
-    does not depend on that object's identity.
-    """
+    """A failed shutdown completes unload and blocks later acquisitions."""
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
