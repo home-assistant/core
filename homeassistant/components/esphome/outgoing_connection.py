@@ -1,5 +1,6 @@
 """Shared listener for ESPHome device-initiated connections."""
 
+import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -29,6 +30,9 @@ class _ListenerState:
 _KEY_OUTGOING_CONNECTION_LISTENER: HassKey[_ListenerState] = HassKey(
     "esphome_outgoing_connection_listener"
 )
+_KEY_OUTGOING_CONNECTION_STOPPING: HassKey[asyncio.Task[None]] = HassKey(
+    "esphome_outgoing_connection_stopping"
+)
 
 
 @singleton(_KEY_OUTGOING_CONNECTION_LISTENER, async_=True)
@@ -37,6 +41,9 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
 
     Raising keeps the singleton uncached so the next registration retries.
     """
+    if (stopping := hass.data.pop(_KEY_OUTGOING_CONNECTION_STOPPING, None)) is not None:
+        # Wait for the previous listener to release the port before rebinding
+        await stopping
     server = OutgoingConnectionServer()
     await server.start()
 
@@ -64,7 +71,10 @@ async def async_register_outgoing_target(
             state = await _async_get_listener(hass)
         except OSError as err:
             _LOGGER.warning(
-                "Cannot listen for ESPHome outgoing connections on port %s: %s",
+                (
+                    "Cannot listen for ESPHome outgoing connections on port %s: %s;"
+                    " devices are still told to dial back and will retry"
+                ),
                 DEFAULT_OUTGOING_CONNECTION_PORT,
                 err,
             )
@@ -88,6 +98,9 @@ async def async_register_outgoing_target(
         ):
             del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
             state.remove_stop_listener()
-            hass.async_create_task(state.server.stop())
+            # Tracked so the next registration waits for the port release
+            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = hass.async_create_task(
+                state.server.stop()
+            )
 
     return _async_unregister

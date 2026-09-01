@@ -131,6 +131,14 @@ async def test_outgoing_connection_shared_listener(
     mock_server.start.assert_awaited_once()
     assert mock_server.register.call_count == 2
 
+    # Unloading one entry keeps the shared listener running
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_server.stop.assert_not_awaited()
+    await hass.config_entries.async_unload(entry2.entry_id)
+    await hass.async_block_till_done()
+    mock_server.stop.assert_awaited_once()
+
 
 async def test_outgoing_connection_zero_psk_never_registers(
     hass: HomeAssistant,

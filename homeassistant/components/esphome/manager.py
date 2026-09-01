@@ -601,9 +601,14 @@ class ESPHomeManager:
         """
         entry = self.entry
         # The client's key, not entry data: must match what the hello declared
-        if not _is_outgoing_connection_target(self.cli.noise_psk) or not (
-            (mac := entry.unique_id) and ":" in mac
-        ):
+        if not _is_outgoing_connection_target(self.cli.noise_psk):
+            return
+        if not ((mac := entry.unique_id) and ":" in mac):
+            _LOGGER.debug(
+                "%s: Not routing dial-ins; unique id %s is not a MAC address",
+                entry.title,
+                entry.unique_id,
+            )
             return
         if (
             unregister := await async_register_outgoing_target(
