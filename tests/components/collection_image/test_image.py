@@ -9,7 +9,11 @@ import pytest
 
 from homeassistant.components.image import Image, async_get_image
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -216,7 +220,7 @@ async def test_unresolvable(
 
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNKNOWN
 
     await hass.async_block_till_done(wait_background_tasks=True)
 

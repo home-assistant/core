@@ -396,8 +396,6 @@ async def test_loading_from_storage(
             "devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -428,8 +426,6 @@ async def test_loading_from_storage(
             "deleted_devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "has_composite_identifiers": False,
@@ -1754,7 +1750,7 @@ async def test_migration_from_1_11(
     """Test migration from version 1.11."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 10,
+        "minor_version": 11,
         "key": dr.STORAGE_KEY,
         "data": {
             "devices": [
@@ -1763,7 +1759,7 @@ async def test_migration_from_1_11(
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
-                    "connections": [["mac", "123456ABCDEF"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
@@ -1788,7 +1784,7 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entries": ["234567"],
                     "config_entries_subentries": {"234567": [None]},
-                    "connections": [["mac", "123456ABCDAB"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "id": "abcdefghijklm2",
@@ -7762,8 +7758,6 @@ async def test_loading_invalid_configuration_url_from_storage(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
