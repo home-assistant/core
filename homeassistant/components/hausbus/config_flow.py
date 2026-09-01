@@ -96,7 +96,11 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._search_task
 
         except HomeServerUnavailable:
-            return self.async_abort(reason="home_server_unavailable")
+            # A flow already in the show-progress state can only transition
+            # to another show-progress step or to show-progress-done - not
+            # straight to async_abort() - so the actual abort happens in
+            # async_step_home_server_unavailable() below.
+            return self.async_show_progress_done(next_step_id="home_server_unavailable")
 
         except TimeoutError, OSError:
             return self.async_show_progress_done(next_step_id="search_timeout")
@@ -105,6 +109,13 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._search_task = None
 
         return self.async_show_progress_done(next_step_id="search_complete")
+
+    async def async_step_home_server_unavailable(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort: the shared HomeServer failed to shut down and cannot reopen."""
+
+        return self.async_abort(reason="home_server_unavailable")
 
     async def async_step_search_timeout(
         self, user_input: dict[str, Any] | None = None

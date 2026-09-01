@@ -179,12 +179,7 @@ async def test_setup_retries_if_home_server_connection_fails(
     mock_home_server_class: MagicMock,
     error: type[Exception],
 ) -> None:
-    """Setup enters the retry path if opening the connection fails.
-
-    HausbusGateway.async_create() constructs HomeServer() on the executor;
-    async_setup_entry() must turn that failure into a retry rather than
-    failing setup outright or letting the exception escape unconverted.
-    """
+    """Setup enters the retry path if opening the connection fails."""
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
     mock_home_server_class.side_effect = error("connection failed")
