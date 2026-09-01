@@ -18,13 +18,25 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_APP_SECRET): str})
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_APP_SECRET): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
 
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
