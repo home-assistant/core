@@ -52,6 +52,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
@@ -1414,6 +1415,42 @@ async def test_refresh_token_resends_software_metadata(
     assert body["software_id"] == SOFTWARE_ID
     assert body["software_version"] == __version__
     assert mock_entry.data["token"]["access_token"] == "new_access_token"
+
+
+async def test_refresh_token_rejects_response_without_access_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A successful but malformed refresh response must not merge into the stale token."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DCR_AUTH_DOMAIN,
+            "token": {
+                "access_token": "old_access_token",
+                "refresh_token": "old_refresh_token",
+                "expires_at": time.time() - 3600,
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={"refresh_token": "new_refresh_token", "expires_in": 3600},
+    )
+
+    session = OAuth2Session(
+        hass,
+        mock_entry,
+        TeslemetryImplementation(hass, DCR_AUTH_DOMAIN, DCR_CLIENT_ID),
+    )
+
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    assert mock_entry.data["token"]["access_token"] == "old_access_token"
 
 
 def test_stream_topic_allowlist() -> None:

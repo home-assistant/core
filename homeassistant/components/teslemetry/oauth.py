@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -76,6 +77,11 @@ class TeslemetryImplementation(
                 "software_version": __version__,
             }
         )
+
+        # Merging a response without one would keep the stale access token while
+        # extending its expiry, so the session would never recover.
+        if not new_token.get("access_token"):
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain)
 
         return {**token, **new_token}
 
