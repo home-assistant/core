@@ -69,8 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     )
     await coordinator_temperatures.async_config_entry_first_refresh()
 
+    try:
+        panel_info = await client.controller.read_panel_info()
+    except SatelIntegraError:
+        _LOGGER.warning("Unable to read Satel panel information", exc_info=True)
+        panel_info = None
+
     entry.runtime_data = SatelIntegraData(
         client=client,
+        panel_info=panel_info,
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
@@ -85,12 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
-
-    try:
-        panel_info = await client.controller.read_panel_info()
-    except SatelIntegraError:
-        _LOGGER.warning("Unable to read Satel panel information", exc_info=True)
-        panel_info = None
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
