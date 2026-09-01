@@ -5,11 +5,12 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from velasmart import VelaSmartApiClient, VelaSmartApiError
+from velasmart import VelaSmartApiAuthError, VelaSmartApiClient, VelaSmartApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,6 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelasmartConfigEntry) ->
         """Fetch device state from the cloud API."""
         try:
             devices = await client.get_devices()
+        except VelaSmartApiAuthError as err:
+            raise ConfigEntryAuthFailed(str(err)) from err
         except VelaSmartApiError as err:
             raise UpdateFailed(str(err)) from err
         return {device["id"]: device for device in devices}

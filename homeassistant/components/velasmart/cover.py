@@ -78,6 +78,7 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
         device = self.coordinator.data.get(self._device_id)
         if device is not None:
             self._update_from_device(device)
+        super()._handle_coordinator_update()
 
     def _update_from_device(self, device: dict[str, Any]) -> None:
         """Update entity state from device data."""

@@ -4,8 +4,8 @@
   "codeowners": ["@liulijun2019"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/velasmart",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["velasmart==0.1.0"]
+  "requirements": ["velasmart==0.1.1"]
 }
