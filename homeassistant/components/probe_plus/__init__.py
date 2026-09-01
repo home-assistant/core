@@ -44,7 +44,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) 
     if entry.version > 1:
         return False
 
-    if entry.version == 1 and entry.minor_version == 0:
+    if entry.version == 1 and entry.minor_version == 1:
         mac = entry.unique_id
         if mac is None:
             return True
@@ -68,7 +68,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) 
             return {"new_unique_id": f"{mac}_{key}_0"}
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_entity)
-        hass.config_entries.async_update_entry(entry, minor_version=1)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

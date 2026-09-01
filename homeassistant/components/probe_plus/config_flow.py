@@ -40,7 +40,7 @@ def title(discovery_info: BluetoothServiceInfo) -> str:
 class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Probe."""
 
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
