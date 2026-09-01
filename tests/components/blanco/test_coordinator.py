@@ -261,11 +261,11 @@ class TestLanguageListener:
     """Tests for the HA-language → BLANCO API locale sync listener."""
 
     def _get_registered_callback(
-        self, hass: MagicMock
+        self, mock_hass: MagicMock
     ) -> Callable[[Event], Awaitable[None]]:
         """Return the callback the coordinator registered for EVENT_CORE_CONFIG_UPDATE."""
-        assert hass.bus.async_listen.call_count == 1
-        event_type, callback = hass.bus.async_listen.call_args[0]
+        assert mock_hass.bus.async_listen.call_count == 1
+        event_type, callback = mock_hass.bus.async_listen.call_args[0]
         assert event_type == EVENT_CORE_CONFIG_UPDATE
         return callback
 
