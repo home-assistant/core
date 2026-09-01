@@ -368,7 +368,7 @@ class RachioZone(RachioSwitch):
                 )
             )
         # The API limit is 3 hours, and requires an int be passed
-        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
+        self._controller.start_zone_watering(self.zone_id, manual_run_time.seconds)
         # Rachio does not send a zone-status webhook for changes made by the
         # same API client, so reflect a successful command immediately.
         self._attr_is_on = True

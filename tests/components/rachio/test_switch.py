@@ -1,5 +1,6 @@
 """Tests for the Rachio switch platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 CONTROLLER_ID = "controller-id"
 ZONE_ID = "zone-id"
@@ -44,11 +46,22 @@ pytestmark = [
 ]
 
 
+@pytest.mark.parametrize(
+    "success_status",
+    [
+        pytest.param(200, id="ok"),
+        pytest.param(204, id="no-content"),
+    ],
+)
 async def test_zone_services_update_state(
     hass: HomeAssistant,
     mock_rachio: MagicMock,
+    success_status: int,
 ) -> None:
     """Test zone services optimistically update Home Assistant state."""
+    mock_rachio.device.stop_water.return_value = ({"status": success_status}, {})
+    mock_rachio.zone.start.return_value = ({"status": success_status}, {})
+
     assert hass.states.is_state(ZONE_ENTITY_ID, STATE_OFF)
 
     await hass.services.async_call(
@@ -75,14 +88,30 @@ async def test_zone_services_update_state(
     assert mock_rachio.device.stop_water.call_count == 2
 
 
+@pytest.mark.parametrize(
+    ("response", "side_effect", "expected_exception"),
+    [
+        pytest.param(
+            ({"status": 500}, {}),
+            None,
+            HomeAssistantError,
+            id="error-response",
+        ),
+        pytest.param(None, RuntimeError, RuntimeError, id="exception"),
+    ],
+)
 async def test_zone_start_failure_does_not_update_state(
     hass: HomeAssistant,
     mock_rachio: MagicMock,
+    response: tuple[dict[str, int], dict[str, Any]] | None,
+    side_effect: type[Exception] | None,
+    expected_exception: type[Exception],
 ) -> None:
     """Test a failed start command does not optimistically update state."""
-    mock_rachio.zone.start.side_effect = RuntimeError
+    mock_rachio.zone.start.return_value = response
+    mock_rachio.zone.start.side_effect = side_effect
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -94,9 +123,24 @@ async def test_zone_start_failure_does_not_update_state(
     assert hass.states.is_state(ZONE_ENTITY_ID, STATE_OFF)
 
 
+@pytest.mark.parametrize(
+    ("response", "side_effect", "expected_exception"),
+    [
+        pytest.param(
+            ({"status": 500}, {}),
+            None,
+            HomeAssistantError,
+            id="error-response",
+        ),
+        pytest.param(None, RuntimeError, RuntimeError, id="exception"),
+    ],
+)
 async def test_zone_stop_failure_does_not_update_state(
     hass: HomeAssistant,
     mock_rachio: MagicMock,
+    response: tuple[dict[str, int], dict[str, Any]] | None,
+    side_effect: type[Exception] | None,
+    expected_exception: type[Exception],
 ) -> None:
     """Test a failed stop command does not optimistically update state."""
     await hass.services.async_call(
@@ -108,9 +152,10 @@ async def test_zone_stop_failure_does_not_update_state(
     await hass.async_block_till_done()
     assert hass.states.is_state(ZONE_ENTITY_ID, STATE_ON)
 
-    mock_rachio.device.stop_water.side_effect = RuntimeError
+    mock_rachio.device.stop_water.return_value = response
+    mock_rachio.device.stop_water.side_effect = side_effect
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

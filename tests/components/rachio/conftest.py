@@ -59,6 +59,8 @@ def mock_rachio(request: pytest.FixtureRequest) -> Generator[MagicMock]:
             {"id": "test-device-webhook-id"},
         )
         rachio.device.current_schedule.return_value = ({"status": 200}, {})
+        rachio.device.stop_water.return_value = ({"status": 204}, {})
+        rachio.zone.start.return_value = ({"status": 204}, {})
         rachio.valve.list_base_stations.return_value = (
             {"status": 200},
             {
