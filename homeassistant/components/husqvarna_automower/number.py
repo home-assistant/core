@@ -85,6 +85,7 @@ MOWER_NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
 class WorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
+    exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], int]
     translation_key_fn: Callable[[int, str], str]
     set_value_fn: Callable[
@@ -98,6 +99,7 @@ WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
         translation_key_fn=_work_area_translation_key,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
+        exists_fn=lambda data: data.use_global_cutting_height is False,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=async_set_work_area_cutting_height,
     ),
@@ -122,6 +124,7 @@ async def async_setup_entry(
                     )
                     for description in WORK_AREA_NUMBER_TYPES
                     for work_area_id in _work_areas
+                    if description.exists_fn(_work_areas[work_area_id])
                 )
         entities.extend(
             AutomowerNumberEntity(mower_id, coordinator, description)
@@ -131,10 +134,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        work_areas = coordinator.data[mower_id].work_areas
+        if work_areas is None:
+            return
         async_add_entities(
             WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
             for description in WORK_AREA_NUMBER_TYPES
             for work_area_id in work_area_ids
+            if description.exists_fn(work_areas[work_area_id])
         )
 
     def _async_add_new_devices(mower_ids: set[str]) -> None:
