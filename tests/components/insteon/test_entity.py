@@ -14,6 +14,7 @@ from homeassistant.components.insteon.entity import InsteonEntity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
@@ -56,6 +57,8 @@ async def test_async_update_requests_status_for_mains_powered_device(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test homeassistant.update_entity forwards the entity's group to async_status."""
+
+    await async_setup_component(hass, "homeassistant", {})
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
