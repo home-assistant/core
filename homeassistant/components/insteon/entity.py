@@ -191,3 +191,15 @@ class InsteonEntity(Entity):
     async def _async_add_default_links(self):
         """Add default links between the device and the modem."""
         await self._insteon_device.async_add_default_links()
+
+    async def async_update(self) -> None:
+        """Request a live status update from the device.
+
+        No-op for battery-powered devices: a status request on those queues
+        work and starts a wake-ping loop rather than completing, matching
+        the same skip used for the startup status pass in
+        async_get_device_config.
+        """
+        if self._insteon_device.is_battery:
+            return
+        await self._insteon_device.async_status(self.insteon_group)
