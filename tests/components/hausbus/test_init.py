@@ -203,9 +203,12 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
     listeners and unloaded the cover platform by the time it calls
     async_release_home_server() - if that final shutdown then fails, a
     later acquirer (a config flow, or single_config_entry permitting, a
-    future setup) must not be handed the same half torn-down HomeServer,
-    or a bare removeBusDeviceListener() call on it would raise ValueError
-    against a listener list shutdown() already cleared.
+    future setup) must not be handed a HomeServer at all, or a bare
+    removeBusDeviceListener() call on it would raise ValueError against a
+    listener list shutdown() already cleared. This models pyhausbus's real
+    singleton reset - shutdown() clears its singleton before raising, so
+    the next HomeServer() call returns a distinct object - to prove the
+    rejection does not depend on that object's identity.
     """
     config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
     config_entry.add_to_hass(hass)
@@ -216,5 +219,12 @@ async def test_unload_shutdown_failure_is_not_handed_out_again(
 
     assert not await hass.config_entries.async_unload(config_entry.entry_id)
 
-    with pytest.raises(OSError):
+    with (
+        patch(
+            "homeassistant.components.hausbus.gateway.HomeServer",
+            autospec=True,
+            return_value=MagicMock(),
+        ),
+        pytest.raises(OSError),
+    ):
         await async_acquire_home_server(hass)

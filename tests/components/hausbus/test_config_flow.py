@@ -27,13 +27,9 @@ async def test_user_flow_creates_entry(
         assert release_search.wait(timeout=5), "test did not release in time"
 
     # A real function, not a MagicMock: hass's test-mode executor-job
-    # runner special-cases Mock targets and runs them inline instead of on
-    # a worker thread. Blocking on an Event (rather than returning
-    # instantly) makes the SHOW_PROGRESS assertion below deterministic
-    # instead of depending on how fast a real executor thread happens to
-    # be scheduled - a fast enough thread could otherwise let the flow
-    # cascade straight past SHOW_PROGRESS to CREATE_ENTRY before this test
-    # could ever observe the progress step.
+    # runner runs Mock targets inline, and blocking here makes the
+    # SHOW_PROGRESS assertion below deterministic instead of racing a
+    # real executor thread.
     mock_home_server.searchDevices = _blocking_search_devices
 
     result = await hass.config_entries.flow.async_init(

@@ -5,9 +5,22 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.hausbus import gateway as hausbus_gateway
 from homeassistant.components.hausbus.const import DOMAIN
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def _reset_home_server_broken_flag() -> Generator[None]:
+    """Reset the module-level broken-HomeServer flag between tests.
+
+    Unlike the reference-count WeakKeyDictionary it lives alongside, this
+    flag is not tied to any object's lifetime, so it would otherwise stay
+    set for every test running after one that intentionally triggers it.
+    """
+    yield
+    hausbus_gateway._home_server_broken_state.broken = False
 
 
 @pytest.fixture

@@ -39,13 +39,24 @@ _home_server_lock = asyncio.Lock()
 # is a fresh object per test and simply starts out with no entry.
 _home_server_refs: WeakKeyDictionary[HomeServer, int] = WeakKeyDictionary()
 
-# HomeServer instances whose shutdown() failed to fully stop their worker
-# or collector thread (see async_release_home_server). pyhausbus.HomeServer()
-# keeps returning this very same object until shutdown() completes without
-# error, so without this, a fresh async_acquire_home_server() call - from a
-# config flow, or a later setup attempt - could hand this half torn-down
-# instance straight back out.
-_broken_home_servers: WeakKeyDictionary[HomeServer, None] = WeakKeyDictionary()
+
+class _HomeServerBrokenState:
+    """Whether the shared HomeServer is unusable until Home Assistant restarts.
+
+    Set once a HomeServer's shutdown() fails to fully stop its worker or
+    collector thread (see async_release_home_server). This is intentionally
+    not tracked per-instance: pyhausbus's shutdown() clears HomeServer's
+    singleton before raising, so the very next HomeServer() call returns a
+    fresh object that a per-instance marker would never match, letting a
+    reacquisition succeed alongside the worker thread that failed to stop.
+    A plain module-level attribute (rather than a rebound module global)
+    is used so callers can flip it without a `global` statement.
+    """
+
+    broken = False
+
+
+_home_server_broken_state = _HomeServerBrokenState()
 
 
 async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
@@ -67,6 +78,13 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
     back the exact object this returned.
     """
     async with _home_server_lock:
+        if _home_server_broken_state.broken:
+            raise OSError(
+                "The Haus-Bus network connection failed to shut down "
+                "cleanly earlier and cannot be reopened until Home "
+                "Assistant restarts"
+            )
+
         home_server_job = hass.async_add_executor_job(HomeServer)
         try:
             home_server = await asyncio.shield(home_server_job)
@@ -76,13 +94,6 @@ async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
 
             _release_cancelled_home_server(hass, home_server_job)
             raise
-
-        if home_server in _broken_home_servers:
-            raise OSError(
-                "The Haus-Bus network connection failed to shut down "
-                "cleanly earlier and cannot be reopened until Home "
-                "Assistant restarts"
-            )
 
         _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
         return home_server
@@ -134,10 +145,10 @@ async def _async_shutdown_unreferenced_home_server(
             with contextlib.suppress(Exception):
                 await shutdown_job
             if shutdown_job.done() and shutdown_job.exception() is not None:
-                _broken_home_servers[home_server] = None
+                _home_server_broken_state.broken = True
             raise
         except Exception:
-            _broken_home_servers[home_server] = None
+            _home_server_broken_state.broken = True
             raise
 
 
@@ -152,9 +163,10 @@ async def async_release_home_server(
     it here would report a successful unload while a stray thread could
     still be running against a HomeServer a subsequent reload replaces, so
     it is intentionally left to propagate rather than caught. The failed
-    HomeServer is instead marked (see _broken_home_servers) so a later
-    async_acquire_home_server() call refuses to hand this same half
-    torn-down instance back out.
+    HomeServer is instead marked (see _home_server_broken_state) so a
+    later async_acquire_home_server() call refuses to hand a HomeServer
+    back out at all, even a newly constructed one, until Home Assistant
+    restarts.
 
     The shutdown executor job itself is shielded from cancellation: this
     coroutine may be cancelled (e.g. during Home Assistant shutdown) while
@@ -174,10 +186,10 @@ async def async_release_home_server(
                 with contextlib.suppress(Exception):
                     await shutdown_job
                 if shutdown_job.done() and shutdown_job.exception() is not None:
-                    _broken_home_servers[home_server] = None
+                    _home_server_broken_state.broken = True
                 raise
             except Exception:
-                _broken_home_servers[home_server] = None
+                _home_server_broken_state.broken = True
                 raise
         else:
             _home_server_refs[home_server] = refcount
