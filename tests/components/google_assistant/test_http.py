@@ -707,6 +707,29 @@ async def test_registry_rename_transfers_yaml_lock(
     mock_sync.assert_called_once_with("mock-user-id")
 
 
+async def test_legacy_entity_removal_triggers_sync(hass: HomeAssistant) -> None:
+    """Test removing a non-registry entity's state schedules a sync."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
+
+    # "light" is exposed by default; its YAML exposure is applied as soon
+    # as its state is added, since the listener is already active.
+    hass.states.async_set("light.legacy", "on")
+    assert config.should_expose("light.legacy") is True
+
+    with (
+        patch.object(config, "async_sync_entities") as mock_sync,
+        patch.object(helpers, "SYNC_DELAY", 0),
+    ):
+        hass.states.async_remove("light.legacy")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    mock_sync.assert_called_once_with("mock-user-id")
+
+
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

@@ -17,7 +17,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -28,7 +28,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -125,8 +124,10 @@ class GoogleConfig(AbstractConfig):
             )
         )
         self._on_deinitialize.append(
-            async_track_state_added_domain(
-                self.hass, MATCH_ALL, self._async_state_added
+            self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                self._async_state_changed,
+                event_filter=self._async_filter_state_changed,
             )
         )
 
@@ -139,15 +140,25 @@ class GoogleConfig(AbstractConfig):
         self.async_enable_local_sdk()
 
     @callback
-    def _async_state_added(self, event: Event[EventStateChangedData]) -> None:
-        """Push YAML exposure for a newly added entity and schedule a sync.
+    def _async_filter_state_changed(self, event_data: EventStateChangedData) -> bool:
+        """Return True for a non-registry entity's state being added or removed.
 
-        This only needs to handle states not registered in entity registry.
+        Registered entities are ignored; a registered entity's changes are
+        handled by _async_entity_registry_updated instead.
         """
-        entity_id = event.data["entity_id"]
+        if event_data["old_state"] is not None and event_data["new_state"] is not None:
+            return False
         entity_registry = er.async_get(self.hass)
+        return not entity_registry.async_get(event_data["entity_id"])
 
-        if entity_registry.async_get(entity_id):
+    @callback
+    def _async_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Push or clear YAML exposure when a non-registry entity is added or removed."""
+        entity_id = event.data["entity_id"]
+
+        if event.data["new_state"] is None:
+            async_set_entity_locked(self.hass, DOMAIN, entity_id, None)
+            self.async_schedule_google_sync_all()
             return
 
         self._async_update_legacy_exposure(entity_id)
