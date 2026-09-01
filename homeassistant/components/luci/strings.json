@@ -15,6 +15,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to log in to the OpenWrt router.",
+          "username": "The username to log in to the OpenWrt router."
         }
       },
       "user": {
@@ -24,6 +28,13 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your OpenWrt router.",
+          "password": "The password to log in to the OpenWrt router.",
+          "ssl": "Whether to connect to the router using SSL.",
+          "username": "The username to log in to the OpenWrt router.",
+          "verify_ssl": "Whether to verify the router's SSL certificate."
         }
       }
     }

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusConnection, ModbusError
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import ATTR_MANUFACTURER, DEFAULT_SCAN_INTERVAL, DOMAIN, UNIT_ID
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -28,8 +28,8 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         entry: StiebelEltronConfigEntry,
         model: ControllerModel,
+        connection: ModbusConnection,
         host: str,
-        port: int,
     ) -> None:
         """Initialize the StiebelEltronDataCoordinator."""
         super().__init__(
@@ -42,32 +42,20 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self.api_client = LwzStiebelEltronAPI(host=host, port=port)
+        self.api_client = LwzStiebelEltronAPI(connection.for_unit(UNIT_ID))
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            configuration_url=f"http://{self.host}",
+            configuration_url=f"http://{host}",
             name=self.name,
             model=model.name,
             model_id=str(model.value),
             manufacturer=ATTR_MANUFACTURER,
         )
 
-    async def close(self) -> None:
-        """Disconnect client."""
-        _LOGGER.debug("Closing connection to %s", self.host)
-        await self.api_client.close()
-
-    @property
-    def host(self) -> str:
-        """Return the host address of the Stiebel Eltron ISG."""
-        return self.api_client.host
-
     @override
     async def _async_update_data(self) -> None:
         """Fetch the latest data from the source."""
         try:
-            if not self.api_client.is_connected:
-                await self.api_client.connect()
             await self.api_client.async_update()
-        except ModbusException as exception:
+        except ModbusError as exception:
             raise UpdateFailed(exception) from exception

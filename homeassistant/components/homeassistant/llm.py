@@ -8,7 +8,11 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.llm import LLMTools
-from homeassistant.components.sensor import SensorDeviceClass, async_rounded_state
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    async_rounded_state,
+)
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -18,13 +22,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import (
-    LLM_API_ASSIST,
-    NO_ENTITIES_PROMPT,
-    LLMContext,
-    Tool,
-    ToolInput,
-)
+from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
@@ -34,10 +32,15 @@ from .exposed_entities import async_should_expose
 CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
 
+NO_ENTITIES_PROMPT = (
+    "Only if the user wants to control a device, tell them to expose entities "
+    "to their voice assistant in Home Assistant."
+)
+
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `GetLiveContext` tool."
+    "the home using the `homeassistant__GetLiveContext` tool."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -51,7 +54,7 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `GetLiveContext`."
+    "    2.  You MUST call `homeassistant__GetLiveContext`."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
@@ -120,14 +123,12 @@ def async_get_exposed_entities(
                 area_names.append(area_entry.name)
                 area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
-                # Check device area
+                # Check the device's effective area
                 if (
-                    device_entry.area_id is not None
-                    and (
-                        area_entry := area_registry.async_get_area(device_entry.area_id)
-                    )
-                    is not None
-                ):
+                    device_area_id := dr.async_get_effective_area_id(hass, device_entry)
+                ) is not None and (
+                    area_entry := area_registry.async_get_area(device_area_id)
+                ) is not None:
                     area_names.append(area_entry.name)
                     area_names.extend(sorted(area_entry.aliases))
 
@@ -140,7 +141,7 @@ def async_get_exposed_entities(
             info["state"] = state.state
 
             # Format numeric states with configured display precision
-            if state.domain == "sensor":
+            if state.domain == SENSOR_DOMAIN:
                 info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
@@ -201,7 +202,7 @@ class GetLiveContextTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "GetLiveContext"
+    name = "homeassistant__GetLiveContext"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"

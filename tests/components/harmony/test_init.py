@@ -72,7 +72,7 @@ async def test_unique_id_migration(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     switch_tv = ent_reg.async_get(ENTITY_WATCH_TV)
     assert switch_tv.unique_id == f"activity_{WATCH_TV_ACTIVITY_ID}"

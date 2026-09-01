@@ -48,6 +48,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
+    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
@@ -959,7 +960,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
-    _valid_unit: str | None | UndefinedType = UNDEFINED
+    _valid_unit: str | UndefinedType | None = UNDEFINED
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -1050,7 +1051,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
@@ -1726,6 +1727,7 @@ def state(
         req_state = [req_state]
 
     is_state = False
+    state_value: Any = None
     for req_state_value in req_state:
         state_value = req_state_value
         if (
@@ -2147,6 +2149,20 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
                 if isinstance(value := config.get(key), str) and valid_entity_id(value):
                     referenced.add(value)
             continue
+
+        if condition == "zone":
+            options = config.get(CONF_OPTIONS, {})
+            referenced.update(options.get(CONF_ENTITY_ID, []))
+            referenced.update(options.get(CONF_ZONE, []))
+
+        elif condition in (
+            "zone.in_zone",
+            "zone.not_in_zone",
+            "zone.occupancy_is_detected",
+            "zone.occupancy_is_not_detected",
+        ):
+            if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
+                referenced.add(zone_entity_id)
 
         entity_ids = config.get(CONF_ENTITY_ID)
 

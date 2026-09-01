@@ -7,11 +7,14 @@ from typing import TYPE_CHECKING, Any, Final
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN
 from .helpers import async_sync_device_time
@@ -126,48 +129,34 @@ def _resolve_config_entry(
     service_call: ServiceCall,
 ) -> tuple[BSBLanConfigEntry, dr.DeviceEntry]:
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
-    device_id: str = service_call.data[ATTR_DEVICE_ID]
+    config_entry: BSBLanConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, service_call.data[ATTR_DEVICE_ID]
+    )
+    return config_entry, device
 
-    device_registry = dr.async_get(service_call.hass)
-    device_entry = device_registry.async_get(device_id)
 
-    if device_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
+def _device_name(device_entry: dr.DeviceEntry) -> str:
+    """Return the best available display name for a device."""
+    return device_entry.name_by_user or device_entry.name or device_entry.id
 
-    # Find the config entry for this device
-    matching_entries: list[BSBLanConfigEntry] = [
-        entry
-        for entry in service_call.hass.config_entries.async_entries(DOMAIN)
-        if entry.entry_id in device_entry.config_entries
-    ]
 
-    if not matching_entries:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_config_entry_for_device",
-            translation_placeholders={"device_id": device_entry.name or device_id},
-        )
-
-    entry = matching_entries[0]
-
-    # Verify the config entry is loaded
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_loaded",
-            translation_placeholders={"device_name": device_entry.name or device_id},
-        )
-
-    return entry, device_entry
+def _ensure_water_heater_device(device_entry: dr.DeviceEntry) -> None:
+    """Validate the service targets the water heater sub-device."""
+    for domain, identifier in device_entry.identifiers:
+        if domain == DOMAIN and identifier.endswith("-water-heater"):
+            return
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="not_a_water_heater_device",
+        translation_placeholders={"device_name": _device_name(device_entry)},
+    )
 
 
 async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     """Set hot water heating schedule."""
-    entry, _ = _resolve_config_entry(service_call)
+    entry, device_entry = _resolve_config_entry(service_call)
+    _ensure_water_heater_device(device_entry)
     client = entry.runtime_data.client
 
     days = _build_weekly_schedule_days(service_call)
@@ -185,7 +174,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
         ) from err
 
     # Refresh the slow coordinator to get the updated schedule
-    await entry.runtime_data.slow_coordinator.async_request_refresh()
+    await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
 
 
 async def async_sync_time(service_call: ServiceCall) -> None:

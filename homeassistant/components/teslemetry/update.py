@@ -6,7 +6,11 @@ from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateEntity,
+    UpdateEntityFeature,
+    UpdateEntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -154,16 +158,27 @@ class TeslemetryStreamingUpdateEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_in_progress = state.attributes.get("in_progress", False)
-            self._attr_update_percentage = state.attributes.get("update_percentage")
-            self._attr_installed_version = state.attributes.get("installed_version")
-            self._attr_latest_version = state.attributes.get("latest_version")
+            self._attr_installed_version = state.attributes.get(
+                UpdateEntityStateAttribute.INSTALLED_VERSION
+            )
+            self._attr_latest_version = state.attributes.get(
+                UpdateEntityStateAttribute.LATEST_VERSION
+            )
             self._attr_supported_features = UpdateEntityFeature(
                 state.attributes.get(
                     "supported_features", self._attr_supported_features
                 )
             )
-            self._scheduled = self._attr_in_progress
+            # A restored in-progress flag with installed == latest is a missed
+            # completion; restoring it would re-strand the entity every restart.
+            if not self._up_to_date:
+                self._attr_in_progress = state.attributes.get(
+                    UpdateEntityStateAttribute.IN_PROGRESS, False
+                )
+                self._attr_update_percentage = state.attributes.get(
+                    UpdateEntityStateAttribute.UPDATE_PERCENTAGE
+                )
+                self._scheduled = self._attr_in_progress
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -236,7 +251,18 @@ class TeslemetryStreamingUpdateEntity(
 
         if value is not None:
             self._attr_installed_version = value.split(" ")[0]
+            # A new installed version can be the only signal that an offline
+            # install finished, so re-evaluate any lingering scheduled flag.
+            self._async_update_progress()
             self.async_write_ha_state()
+
+    @property
+    def _up_to_date(self) -> bool:
+        """Return True when the installed version matches the known latest version."""
+        return (
+            self._attr_installed_version is not None
+            and self._attr_installed_version == self._attr_latest_version
+        )
 
     def _async_update_progress(self) -> None:
         """Update the progress of the update."""
@@ -247,6 +273,9 @@ class TeslemetryStreamingUpdateEntity(
         elif 10 < self._install_percentage < 100:
             self._attr_in_progress = True
             self._attr_update_percentage = self._install_percentage
+        elif self._scheduled and not self._up_to_date:
+            self._attr_in_progress = True
+            self._attr_update_percentage = None
         else:
-            self._attr_in_progress = self._scheduled
+            self._attr_in_progress = False
             self._attr_update_percentage = None

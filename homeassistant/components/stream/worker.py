@@ -424,8 +424,28 @@ class StreamMuxer:
 
     def close(self) -> None:
         """Close stream buffer."""
-        self._av_output.close()
-        self._memory_file.close()
+        try:
+            self._av_output.close()
+        finally:
+            self._memory_file.close()
+
+
+@contextlib.contextmanager
+def closing_stream_worker(
+    container: InputContainer, muxer: StreamMuxer
+) -> Generator[None]:
+    """Close worker resources without masking an active error."""
+    try:
+        yield
+    except BaseException:
+        with contextlib.suppress(av.FFmpegError):
+            muxer.close()
+        with contextlib.suppress(av.FFmpegError):
+            container.close()
+        raise
+    else:
+        with contextlib.closing(container), contextlib.closing(muxer):
+            pass
 
 
 class PeekIterator(Iterator[av.Packet]):
@@ -469,6 +489,28 @@ class PeekIterator(Iterator[av.Packet]):
         for packet in self._iterator:
             self._buffer.append(packet)
             yield packet
+
+
+def repair_initial_missing_dts(packets: PeekIterator) -> None:
+    """Repair a missing DTS on the initial video keyframe."""
+    buffered_packets = packets.peek()
+    first_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if (
+        first_video_packet is None
+        or not first_video_packet.is_keyframe
+        or first_video_packet.dts is not None
+    ):
+        return
+
+    next_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if next_video_packet is None or next_video_packet.dts is None:
+        return
+
+    first_video_packet.dts = next_video_packet.dts - (next_video_packet.duration or 1)
 
 
 class TimestampValidator:
@@ -630,8 +672,9 @@ def stream_worker(
         int(1 / video_stream.time_base),  # type: ignore[operator]
         int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
     )
+    unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
     container_packets = PeekIterator(
-        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+        filter(dts_validator.is_valid, unvalidated_packets)
     )
 
     def is_video(packet: av.Packet) -> Any:
@@ -645,6 +688,7 @@ def stream_worker(
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
     try:
+        repair_initial_missing_dts(unvalidated_packets)
         # Get the required bitstream filter
         audio_bsf = get_audio_bitstream_filter(container_packets.peek(), audio_stream)
         # Advance to the first keyframe for muxing, then rewind so the muxing
@@ -687,10 +731,15 @@ def stream_worker(
     )
     muxer.reset(start_dts)
 
-    # Mux the first keyframe, then proceed through the rest of the packets
-    muxer.mux_packet(first_keyframe)
+    with closing_stream_worker(container, muxer):
+        # Mux the first keyframe, then proceed through the rest of the packets
+        try:
+            muxer.mux_packet(first_keyframe)
+        except av.FFmpegError as ex:
+            raise StreamWorkerError(
+                f"Error muxing first keyframe ({redact_av_error_string(ex)})"
+            ) from ex
 
-    with contextlib.closing(container), contextlib.closing(muxer):
         while not quit_event.is_set():
             try:
                 packet = next(container_packets)
@@ -703,7 +752,12 @@ def stream_worker(
                     f"Error demuxing stream ({redact_av_error_string(ex)})"
                 ) from ex
 
-            muxer.mux_packet(packet)
+            try:
+                muxer.mux_packet(packet)
+            except av.FFmpegError as ex:
+                raise StreamWorkerError(
+                    f"Error muxing stream ({redact_av_error_string(ex)})"
+                ) from ex
 
             if packet.is_keyframe and is_video(packet):
                 keyframe_converter.stash_keyframe_packet(packet)
