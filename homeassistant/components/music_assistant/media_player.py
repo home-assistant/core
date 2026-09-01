@@ -108,6 +108,33 @@ REPEAT_MODE_MAPPING_TO_HA = {
     # UNKNOWN is intentionally not mapped - will return None
 }
 
+MASS_ICON_TO_MDI: Mapping[str, str] = {
+    "bluetooth": "mdi:bluetooth",
+    "car": "mdi:car",
+    "cast": "mdi:cast",
+    "headphones": "mdi:headphones",
+    "laptop": "mdi:laptop",
+    "monitor": "mdi:monitor",
+    "radio": "mdi:radio",
+    "smartphone": "mdi:cellphone",
+    "soundbar": "mdi:soundbar",
+    "speaker": "mdi:speaker",
+    "speakers": "mdi:speaker-multiple",
+    "sun": "mdi:white-balance-sunny",
+    "tablet": "mdi:tablet",
+    "tv": "mdi:television",
+    "vinyl": "mdi:record-player",
+}
+
+
+def _get_mdi_icon(icon: str) -> str:
+    """Return an MDI icon for a Music Assistant icon."""
+    if icon.startswith("mdi:"):
+        return icon
+    if icon.startswith("mdi-"):
+        return icon.replace("mdi-", "mdi:", 1)
+    return MASS_ICON_TO_MDI.get(icon, "mdi:speaker")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -136,7 +163,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
         super().__init__(mass, player_id)
-        self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
+        self._attr_icon = _get_mdi_icon(self.player.icon)
         self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._source_list_mapping: dict[str, str] = {}
