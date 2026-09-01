@@ -38,17 +38,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_probe_reading() -> MagicMock:
-    """Return a mock probe reading."""
-    probe = create_autospec(ProbeReading, instance=True)
-    probe.temperature = 25.0
-    probe.rssi = -60
-    probe.voltage = 3.7
-    probe.online = True
-    return probe
-
-
-@pytest.fixture
 def mock_probe_plus() -> Generator[MagicMock]:
     """Mock the Probe Plus device with multiple probes."""
     with patch(

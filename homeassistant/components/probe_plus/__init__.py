@@ -44,10 +44,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) 
     if entry.version > 1:
         return False
 
-    if entry.version == 1 and entry.minor_version == 1:
+    if entry.version == 1 and entry.minor_version < 2:
         mac = entry.unique_id
         if mac is None:
-            return True
+            _LOGGER.warning(
+                "Cannot migrate config entry %s because unique_id is None",
+                entry.entry_id,
+            )
+            return False
 
         legacy_keys = (
             "probe_temperature",

@@ -8,8 +8,8 @@ from typing import override
 from pyprobeplus.parsers.base import ProbeReading
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -135,7 +135,7 @@ async def async_setup_entry(
     )
 
 
-class RelaySensor(ProbePlusEntity, RestoreSensor):
+class RelaySensor(ProbePlusEntity, SensorEntity):
     """Representation of a Probe Plus sensor."""
 
     entity_description: ProbePlusRelaySensorEntityDescription
@@ -147,7 +147,7 @@ class RelaySensor(ProbePlusEntity, RestoreSensor):
         return self.entity_description.value_fn(self.device)
 
 
-class ProbeSensor(ProbePlusProbeEntity, RestoreSensor):
+class ProbeSensor(ProbePlusProbeEntity, SensorEntity):
     """Representation of a Probe Plus probe sensor."""
 
     entity_description: ProbePlusProbeSensorEntityDescription

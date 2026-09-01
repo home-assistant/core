@@ -125,7 +125,7 @@ async def test_migrate_entry_no_unique_id(
     await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 1
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_migrate_entry_future_version(
