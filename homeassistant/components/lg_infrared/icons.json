@@ -1,11 +1,23 @@
 {
   "entity": {
     "button": {
+      "ai_convertible": {
+        "default": "mdi:brain"
+      },
+      "audio": {
+        "default": "mdi:volume-high"
+      },
       "back": {
         "default": "mdi:keyboard-backspace"
       },
+      "diagnose": {
+        "default": "mdi:stethoscope"
+      },
       "down": {
         "default": "mdi:arrow-down"
+      },
+      "eco": {
+        "default": "mdi:leaf"
       },
       "exit": {
         "default": "mdi:exit-to-app"
@@ -34,8 +46,14 @@
       "input": {
         "default": "mdi:import"
       },
+      "jet": {
+        "default": "mdi:fan-chevron-up"
+      },
       "left": {
         "default": "mdi:arrow-left"
+      },
+      "light": {
+        "default": "mdi:led-on"
       },
       "menu": {
         "default": "mdi:menu"
@@ -85,8 +103,17 @@
       "right": {
         "default": "mdi:arrow-right"
       },
+      "swing_v_toggle": {
+        "default": "mdi:arrow-up-down"
+      },
       "up": {
         "default": "mdi:arrow-up"
+      },
+      "viraat": {
+        "default": "mdi:rocket-launch"
+      },
+      "wifi": {
+        "default": "mdi:wifi"
       }
     },
     "climate": {
