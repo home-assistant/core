@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_vacuum[vacuum.700series_vacuum_rvc-entry]
+# name: test_vacuum[vacuum.700series_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7,11 +7,11 @@
     'area_id': None,
     'capabilities': dict({
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
-        'Max power',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
+        'max_power',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -21,7 +21,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.700series_vacuum_rvc',
+    'entity_id': 'vacuum.700series_vacuum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,12 +29,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RVC',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RVC',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -44,29 +44,29 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[vacuum.700series_vacuum_rvc-state]
+# name: test_vacuum[vacuum.700series_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'Powerful',
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'powerful',
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
-        'Max power',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
+        'max_power',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '700series vacuum RVC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '700series vacuum',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12604>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.700series_vacuum_rvc',
+    'entity_id': 'vacuum.700series_vacuum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'docked',
   })
 # ---
-# name: test_vacuum[vacuum.cybele_vacuum_rvc-entry]
+# name: test_vacuum[vacuum.cybele_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -74,11 +74,11 @@
     'area_id': None,
     'capabilities': dict({
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
-        'Max',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
+        'max',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -88,7 +88,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.cybele_vacuum_rvc',
+    'entity_id': 'vacuum.cybele_vacuum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,12 +96,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RVC',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RVC',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -111,29 +111,29 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[vacuum.cybele_vacuum_rvc-state]
+# name: test_vacuum[vacuum.cybele_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'Powerful',
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'powerful',
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
-        'Max',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
+        'max',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cybele vacuum RVC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cybele vacuum',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12604>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.cybele_vacuum_rvc',
+    'entity_id': 'vacuum.cybele_vacuum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'docked',
   })
 # ---
-# name: test_vacuum[vacuum.gordias_vacuum_rvc-entry]
+# name: test_vacuum[vacuum.gordias_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -141,10 +141,10 @@
     'area_id': None,
     'capabilities': dict({
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -154,7 +154,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.gordias_vacuum_rvc',
+    'entity_id': 'vacuum.gordias_vacuum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -162,12 +162,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RVC',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RVC',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -177,28 +177,28 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[vacuum.gordias_vacuum_rvc-state]
+# name: test_vacuum[vacuum.gordias_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'Quiet',
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'quiet',
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Quiet',
-        'Energy saving',
-        'Standard',
-        'Powerful',
+        'quiet',
+        'energy_saving',
+        'standard',
+        'powerful',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gordias vacuum RVC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gordias vacuum',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12604>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.gordias_vacuum_rvc',
+    'entity_id': 'vacuum.gordias_vacuum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'docked',
   })
 # ---
-# name: test_vacuum[vacuum.pure_i9_vacuum_rvc-entry]
+# name: test_vacuum[vacuum.pure_i9_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -206,9 +206,9 @@
     'area_id': None,
     'capabilities': dict({
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Silent',
-        'Smart',
-        'Power',
+        'silent',
+        'smart',
+        'power',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -218,7 +218,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.pure_i9_vacuum_rvc',
+    'entity_id': 'vacuum.pure_i9_vacuum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,12 +226,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RVC',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RVC',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -241,20 +241,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[vacuum.pure_i9_vacuum_rvc-state]
+# name: test_vacuum[vacuum.pure_i9_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'Smart',
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'smart',
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
-        'Silent',
-        'Smart',
-        'Power',
+        'silent',
+        'smart',
+        'power',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pure i9 vacuum RVC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pure i9 vacuum',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12604>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.pure_i9_vacuum_rvc',
+    'entity_id': 'vacuum.pure_i9_vacuum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
