@@ -211,6 +211,8 @@ class AbstractOAuth2Implementation(ABC):
             new_token["expires_in"] = int(new_token["expires_in"])
         except (KeyError, TypeError, ValueError) as err:
             raise OAuth2TokenRequestConnectionError(domain=self.service_domain) from err
+        if not new_token.get("access_token"):
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain)
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
@@ -310,6 +312,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 "refresh_token": token["refresh_token"],
             }
         )
+
+        # Merging a response without one would keep the stale access token while
+        # extending its expiry, so the session would never recover.
+        if not new_token.get("access_token"):
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain)
 
         return {**token, **new_token}
 
@@ -852,10 +859,13 @@ class OAuth2Session:
         """Return the stored token, checking it carries the given fields.
 
         Only linking the account again can restore missing fields, so this starts
-        reauth instead of letting the caller retry.
+        reauth instead of letting the caller retry. An expires_at of 0 is kept, so
+        an expired token is still refreshed rather than sent to the user.
         """
         token = self.config_entry.data.get("token")
-        if not isinstance(token, dict) or any(field not in token for field in fields):
+        if not isinstance(token, dict) or any(
+            token.get(field) in (None, "") for field in fields
+        ):
             self.config_entry.async_start_reauth_if_available(self.hass)
             raise InvalidTokenError
         return token

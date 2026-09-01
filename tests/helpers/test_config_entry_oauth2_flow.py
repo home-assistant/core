@@ -1174,9 +1174,21 @@ async def test_oauth_session_refresh_connection_error_is_transient(
         pytest.param(None, id="missing"),
         pytest.param({}, id="empty"),
         pytest.param({"expires_at": FUTURE_EXPIRES_AT}, id="no_access_token"),
+        pytest.param(
+            {"access_token": None, "expires_at": FUTURE_EXPIRES_AT},
+            id="null_access_token",
+        ),
+        pytest.param(
+            {"access_token": "", "expires_at": FUTURE_EXPIRES_AT},
+            id="blank_access_token",
+        ),
         pytest.param({"access_token": ACCESS_TOKEN_1}, id="no_expires_at"),
         pytest.param(
             {"access_token": ACCESS_TOKEN_1, "expires_at": 0}, id="no_refresh_token"
+        ),
+        pytest.param(
+            {"access_token": ACCESS_TOKEN_1, "expires_at": 0, "refresh_token": None},
+            id="null_refresh_token",
         ),
     ],
 )
@@ -1253,6 +1265,87 @@ async def test_oauth_session_malformed_refresh_response_is_not_reauth(
     assert err.value.translation_key == "oauth2_helper_refresh_transient"
     # Relinking the account cannot fix a bad response, so it must not ask for it.
     start_reauth.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"expires_in": 100}, id="no_access_token"),
+        pytest.param({"access_token": None, "expires_in": 100}, id="null_access_token"),
+        pytest.param({"access_token": "", "expires_in": 100}, id="blank_access_token"),
+    ],
+)
+async def test_oauth_session_refresh_without_access_token_is_rejected(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+) -> None:
+    """Test a response with no usable access token is not merged over the old one."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    aioclient_mock.post(TOKEN_URL, json=response)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    # The stale token must stay expired so the next attempt refreshes again.
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+    assert config_entry.data["token"]["expires_at"] == 0
+
+
+@pytest.mark.parametrize(
+    "refreshed",
+    [
+        pytest.param({"expires_in": 100}, id="no_access_token"),
+        pytest.param({"access_token": None, "expires_in": 100}, id="null_access_token"),
+    ],
+)
+async def test_oauth_session_custom_implementation_without_access_token(
+    hass: HomeAssistant,
+    refreshed: dict[str, Any],
+) -> None:
+    """Test an implementation returning no usable access token is rejected."""
+
+    class BadImplementation(MockOAuth2Implementation):
+        """Implementation whose refresh skips the local token request."""
+
+        async def _async_refresh_token(self, token: dict) -> dict:
+            """Refresh a token."""
+            return refreshed
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, config_entry, BadImplementation()
+    )
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
 
 
 @pytest.mark.parametrize(
