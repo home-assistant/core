@@ -13,6 +13,7 @@ class ZoneEntityStateAttribute(StrEnum):
     RADIUS = "radius"
     PASSIVE = "passive"
     PERSONS = "persons"
+    DEVICE_TRACKERS = "device_trackers"
     EDITABLE = "editable"
 
 
