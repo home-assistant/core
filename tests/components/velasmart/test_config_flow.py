@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from velasmart import VelaSmartApiClient, VelaSmartApiError
 
 from homeassistant.components.velasmart.const import DOMAIN

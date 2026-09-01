@@ -1,10 +1,11 @@
 """Config flow for the VelaSmart integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
 from velasmart import VelaSmartApiClient, VelaSmartApiError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -50,14 +51,12 @@ class VelaSmartConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @override
     async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        return await self.async_step_reauth_confirm(user_input)
+        return await self.async_step_reauth_confirm()
 
-    @override
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

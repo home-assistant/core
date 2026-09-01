@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:

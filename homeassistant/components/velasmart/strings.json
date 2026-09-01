@@ -1,30 +1,30 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to VelaSmart",
-        "description": "Enter your VelaSmart account credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate VelaSmart",
-        "description": "Update your VelaSmart account credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      }
+    "abort": {
+      "already_configured": "This account is already configured",
+      "reauth_successful": "Reauthentication successful"
     },
     "error": {
       "invalid_auth": "Invalid username or password",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "This account is already configured",
-      "reauth_successful": "Reauthentication successful"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Update your VelaSmart account credentials.",
+        "title": "Reauthenticate VelaSmart"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Enter your VelaSmart account credentials.",
+        "title": "Connect to VelaSmart"
+      }
     }
   }
 }

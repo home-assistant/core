@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from velasmart import VelaSmartApiClient
 
-from homeassistant.components.velasmart import async_setup_entry, async_unload_entry
+from homeassistant.components.velasmart import VelasmartData
 from homeassistant.components.velasmart.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -23,12 +23,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     with patch.object(
         VelaSmartApiClient, "get_devices", new_callable=AsyncMock, return_value=[]
     ):
-        assert await async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert "coordinator" in hass.data[DOMAIN][entry.entry_id]
+    assert isinstance(entry.runtime_data, VelasmartData)
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -42,8 +40,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     with patch.object(
         VelaSmartApiClient, "get_devices", new_callable=AsyncMock, return_value=[]
     ):
-        assert await async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert await async_unload_entry(hass, entry) is True
-    assert entry.entry_id not in hass.data[DOMAIN]
+    assert await hass.config_entries.async_unload(entry.entry_id) is True

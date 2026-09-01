@@ -1,5 +1,6 @@
 """The VelaSmart integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -18,7 +19,18 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class VelasmartData:
+    """Runtime data for the VelaSmart integration."""
+
+    client: VelaSmartApiClient
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]]
+
+
+type VelasmartConfigEntry = ConfigEntry[VelasmartData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: VelasmartConfigEntry) -> bool:
     """Set up VelaSmart from a config entry."""
     client = VelaSmartApiClient(
         entry.data[CONF_USERNAME],
@@ -43,24 +55,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": client,
-        "coordinator": coordinator,
-    }
+    entry.runtime_data = VelasmartData(client=client, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VelasmartConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
+    hass: HomeAssistant,
+    entry: VelasmartConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removal of any device."""
     return True
