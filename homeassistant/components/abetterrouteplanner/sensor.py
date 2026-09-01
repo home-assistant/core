@@ -189,7 +189,10 @@ SENSORS: tuple[
         key="battery_capacity",
         translation_key="battery_capacity",
         device_class=SensorDeviceClass.ENERGY_STORAGE,
-        # No ``state_class``: capacity is a nameplate value, not a measurement.
+        # No ``state_class``: capacity is a fixed spec figure that only moves on
+        # an occasional recalibration, so long-term statistics would record a
+        # flat series. ``TOTAL`` is not an alternative: ENERGY_STORAGE permits
+        # only ``MEASUREMENT``.
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
