@@ -333,7 +333,7 @@ def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | 
         # upstream would be a stronger, product-side fix.
         if re.search(r"config\.target\b\s*(?:\[[^\]]*\])?\s*=(?!=)", src):
             return f"{key}: __init__ must not assign to config.target"
-        return None
+        continue
     return None
 
 
@@ -347,7 +347,7 @@ def _entity_filter_hygiene_violation(cls: type, key: str) -> str | None:
         src = inspect.getsource(klass.entity_filter)
         if "super().entity_filter(" not in src:
             return f"{key}: entity_filter override must narrow the base result"
-        return None
+        continue
     return None
 
 

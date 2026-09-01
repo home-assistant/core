@@ -110,6 +110,31 @@ class _CustomTargetTrigger(Trigger):
     _schema = _TARGET_SCHEMA
 
 
+class _NestedBadInitTrigger(_MutatesConfigTargetTrigger):
+    """Clean delegating ``__init__`` above a parent that rewrites the target.
+
+    The child initializer is hygienic on its own; the defect lives on the
+    parent, so this only fails if the MRO scan continues past the clean child.
+    """
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        # pylint: disable=useless-parent-delegation
+        """Delegate cleanly to super."""
+        super().__init__(hass, config)
+
+
+class _NestedWideningEntityFilterTrigger(_WideningEntityFilterTrigger):
+    """Narrowing ``entity_filter`` above a parent that widens the base result.
+
+    The child override narrows correctly; the defect lives on the parent, so
+    this only fails if the MRO scan continues past the clean child.
+    """
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Narrow the base result."""
+        return super().entity_filter(entities) & entities
+
+
 class _MachineryOverrideCondition(_ValidCondition):
     """Overrides target-resolution machinery (``_async_check``)."""
 
@@ -152,6 +177,19 @@ class _CustomTargetCondition(Condition):
     _schema = _TARGET_SCHEMA
 
 
+class _NestedBadInitCondition(_MutatesConfigTargetCondition):
+    """Clean delegating ``__init__`` above a parent that rewrites the target.
+
+    Mirrors ``_NestedBadInitTrigger`` on the condition side, where
+    ``_init_hygiene_violation`` is wired with ``config_cls="ConditionConfig"``.
+    """
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        # pylint: disable=useless-parent-delegation
+        """Delegate cleanly to super."""
+        super().__init__(hass, config)
+
+
 @pytest.mark.parametrize(
     ("registry", "declaration", "match"),
     [
@@ -172,6 +210,12 @@ class _CustomTargetCondition(Condition):
             {"x": TargetSupport.STANDARD},
             "must not assign to config.target",
             id="standard-mutates-config-target",
+        ),
+        pytest.param(
+            {"x": _NestedBadInitTrigger},
+            {"x": TargetSupport.STANDARD},
+            "must not assign to config.target",
+            id="standard-nested-bad-init",
         ),
         pytest.param(
             {"x": _InitNoSuperTrigger},
@@ -196,6 +240,12 @@ class _CustomTargetCondition(Condition):
             {"x": TargetSupport.STANDARD},
             "entity_filter override must narrow",
             id="standard-widens-entity-filter",
+        ),
+        pytest.param(
+            {"x": _NestedWideningEntityFilterTrigger},
+            {"x": TargetSupport.STANDARD},
+            "entity_filter override must narrow",
+            id="standard-nested-widening-filter",
         ),
         pytest.param(
             {"x": _CustomTargetTrigger},
@@ -265,6 +315,12 @@ def test_assert_triggers_target_support_rejects(
             {"x": TargetSupport.STANDARD},
             "must not assign to config.target",
             id="standard-mutates-config-target",
+        ),
+        pytest.param(
+            {"x": _NestedBadInitCondition},
+            {"x": TargetSupport.STANDARD},
+            "must not assign to config.target",
+            id="standard-nested-bad-init",
         ),
         pytest.param(
             {"x": _RebuildsConfigCondition},
