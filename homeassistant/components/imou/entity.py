@@ -1,10 +1,12 @@
 """An abstract class common to all Imou entities."""
 
-from typing import override
+from typing import NoReturn, override
 
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -64,3 +66,15 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         return (
             self.device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value
         )
+
+    def _handle_imou_exception(
+        self, err: ImouException, *, translation_key: str
+    ) -> NoReturn:
+        """Raise a translated error; start reauth when App ID or secret is invalid."""
+        if isinstance(err, InvalidAppIdOrSecretException):
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"error": err.message},
+        ) from err

@@ -14,10 +14,9 @@ from pyimouapi.ha_device import ImouHaDevice
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, imou_device_identifier
+from .const import imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -96,9 +95,5 @@ class ImouSelect(ImouEntity, SelectEntity):
                 option,
             )
         except ImouException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="select_option_failed",
-                translation_placeholders={"error": e.message},
-            ) from e
+            self._handle_imou_exception(e, translation_key="select_option_failed")
         await self.coordinator.async_request_refresh()

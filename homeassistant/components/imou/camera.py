@@ -13,10 +13,9 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, PARAM_HEADER_DETECT, imou_device_identifier
+from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -98,11 +97,7 @@ class ImouCamera(ImouEntity, Camera):
                 PYIMOUAPI_LIVE_PROTOCOL,
             )
         except ImouException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="get_stream_failed",
-                translation_placeholders={"error": err.message},
-            ) from err
+            self._handle_imou_exception(err, translation_key="get_stream_failed")
 
     @override
     async def async_camera_image(
@@ -115,11 +110,7 @@ class ImouCamera(ImouEntity, Camera):
                 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
             )
         except ImouException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="get_image_failed",
-                translation_placeholders={"error": err.message},
-            ) from err
+            self._handle_imou_exception(err, translation_key="get_image_failed")
 
     @property
     @override

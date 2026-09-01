@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import assert_reauth_flow
 from .const import create_online_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -284,24 +285,36 @@ async def test_camera_state(
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    ("error", "expect_reauth"),
+    [
+        pytest.param(ImouException("stream failure"), False, id="cloud_error"),
+        pytest.param(
+            InvalidAppIdOrSecretException("fail"), True, id="invalid_credentials"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_camera_stream_source_propagates_api_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: ImouException,
+    expect_reauth: bool,
 ) -> None:
     """Imou API errors from stream fetch surface to the caller."""
-    mock_imou_ha_device_manager.async_get_device_stream.side_effect = ImouException(
-        "stream failure"
-    )
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = error
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
         HomeAssistantError,
-        match="Could not get the live stream URL from Imou: stream failure",
+        match=f"Could not get the live stream URL from Imou: {error.message}",
     ):
         await async_get_stream_source(hass, entity_id)
+
+    await hass.async_block_till_done()
+    assert_reauth_flow(hass, mock_config_entry, started=expect_reauth)
 
 
 @pytest.mark.parametrize(
@@ -318,24 +331,36 @@ async def test_camera_stream_source_propagates_api_error(
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    ("error", "expect_reauth"),
+    [
+        pytest.param(ImouException("image failure"), False, id="cloud_error"),
+        pytest.param(
+            InvalidAppIdOrSecretException("fail"), True, id="invalid_credentials"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_camera_image_propagates_api_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: ImouException,
+    expect_reauth: bool,
 ) -> None:
     """Imou API errors from snapshot fetch surface to the caller."""
-    mock_imou_ha_device_manager.async_get_device_image.side_effect = ImouException(
-        "image failure"
-    )
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = error
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
         HomeAssistantError,
-        match="Could not get a snapshot from Imou: image failure",
+        match=f"Could not get a snapshot from Imou: {error.message}",
     ):
         await async_get_image(hass, entity_id)
+
+    await hass.async_block_till_done()
+    assert_reauth_flow(hass, mock_config_entry, started=expect_reauth)
 
 
 @pytest.mark.parametrize(

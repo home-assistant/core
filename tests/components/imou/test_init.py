@@ -11,11 +11,12 @@ import pytest
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import assert_reauth_flow
 from .const import create_offline_device, create_online_device, default_mock_devices
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -76,10 +77,43 @@ async def test_setup_entry_auth_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert_reauth_flow(hass, mock_config_entry, started=True)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_refresh_auth_failed_starts_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Invalid credentials on a later poll start reauthentication."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert_reauth_flow(hass, mock_config_entry, started=True)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_status_auth_failed_starts_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Invalid credentials while updating device status start reauthentication."""
+    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert_reauth_flow(hass, mock_config_entry, started=True)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -362,6 +396,7 @@ async def test_coordinator_update_fails_when_all_devices_fail(
 
     assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+    assert_reauth_flow(hass, mock_config_entry, started=False)
 
 
 @pytest.mark.parametrize(
