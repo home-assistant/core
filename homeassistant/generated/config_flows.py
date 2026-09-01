@@ -834,6 +834,7 @@ FLOWS = {
         "v2c",
         "vallox",
         "vegehub",
+        "velasmart",
         "velbus",
         "velux",
         "venstar",

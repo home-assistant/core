@@ -1973,6 +1973,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/valve/ @home-assistant/core
 /homeassistant/components/vegehub/ @thulrus
 /tests/components/vegehub/ @thulrus
+/homeassistant/components/velasmart/ @liulijun2019
+/tests/components/velasmart/ @liulijun2019
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342 @pawlizio @wollew
