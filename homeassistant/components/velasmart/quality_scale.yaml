@@ -4,37 +4,23 @@ rules:
     status: exempt
     comment: The integration does not expose any actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Brand logo needs to be added to the brands repository.
+  brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Config flow tests are not yet implemented.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration does not expose any actions.
-  docs-high-level-description:
-    status: todo
-    comment: Documentation needs to be added to home-assistant.io.
-  docs-installation-instructions:
-    status: todo
-    comment: Documentation needs to be added to home-assistant.io.
-  docs-removal-instructions:
-    status: todo
-    comment: Documentation needs to be added to home-assistant.io.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Entities do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: todo
-    comment: Tests are not yet implemented.
-  test-before-setup:
-    status: todo
-    comment: Tests are not yet implemented.
+  test-before-configure: done
+  test-before-setup: done
   unique-config-entry: done

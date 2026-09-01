@@ -1,7 +1,5 @@
 """The VelaSmart integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -62,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removal of any device."""
     return True

@@ -1,16 +1,13 @@
 """Config flow for the VelaSmart integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from velasmart import VelaSmartApiClient, VelaSmartApiError
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -18,14 +15,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class VelaSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VelaSmartConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VelaSmart."""
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -52,15 +50,17 @@ class VelaSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm(user_input)
 
+    @override
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauthentication."""
         errors: dict[str, str] = {}
         entry = self._get_reauth_entry()

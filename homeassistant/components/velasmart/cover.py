@@ -1,8 +1,6 @@
 """Cover platform for the VelaSmart integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from velasmart import VelaSmartApiClient
 
@@ -14,7 +12,8 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -23,7 +22,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VelaSmart cover entities."""
     data = hass.data[DOMAIN][entry.entry_id]
@@ -40,6 +39,7 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
     """Representation of a VelaSmart curtain."""
 
     _attr_device_class = CoverDeviceClass.CURTAIN
+    _attr_has_entity_name = True
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -57,20 +57,22 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
         self._client = client
         self._device_id: str = device["id"]
         self._curtain_type: int = device["device_type"]
+        self._device_name: str = device["name"]
         self._attr_unique_id = device["id"]
-        self._attr_name = device["name"]
         self._update_from_device(device)
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    @override
+    def device_info(self) -> DeviceInfo | None:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._attr_name,
+            "name": self._device_name,
             "manufacturer": "VelaSmart",
             "model": "Smart Curtain",
         }
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = self.coordinator.data.get(self._device_id)
@@ -84,6 +86,7 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
         self._attr_is_opening = False
         self._attr_is_closing = False
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
         await self._client.send_command(self._device_id, self._curtain_type, 100)
@@ -92,6 +95,7 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
         await self._client.send_command(self._device_id, self._curtain_type, 0)
@@ -100,6 +104,7 @@ class VelaSmartCover(CoordinatorEntity, CoverEntity):
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the curtain position."""
         position = kwargs.get(ATTR_POSITION)

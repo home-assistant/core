@@ -3308,6 +3308,9 @@ vegehub==0.1.26
 # homeassistant.components.rdw
 vehicle==3.0.0
 
+# homeassistant.components.velasmart
+velasmart==0.1.0
+
 # homeassistant.components.velbus
 velbus-aio==2026.7.2
 
