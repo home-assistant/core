@@ -14,6 +14,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.Configuration impo
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
+from pyhausbus.IBusDeviceListener import IBusDeviceListener
 from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import HomeAssistant
@@ -195,7 +196,7 @@ async def async_release_home_server(
             _home_server_refs[home_server] = refcount
 
 
-class HausbusGateway(IBusDataListener):
+class HausbusGateway(IBusDataListener, IBusDeviceListener):
     """Manages a Haus-Bus gateway."""
 
     def __init__(

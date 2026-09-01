@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
 from homeassistant.components.hausbus.gateway import async_acquire_home_server
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -167,6 +168,27 @@ async def test_unload_flushes_buffered_channel_if_platform_unload_fails(
         assert not await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert [chan for chan, _device_info in received] == [channel]
+
+
+@pytest.mark.parametrize("error", [OSError, TimeoutError])
+async def test_setup_retries_if_home_server_connection_fails(
+    hass: HomeAssistant,
+    mock_home_server_class: MagicMock,
+    error: type[Exception],
+) -> None:
+    """Setup enters the retry path if opening the connection fails.
+
+    HausbusGateway.async_create() constructs HomeServer() on the executor;
+    async_setup_entry() must turn that failure into a retry rather than
+    failing setup outright or letting the exception escape unconverted.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Haus-Bus", data={})
+    config_entry.add_to_hass(hass)
+    mock_home_server_class.side_effect = error("connection failed")
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_releases_home_server_if_platform_setup_fails(
