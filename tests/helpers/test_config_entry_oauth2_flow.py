@@ -45,6 +45,8 @@ ACCESS_TOKEN_1 = "mock-access-token-1"
 ACCESS_TOKEN_2 = "mock-access-token-2"
 AUTHORIZE_URL = "https://example.como/auth/authorize"
 TOKEN_URL = "https://example.como/auth/token"
+# Far enough ahead that a token carrying it always counts as unexpired.
+FUTURE_EXPIRES_AT = 2000000000
 MOCK_SECRET_TOKEN_URLSAFE = (
     "token-"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -1169,7 +1171,9 @@ async def test_oauth_session_refresh_connection_error_is_transient(
 @pytest.mark.parametrize(
     "token",
     [
+        pytest.param(None, id="missing"),
         pytest.param({}, id="empty"),
+        pytest.param({"expires_at": FUTURE_EXPIRES_AT}, id="no_access_token"),
         pytest.param({"access_token": ACCESS_TOKEN_1}, id="no_expires_at"),
         pytest.param(
             {"access_token": ACCESS_TOKEN_1, "expires_at": 0}, id="no_refresh_token"
@@ -1179,7 +1183,7 @@ async def test_oauth_session_refresh_connection_error_is_transient(
 async def test_oauth_session_incomplete_token_asks_for_reauth(
     hass: HomeAssistant,
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
-    token: dict[str, Any],
+    token: dict[str, Any] | None,
 ) -> None:
     """Test an incomplete stored token asks for reauth instead of raising KeyError."""
     config_entry = MockConfigEntry(
@@ -1199,6 +1203,38 @@ async def test_oauth_session_incomplete_token_asks_for_reauth(
     assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert err.value.translation_key == "oauth2_invalid_token"
     start_reauth.assert_called_once_with(hass)
+
+
+async def test_oauth_session_malformed_refresh_response_is_not_reauth(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a token response missing expires_in is not blamed on stored credentials."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    aioclient_mock.post(TOKEN_URL, json={"access_token": ACCESS_TOKEN_2})
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(KeyError),
+    ):
+        await session.async_ensure_token_valid()
+
+    # Relinking the account cannot fix a bad response, so it must not ask for it.
+    start_reauth.assert_not_called()
 
 
 @pytest.mark.parametrize(

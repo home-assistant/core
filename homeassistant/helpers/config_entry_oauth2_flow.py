@@ -845,23 +845,34 @@ class OAuth2Session:
             > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC
         )
 
+    def _require_token_fields(self, *fields: str) -> dict:
+        """Return the stored token, checking it carries the given fields.
+
+        Only linking the account again can restore missing fields, so this starts
+        reauth instead of letting the caller retry.
+        """
+        token = self.config_entry.data.get("token")
+        if not isinstance(token, dict) or any(field not in token for field in fields):
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise InvalidTokenError
+        return token
+
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         async with self._token_lock:
-            try:
-                if self.valid_token:
-                    return
+            # Callers read access_token off the token once this returns.
+            self._require_token_fields("access_token", "expires_at")
+            if self.valid_token:
+                return
 
-                new_token = await self.implementation.async_refresh_token(self.token)
+            token = self._require_token_fields("refresh_token")
+            try:
+                new_token = await self.implementation.async_refresh_token(token)
             except OAuth2TokenRequestReauthError:
                 # Start reauth here so it also happens for callers that map the
                 # error onto a recoverable one, which would retry indefinitely.
                 self.config_entry.async_start_reauth_if_available(self.hass)
                 raise
-            except KeyError as err:
-                # A token missing fields stays broken until the account is linked again.
-                self.config_entry.async_start_reauth_if_available(self.hass)
-                raise InvalidTokenError from err
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
