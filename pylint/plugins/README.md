@@ -1009,19 +1009,22 @@ data = await async_load_json_object_fixture(hass, "data.json", DOMAIN)
 
 ## `home_assistant_light_color_mode` checker
 
-A modern `LightEntity` must report **both** `supported_color_modes` and a
-current `color_mode`; setting one without the other raises
-`HomeAssistantError` at runtime. These two checks flag each half of that
-inconsistency. A light that sets *neither* is left alone -- it is either a
-legacy `supported_features`-based light or an abstract base.
+A `LightEntity` must report **both** `supported_color_modes` and a current
+`color_mode`; setting one without the other raises `HomeAssistantError` at
+runtime . These two checks flag each half of that inconsistency. A light
+that sets *neither* is deliberately not flagged: the realistic both-missing
+class is an abstract base, so flagging it would false-positive; the tradeoff
+is that a concrete both-missing light, which also raises, is not caught.
 
-A value is considered *provided* by a class when, in that class or any of its
-resolvable ancestors (but excluding `LightEntity`'s own `None` defaults), any
-of these holds: a non-`None` class-body `_attr_...` assignment, a
-`self._attr_... = ...` assignment in a method body, or a property/method
-override of the public name. Mixin/abstract bases that are subclassed by
-another class in the same module are exempted, on the assumption that the
-concrete subclass is the runtime entity (and may supply the missing half).
+A value is considered *provided* by a class when its effective declaration,
+resolved in MRO order and excluding `LightEntity`'s own `None` defaults, is a
+non-`None` class-body `_attr_...` assignment, a `self._attr_... = ...`
+assignment in a method body, or a property/method override of the public
+name. Subclass shadowing is respected: a subclass that assigns the
+`_attr_...` to `None` nullifies a non-`None` value inherited from an
+ancestor. Mixin/abstract bases that are subclassed by another class in the
+same module are exempted, on the assumption that the concrete subclass is the
+runtime entity (and may supply the missing half).
 
 ### `W7436`: `home-assistant-light-missing-color-mode`
 

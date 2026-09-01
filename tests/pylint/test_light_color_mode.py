@@ -361,6 +361,99 @@ class MyLight(MyBaseLight):
         walk_checker(linter, checker, root_node)
 
 
+def test_subclass_nullifies_inherited_color_mode(
+    linter: UnittestLinter,
+    checker: HassLightColorModeChecker,
+    tmp_path: Path,
+) -> None:
+    """Fire W7436 when a subclass shadows an inherited color_mode with None.
+
+    The base reports both, but the subclass resets `_attr_color_mode` to
+    None, so at runtime the subclass reports no color mode.
+    """
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    _attr_color_mode = None
+""",
+        integration_dir,
+    )
+    class_node = _find_class(root_node, "MyLight")
+    with assert_adds_messages(linter, _expect(class_node)):
+        walk_checker(linter, checker, root_node)
+
+
+def test_subclass_nullifies_inherited_supported(
+    linter: UnittestLinter,
+    checker: HassLightColorModeChecker,
+    tmp_path: Path,
+) -> None:
+    """Fire W7437 when a subclass shadows inherited supported modes with None.
+
+    The base reports both, but the subclass resets
+    `_attr_supported_color_modes` to None, so at runtime the subclass sets
+    no supported color modes.
+    """
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    _attr_supported_color_modes = None
+""",
+        integration_dir,
+    )
+    class_node = _find_class(root_node, "MyLight")
+    with assert_adds_messages(linter, _expect(class_node, _MISSING_SUPPORTED)):
+        walk_checker(linter, checker, root_node)
+
+
+def test_subclass_reassigns_inherited_color_mode_via_init(
+    linter: UnittestLinter,
+    checker: HassLightColorModeChecker,
+    tmp_path: Path,
+) -> None:
+    """No fire when a subclass nullifies the class attr but sets it in __init__.
+
+    A runtime `self._attr_color_mode = ...` assignment wins over the
+    class-body None, so the pair is still reported.
+    """
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from homeassistant.components.light import ColorMode, LightEntity
+
+class MyBaseLight(LightEntity):
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
+
+class MyLight(MyBaseLight):
+    _attr_color_mode = None
+
+    def __init__(self) -> None:
+        self._attr_color_mode = ColorMode.HS
+""",
+        integration_dir,
+    )
+    with assert_no_messages(linter):
+        walk_checker(linter, checker, root_node)
+
+
 def test_two_subclasses_only_offender_fires(
     linter: UnittestLinter,
     checker: HassLightColorModeChecker,

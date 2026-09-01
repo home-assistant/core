@@ -3,15 +3,23 @@
 A ``LightEntity`` must report **both** ``supported_color_modes`` and
 a current ``color_mode``; setting one without the other raises
 ``HomeAssistantError`` at runtime. These two checks flag each half of that
-inconsistency. A light that sets *neither* is left alone.
+inconsistency. A light that sets *neither* is deliberately not flagged: the
+realistic both-missing class is an abstract base (which the concrete
+subclass completes), so flagging it would produce false positives — the
+tradeoff is that a concrete both-missing light, which also raises at
+runtime, is not caught.
 
-A value is considered *provided* by a class when, in that class or any of
-its resolvable ancestors (but excluding ``LightEntity``'s own ``None``
-defaults), any of these holds:
+A value is considered *provided* by a class when its effective declaration,
+resolved in MRO order and excluding ``LightEntity``'s own ``None`` defaults,
+is one of:
 
 - a non-``None`` class-body ``_attr_...`` assignment,
 - a ``self._attr_... = ...`` assignment in a method body, or
 - a property/method override of the public name.
+
+Subclass shadowing is respected: a subclass that assigns the ``_attr_...``
+to ``None`` nullifies a non-``None`` value inherited from an ancestor, so
+the pair is treated as unset from that subclass down.
 
 Mixin/abstract bases that are subclassed by another class in the same
 module are exempted, on the assumption that the concrete subclass is the
@@ -45,6 +53,7 @@ Known limitations:
   integration's responsibility.
 """
 
+import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
@@ -121,6 +130,22 @@ def _method_sets_self_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
     return False
 
 
+def _class_body_nullifies_attr(class_node: nodes.ClassDef, attr_name: str) -> bool:
+    """Return True if the class body assigns *attr_name* to a literal ``None``."""
+    for item in class_node.body:
+        match item:
+            case nodes.AnnAssign(
+                target=nodes.AssignName(name=name),
+                value=nodes.Const(value=None),
+            ) if name == attr_name:
+                return True
+            case nodes.Assign(targets=targets, value=nodes.Const(value=None)) if any(
+                isinstance(t, nodes.AssignName) and t.name == attr_name for t in targets
+            ):
+                return True
+    return False
+
+
 def _class_defines_method(class_node: nodes.ClassDef, method_name: str) -> bool:
     """Return True if the class body overrides *method_name* (property/method)."""
     return any(
@@ -130,35 +155,56 @@ def _class_defines_method(class_node: nodes.ClassDef, method_name: str) -> bool:
     )
 
 
-def _class_provides(
+def _class_declaration(
     class_node: nodes.ClassDef, attr_name: str, property_name: str
-) -> bool:
-    """Return True if *class_node* itself provides the attribute or property.
+) -> bool | None:
+    """Return this class's *effective* declaration for the attr/property.
 
-    ``LightEntity`` is excluded because it defines the ``None`` defaults for
-    both ``color_mode`` / ``_attr_color_mode`` and ``supported_color_modes``
-    / ``_attr_supported_color_modes``; counting those would make the checks
-    trivially pass or fire on every subclass.
+    ``True`` if the class provides a value, ``False`` if it nullifies an
+    inherited value (class-body ``_attr_... = None``), or ``None`` if the
+    class does not declare the pair at all. ``LightEntity`` declares the
+    ``None`` defaults, so it resolves to ``False`` — reaching it means no
+    subclass provided a value.
+
+    Precedence within the class follows runtime resolution: a
+    ``property``/method override or a non-``None`` ``self._attr_...``
+    assignment wins over a class-body ``_attr_... = None``.
     """
     if class_node.qname() == LIGHT_ENTITY_QNAME:
         return False
-    return (
-        _class_body_sets_attr(class_node, attr_name)
-        or _method_sets_self_attr(class_node, attr_name)
-        or _class_defines_method(class_node, property_name)
-    )
+    if _class_defines_method(class_node, property_name):
+        return True
+    if _method_sets_self_attr(class_node, attr_name):
+        return True
+    if _class_body_sets_attr(class_node, attr_name):
+        return True
+    if _class_body_nullifies_attr(class_node, attr_name):
+        return False
+    return None
 
 
-def _hierarchy_provides(
+def _mro(class_node: nodes.ClassDef) -> list[nodes.ClassDef]:
+    """Return the class's MRO, falling back to a DFS ancestor walk."""
+    try:
+        return class_node.mro()  # type: ignore[no-any-return]
+    except astroid.exceptions.MroError:
+        return [class_node, *extended_ancestors(class_node)]
+
+
+def _provides_effective(
     class_node: nodes.ClassDef, attr_name: str, property_name: str
 ) -> bool:
-    """Return True if the class or any ancestor provides the attribute/property."""
-    if _class_provides(class_node, attr_name, property_name):
-        return True
-    return any(
-        _class_provides(ancestor, attr_name, property_name)
-        for ancestor in extended_ancestors(class_node)
-    )
+    """Return True if the effective value for *class_node* is provided.
+
+    Walks the MRO most-derived first and returns the first class that
+    declares the pair, so a subclass ``_attr_... = None`` shadows a
+    non-``None`` value set by an ancestor.
+    """
+    for klass in _mro(class_node):
+        decl = _class_declaration(klass, attr_name, property_name)
+        if decl is not None:
+            return decl
+    return False
 
 
 class HassLightColorModeChecker(BaseChecker):
@@ -223,14 +269,15 @@ class HassLightColorModeChecker(BaseChecker):
             return
         if not inherits_from_light_entity(node):
             return
-        provides_supported = _hierarchy_provides(
+        provides_supported = _provides_effective(
             node, _SUPPORTED_ATTR, _SUPPORTED_PROPERTY
         )
-        provides_color_mode = _hierarchy_provides(
+        provides_color_mode = _provides_effective(
             node, _COLOR_MODE_ATTR, _COLOR_MODE_PROPERTY
         )
-        # Only the XOR is an inconsistency: a light reporting both is correct,
-        # and a light reporting neither is a legacy or abstract light.
+        # Only the XOR is flagged: reporting both is correct, and reporting
+        # neither is skipped to avoid false positives on abstract bases (a
+        # concrete both-missing light also raises but is not caught).
         if provides_supported and not provides_color_mode:
             self.add_message(
                 "home-assistant-light-missing-color-mode",
