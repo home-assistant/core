@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     DucoConnectionError,
     DucoError,
-    DucoUnsupportedCapabilityError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
@@ -277,15 +276,15 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
 
 
-async def test_ventilation_temperatures_missing_skip_sensor_creation(
+async def test_empty_ventilation_temperatures_are_retried(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test unsupported ventilation temperatures never expose temperature states."""
+    """Test empty ventilation temperatures are retried and can appear later."""
     mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
-        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}'),
+        VentilationTemperatureInfo(),
         VentilationTemperatureInfo(temp_oda=5.5),
     ]
 
@@ -298,8 +297,10 @@ async def test_ventilation_temperatures_missing_skip_sensor_creation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
-        assert hass.states.get(entity_id) is None
+    assert mock_duco_client.async_get_ventilation_temperature_info.await_count == 2
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
 
 
 async def test_partial_ventilation_temperatures_only_expose_available_sensor_values(

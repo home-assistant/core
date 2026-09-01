@@ -1,6 +1,8 @@
 """Provides the constants needed for the component."""
 
-DOMAIN = "datetime"
+from typing import Final
+
+DOMAIN: Final = "datetime"
 
 ATTR_DATETIME = "datetime"
 

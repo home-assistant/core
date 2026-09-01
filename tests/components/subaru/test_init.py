@@ -60,7 +60,9 @@ async def test_setup_g3(hass: HomeAssistant, subaru_config_entry) -> None:
     assert check_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_g4(hass: HomeAssistant, subaru_config_entry) -> None:
+async def test_setup_g4(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subaru_config_entry
+) -> None:
     """Test setup with a G4 vehicle (2026+ models report api_gen "g4")."""
     await setup_subaru_config_entry(
         hass,
@@ -74,7 +76,6 @@ async def test_setup_g4(hass: HomeAssistant, subaru_config_entry) -> None:
     assert check_entry.state is ConfigEntryState.LOADED
     # Gen4 must receive both Gen2+ and Gen3+ sensor sets; without this, only
     # the odometer was created on 2026 model year vehicles.
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{TEST_VIN_4_G4}_AVG_FUEL_CONSUMPTION"
     )

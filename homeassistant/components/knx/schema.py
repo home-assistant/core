@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     Platform,
@@ -82,6 +83,7 @@ from .validation import (
     numeric_type_validator,
     sensor_type_validator,
     string_type_validator,
+    sync_state_no_false_validator,
     sync_state_validator,
     validate_number_attributes,
     validate_sensor_attributes,
@@ -193,6 +195,22 @@ class EventSchema:
 #############
 
 
+def _unique_id_duplicate_validator(entities: list[dict]) -> list[dict]:
+    """Validate that user-defined unique_ids are unique within a platform.
+
+    The same unique_id on different platforms is allowed - the entity registry
+    scopes uniqueness per (entity domain, integration).
+    """
+    seen: set[str] = set()
+    for entity in entities:
+        if (unique_id := entity.get(CONF_UNIQUE_ID)) is None:
+            continue
+        if unique_id in seen:
+            raise vol.Invalid(f"duplicate 'unique_id' not allowed: {unique_id}")
+        seen.add(unique_id)
+    return entities
+
+
 class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
@@ -204,7 +222,7 @@ class KNXPlatformSchema(ABC):
         """Return a schema node for the platform."""
         return {
             vol.Optional(str(cls.PLATFORM)): vol.All(
-                cv.ensure_list, [cls.ENTITY_SCHEMA]
+                cv.ensure_list, [cls.ENTITY_SCHEMA], _unique_id_duplicate_validator
             )
         }
 
@@ -241,6 +259,7 @@ def _entity_base_schema(platform: Platform) -> vol.Schema:
                 cv.entity_id, cv.entity_domain(platform)
             ),
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): vol.All(cv.string, vol.Length(min=1)),
         }
     )
 
@@ -449,6 +468,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
     )
@@ -489,6 +511,9 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -547,6 +572,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
+    CONF_KNX_EXPOSE_SEND_ON_INIT = "send_on_init"
     CONF_KNX_EXPOSE_PERIODIC_SEND = "periodic_send"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     CONF_TIME = "time"
@@ -567,6 +593,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Optional(
                 CONF_KNX_EXPOSE_COOLDOWN, default=timedelta(0)
             ): cv.positive_time_period,
+            vol.Optional(CONF_KNX_EXPOSE_SEND_ON_INIT, default=False): cv.boolean,
             vol.Optional(
                 CONF_KNX_EXPOSE_PERIODIC_SEND, default=timedelta(0)
             ): cv.positive_time_period,
@@ -731,6 +758,9 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -804,6 +834,9 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         _number_limit_sub_validator,
@@ -894,6 +927,7 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
@@ -910,6 +944,7 @@ class TextSchema(KNXPlatformSchema):
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 

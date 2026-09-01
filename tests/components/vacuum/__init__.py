@@ -23,13 +23,11 @@ class MockVacuum(MockEntity, StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.MAP
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
-    _attr_battery_level = 99
     _attr_fan_speed_list = ["slow", "fast"]
 
     def __init__(self, **values: Any) -> None:

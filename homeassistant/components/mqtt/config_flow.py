@@ -24,8 +24,6 @@ from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certifica
 import voluptuous as vol
 import yaml
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.climate import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
@@ -33,7 +31,6 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     PRESET_NONE,
 )
-from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE
@@ -48,7 +45,6 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberDeviceClass,
     NumberMode,
 )
 from homeassistant.components.sensor import (
@@ -58,8 +54,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.valve import ValveDeviceClass, ValveState
+from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -113,6 +108,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     DurationSelector,
     DurationSelectorConfig,
     FileSelector,
@@ -629,21 +626,11 @@ ALARM_CONTROL_PANEL_CODE_MODE = SelectSelector(
         translation_key="alarm_control_panel_code_mode",
     )
 )
-BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in BinarySensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_binary_sensor",
-        sort=True,
-    )
+BINARY_SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
 )
-BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in ButtonDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_button",
-        sort=True,
-    )
+BUTTON_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.BUTTON)
 )
 CLIMATE_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -652,13 +639,8 @@ CLIMATE_MODE_SELECTOR = SelectSelector(
         translation_key="climate_modes",
     )
 )
-COVER_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in CoverDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_cover",
-        sort=True,
-    )
+COVER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.COVER)
 )
 FAN_SPEED_RANGE_MIN_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
@@ -733,14 +715,8 @@ LIGHT_SCHEMA_SELECTOR = SelectSelector(
     )
 )
 MIN_MAX_SELECTOR = NumberSelector(NumberSelectorConfig(step=1e-3))
-NUMBER_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in NumberDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        # The number device classes are all shared with the sensor device classes
-        translation_key="device_class_sensor",
-        sort=True,
-    )
+NUMBER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.NUMBER)
 )
 NUMBER_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -774,13 +750,8 @@ SCALE_SELECTOR = NumberSelector(
         step=1,
     )
 )
-SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_sensor",
-        sort=True,
-    )
+SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.SENSOR)
 )
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -807,12 +778,8 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SwitchDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_switch",
-    )
+SWITCH_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.SWITCH)
 )
 TARGET_TEMPERATURE_FEATURE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -840,12 +807,8 @@ TEXT_MODE_SELECTOR = SelectSelector(
 TEXT_SIZE_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=0, max=255, step=1, mode=NumberSelectorMode.BOX)
 )
-VALVE_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in ValveDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_valve",
-    )
+VALVE_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.VALVE)
 )
 VALVE_POSITION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, step=1)
