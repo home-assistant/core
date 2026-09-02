@@ -536,10 +536,10 @@ async def receive_file(
     fut: asyncio.Future[None] | None = None
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
-        megabytes_sending = 0
+        chunks_sent = 0
         async for chunk in stream:
-            megabytes_sending += 1
-            if megabytes_sending % 5 != 0:
+            chunks_sent += 1
+            if chunks_sent % 5 != 0:
                 queue.put_nowait((chunk, None))
                 continue
 
@@ -552,8 +552,9 @@ async def receive_file(
             if fut.done():
                 # The executor job failed
                 break
-
-        queue.put_nowait(None)  # terminate queue consumer
     finally:
+        # Always terminate the queue consumer, also if the stream raised or the
+        # task was cancelled.
+        queue.put_nowait(None)
         if fut is not None:
             await fut
