@@ -912,6 +912,46 @@ async def test_sun_to_fixed_time_interval_restart(
     assert state.state == STATE_OFF
 
 
+async def test_fixed_time_to_sun_interval_restart_across_dst(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fixed-to-solar interval initialization across DST."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    time_zone = dt_util.get_time_zone(hass.config.time_zone)
+    test_date = datetime(2019, 3, 31, tzinfo=time_zone)
+    after = datetime(2019, 3, 30, 20, tzinfo=time_zone)
+    before = get_astral_event_date(hass, "sunrise", test_date)
+    freezer.move_to(before - timedelta(minutes=30))
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Night",
+                    "after": "20:00",
+                    "before": "sunrise",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.isoformat()
+    assert state.attributes["before"] == before.astimezone(time_zone).isoformat()
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+
 async def test_dst1(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:

@@ -233,14 +233,18 @@ class TodSensor(BinarySensorEntity):
             before_time = before_event_date + self._before_offset
 
             if (
-                _is_sun_event(self._after)
-                and after_event_is_today
+                (not _is_sun_event(self._after) or after_event_is_today)
                 and (not _is_sun_event(self._before) or before_event_is_today)
                 and nowutc < previous_before_time
             ):
-                previous_after_event_date = self._get_astral_event_previous(
-                    self._after, nowutc - self._after_offset
-                )
+                if _is_sun_event(self._after):
+                    previous_after_event_date = self._get_astral_event_previous(
+                        self._after, nowutc - self._after_offset
+                    )
+                else:
+                    previous_after_event_date = self._subtract_one_dst_aware_day(
+                        after_event_date, self._after
+                    )
                 previous_after_time = previous_after_event_date + self._after_offset
                 if previous_after_time <= nowutc:
                     after_time = previous_after_time
@@ -248,22 +252,6 @@ class TodSensor(BinarySensorEntity):
 
         self._time_after = after_time
         self._time_before = before_time
-
-        # We are calculating the _time_after value assuming that it will happen today
-        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
-        # If _time_before and _time_after are ahead of nowutc:
-        # _time_before is set to 12:00 next day
-        # _time_after is set to 23:00 today
-        # nowutc is set to 10:00 today
-
-        if (
-            not _is_sun_event(self._after)
-            and self._time_after > nowutc
-            and self._time_before > nowutc + timedelta(days=1)
-        ):
-            # remove one day from _time_before and _time_after
-            self._time_after -= timedelta(days=1)
-            self._time_before -= timedelta(days=1)
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
         """Add 24 hours (1 day) but account for DST."""
@@ -273,6 +261,22 @@ class TodSensor(BinarySensorEntity):
             hour=target_time.hour, minute=target_time.minute
         )
         # The following call addresses missing time during DST jumps
+        return dt_util.find_next_time_expression_time(
+            tentative_new_date,
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 23),
+        )
+
+    def _subtract_one_dst_aware_day(
+        self, a_date: datetime, target_time: time
+    ) -> datetime:
+        """Subtract 24 hours but account for DST."""
+        tentative_new_date = a_date - timedelta(days=1)
+        tentative_new_date = dt_util.as_local(tentative_new_date)
+        tentative_new_date = tentative_new_date.replace(
+            hour=target_time.hour, minute=target_time.minute
+        )
         return dt_util.find_next_time_expression_time(
             tentative_new_date,
             dt_util.parse_time_expression("*", 0, 59),
