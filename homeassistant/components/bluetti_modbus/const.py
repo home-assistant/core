@@ -25,21 +25,12 @@ DEVICE_TYPE_BALCO260: Final = "balco260"
 # HACS integration's own Modbus coordinator. Do not poll faster.
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
-# Excluded from both the read plan and entity creation - restrict_fields() in
-# __init__.py takes this same set, so the coordinator never polls a register
-# nothing here reads.
-#
-# ac_o_switch/g_i_switch/g_o_switch/b_soc_high/b_soc_low belong on other
-# platforms once they exist (switch, number/select), not on sensor - creating
-# them here now would mean a breaking entity-domain change or a leftover
-# duplicate once those follow-up PRs land.
-#
-# d_inverter_fault/d_inverter_warning: bluetti-modbus 0.1.4's InverterFault
-# and InverterWarning enums each define only their zero ("no fault"/"no
-# warning") member, so a real, non-zero code has nothing to decode to.
-# Excluded until the library represents the actual fault/warning bitmaps,
-# rather than shipping a sensor that goes unknown exactly when it would
-# matter.
+# Excluded from both the read plan and entity creation - restrict_fields()
+# in __init__.py takes this same set. ac_o_switch/g_i_switch/g_o_switch/
+# b_soc_high/b_soc_low belong on other platforms once they exist (switch,
+# number/select). d_inverter_fault/d_inverter_warning: bluetti-modbus's
+# InverterFault/InverterWarning enums currently only define their zero
+# member, so a real fault/warning code has nothing to decode to yet.
 EXCLUDED_FIELDS: Final = frozenset(
     {
         "ac_o_switch",

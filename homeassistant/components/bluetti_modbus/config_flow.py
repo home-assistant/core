@@ -49,10 +49,12 @@ STEP_USER = vol.Schema(
 
 
 def _normalized(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Return config entry data with the host spelling normalized.
+    """Return config entry data with the host lowercased.
 
-    One connection is shared per host and port (see homeassistant.components
-    .modbus.connection), so spelling matters.
+    homeassistant.components.modbus.connection keys its shared connections
+    on ModbusTcpParams, comparing the host string as-is - two entries
+    (or the same one re-added) spelling the same host with different case
+    would be treated as different links instead of sharing one connection.
     """
     return {**user_input, CONF_HOST: user_input[CONF_HOST].lower()}
 
@@ -128,10 +130,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         serial = device.values.get("d_serial")
         if not serial:
-            # d_serial is a UINT64; a genuine Balco260 always has a real,
-            # non-zero manufactured serial. 0 means whatever answered these
-            # addresses isn't reporting a real identity - not a real device
-            # to identify, so this is a failed probe, the same as a device
-            # that didn't answer at all.
+            # 0 isn't a real Balco260 serial - the same "can't identify
+            # this device" outcome as one that didn't answer at all.
             return {"base": "cannot_connect"}, None
         return {}, str(serial)
