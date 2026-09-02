@@ -142,6 +142,11 @@ SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
         value_fn=int_value_fn("engineCapacity"),
     ),
     DVLASensorEntityDescription(
+        key="yearOfManufacture",
+        translation_key="year_of_manufacture",
+        value_fn=int_value_fn("yearOfManufacture"),
+    ),
+    DVLASensorEntityDescription(
         key="co2Emissions",
         translation_key="co2_emissions",
         native_unit_of_measurement="g/km",
@@ -234,16 +239,12 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        year_of_manufacture = coordinator.data.get("yearOfManufacture")
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, reg_number)},
             manufacturer=coordinator.data.get("make"),
             name=reg_number,
             entry_type=DeviceEntryType.SERVICE,
-            hw_version=str(year_of_manufacture)
-            if year_of_manufacture is not None
-            else None,
         )
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description

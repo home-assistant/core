@@ -48,6 +48,9 @@
       },
       "wheelplan": {
         "default": "mdi:tire"
+      },
+      "year_of_manufacture": {
+        "default": "mdi:calendar"
       }
     }
   }

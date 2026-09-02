@@ -80,6 +80,9 @@
       },
       "wheelplan": {
         "name": "Wheelplan"
+      },
+      "year_of_manufacture": {
+        "name": "Year of manufacture"
       }
     }
   }

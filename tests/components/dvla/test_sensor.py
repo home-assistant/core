@@ -327,7 +327,20 @@ async def test_device_entry_type(
     assert device.entry_type is DeviceEntryType.SERVICE
     assert device.manufacturer == "FORD"
     assert device.model is None
-    assert device.hw_version == "2020"
+
+
+async def test_year_of_manufacture_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test year of manufacture sensor."""
+    await setup_dvla_entry(hass)
+
+    entity_id = get_entity_id(entity_registry, "yearOfManufacture")
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == "2024"
 
 
 async def test_date_sensor_non_string_value_is_unknown(
