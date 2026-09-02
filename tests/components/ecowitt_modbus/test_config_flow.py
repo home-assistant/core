@@ -79,7 +79,9 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{model_case.name} ({MOCK_HOST})"
+    assert (
+        result["title"] == f"{model_case.name} ({MOCK_HOST}, unit {model_case.unit_id})"
+    )
     assert result["data"] == model_case.entry_data
     assert result["result"].unique_id == model_case.unique_id
     assert len(mock_setup_entry.mock_calls) == 1
@@ -198,6 +200,35 @@ async def test_the_same_device_cannot_be_added_twice(
     result = await hass.config_entries.flow.async_configure(
         flow_id, model_case.user_input
     )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_an_address_stays_claimed_even_for_a_misleading_probe(
+    hass: HomeAssistant,
+) -> None:
+    """Test the address is checked before identity, not instead of it.
+
+    The two models' registers overlap enough that a WN69LP configured with
+    device address 0x90 answers a WN90LP probe's device-code check the same
+    way a genuine WN90LP would -- 0x160 means something different on each
+    model, but the values can coincide. If duplicate detection ran only on
+    the identity a model happens to report, this WN69LP could be claimed a
+    second time under the wrong label. The address check has to catch it
+    regardless of what either probe concludes about identity.
+    """
+    existing = MockConfigEntry(domain=DOMAIN, data=WN69LP_CASE.entry_data)
+    existing.add_to_hass(hass)
+
+    misleading = dict(WN69LP_CASE.registers)
+    misleading[0x160] = 0x90  # WN69LP's own device-address register
+
+    flow_id = await _pick_model(hass, WN90LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, misleading):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN90LP_CASE.user_input, CONF_UNIT_ID: WN69LP_CASE.unit_id}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -388,7 +419,9 @@ class TestReconfigure:
         assert mock_config_entry.data[CONF_MODEL] == model_case.name
         # The title carries the host, so a move that left it behind would
         # keep showing the old address in the UI.
-        assert mock_config_entry.title == f"{model_case.name} (192.168.1.200)"
+        assert mock_config_entry.title == (
+            f"{model_case.name} (192.168.1.200, unit {model_case.unit_id})"
+        )
 
     @EVERY_MODEL
     @pytest.mark.usefixtures("mock_temporary_unit")

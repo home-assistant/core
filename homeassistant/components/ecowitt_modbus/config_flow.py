@@ -91,18 +91,24 @@ async def _async_probe(
 
 
 def _title(model: str, user_input: Mapping[str, Any]) -> str:
-    """Name the entry for the model and where it is reached."""
-    return f"{model} ({user_input[CONF_HOST]})"
+    """Name the entry for the model and where it is reached.
+
+    Includes the unit ID, not just the host: several sensors can share one
+    RTU-over-TCP gateway, each at its own device address, and a host-only
+    title would make them indistinguishable.
+    """
+    return f"{model} ({user_input[CONF_HOST]}, unit {user_input[CONF_UNIT_ID]})"
 
 
-def _address(model: str, user_input: Mapping[str, Any]) -> dict[str, Any]:
-    """The settings that together say which device an entry talks to.
+def _address(user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """The Modbus endpoint this entry talks to.
 
-    Two entries sharing all of these would poll the same device, which is
-    the duplicate a model with no serial number can still be checked for.
+    Only one device can be wired to a given host, port, and unit ID, so no
+    two entries -- of any model -- should be allowed to share one. This is
+    checked independently of identity: it applies even to a model that
+    reports a serial number, which otherwise has no address check at all.
     """
     return {
-        CONF_MODEL: model,
         CONF_HOST: user_input[CONF_HOST],
         CONF_PORT: user_input[CONF_PORT],
         CONF_UNIT_ID: user_input[CONF_UNIT_ID],
@@ -151,17 +157,16 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Only one device can be wired to a given address, whichever
+                # model it turns out to be, so this applies regardless of
+                # what the identity check below can or cannot do.
+                self._async_abort_entries_match(_address(user_input))
+
                 if (serial := device.serial_number) is not None:
-                    # Identifies the hardware wherever it is reached, so the
-                    # same sensor cannot be added twice at two addresses.
+                    # Also identifies the hardware wherever it is reached, so
+                    # the same sensor cannot be added twice at two addresses.
                     await self.async_set_unique_id(serial)
                     self._abort_if_unique_id_configured()
-                else:
-                    # No identity to key on, so the entry gets none: an
-                    # address would go stale the moment the device moved.
-                    # All that can be checked is that no other entry is
-                    # already polling this address.
-                    self._async_abort_entries_match(_address(self._model, user_input))
 
                 return self.async_create_entry(
                     title=_title(self._model, user_input),
@@ -201,17 +206,18 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Only one device can be wired to a given address, whichever
+                # model it turns out to be. _async_abort_entries_match
+                # excludes the entry being reconfigured, so moving this one
+                # onto its own current address is not flagged as a clash.
+                self._async_abort_entries_match(_address(user_input))
+
                 if (serial := device.serial_number) is not None:
                     # Repointing an entry at a different sensor array would
                     # silently rehome its history, so a model that reports
-                    # an identity has to report the same one.
+                    # an identity also has to report the same one.
                     await self.async_set_unique_id(serial)
                     self._abort_if_unique_id_mismatch(reason="another_device")
-                else:
-                    # Nothing identifies this model, so a move can only be
-                    # taken on trust. All that can be checked is that the
-                    # new address is not one another entry already polls.
-                    self._async_abort_entries_match(_address(model, user_input))
 
                 # Passing `data` alone would leave the old host in the title.
                 return self.async_update_reload_and_abort(
