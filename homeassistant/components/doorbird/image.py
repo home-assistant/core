@@ -17,7 +17,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_EVENT_TYPES, DOMAIN, SIGNAL_EVENTS_UPDATED
+from .const import (
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_EVENT_TYPES,
+    DOMAIN,
+    SIGNAL_EVENTS_UPDATED,
+)
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
@@ -88,7 +93,8 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         Resolved on each use because the options listener replaces the
         descriptions without reloading the platform. Models without the
         schedule API report no descriptions at all, so fall back to the
-        configured events for this type to keep the image refreshing.
+        configured events to keep the image refreshing: the ones this type
+        names, or every unclassifiable one when the user renamed them.
         """
         event_type = self.entity_description.doorbird_event_type
         door_station = self._door_station
@@ -101,17 +107,25 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             if event.event_type == event_type and event.event in configured
         ]:
             return names
-        default_events = {
+
+        classifiable = {event for event, _ in DEFAULT_EVENT_TYPES}
+        own_events = {
             event
             for event, default_type in DEFAULT_EVENT_TYPES
             if default_type == event_type
         }
+        # A renamed event cannot be attributed to either image, so the doorbell
+        # one takes it: without this the replacement never refreshes, while the
+        # deprecated cameras polled on a timer regardless of the event names.
+        takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT and not any(
+            event in classifiable for event in door_station.events
+        )
         return [
             event_name
             for event, event_name in zip(
                 door_station.events, door_station.door_station_events, strict=True
             )
-            if event in default_events
+            if event in own_events or takes_unclassifiable
         ]
 
     @override
@@ -154,7 +168,10 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Drop the current mappings and subscriptions."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event_name in self._subscribed_event_names:
-            event_to_entity_id.pop(event_name, None)
+            # Another image may already have claimed the event, if a refresh
+            # moved it between the doorbell and motion types.
+            if event_to_entity_id.get(event_name) == self.entity_id:
+                del event_to_entity_id[event_name]
         while self._event_unsubscribes:
             self._event_unsubscribes.pop()()
 

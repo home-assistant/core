@@ -204,3 +204,55 @@ async def test_image_ignores_deconfigured_event_descriptions(
     assert (
         "mydoorbird_doorbell" not in doorbird_entry.entry.runtime_data.event_entity_ids
     )
+
+
+async def test_image_updates_on_renamed_event_without_schedule_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """A renamed event on a schedule-less model still refreshes an image.
+
+    The options accept arbitrary names, so neither type can claim the event;
+    the deprecated cameras polled on a timer and did not care.
+    """
+    doorbird_entry = await doorbird_mocker(
+        schedule_side_effect=mock_not_found_exception()
+    )
+    hass.config_entries.async_update_entry(
+        doorbird_entry.entry, options={CONF_EVENTS: ["front_door"]}
+    )
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    await mock_webhook_call(doorbird_entry.entry, client, "mydoorbird_front_door")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN
+
+
+async def test_image_keeps_mapping_reassigned_to_the_other_image(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """An event moved between the two images keeps the new owner's mapping."""
+    doorbird_entry = await doorbird_mocker()
+    door_station = doorbird_entry.entry.runtime_data.door_station
+    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
+
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+
+    # The refreshed descriptions swap which image each event belongs to, so one
+    # image claims a name the other is about to release.
+    door_station.event_descriptions = [
+        DoorbirdEvent("mydoorbird_doorbell", "motion"),
+        DoorbirdEvent("mydoorbird_motion", "doorbell"),
+    ]
+    mac_address = get_mac_address_from_door_station_info(
+        doorbird_entry.entry.runtime_data.door_station_info
+    )
+    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
+    await hass.async_block_till_done()
+
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_motion"
+    assert event_entity_ids["mydoorbird_motion"] == "image.mydoorbird_last_ring"
