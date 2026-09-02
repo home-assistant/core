@@ -735,6 +735,45 @@ async def test_sun_interval_restart(
     assert state.attributes["before"] == before.astimezone(hass_tz_info).isoformat()
 
 
+async def test_sun_to_fixed_time_interval_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+) -> None:
+    """Test initialization during a solar-to-fixed-time interval."""
+    restart_time = datetime(2019, 1, 13, 6, tzinfo=hass_tz_info)
+    after = get_astral_event_date(hass, "sunset", restart_time - timedelta(days=1))
+    before = datetime(2019, 1, 13, 7, tzinfo=hass_tz_info)
+    freezer.move_to(restart_time)
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Night",
+                    "after": "sunset",
+                    "before": "07:00",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.astimezone(hass_tz_info).isoformat()
+    assert state.attributes["before"] == before.isoformat()
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+
 async def test_dst1(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:

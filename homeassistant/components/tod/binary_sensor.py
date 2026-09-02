@@ -233,7 +233,7 @@ class TodSensor(BinarySensorEntity):
             if (
                 _is_sun_event(self._after)
                 and after_event_is_today
-                and before_event_is_today
+                and (not _is_sun_event(self._before) or before_event_is_today)
                 and nowutc < previous_before_time
             ):
                 previous_after_event_date = self._get_astral_event_previous(
