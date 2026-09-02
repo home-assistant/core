@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate the HACS manifest of the repository."""
 
 from voluptuous.error import Invalid
 from voluptuous.humanize import humanize_error

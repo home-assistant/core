@@ -1,7 +1,5 @@
 """HACS Decorators."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 from functools import wraps
@@ -50,14 +48,14 @@ def return_none_on_exception(func):
     def sync_wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001 # the decorator exists to swallow anything
             return None
 
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001 # the decorator exists to swallow anything
             return None
 
     if asyncio.iscoroutinefunction(func):

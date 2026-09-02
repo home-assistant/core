@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate the topics of the repository."""
 
 from typing import TYPE_CHECKING
 

@@ -3,8 +3,8 @@
     "switch": {
       "pre-release": {
         "state": {
-          "on": "mdi:test-tube",
-          "off": "mdi:test-tube-off"
+          "off": "mdi:test-tube-off",
+          "on": "mdi:test-tube"
         }
       }
     }

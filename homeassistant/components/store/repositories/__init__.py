@@ -1,7 +1,5 @@
 """Initialize repositories."""
 
-from __future__ import annotations
-
 from ..enums import HacsCategory
 from .appdaemon import HacsAppdaemonRepository
 from .base import HacsRepository

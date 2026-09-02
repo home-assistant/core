@@ -1,7 +1,5 @@
 """Base class for validation."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from ..exceptions import HacsException
@@ -23,6 +21,7 @@ class ActionValidationBase:
     more_info: str = "https://hacs.xyz/docs/publish/action"
 
     def __init__(self, repository: HacsRepository) -> None:
+        """Initialize the validator."""
         self.hacs = repository.hacs
         self.repository = repository
         self.failed = False

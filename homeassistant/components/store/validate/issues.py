@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate that the repository has issues enabled."""
 
 from typing import TYPE_CHECKING
 

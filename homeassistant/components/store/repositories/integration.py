@@ -1,7 +1,5 @@
 """Class for integrations in HACS."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -83,7 +81,7 @@ class HacsIntegrationRepository(HacsRepository):
                     or "repository.yaml" in self.treefiles
                     or "repository.yml" in self.treefiles
                 ):
-                    raise AppRepositoryException()
+                    raise AppRepositoryException
                 raise HacsException(
                     f"{self.string} Repository structure for {self.ref.replace('tags/', '')} is not compliant"
                 )
@@ -173,7 +171,7 @@ class HacsIntegrationRepository(HacsRepository):
         self.logger.info("Custom_component cache reloaded")
 
     async def async_get_integration_manifest(
-        self, ref: str = None
+        self, ref: str | None = None
     ) -> dict[str, Any] | None:
         """Get the content of the manifest.json file."""
         manifest_path = (
@@ -200,6 +198,7 @@ class HacsIntegrationRepository(HacsRepository):
         )
         if response:
             return json_loads(decode_content(response.data.content))
+        return None
 
     async def get_integration_manifest(
         self, *, version: str, **kwargs
@@ -227,5 +226,5 @@ class HacsIntegrationRepository(HacsRepository):
             if result is None:
                 return None
             return json_loads(result)
-        except Exception:  # pylint: disable=broad-except
+        except ValueError:
             return None

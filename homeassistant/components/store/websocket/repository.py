@@ -1,7 +1,5 @@
 """Register info websocket commands."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -48,7 +46,7 @@ async def hacs_repository_info(
     if not repository.updated_info:
         try:
             await repository.update_repository(ignore_issues=True, force=True)
-        except Exception as exception:  # pylint: disable=broad-except
+        except HacsException as exception:
             repository.logger.error("%s %s", repository.string, exception)
         repository.updated_info = True
 
@@ -145,7 +143,7 @@ async def hacs_repository_state(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Set the state of a repository"""
+    """Set the state of a repository."""
     hacs: HacsBase = hass.data.get(DOMAIN)
     repository = hacs.repositories.get_by_id(msg["repository"])
 
@@ -169,7 +167,7 @@ async def hacs_repository_version(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Set the version of a repository"""
+    """Set the version of a repository."""
     hacs: HacsBase = hass.data.get(DOMAIN)
     repository = hacs.repositories.get_by_id(msg["repository"])
 
@@ -199,7 +197,7 @@ async def hacs_repository_beta(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Show or hide beta versions of a repository"""
+    """Show or hide beta versions of a repository."""
     hacs: HacsBase = hass.data.get(DOMAIN)
     repository = hacs.repositories.get_by_id(msg["repository"])
 
@@ -226,7 +224,7 @@ async def hacs_repository_download(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Set the version of a repository"""
+    """Set the version of a repository."""
     hacs: HacsBase = hass.data.get(DOMAIN)
     repository = hacs.repositories.get_by_id(msg["repository"])
 
@@ -264,7 +262,7 @@ async def hacs_repository_remove(
     repository.data.new = False
     try:
         await repository.update_repository(ignore_issues=True, force=True)
-    except Exception as exception:  # pylint: disable=broad-except
+    except HacsException as exception:
         repository.logger.error("%s %s", repository.string, exception)
     await repository.uninstall()
 
@@ -351,8 +349,8 @@ async def hacs_repository_releases(
     repository = hacs.repositories.get_by_id(msg["repository_id"])
     try:
         releases = await repository.async_get_releases()
-    except Exception as exception:
-        hacs.log.exception(exception)
+    except HacsException as exception:
+        hacs.log.exception("Could not get the releases for %s", repository.string)
         connection.send_error(msg["id"], "unknown", str(exception))
         return
 

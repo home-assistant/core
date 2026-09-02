@@ -1,7 +1,5 @@
 """The QueueManager class."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 import time
@@ -18,6 +16,7 @@ class QueueManager:
     """The QueueManager class."""
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the queue manager."""
         self.hass = hass
         self.queue: list[Coroutine] = []
         self.running = False
@@ -52,14 +51,9 @@ class QueueManager:
         self.running = True
 
         _LOGGER.debug("<QueueManager> Checking out tasks to execute")
-        local_queue = []
-
-        if number_of_tasks:
-            for task in self.queue[:number_of_tasks]:
-                local_queue.append(task)
-        else:
-            for task in self.queue:
-                local_queue.append(task)
+        local_queue = list(
+            self.queue[:number_of_tasks] if number_of_tasks else self.queue
+        )
 
         _LOGGER.debug(
             "<QueueManager> Starting queue execution for %s tasks", len(local_queue)

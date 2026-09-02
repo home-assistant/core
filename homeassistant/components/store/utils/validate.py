@@ -1,7 +1,5 @@
 """Validation utilities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -32,8 +30,7 @@ def _country_validator(values) -> list[str]:
     if isinstance(values, str):
         countries.append(values.upper())
     elif isinstance(values, list):
-        for value in values:
-            countries.append(value.upper())
+        countries.extend(value.upper() for value in values)
     else:
         raise vol.Invalid(
             f"Value '{values}' is not a string or list.", path=["country"]

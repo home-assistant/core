@@ -1,7 +1,5 @@
 """Repairs platform for HACS."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +16,7 @@ class RestartRequiredFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(self, issue_id: str) -> None:
+        """Initialize the fix flow."""
         self.issue_id = issue_id
 
     async def async_step_init(

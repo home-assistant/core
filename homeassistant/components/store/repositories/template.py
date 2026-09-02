@@ -1,7 +1,5 @@
 """Class for themes in HACS."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.exceptions import HomeAssistantError
@@ -82,8 +80,8 @@ class HacsTemplateRepository(HacsRepository):
             await self.hacs.hass.services.async_call(
                 "homeassistant", "reload_custom_templates", {}
             )
-        except HomeAssistantError as exception:
-            self.logger.exception("%s %s", self.string, exception)
+        except HomeAssistantError:
+            self.logger.exception("%s Reloading custom templates failed", self.string)
 
     @concurrent(concurrenttasks=10, backoff_time=5)
     async def update_repository(self, ignore_issues=False, force=False):

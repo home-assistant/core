@@ -34,6 +34,7 @@ class AppRepositoryException(HacsException):
     )
 
     def __init__(self) -> None:
+        """Initialize the exception."""
         super().__init__(self.exception_message)
 
 
@@ -46,4 +47,5 @@ class HomeAssistantCoreRepositoryException(HacsException):
     )
 
     def __init__(self) -> None:
+        """Initialize the exception."""
         super().__init__(self.exception_message)

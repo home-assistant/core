@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate that the repository is not archived."""
 
 from typing import TYPE_CHECKING
 

@@ -1,4 +1,4 @@
-"""Constants for HACS"""
+"""Constants for HACS."""
 
 from typing import TypeVar
 
@@ -108,7 +108,7 @@ LOCALE = [
     "EE",
     "ET",
     "FK",
-    "FO",
+    "FO",  # codespell:ignore
     "FJ",
     "FI",
     "FR",

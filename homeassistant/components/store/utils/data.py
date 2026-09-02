@@ -1,8 +1,7 @@
 """Data handler for HACS."""
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 from datetime import UTC, datetime
 from typing import Any
 
@@ -22,7 +21,8 @@ EXPORTED_BASE_DATA = (
     ("full_name", ""),
 )
 
-EXPORTED_REPOSITORY_DATA = EXPORTED_BASE_DATA + (
+EXPORTED_REPOSITORY_DATA = (
+    *EXPORTED_BASE_DATA,
     ("authors", []),
     ("category", ""),
     ("description", ""),
@@ -36,7 +36,8 @@ EXPORTED_REPOSITORY_DATA = EXPORTED_BASE_DATA + (
     ("topics", []),
 )
 
-EXPORTED_DOWNLOADED_REPOSITORY_DATA = EXPORTED_REPOSITORY_DATA + (
+EXPORTED_DOWNLOADED_REPOSITORY_DATA = (
+    *EXPORTED_REPOSITORY_DATA,
     ("archived", False),
     ("config_flow", False),
     ("default_branch", None),
@@ -165,10 +166,8 @@ class HacsData:
         repositories = {}
         hacs = {}
 
-        try:
+        with contextlib.suppress(HomeAssistantError):
             hacs = await async_load_from_store(self.hacs.hass, "hacs") or {}
-        except HomeAssistantError:
-            pass
 
         try:
             repositories = await async_load_from_store(self.hacs.hass, "repositories")
@@ -253,9 +252,7 @@ class HacsData:
             # async_register_repository is awaited in a loop
             # since its unlikely to ever suspend at startup
             if (
-                entry == "0"
-                # The old HACS self-repository is not managed by the store
-                or entry == HACS_REPOSITORY_ID
+                entry in ("0", HACS_REPOSITORY_ID)
                 or repo_data.get("category", category) is None
                 or self.hacs.repositories.is_registered(repository_id=entry)
             ):

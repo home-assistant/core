@@ -1,7 +1,5 @@
 """Base HACS class."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
@@ -35,7 +33,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TV, URL_BASE
 from .coordinator import HacsUpdateCoordinator
@@ -83,8 +81,8 @@ class RemovedRepository:
 
     def update_data(self, data: dict):
         """Update data of the repository."""
-        for key in data:
-            if data[key] is None:
+        for key, value in data.items():
+            if value is None:
                 continue
             if key in (
                 "reason",
@@ -92,7 +90,7 @@ class RemovedRepository:
                 "removal_type",
                 "acknowledged",
             ):
-                self.__setattr__(key, data[key])
+                self.__setattr__(key, value)
 
     def to_json(self):
         """Return a JSON representation of the data."""
@@ -134,10 +132,10 @@ class HacsConfiguration:
         if not isinstance(data, dict):
             raise HacsException("Configuration is not valid.")
 
-        for key in data:
+        for key, value in data.items():
             if key in {"experimental", "netdaemon", "release_limit", "debug"}:
                 continue
-            self.__setattr__(key, data[key])
+            self.__setattr__(key, value)
 
 
 @dataclass
@@ -429,9 +427,11 @@ class HacsBase:
             # Create gz for .js files
             if os.path.isfile(file_path):
                 if file_path.endswith(".js"):
-                    with open(file_path, "rb") as f_in:
-                        with gzip.open(file_path + ".gz", "wb") as f_out:
-                            shutil.copyfileobj(f_in, f_out)
+                    with (
+                        open(file_path, "rb") as f_in,
+                        gzip.open(file_path + ".gz", "wb") as f_out,
+                    ):
+                        shutil.copyfileobj(f_in, f_out)
 
             # LEGACY! Remove with 2.0
             if "themes" in file_path and file_path.endswith(".yaml"):
@@ -444,10 +444,7 @@ class HacsBase:
 
         try:
             await self.hass.async_add_executor_job(_write_file)
-        except (
-            # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            BaseException
-        ) as error:
+        except OSError as error:
             self.log.error("Could not write data to %s - %s", file_path, error)
             return False
 
@@ -459,8 +456,8 @@ class HacsBase:
             response = await self.async_github_api_method(self.githubapi.rate_limit)
             if ((limit := response.data.resources.core.remaining or 0) - 1000) >= 10:
                 return math.floor((limit - 1000) / 10)
-            reset = dt.as_local(
-                dt.utc_from_timestamp(response.data.resources.core.reset)
+            reset = dt_util.as_local(
+                dt_util.utc_from_timestamp(response.data.resources.core.reset)
             )
             self.log.info(
                 "GitHub API ratelimited - %s remaining (%s)",
@@ -468,11 +465,8 @@ class HacsBase:
                 f"{reset.hour}:{reset.minute}:{reset.second}",
             )
             self.disable_hacs(HacsDisabledReason.RATE_LIMIT)
-        except (
-            # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            BaseException
-        ) as exception:
-            self.log.exception(exception)
+        except HacsException:
+            self.log.exception("Could not get the GitHub API rate limit")
 
         return 0
 
@@ -483,7 +477,7 @@ class HacsBase:
         raise_exception: bool = True,
         **kwargs,
     ) -> TV | None:
-        """Call a GitHub API method"""
+        """Call a GitHub API method."""
         _exception = None
 
         try:
@@ -494,15 +488,14 @@ class HacsBase:
         except GitHubRatelimitException as exception:
             self.disable_hacs(HacsDisabledReason.RATE_LIMIT)
             _exception = exception
-        except GitHubNotModifiedException as exception:
-            raise exception
+        except GitHubNotModifiedException:
+            raise
         except GitHubException as exception:
             _exception = exception
         except (
-            # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            BaseException
-        ) as exception:
-            self.log.exception(exception)
+            Exception
+        ) as exception:  # normalize any failure of the wrapped API method
+            self.log.exception("Unexpected error calling the GitHub API")
             _exception = exception
 
         if raise_exception and _exception is not None:
@@ -524,13 +517,13 @@ class HacsBase:
             raise HacsExpectedException(f"Skipping {repository_full_name}")
 
         if repository_full_name == "home-assistant/core":
-            raise HomeAssistantCoreRepositoryException()
+            raise HomeAssistantCoreRepositoryException
 
         if (
             repository_full_name == "home-assistant/addons"
             or repository_full_name.startswith("hassio-addons/")
         ):
-            raise AppRepositoryException()
+            raise AppRepositoryException
 
         if category not in REPOSITORY_CLASSES:
             self.log.warning(
@@ -600,6 +593,7 @@ class HacsBase:
             )
 
         self.repositories.register(repository, default)
+        return None
 
     async def startup_tasks(self, _=None) -> None:
         """Tasks that are started after setup."""
@@ -720,7 +714,7 @@ class HacsBase:
                     await asyncio.sleep(retry_after)
                     continue
 
-                raise HacsException(
+                raise HacsException(  # noqa: TRY301 # handled by the retry loop below
                     f"Got status code {request.status} when trying to download {url}"
                 )
             except TimeoutError:
@@ -738,14 +732,12 @@ class HacsBase:
                 await asyncio.sleep(1)
                 continue
 
-            except (
-                # lgtm [py/catch-base-exception] pylint: disable=broad-except
-                BaseException
-            ) as exception:
+            except Exception:  # a failed download must not break the retry loop
                 if not nolog:
-                    self.log.exception("Download failed - %s", exception)
+                    self.log.exception("Download of %s failed", url)
 
             return None
+        return None
 
     async def async_recreate_entities(self) -> None:
         """Recreate entities."""
@@ -755,13 +747,13 @@ class HacsBase:
         if self.core.ha_version < AwesomeVersion("2024.6.0"):
             unload_platforms_lock = asyncio.Lock()
             async with unload_platforms_lock:
-                on_unload = self.configuration.config_entry._on_unload
-                self.configuration.config_entry._on_unload = []
+                on_unload = self.configuration.config_entry._on_unload  # noqa: SLF001 # workaround needs the core internals
+                self.configuration.config_entry._on_unload = []  # noqa: SLF001
                 await self.hass.config_entries.async_unload_platforms(
                     entry=self.configuration.config_entry,
                     platforms=platforms,
                 )
-                self.configuration.config_entry._on_unload = on_unload
+                self.configuration.config_entry._on_unload = on_unload  # noqa: SLF001
         else:
             await self.hass.config_entries.async_unload_platforms(
                 entry=self.configuration.config_entry,
@@ -989,7 +981,7 @@ class HacsBase:
         repositories_updated = asyncio.Event()
 
         async def update_repository(repository: HacsRepository) -> None:
-            """Update a repository"""
+            """Update a repository."""
             nonlocal repositories_to_update
             await repository.update_repository(ignore_issues=True)
             repositories_to_update -= 1
@@ -1043,8 +1035,7 @@ class HacsBase:
 
         stored_critical = await async_load_from_store(self.hass, "critical")
 
-        for stored in stored_critical or []:
-            instored.append(stored["repository"])
+        instored.extend(stored["repository"] for stored in stored_critical or [])
 
         stored_critical = []
 

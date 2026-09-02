@@ -4,13 +4,7 @@
   "after_dependencies": ["python_script"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
-  "dependencies": [
-    "frontend",
-    "http",
-    "lovelace",
-    "repairs",
-    "websocket_api"
-  ],
+  "dependencies": ["frontend", "http", "lovelace", "repairs", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/store",
   "integration_type": "service",
   "iot_class": "cloud_polling",

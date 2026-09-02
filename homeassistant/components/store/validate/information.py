@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate that the repository has an information file."""
 
 from typing import TYPE_CHECKING
 
@@ -21,7 +21,12 @@ class Validator(ActionValidationBase):
     async def async_validate(self) -> None:
         """Validate the repository."""
         filenames = [x.filename.lower() for x in self.repository.tree]
-        if "readme" in filenames or "readme.md" in filenames or "info" in filenames or "info.md" in filenames:
+        if (
+            "readme" in filenames
+            or "readme.md" in filenames
+            or "info" in filenames
+            or "info.md" in filenames
+        ):
             pass
         else:
             raise ValidationException("The repository has no information file")

@@ -1,67 +1,34 @@
 {
-  "title": "Community store",
   "config": {
     "abort": {
-      "single_instance_allowed": "Only a single configuration of the Community store is allowed.",
       "not_setup": "The Community store is not set up.",
-      "reauth_successful": "Reauthentication was successful."
+      "reauth_successful": "Reauthentication was successful.",
+      "single_instance_allowed": "Only a single configuration of the Community store is allowed."
     },
     "error": {
-      "auth": "Personal Access Token is not correct",
-      "acc": "You need to acknowledge all the statements before continuing"
+      "acc": "You need to acknowledge all the statements before continuing",
+      "auth": "Personal Access Token is not correct"
+    },
+    "progress": {
+      "wait_for_device": "1. Open {url} \n2. Paste the following key to authorize the Community store: \n```\n{code}\n```"
     },
     "step": {
-      "user": {
-        "data": {
-          "acc_logs": "I know how to access Home Assistant logs",
-          "acc_addons": "I know that there are no apps in the Community store",
-          "acc_untested": "I know that everything inside the Community store, including the store itself, is custom and not tested by the Home Assistant project",
-          "acc_disable": "I know that if I get issues with Home Assistant I should disable all my custom_components"
-        },
-        "description": "Before you can set up the Community store you need to acknowledge the following"
-      },
       "device": {
         "title": "Waiting for device activation"
       },
       "reauth_confirm": {
-        "title": "Reauthentication needed",
-        "description": "You need to reauthenticate with GitHub."
-      }
-    },
-    "progress": {
-      "wait_for_device": "1. Open {url} \n2. Paste the following key to authorize the Community store: \n```\n{code}\n```"
-    }
-  },
-  "options": {
-    "abort": {
-      "not_setup": "The Community store is not set up.",
-      "pending_tasks": "There are pending tasks. Try again later.",
-      "release_limit_value": "The release limit needs to be between 1 and 100."
-    },
-    "step": {
+        "description": "You need to reauthenticate with GitHub.",
+        "title": "Reauthentication needed"
+      },
       "user": {
         "data": {
-          "country": "Filter with country code",
-          "appdaemon": "Enable AppDaemon apps discovery & tracking"
-        }
+          "acc_addons": "I know that there are no apps in the Community store",
+          "acc_disable": "I know that if I get issues with Home Assistant I should disable all my custom_components",
+          "acc_logs": "I know how to access Home Assistant logs",
+          "acc_untested": "I know that everything inside the Community store, including the store itself, is custom and not tested by the Home Assistant project"
+        },
+        "description": "Before you can set up the Community store you need to acknowledge the following"
       }
-    }
-  },
-  "issues": {
-    "restart_required": {
-      "title": "Restart required",
-      "fix_flow": {
-        "step": {
-          "confirm_restart": {
-            "title": "Restart required",
-            "description": "Restart of Home Assistant is required to finish download/update of {name}, click submit to restart now."
-          }
-        }
-      }
-    },
-    "removed": {
-      "title": "Repository removed from the Community store",
-      "description": "Because {reason}, `{name}` has been removed from the Community store. Please visit the [Community store panel](/store/repository/{repositry_id}) to remove it."
     }
   },
   "entity": {
@@ -74,5 +41,38 @@
         }
       }
     }
-  }
+  },
+  "issues": {
+    "removed": {
+      "description": "Because {reason}, `{name}` has been removed from the Community store. Please visit the [Community store panel](/store/repository/{repositry_id}) to remove it.",
+      "title": "Repository removed from the Community store"
+    },
+    "restart_required": {
+      "fix_flow": {
+        "step": {
+          "confirm_restart": {
+            "description": "Restart of Home Assistant is required to finish download/update of {name}, click submit to restart now.",
+            "title": "Restart required"
+          }
+        }
+      },
+      "title": "Restart required"
+    }
+  },
+  "options": {
+    "abort": {
+      "not_setup": "The Community store is not set up.",
+      "pending_tasks": "There are pending tasks. Try again later.",
+      "release_limit_value": "The release limit needs to be between 1 and 100."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "appdaemon": "Enable AppDaemon apps discovery & tracking",
+          "country": "Filter with country code"
+        }
+      }
+    }
+  },
+  "title": "Community store"
 }

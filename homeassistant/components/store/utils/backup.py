@@ -1,7 +1,5 @@
 """Backup."""
 
-from __future__ import annotations
-
 import os
 import shutil
 import tempfile
@@ -57,7 +55,7 @@ class Backup:
         return True
 
     def create(self) -> None:
-        """Create a backup in /tmp"""
+        """Create a backup in /tmp."""
         if not self._init_backup_dir():
             return
 
@@ -75,9 +73,7 @@ class Backup:
                 self.local_path,
                 self.backup_path_full,
             )
-        except (
-            BaseException  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-        ) as exception:
+        except OSError as exception:
             self.hacs.log.warning("Could not create backup: %s", exception)
 
     def restore(self) -> None:

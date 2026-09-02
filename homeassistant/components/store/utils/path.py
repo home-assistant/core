@@ -1,6 +1,4 @@
-"""Path utils"""
-
-from __future__ import annotations
+"""Path utils."""
 
 from functools import lru_cache
 from pathlib import Path

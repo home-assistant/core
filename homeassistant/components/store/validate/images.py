@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate that the repository information file has images."""
 
 from typing import TYPE_CHECKING
 

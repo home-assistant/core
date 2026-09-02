@@ -1,7 +1,5 @@
 """Starting setup task: Frontend."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.components.frontend import (

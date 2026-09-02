@@ -1,16 +1,13 @@
 """File system functions."""
 
-from __future__ import annotations
-
 import os
 import shutil
-from typing import TypeAlias
 
 from homeassistant.core import HomeAssistant
 
 # From typeshed
-StrOrBytesPath: TypeAlias = str | bytes | os.PathLike[str] | os.PathLike[bytes]
-FileDescriptorOrPath: TypeAlias = int | StrOrBytesPath
+type StrOrBytesPath = str | bytes | os.PathLike[str] | os.PathLike[bytes]
+type FileDescriptorOrPath = int | StrOrBytesPath
 
 
 async def async_exists(hass: HomeAssistant, path: FileDescriptorOrPath) -> bool:

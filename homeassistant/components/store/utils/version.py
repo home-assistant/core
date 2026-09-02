@@ -1,7 +1,5 @@
 """Version utils."""
 
-from __future__ import annotations
-
 from functools import lru_cache
 
 from awesomeversion import (
@@ -17,9 +15,9 @@ def version_left_higher_then_right(left: str, right: str) -> bool | None:
     try:
         left_version = AwesomeVersion(left)
         right_version = AwesomeVersion(right)
-        if (
-            left_version.strategy != AwesomeVersionStrategy.UNKNOWN
-            and right_version.strategy != AwesomeVersionStrategy.UNKNOWN
+        if AwesomeVersionStrategy.UNKNOWN not in (
+            left_version.strategy,
+            right_version.strategy,
         ):
             return left_version > right_version
     except AwesomeVersionException, AttributeError, KeyError:

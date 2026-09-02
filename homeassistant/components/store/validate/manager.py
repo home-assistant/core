@@ -1,11 +1,10 @@
 """Hacs validation manager."""
 
-from __future__ import annotations
-
 import asyncio
 from importlib import import_module
 import os
 from pathlib import Path
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -83,7 +82,7 @@ class ValidationManager:
             repository.logger.error(
                 "%s %s/%s checks failed", repository.string, failed, total
             )
-            exit(1)
+            sys.exit(1)
         else:
             repository.logger.info(
                 "%s All (%s) checks passed", repository.string, total

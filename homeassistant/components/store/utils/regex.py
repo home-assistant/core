@@ -1,6 +1,4 @@
-"""Regex utils"""
-
-from __future__ import annotations
+"""Regex utils."""
 
 import re
 

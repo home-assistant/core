@@ -28,14 +28,16 @@ class LegacyTreeFile:
         self.download_url = f"https://raw.githubusercontent.com/{self.repository}/{self.ref}/{self.full_path}"
 
     @property
-    def path(self):
+    def path(self) -> str:
+        """Return the path of the parent directory."""
         path = ""
         if "/" in self.full_path:
             path = self.full_path.split(f"/{self.full_path.split('/')[-1]}")[0]
         return path
 
     @property
-    def filename(self):
+    def filename(self) -> str:
+        """Return the filename without the directories."""
         filename = self.full_path
         if "/" in self.full_path:
             filename = self.full_path.split("/")[-1]

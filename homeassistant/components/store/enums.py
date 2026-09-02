@@ -1,6 +1,5 @@
 """Helper constants."""
 
-# pylint: disable=missing-class-docstring
 from enum import StrEnum
 
 
@@ -12,6 +11,8 @@ class HacsGitHubRepo(StrEnum):
 
 
 class HacsCategory(StrEnum):
+    """Repository categories HACS knows about."""
+
     APPDAEMON = "appdaemon"
     INTEGRATION = "integration"
     PLUGIN = "plugin"  # Kept for legacy purposes
@@ -19,7 +20,8 @@ class HacsCategory(StrEnum):
     TEMPLATE = "template"
     THEME = "theme"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return the string representation."""
         return str(self.value)
 
 
@@ -53,6 +55,8 @@ class LovelaceMode(StrEnum):
 
 
 class HacsStage(StrEnum):
+    """Stages HACS moves through during its lifetime."""
+
     SETUP = "setup"
     STARTUP = "startup"
     WAITING = "waiting"
@@ -60,6 +64,8 @@ class HacsStage(StrEnum):
 
 
 class HacsDisabledReason(StrEnum):
+    """Reasons why HACS can be disabled."""
+
     RATE_LIMIT = "rate_limit"
     REMOVED = "removed"
     INVALID_TOKEN = "invalid_token"

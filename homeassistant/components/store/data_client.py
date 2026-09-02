@@ -1,7 +1,5 @@
 """HACS Data client."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout
@@ -47,7 +45,7 @@ class HacsDataClient:
                 },
             )
             if response.status == 304:
-                raise HacsNotModifiedException() from None
+                raise HacsNotModifiedException from None  # noqa: TRY301 # re-raised untouched below
             response.raise_for_status()
         except HacsNotModifiedException:
             raise

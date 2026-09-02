@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Validate that the repository has a description."""
 
 from typing import TYPE_CHECKING
 

@@ -1,7 +1,5 @@
 """Class for themes in HACS."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.exceptions import HomeAssistantError
@@ -77,8 +75,8 @@ class HacsThemeRepository(HacsRepository):
         self.logger.debug("%s Reloading frontend themes", self.string)
         try:
             await self.hacs.hass.services.async_call("frontend", "reload_themes", {})
-        except HomeAssistantError as exception:
-            self.logger.exception("%s %s", self.string, exception)
+        except HomeAssistantError:
+            self.logger.exception("%s Reloading frontend themes failed", self.string)
 
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""

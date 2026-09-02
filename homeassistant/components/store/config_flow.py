@@ -1,7 +1,5 @@
 """Adds config flow for HACS."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 from typing import TYPE_CHECKING
@@ -145,7 +143,7 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_device_done(self, user_input: dict[str, bool] | None = None):
-        """Handle device steps"""
+        """Handle device steps."""
         if self._reauth:
             existing_entry = self.hass.config_entries.async_get_entry(
                 self.context["entry_id"]

@@ -1,7 +1,5 @@
 """Register info websocket commands."""
 
-from __future__ import annotations
-
 import sys
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from ..const import DOMAIN
 from ..enums import HacsDispatchEvent
+from ..exceptions import HacsException
 from ..utils import regex
 
 if TYPE_CHECKING:
@@ -124,10 +123,11 @@ async def hacs_repositories_removed(
 ) -> None:
     """Get information about removed repositories."""
     hacs: HacsBase = hass.data.get(DOMAIN)
-    content = []
-    for repo in hacs.repositories.list_removed:
-        if repo.repository not in hacs.common.ignored_repositories:
-            content.append(repo.to_json())
+    content = [
+        repo.to_json()
+        for repo in hacs.repositories.list_removed
+        if repo.repository not in hacs.common.ignored_repositories
+    ]
     connection.send_message(websocket_api.result_message(msg["id"], content))
 
 
@@ -169,9 +169,7 @@ async def hacs_repositories_add(
                 category=category,
             )
 
-        except (
-            BaseException  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-        ) as exception:
+        except HacsException as exception:
             hacs.async_dispatch(
                 HacsDispatchEvent.ERROR,
                 {

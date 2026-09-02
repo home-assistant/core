@@ -4,8 +4,6 @@ For more details about this integration, please refer to the documentation at
 https://hacs.xyz/
 """
 
-from __future__ import annotations
-
 from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
 from awesomeversion import AwesomeVersion
@@ -38,7 +36,7 @@ async def _async_initialize_integration(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
 ) -> bool:
-    """Initialize the integration"""
+    """Initialize the integration."""
     hass.data[DOMAIN] = hacs = HacsBase()
     hacs.enable_hacs()
 
