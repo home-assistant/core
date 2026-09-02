@@ -521,7 +521,12 @@ class DefaultAgent(ConversationEntity):
         )
 
         return ConversationResult(
-            response=response, conversation_id=chat_log.conversation_id
+            response=response,
+            conversation_id=chat_log.conversation_id,
+            # A reprompt is a follow-up question, so the satellite has to keep
+            # listening for the answer. Conversation agents backed by an LLM
+            # already get this from `chat_log.continue_conversation`.
+            continue_conversation=bool(response.reprompt),
         )
 
     async def _async_process_intent_result(
