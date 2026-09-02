@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
     ATTR_UDN,
+    CONF_ON_ACTION,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -17,6 +18,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_TURN_ON_ACTION,
     get_mock_remote,
 )
 
@@ -212,6 +214,53 @@ async def test_setup_config_flow_initiated(hass: HomeAssistant) -> None:
         )
 
     assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_setup_entry_with_turn_on_action(
+    hass: HomeAssistant, mock_remote: Mock
+) -> None:
+    """Test setup uses turn_on_action when present in entry options."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA, **MOCK_DEVICE_INFO},
+        options={CONF_ON_ACTION: MOCK_TURN_ON_ACTION},
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+
+
+async def test_options_update_reloads_entry(
+    hass: HomeAssistant, mock_remote: Mock
+) -> None:
+    """Test that updating options reloads the entry so the new action takes effect."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA, **MOCK_DEVICE_INFO},
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries,
+        "async_reload",
+        wraps=hass.config_entries.async_reload,
+    ) as mock_async_reload:
+        hass.config_entries.async_update_entry(
+            mock_entry, options={CONF_ON_ACTION: MOCK_TURN_ON_ACTION}
+        )
+        await hass.async_block_till_done()
+
+    assert mock_entry.options == {CONF_ON_ACTION: MOCK_TURN_ON_ACTION}
+    mock_async_reload.assert_awaited_once_with(mock_entry.entry_id)
+    assert mock_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
