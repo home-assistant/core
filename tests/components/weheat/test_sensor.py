@@ -183,6 +183,24 @@ async def test_cooling_timestamps_exist_before_the_first_cooling_cycle(
 
 
 @pytest.mark.usefixtures("mock_weheat_discover")
+async def test_cooling_available_from_is_unknown_when_not_waiting(
+    hass: HomeAssistant,
+    mock_weheat_heat_pump: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no moment is reported while the heat pump is not waiting to cool."""
+    mock_weheat_heat_pump.cooling_available_from = None
+
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.test_model_cooling_available_from").state
+        == STATE_UNKNOWN
+    )
+
+
+@pytest.mark.usefixtures("mock_weheat_discover")
 async def test_a_heat_pump_without_cooling_gets_no_cooling_timestamps(
     hass: HomeAssistant,
     mock_weheat_heat_pump: AsyncMock,

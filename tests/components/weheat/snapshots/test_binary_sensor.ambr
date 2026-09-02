@@ -50,7 +50,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_air_warmer_than_water-entry]
+# name: test_binary_entities[binary_sensor.test_model_cooling_air_warmer_than_system_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_air_warmer_than_water',
+    'entity_id': 'binary_sensor.test_model_cooling_air_warmer_than_system_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cooling air warmer than water',
+    'object_id_base': 'Cooling air warmer than system water',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cooling air warmer than water',
+    'original_name': 'Cooling air warmer than system water',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,13 +87,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_air_warmer_than_water-state]
+# name: test_binary_entities[binary_sensor.test_model_cooling_air_warmer_than_system_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling air warmer than water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling air warmer than system water',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_air_warmer_than_water',
+    'entity_id': 'binary_sensor.test_model_cooling_air_warmer_than_system_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -200,56 +200,6 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_demand-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_demand',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cooling demand',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cooling demand',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cooling_start_condition_demand',
-    'unique_id': '0000-1111-2222-3333_cooling_start_condition_demand',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_demand-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling demand',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_demand',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_entities[binary_sensor.test_model_cooling_indoor_unit_connected-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -350,7 +300,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_restart_delay_elapsed-entry]
+# name: test_binary_entities[binary_sensor.test_model_cooling_room_warmer_than_desired-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -364,7 +314,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_restart_delay_elapsed',
+    'entity_id': 'binary_sensor.test_model_cooling_room_warmer_than_desired',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -372,62 +322,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cooling restart delay elapsed',
+    'object_id_base': 'Cooling room warmer than desired',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cooling restart delay elapsed',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cooling_start_condition_exponential_backoff',
-    'unique_id': '0000-1111-2222-3333_cooling_start_condition_exponential_backoff',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_restart_delay_elapsed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling restart delay elapsed',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_restart_delay_elapsed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_room_warmer_than_target-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_cooling_room_warmer_than_target',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cooling room warmer than target',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cooling room warmer than target',
+    'original_name': 'Cooling room warmer than desired',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -437,20 +337,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_cooling_room_warmer_than_target-state]
+# name: test_binary_entities[binary_sensor.test_model_cooling_room_warmer_than_desired-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling room warmer than target',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Cooling room warmer than desired',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_cooling_room_warmer_than_target',
+    'entity_id': 'binary_sensor.test_model_cooling_room_warmer_than_desired',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_heating_to_cooling_delay_elapsed-entry]
+# name: test_binary_entities[binary_sensor.test_model_demand_for_cooling_from_cooling_curve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -464,7 +364,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_heating_to_cooling_delay_elapsed',
+    'entity_id': 'binary_sensor.test_model_demand_for_cooling_from_cooling_curve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -472,32 +372,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Heating to cooling delay elapsed',
+    'object_id_base': 'Demand for cooling from cooling curve',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Heating to cooling delay elapsed',
+    'original_name': 'Demand for cooling from cooling curve',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cooling_start_condition_heat_cool_delay',
-    'unique_id': '0000-1111-2222-3333_cooling_start_condition_heat_cool_delay',
+    'translation_key': 'cooling_start_condition_demand',
+    'unique_id': '0000-1111-2222-3333_cooling_start_condition_demand',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_heating_to_cooling_delay_elapsed-state]
+# name: test_binary_entities[binary_sensor.test_model_demand_for_cooling_from_cooling_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Heating to cooling delay elapsed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Demand for cooling from cooling curve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_heating_to_cooling_delay_elapsed',
+    'entity_id': 'binary_sensor.test_model_demand_for_cooling_from_cooling_curve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxiliary_water_pump-entry]
@@ -703,7 +603,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_no_cooling_faults-entry]
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_back_off_waiting_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -717,7 +617,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_model_no_cooling_faults',
+    'entity_id': 'binary_sensor.test_model_no_cooling_back_off_waiting_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -725,12 +625,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'No cooling faults',
+    'object_id_base': 'No cooling back-off waiting time',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'No cooling faults',
+    'original_name': 'No cooling back-off waiting time',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_start_condition_exponential_backoff',
+    'unique_id': '0000-1111-2222-3333_cooling_start_condition_exponential_backoff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_back_off_waiting_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model No cooling back-off waiting time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_model_no_cooling_back_off_waiting_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_related_faults-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_model_no_cooling_related_faults',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'No cooling related faults',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'No cooling related faults',
     'platform': 'weheat',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -740,13 +690,63 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_no_cooling_faults-state]
+# name: test_binary_entities[binary_sensor.test_model_no_cooling_related_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model No cooling faults',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model No cooling related faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_no_cooling_faults',
+    'entity_id': 'binary_sensor.test_model_no_cooling_related_faults',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_no_heating_in_the_last_24_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_model_no_heating_in_the_last_24_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'No heating in the last 24 hours',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'No heating in the last 24 hours',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_start_condition_heat_cool_delay',
+    'unique_id': '0000-1111-2222-3333_cooling_start_condition_heat_cool_delay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_entities[binary_sensor.test_model_no_heating_in_the_last_24_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model No heating in the last 24 hours',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_model_no_heating_in_the_last_24_hours',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

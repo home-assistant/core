@@ -39,22 +39,22 @@
         "name": "Cooling allowed by control method"
       },
       "cooling_start_condition_demand": {
-        "name": "Cooling demand"
+        "name": "Demand for cooling from cooling curve"
       },
       "cooling_start_condition_dtc": {
-        "name": "No cooling faults"
+        "name": "No cooling related faults"
       },
       "cooling_start_condition_exponential_backoff": {
-        "name": "Cooling restart delay elapsed"
+        "name": "No cooling back-off waiting time"
       },
       "cooling_start_condition_heat_cool_delay": {
-        "name": "Heating to cooling delay elapsed"
+        "name": "No heating in the last 24 hours"
       },
       "cooling_start_condition_indoor_unit_connected": {
         "name": "Cooling indoor unit connected"
       },
       "cooling_start_condition_inside_temperature": {
-        "name": "Cooling room warmer than target"
+        "name": "Cooling room warmer than desired"
       },
       "cooling_start_condition_outside_air_temperature": {
         "name": "Cooling outside temperature high enough"
@@ -63,7 +63,7 @@
         "name": "Water warmer than cooling curve"
       },
       "cooling_start_condition_water_to_air": {
-        "name": "Cooling air warmer than water"
+        "name": "Cooling air warmer than system water"
       },
       "indoor_unit_auxiliary_pump_state": {
         "name": "Indoor unit auxiliary water pump"
@@ -128,7 +128,7 @@
           "outside_temperature_too_low": "Outside temperature too low",
           "room_temperature_too_low": "Room temperature too low",
           "water_temperature_below_dewpoint": "Water temperature below dew point",
-          "water_temperature_below_setpoint": "Water temperature below setpoint"
+          "water_temperature_below_setpoint": "Water temperature colder than setpoint"
         }
       },
       "cooling_state": {
