@@ -15,16 +15,18 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     SelectOptionDict,
+    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_LOCAL_ONLY, CONF_PROVINCE, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
@@ -65,9 +67,9 @@ def get_optional_categories(country: str) -> list[str]:
     ]
 
 
-def get_options_schema(country: str) -> vol.Schema:
+def get_options_schema(country: str, has_provinces: bool = False) -> vol.Schema:
     """Return the options schema."""
-    schema = {}
+    schema: dict[vol.Marker, Selector] = {}
     if provinces := get_optional_provinces(country):
         schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
@@ -75,6 +77,7 @@ def get_options_schema(country: str) -> vol.Schema:
                 mode=SelectSelectorMode.DROPDOWN,
             )
         )
+        schema[vol.Optional(CONF_LOCAL_ONLY)] = BooleanSelector()
     if categories := get_optional_categories(country):
         schema[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
             SelectSelectorConfig(
@@ -98,6 +101,20 @@ def get_entry_name(language: str, country: str, province: str | None) -> str:
     country_str = locale.territories[country]  # blocking I/O
     province_str = f", {province}" if province else ""
     return f"{country_str}{province_str}"
+
+
+def _is_duplicate_entry(
+    entry: ConfigEntry,
+    country: str,
+    province: str | None,
+    categories: list[str] | None,
+) -> bool:
+    """Return whether an existing entry matches the requested configuration."""
+    return (
+        entry.data[CONF_COUNTRY] == country
+        and entry.data.get(CONF_PROVINCE) == province
+        and (entry.options.get(CONF_CATEGORIES) or None) == (categories or None)
+    )
 
 
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -132,7 +149,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             if options_schema.schema:
                 return await self.async_step_options()
 
-            self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
+            if any(
+                _is_duplicate_entry(entry, selected_country, None, None)
+                for entry in self._async_current_entries()
+            ):
+                return self.async_abort(reason="already_configured")
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -164,18 +185,32 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = self.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
-            if province := user_input.get(CONF_PROVINCE):
+            options: dict[str, Any] = {}
+            province = user_input.get(CONF_PROVINCE)
+            if province:
                 data[CONF_PROVINCE] = province
             if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+                options[CONF_CATEGORIES] = categories
+            if province and user_input.get(CONF_LOCAL_ONLY):
+                options[CONF_LOCAL_ONLY] = True
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            if any(
+                _is_duplicate_entry(
+                    entry,
+                    country,
+                    province,
+                    options.get(CONF_CATEGORIES),
+                )
+                for entry in self._async_current_entries()
+            ):
+                return self.async_abort(reason="already_configured")
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
             )
-            return self.async_create_entry(title=name, data=data, options=options)
+            return self.async_create_entry(
+                title=name, data=data, options=options or None
+            )
 
         options_schema = await self.hass.async_add_executor_job(
             get_options_schema, self.data[CONF_COUNTRY]
@@ -196,12 +231,23 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             country = reconfigure_entry.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
             options: dict[str, Any] | None = None
-            if province := user_input.get(CONF_PROVINCE):
+            province = user_input.get(CONF_PROVINCE)
+            if province:
                 data[CONF_PROVINCE] = province
             if categories := user_input.get(CONF_CATEGORIES):
                 options = {CONF_CATEGORIES: categories}
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            if any(
+                _is_duplicate_entry(
+                    entry,
+                    country,
+                    province,
+                    options[CONF_CATEGORIES] if options else None,
+                )
+                for entry in self._async_current_entries()
+                if entry.entry_id != reconfigure_entry.entry_id
+            ):
+                return self.async_abort(reason="already_configured")
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -240,21 +286,25 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
         categories = await self.hass.async_add_executor_job(
             get_optional_categories, self.config_entry.data[CONF_COUNTRY]
         )
-        if not categories:
+        schema_dict: dict[vol.Marker, Any] = {}
+
+        if categories:
+            schema_dict[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=categories,
+                    multiple=True,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="categories",
+                )
+            )
+
+        if self.config_entry.data.get(CONF_PROVINCE):
+            schema_dict[vol.Optional(CONF_LOCAL_ONLY)] = BooleanSelector()
+
+        if not schema_dict:
             return self.async_abort(reason="no_categories")
 
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_CATEGORIES): SelectSelector(
-                    SelectSelectorConfig(
-                        options=categories,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="categories",
-                    )
-                )
-            }
-        )
+        schema = vol.Schema(schema_dict)
 
         return self.async_show_form(
             data_schema=self.add_suggested_values_to_schema(

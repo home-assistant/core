@@ -1,19 +1,24 @@
 """Test the Holiday config flow."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from holidays import UNOFFICIAL
+from holidays import CATHOLIC, UNOFFICIAL
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.calendar import (
+    DOMAIN as CALENDAR_DOMAIN,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
+    CONF_LOCAL_ONLY,
     CONF_PROVINCE,
     DOMAIN,
 )
-from homeassistant.const import CONF_COUNTRY, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_COUNTRY, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
@@ -99,8 +104,8 @@ async def test_form_translated_title(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_single_combination_country_province(hass: HomeAssistant) -> None:
-    """Test that configuring more than one instance is rejected."""
+async def test_multiple_combinations_country_province(hass: HomeAssistant) -> None:
+    """Test that country-only and country-province entries can coexist."""
     data_de_step_1 = {
         CONF_COUNTRY: "DE",
     }
@@ -126,7 +131,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     assert result_al["type"] is FlowResultType.ABORT
     assert result_al["reason"] == "already_configured"
 
-    # Test for country with subdivisions
+    # Test that a different subdivision of the same country is allowed
     result_de = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -137,12 +142,37 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     )
     assert result_de["type"] is FlowResultType.FORM
 
-    result_de = await hass.config_entries.flow.async_configure(
+    result_de_step2 = await hass.config_entries.flow.async_configure(
         result_de["flow_id"],
-        data_de_step_2,
+        {
+            CONF_PROVINCE: "NW",
+        },
     )
-    assert result_de["type"] is FlowResultType.ABORT
-    assert result_de["reason"] == "already_configured"
+    await hass.async_block_till_done()
+
+    assert result_de_step2["type"] is FlowResultType.CREATE_ENTRY
+    assert result_de_step2["title"] == "Germany, NW"
+    assert result_de_step2["data"] == {
+        "country": "DE",
+        "province": "NW",
+    }
+
+    # Test that the exact same combination is still rejected
+    result_de_step3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=data_de_step_1,
+    )
+    assert result_de_step3["type"] is FlowResultType.FORM
+
+    result_de_step4 = await hass.config_entries.flow.async_configure(
+        result_de_step3["flow_id"],
+        {
+            CONF_PROVINCE: data_de_step_2[CONF_PROVINCE],
+        },
+    )
+    assert result_de_step4["type"] is FlowResultType.ABORT
+    assert result_de_step4["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -366,10 +396,9 @@ async def test_form_with_options(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the flow with configuring options."""
-    await hass.config.async_set_time_zone("America/Chicago")
-    zone = await dt_util.async_get_time_zone("America/Chicago")
-    # Oct 31st is a Friday. Unofficial holiday as Halloween
-    freezer.move_to(datetime(2024, 10, 31, 12, 0, 0, tzinfo=zone))
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    zone = await dt_util.async_get_time_zone("Europe/Berlin")
+    freezer.move_to(datetime(2024, 12, 24, 12, 0, 0, tzinfo=zone))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -379,7 +408,7 @@ async def test_form_with_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "US",
+            CONF_COUNTRY: "DE",
         },
     )
     await hass.async_block_till_done()
@@ -389,25 +418,50 @@ async def test_form_with_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PROVINCE: "TX",
-            CONF_CATEGORIES: [UNOFFICIAL],
+            CONF_PROVINCE: "BY",
+            CONF_CATEGORIES: [CATHOLIC],
         },
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "United States, TX"
+    assert result["title"] == "Germany, BY"
     assert result["data"] == {
-        CONF_COUNTRY: "US",
-        CONF_PROVINCE: "TX",
+        CONF_COUNTRY: "DE",
+        CONF_PROVINCE: "BY",
     }
     assert result["options"] == {
-        CONF_CATEGORIES: ["unofficial"],
+        CONF_CATEGORIES: ["catholic"],
     }
 
-    state = hass.states.get("calendar.united_states_tx")
-    assert state
-    assert state.state == STATE_ON
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_by",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany_by": {
+            "events": [
+                {
+                    "start": "2024-12-25",
+                    "end": "2024-12-26",
+                    "summary": "Christmas Day",
+                    "location": "Germany, BY",
+                },
+                {
+                    "start": "2024-12-26",
+                    "end": "2024-12-27",
+                    "summary": "Second Day of Christmas",
+                    "location": "Germany, BY",
+                },
+            ]
+        }
+    }
 
     entries = hass.config_entries.async_entries(DOMAIN)
     entry = entries[0]
@@ -418,16 +472,29 @@ async def test_form_with_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_CATEGORIES: []},
+        {CONF_CATEGORIES: [], CONF_LOCAL_ONLY: True},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_CATEGORIES: [],
+        CONF_LOCAL_ONLY: True,
     }
 
-    state = hass.states.get("calendar.united_states_tx")
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_by",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"calendar.germany_by": {"events": []}}
+
+    state = hass.states.get("calendar.germany_by")
     assert state
     assert state.state == STATE_OFF
 

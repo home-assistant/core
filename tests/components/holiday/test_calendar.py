@@ -13,6 +13,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
+    CONF_LOCAL_ONLY,
     CONF_PROVINCE,
     DOMAIN,
 )
@@ -36,11 +37,12 @@ async def test_holiday_calendar_entity(
     """Test HolidayCalendarEntity functionality."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2023, 1, 1, 0, 1, 1, tzinfo=zone))  # New Years Day
+    freezer.move_to(datetime(2023, 3, 27, 0, 1, 1, tzinfo=zone))  # Seward's Day
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
+        options={CONF_LOCAL_ONLY: True},
         title="United States, AK",
     )
     config_entry.add_to_hass(hass)
@@ -65,9 +67,9 @@ async def test_holiday_calendar_entity(
         "calendar.united_states_ak": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2023-03-27",
+                    "end": "2023-03-28",
+                    "summary": "Seward's Day",
                     "location": "United States, AK",
                 }
             ]
@@ -79,8 +81,8 @@ async def test_holiday_calendar_entity(
     assert state.state == "on"
 
     freezer.move_to(
-        datetime(2023, 1, 2, 0, 1, 1, tzinfo=zone)
-    )  # Day after New Years Day
+        datetime(2023, 3, 28, 0, 1, 1, tzinfo=zone)
+    )  # Day after Seward's Day
 
     state = hass.states.get("calendar.united_states_ak")
     assert state is not None
@@ -94,7 +96,7 @@ async def test_holiday_calendar_entity(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
-            "end_date_time": dt_util.now() + timedelta(days=1),
+            "end_date_time": dt_util.now() + timedelta(days=100),
         },
         blocking=True,
         return_response=True,
@@ -103,9 +105,9 @@ async def test_holiday_calendar_entity(
         "calendar.united_states_ak": {
             "events": [
                 {
-                    "start": "2024-01-01",
-                    "end": "2024-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2024-03-25",
+                    "end": "2024-03-26",
+                    "summary": "Seward's Day",
                     "location": "United States, AK",
                 }
             ]
@@ -124,11 +126,12 @@ async def test_default_language(
     """Test default language."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
+    freezer.move_to(datetime(2023, 10, 9, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "FR", CONF_PROVINCE: "BL"},
+        options={CONF_LOCAL_ONLY: True},
         title="France, BL",
     )
     config_entry.add_to_hass(hass)
@@ -151,9 +154,9 @@ async def test_default_language(
         "calendar.france_bl": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2023-10-09",
+                    "end": "2023-10-10",
+                    "summary": "Abolition of Slavery",
                     "location": "France, BL",
                 }
             ]
@@ -180,9 +183,9 @@ async def test_default_language(
         "calendar.france_bl": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "Jour de l'an",
+                    "start": "2023-10-09",
+                    "end": "2023-10-10",
+                    "summary": "Abolition de l'esclavage",
                     "location": "France, BL",
                 }
             ]
@@ -379,6 +382,7 @@ async def test_categories(
         },
         options={
             CONF_CATEGORIES: [CATHOLIC],
+            CONF_LOCAL_ONLY: True,
         },
         title="Germany",
     )
@@ -421,15 +425,78 @@ async def test_categories(
         blocking=True,
         return_response=True,
     )
+    assert response == {"calendar.germany": {"events": []}}
+
+
+async def test_local_only(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the local_only option."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    zone = await dt_util.async_get_time_zone("Europe/Berlin")
+    freezer.move_to(datetime(2025, 12, 24, 12, tzinfo=zone))
+
+    # With local_only=True, national holiday (Dec 25) should NOT be returned
+    config_entry_local = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "DE", CONF_PROVINCE: "BW"},
+        options={CONF_LOCAL_ONLY: True},
+        title="Germany BW Local",
+    )
+    config_entry_local.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry_local.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_bw_local",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"calendar.germany_bw_local": {"events": []}}
+
+    # With local_only=False (default), national holiday (Dec 25) SHOULD be returned
+    config_entry_all = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "DE", CONF_PROVINCE: "BY"},
+        title="Germany BY All",
+    )
+    config_entry_all.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry_all.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_by_all",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
     assert response == {
-        "calendar.germany": {
+        "calendar.germany_by_all": {
             "events": [
                 {
                     "start": "2025-12-25",
                     "end": "2025-12-26",
                     "summary": "Christmas Day",
-                    "location": "Germany",
-                }
+                    "location": "Germany BY All",
+                },
+                {
+                    "start": "2025-12-26",
+                    "end": "2025-12-27",
+                    "summary": "Second Day of Christmas",
+                    "location": "Germany BY All",
+                },
             ]
         }
     }
@@ -447,6 +514,7 @@ async def test_no_update_when_disabled(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
+        options={CONF_LOCAL_ONLY: True},
         title="United States, AK",
     )
     config_entry.add_to_hass(hass)

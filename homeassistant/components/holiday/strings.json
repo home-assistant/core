@@ -8,10 +8,12 @@
       "options": {
         "data": {
           "categories": "Categories",
+          "local_only": "[%key:component::holiday::options::step::init::data::local_only%]",
           "province": "Province"
         },
         "data_description": {
           "categories": "Optionally choose additional holiday categories, public holidays are already included",
+          "local_only": "[%key:component::holiday::options::step::init::data_description::local_only%]",
           "province": "Optionally choose a province / subdivision of {country}"
         }
       },
@@ -40,10 +42,12 @@
     "step": {
       "init": {
         "data": {
-          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+          "local_only": "Include only local holidays"
         },
         "data_description": {
-          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+          "local_only": "If this option is turned off, national holidays will also be present in the local calendar"
         }
       }
     }
