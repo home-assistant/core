@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
@@ -357,7 +358,7 @@ async def test_handle_non_alarm_states(
 )
 async def test_set_if_valid_guards_frozen_valid_values(
     hass: HomeAssistant,
-    hk_driver,
+    hk_driver: HomeDriver,
     build_features: AlarmControlPanelEntityFeature,
     value_is_valid: bool,
     expected_current: int,
