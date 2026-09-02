@@ -6,9 +6,10 @@ from typing import Protocol, cast
 import telegram
 from telegram import Bot
 from telegram.constants import InputMediaType
-from telegram.error import InvalidToken, TelegramError
+from telegram.error import InvalidToken, NetworkError, TelegramError
 import voluptuous as vol
 
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -28,7 +29,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
 )
@@ -967,11 +967,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_token",
+        ) from err
     except TelegramError as err:
         raise ConfigEntryNotReady from err
-
     p_type: str = entry.data[CONF_PLATFORM]
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
