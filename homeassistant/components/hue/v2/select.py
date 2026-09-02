@@ -4,7 +4,6 @@ from typing import override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.groups import RoomController, ZoneController
 from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene
@@ -73,7 +72,7 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register a tracker listener when added to Home Assistant."""
+        """Register listeners when added to Home Assistant."""
         await super().async_added_to_hass()
 
         @callback
@@ -84,6 +83,31 @@ class HueSceneSelectEntity(HueBaseEntity, SelectEntity):
         self.async_on_remove(
             self._tracker.subscribe(self._group_id, _on_tracker_update)
         )
+        self.async_on_remove(
+            self.bridge.api.scenes.subscribe(
+                self._handle_scene_event,
+                event_filter=(
+                    EventType.RESOURCE_ADDED,
+                    EventType.RESOURCE_UPDATED,
+                    EventType.RESOURCE_DELETED,
+                ),
+            )
+        )
+
+    @callback
+    def _handle_scene_event(
+        self, event_type: EventType, scene: HueScene | HueSmartScene
+    ) -> None:
+        """Refresh options when this group's scenes change."""
+        if scene.group.rid != self._group_id:
+            return
+        # Skip rebuild on status updates where the name hasn't changed.
+        if event_type == EventType.RESOURCE_UPDATED and self.scene_option_matches_name(
+            scene.id, scene.metadata.name
+        ):
+            return
+        self.refresh_options()
+        self.async_write_ha_state()
 
     def scene_option_matches_name(self, scene_id: str, name: str) -> bool:
         """Return if the current option label still matches an unchanged scene name."""
@@ -144,62 +168,19 @@ async def async_setup_entry(
     for scene in api.scenes:
         scenes_by_group.setdefault(scene.group.rid, []).append(scene)
 
-    scene_entities: dict[str, HueSceneSelectEntity] = {}
-
     @callback
-    def _on_scene_event(event_type: EventType, scene: HueScene | HueSmartScene) -> None:
-        if entity := scene_entities.get(scene.group.rid):
-            # Skip rebuild on status updates where the name hasn't changed.
-            if (
-                event_type == EventType.RESOURCE_UPDATED
-                and entity.scene_option_matches_name(scene.id, scene.metadata.name)
-            ):
-                return
-            entity.refresh_options()
-            entity.async_write_ha_state()
+    def _on_group_added(_: EventType, group: Room | Zone) -> None:
+        async_add_entities([HueSceneSelectEntity(bridge, tracker, group.id)])
 
-    scene_event_filter = (
-        EventType.RESOURCE_ADDED,
-        EventType.RESOURCE_UPDATED,
-        EventType.RESOURCE_DELETED,
-    )
-    config_entry.async_on_unload(
-        api.scenes.subscribe(_on_scene_event, event_filter=scene_event_filter)
-    )
-
-    @callback
-    def _add_group_entities(group_controller: RoomController | ZoneController) -> None:
-        """Create select entities for all groups in the given controller."""
-        entities: list[HueSceneSelectEntity] = []
-        for group in group_controller:
-            scene_entity = HueSceneSelectEntity(
+    for group_controller in (api.groups.room, api.groups.zone):
+        async_add_entities(
+            HueSceneSelectEntity(
                 bridge, tracker, group.id, scenes_by_group.get(group.id)
             )
-            scene_entities[group.id] = scene_entity
-            entities.append(scene_entity)
-        if entities:
-            async_add_entities(entities)
-
-        @callback
-        def _on_group_added(event_type: EventType, group: Room | Zone) -> None:
-            scene_entity = HueSceneSelectEntity(bridge, tracker, group.id)
-            scene_entities[group.id] = scene_entity
-            async_add_entities([scene_entity])
-
-        @callback
-        def _on_group_removed(_: EventType, group: Room | Zone) -> None:
-            scene_entities.pop(group.id, None)
-
+            for group in group_controller
+        )
         config_entry.async_on_unload(
             group_controller.subscribe(
                 _on_group_added, event_filter=EventType.RESOURCE_ADDED
             )
         )
-        config_entry.async_on_unload(
-            group_controller.subscribe(
-                _on_group_removed, event_filter=EventType.RESOURCE_DELETED
-            )
-        )
-
-    _add_group_entities(api.groups.room)
-    _add_group_entities(api.groups.zone)
