@@ -144,6 +144,7 @@ FLOWS = {
         "control4",
         "cookidoo",
         "coolmaster",
+        "cppm_tracker",
         "cpuspeed",
         "crownstone",
         "cync",
