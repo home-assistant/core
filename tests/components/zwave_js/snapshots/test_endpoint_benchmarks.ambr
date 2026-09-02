@@ -1,0 +1,1871 @@
+# serializer version: 1
+# name: test_device_tree[fibaro_fgr223]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.test_location_fgr_223_test_cover_over_current_detected',
+          'original_name': 'Over-current detected',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.test_location_fgr_223_test_cover_system_hardware_failure_with_failure_code',
+          'original_name': 'System hardware failure (with failure code)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.test_location_fgr_223_test_cover_idle_power_management_over_current_status',
+          'original_name': 'Idle Power Management Over-current status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.test_location_fgr_223_test_cover_idle_system_hardware_status',
+          'original_name': 'Idle System Hardware status',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.test_location_fgr_223_test_cover_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.test_location_fgr_223_test_cover_reset_accumulated_values',
+          'original_name': 'Reset accumulated values',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'cover.test_location_fgr_223_test_cover',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'cover.test_location_fgr_223_test_cover_2',
+          'original_name': '(2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_1_event_state_parameters',
+          'original_name': 'Alarm #1: Event/State Parameters',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_1_notification_status',
+          'original_name': 'Alarm #1: Notification Status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_1_notification_type',
+          'original_name': 'Alarm #1: Notification Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_2_event_state_parameters',
+          'original_name': 'Alarm #2: Event/State Parameters',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_2_notification_status',
+          'original_name': 'Alarm #2: Notification Status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_2_notification_type',
+          'original_name': 'Alarm #2: Notification Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_3_event_state_parameters',
+          'original_name': 'Alarm #3: Event/State Parameters',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_3_notification_status',
+          'original_name': 'Alarm #3: Notification Status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_3_notification_type',
+          'original_name': 'Alarm #3: Notification Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_4_event_state_parameters',
+          'original_name': 'Alarm #4: Event/State Parameters',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_4_notification_status',
+          'original_name': 'Alarm #4: Notification Status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_4_notification_type',
+          'original_name': 'Alarm #4: Notification Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_5_event_state_parameters',
+          'original_name': 'Alarm #5: Event/State Parameters',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_5_notification_status',
+          'original_name': 'Alarm #5: Notification Status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_alarm_5_notification_type',
+          'original_name': 'Alarm #5: Notification Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_delay_motor_stop',
+          'original_name': 'Delay motor stop',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_energy_reports_on_change',
+          'original_name': 'Energy reports - on change',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_energy_reports_periodic',
+          'original_name': 'Energy reports - periodic',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_motor_operation_detection',
+          'original_name': 'Motor operation detection',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_power_reports_on_change',
+          'original_name': 'Power reports - on change',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_power_reports_periodic',
+          'original_name': 'Power reports - periodic',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_time_of_down_movement',
+          'original_name': 'Time of down movement',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_time_of_up_movement',
+          'original_name': 'Time of up movement',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.test_location_fgr_223_test_cover_venetian_blind_time_of_full_turn_of_the_slats',
+          'original_name': 'Venetian blind - time of full turn of the slats',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_alarm_1_action',
+          'original_name': 'Alarm #1: Action',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_alarm_2_action',
+          'original_name': 'Alarm #2: Action',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_alarm_3_action',
+          'original_name': 'Alarm #3: Action',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_alarm_4_action',
+          'original_name': 'Alarm #4: Action',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_alarm_5_action',
+          'original_name': 'Alarm #5: Action',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_force_calibration',
+          'original_name': 'Force calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_inputs_orientation',
+          'original_name': 'Inputs orientation',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.test_location_fgr_223_test_cover_local_protection_state',
+          'original_name': 'Local protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_measuring_power_consumed_by_the_device_itself',
+          'original_name': 'Measuring power consumed by the device itself',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_operating_mode',
+          'original_name': 'Operating mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_outputs_orientation',
+          'original_name': 'Outputs orientation',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.test_location_fgr_223_test_cover_rf_protection_state',
+          'original_name': 'RF protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_set_slats_back_to_previous_position',
+          'original_name': 'Set slats back to previous position',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.test_location_fgr_223_test_cover_switch_type',
+          'original_name': 'Switch type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_alarm_level',
+          'original_name': 'Alarm Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_alarm_type',
+          'original_name': 'Alarm Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_electric_consumption_kwh',
+          'original_name': 'Electric Consumption [kWh]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_electric_consumption_w',
+          'original_name': 'Electric Consumption [W]',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.test_location_fgr_223_test_cover_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s1_scenes_hold_down_release',
+          'original_name': 'S1 scenes: Hold down / Release',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s1_scenes_pressed_1_time',
+          'original_name': 'S1 scenes: Pressed 1 time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s1_scenes_pressed_2_times',
+          'original_name': 'S1 scenes: Pressed 2 times',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s1_scenes_pressed_3_time',
+          'original_name': 'S1 scenes: Pressed 3 time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s2_scenes_hold_down_release',
+          'original_name': 'S2 scenes: Hold down / Release',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s2_scenes_pressed_1_time',
+          'original_name': 'S2 scenes: Pressed 1 time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s2_scenes_pressed_2_times',
+          'original_name': 'S2 scenes: Pressed 2 times',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'switch.test_location_fgr_223_test_cover_s2_scenes_pressed_3_time',
+          'original_name': 'S2 scenes: Pressed 3 time',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'update.test_location_fgr_223_test_cover_firmware',
+          'original_name': 'Firmware',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-10',
+        'zwave_js:3245146787-10-271:771:4096',
+      ]),
+      'name': 'fgr 223 test cover',
+    }),
+  })
+# ---
+# name: test_device_tree[heatit_z_trm2fx]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.floor_thermostat_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'climate.floor_thermostat',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'light.floor_thermostat_basic',
+          'original_name': 'Basic',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'light.floor_thermostat_basic_3',
+          'original_name': 'Basic (3)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_air_a2_maximum_temperature_limit_ahi',
+          'original_name': 'Air (A2) maximum temperature limit (AHi)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_air_a2_minimum_temperature_limit_alo',
+          'original_name': 'Air (A2) minimum temperature limit (ALo)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_button_brightness_active_state',
+          'original_name': 'Button brightness - active state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_button_brightness_dimmed_state',
+          'original_name': 'Button brightness - dimmed state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_cooling_setpoint_cool',
+          'original_name': 'Cooling setpoint (COOL)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_display_brightness_active_state',
+          'original_name': 'Display brightness - active state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_display_brightness_dimmed_state',
+          'original_name': 'Display brightness - dimmed state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_energy_saving_mode_setpoint_eco',
+          'original_name': 'Energy saving mode setpoint (ECO)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_external_sensor_calibration',
+          'original_name': 'External sensor calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_maximum_temperature_fhi',
+          'original_name': 'Floor maximum temperature (FHi)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_minimum_temperature_limit_flo',
+          'original_name': 'Floor minimum temperature limit (FLo)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_sensor_calibration',
+          'original_name': 'Floor sensor calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_heating_mode_setpoint_co',
+          'original_name': 'Heating mode setpoint (CO)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_meter_report_delta_value',
+          'original_name': 'Meter report delta value',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_meter_report_interval',
+          'original_name': 'Meter report interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_control_hysteresis_diff_i',
+          'original_name': 'Temperature control hysteresis (DIFF I)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_hysteresis',
+          'original_name': 'Temperature report hysteresis',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_interval',
+          'original_name': 'Temperature report interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_floor_sensor_type',
+          'original_name': 'Floor sensor type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_operation_mode',
+          'original_name': 'Operation mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_sensor_mode',
+          'original_name': 'Sensor mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_temperature_display',
+          'original_name': 'Temperature display',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature',
+          'original_name': 'Air temperature',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature_3',
+          'original_name': 'Air temperature (3)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_electric_consumed_kwh',
+          'original_name': 'Electric Consumed [kWh]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_electric_consumed_v',
+          'original_name': 'Electric Consumed [V]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_electric_consumed_w',
+          'original_name': 'Electric Consumed [W]',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'switch.floor_thermostat',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'update.floor_thermostat_firmware',
+          'original_name': 'Firmware',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-26',
+        'zwave_js:3245146787-26-411:3:514',
+      ]),
+      'name': 'Floor thermostat',
+    }),
+  })
+# ---
+# name: test_device_tree[heatit_z_trm3]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.floor_thermostat_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'climate.floor_thermostat',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_air_maximum_temperature_limit_ahi',
+          'original_name': 'Air maximum temperature limit (AHi)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_air_minimum_temperature_limit_alo',
+          'original_name': 'Air minimum temperature limit (ALo)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_button_brightness_active_state',
+          'original_name': 'Button brightness - active state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_button_brightness_dimmed_state',
+          'original_name': 'Button brightness - dimmed state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_display_brightness_active_state',
+          'original_name': 'Display brightness - active state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_display_brightness_dimmed_state',
+          'original_name': 'Display brightness - dimmed state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_external_sensor_calibration',
+          'original_name': 'External sensor calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_maximum_temperature_fhi',
+          'original_name': 'Floor maximum temperature (FHi)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_minimum_temperature_limit_flo',
+          'original_name': 'Floor minimum temperature limit (FLo)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_sensor_calibration',
+          'original_name': 'Floor sensor calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_meter_report_delta_value',
+          'original_name': 'Meter report delta value',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_meter_report_interval',
+          'original_name': 'Meter report interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_room_sensor_calibration',
+          'original_name': 'Room sensor calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_control_hysteresis_diff_i',
+          'original_name': 'Temperature control hysteresis (DIFF I)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_hysteresis',
+          'original_name': 'Temperature report hysteresis',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_interval',
+          'original_name': 'Temperature report interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_floor_sensor_type',
+          'original_name': 'Floor sensor type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_sensor_mode',
+          'original_name': 'Sensor mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_temperature_display',
+          'original_name': 'Temperature display',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature',
+          'original_name': 'Air temperature',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature_3',
+          'original_name': 'Air temperature (3)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature_4',
+          'original_name': 'Air temperature (4)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_value_electric_consumed',
+          'original_name': 'Value (Electric, Consumed)',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-24',
+        'zwave_js:3245146787-24-411:3:515',
+      ]),
+      'name': 'Floor thermostat',
+    }),
+  })
+# ---
+# name: test_device_tree[heatit_z_trm6]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.floor_thermostat_over_load_detected',
+          'original_name': 'Over-load detected',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.floor_thermostat_overheat_detected',
+          'original_name': 'Overheat detected',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.floor_thermostat_identify',
+          'original_name': 'Identify',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.floor_thermostat_idle_heat_alarm_heat_sensor_status',
+          'original_name': 'Idle Heat Alarm Heat sensor status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.floor_thermostat_idle_power_management_over_load_status',
+          'original_name': 'Idle Power Management Over-load status',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.floor_thermostat_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.floor_thermostat_reset_accumulated_values',
+          'original_name': 'Reset accumulated values',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'climate.floor_thermostat',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_active_display_brightness',
+          'original_name': 'Active Display Brightness',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_cooling_setpoint',
+          'original_name': 'Cooling Setpoint',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_eco_setpoint',
+          'original_name': 'Eco Setpoint',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_external_sensor_calibration',
+          'original_name': 'External Sensor Calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_external_sensor_max_temp_limit',
+          'original_name': 'External Sensor Max Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_external_sensor_min_temp_limit',
+          'original_name': 'External Sensor Min Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_sensor_calibration',
+          'original_name': 'Floor Sensor Calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_sensor_max_temp_limit',
+          'original_name': 'Floor Sensor Max Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_floor_sensor_min_temp_limit',
+          'original_name': 'Floor Sensor Min Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_heating_setpoint',
+          'original_name': 'Heating Setpoint',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_indicator_value',
+          'original_name': 'Indicator value',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_internal_sensor_calibration',
+          'original_name': 'Internal Sensor Calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_internal_sensor_max_temp_limit',
+          'original_name': 'Internal Sensor Max Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_internal_sensor_min_temp_limit',
+          'original_name': 'Internal Sensor Min Temp Limit',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_load_power',
+          'original_name': 'Load Power',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_meter_report_interval',
+          'original_name': 'Meter Report Interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_power_regulator_active_time',
+          'original_name': 'Power Regulator Active Time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_standby_display_brightness',
+          'original_name': 'Standby Display Brightness',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_control_hysteresis',
+          'original_name': 'Temperature Control Hysteresis',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_hysteresis',
+          'original_name': 'Temperature Report Hysteresis',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_temperature_report_interval',
+          'original_name': 'Temperature Report Interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_thermostat_state_report_interval',
+          'original_name': 'Thermostat State Report Interval',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.floor_thermostat_turn_on_delay_after_error',
+          'original_name': 'Turn On Delay After Error',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_external_sensor_resistance',
+          'original_name': 'External Sensor Resistance',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_local_control',
+          'original_name': 'Local Control',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.floor_thermostat_local_protection_state',
+          'original_name': 'Local protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_open_window_detection',
+          'original_name': 'Open Window Detection',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_operating_mode',
+          'original_name': 'Operating Mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_regulation_mode',
+          'original_name': 'Regulation Mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_sensor_mode',
+          'original_name': 'Sensor Mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.floor_thermostat_temperature_display',
+          'original_name': 'Temperature Display',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature',
+          'original_name': 'Air temperature',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature_3',
+          'original_name': 'Air temperature (3)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_air_temperature_4',
+          'original_name': 'Air temperature (4)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_alarm_level',
+          'original_name': 'Alarm Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_alarm_type',
+          'original_name': 'Alarm Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_electric_consumption_kwh',
+          'original_name': 'Electric Consumption [kWh]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_electric_consumption_w',
+          'original_name': 'Electric Consumption [W]',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.floor_thermostat_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.floor_thermostat_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'update.floor_thermostat_firmware',
+          'original_name': 'Firmware',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-101',
+        'zwave_js:3245146787-101-411:48:12289',
+      ]),
+      'name': 'Floor Thermostat',
+    }),
+  })
+# ---
+# name: test_device_tree[inovelli_lzw36]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.family_room_combo_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.family_room_combo_reset_accumulated_values',
+          'original_name': 'Reset accumulated values',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'fan.family_room_combo_2',
+          'original_name': '(2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'light.family_room_combo',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_active_power_reports',
+          'original_name': 'Active Power Reports',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_auto_off_fan_timer',
+          'original_name': 'Auto Off Fan Timer',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_auto_off_light_timer',
+          'original_name': 'Auto Off Light Timer',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_default_light_level_local',
+          'original_name': 'Default Light Level (Local)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_default_light_level_z_wave',
+          'original_name': 'Default Light Level (Z-Wave)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_energy_reports',
+          'original_name': 'Energy Reports',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_indicator_color',
+          'original_name': 'Fan LED Indicator Color',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_effect_color',
+          'original_name': 'Fan LED Strip Effect Color',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_effect_duration',
+          'original_name': 'Fan LED Strip Effect Duration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_effect_intensity',
+          'original_name': 'Fan LED Strip Effect Intensity',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_intensity',
+          'original_name': 'Fan LED Strip Intensity',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_intensity_when_off',
+          'original_name': 'Fan LED Strip Intensity (When OFF)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_led_strip_timeout',
+          'original_name': 'Fan LED Strip Timeout',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_fan_state_after_power_restored',
+          'original_name': 'Fan State After Power Restored',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_dimming_speed',
+          'original_name': 'Light Dimming Speed',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_dimming_speed_from_switch',
+          'original_name': 'Light Dimming Speed (From Switch)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_indicator_color',
+          'original_name': 'Light LED Indicator Color',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_effect_color',
+          'original_name': 'Light LED Strip Effect Color',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_effect_duration',
+          'original_name': 'Light LED Strip Effect Duration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_effect_intensity',
+          'original_name': 'Light LED Strip Effect Intensity',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_intensity',
+          'original_name': 'Light LED Strip Intensity',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_intensity_when_off',
+          'original_name': 'Light LED Strip Intensity (When OFF)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_led_strip_timeout',
+          'original_name': 'Light LED Strip Timeout',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_ramp_rate',
+          'original_name': 'Light Ramp Rate',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_ramp_rate_from_switch',
+          'original_name': 'Light Ramp Rate (From Switch)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_light_state_after_power_restored',
+          'original_name': 'Light State After Power Restored',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_maximum_fan_level',
+          'original_name': 'Maximum Fan Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_maximum_light_level',
+          'original_name': 'Maximum Light Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_minimum_fan_level',
+          'original_name': 'Minimum Fan Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_minimum_light_level',
+          'original_name': 'Minimum Light Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.family_room_combo_periodic_power_energy_reports',
+          'original_name': 'Periodic Power & Energy Reports',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_default_fan_level_local',
+          'original_name': 'Default Fan Level (Local)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_default_fan_level_z_wave',
+          'original_name': 'Default Fan Level (Z-Wave)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_fan_led_strip_effect',
+          'original_name': 'Fan LED Strip Effect',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_instant_on',
+          'original_name': 'Instant On',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_light_led_strip_effect',
+          'original_name': 'Light LED Strip Effect',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.family_room_combo_local_protection',
+          'original_name': 'Local Protection',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.family_room_combo_local_protection_state',
+          'original_name': 'Local protection state',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.family_room_combo_rf_protection_state',
+          'original_name': 'RF protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.family_room_combo_electric_consumed_kwh',
+          'original_name': 'Electric Consumed [kWh]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.family_room_combo_electric_consumed_w',
+          'original_name': 'Electric Consumed [W]',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.family_room_combo_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.family_room_combo_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'update.family_room_combo_firmware',
+          'original_name': 'Firmware',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-19',
+        'zwave_js:3245146787-19-798:14:1',
+      ]),
+      'name': 'family_room_combo',
+    }),
+  })
+# ---
+# name: test_device_tree[merten_507801]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.connect_roller_shutter_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'cover.connect_roller_shutter',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'cover.connect_roller_shutter_2',
+          'original_name': '(2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.connect_roller_shutter_changeover_delay',
+          'original_name': 'Changeover Delay',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.connect_roller_shutter_travel_time_down_byte_1',
+          'original_name': 'Travel Time Down, Byte 1',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.connect_roller_shutter_travel_time_down_byte_2',
+          'original_name': 'Travel Time Down, Byte 2',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.connect_roller_shutter_travel_time_up_byte_1',
+          'original_name': 'Travel Time Up, Byte 1',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.connect_roller_shutter_travel_time_up_byte_2',
+          'original_name': 'Travel Time Up, Byte 2',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.connect_roller_shutter_local_protection_state',
+          'original_name': 'Local protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.connect_roller_shutter_local_protection_state_2',
+          'original_name': 'Local protection state (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'select.connect_roller_shutter_rf_protection_state',
+          'original_name': 'RF protection state',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.connect_roller_shutter_rf_protection_state_2',
+          'original_name': 'RF protection state (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.connect_roller_shutter_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.connect_roller_shutter_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-41',
+        'zwave_js:3245146787-41-122:32771:1',
+      ]),
+      'name': 'Connect Roller Shutter',
+    }),
+  })
+# ---
+# name: test_device_tree[shelly_qnsh_001p10]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_over_current_detected',
+          'original_name': 'Over-current detected',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_over_current_detected_2',
+          'original_name': 'Over-current detected (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_overheat_detected',
+          'original_name': 'Overheat detected',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_overheat_detected_2',
+          'original_name': 'Overheat detected (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_system_hardware_failure',
+          'original_name': 'System hardware failure',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'binary_sensor.wave_shutter_system_hardware_failure_2',
+          'original_name': 'System hardware failure (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_identify',
+          'original_name': 'Identify',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_heat_alarm_heat_sensor_status',
+          'original_name': 'Idle Heat Alarm Heat sensor status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_heat_alarm_heat_sensor_status_2',
+          'original_name': 'Idle Heat Alarm Heat sensor status (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_power_management_over_current_status',
+          'original_name': 'Idle Power Management Over-current status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_power_management_over_current_status_2',
+          'original_name': 'Idle Power Management Over-current status (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_system_hardware_status',
+          'original_name': 'Idle System Hardware status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'button.wave_shutter_idle_system_hardware_status_2',
+          'original_name': 'Idle System Hardware status (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_reset_accumulated_values',
+          'original_name': 'Reset accumulated values',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_reset_accumulated_values_2',
+          'original_name': 'Reset accumulated values (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_reset_electric',
+          'original_name': 'Reset (Electric)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.wave_shutter_reset_electric_2',
+          'original_name': 'Reset (Electric) (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'cover.wave_shutter',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'cover.wave_shutter_2',
+          'original_name': '(2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_alarm_conf_co',
+          'original_name': 'Alarm conf. - CO',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_alarm_conf_heat',
+          'original_name': 'Alarm conf. - Heat',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_alarm_conf_smoke',
+          'original_name': 'Alarm conf. - Smoke',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_alarm_conf_water',
+          'original_name': 'Alarm conf. - Water',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_delay_motor_stop',
+          'original_name': 'Delay Motor Stop',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_down_time',
+          'original_name': 'Down time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_factory_reset',
+          'original_name': 'Factory reset',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_indicator_value',
+          'original_name': 'Indicator value',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_motor_moving_time',
+          'original_name': 'Motor Moving Time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_motor_operation_detection',
+          'original_name': 'Motor Operation Detection',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_next_move_delay',
+          'original_name': 'Next move delay',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_power_change_report_threshold',
+          'original_name': 'Power Change Report Threshold',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_power_consumption_measurement_delay',
+          'original_name': 'Power Consumption Measurement Delay',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_slats_turning_time_offset',
+          'original_name': 'Slats turning time offset',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_up_time',
+          'original_name': 'Up time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'number.wave_shutter_venetian_mode_turning_time',
+          'original_name': 'Venetian Mode: Turning Time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_operating_mode',
+          'original_name': 'Operating Mode',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_shutter_calibration',
+          'original_name': 'Shutter Calibration',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_sw1_switch_type',
+          'original_name': 'SW1 Switch Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_swap_inputs',
+          'original_name': 'Swap Inputs',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_swap_outputs',
+          'original_name': 'Swap Outputs',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'select.wave_shutter_venetian_mode_restore_slats_position_after_moving',
+          'original_name': 'Venetian Mode: Restore Slats Position After Moving',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_alarm_level',
+          'original_name': 'Alarm Level',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_alarm_level_2',
+          'original_name': 'Alarm Level (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_alarm_type',
+          'original_name': 'Alarm Type',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_alarm_type_2',
+          'original_name': 'Alarm Type (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.wave_shutter_electric_consumption_kwh',
+          'original_name': 'Electric Consumption [kWh]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.wave_shutter_electric_consumption_kwh_2',
+          'original_name': 'Electric Consumption [kWh] (2)',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.wave_shutter_electric_consumption_w',
+          'original_name': 'Electric Consumption [W]',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.wave_shutter_electric_consumption_w_2',
+          'original_name': 'Electric Consumption [W] (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.wave_shutter_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.wave_shutter_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'update.wave_shutter_firmware',
+          'original_name': 'Firmware',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-5',
+        'zwave_js:3245146787-5-1120:3:130',
+      ]),
+      'name': 'Wave Shutter',
+    }),
+  })
+# ---
+# name: test_device_tree[vision_zl7432]
+  dict({
+    'child_devices': list([
+    ]),
+    'node_device': dict({
+      'entities': list([
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'button.in_wall_dual_relay_switch_ping',
+          'original_name': 'Ping',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'light.in_wall_dual_relay_switch_basic',
+          'original_name': 'Basic',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'light.in_wall_dual_relay_switch_basic_2',
+          'original_name': 'Basic (2)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_commands_dropped_rx',
+          'original_name': 'Commands dropped (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_commands_dropped_tx',
+          'original_name': 'Commands dropped (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_last_seen',
+          'original_name': 'Last seen',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_node_status',
+          'original_name': 'Node status',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_round_trip_time',
+          'original_name': 'Round trip time',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_signal_strength',
+          'original_name': 'Signal strength',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_successful_commands_rx',
+          'original_name': 'Successful commands (RX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_successful_commands_tx',
+          'original_name': 'Successful commands (TX)',
+        }),
+        dict({
+          'disabled_by': 'integration',
+          'entity_id': 'sensor.in_wall_dual_relay_switch_timed_out_responses',
+          'original_name': 'Timed out responses',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'switch.in_wall_dual_relay_switch',
+          'original_name': '',
+        }),
+        dict({
+          'disabled_by': 'None',
+          'entity_id': 'switch.in_wall_dual_relay_switch_2',
+          'original_name': '(2)',
+        }),
+      ]),
+      'identifiers': list([
+        'zwave_js:3245146787-7',
+        'zwave_js:3245146787-7-265:8215:5911',
+      ]),
+      'name': 'In Wall Dual Relay Switch',
+    }),
+  })
+# ---
