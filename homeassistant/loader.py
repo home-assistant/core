@@ -723,6 +723,21 @@ class Integration:
             if integration.is_built_in:
                 return integration
 
+            # A custom integration that a built-in one took over is left alone,
+            # without the warning that would make it look like a problem.
+            if (
+                blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain)
+            ) and blocked.replaced_by is not None:
+                _LOGGER.info(
+                    (
+                        "Custom integration '%s' is now part of Home Assistant"
+                        " as '%s' and is no longer loaded"
+                    ),
+                    integration.domain,
+                    blocked.replaced_by,
+                )
+                return None
+
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
 
             if integration.version is None:
@@ -764,26 +779,16 @@ class Integration:
 
             if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
                 if _version_blocked(integration.version, blocked):
-                    if blocked.replaced_by is not None:
-                        _LOGGER.info(
-                            (
-                                "Custom integration '%s' is now part of Home Assistant"
-                                " as '%s' and is no longer loaded"
-                            ),
-                            integration.domain,
-                            blocked.replaced_by,
-                        )
-                    else:
-                        _LOGGER.error(
-                            (
-                                "Version %s of custom integration '%s' %s and was "
-                                "blocked from loading, please %s"
-                            ),
-                            integration.version,
-                            integration.domain,
-                            blocked.reason,
-                            async_suggest_report_issue(None, integration=integration),
-                        )
+                    _LOGGER.error(
+                        (
+                            "Version %s of custom integration '%s' %s and was blocked "
+                            "from loading, please %s"
+                        ),
+                        integration.version,
+                        integration.domain,
+                        blocked.reason,
+                        async_suggest_report_issue(None, integration=integration),
+                    )
                     return None
 
             return integration
