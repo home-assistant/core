@@ -330,6 +330,7 @@ homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
+homeassistant.components.kaco_modbus.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
@@ -547,6 +548,8 @@ homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*
 homeassistant.components.snooz.*
+homeassistant.components.sofar.*
+homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
@@ -565,6 +568,7 @@ homeassistant.components.streamlabswater.*
 homeassistant.components.stt.*
 homeassistant.components.suez_water.*
 homeassistant.components.sun.*
+homeassistant.components.sunsynk.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
 homeassistant.components.switch_as_x.*
@@ -670,4 +674,5 @@ homeassistant.components.zeroconf.*
 homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
+homeassistant.components.zonneplan.*
 homeassistant.components.zwave_js.*
