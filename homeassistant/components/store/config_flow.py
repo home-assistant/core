@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Mapping
-from contextlib import suppress
 from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
@@ -21,7 +20,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers import aiohttp_client
 
 from .base import HacsBase
@@ -57,8 +55,9 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        # A user flow with an entry already present is aborted by core, the
+        # manifest sets single_config_entry. This catches the store running
+        # without an entry of its own.
         if self.hass.data.get(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
@@ -96,18 +95,8 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="could_not_register")
 
         async def _wait_for_activation() -> None:
-            try:
-                activation = await device.activation(
-                    device_code=registration.device_code
-                )
-                self._activation = activation.data
-            finally:
-
-                async def _progress() -> None:
-                    with suppress(UnknownFlow):
-                        await self.hass.config_entries.flow.async_configure(
-                            flow_id=self.flow_id
-                        )
+            activation = await device.activation(device_code=registration.device_code)
+            self._activation = activation.data
 
         if self.activation_task is None:
             self.activation_task = self.hass.async_create_task(_wait_for_activation())
