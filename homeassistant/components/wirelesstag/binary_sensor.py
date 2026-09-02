@@ -126,6 +126,5 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     @callback
     def _on_binary_event_callback(self, new_tag: SensorTag) -> None:
         """Update state from arrived push notification."""
-        self._tag = new_tag
-        self._state = self.updated_state_value()
+        self._apply_tag(new_tag)
         self.async_write_ha_state()
