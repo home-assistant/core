@@ -222,7 +222,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         )
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
-        self._state = description.value_fn(coordinator.data)
 
     @property
     @override
