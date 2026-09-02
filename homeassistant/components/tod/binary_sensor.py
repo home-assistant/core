@@ -177,7 +177,9 @@ class TodSensor(BinarySensorEntity):
             )
             if event_date is not None and event_date <= utc_point_in_time:
                 return event_date
-        raise ValueError(f"Unable to find a previous {event_type} event within one year")
+        raise ValueError(
+            f"Unable to find a previous {event_type} event within one year"
+        )
 
     def _calculate_boundary_time(self) -> None:
         """Calculate internal absolute time boundaries."""
