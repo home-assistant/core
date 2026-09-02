@@ -99,16 +99,6 @@ def sun(
     has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
     has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
 
-    after_sunrise = sunrise is not None and today > dt_util.as_local(sunrise).date()
-    if after_sunrise and has_sunrise_condition:
-        tomorrow = today + timedelta(days=1)
-        sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
-
-    after_sunset = sunset is not None and today > dt_util.as_local(sunset).date()
-    if after_sunset and has_sunset_condition:
-        tomorrow = today + timedelta(days=1)
-        sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
-
     # A missing sunrise/sunset means the sun doesn't rise/set on this day, which
     # happens in polar regions.
     if sunrise is None and has_sunrise_condition:

@@ -202,12 +202,12 @@ async def test_from_sunrise_to_sunset(
 ) -> None:
     """Test period from sunrise to sunset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
-    sunrise = dt_util.as_local(
-        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
-    )
-    sunset = dt_util.as_local(
-        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
-    )
+    raw_sunrise = get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+    sunrise = dt_util.as_local(raw_sunrise)
+    # This location's sunset (in the configured timezone's calendar day)
+    # precedes its sunrise, so the sensor rolls sunset forward to the next
+    # occurrence after sunrise, same as `_calculate_boundary_time` does.
+    sunset = dt_util.as_local(get_astral_event_next(hass, "sunset", raw_sunrise))
     config = {
         "binary_sensor": [
             {
@@ -544,12 +544,13 @@ async def test_sun_offset(
 ) -> None:
     """Test sun event with offset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
-    sunrise = dt_util.as_local(
-        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
-        + timedelta(hours=-1, minutes=-30)
-    )
+    raw_sunrise = get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+    sunrise = dt_util.as_local(raw_sunrise + timedelta(hours=-1, minutes=-30))
+    # This location's sunset (in the configured timezone's calendar day)
+    # precedes its sunrise, so the sensor rolls sunset forward to the next
+    # occurrence after sunrise, same as `_calculate_boundary_time` does.
     sunset = dt_util.as_local(
-        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
+        get_astral_event_next(hass, "sunset", raw_sunrise)
         + timedelta(hours=1, minutes=30)
     )
     config = {

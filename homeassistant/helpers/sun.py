@@ -144,7 +144,12 @@ def get_astral_event_date(
 
     event_func = cast(_AstralSunEventCallable, getattr(astral.sun, event))
     try:
-        return event_func(observer, date)
+        # Astral matches the returned event's date against `date` in `tzinfo`,
+        # which defaults to UTC. Pass the local zone so the match is against
+        # the intended local day, then convert back to UTC for callers.
+        return event_func(
+            observer, date, tzinfo=dt_util.get_default_time_zone()
+        ).astimezone(dt_util.UTC)
     except ValueError:
         # Event never occurs for specified date.
         return None
