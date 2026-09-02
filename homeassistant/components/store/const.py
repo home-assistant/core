@@ -28,8 +28,6 @@ HACS_ACTION_GITHUB_API_HEADERS = {
 }
 
 VERSION_STORAGE = "6"
-# Kept for compatibility with HACS installs, migrates in a later release
-STORENAME = "hacs"
 
 HACS_SYSTEM_ID = (
     "0717a0cd-745c-48fd-9b16-c8534c9704f9-bc944b0f-fd42-4a58-a072-ade38d1444cd"
