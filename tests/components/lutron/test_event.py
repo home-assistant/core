@@ -98,14 +98,7 @@ async def test_event_press_release(
 async def test_event_release_only_button(
     hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """A button that only ever reports a release still fires a single press.
-
-    When a button's programming carries a hold or multi-tap action, the system
-    reports on release rather than on press: at press time it cannot yet tell a
-    tap from a hold, so it waits for the release to decide. Such a button never
-    sends a press, and its button type is an ordinary one -- not a raise/lower --
-    so it cannot be recognised from the type alone.
-    """
+    """A button that only ever reports a release still fires a single press."""
     mock_config_entry.add_to_hass(hass)
 
     button = mock_lutron.areas[0].keypads[0].buttons[0]
