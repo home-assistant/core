@@ -487,7 +487,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_backup_nvm)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
-    hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
+    hass.http.register_view(FirmwareUploadView())
 
 
 @websocket_api.require_admin
@@ -2712,18 +2712,13 @@ class FirmwareUploadView(HomeAssistantView):
     url = r"/api/zwave_js/firmware/upload/{device_id}"
     name = "api:zwave_js:firmware:upload"
 
-    def __init__(self, dev_reg: dr.DeviceRegistry) -> None:
-        """Initialize view."""
-        super().__init__()
-        self._dev_reg = dev_reg
-
     @require_admin
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
         hass = request.app[KEY_HASS]
 
         try:
-            node = async_get_node_from_device_id(hass, device_id, self._dev_reg)
+            node = async_get_node_from_device_id(hass, device_id)
         except ValueError as err:
             if "not loaded" in err.args[0]:
                 raise web_exceptions.HTTPBadRequest from err
@@ -3041,7 +3036,7 @@ async def websocket_hard_reset_controller(
     @callback
     def _handle_device_added(device: dr.DeviceEntry) -> None:
         """Handle device is added."""
-        if entry.entry_id in device.config_entries:
+        if entry.entry_id == device.config_entry_id:
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 

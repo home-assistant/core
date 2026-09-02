@@ -974,9 +974,7 @@ class ZWaveServices:
 
         for device_id in service.data.get(ATTR_DEVICE_ID, []):
             try:
-                node = async_get_node_from_device_id(
-                    self._hass, device_id, self._dev_reg
-                )
+                node = async_get_node_from_device_id(self._hass, device_id)
             except ValueError as err:
                 _LOGGER.warning(err.args[0])
                 continue
@@ -993,9 +991,7 @@ class ZWaveServices:
                     const.DOMAIN,
                 )
                 continue
-            node = async_get_node_from_entity_id(
-                self._hass, entity_id, self._ent_reg, self._dev_reg
-            )
+            node = async_get_node_from_entity_id(self._hass, entity_id, self._ent_reg)
             if (
                 value_id := get_value_id_from_unique_id(entity_entry.unique_id)
             ) is None:
