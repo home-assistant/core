@@ -2,13 +2,30 @@
 
 import logging
 
+from homeassistant.components.automation import (
+    DOMAIN as AUTOMATION_DOMAIN,
+    automations_with_entity,
+)
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN, scripts_with_entity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    start,
+)
 
+from .const import DOMAIN
 from .hub import Hub, VictronGxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+_LEGACY_EVCHARGER_SENSOR_SUFFIXES = (
+    "_evcharger_max_set_current",
+    "_evcharger_min_set_current",
+)
+_LEGACY_SENSOR_BREAKS_IN_VERSION = "2027.2.0"
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,9 +39,77 @@ PLATFORMS: list[Platform] = [
 ]
 
 
+def _automations_and_scripts_using_entity(
+    hass: HomeAssistant, entity_id: str
+) -> list[str]:
+    """Return links to automations and scripts referencing an entity."""
+    entity_registry = er.async_get(hass)
+    items: list[str] = []
+    for domain, entity_ids in (
+        (AUTOMATION_DOMAIN, automations_with_entity(hass, entity_id)),
+        (SCRIPT_DOMAIN, scripts_with_entity(hass, entity_id)),
+    ):
+        for used_entity_id in entity_ids:
+            if entry := entity_registry.async_get(used_entity_id):
+                items.append(
+                    f"- [{entry.original_name or used_entity_id}]"
+                    f"(/config/{domain}/edit/{entry.unique_id})"
+                )
+            else:
+                items.append(f"- `{used_entity_id}`")
+    return items
+
+
+def _async_check_legacy_sensors(
+    hass: HomeAssistant, config_entry: VictronGxConfigEntry
+) -> None:
+    """Create repairs for legacy sensors and remove them once disabled."""
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if (
+            entity_entry.domain != Platform.SENSOR
+            or not entity_entry.unique_id.endswith(_LEGACY_EVCHARGER_SENSOR_SUFFIXES)
+        ):
+            continue
+
+        issue_id = f"deprecated_sensor_{entity_entry.unique_id}"
+        if entity_entry.disabled:
+            entity_registry.async_remove(entity_entry.entity_id)
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            continue
+
+        items = _automations_and_scripts_using_entity(hass, entity_entry.entity_id)
+        translation_key = "deprecated_sensor"
+        placeholders = {"entity_id": entity_entry.entity_id}
+        if items:
+            translation_key = "deprecated_sensor_in_use"
+            placeholders["items"] = "\n".join(items)
+
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=_LEGACY_SENSOR_BREAKS_IN_VERSION,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
     """Set up victron_gx from a config entry."""
     _LOGGER.debug("async_setup_entry called for entry: %s", entry.entry_id)
+
+    @callback
+    def _async_check_legacy_sensors_at_start(_: HomeAssistant) -> None:
+        _async_check_legacy_sensors(hass, entry)
+
+    entry.async_on_unload(
+        start.async_at_started(hass, _async_check_legacy_sensors_at_start)
+    )
 
     hub = Hub(hass, entry)
     entry.runtime_data = hub
