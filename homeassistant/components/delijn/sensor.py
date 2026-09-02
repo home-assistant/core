@@ -116,6 +116,17 @@ def _get_failed_import_stops(hass: HomeAssistant) -> set[tuple[str, str]]:
     return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_FAILED_IMPORT_STOPS, set())
 
 
+def _clear_failed_import_stop(failed_stops: set[tuple[str, str]], stop_id: str) -> None:
+    """Forget import failures of a stop under every account.
+
+    Once the stop is configured on any entry, no account still needs the
+    YAML block for it, and its stop-scoped repair issue is deleted.
+    """
+    failed_stops.difference_update(
+        {entry for entry in failed_stops if entry[1] == stop_id}
+    )
+
+
 def _get_import_lock(hass: HomeAssistant) -> asyncio.Lock:
     """Return the lock serializing YAML platform imports across all blocks.
 
@@ -230,7 +241,7 @@ async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> Non
 
         if _is_stop_on_any_entry(hass, stop_id) or stop_id in pending_numbers:
             ir.async_delete_issue(hass, DOMAIN, issue_id)
-            failed_stops.discard((api_key, stop_id))
+            _clear_failed_import_stop(failed_stops, stop_id)
             continue
 
         try:
@@ -277,7 +288,7 @@ async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> Non
 
         # A successful import, or one already configured in a prior
         # restart, resolves any previously reported import failure.
-        failed_stops.discard((api_key, stop_id))
+        _clear_failed_import_stop(failed_stops, stop_id)
         ir.async_delete_issue(hass, DOMAIN, issue_id)
         if _is_stop_on_any_entry(hass, stop.number) or stop.number in pending_numbers:
             continue
@@ -298,7 +309,7 @@ async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> Non
                 ir.async_delete_issue(
                     hass, DOMAIN, f"deprecated_yaml_import_issue_{dup_stop_id}"
                 )
-                failed_stops.discard((api_key, dup_stop_id))
+                _clear_failed_import_stop(failed_stops, dup_stop_id)
                 continue
             still_pending.append((stop, number_of_departures))
         to_add = still_pending

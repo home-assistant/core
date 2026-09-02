@@ -242,7 +242,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                 if passage.due_at
                 else "?"
             )
-            lines.append(f"{line_number} → {passage.destination} ({due_at})")
+            destination = passage.destination or "?"
+            lines.append(f"{line_number} → {destination} ({due_at})")
         return "\n".join(lines)
 
     async def async_step_user(

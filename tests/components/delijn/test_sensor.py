@@ -571,19 +571,17 @@ async def test_yaml_import_new_entry_drops_stop_added_to_another_entry(
     )
 
 
-async def test_yaml_import_failure_tracked_per_account_for_same_stop(
+async def test_yaml_import_success_clears_failure_of_other_account(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a failure under one API key isn't hidden by success under another.
+    """Test success under one API key resolves the same stop's other failures.
 
-    The generic deprecated-YAML notice is gated on a failed-import set keyed
-    by (api_key, stop_id); a second account's block successfully importing
-    the same stop id must only resolve that account's own failure, not
-    another account's, so the generic notice must stay withheld. (The
-    per-stop repair issue itself stays stop-scoped and may be cleared by
-    either account's success — that's expected.)
+    Once a stop is configured on any entry, no account still needs its YAML
+    block for it, so the failure recorded under the other key is cleared
+    together with the stop-scoped repair issue, and the generic
+    deprecated-YAML notice can appear.
     """
     shared_stop_id = STOP_NUMBER
     failing_key = "account-a-key"
@@ -619,6 +617,9 @@ async def test_yaml_import_failure_tracked_per_account_for_same_stop(
     assert len(entries) == 1
     assert entries[0].data == {CONF_API_KEY: succeeding_key}
     assert not issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{shared_stop_id}"
+    )
+    assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
     )
 
