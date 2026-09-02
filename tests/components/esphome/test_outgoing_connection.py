@@ -170,3 +170,30 @@ async def test_outgoing_connection_requires_mac_unique_id(
 
     mock_server.register.assert_not_called()
     assert mock_client.outgoing_connection_target is True
+
+
+async def test_outgoing_connection_listener_restarts_after_last_unload(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_server: MagicMock,
+) -> None:
+    """A new entry after the last unload waits out the stop and rebinds."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry, device_info={})
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_server.stop.assert_awaited_once()
+
+    entry2 = _make_entry(unique_id="aa:bb:cc:dd:ee:01")
+    entry2.add_to_hass(hass)
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry2,
+        device_info={"mac_address": "AA:BB:CC:DD:EE:01", "name": "test2"},
+    )
+    await hass.async_block_till_done()
+    assert mock_server.start.await_count == 2
+    assert mock_server.register.call_count == 2

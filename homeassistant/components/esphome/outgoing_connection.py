@@ -42,8 +42,14 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
     Raising keeps the singleton uncached so the next registration retries.
     """
     if (stopping := hass.data.pop(_KEY_OUTGOING_CONNECTION_STOPPING, None)) is not None:
-        # Wait for the previous listener to release the port before rebinding
-        await stopping
+        # Wait for the previous listener to release the port before rebinding;
+        # best effort, a still-bound port surfaces as OSError from start()
+        try:
+            await stopping
+        except Exception:
+            _LOGGER.debug(
+                "Previous outgoing connection listener failed to stop", exc_info=True
+            )
     server = OutgoingConnectionServer()
     await server.start()
 
@@ -56,6 +62,41 @@ async def _async_get_listener(hass: HomeAssistant) -> _ListenerState:
         EVENT_HOMEASSISTANT_STOP, _async_stop
     )
     return _ListenerState(server, remove_stop_listener)
+
+
+class _Registration:
+    """One MAC registration; unregisters exactly once."""
+
+    __slots__ = ("_hass", "_state", "_unregister")
+
+    def __init__(
+        self, hass: HomeAssistant, state: _ListenerState, unregister: CALLBACK_TYPE
+    ) -> None:
+        self._hass = hass
+        self._state = state
+        self._unregister: CALLBACK_TYPE | None = unregister
+
+    @callback
+    def async_unregister(self) -> None:
+        """Remove the route; the last one stops the listener."""
+        if (unregister := self._unregister) is None:
+            return
+        self._unregister = None
+        unregister()
+        hass = self._hass
+        state = self._state
+        state.registrations -= 1
+        # Already popped when Home Assistant is stopping
+        if (
+            state.registrations == 0
+            and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
+        ):
+            del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
+            state.remove_stop_listener()
+            # Tracked so the next registration waits for the port release
+            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = hass.async_create_task(
+                state.server.stop()
+            )
 
 
 async def async_register_outgoing_target(
@@ -86,21 +127,4 @@ async def async_register_outgoing_target(
         return None
     unregister = state.server.register(mac, reconnect_logic)
     state.registrations += 1
-
-    @callback
-    def _async_unregister() -> None:
-        unregister()
-        state.registrations -= 1
-        # Already popped when Home Assistant is stopping
-        if (
-            state.registrations == 0
-            and hass.data.get(_KEY_OUTGOING_CONNECTION_LISTENER) is state
-        ):
-            del hass.data[_KEY_OUTGOING_CONNECTION_LISTENER]
-            state.remove_stop_listener()
-            # Tracked so the next registration waits for the port release
-            hass.data[_KEY_OUTGOING_CONNECTION_STOPPING] = hass.async_create_task(
-                state.server.stop()
-            )
-
-    return _async_unregister
+    return _Registration(hass, state, unregister).async_unregister
