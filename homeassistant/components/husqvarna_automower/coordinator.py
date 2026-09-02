@@ -57,6 +57,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
+        self.work_area_cutting_height_callbacks: list[
+            Callable[[str, set[int], set[int]], None]
+        ] = []
+        self._work_area_cutting_height_states: dict[tuple[str, int], bool] = {}
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
         self.websocket_callbacks: list[Callable[[bool], None]] = []
@@ -327,3 +331,32 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     for area_id in removed_areas:
                         if entry.unique_id.startswith(f"{mower_id}_{area_id}_"):
                             entity_registry.async_remove(entry.entity_id)
+
+            cutting_height_enabled: set[int] = set()
+            cutting_height_disabled: set[int] = set()
+            for area_id in current_ids:
+                work_area = self.data[mower_id].work_areas[area_id]
+                enabled = work_area.use_global_cutting_height is False
+                state_key = (mower_id, area_id)
+                previous_enabled = self._work_area_cutting_height_states.get(state_key)
+                if previous_enabled is not None and previous_enabled != enabled:
+                    if enabled:
+                        cutting_height_enabled.add(area_id)
+                    else:
+                        cutting_height_disabled.add(area_id)
+                self._work_area_cutting_height_states[state_key] = enabled
+
+            for area_id in removed_areas:
+                self._work_area_cutting_height_states.pop((mower_id, area_id), None)
+
+            if cutting_height_enabled or cutting_height_disabled:
+                _LOGGER.debug(
+                    "Work area cutting height changes for %s: enabled=%s, disabled=%s",
+                    mower_id,
+                    cutting_height_enabled,
+                    cutting_height_disabled,
+                )
+                for callback_fn in self.work_area_cutting_height_callbacks:
+                    callback_fn(
+                        mower_id, cutting_height_enabled, cutting_height_disabled
+                    )
