@@ -13,7 +13,12 @@ from pyzonneplan import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -104,10 +109,15 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(account.user_account.uuid)
-                if self.source == SOURCE_REAUTH:
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
                     self._abort_if_unique_id_mismatch()
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
+                    )
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
+                        entry,
                         data_updates={
                             CONF_EMAIL: account.user_account.email,
                             CONF_TOKEN: token.as_dict(),
@@ -148,6 +158,33 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input or {CONF_EMAIL: email},
+            ),
+            errors=errors,
+            description_placeholders={CONF_EMAIL: email},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Request a new OTP for the email of the entry being reconfigured."""
+        email = self._get_reconfigure_entry().data[CONF_EMAIL]
+        errors: dict[str, str] | None = None
+        if user_input is not None and not (
+            errors := await self._async_request_otp(user_input[CONF_EMAIL])
+        ):
+            return await self.async_step_otp()
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values=user_input or {CONF_EMAIL: email},
