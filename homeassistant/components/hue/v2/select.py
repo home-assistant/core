@@ -43,7 +43,7 @@ async def async_setup_entry(
     for group_controller in (api.groups.room, api.groups.zone):
         async_add_entities(
             HueSceneSelectEntity(
-                bridge, tracker, group.id, scenes_by_group.get(group.id)
+                bridge, tracker, group.id, scenes_by_group.get(group.id, [])
             )
             for group in group_controller
         )
