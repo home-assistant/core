@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Netis Router",
+        "description": "Connect to your Netis router. The password is the same as your Wi-Fi password. Leave the password empty if your router is in factory-default state (no password set).",
+        "data": {
+          "host": "Host (IP address)",
+          "password": "Password (leave empty if default)"
+        }
+      },
+      "init": {
+        "title": "Netis Router options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password. The password is the Wi-Fi password.",
+      "cannot_connect": "Cannot reach the router. Check the IP address.",
+      "unknown": "Unexpected error. Check the logs."
+    },
+    "abort": {
+      "already_configured": "This router is already configured."
+    }
+  }
+}

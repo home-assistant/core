@@ -1,0 +1,75 @@
+# Custom services exposed by the Netis Router integration.
+#
+# These services cover router capabilities that cannot be represented as
+# standard entity types (button / switch / select / sensor) because they
+# require dynamic parameters from the user at call time.
+
+# Send an SMS message through the router's LTE/4G modem SIM card.
+# Only available on LTE-capable router models (e.g. MW5630).
+send_sms:
+  name: Send SMS
+  description: >-
+    Send an SMS text message through the router's 4G LTE modem.
+    Only works on router models with a SIM card inserted and LTE connected.
+  target:
+    device:
+      integration: netis
+  fields:
+    phone:
+      name: Phone number
+      description: Recipient phone number (digits only, no spaces or dashes).
+      required: true
+      example: "13800138000"
+      selector:
+        text:
+    message:
+      name: Message
+      description: Text content of the SMS message.
+      required: true
+      example: "Hello from Home Assistant"
+      selector:
+        text:
+          multiline: true
+
+# Set a download/upload speed limit for a specific connected device.
+# Useful for parental control or bandwidth management.
+set_speed_limit:
+  name: Set device speed limit
+  description: >-
+    Set a per-device speed limit (download and upload) for a connected client.
+    Set both values to 0 to remove the limit.
+  target:
+    device:
+      integration: netis
+  fields:
+    mac:
+      name: Device MAC address
+      description: MAC address of the target device (e.g. 34:29:8F:70:96:85).
+      required: true
+      example: "34:29:8F:70:96:85"
+      selector:
+        text:
+    down_speed:
+      name: Download limit (Kbps)
+      description: >-
+        Maximum download speed in Kbps. Set to 0 for unlimited.
+      required: true
+      default: 0
+      example: 1024
+      selector:
+        number:
+          min: 0
+          max: 102400
+          unit_of_measurement: Kbps
+    up_speed:
+      name: Upload limit (Kbps)
+      description: >-
+        Maximum upload speed in Kbps. Set to 0 for unlimited.
+      required: true
+      default: 0
+      example: 512
+      selector:
+        number:
+          min: 0
+          max: 102400
+          unit_of_measurement: Kbps
