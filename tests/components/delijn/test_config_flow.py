@@ -48,9 +48,6 @@ async def _select_menu_option(
     )
 
 
-# --- Main config flow (API key) ---
-
-
 async def test_user_flow_success(
     hass: HomeAssistant, mock_delijn_client: MagicMock
 ) -> None:
@@ -330,9 +327,6 @@ async def test_main_reconfigure_errors(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": expected_error}
     assert mock_config_entry.data[CONF_API_KEY] == "test-api-key"
-
-
-# --- Stop subentry flow ---
 
 
 async def test_subentry_stop_number(

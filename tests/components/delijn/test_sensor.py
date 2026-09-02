@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import UTC, datetime
+from types import MappingProxyType
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -24,6 +25,7 @@ from homeassistant.components.delijn.const import (
     CONF_STOP_NUMBER,
     DOMAIN,
     SCAN_INTERVAL,
+    SUBENTRY_TYPE_STOP,
 )
 from homeassistant.components.delijn.sensor import (
     CONF_NEXT_DEPARTURE,
@@ -415,24 +417,29 @@ async def test_yaml_import_concurrent_blocks_same_key_no_duplicate_error(
     )
 
 
-async def test_add_subentries_to_entry_skips_stop_added_concurrently(
+async def test_add_subentries_to_entry_skips_stop_added_concurrently_elsewhere(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_stop_subentry: ConfigSubentry,
     mock_stop: Stop,
 ) -> None:
-    """Test a stop added while unloading isn't re-added, and doesn't raise.
+    """Test a stop added to another entry while unloading isn't re-added.
 
     Unloading the entry awaits; a concurrent subentry flow (e.g. from the
-    UI) could add one of the pending stops in that window.
-    ``async_add_subentry`` raises ``AbortFlow`` on a duplicate unique_id, so
-    each stop is re-checked immediately before it's added and skipped if
-    another task already added it.
+    UI) could add one of the pending stops to a *different* entry in that
+    window (sensor unique ids are global). ``async_add_subentry`` raises
+    ``AbortFlow`` on a duplicate unique_id, so each stop is re-checked
+    against all entries immediately before it's added and skipped if
+    another task already added it anywhere.
     """
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_API_KEY: "other-api-key"}, title="De Lijn"
+    )
+    other_entry.add_to_hass(hass)
 
     real_async_unload = hass.config_entries.async_unload
     raced = False
@@ -443,7 +450,15 @@ async def test_add_subentries_to_entry_skips_stop_added_concurrently(
         if not raced:
             raced = True
             hass.config_entries.async_add_subentry(
-                mock_config_entry, mock_stop_subentry
+                other_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(
+                        {CONF_STOP_NUMBER: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 5}
+                    ),
+                    subentry_type=SUBENTRY_TYPE_STOP,
+                    title="Racing subentry",
+                    unique_id=STOP_NUMBER,
+                ),
             )
         return result
 
@@ -452,7 +467,8 @@ async def test_add_subentries_to_entry_skips_stop_added_concurrently(
     ):
         await _async_add_subentries_to_entry(hass, mock_config_entry, [(mock_stop, 5)])
 
-    assert len(mock_config_entry.subentries) == 1
+    assert not mock_config_entry.subentries
+    assert len(other_entry.subentries) == 1
 
 
 async def test_yaml_import_skips_stop_configured_on_another_entry(
@@ -486,6 +502,70 @@ async def test_yaml_import_skips_stop_configured_on_another_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert not issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{STOP_NUMBER}"
+    )
+
+
+async def test_yaml_import_new_entry_drops_stop_added_to_another_entry(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the new-entry import path drops a stop configured elsewhere mid-validation.
+
+    Every stop is validated (the only part that awaits) before this brand
+    new entry is created with them all as subentries. Validating the
+    second stop here also adds the first one to a different entry, standing
+    in for a concurrent UI subentry flow racing in during that await; the
+    first stop must be dropped at commit time instead of reaching entry
+    creation with a unique_id that collides globally.
+    """
+    raced_stop = STOP_NUMBER
+    trigger_stop = "200113"
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_API_KEY: "other-api-key"}, title="De Lijn"
+    )
+    other_entry.add_to_hass(hass)
+
+    async def _get_stop(stop_id: str) -> Stop:
+        if stop_id == trigger_stop:
+            hass.config_entries.async_add_subentry(
+                other_entry,
+                ConfigSubentry(
+                    data=MappingProxyType(
+                        {CONF_STOP_NUMBER: raced_stop, CONF_NUMBER_OF_DEPARTURES: 5}
+                    ),
+                    subentry_type=SUBENTRY_TYPE_STOP,
+                    title=f"Stop {raced_stop}",
+                    unique_id=raced_stop,
+                ),
+            )
+        return Stop(
+            entity_number="2",
+            number=stop_id,
+            name=f"Stop {stop_id}",
+            municipality="Gent",
+        )
+
+    mock_delijn_client.get_stop.side_effect = _get_stop
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: raced_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+            {CONF_STOP_ID: trigger_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    await async_setup_platform(hass, platform_config, MagicMock())
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    new_entry = next(entry for entry in entries if entry.data[CONF_API_KEY] == API_KEY)
+    assert {subentry.unique_id for subentry in new_entry.subentries.values()} == {
+        trigger_stop
+    }
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{raced_stop}"
     )
 
 

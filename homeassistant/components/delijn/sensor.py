@@ -153,15 +153,16 @@ async def _async_add_subentries_to_entry(
     each queue their own reload; a single explicit reload applies them all.
 
     Unloading awaits, so a concurrent subentry flow (e.g. from the UI)
-    could add one of these stops in the meantime; ``async_add_subentry``
+    could add one of these stops in the meantime, on this entry or on a
+    different one (sensor unique ids are global); ``async_add_subentry``
     raises ``AbortFlow`` on a duplicate unique_id, so every stop is
-    re-checked against the entry's current subentries immediately before
-    it is added, and skipped if it's already there.
+    re-checked against all entries' subentries immediately before it is
+    added, and skipped if it's already configured anywhere.
     """
     if entry.state is ConfigEntryState.LOADED:
         await hass.config_entries.async_unload(entry.entry_id)
     for stop, number_of_departures in to_add:
-        if _is_stop_on_entry(entry, stop.number):
+        if _is_stop_on_any_entry(hass, stop.number):
             continue
         subentry_data = _build_subentry_data(stop, number_of_departures)
         hass.config_entries.async_add_subentry(
@@ -221,6 +222,7 @@ async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> Non
     failed_stops = _get_failed_import_stops(hass)
     to_add: list[tuple[Stop, int]] = []
     pending_numbers: set[str] = set()
+    stop_ids_by_number: dict[str, str] = {}
 
     for departure in config[CONF_NEXT_DEPARTURE]:
         stop_id = departure[CONF_STOP_ID]
@@ -281,7 +283,25 @@ async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> Non
             continue
 
         pending_numbers.add(stop.number)
+        stop_ids_by_number[stop.number] = stop_id
         to_add.append((stop, departure[CONF_NUMBER_OF_DEPARTURES]))
+
+    if entry is None and to_add:
+        # Validating every stop above is the only part that awaits; a UI
+        # subentry flow could have added one of them to a different entry
+        # in that window (sensor unique ids are global), before this brand
+        # new entry is created with them as subentries.
+        still_pending: list[tuple[Stop, int]] = []
+        for stop, number_of_departures in to_add:
+            if _is_stop_on_any_entry(hass, stop.number):
+                dup_stop_id = stop_ids_by_number[stop.number]
+                ir.async_delete_issue(
+                    hass, DOMAIN, f"deprecated_yaml_import_issue_{dup_stop_id}"
+                )
+                failed_stops.discard((api_key, dup_stop_id))
+                continue
+            still_pending.append((stop, number_of_departures))
+        to_add = still_pending
 
     if to_add:
         if entry is None:
