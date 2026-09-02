@@ -79,13 +79,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-
-    @property
-    def _matching_event_names(self) -> list[str]:
-        """Return the event names that refresh this image."""
-        return async_matching_event_names(
-            self._door_station, self.entity_description.doorbird_event_type
-        )
+        self._registered_event_names: list[str] = []
 
     @override
     async def async_image(self) -> bytes | None:
@@ -112,7 +106,13 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event_name in self._matching_event_names:
+        # Remembered rather than resolved again on removal: resetting the
+        # favorites re-derives the descriptions while the entity is live, so
+        # the names can have moved on by then.
+        self._registered_event_names = async_matching_event_names(
+            self._door_station, self.entity_description.doorbird_event_type
+        )
+        for event_name in self._registered_event_names:
             event_to_entity_id[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
@@ -126,7 +126,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event_name in self._matching_event_names:
+        for event_name in self._registered_event_names:
             # Another image may already have claimed it after a reload.
             if event_to_entity_id.get(event_name) == self.entity_id:
                 del event_to_entity_id[event_name]

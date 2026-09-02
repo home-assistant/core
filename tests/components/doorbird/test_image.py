@@ -266,3 +266,29 @@ async def test_matching_event_names(
         async_matching_event_names(door_station, DEFAULT_MOTION_EVENT)
         == expected_motion
     )
+
+
+async def test_image_cleans_up_the_events_it_registered(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removal drops the mappings the image actually registered."""
+    doorbird_entry = await doorbird_mocker()
+    door_station = doorbird_entry.entry.runtime_data.door_station
+    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
+
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+
+    # Resetting the favorites re-derives the descriptions while the entities
+    # are live, here attributing each event to the other image.
+    door_station.event_descriptions = [
+        DoorbirdEvent("mydoorbird_doorbell", "motion"),
+        DoorbirdEvent("mydoorbird_motion", "doorbell"),
+    ]
+    entity_registry.async_update_entity(
+        "image.mydoorbird_last_ring", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert "mydoorbird_doorbell" not in event_entity_ids

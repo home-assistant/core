@@ -275,10 +275,12 @@ def async_matching_event_names(
 ) -> list[str]:
     """Return the configured event names that refresh the given image type.
 
-    Resolved on each use because the options listener replaces the descriptions
-    without reloading the platforms. Models without the schedule API report no
-    descriptions at all, so fall back to the configured events: the ones this
-    type names, or every unclassifiable one when the user renamed them.
+    Models without the schedule API report no descriptions at all, so fall back
+    to the configured events: the ones this type names, or every unclassifiable
+    one when the user renamed them.
+
+    The camera platform uses this to decide whether the image replacing a
+    deprecated camera can refresh at all.
     """
     # The device keeps the favorites and schedule entries of a deconfigured
     # event, so the descriptions can still name one that was removed.
