@@ -64,8 +64,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
         """Fetch data from the Zonneplan API."""
         try:
             account = await self.zonneplan.async_get_account()
-            electricity_prices: ConsumerPrices | None = None
-            gas_prices: ConsumerPrices | None = None
             price_coroutines: dict[str, Coroutine[Any, Any, ConsumerPrices]] = {}
 
             if any(
@@ -94,8 +92,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
                     strict=True,
                 )
             )
-            electricity_prices = prices.get("electricity")
-            gas_prices = prices.get("gas")
         except ZonneplanAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -124,6 +120,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
 
         return ZonneplanData(
             account=account,
-            electricity_prices=electricity_prices,
-            gas_prices=gas_prices,
+            electricity_prices=prices.get("electricity"),
+            gas_prices=prices.get("gas"),
         )
