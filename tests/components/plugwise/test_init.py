@@ -242,7 +242,6 @@ async def test_migrate_unique_id_relay(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
