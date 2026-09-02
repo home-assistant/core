@@ -331,21 +331,11 @@
   "services": {
     "fan_reset_filter": {
       "description": "Resets the filter lifetime and usage.",
-      "fields": {
-        "entity_id": {
-          "description": "Name of the Xiaomi Home entity.",
-          "name": "Entity ID"
-        }
-      },
       "name": "Fan reset filter"
     },
     "fan_set_extra_features": {
       "description": "Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called \"turbo mode\" is unlocked in the app on value 1.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "features": {
           "description": "Integer, known values are 0 (default) and 1 (turbo mode).",
           "name": "Features"
@@ -355,71 +345,31 @@
     },
     "light_eyecare_mode_off": {
       "description": "Turns off the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light eyecare mode off"
     },
     "light_eyecare_mode_on": {
       "description": "Turns on the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light eyecare mode on"
     },
     "light_night_light_mode_off": {
       "description": "Turns off the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light night light mode off"
     },
     "light_night_light_mode_on": {
       "description": "Turns on the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light night light mode on"
     },
     "light_reminder_off": {
       "description": "Disables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_reminder_on::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light reminder off"
     },
     "light_reminder_on": {
       "description": "Enables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
-      "fields": {
-        "entity_id": {
-          "description": "Name of the entity to act on.",
-          "name": "Entity ID"
-        }
-      },
       "name": "Light reminder on"
     },
     "light_set_delayed_turn_off": {
       "description": "Sets the delayed turning off of a light.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_set_scene::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "time_period": {
           "description": "Time period for the delayed turning off.",
           "name": "Time period"
@@ -430,10 +380,6 @@
     "light_set_scene": {
       "description": "Sets a fixed scene.",
       "fields": {
-        "entity_id": {
-          "description": "Name of the light entity.",
-          "name": "Entity ID"
-        },
         "scene": {
           "description": "Number of the fixed scene.",
           "name": "Scene"
@@ -466,10 +412,6 @@
     "switch_set_power_mode": {
       "description": "Sets the power mode.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "mode": {
           "description": "Power mode.",
           "name": "[%key:common::config_flow::data::mode%]"
@@ -480,10 +422,6 @@
     "switch_set_power_price": {
       "description": "Sets the power price.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "mode": {
           "description": "Power price.",
           "name": "[%key:common::config_flow::data::mode%]"
@@ -493,22 +431,10 @@
     },
     "switch_set_wifi_led_off": {
       "description": "Turns off the Wi-Fi LED of a switch.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Switch set Wi-Fi LED off"
     },
     "switch_set_wifi_led_on": {
       "description": "Turns on the Wi-Fi LED of a switch.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Switch set Wi-Fi LED on"
     },
     "vacuum_clean_segment": {
