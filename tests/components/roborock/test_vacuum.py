@@ -8,6 +8,7 @@ import pytest
 from roborock import RoborockException
 from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
+from roborock.map.b01_q10_map_parser import Q10Point
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -299,7 +300,6 @@ async def test_goto(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_goto_not_supported(
@@ -349,7 +349,6 @@ async def test_zoned_cleaning(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_zoned_cleaning_not_supported(
@@ -447,7 +446,6 @@ async def test_get_current_position_no_robot_position(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_get_current_position_not_supported(
@@ -928,8 +926,153 @@ def fake_q10_vacuum_api_fixture(
         api.vacuum.return_to_dock.side_effect = send_message_exception
         api.vacuum.set_fan_level.side_effect = send_message_exception
         api.vacuum.clean_segments.side_effect = send_message_exception
+        api.vacuum.clean_zone.side_effect = send_message_exception
+        api.vacuum.goto_position.side_effect = send_message_exception
         api.command.send.side_effect = send_message_exception
     return api
+
+
+async def test_q10_get_current_position(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test returning the Q10 position in common Roborock coordinates."""
+    q10_vacuum_api.map.roborock_position = Q10Point(x=30020, y=28705)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {Q10_ENTITY_ID: {"x": 30020, "y": 28705}}
+
+
+async def test_q10_get_current_position_not_available(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test the Q10 position service before a trace has been received."""
+    q10_vacuum_api.map.roborock_position = None
+
+    with pytest.raises(HomeAssistantError, match="Robot position not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q10_zoned_cleaning(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that Q10 zoned cleaning uses the native zone task."""
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        {
+            ATTR_ENTITY_ID: Q10_ENTITY_ID,
+            "x1": 28582,
+            "y1": 21363,
+            "x2": 27425,
+            "y2": 22816,
+            "repeats": 1,
+        },
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.clean_zone.call_args == call(
+        28582,
+        21363,
+        27425,
+        22816,
+        clean_count=2,
+    )
+
+
+async def test_q10_goto(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that Q10 goto delegates the complete operation to the library."""
+    q10_vacuum_api.map.roborock_position = Q10Point(x=25500, y=25500)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.goto_position.call_args == call(29900, 28650)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "api_method", "error", "expected_exception"),
+    [
+        pytest.param(
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {"x": 29900, "y": 28650},
+            "goto_position",
+            ValueError("invalid coordinate"),
+            ServiceValidationError,
+            id="goto-validation",
+        ),
+        pytest.param(
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {"x": 29900, "y": 28650},
+            "goto_position",
+            RoborockException(),
+            HomeAssistantError,
+            id="goto-command",
+        ),
+        pytest.param(
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
+            "clean_zone",
+            ValueError("invalid zone"),
+            ServiceValidationError,
+            id="zone-validation",
+        ),
+        pytest.param(
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
+            "clean_zone",
+            RoborockException(),
+            HomeAssistantError,
+            id="zone-command",
+        ),
+    ],
+)
+async def test_q10_targeted_action_errors(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+    service: str,
+    service_data: dict[str, Any],
+    api_method: str,
+    error: Exception,
+    expected_exception: type[Exception],
+) -> None:
+    """Test validation and command failures for Q10 targeted actions."""
+    getattr(q10_vacuum_api.vacuum, api_method).side_effect = error
+
+    with pytest.raises(expected_exception):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, **service_data},
+            blocking=True,
+        )
 
 
 async def test_q10_registry_entries(
@@ -1044,6 +1187,7 @@ async def test_q10_send_command(
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
+    q10_vacuum_api.vacuum.cancel_goto.assert_called_once_with()
 
 
 async def test_q10_send_command_invalid(
@@ -1062,6 +1206,7 @@ async def test_q10_send_command_invalid(
             {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
             blocking=True,
         )
+    q10_vacuum_api.vacuum.cancel_goto.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -772,6 +772,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+        self.coordinator.api.vacuum.cancel_goto()
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
@@ -779,14 +780,52 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+        if (position := self.coordinator.api.map.roborock_position) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="position_not_found",
+            )
+        return {"x": position.x, "y": position.y}
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
-        """Set the vacuum to go to a specific position."""
-        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+        """Move the Q10 to a position using the library goto operation."""
+        try:
+            await self.coordinator.api.vacuum.goto_position(x, y)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_q10_coordinate",
+                translation_placeholders={"x": str(x), "y": str(y)},
+            ) from err
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "set_vacuum_goto_position"},
+            ) from err
 
     async def async_set_vacuum_zoned_cleaning(
         self, x1: int, y1: int, x2: int, y2: int, repeats: int
     ) -> None:
         """Clean the specified zone."""
-        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
+        try:
+            # Home Assistant defines repeats as additional passes, while Q10
+            # carries the total clean count.
+            await self.coordinator.api.vacuum.clean_zone(
+                x1,
+                y1,
+                x2,
+                y2,
+                clean_count=repeats + 1,
+            )
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_q10_zone",
+            ) from err
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "set_vacuum_zoned_cleaning"},
+            ) from err
