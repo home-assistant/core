@@ -11,6 +11,7 @@
     "file_upload",
     "http",
     "lovelace",
+    "map_tiles",
     "onboarding",
     "repairs",
     "search",
@@ -21,5 +22,5 @@
   "integration_type": "system",
   "preview_features": { "winter_mode": {} },
   "quality_scale": "internal",
-  "requirements": ["home-assistant-frontend==20260826.1"]
+  "requirements": ["home-assistant-frontend==20260826.2"]
 }

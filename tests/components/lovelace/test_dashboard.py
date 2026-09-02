@@ -363,7 +363,9 @@ async def test_lovelace_from_yaml(
 
 
 async def test_lovelace_from_yaml_creates_repair_issue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test YAML mode creates a repair issue."""
     assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
@@ -372,7 +374,6 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
     # Repair issue should be created
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
