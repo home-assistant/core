@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_entities[binary_sensor.test_roomba_bin_empty_allowed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_roomba_bin_empty_allowed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bin empty allowed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bin empty allowed',
+    'platform': 'roomba',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bin_empty_allowed',
+    'unique_id': 'evacAllowed_blid123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.test_roomba_bin_empty_allowed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Bin empty allowed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_roomba_bin_empty_allowed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_entities[binary_sensor.test_roomba_bin_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -94,6 +144,106 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_roomba_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.test_roomba_pad_dry_allowed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_roomba_pad_dry_allowed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pad dry allowed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pad dry allowed',
+    'platform': 'roomba',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pad_dry_allowed',
+    'unique_id': 'padDryAllowed_blid123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.test_roomba_pad_dry_allowed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Pad dry allowed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_roomba_pad_dry_allowed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor.test_roomba_pad_wash_allowed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_roomba_pad_wash_allowed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pad wash allowed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pad wash allowed',
+    'platform': 'roomba',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pad_wash_allowed',
+    'unique_id': 'padWashAllowed_blid123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.test_roomba_pad_wash_allowed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Pad wash allowed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_roomba_pad_wash_allowed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
