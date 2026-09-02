@@ -35,6 +35,9 @@
       "barometric_pressure": {
         "name": "Pressure barometric"
       },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
       "dew_point": {
         "name": "Dew point"
       },

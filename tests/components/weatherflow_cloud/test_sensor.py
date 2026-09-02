@@ -17,10 +17,11 @@ from homeassistant.components.weatherflow_cloud.coordinator import (
 from homeassistant.components.weatherflow_cloud.sensor import (
     WeatherFlowWebsocketSensorObservation,
     WeatherFlowWebsocketSensorWind,
+    _battery_percentage,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -32,11 +33,25 @@ from tests.common import (
 )
 
 
+@pytest.mark.parametrize(
+    ("voltage", "percentage"),
+    [
+        pytest.param(1.9, 0, id="below-minimum"),
+        pytest.param(2.45, 85, id="interpolated"),
+        pytest.param(2.8, 100, id="above-maximum"),
+    ],
+)
+def test_battery_percentage(voltage: float, percentage: float) -> None:
+    """Test converting battery voltage to percentage."""
+    assert _battery_percentage(voltage) == pytest.approx(percentage)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
@@ -48,6 +63,12 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "24432"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "172"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -134,11 +155,13 @@ async def test_websocket_sensor_observation(
 
     # Create a mock coordinator with test data
     coordinator = MagicMock(spec=WeatherFlowObservationCoordinator)
+    coordinator.stations = mock_rest_api.async_get_stations.return_value
 
     # Mock the coordinator data structure
     test_station_id = 24432
     test_device_id = 12345
     test_data = {
+        "battery": 2.45,
         "temperature": 22.5,
         "humidity": 45,
         "pressure": 1013.2,
@@ -161,6 +184,9 @@ async def test_websocket_sensor_observation(
     # Test that native_value returns the correct value
     assert sensor.native_value == 22.5
 
+    entity_description.value_fn = lambda data: data["battery"]
+    assert sensor.native_value == 2.45
+
 
 async def test_websocket_sensor_wind(
     hass: HomeAssistant,
@@ -177,6 +203,7 @@ async def test_websocket_sensor_wind(
 
     # Create a mock coordinator with test data
     coordinator = MagicMock(spec=WeatherFlowWindCoordinator)
+    coordinator.stations = mock_rest_api.async_get_stations.return_value
 
     # Mock the coordinator data structure
     test_station_id = 24432
