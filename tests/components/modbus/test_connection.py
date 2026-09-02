@@ -257,3 +257,56 @@ async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
 
     [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
     assert shared.consumers == 1
+
+
+async def test_one_entry_holding_the_same_unit_twice(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """Two holds on one unit are one unit, and release together.
+
+    The registry records which units an entry holds, not how many times it
+    asked, so asking twice adds nothing to release twice.
+    """
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    params = ModbusTcpParams(host="1.2.3.4", port=502)
+    async_get_unit(hass, entry, params, 1)
+    async_get_unit(hass, entry, params, 1)
+    [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
+    assert shared.units == {entry.entry_id: {1}}
+
+    with patch.object(shared.connection, "close") as close:
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert close.call_count == 1
+    assert not hass.data[DATA_MODBUS_CONNECTIONS]
+
+
+async def test_two_entries_holding_the_same_unit(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """The link stays while anybody still holds that unit, however they asked."""
+    one = consumer()
+    await hass.config_entries.async_setup(one.entry_id)
+    two = consumer()
+    await hass.config_entries.async_setup(two.entry_id)
+
+    params = ModbusTcpParams(host="1.2.3.4", port=502)
+    async_get_unit(hass, one, params, 1)
+    async_get_unit(hass, one, params, 1)  # the same unit, asked for twice
+    async_get_unit(hass, two, params, 1)
+    [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
+
+    with patch.object(shared.connection, "close") as close:
+        await hass.config_entries.async_unload(one.entry_id)
+        await hass.async_block_till_done()
+
+        assert not close.called  # the other entry is still on that unit
+        assert hass.data[DATA_MODBUS_CONNECTIONS]
+
+        await hass.config_entries.async_unload(two.entry_id)
+        await hass.async_block_till_done()
+
+    assert close.called

@@ -10,6 +10,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
+from . import llm_api
 from .connection import async_get_temporary_unit, async_get_unit
 from .const import DOMAIN
 from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
@@ -52,6 +53,7 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
+        llm_api.async_setup(hass)
         return True
 
     async def _reload_config(call: Event | ServiceCall) -> None:
@@ -75,4 +77,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    return await async_modbus_setup(hass, config)
+    if not await async_modbus_setup(hass, config):
+        return False
+
+    # Registered last: the API reads the component's connections, so it must
+    # not outlive a setup Home Assistant considers failed.
+    llm_api.async_setup(hass)
+    return True
