@@ -11,6 +11,7 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -144,6 +145,37 @@ async def async_setup_entry(
             if description.exists_fn(work_areas[work_area_id])
         )
 
+    def _async_update_work_area_cutting_heights(
+        mower_id: str,
+        enabled_area_ids: set[int],
+        disabled_area_ids: set[int],
+    ) -> None:
+        """Create or remove cutting height entities after a setting transition."""
+        work_areas = coordinator.data[mower_id].work_areas
+        if work_areas is None:
+            return
+
+        entity_registry = er.async_get(hass)
+        entries = {
+            entry.unique_id: entry
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, coordinator.config_entry.entry_id
+            )
+        }
+        description = WORK_AREA_NUMBER_TYPES[0]
+
+        async_add_entities(
+            WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
+            for work_area_id in enabled_area_ids
+            if description.exists_fn(work_areas[work_area_id])
+            and f"{mower_id}_{work_area_id}_{description.key}" not in entries
+        )
+
+        for work_area_id in disabled_area_ids:
+            unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+            if entry := entries.get(unique_id):
+                entity_registry.async_remove(entry.entity_id)
+
     def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(
             AutomowerNumberEntity(mower_id, coordinator, description)
@@ -158,6 +190,9 @@ async def async_setup_entry(
                 _async_add_new_work_areas(mower_id, work_area_ids)
 
     coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
+    coordinator.work_area_cutting_height_callbacks.append(
+        _async_update_work_area_cutting_heights
+    )
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
