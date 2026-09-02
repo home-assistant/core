@@ -14,10 +14,11 @@ from .coordinator import EcowittConfigEntry
 # identify the specific unit. None of it is needed to interpret a reading.
 #
 # `device_id` is the WN90LP's raw identity register -- the same value
-# `serial_number` is formatted from -- and `unique_id` is derived from one or
-# the other: the serial number where a model reports one, and the host and
-# address where it does not. Redacting `serial_number` alone would leave the
-# same information in both.
+# `serial_number` is formatted from, and what `unique_id` is set to for a
+# model that reports one. A model that reports none (the WN69LP) gets no
+# unique_id at all, so there is nothing there to redact for it. Redacting
+# `serial_number` alone would still leave the same value sitting in
+# `device_id` and `unique_id` for a WN90LP.
 TO_REDACT = {CONF_HOST, "device_id", "serial_number", "unique_id"}
 
 
