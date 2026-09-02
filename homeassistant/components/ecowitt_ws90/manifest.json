@@ -1,0 +1,12 @@
+{
+  "domain": "ecowitt_ws90",
+  "name": "Ecowitt WS90",
+  "codeowners": ["@iainchesworth"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/ecowitt_ws90",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["ecowitt-ws90-modbus==1.0.0"]
+}
