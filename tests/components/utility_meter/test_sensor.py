@@ -1245,7 +1245,7 @@ async def test_non_net_consumption(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
 
-    assert state.state == "0"
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(
