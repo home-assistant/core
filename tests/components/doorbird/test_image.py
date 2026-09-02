@@ -266,3 +266,24 @@ async def test_image_keeps_mapping_reassigned_to_the_other_image(
 
     assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_motion"
     assert event_entity_ids["mydoorbird_motion"] == "image.mydoorbird_last_ring"
+
+
+async def test_image_respects_schedule_classification_of_renamed_event(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """A renamed event the schedule classifies stays with the image it names."""
+    doorbird_entry = await doorbird_mocker()
+    door_station = doorbird_entry.entry.runtime_data.door_station
+    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
+
+    door_station.update_events(["front_door"])
+    door_station.event_descriptions = [DoorbirdEvent("mydoorbird_front_door", "motion")]
+    mac_address = get_mac_address_from_door_station_info(
+        doorbird_entry.entry.runtime_data.door_station_info
+    )
+    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
+    await hass.async_block_till_done()
+
+    # The ring image must not claim it back through the unclassifiable fallback.
+    assert event_entity_ids["mydoorbird_front_door"] == "image.mydoorbird_last_motion"

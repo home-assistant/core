@@ -101,13 +101,15 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         # The device keeps the favorites and schedule entries of a deconfigured
         # event, so the descriptions can still name one that was removed.
         configured = set(door_station.door_station_events)
-        if names := [
+        described_names = [
             event.event
             for event in door_station.event_descriptions
             if event.event_type == event_type and event.event in configured
-        ]:
-            return names
+        ]
 
+        # An event the schedule attributes to either image is spoken for, so the
+        # fallback only covers the configured events it left over.
+        described = {event.event for event in door_station.event_descriptions}
         classifiable = {event for event, _ in DEFAULT_EVENT_TYPES}
         own_events = {
             event
@@ -118,13 +120,16 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         # one takes it: without this the replacement never refreshes, while the
         # deprecated cameras polled on a timer regardless of the event names.
         takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT
-        return [
+        return described_names + [
             event_name
             for event, event_name in zip(
                 door_station.events, door_station.door_station_events, strict=True
             )
-            if event in own_events
-            or (takes_unclassifiable and event not in classifiable)
+            if event_name not in described
+            and (
+                event in own_events
+                or (takes_unclassifiable and event not in classifiable)
+            )
         ]
 
     @override
