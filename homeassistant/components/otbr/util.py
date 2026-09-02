@@ -310,6 +310,14 @@ class OTBRData:
         cannot revoke a key handed out after it.
         """
         async with self.ephemeral_key_lock:
+            # The router dropped an expired key on its own; deleting now could
+            # revoke a key another controller activated since
+            if (
+                self.active_ephemeral_key_expires is not None
+                and self.active_ephemeral_key_expires <= dt_util.utcnow()
+            ):
+                self.active_ephemeral_key = None
+                self.active_ephemeral_key_expires = None
             if only_if_active and self.active_ephemeral_key is None:
                 return False
             if ephemeral_key is not None and ephemeral_key != self.active_ephemeral_key:

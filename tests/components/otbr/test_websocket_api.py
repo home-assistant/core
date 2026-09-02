@@ -1417,17 +1417,20 @@ async def test_delete_ephemeral_key(
 
 
 @pytest.mark.parametrize(
-    ("ephemeral_key", "deleted"),
+    ("ephemeral_key", "elapsed", "deleted"),
     [
-        pytest.param("700855744", True, id="active_key"),
-        pytest.param("123456789", False, id="replaced_key"),
+        pytest.param("700855744", timedelta(minutes=1), True, id="active_key"),
+        pytest.param("123456789", timedelta(minutes=1), False, id="replaced_key"),
+        pytest.param("700855744", timedelta(minutes=6), False, id="expired_key"),
     ],
 )
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
 async def test_delete_ephemeral_key_by_key(
     aioclient_mock: AiohttpClientMocker,
     websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
     ephemeral_key: str,
+    elapsed: timedelta,
     deleted: bool,
 ) -> None:
     """Test deleting a specific key only deactivates it if it is still active."""
@@ -1448,6 +1451,7 @@ async def test_delete_ephemeral_key_by_key(
             }
         )
         assert (await websocket_client.receive_json())["success"]
+        freezer.tick(elapsed)
         await websocket_client.send_json_auto_id(
             {
                 "type": "otbr/delete_ephemeral_key",
