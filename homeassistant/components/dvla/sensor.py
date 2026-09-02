@@ -248,17 +248,9 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         )
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
-        self._state = description.value_fn(coordinator.data)
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._state = self.entity_description.value_fn(self.coordinator.data)
-        self.async_write_ha_state()
 
     @property
     @override
     def native_value(self) -> StateType | date:
         """Native value."""
-        return self._state
+        return self.entity_description.value_fn(self.coordinator.data)
