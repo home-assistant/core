@@ -5,11 +5,8 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.collection_image.image import CollectionImageImageEntity
 from homeassistant.components.collection_image.services import (
-    ATTR_WRAP,
-    SERVICE_SELECT_FIRST,
-    SERVICE_SELECT_LAST,
-    SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_PREVIOUS,
+    CollectionImageService,
+    CollectionImageServiceArgument,
 )
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
@@ -97,25 +94,25 @@ async def test_navigation(
     assert_resolve_index(1)
 
     steps = (
-        (SERVICE_SELECT_FIRST, 0),
-        (SERVICE_SELECT_LAST, 2),
-        (SERVICE_SELECT_PREVIOUS, 1),
-        (SERVICE_SELECT_PREVIOUS, 0),
-        (SERVICE_SELECT_PREVIOUS, 0),
-        (SERVICE_SELECT_PREVIOUS, 2, True),
-        (SERVICE_SELECT_PREVIOUS, 1, True),
-        (SERVICE_SELECT_PREVIOUS, 0, True),
-        (SERVICE_SELECT_NEXT, 1),
-        (SERVICE_SELECT_NEXT, 2),
-        (SERVICE_SELECT_NEXT, 2),
-        (SERVICE_SELECT_NEXT, 0, True),
-        (SERVICE_SELECT_NEXT, 1, True),
+        (CollectionImageService.SELECT_FIRST, 0),
+        (CollectionImageService.SELECT_LAST, 2),
+        (CollectionImageService.SELECT_PREVIOUS, 1),
+        (CollectionImageService.SELECT_PREVIOUS, 0),
+        (CollectionImageService.SELECT_PREVIOUS, 0),
+        (CollectionImageService.SELECT_PREVIOUS, 2, True),
+        (CollectionImageService.SELECT_PREVIOUS, 1, True),
+        (CollectionImageService.SELECT_PREVIOUS, 0, True),
+        (CollectionImageService.SELECT_NEXT, 1),
+        (CollectionImageService.SELECT_NEXT, 2),
+        (CollectionImageService.SELECT_NEXT, 2),
+        (CollectionImageService.SELECT_NEXT, 0, True),
+        (CollectionImageService.SELECT_NEXT, 1, True),
     )
 
     for service, expected_index, *wrap_arg in steps:
         data = {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID}
         if wrap_arg:
-            data[ATTR_WRAP] = True
+            data[CollectionImageServiceArgument.WRAP] = True
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -145,17 +142,44 @@ async def test_navigation(
     data = {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        CollectionImageService.SELECT_NEXT,
         data,
         blocking=True,
     )
     assert_resolve_index(0)
 
+    # Change to new images and verify that previous resets count to -1
+    images = [
+        image("media-source://mymedia/7"),
+        image("media-source://mymedia/8"),
+        image("media-source://mymedia/9"),
+    ]
+
+    media_source_state.browse_results = {
+        MOCK_MEDIA_DIR_URI_1: directory("My pictures", *images)
+    }
+    media_source_state.resolve_results = {
+        img.media_content_id: PlayMedia(
+            url="",
+            mime_type="image/png",
+        )
+        for img in images
+    }
+
+    data = {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID}
+    await hass.services.async_call(
+        DOMAIN,
+        CollectionImageService.SELECT_PREVIOUS,
+        data,
+        blocking=True,
+    )
+    assert_resolve_index(2)
+
     # Now there are no images, go to unavailable
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        CollectionImageService.SELECT_NEXT,
         data,
         blocking=True,
     )
@@ -193,7 +217,7 @@ async def test_first_unavailable(
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_FIRST,
+        CollectionImageService.SELECT_FIRST,
         {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
         blocking=True,
     )
