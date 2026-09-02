@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import init_integration
 from .const import PORT_TCP
@@ -28,11 +32,20 @@ async def test_setup_connection_failed(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the setup that fails during velbus connect."""
     controller.return_value.connect.side_effect = VelbusConnectionFailed()
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"name": config_entry.title}
 
 
 async def test_setup_start_failed(
@@ -239,6 +252,139 @@ async def test_device_registry(
         (DOMAIN, "2"), config_entry.entry_id
     )
     assert device_no_sub.via_device_id is None
+
+
+async def test_connection_lost_creates_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a disconnect callback creates an issue in the repair registry."""
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"name": config_entry.title}
+
+
+async def test_connection_restored_deletes_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a reconnect callback removes the connection_lost issue."""
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    on_reconnect = controller.return_value.add_connect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    await on_reconnect()
+    assert (DOMAIN, issue_id) not in issue_registry.issues
+
+
+async def test_reload_while_offline_keeps_connection_lost_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a reload which fails to reconnect doesn't silently drop the issue.
+
+    async_unload_entry (via the async_on_unload hook) clears the issue on every
+    reload, success or not. If the reconnect attempt in async_setup_entry then
+    fails, the issue must be recreated there — otherwise a reload that can't
+    restore the connection leaves the entry in SETUP_RETRY with no repair issue.
+    """
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    controller.return_value.connect.side_effect = VelbusConnectionFailed()
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.is_persistent is True
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+
+
+async def test_setup_deletes_stale_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a successful setup removes a connection_lost issue from a previous run."""
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_lost",
+        translation_placeholders={"name": config_entry.title},
+    )
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    await init_integration(hass, config_entry)
+
+    assert (DOMAIN, issue_id) not in issue_registry.issues
+
+
+async def test_remove_entry_deletes_connection_lost_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that removing a stuck-retrying entry clears its connection_lost issue.
+
+    async_on_unload is only registered once connect() succeeds, so a config entry
+    that never got past setup retry has no unload hook to clean up the persistent
+    issue. async_remove_entry must delete it directly.
+    """
+    controller.return_value.connect.side_effect = VelbusConnectionFailed()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_lost",
+        translation_placeholders={"name": config_entry.title},
+    )
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    with patch("shutil.rmtree"):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_remove_config_entry_device(

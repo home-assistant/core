@@ -18,6 +18,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -146,13 +147,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
         vlp_file=entry.data.get(CONF_VLP_FILE),
     )
+    issue_id = f"connection_lost_{entry.entry_id}"
+
+    def _create_connection_lost_issue() -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="connection_lost",
+            translation_placeholders={"name": entry.title},
+        )
+
     try:
         await controller.connect()
     except VelbusConnectionFailed as error:
+        # A reload that fails to reconnect starts from here too: async_unload_entry
+        # already cleared the issue via the async_on_unload hook below, and this is
+        # the only chance to put it back before setup bails out into SETUP_RETRY.
+        _create_connection_lost_issue()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_failed",
         ) from error
+
+    # The connection is up, so any connection_lost issue is stale. It cannot be
+    # cleared by on_reconnect: the controller reports the initial connection while
+    # connect() is still running, before the callback below is registered.
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    async def on_disconnect() -> None:
+        _create_connection_lost_issue()
+
+    async def on_reconnect() -> None:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    controller.add_disconnect_callback(on_disconnect)
+    controller.add_connect_callback(on_reconnect)
+    entry.async_on_unload(lambda: controller.remove_disconnect_callback(on_disconnect))
+    entry.async_on_unload(lambda: controller.remove_connect_callback(on_reconnect))
+    entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
 
     _migrate_device_identifiers(hass, entry.entry_id)
     # Migrate unique ids before the bus scan to preserve entity history
@@ -175,6 +211,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> b
 
 async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Remove the velbus entry, so we also have to cleanup the cache dir."""
+    # If the initial connection fails, async_setup_entry raises ConfigEntryNotReady
+    # before async_on_unload is registered, so the unload callback never clears this
+    # persistent issue. Delete it here too, so a removed entry doesn't leave it behind.
+    ir.async_delete_issue(hass, DOMAIN, f"connection_lost_{entry.entry_id}")
     await hass.async_add_executor_job(
         shutil.rmtree,
         hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
