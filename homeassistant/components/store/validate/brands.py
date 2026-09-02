@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.hacs.enums import HacsCategory
-
+from ..enums import HacsCategory
 from .base import ActionValidationBase, ValidationException
 
 if TYPE_CHECKING:

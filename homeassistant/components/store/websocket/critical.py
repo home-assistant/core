@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/critical/list",
+        vol.Required("type"): "store/critical/list",
     }
 )
 @websocket_api.require_admin
@@ -38,7 +38,7 @@ async def hacs_critical_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/critical/acknowledge",
+        vol.Required("type"): "store/critical/acknowledge",
         vol.Optional("repository"): cv.string,
     }
 )

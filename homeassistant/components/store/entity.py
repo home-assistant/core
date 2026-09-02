@@ -27,7 +27,7 @@ def system_info(hacs: HacsBase) -> dict:
         "manufacturer": "hacs.xyz",
         "model": "",
         "sw_version": str(hacs.version),
-        "configuration_url": "homeassistant://hacs",
+        "configuration_url": "homeassistant://store",
         "entry_type": DeviceEntryType.SERVICE,
     }
 
@@ -125,7 +125,7 @@ class HacsRepositoryEntity(
             "name": self.repository.display_name,
             "model": self.repository.data.category,
             "manufacturer": _manufacturer(),
-            "configuration_url": f"homeassistant://hacs/repository/{self.repository.data.id}",
+            "configuration_url": f"homeassistant://store/repository/{self.repository.data.id}",
             "entry_type": DeviceEntryType.SERVICE,
         }
 

@@ -65,7 +65,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/subscribe",
+        vol.Required("type"): "store/subscribe",
         vol.Required("signal"): str,
     }
 )
@@ -93,7 +93,7 @@ async def hacs_subscribe(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/info",
+        vol.Required("type"): "store/info",
     }
 )
 @websocket_api.require_admin

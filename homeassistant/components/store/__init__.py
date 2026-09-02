@@ -214,9 +214,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await hacs.data.async_write(force=True)
 
     try:
-        if hass.data.get("frontend_panels", {}).get("hacs"):
+        if hass.data.get("frontend_panels", {}).get(DOMAIN):
             hacs.log.info("Removing sidepanel")
-            async_remove_panel(hass, "hacs")
+            async_remove_panel(hass, DOMAIN)
     except AttributeError:
         pass
 

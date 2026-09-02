@@ -19,8 +19,8 @@ def async_register(
     hass: HomeAssistant, register: system_health.SystemHealthRegistration
 ) -> None:
     """Register system health callbacks."""
-    register.domain = "Home Assistant Community Store"
-    register.async_register_info(system_health_info, "/hacs")
+    register.domain = "Community store"
+    register.async_register_info(system_health_info, "/store")
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:

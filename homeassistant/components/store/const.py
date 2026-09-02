@@ -4,16 +4,17 @@ from typing import TypeVar
 
 from aiogithubapi.common.const import ACCEPT_HEADERS
 
-NAME_SHORT = "HACS"
-DOMAIN = "hacs"
+NAME_SHORT = "Community store"
+DOMAIN = "store"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 MINIMUM_HA_VERSION = "0.0.0"
 
+# Kept for compatibility with HACS installs, migrates in a later release
 URL_BASE = "/hacsfiles"
 
 TV = TypeVar("TV")
 
-PACKAGE_NAME = "custom_components.hacs"
+PACKAGE_NAME = "homeassistant.components.store"
 
 DEFAULT_CONCURRENT_TASKS = 15
 DEFAULT_CONCURRENT_BACKOFF_TIME = 1
@@ -26,6 +27,7 @@ HACS_ACTION_GITHUB_API_HEADERS = {
 }
 
 VERSION_STORAGE = "6"
+# Kept for compatibility with HACS installs, migrates in a later release
 STORENAME = "hacs"
 
 HACS_SYSTEM_ID = (

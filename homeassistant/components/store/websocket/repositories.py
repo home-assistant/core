@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING, Any
 
-from custom_components.hacs.utils import regex
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -13,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 from ..const import DOMAIN
 from ..enums import HacsDispatchEvent
+from ..utils import regex
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repositories/list",
+        vol.Required("type"): "store/repositories/list",
         vol.Optional("categories"): [str],
     }
 )
@@ -78,7 +78,7 @@ async def hacs_repositories_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repositories/clear_new",
+        vol.Required("type"): "store/repositories/clear_new",
         vol.Optional("categories"): cv.ensure_list,
         vol.Optional("repository"): cv.string,
     }
@@ -112,7 +112,7 @@ async def hacs_repositories_clear_new(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repositories/removed",
+        vol.Required("type"): "store/repositories/removed",
     }
 )
 @websocket_api.require_admin
@@ -133,7 +133,7 @@ async def hacs_repositories_removed(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repositories/add",
+        vol.Required("type"): "store/repositories/add",
         vol.Required("repository"): cv.string,
         vol.Required("category"): vol.Lower,
     }
@@ -195,7 +195,7 @@ async def hacs_repositories_add(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repositories/remove",
+        vol.Required("type"): "store/repositories/remove",
         vol.Required("repository"): cv.string,
     }
 )

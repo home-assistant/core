@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/info",
+        vol.Required("type"): "store/repository/info",
         vol.Required("repository_id"): str,
     }
 )
@@ -101,7 +101,7 @@ async def hacs_repository_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/ignore",
+        vol.Required("type"): "store/repository/ignore",
         vol.Required("repository"): str,
     }
 )
@@ -133,7 +133,7 @@ async def hacs_repository_ignore(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/state",
+        vol.Required("type"): "store/repository/state",
         vol.Required("repository"): cv.string,
         vol.Required("state"): cv.string,
     }
@@ -157,7 +157,7 @@ async def hacs_repository_state(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/version",
+        vol.Required("type"): "store/repository/version",
         vol.Required("repository"): cv.string,
         vol.Required("version"): cv.string,
     }
@@ -187,7 +187,7 @@ async def hacs_repository_version(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/beta",
+        vol.Required("type"): "store/repository/beta",
         vol.Required("repository"): cv.string,
         vol.Required("show_beta"): cv.boolean,
     }
@@ -214,7 +214,7 @@ async def hacs_repository_beta(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/download",
+        vol.Required("type"): "store/repository/download",
         vol.Required("repository"): cv.string,
         vol.Optional("version"): cv.string,
     }
@@ -246,7 +246,7 @@ async def hacs_repository_download(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/remove",
+        vol.Required("type"): "store/repository/remove",
         vol.Required("repository"): cv.string,
     }
 )
@@ -274,7 +274,7 @@ async def hacs_repository_remove(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/refresh",
+        vol.Required("type"): "store/repository/refresh",
         vol.Required("repository"): cv.string,
     }
 )
@@ -299,7 +299,7 @@ async def hacs_repository_refresh(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/release_notes",
+        vol.Required("type"): "store/repository/release_notes",
         vol.Required("repository"): cv.string,
     }
 )
@@ -335,7 +335,7 @@ async def hacs_repository_release_notes(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hacs/repository/releases",
+        vol.Required("type"): "store/repository/releases",
         vol.Required("repository_id"): cv.string,
     }
 )

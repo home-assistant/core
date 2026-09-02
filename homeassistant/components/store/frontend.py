@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING
 
 from homeassistant.components.frontend import (
@@ -11,7 +10,6 @@ from homeassistant.components.frontend import (
 )
 
 from .const import DOMAIN, URL_BASE
-from .hacs_frontend import VERSION as FE_VERSION, locate_dir
 from .utils.workarounds import async_register_static_path
 
 if TYPE_CHECKING:
@@ -23,23 +21,7 @@ if TYPE_CHECKING:
 async def async_register_frontend(hass: HomeAssistant, hacs: HacsBase) -> None:
     """Register the frontend."""
 
-    # Register frontend
-    if hacs.configuration.dev and (frontend_path := os.getenv("HACS_FRONTEND_DIR")):
-        hacs.log.warning(
-            "<HacsFrontend> Frontend development mode enabled. Do not run in production!"
-        )
-        await async_register_static_path(
-            hass,
-            f"{URL_BASE}/frontend",
-            f"{frontend_path}/hacs_frontend",
-            cache_headers=False,
-        )
-        hacs.frontend_version = "dev"
-    else:
-        await async_register_static_path(
-            hass, f"{URL_BASE}/frontend", locate_dir(), cache_headers=False
-        )
-        hacs.frontend_version = FE_VERSION
+    hacs.frontend_version = "core"
 
     # Custom iconset
     await async_register_static_path(
