@@ -203,7 +203,9 @@ class ConfiguredDoorBird:
             output.param: entry.input
             for entry in schedule
             for output in entry.output
-            if output.event == HTTP_EVENT_TYPE
+            # A disabled output is one the device will not call, so the event
+            # is not reported and nothing subscribes to it.
+            if output.event == HTTP_EVENT_TYPE and output.enabled
         }
         default_event_types = {
             self._get_event_name(event): event_type

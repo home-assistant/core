@@ -1,5 +1,6 @@
 """Test DoorBird cameras."""
 
+from doorbirdpy import DoorBirdScheduleEntry
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -18,6 +19,8 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_not_found_exception
 from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
+
+from tests.common import load_json_value_fixture
 
 LIVE_CAMERA_ENTITY_ID = "camera.mydoorbird_live"
 LAST_RING_CAMERA_ENTITY_ID = "camera.mydoorbird_last_ring"
@@ -283,3 +286,35 @@ async def test_camera_kept_until_a_renamed_event_is_assigned(
     # The favorite exists but has to be assigned to an input in the DoorBird
     # app before the device calls it, so the image cannot refresh yet.
     assert hass.states.get("camera.mydoorbird_last_ring") is not None
+
+
+async def test_disabled_webhook_output_is_reconfigured(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test a switched off webhook output is wired up again."""
+    schedule = DoorBirdScheduleEntry.parse_all(
+        load_json_value_fixture("schedule.json", "doorbird")
+    )
+    for entry in schedule:
+        if entry.input == "doorbell":
+            for output in entry.output:
+                if output.event == "http":
+                    output.enabled = False
+
+    doorbird_entry = await doorbird_mocker(schedule=schedule)
+
+    # A disabled output is one the device will not call, so it counts as
+    # unconfigured and an enabled one is written back for the same favorite.
+    doorbell = next(entry for entry in schedule if entry.input == "doorbell")
+    assert [
+        (output.param, output.enabled)
+        for output in doorbell.output
+        if output.event == "http"
+    ] == [("0", False), ("0", True)]
+
+    # The replacement can refresh again, so the deprecation proceeds as usual.
+    assert doorbird_entry.entry.runtime_data.door_station.image_event_names[
+        "doorbell"
+    ] == ["mydoorbird_doorbell"]
+    assert hass.states.get("camera.mydoorbird_last_ring") is None
