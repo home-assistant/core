@@ -118,11 +118,11 @@ class CollectionImageImageEntity(ImageEntity):
         """Get the last image."""
         await self._get_image_at_position(-1)
 
-    async def get_next_image(self, wrap=False) -> None:
+    async def get_next_image(self, wrap: bool = False) -> None:
         """Get the next image."""
         await self._get_next_sequential_image(False, wrap)
 
-    async def get_previous_image(self, wrap=False) -> None:
+    async def get_previous_image(self, wrap: bool = False) -> None:
         """Get the previous image."""
         await self._get_next_sequential_image(True, wrap)
 
@@ -138,7 +138,9 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
-    async def _get_next_sequential_image(self, reverse=False, wrap=False) -> None:
+    async def _get_next_sequential_image(
+        self, reverse: bool = False, wrap: bool = False
+    ) -> None:
         """Get the next or previous image."""
 
         filtered = await self.get_valid_images()
@@ -167,7 +169,7 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
-    async def update_image(self, image_id: str):
+    async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
         self._current_image_id = image_id
         self._cached_image = None
