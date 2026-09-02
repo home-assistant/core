@@ -74,10 +74,6 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_PASSWORD: password,
                             },
                         )
-            finally:
-                # The entry is set up from the stored credentials with its own
-                # auth, so this one only lives for the length of the flow.
-                auth.close()
 
         return self.async_show_form(
             step_id="user", data_schema=AUTH_SCHEMA, errors=errors
@@ -134,8 +130,6 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     entry, data_updates={CONF_PASSWORD: password}
                 )
-            finally:
-                auth.close()
 
         return self.async_show_form(
             step_id=step_id,
