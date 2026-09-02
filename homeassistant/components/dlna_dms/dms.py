@@ -1,12 +1,11 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import functools
-from typing import Any, cast
+from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client import UpnpRequester
@@ -37,6 +36,7 @@ from .const import (
     DLNA_RESOLVE_FILTER,
     DLNA_SORT_CRITERIA,
     DOMAIN,
+    DOMAIN_DATA,
     LOGGER,
     MEDIA_CLASS_MAP,
     PATH_OBJECT_ID_FLAG,
@@ -92,11 +92,10 @@ class DlnaDmsData:
 @callback
 def get_domain_data(hass: HomeAssistant) -> DlnaDmsData:
     """Obtain this integration's domain data, creating it if needed."""
-    if DOMAIN in hass.data:
-        return cast(DlnaDmsData, hass.data[DOMAIN])
+    if (data := hass.data.get(DOMAIN_DATA)) is not None:
+        return data
 
-    data = DlnaDmsData(hass)
-    hass.data[DOMAIN] = data
+    data = hass.data[DOMAIN_DATA] = DlnaDmsData(hass)
     return data
 
 
