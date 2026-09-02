@@ -3130,6 +3130,113 @@ async def test_device_info_child_device_invalid(
     assert "Not adding entity, error adding device" in caplog.text
 
 
+async def test_device_info_child_device_with_main_only_key(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that child device info containing a main-only key is rejected."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
+                        "name": "Outlet 1",
+                        "parent_device_id": parent.id,
+                        "manufacturer": "Acme",
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    # Platform setup still completes despite the malformed device info
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids()
+    assert not device_registry.child_devices
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (config_entry.domain, "strip_outlet_1"), config_entry.entry_id
+        )
+        is None
+    )
+    assert "Not adding entity with invalid device info" in caplog.text
+    assert "unexpected key(s) manufacturer for a child device" in caplog.text
+
+
+async def test_device_info_child_device_missing_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a child device info without identifiers is not added.
+
+    identifiers is a required ChildDeviceInfo key; a missing one is rejected via
+    the curated DeviceInfoError path so the entity is aborted while platform setup
+    still completes, instead of raising a raw TypeError from the splat.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    device_info={
+                        "name": "Outlet 1",
+                        "parent_device_id": parent.id,
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    # Platform setup still completes despite the malformed device info
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids()
+    assert not device_registry.child_devices
+    assert "Not adding entity with invalid device info" in caplog.text
+    assert "a child device info must include identifiers" in caplog.text
+
+
 async def test_device_info_parent_device_id_routing(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
