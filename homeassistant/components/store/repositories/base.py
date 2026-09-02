@@ -248,7 +248,7 @@ class HacsManifest:
         manifest_data.manifest = {
             k: v
             for k, v in manifest.items()
-            if k in manifest_data.__dict__ and v != manifest_data.__getattribute__(k)
+            if k in manifest_data.__dict__ and v != getattr(manifest_data, k)
         }
 
         for key, value in manifest_data.manifest.items():
@@ -1182,7 +1182,7 @@ class HacsRepository:
                 )
 
         # Get releases.
-        if not skip_releases:
+        if not skip_releases:  # pylint: disable=too-many-nested-blocks
             try:
                 releases = await self.get_releases(prerelease=True, returnlimit=30)
                 if releases:

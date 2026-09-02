@@ -3,6 +3,8 @@
 For more details about this integration, please refer to the documentation at
 https://hacs.xyz/
 """
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
 from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS

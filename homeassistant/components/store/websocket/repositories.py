@@ -1,6 +1,7 @@
 """Register info websocket commands."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
-import sys
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -33,7 +34,7 @@ async def hacs_repositories_list(
     msg: dict[str, Any],
 ) -> None:
     """List repositories."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
@@ -90,10 +91,16 @@ async def hacs_repositories_clear_new(
     msg: dict[str, Any],
 ) -> None:
     """Clear new repositories for specific categories."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
 
     if repo := msg.get("repository"):
-        repository = hacs.repositories.get_by_id(repo)
+        if (repository := hacs.repositories.get_by_id(repo)) is None:
+            connection.send_error(
+                msg["id"],
+                "repository_not_found",
+                f"Repository with ID ({repo}) not found",
+            )
+            return
         repository.data.new = False
 
     else:
@@ -122,7 +129,7 @@ async def hacs_repositories_removed(
     msg: dict[str, Any],
 ) -> None:
     """Get information about removed repositories."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     content = [
         repo.to_json()
         for repo in hacs.repositories.list_removed
@@ -146,7 +153,7 @@ async def hacs_repositories_add(
     msg: dict[str, Any],
 ) -> None:
     """Add custom repositoriy."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = regex.extract_repository_from_url(msg["repository"])
     category = msg["category"]
 
@@ -174,7 +181,7 @@ async def hacs_repositories_add(
                 HacsDispatchEvent.ERROR,
                 {
                     "action": "add_repository",
-                    "exception": str(sys.exc_info()[0].__name__),
+                    "exception": type(exception).__name__,
                     "message": str(exception),
                 },
             )
@@ -205,8 +212,15 @@ async def hacs_repositories_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove custom repositoriy."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     repository.remove()
     await hacs.data.async_write()

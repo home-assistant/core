@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     hacs: HacsBase = hass.data[DOMAIN]
 
-    data = {
+    data: dict[str, Any] = {
         "entry": entry.as_dict(),
         "hacs": {
             "stage": hacs.stage,

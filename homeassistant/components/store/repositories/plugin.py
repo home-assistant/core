@@ -138,7 +138,7 @@ class HacsPluginRepository(HacsRepository):
                 self.content.path.remote = ""
                 return
             if not content_in_root and f"dist/{filename}" in all_paths:
-                self.data.file_name = filename.split("/")[-1]
+                self.data.file_name = filename.rsplit("/", maxsplit=1)[-1]
                 self.content.path.remote = "dist"
                 return
 

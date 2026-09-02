@@ -1,4 +1,6 @@
 """Provide info to system health."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
 from typing import Any
 

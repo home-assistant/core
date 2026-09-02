@@ -82,7 +82,7 @@ def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], An
     """
     _schema = vol.Schema(schema, extra=extra)
 
-    def validate_repo_data(data: Any) -> Any:
+    def _validate(data: Any) -> Any:
         """Validate integration repo data."""
         schema_errors: vol.MultipleInvalid | None = None
         try:
@@ -100,7 +100,7 @@ def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], An
             raise schema_errors
         return data
 
-    return validate_repo_data
+    return _validate
 
 
 def validate_version(data: Any) -> Any:

@@ -34,7 +34,7 @@ class HacsDataClient:
         section: str | None = None,
     ) -> Any:
         """Do request."""
-        endpoint = "/".join([v for v in [section, filename] if v is not None])
+        endpoint = "/".join(v for v in (section, filename) if v is not None)
         try:
             response = await self._session.get(
                 f"https://data-v2.hacs.xyz/{endpoint}",

@@ -89,7 +89,7 @@ class RemovedRepository:
                 "removal_type",
                 "acknowledged",
             ):
-                self.__setattr__(key, value)
+                setattr(self, key, value)
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON representation of the data."""
@@ -134,13 +134,13 @@ class HacsConfiguration:
         for key, value in data.items():
             if key in {"experimental", "netdaemon", "release_limit", "debug"}:
                 continue
-            self.__setattr__(key, value)
+            setattr(self, key, value)
 
 
 class HacsCore:
     """HACS Core info."""
 
-    config_path: str
+    config_path: str = ""
     ha_version: AwesomeVersion
     lovelace_mode: LovelaceMode = LovelaceMode("yaml")
 
@@ -365,7 +365,7 @@ class HacsBase:
         """Initialize."""
         self.common = HacsCommon()
         self.configuration = HacsConfiguration()
-        self.coordinators: dict[HacsCategory, HacsUpdateCoordinator] = {}
+        self.coordinators: dict[str, HacsUpdateCoordinator] = {}
         self.core = HacsCore()
         self.log = LOGGER
         self.recurring_tasks: list[Callable[[], None]] = []

@@ -1,4 +1,6 @@
 """Register info websocket commands."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
 from typing import TYPE_CHECKING, Any
 
@@ -32,7 +34,7 @@ async def hacs_repository_info(
     msg: dict[str, Any],
 ) -> None:
     """Return information about a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository_id = msg["repository_id"]
     repository = hacs.repositories.get_by_id(repository_id)
     if repository is None:
@@ -111,7 +113,7 @@ async def hacs_repository_ignore(
     msg: dict[str, Any],
 ) -> None:
     """Ignore a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository_id = msg["repository"]
     hacs.log.info("Ignoring %s", repository_id)
     repository = hacs.repositories.get_by_id(repository_id)
@@ -144,8 +146,15 @@ async def hacs_repository_state(
     msg: dict[str, Any],
 ) -> None:
     """Set the state of a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     repository.state = msg["state"]
 
@@ -168,8 +177,15 @@ async def hacs_repository_version(
     msg: dict[str, Any],
 ) -> None:
     """Set the version of a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     if msg["version"] == repository.data.default_branch:
         repository.data.selected_tag = None
@@ -198,8 +214,15 @@ async def hacs_repository_beta(
     msg: dict[str, Any],
 ) -> None:
     """Show or hide beta versions of a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     repository.data.show_beta = msg["show_beta"]
 
@@ -225,8 +248,15 @@ async def hacs_repository_download(
     msg: dict[str, Any],
 ) -> None:
     """Set the version of a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     try:
         was_installed = repository.data.installed
@@ -256,8 +286,15 @@ async def hacs_repository_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     repository.data.new = False
     try:
@@ -284,8 +321,15 @@ async def hacs_repository_refresh(
     msg: dict[str, Any],
 ) -> None:
     """Refresh a repository."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     await repository.update_repository(ignore_issues=True, force=True)
     await hacs.data.async_write()
@@ -309,8 +353,15 @@ async def hacs_repository_release_notes(
     msg: dict[str, Any],
 ) -> None:
     """Return release notes."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository']}) not found",
+        )
+        return
 
     connection.send_message(
         websocket_api.result_message(
@@ -345,8 +396,16 @@ async def hacs_repository_releases(
     msg: dict[str, Any],
 ) -> None:
     """Return releases."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     repository = hacs.repositories.get_by_id(msg["repository_id"])
+    if repository is None:
+        connection.send_error(
+            msg["id"],
+            "repository_not_found",
+            f"Repository with ID ({msg['repository_id']}) not found",
+        )
+        return
+
     try:
         releases = await repository.async_get_releases()
     except HacsException as exception:

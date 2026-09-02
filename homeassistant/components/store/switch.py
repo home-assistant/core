@@ -1,12 +1,14 @@
 """Switch entities for HACS."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import HacsBase
 from .const import DOMAIN
@@ -17,7 +19,7 @@ from .repositories.base import HacsRepository
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup switch platform."""
     hacs: HacsBase = hass.data[DOMAIN]
@@ -40,14 +42,17 @@ class HacsRepositoryPreReleaseSwitchEntity(HacsRepositoryEntity, SwitchEntity):
         self._attr_entity_registry_enabled_default = self.repository.data.show_beta
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the pre-release option is enabled for the repository."""
         return self.repository.data.show_beta
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._handle_change(value=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._handle_change(value=False)

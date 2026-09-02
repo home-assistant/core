@@ -1,4 +1,6 @@
 """Register_commands."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
 from typing import TYPE_CHECKING, Any
 
@@ -102,7 +104,7 @@ async def hacs_info(
     msg: dict[str, Any],
 ) -> None:
     """Return information about HACS."""
-    hacs: HacsBase = hass.data.get(DOMAIN)
+    hacs: HacsBase = hass.data[DOMAIN]
     connection.send_message(
         websocket_api.result_message(
             msg["id"],

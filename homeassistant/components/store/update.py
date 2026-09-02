@@ -1,12 +1,15 @@
 """Update entities for HACS."""
+# The store object is shared and read where no config entry is at hand.
+# pylint: disable=home-assistant-use-runtime-data
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import HacsBase
 from .const import DOMAIN
@@ -16,7 +19,9 @@ from .exceptions import HacsException
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup update platform."""
     hacs: HacsBase = hass.data[DOMAIN]
@@ -37,16 +42,19 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
     )
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name."""
         return f"{self.repository.display_name} update"
 
     @property
+    @override
     def latest_version(self) -> str:
         """Return latest version of the entity."""
         return self.repository.display_available_version
 
     @property
+    @override
     def release_url(self) -> str:
         """Return the URL of the release page."""
         if self.repository.display_version_or_commit == "commit":
@@ -54,11 +62,13 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         return f"https://github.com/{self.repository.data.full_name}/releases/{self.latest_version}"
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return downloaded version of the entity."""
         return self.repository.display_installed_version
 
     @property
+    @override
     def release_summary(self) -> str | None:
         """Return the release summary."""
         if self.repository.pending_restart:
@@ -66,6 +76,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         return None
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         if (
@@ -78,6 +89,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
             f"https://brands.home-assistant.io/_/{self.repository.data.domain}/icon.png"
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -94,6 +106,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         except HacsException as exception:
             raise HomeAssistantError(exception) from exception
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         if self.repository.pending_restart:
@@ -140,6 +153,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
 
         return release_notes.replace("\n#", "\n\n#")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for status events."""
         await super().async_added_to_hass()
@@ -152,7 +166,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         )
 
     @callback
-    def _update_download_progress(self, data: dict) -> None:
+    def _update_download_progress(self, data: dict[str, Any]) -> None:
         """Update the download progress."""
         if data["repository"] != self.repository.data.full_name:
             return
@@ -161,5 +175,6 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
     @callback
     def _update_in_progress(self, progress: int | bool) -> None:
         """Update the download progress."""
-        self._attr_in_progress = progress
+        self._attr_in_progress = progress is not False
+        self._attr_update_percentage = progress if progress is not False else None
         self.async_write_ha_state()
