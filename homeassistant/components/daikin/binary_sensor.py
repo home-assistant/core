@@ -1,8 +1,6 @@
 """Support for Daikin binary sensors."""
 
-from typing import Any
-
-from typing_extensions import override
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
@@ -43,4 +41,7 @@ class DaikinDemandControlSensor(DaikinEntity, BinarySensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.device.get_demand_control()
+        attrs = self.device.get_demand_control()
+        if attrs.get("mode") != "0":
+            attrs.pop("max_pow", None)
+        return attrs

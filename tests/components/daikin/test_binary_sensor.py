@@ -77,6 +77,26 @@ async def test_demand_control_sensor_state(
     assert state.state == expected_state
 
 
+async def test_demand_control_sensor_schedule_mode_excludes_max_pow(
+    hass: HomeAssistant,
+    zone_device: ZoneDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test max_pow is excluded from attributes in schedule mode."""
+    zone_device.support_demand_control = True
+    zone_device.get_demand_control = MagicMock(
+        return_value={**DEMAND_CONTROL_DATA, "mode": "1"}
+    )
+
+    await async_setup_daikin(hass, zone_device)
+
+    entity_id = _demand_control_entity_id(entity_registry, zone_device)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert "max_pow" not in state.attributes
+
+
 async def test_demand_control_sensor_not_created_unsupported(
     hass: HomeAssistant,
     zone_device: ZoneDevice,
