@@ -14,13 +14,14 @@ from aiogithubapi import (
 )
 from aiogithubapi.common.const import OAUTH_USER_LOGIN
 from awesomeversion import AwesomeVersion
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.loader import async_get_integration
-import voluptuous as vol
 
 from .base import HacsBase
 from .const import CLIENT_ID, DOMAIN, LOCALE, MINIMUM_HA_VERSION
@@ -79,20 +80,24 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         async def _wait_for_activation() -> None:
             try:
-                response = await self.device.activation(device_code=self._registration.device_code)
+                response = await self.device.activation(
+                    device_code=self._registration.device_code
+                )
                 self._activation = response.data
             finally:
 
                 async def _progress():
                     with suppress(UnknownFlow):
-                        await self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+                        await self.hass.config_entries.flow.async_configure(
+                            flow_id=self.flow_id
+                        )
 
         if not self.device:
             integration = await async_get_integration(self.hass, DOMAIN)
             self.device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
                 session=aiohttp_client.async_get_clientsession(self.hass),
-                **{"client_name": f"HACS/{integration.version}"},
+                client_name=f"HACS/{integration.version}",
             )
             try:
                 response = await self.device.register()
@@ -136,12 +141,18 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("acc_logs", default=user_input.get("acc_logs", False)): bool,
-                    vol.Required("acc_addons", default=user_input.get("acc_addons", False)): bool,
+                    vol.Required(
+                        "acc_logs", default=user_input.get("acc_logs", False)
+                    ): bool,
+                    vol.Required(
+                        "acc_addons", default=user_input.get("acc_addons", False)
+                    ): bool,
                     vol.Required(
                         "acc_untested", default=user_input.get("acc_untested", False)
                     ): bool,
-                    vol.Required("acc_disable", default=user_input.get("acc_disable", False)): bool,
+                    vol.Required(
+                        "acc_disable", default=user_input.get("acc_disable", False)
+                    ): bool,
                 }
             ),
             errors=self._errors,
@@ -150,9 +161,12 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_device_done(self, user_input: dict[str, bool] | None = None):
         """Handle device steps"""
         if self._reauth:
-            existing_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+            existing_entry = self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            )
             self.hass.config_entries.async_update_entry(
-                existing_entry, data={**existing_entry.data, "token": self._activation.access_token}
+                existing_entry,
+                data={**existing_entry.data, "token": self._activation.access_token},
             )
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
@@ -207,7 +221,9 @@ class HacsOptionsFlowHandler(OptionsFlow):
         """Handle a flow initialized by the user."""
         hacs: HacsBase = self.hass.data.get(DOMAIN)
         if user_input is not None:
-            return self.async_create_entry(title="", data={**user_input, "experimental": True})
+            return self.async_create_entry(
+                title="", data={**user_input, "experimental": True}
+            )
 
         if hacs is None or hacs.configuration is None:
             return self.async_abort(reason="not_setup")
@@ -216,8 +232,12 @@ class HacsOptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="pending_tasks")
 
         schema = {
-            vol.Optional(SIDEPANEL_TITLE, default=hacs.configuration.sidepanel_title): str,
-            vol.Optional(SIDEPANEL_ICON, default=hacs.configuration.sidepanel_icon): str,
+            vol.Optional(
+                SIDEPANEL_TITLE, default=hacs.configuration.sidepanel_title
+            ): str,
+            vol.Optional(
+                SIDEPANEL_ICON, default=hacs.configuration.sidepanel_icon
+            ): str,
             vol.Optional(COUNTRY, default=hacs.configuration.country): vol.In(LOCALE),
             vol.Optional(APPDAEMON, default=hacs.configuration.appdaemon): bool,
         }

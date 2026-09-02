@@ -44,7 +44,9 @@ class HacsPythonScriptRepository(HacsRepository):
 
         compliant = False
         for treefile in self.treefiles:
-            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(".py"):
+            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(
+                ".py"
+            ):
                 compliant = True
                 break
         if not compliant:
@@ -79,7 +81,9 @@ class HacsPythonScriptRepository(HacsRepository):
 
         compliant = False
         for treefile in self.treefiles:
-            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(".py"):
+            if treefile.startswith(f"{self.content.path.remote}") and treefile.endswith(
+                ".py"
+            ):
                 compliant = True
                 break
         if not compliant:

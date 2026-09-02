@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from custom_components.hacs.base import HacsBase
+import voluptuous as vol
+
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
-import voluptuous as vol
-
-from custom_components.hacs.base import HacsBase
 
 from .const import DOMAIN
 

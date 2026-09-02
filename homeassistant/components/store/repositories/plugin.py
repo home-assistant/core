@@ -151,7 +151,9 @@ class HacsPluginRepository(HacsRepository):
         """Get the dashboard resource namespace."""
         filename = self.data.file_name
         if "/" in filename:
-            self.logger.warning("%s have defined an invalid file name %s", self.string, filename)
+            self.logger.warning(
+                "%s have defined an invalid file name %s", self.string, filename
+            )
             filename = filename.split("/")[-1]
         return (
             f"{self.generate_dashboard_resource_namespace()}/{filename}"
@@ -163,11 +165,13 @@ class HacsPluginRepository(HacsRepository):
         resources: ResourceStorageCollection | None
         if not (hass_data := self.hacs.hass.data):
             self.logger.error("%s Can not access the hass data", self.string)
-            return
+            return None
 
         if (lovelace_data := hass_data.get("lovelace")) is None:
-            self.logger.warning("%s Can not access the lovelace integration data", self.string)
-            return
+            self.logger.warning(
+                "%s Can not access the lovelace integration data", self.string
+            )
+            return None
 
         if self.hacs.core.ha_version > "2025.1.99":
             # Changed to 2025.2.0
@@ -177,16 +181,20 @@ class HacsPluginRepository(HacsRepository):
             resources = lovelace_data.get("resources")
 
         if resources is None:
-            self.logger.warning("%s Can not access the dashboard resources", self.string)
-            return
+            self.logger.warning(
+                "%s Can not access the dashboard resources", self.string
+            )
+            return None
 
         if not hasattr(resources, "store") or resources.store is None:
-            self.logger.info("%s YAML mode detected, can not update resources", self.string)
-            return
+            self.logger.info(
+                "%s YAML mode detected, can not update resources", self.string
+            )
+            return None
 
         if resources.store.key != "lovelace_resources" or resources.store.version != 1:
             self.logger.warning("%s Can not use the dashboard resources", self.string)
-            return
+            return None
 
         return resources
 
@@ -233,6 +241,8 @@ class HacsPluginRepository(HacsRepository):
 
         for entry in resources.async_items():
             if entry["url"].startswith(namespace):
-                self.logger.info("%s Removing dashboard resource %s", self.string, entry["url"])
+                self.logger.info(
+                    "%s Removing dashboard resource %s", self.string, entry["url"]
+                )
                 await resources.async_delete_item(entry["id"])
                 return

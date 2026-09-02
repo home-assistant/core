@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiogithubapi import GitHubException
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -62,7 +63,9 @@ async def async_get_config_entry_diagnostics(
                 "repository_manifest": repository.repository_manifest.to_dict(),
                 "ref": repository.ref,
                 "paths": {
-                    "localpath": repository.localpath.replace(hacs.core.config_path, "/config"),
+                    "localpath": repository.localpath.replace(
+                        hacs.core.config_path, "/config"
+                    ),
                     "local": repository.content.path.local.replace(
                         hacs.core.config_path, "/config"
                     ),

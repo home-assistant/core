@@ -25,6 +25,7 @@ from aiogithubapi import (
 from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
+
 from homeassistant.components.persistent_notification import (
     async_create as async_create_persistent_notification,
 )
@@ -61,7 +62,6 @@ from .exceptions import (
 from .repositories import REPOSITORY_CLASSES
 from .repositories.base import HACS_MANIFEST_KEYS_TO_EXPORT, REPOSITORY_KEYS_TO_EXPORT
 from .utils.file_system import async_exists
-from .utils.json import json_loads
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
 from .utils.store import async_load_from_store, async_save_to_store
@@ -200,7 +200,9 @@ class HacsRepositories:
     _repositories: set[HacsRepository] = field(default_factory=set)
     _repositories_by_full_name: dict[str, HacsRepository] = field(default_factory=dict)
     _repositories_by_id: dict[str, HacsRepository] = field(default_factory=dict)
-    _removed_repositories_by_full_name: dict[str, RemovedRepository] = field(default_factory=dict)
+    _removed_repositories_by_full_name: dict[str, RemovedRepository] = field(
+        default_factory=dict
+    )
 
     @property
     def list_all(self) -> list[HacsRepository]:
@@ -332,7 +334,9 @@ class HacsRepositories:
             return None
         return self._repositories_by_id.get(str(repository_id))
 
-    def get_by_full_name(self, repository_full_name: str | None) -> HacsRepository | None:
+    def get_by_full_name(
+        self, repository_full_name: str | None
+    ) -> HacsRepository | None:
         """Get repository by full name."""
         if not repository_full_name:
             return None
@@ -406,7 +410,9 @@ class HacsBase:
             self.log.error("HACS is disabled - %s", reason)
 
         if reason == HacsDisabledReason.INVALID_TOKEN:
-            self.hass.add_job(self.configuration.config_entry.async_start_reauth, self.hass)
+            self.hass.add_job(
+                self.configuration.config_entry.async_start_reauth, self.hass
+            )
 
     def enable_hacs(self) -> None:
         """Enable HACS."""
@@ -442,8 +448,8 @@ class HacsBase:
 
             # LEGACY! Remove with 2.0
             if "themes" in file_path and file_path.endswith(".yaml"):
-                filename = file_path.split("/")[-1]
-                base = file_path.split("/themes/")[0]
+                filename = file_path.rsplit("/", maxsplit=1)[-1]
+                base = file_path.split("/themes/", maxsplit=1)[0]
                 combined = f"{base}/themes/{filename}"
                 if os.path.exists(combined):
                     self.log.info("Removing old theme file %s", combined)
@@ -466,7 +472,9 @@ class HacsBase:
             response = await self.async_github_api_method(self.githubapi.rate_limit)
             if ((limit := response.data.resources.core.remaining or 0) - 1000) >= 10:
                 return math.floor((limit - 1000) / 10)
-            reset = dt.as_local(dt.utc_from_timestamp(response.data.resources.core.reset))
+            reset = dt.as_local(
+                dt.utc_from_timestamp(response.data.resources.core.reset)
+            )
             self.log.info(
                 "GitHub API ratelimited - %s remaining (%s)",
                 response.data.resources.core.remaining,
@@ -532,8 +540,9 @@ class HacsBase:
         if repository_full_name == "home-assistant/core":
             raise HomeAssistantCoreRepositoryException()
 
-        if repository_full_name == "home-assistant/addons" or repository_full_name.startswith(
-            "hassio-addons/"
+        if (
+            repository_full_name == "home-assistant/addons"
+            or repository_full_name.startswith("hassio-addons/")
         ):
             raise AppRepositoryException()
 
@@ -543,19 +552,25 @@ class HacsBase:
                 category,
                 repository_full_name,
             )
-            return
+            return None
 
-        if (renamed := self.common.renamed_repositories.get(repository_full_name)) is not None:
+        if (
+            renamed := self.common.renamed_repositories.get(repository_full_name)
+        ) is not None:
             repository_full_name = renamed
 
-        repository: HacsRepository = REPOSITORY_CLASSES[category](self, repository_full_name)
+        repository: HacsRepository = REPOSITORY_CLASSES[category](
+            self, repository_full_name
+        )
         if check:
             try:
                 await repository.async_registration(ref)
                 if repository.validate.errors:
                     self.common.skip.add(repository.data.full_name)
                     if not self.status.startup:
-                        self.log.error("Validation for %s failed.", repository_full_name)
+                        self.log.error(
+                            "Validation for %s failed.", repository_full_name
+                        )
                     if self.system.action:
                         raise HacsException(
                             f"::error:: Validation for {repository_full_name} failed."
@@ -564,13 +579,18 @@ class HacsBase:
                 if self.system.action:
                     repository.logger.info("%s Validation completed", repository.string)
                 else:
-                    repository.logger.info("%s Registration completed", repository.string)
-            except (HacsRepositoryExistException, HacsRepositoryArchivedException) as exception:
+                    repository.logger.info(
+                        "%s Registration completed", repository.string
+                    )
+            except (
+                HacsRepositoryExistException,
+                HacsRepositoryArchivedException,
+            ) as exception:
                 if self.system.generator:
                     repository.logger.error(
                         "%s Registration Failed - %s", repository.string, exception
                     )
-                return
+                return None
             except AIOGitHubAPIException as exception:
                 self.common.skip.add(repository.data.full_name)
                 raise HacsException(
@@ -583,16 +603,15 @@ class HacsBase:
         if repository_id is not None:
             repository.data.id = repository_id
 
-        else:
-            if self.hass is not None and check and repository.data.new:
-                self.async_dispatch(
-                    HacsDispatchEvent.REPOSITORY,
-                    {
-                        "action": "registration",
-                        "repository": repository.data.full_name,
-                        "repository_id": repository.data.id,
-                    },
-                )
+        elif self.hass is not None and check and repository.data.new:
+            self.async_dispatch(
+                HacsDispatchEvent.REPOSITORY,
+                {
+                    "action": "registration",
+                    "repository": repository.data.full_name,
+                    "repository_id": repository.data.id,
+                },
+            )
 
         self.repositories.register(repository, default)
 
@@ -620,7 +639,9 @@ class HacsBase:
 
         self.recurring_tasks.append(
             async_track_time_interval(
-                self.hass, self.async_update_downloaded_custom_repositories, timedelta(hours=48)
+                self.hass,
+                self.async_update_downloaded_custom_repositories,
+                timedelta(hours=48),
             )
         )
 
@@ -631,10 +652,14 @@ class HacsBase:
         )
 
         self.recurring_tasks.append(
-            async_track_time_interval(self.hass, self.async_check_rate_limit, timedelta(minutes=5))
+            async_track_time_interval(
+                self.hass, self.async_check_rate_limit, timedelta(minutes=5)
+            )
         )
         self.recurring_tasks.append(
-            async_track_time_interval(self.hass, self.async_process_queue, timedelta(minutes=10))
+            async_track_time_interval(
+                self.hass, self.async_process_queue, timedelta(minutes=10)
+            )
         )
 
         self.recurring_tasks.append(
@@ -649,7 +674,9 @@ class HacsBase:
         if config_entry := self.configuration.config_entry:
             config_entry.async_on_unload(unsub)
 
-        self.log.debug("There are %s scheduled recurring tasks", len(self.recurring_tasks))
+        self.log.debug(
+            "There are %s scheduled recurring tasks", len(self.recurring_tasks)
+        )
 
         self.status.startup = False
         self.async_dispatch(HacsDispatchEvent.STATUS, {})
@@ -702,7 +729,7 @@ class HacsBase:
                 if handle_rate_limit and request.status == 429:
                     try:
                         header = int(request.headers.get("retry-after") or 10)
-                    except (ValueError, TypeError):
+                    except ValueError, TypeError:
                         header = 10
                     retry_after = min(header, 60)  # Limit to 60 seconds
 
@@ -768,14 +795,20 @@ class HacsBase:
         )
 
     @callback
-    def async_dispatch(self, signal: HacsDispatchEvent, data: dict | None = None) -> None:
+    def async_dispatch(
+        self, signal: HacsDispatchEvent, data: dict | None = None
+    ) -> None:
         """Dispatch a signal with data."""
         async_dispatcher_send(self.hass, signal, data)
 
     def set_active_categories(self) -> None:
         """Set the active categories."""
         self.common.categories = set()
-        for category in (HacsCategory.INTEGRATION, HacsCategory.PLUGIN, HacsCategory.TEMPLATE):
+        for category in (
+            HacsCategory.INTEGRATION,
+            HacsCategory.PLUGIN,
+            HacsCategory.TEMPLATE,
+        ):
             self.enable_hacs_category(HacsCategory(category))
 
         if (
@@ -807,7 +840,9 @@ class HacsBase:
                     category=HacsCategory.INTEGRATION,
                     default=True,
                 )
-                repository = self.repositories.get_by_full_name(HacsGitHubRepo.INTEGRATION)
+                repository = self.repositories.get_by_full_name(
+                    HacsGitHubRepo.INTEGRATION
+                )
             elif not self.status.startup:
                 self.log.error("Scheduling update of hacs/integration")
                 self.queue.add(repository.common_update())
@@ -873,7 +908,9 @@ class HacsBase:
                 if repository.data.last_fetched is None or (
                     repository.data.last_fetched.timestamp() < repo_data["last_fetched"]
                 ):
-                    repository.data.update_data({**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data})
+                    repository.data.update_data(
+                        {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
+                    )
                     if (manifest := repo_data.get("manifest")) is not None:
                         repository.repository_manifest.update_data(
                             {**dict(HACS_MANIFEST_KEYS_TO_EXPORT), **manifest}
@@ -899,7 +936,10 @@ class HacsBase:
 
     async def async_check_rate_limit(self, _=None) -> None:
         """Check rate limit."""
-        if not self.system.disabled or self.system.disabled_reason != HacsDisabledReason.RATE_LIMIT:
+        if (
+            not self.system.disabled
+            or self.system.disabled_reason != HacsDisabledReason.RATE_LIMIT
+        ):
             return
 
         self.log.debug("Checking if ratelimit has lifted")
@@ -949,7 +989,9 @@ class HacsBase:
         self.log.info("Loading removed repositories")
 
         try:
-            removed_repositories = await self.data_client.get_data("removed", validate=True)
+            removed_repositories = await self.data_client.get_data(
+                "removed", validate=True
+            )
         except HacsException:
             return
 
@@ -958,7 +1000,9 @@ class HacsBase:
             removed.update_data(item)
 
         for removed in self.repositories.list_removed:
-            if (repository := self.repositories.get_by_full_name(removed.repository)) is None:
+            if (
+                repository := self.repositories.get_by_full_name(removed.repository)
+            ) is None:
                 continue
             if repository.data.full_name in self.common.ignored_repositories:
                 continue
@@ -996,7 +1040,9 @@ class HacsBase:
         """Execute the task."""
         if self.system.disabled:
             return
-        self.log.info("Starting recurring background task for downloaded custom repositories")
+        self.log.info(
+            "Starting recurring background task for downloaded custom repositories"
+        )
 
         repositories_to_update = 0
         repositories_updated = asyncio.Event()
@@ -1028,9 +1074,13 @@ class HacsBase:
                 self.hass, update_coordinators(), "update_coordinators"
             )
         else:
-            self.hass.async_create_background_task(update_coordinators(), "update_coordinators")
+            self.hass.async_create_background_task(
+                update_coordinators(), "update_coordinators"
+            )
 
-        self.log.debug("Recurring background task for downloaded custom repositories done")
+        self.log.debug(
+            "Recurring background task for downloaded custom repositories done"
+        )
 
     async def async_handle_critical_repositories(self, _=None) -> None:
         """Handle critical repositories."""
@@ -1041,7 +1091,7 @@ class HacsBase:
 
         try:
             critical = await self.data_client.get_data("critical", validate=True)
-        except (GitHubNotModifiedException, HacsNotModifiedException):
+        except GitHubNotModifiedException, HacsNotModifiedException:
             return
         except HacsException:
             pass
@@ -1058,7 +1108,9 @@ class HacsBase:
         stored_critical = []
 
         for repository in critical:
-            removed_repo = self.repositories.removed_repository(repository["repository"])
+            removed_repo = self.repositories.removed_repository(
+                repository["repository"]
+            )
             removed_repo.removal_type = "critical"
             repo = self.repositories.get_by_full_name(repository["repository"])
 

@@ -104,7 +104,9 @@ class HacsIntegrationRepository(HacsRepository):
                     f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
                 )
                 self.hacs.log.error(
-                    "Missing expected key '%s' in '%s'", exception, RepositoryFile.MAINIFEST_JSON
+                    "Missing expected key '%s' in '%s'",
+                    exception,
+                    RepositoryFile.MAINIFEST_JSON,
                 )
 
         # Set local path
@@ -144,7 +146,9 @@ class HacsIntegrationRepository(HacsRepository):
                     f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
                 )
                 self.hacs.log.error(
-                    "Missing expected key '%s' in '%s'", exception, RepositoryFile.MAINIFEST_JSON
+                    "Missing expected key '%s' in '%s'",
+                    exception,
+                    RepositoryFile.MAINIFEST_JSON,
                 )
 
         # Set local path
@@ -169,30 +173,9 @@ class HacsIntegrationRepository(HacsRepository):
         await async_get_custom_components(self.hacs.hass)
         self.logger.info("Custom_component cache reloaded")
 
-    async def async_get_integration_manifest(self, ref: str = None) -> dict[str, Any] | None:
-        """Get the content of the manifest.json file."""
-        manifest_path = (
-            "manifest.json"
-            if self.repository_manifest.content_in_root
-            else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
-        )
-
-        if not manifest_path in (x.full_path for x in self.tree):
-            raise HacsException(f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'")
-
-        target_ref = ref or self.version_to_download()
-        self.logger.debug("%s Getting %s for ref=%s", self.string, manifest_path, target_ref)
-
-        response = await self.hacs.async_github_api_method(
-            method=self.hacs.githubapi.repos.contents.get,
-            repository=self.data.full_name,
-            path=manifest_path,
-            **{"params": {"ref": target_ref}},
-        )
-        if response:
-            return json_loads(decode_content(response.data.content))
-
-    async def get_integration_manifest(self, *, version: str, **kwargs) -> dict[str, Any] | None:
+    async def async_get_integration_manifest(
+        self, ref: str = None
+    ) -> dict[str, Any] | None:
         """Get the content of the manifest.json file."""
         manifest_path = (
             "manifest.json"
@@ -201,9 +184,42 @@ class HacsIntegrationRepository(HacsRepository):
         )
 
         if manifest_path not in (x.full_path for x in self.tree):
-            raise HacsException(f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'")
+            raise HacsException(
+                f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
+            )
 
-        self.logger.debug("%s Getting manifest.json for version=%s", self.string, version)
+        target_ref = ref or self.version_to_download()
+        self.logger.debug(
+            "%s Getting %s for ref=%s", self.string, manifest_path, target_ref
+        )
+
+        response = await self.hacs.async_github_api_method(
+            method=self.hacs.githubapi.repos.contents.get,
+            repository=self.data.full_name,
+            path=manifest_path,
+            params={"ref": target_ref},
+        )
+        if response:
+            return json_loads(decode_content(response.data.content))
+
+    async def get_integration_manifest(
+        self, *, version: str, **kwargs
+    ) -> dict[str, Any] | None:
+        """Get the content of the manifest.json file."""
+        manifest_path = (
+            "manifest.json"
+            if self.repository_manifest.content_in_root
+            else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
+        )
+
+        if manifest_path not in (x.full_path for x in self.tree):
+            raise HacsException(
+                f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
+            )
+
+        self.logger.debug(
+            "%s Getting manifest.json for version=%s", self.string, version
+        )
         try:
             result = await self.hacs.async_download_file(
                 f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/{manifest_path}",

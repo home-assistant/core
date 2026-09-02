@@ -95,7 +95,9 @@ class Backup:
                 while os.path.exists(self.local_path):
                     sleep(0.1)
             shutil.copytree(self.backup_path_full, self.local_path)
-        self.hacs.log.debug("Restored %s, from backup %s", self.local_path, self.backup_path_full)
+        self.hacs.log.debug(
+            "Restored %s, from backup %s", self.local_path, self.backup_path_full
+        )
 
     def cleanup(self) -> None:
         """Cleanup backup files."""

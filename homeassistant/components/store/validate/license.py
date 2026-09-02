@@ -51,7 +51,9 @@ class Validator(ActionValidationBase):
 
     async def async_validate(self) -> None:
         """Validate the repository."""
-        if (license_info := self.repository.repository_object.attributes.get("license")) is None:
+        if (
+            license_info := self.repository.repository_object.attributes.get("license")
+        ) is None:
             raise ValidationException("The repository has no license")
 
         spdx_id = license_info.get("spdx_id")
@@ -69,7 +71,9 @@ class Validator(ActionValidationBase):
             )
             return
 
-        result = await self.hacs.async_download_file(SPDX_LICENSE_LIST_URL, handle_rate_limit=True)
+        result = await self.hacs.async_download_file(
+            SPDX_LICENSE_LIST_URL, handle_rate_limit=True
+        )
         if result is None:
             raise ValidationException("Could not fetch the SPDX license list")
 

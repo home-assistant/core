@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
+
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 
 from ..const import DOMAIN
 from ..enums import HacsDispatchEvent
@@ -324,7 +325,9 @@ async def hacs_repository_release_notes(
                 }
                 for x in repository.releases.objects
                 if not repository.data.installed_version
-                or version_left_higher_then_right(x.tag_name, repository.data.installed_version)
+                or version_left_higher_then_right(
+                    x.tag_name, repository.data.installed_version
+                )
             ],
         )
     )

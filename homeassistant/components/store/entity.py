@@ -83,7 +83,9 @@ class HacsSystemEntity(HacsDispatcherEntity):
         return system_info(self.hacs)
 
 
-class HacsRepositoryEntity(BaseCoordinatorEntity[HacsUpdateCoordinator], HacsBaseEntity):
+class HacsRepositoryEntity(
+    BaseCoordinatorEntity[HacsUpdateCoordinator], HacsBaseEntity
+):
     """Base repository entity."""
 
     def __init__(
@@ -92,7 +94,9 @@ class HacsRepositoryEntity(BaseCoordinatorEntity[HacsUpdateCoordinator], HacsBas
         repository: HacsRepository,
     ) -> None:
         """Initialize."""
-        BaseCoordinatorEntity.__init__(self, hacs.coordinators[repository.data.category])
+        BaseCoordinatorEntity.__init__(
+            self, hacs.coordinators[repository.data.category]
+        )
         HacsBaseEntity.__init__(self, hacs=hacs)
         self.repository = repository
         self._attr_unique_id = str(repository.data.id)
@@ -101,7 +105,9 @@ class HacsRepositoryEntity(BaseCoordinatorEntity[HacsUpdateCoordinator], HacsBas
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.hacs.repositories.is_downloaded(repository_id=str(self.repository.data.id))
+        return self.hacs.repositories.is_downloaded(
+            repository_id=str(self.repository.data.id)
+        )
 
     @property
     def device_info(self) -> dict[str, any]:

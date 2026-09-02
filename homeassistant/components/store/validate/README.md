@@ -21,6 +21,7 @@ from .base import (
     ValidationException,
 )
 
+
 class SuperAwesomeRepository(ActionValidationBase):
     category = "integration"
 

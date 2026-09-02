@@ -108,7 +108,9 @@ class HacsData:
             if repository.data.category in self.hacs.common.categories:
                 self.async_store_experimental_repository_data(repository)
 
-        await async_save_to_store(self.hacs.hass, "data", {"repositories": self.content})
+        await async_save_to_store(
+            self.hacs.hass, "data", {"repositories": self.content}
+        )
 
     @callback
     def async_store_repository_data(self, repository: HacsRepository) -> dict:
@@ -131,7 +133,9 @@ class HacsData:
         self.content[str(repository.data.id)] = data
 
     @callback
-    def async_store_experimental_repository_data(self, repository: HacsRepository) -> None:
+    def async_store_experimental_repository_data(
+        self, repository: HacsRepository
+    ) -> None:
         """Store the experimental repository data for non downloaded repositories."""
         data = {}
         self.content.setdefault(repository.data.category, [])
@@ -151,7 +155,9 @@ class HacsData:
                 if (value := getattr(repository.data, key, default)) != default:
                     data[key] = value
 
-        self.content[repository.data.category].append({"id": str(repository.data.id), **data})
+        self.content[repository.data.category].append(
+            {"id": str(repository.data.id), **data}
+        )
 
     async def restore(self):
         """Restore saved data."""
@@ -166,10 +172,15 @@ class HacsData:
 
         try:
             repositories = await async_load_from_store(self.hacs.hass, "repositories")
-            if not repositories and (data := await async_load_from_store(self.hacs.hass, "data")):
+            if not repositories and (
+                data := await async_load_from_store(self.hacs.hass, "data")
+            ):
                 for category, entries in data.get("repositories", {}).items():
                     for repository in entries:
-                        repositories[repository["id"]] = {"category": category, **repository}
+                        repositories[repository["id"]] = {
+                            "category": category,
+                            **repository,
+                        }
 
         except HomeAssistantError as exception:
             self.hacs.log.error(
@@ -216,7 +227,9 @@ class HacsData:
                 if entry == "0":
                     # Ignore repositories with ID 0
                     self.logger.debug(
-                        "<HacsData restore> Found repository with ID %s - %s", entry, repo_data
+                        "<HacsData restore> Found repository with ID %s - %s",
+                        entry,
+                        repo_data,
                     )
                     continue
                 self.async_restore_repository(entry, repo_data)
@@ -269,7 +282,9 @@ class HacsData:
         try:
             self.hacs.repositories.set_repository_id(repository, entry)
         except ValueError as exception:
-            self.logger.warning("<HacsData async_restore_repository> duplicate IDs %s", exception)
+            self.logger.warning(
+                "<HacsData async_restore_repository> duplicate IDs %s", exception
+            )
             return
 
         # Restore repository attributes
@@ -282,7 +297,9 @@ class HacsData:
             repository.data.open_issues = repository_data.get("open_issues", 0)
         repository.data.etag_repository = repository_data.get("etag_repository")
         repository.data.topics = [
-            topic for topic in repository_data.get("topics", []) if topic not in TOPIC_FILTER
+            topic
+            for topic in repository_data.get("topics", [])
+            if topic not in TOPIC_FILTER
         ]
         repository.data.domain = repository_data.get("domain")
         repository.data.stargazers_count = repository_data.get(
@@ -305,13 +322,17 @@ class HacsData:
             repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)
 
         repository.repository_manifest = HacsManifest.from_dict(
-            repository_data.get("manifest") or repository_data.get("repository_manifest") or {}
+            repository_data.get("manifest")
+            or repository_data.get("repository_manifest")
+            or {}
         )
 
         if repository.data.prerelease == repository.data.last_version:
             repository.data.prerelease = None
 
-        if repository.localpath is not None and is_safe(self.hacs, repository.localpath):
+        if repository.localpath is not None and is_safe(
+            self.hacs, repository.localpath
+        ):
             # Set local path
             repository.content.path.local = repository.localpath
 

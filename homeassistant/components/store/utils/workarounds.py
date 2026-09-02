@@ -1,6 +1,7 @@
 """Workarounds."""
 
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
+
 from homeassistant.core import HomeAssistant
 
 DOMAIN_OVERRIDES = {
@@ -55,9 +56,7 @@ class LegacyTreeFile:
         self.full_path = self.model.path
         self.is_directory = self.model.type == "tree"
         self.url = self.model.url
-        self.download_url = (
-            f"https://raw.githubusercontent.com/{self.repository}/{self.ref}/{self.full_path}"
-        )
+        self.download_url = f"https://raw.githubusercontent.com/{self.repository}/{self.ref}/{self.full_path}"
 
     @property
     def path(self):

@@ -76,9 +76,13 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         ):
             return None
 
-        return f"https://brands.home-assistant.io/_/{self.repository.data.domain}/icon.png"
+        return (
+            f"https://brands.home-assistant.io/_/{self.repository.data.domain}/icon.png"
+        )
 
-    async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
         """Install an update."""
         to_download = version or self.latest_version
         if to_download == self.installed_version:
@@ -86,7 +90,9 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
                 f"Version {self.installed_version} of {self.repository.data.full_name} is already downloaded"
             )
         try:
-            await self.repository.async_download_repository(ref=version or self.latest_version)
+            await self.repository.async_download_repository(
+                ref=version or self.latest_version
+            )
         except HacsException as exception:
             raise HomeAssistantError(exception) from exception
 
@@ -104,7 +110,9 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
                 self.repository.data.releases = True
                 self.repository.releases.objects = releases
                 self.repository.data.published_tags = [x.tag_name for x in releases]
-                self.repository.data.last_version = next(iter(self.repository.data.published_tags))
+                self.repository.data.last_version = next(
+                    iter(self.repository.data.published_tags)
+                )
 
         release_notes = ""
         # Compile release notes from installed version up to the latest

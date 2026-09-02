@@ -5,11 +5,11 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components import websocket_api
-import homeassistant.helpers.config_validation as cv
+from custom_components.hacs.utils import regex
 import voluptuous as vol
 
-from custom_components.hacs.utils import regex
+from homeassistant.components import websocket_api
+import homeassistant.helpers.config_validation as cv
 
 from ..const import DOMAIN
 from ..enums import HacsDispatchEvent

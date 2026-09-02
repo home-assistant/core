@@ -28,12 +28,16 @@ class Validator(ActionValidationBase):
 
     async def async_validate(self) -> None:
         """Validate the repository."""
-        if RepositoryFile.MAINIFEST_JSON not in [x.filename for x in self.repository.tree]:
+        if RepositoryFile.MAINIFEST_JSON not in [
+            x.filename for x in self.repository.tree
+        ]:
             raise ValidationException(
                 f"The repository has no '{RepositoryFile.MAINIFEST_JSON}' file"
             )
 
-        content = await self.repository.get_integration_manifest(version=self.repository.ref)
+        content = await self.repository.get_integration_manifest(
+            version=self.repository.ref
+        )
         try:
             INTEGRATION_MANIFEST_JSON_SCHEMA(content)
         except Invalid as exception:

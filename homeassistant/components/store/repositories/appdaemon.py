@@ -47,7 +47,9 @@ class HacsAppdaemonRepository(HacsRepository):
         return self.validate.success
 
     @concurrent(concurrenttasks=10, backoff_time=5)
-    async def update_repository(self, ignore_issues: bool = False, force: bool = False) -> None:
+    async def update_repository(
+        self, ignore_issues: bool = False, force: bool = False
+    ) -> None:
         """Update."""
         if not await self.common_update(ignore_issues, force) and not force:
             return

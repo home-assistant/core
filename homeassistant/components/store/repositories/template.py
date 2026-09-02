@@ -79,7 +79,9 @@ class HacsTemplateRepository(HacsRepository):
         """Reload custom templates."""
         self.logger.debug("%s Reloading custom templates", self.string)
         try:
-            await self.hacs.hass.services.async_call("homeassistant", "reload_custom_templates", {})
+            await self.hacs.hass.services.async_call(
+                "homeassistant", "reload_custom_templates", {}
+            )
         except HomeAssistantError as exception:
             self.logger.exception("%s %s", self.string, exception)
 

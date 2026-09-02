@@ -41,7 +41,9 @@ def get_store_key(key):
 
 def _get_store_for_key(hass, key, encoder):
     """Create a Store object for the key."""
-    return HACSStore(hass, VERSION_STORAGE, get_store_key(key), encoder=encoder, atomic_writes=True)
+    return HACSStore(
+        hass, VERSION_STORAGE, get_store_key(key), encoder=encoder, atomic_writes=True
+    )
 
 
 def get_store_for_key(hass, key):

@@ -29,7 +29,10 @@ async def async_register_frontend(hass: HomeAssistant, hacs: HacsBase) -> None:
             "<HacsFrontend> Frontend development mode enabled. Do not run in production!"
         )
         await async_register_static_path(
-            hass, f"{URL_BASE}/frontend", f"{frontend_path}/hacs_frontend", cache_headers=False
+            hass,
+            f"{URL_BASE}/frontend",
+            f"{frontend_path}/hacs_frontend",
+            cache_headers=False,
         )
         hacs.frontend_version = "dev"
     else:

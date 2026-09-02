@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from homeassistant.helpers.config_validation import url as url_validator
 import voluptuous as vol
+
+from homeassistant.helpers.config_validation import url as url_validator
 
 from ..const import LOCALE
 
@@ -34,11 +35,15 @@ def _country_validator(values) -> list[str]:
         for value in values:
             countries.append(value.upper())
     else:
-        raise vol.Invalid(f"Value '{values}' is not a string or list.", path=["country"])
+        raise vol.Invalid(
+            f"Value '{values}' is not a string or list.", path=["country"]
+        )
 
     for country in countries:
         if country not in LOCALE:
-            raise vol.Invalid(f"Value '{country}' is not in {LOCALE}.", path=["country"])
+            raise vol.Invalid(
+                f"Value '{country}' is not in {LOCALE}.", path=["country"]
+            )
 
     return countries
 
@@ -104,7 +109,9 @@ def validate_repo_data(schema: dict[str, Any], extra: int) -> Callable[[Any], An
 def validate_version(data: Any) -> Any:
     """Ensure at least one of last_commit or last_version is present."""
     if "last_commit" not in data and "last_version" not in data:
-        raise vol.Invalid("Expected at least one of [`last_commit`, `last_version`], got none")
+        raise vol.Invalid(
+            "Expected at least one of [`last_commit`, `last_version`], got none"
+        )
     return data
 
 

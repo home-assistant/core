@@ -9,6 +9,7 @@ from __future__ import annotations
 from aiogithubapi import AIOGitHubAPIException, GitHub, GitHubAPI
 from aiogithubapi.const import ACCEPT_HEADERS
 from awesomeversion import AwesomeVersion
+
 from homeassistant.components.frontend import async_remove_panel
 from homeassistant.components.lovelace.system_health import system_health_info
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -104,7 +105,7 @@ async def _async_initialize_integration(
     hacs.githubapi = GitHubAPI(
         token=hacs.configuration.token,
         session=clientsession,
-        **{"client_name": f"HACS/{hacs.version}"},
+        client_name=f"HACS/{hacs.version}",
     )
 
     async def async_startup():
@@ -151,7 +152,9 @@ async def _async_initialize_integration(
             return False
 
         hacs.set_stage(HacsStage.WAITING)
-        hacs.log.info("Setup complete, waiting for Home Assistant before startup tasks starts")
+        hacs.log.info(
+            "Setup complete, waiting for Home Assistant before startup tasks starts"
+        )
 
         # Schedule startup tasks
         async_at_start(hass=hass, at_start_cb=hacs.startup_tasks)
@@ -185,7 +188,9 @@ async def _async_initialize_integration(
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
-    setup_result = await _async_initialize_integration(hass=hass, config_entry=config_entry)
+    setup_result = await _async_initialize_integration(
+        hass=hass, config_entry=config_entry
+    )
     hacs: HacsBase = hass.data[DOMAIN]
     return setup_result and not hacs.system.disabled
 
@@ -215,7 +220,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     except AttributeError:
         pass
 
-    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     hacs.set_stage(None)
     hacs.disable_hacs(HacsDisabledReason.REMOVED)
@@ -242,7 +249,11 @@ async def async_remove_config_entry_device(
     hacs: HacsBase = hass.data[DOMAIN]
     repository_id = None
     for identifier in device_entry.identifiers:
-        if isinstance(identifier, tuple) and len(identifier) == 2 and identifier[0] == DOMAIN:
+        if (
+            isinstance(identifier, tuple)
+            and len(identifier) == 2
+            and identifier[0] == DOMAIN
+        ):
             repository_id = identifier[1]
             break
 

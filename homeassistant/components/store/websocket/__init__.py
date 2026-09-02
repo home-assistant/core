@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
+
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-import voluptuous as vol
 
 from ..const import DOMAIN
 from .critical import hacs_critical_acknowledge, hacs_critical_list

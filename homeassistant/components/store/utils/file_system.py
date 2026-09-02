@@ -26,7 +26,7 @@ async def async_remove(
         return await hass.async_add_executor_job(os.remove, path)
     except FileNotFoundError:
         if missing_ok:
-            return
+            return None
         raise
 
 
@@ -38,5 +38,5 @@ async def async_remove_directory(
         return await hass.async_add_executor_job(shutil.rmtree, path)
     except FileNotFoundError:
         if missing_ok:
-            return
+            return None
         raise
