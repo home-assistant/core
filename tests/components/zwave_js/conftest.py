@@ -188,6 +188,12 @@ def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm6_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_heatit_z_trm7_state", scope="package")
+def climate_heatit_z_trm7_state_fixture() -> dict[str, Any]:
+    """Load the climate HEATIT Z-TRM7 thermostat node state fixture data."""
+    return load_json_object_fixture("climate_heatit_z_trm7_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="package")
 def climate_heatit_z_trm3_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -915,6 +921,16 @@ def climate_eurotronic_comet_z_fixture(
 def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     """Mock a climate radio HEATIT Z-TRM6 node."""
     node = Node(client, copy.deepcopy(climate_heatit_z_trm6_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm7")
+def climate_heatit_z_trm7_fixture(
+    client: MagicMock, climate_heatit_z_trm7_state: dict[str, Any]
+) -> Node:
+    """Mock a climate HEATIT Z-TRM7 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm7_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

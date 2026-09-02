@@ -28,7 +28,7 @@ def async_get_tools(
         return None
 
     tools: list[Tool] = [
-        IntentTool(handler.intent_type, handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     ]

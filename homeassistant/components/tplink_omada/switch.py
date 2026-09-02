@@ -26,14 +26,17 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
+from .const import DOMAIN
 from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity, get_switch_port_base_name
@@ -293,9 +296,18 @@ class OmadaDevicePortSwitchEntity[
         self._do_update()
 
     async def _async_turn_on_off(self, enable: bool) -> None:
-        updated_details = await self.entity_description.set_func(
-            self.coordinator.omada_client, self._device, self._port_details, enable
-        )
+        try:
+            updated_details = await self.entity_description.set_func(
+                self.coordinator.omada_client,
+                self._device,
+                self._port_details,
+                enable,
+            )
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex
 
         if updated_details:
             self._port_details = updated_details

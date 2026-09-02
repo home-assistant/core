@@ -33,6 +33,7 @@ from .services import async_setup_services
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -120,6 +121,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     entry.async_on_unload(watcher.stop)
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
+    )
+
+    @callback
+    def _start_event_listeners(_hass: HomeAssistant) -> None:
+        """Start the Docker event listeners in the event loop."""
+        coordinator.async_start_event_listeners()
+
+    @callback
+    def _stop_event_listeners(_event: Event) -> None:
+        """Stop the Docker event listeners in the event loop."""
+        coordinator.async_stop_event_listeners()
+
+    # Defer the event listener, to avoid a thunderherd of connections during startup
+    entry.async_on_unload(async_at_started(hass, _start_event_listeners))
+    entry.async_on_unload(coordinator.async_stop_event_listeners)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
     )
 
     return True

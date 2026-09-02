@@ -258,7 +258,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
 
         else:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if not user_input.get(CONF_LLM_HASS_API):
+                if user_input.get(CONF_LLM_HASS_API) is None:
                     user_input.pop(CONF_LLM_HASS_API, None)
                 # Don't allow to save options that enable the
                 # Google Search tool with an Assist API
@@ -381,11 +381,11 @@ async def google_generative_ai_config_option_schema(
     api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
-            label=api_model.name.lstrip("models/"),
+            label=api_model.name.removeprefix("models/"),
             value=api_model.name,
         )
         for api_model in sorted(
-            api_models, key=lambda x: (x.name or "").lstrip("models/")
+            api_models, key=lambda x: (x.name or "").removeprefix("models/")
         )
         if (
             api_model.name

@@ -10,7 +10,7 @@ from uuid import UUID
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
@@ -907,6 +907,74 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
+class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a device class selector config."""
+
+    domain: Required[Platform]
+    multiple: bool
+
+
+@cache
+def _enum_options(domain: str, enum_name: str) -> list[str]:
+    """Return a cached lookup of enum options for a domain.
+
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    enum = getattr(module, enum_name)
+
+    return [element.value for element in enum]
+
+
+@SELECTORS.register("device_class")
+class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
+    """Selector for device class."""
+
+    selector_type = "device_class"
+
+    SUPPORTED_PLATFORMS = {
+        Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
+        Platform.BUTTON: "ButtonDeviceClass",
+        Platform.COVER: "CoverDeviceClass",
+        Platform.EVENT: "EventDeviceClass",
+        Platform.HUMIDIFIER: "HumidifierDeviceClass",
+        Platform.INFRARED: "InfraredDeviceClass",
+        Platform.MEDIA_PLAYER: "MediaPlayerDeviceClass",
+        Platform.NUMBER: "NumberDeviceClass",
+        Platform.SENSOR: "SensorDeviceClass",
+        Platform.SWITCH: "SwitchDeviceClass",
+        Platform.UPDATE: "UpdateDeviceClass",
+        Platform.VALVE: "ValveDeviceClass",
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("domain"): vol.All(
+                vol.In(SUPPORTED_PLATFORMS), lambda val: Platform(val).value
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: DeviceClassSelectorConfig) -> None:
+        """Instantiate a device class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        valid_options = _enum_options(
+            self.config["domain"], self.SUPPORTED_PLATFORMS[self.config["domain"]]
+        )
+        options_schema = vol.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [options_schema(vol.Schema(str)(val)) for val in data]
+
+
 class DeviceSelectorConfig(BaseSelectorConfig, DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
@@ -1302,7 +1370,8 @@ class MediaSelector(Selector[MediaSelectorConfig]):
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
+            # Data used by frontend for decoration.
+            vol.Optional("metadata"): dict,
         }
     )
 
@@ -1310,7 +1379,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
+    def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
         item_schema_dict = {
             key: value
@@ -1325,7 +1394,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         item_schema = vol.Schema(item_schema_dict)
 
         if not self.config["multiple"]:
-            media: dict[str, str] = item_schema(data)
+            media: dict[str, Any] = item_schema(data)
             return media
 
         # Backwards compatibility for places that now accept multiple items
