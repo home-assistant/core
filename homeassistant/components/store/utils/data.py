@@ -5,7 +5,7 @@ import contextlib
 from datetime import UTC, datetime
 from typing import Any
 
-from homeassistant.core import callback
+from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from ..base import HacsBase
@@ -16,12 +16,12 @@ from .logger import LOGGER
 from .path import is_safe
 from .store import async_load_from_store, async_save_to_store
 
-EXPORTED_BASE_DATA = (
+EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
     ("new", False),
     ("full_name", ""),
 )
 
-EXPORTED_REPOSITORY_DATA = (
+EXPORTED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     *EXPORTED_BASE_DATA,
     ("authors", []),
     ("category", ""),
@@ -36,7 +36,7 @@ EXPORTED_REPOSITORY_DATA = (
     ("topics", []),
 )
 
-EXPORTED_DOWNLOADED_REPOSITORY_DATA = (
+EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     *EXPORTED_REPOSITORY_DATA,
     ("archived", False),
     ("config_flow", False),
@@ -59,13 +59,13 @@ EXPORTED_DOWNLOADED_REPOSITORY_DATA = (
 class HacsData:
     """HacsData class."""
 
-    def __init__(self, hacs: HacsBase):
+    def __init__(self, hacs: HacsBase) -> None:
         """Initialize."""
         self.logger = LOGGER
         self.hacs = hacs
-        self.content = {}
+        self.content: dict[str, Any] = {}
 
-    async def async_force_write(self, _=None):
+    async def async_force_write(self, _: Event | None = None) -> None:
         """Force write."""
         await self.async_write(force=True)
 
@@ -89,7 +89,9 @@ class HacsData:
         await self._async_store_experimental_content_and_repos()
         await self._async_store_content_and_repos()
 
-    async def _async_store_content_and_repos(self, _=None):  # bb: ignore
+    async def _async_store_content_and_repos(
+        self, _: Event | None = None
+    ) -> None:  # bb: ignore
         """Store the main repos file and each repo that is out of date."""
         # Repositories
         self.content = {}
@@ -101,7 +103,9 @@ class HacsData:
         for event in (HacsDispatchEvent.REPOSITORY, HacsDispatchEvent.CONFIG):
             self.hacs.async_dispatch(event, {})
 
-    async def _async_store_experimental_content_and_repos(self, _=None):
+    async def _async_store_experimental_content_and_repos(
+        self, _: Event | None = None
+    ) -> None:
         """Store the main repos file and each repo that is out of date."""
         # Repositories
         self.content = {}
@@ -114,9 +118,11 @@ class HacsData:
         )
 
     @callback
-    def async_store_repository_data(self, repository: HacsRepository) -> dict:
+    def async_store_repository_data(self, repository: HacsRepository) -> None:
         """Store the repository data."""
-        data = {"repository_manifest": repository.repository_manifest.manifest}
+        data: dict[str, Any] = {
+            "repository_manifest": repository.repository_manifest.manifest
+        }
 
         for key, default in (
             EXPORTED_DOWNLOADED_REPOSITORY_DATA
@@ -138,7 +144,7 @@ class HacsData:
         self, repository: HacsRepository
     ) -> None:
         """Store the experimental repository data for non downloaded repositories."""
-        data = {}
+        data: dict[str, Any] = {}
         self.content.setdefault(repository.data.category, [])
 
         if repository.data.installed:
@@ -160,11 +166,11 @@ class HacsData:
             {"id": str(repository.data.id), **data}
         )
 
-    async def restore(self):
+    async def restore(self) -> bool:
         """Restore saved data."""
         self.hacs.status.new = False
-        repositories = {}
-        hacs = {}
+        repositories: dict[str, Any] = {}
+        hacs: dict[str, Any] = {}
 
         with contextlib.suppress(HomeAssistantError):
             hacs = await async_load_from_store(self.hacs.hass, "hacs") or {}
@@ -234,10 +240,7 @@ class HacsData:
                 self.async_restore_repository(entry, repo_data)
 
             self.logger.info("<HacsData restore> Restore done")
-        except (
-            # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            BaseException
-        ) as exception:
+        except Exception as exception:
             self.logger.critical(
                 "<HacsData restore> [%s] Restore Failed!", exception, exc_info=exception
             )
@@ -246,20 +249,21 @@ class HacsData:
 
     async def register_unknown_repositories(
         self, repositories: dict[str, dict[str, Any]], category: str | None = None
-    ):
+    ) -> None:
         """Registry any unknown repositories."""
         for repo_idx, (entry, repo_data) in enumerate(repositories.items()):
             # async_register_repository is awaited in a loop
             # since its unlikely to ever suspend at startup
+            repo_category = repo_data.get("category", category)
             if (
                 entry in ("0", HACS_REPOSITORY_ID)
-                or repo_data.get("category", category) is None
+                or repo_category is None
                 or self.hacs.repositories.is_registered(repository_id=entry)
             ):
                 continue
             await self.hacs.async_register_repository(
                 repository_full_name=repo_data["full_name"],
-                category=repo_data.get("category", category),
+                category=repo_category,
                 check=False,
                 repository_id=entry,
             )
@@ -268,7 +272,9 @@ class HacsData:
                 await asyncio.sleep(0)
 
     @callback
-    def async_restore_repository(self, entry: str, repository_data: dict[str, Any]):
+    def async_restore_repository(
+        self, entry: str, repository_data: dict[str, Any]
+    ) -> None:
         """Restore repository."""
         if entry == HACS_REPOSITORY_ID:
             # The old HACS self-repository is not managed by the store

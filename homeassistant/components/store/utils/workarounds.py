@@ -2,7 +2,7 @@
 
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 
-DOMAIN_OVERRIDES = {
+DOMAIN_OVERRIDES: dict[str, str] = {
     # https://github.com/hacs/integration/issues/2465
     "custom-components/sensor.custom_aftership": "custom_aftership"
 }
@@ -15,7 +15,9 @@ class LegacyTreeFile:
     the older TreeFile structure.
     """
 
-    def __init__(self, model: GitHubGitTreeEntryModel, repository: str, ref: str):
+    def __init__(
+        self, model: GitHubGitTreeEntryModel, repository: str, ref: str | None
+    ) -> None:
         """Initialize."""
         self.model = model
         self.repository = repository

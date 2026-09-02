@@ -22,20 +22,20 @@ class Backup:
     def __init__(
         self,
         hacs: HacsBase,
-        local_path: str | None = None,
+        local_path: str,
         backup_path: str = DEFAULT_BACKUP_PATH,
         repository: HacsRepository | None = None,
     ) -> None:
         """Initialize."""
         self.hacs = hacs
         self.repository = repository
-        self.local_path = local_path or repository.content.path.local
+        self.local_path = local_path
         self.backup_path = backup_path
         if repository:
             self.backup_path = (
-                tempfile.gettempdir()
-                + f"/hacs_persistent_{repository.data.category}/"
-                + repository.data.name
+                f"{tempfile.gettempdir()}"
+                f"/hacs_persistent_{repository.data.category}/"
+                f"{repository.data.name}"
             )
         self.backup_path_full = f"{self.backup_path}{self.local_path.split('/')[-1]}"
 

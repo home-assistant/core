@@ -1,9 +1,10 @@
 """HACS Decorators."""
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+import inspect
+from typing import TYPE_CHECKING, Any, overload
 
 from ..const import DEFAULT_CONCURRENT_BACKOFF_TIME, DEFAULT_CONCURRENT_TASKS
 
@@ -11,18 +12,20 @@ if TYPE_CHECKING:
     from ..base import HacsBase
 
 
-def concurrent(
+def concurrent[**P, T](
     concurrenttasks: int = DEFAULT_CONCURRENT_TASKS,
     backoff_time: float = DEFAULT_CONCURRENT_BACKOFF_TIME,
-) -> Coroutine[Any, Any, None]:
+) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Coroutine[Any, Any, T]]]:
     """Return a modified function."""
 
     max_concurrent = asyncio.Semaphore(concurrenttasks)
 
-    def inner_function(function) -> Coroutine[Any, Any, None]:
+    def inner_function(
+        function: Callable[P, Awaitable[T]],
+    ) -> Callable[P, Coroutine[Any, Any, T]]:
         @wraps(function)
-        async def wrapper(*args, **kwargs) -> None:
-            hacs: HacsBase = getattr(args[0], "hacs", None)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            hacs: HacsBase | None = getattr(args[0], "hacs", None)
 
             async with max_concurrent:
                 result = await function(*args, **kwargs)
@@ -41,23 +44,35 @@ def concurrent(
     return inner_function
 
 
-def return_none_on_exception(func):
+@overload
+def return_none_on_exception[**P, T](
+    func: Callable[P, Coroutine[Any, Any, T]],
+) -> Callable[P, Coroutine[Any, Any, T | None]]: ...
+
+
+@overload
+def return_none_on_exception[**P, T](
+    func: Callable[P, T],
+) -> Callable[P, T | None]: ...
+
+
+def return_none_on_exception(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to return None on any exception, works for sync/async, methods/functions."""
 
     @wraps(func)
-    def sync_wrapper(*args, **kwargs):
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except Exception:  # noqa: BLE001 # the decorator exists to swallow anything
             return None
 
     @wraps(func)
-    async def async_wrapper(*args, **kwargs):
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return await func(*args, **kwargs)
         except Exception:  # noqa: BLE001 # the decorator exists to swallow anything
             return None
 
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
         return async_wrapper
     return sync_wrapper

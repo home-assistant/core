@@ -13,7 +13,7 @@ from .utils.validate import (
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
 
-CRITICAL_REMOVED_VALIDATORS = {
+CRITICAL_REMOVED_VALIDATORS: dict[str | None, vol.Schema] = {
     "critical": VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
     "removed": VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
 }
@@ -25,14 +25,14 @@ class HacsDataClient:
     def __init__(self, session: ClientSession, client_name: str) -> None:
         """Initialize."""
         self._client_name = client_name
-        self._etags = {}
+        self._etags: dict[str, str | None] = {}
         self._session = session
 
     async def _do_request(
         self,
         filename: str,
         section: str | None = None,
-    ) -> dict[str, dict[str, Any]] | list[str]:
+    ) -> Any:
         """Do request."""
         endpoint = "/".join([v for v in [section, filename] if v is not None])
         try:
@@ -41,7 +41,7 @@ class HacsDataClient:
                 timeout=ClientTimeout(total=60),
                 headers={
                     "User-Agent": self._client_name,
-                    "If-None-Match": self._etags.get(endpoint, ""),
+                    "If-None-Match": self._etags.get(endpoint) or "",
                 },
             )
             if response.status == 304:
@@ -60,19 +60,19 @@ class HacsDataClient:
 
         return await response.json()
 
-    async def get_data(
-        self, section: str | None, *, validate: bool
-    ) -> dict[str, dict[str, Any]]:
+    async def get_data(self, section: str | None, *, validate: bool) -> Any:
         """Get data."""
         data = await self._do_request(filename="data.json", section=section)
         if not validate:
             return data
 
-        if section in VALIDATE_FETCHED_V2_REPO_DATA:
-            validated = {}
+        if section is not None and section in VALIDATE_FETCHED_V2_REPO_DATA:
+            validated_repositories: dict[str, Any] = {}
             for key, repo_data in data.items():
                 try:
-                    validated[key] = VALIDATE_FETCHED_V2_REPO_DATA[section](repo_data)
+                    validated_repositories[key] = VALIDATE_FETCHED_V2_REPO_DATA[
+                        section
+                    ](repo_data)
                 except vol.Invalid as exception:
                     LOGGER.info(
                         "Got invalid data for %s (%s)",
@@ -81,12 +81,12 @@ class HacsDataClient:
                     )
                     continue
 
-            return validated
+            return validated_repositories
 
         if not (validator := CRITICAL_REMOVED_VALIDATORS.get(section)):
             raise ValueError(f"Do not know how to validate {section}")
 
-        validated = []
+        validated: list[Any] = []
         for repo_data in data:
             try:
                 validated.append(validator(repo_data))

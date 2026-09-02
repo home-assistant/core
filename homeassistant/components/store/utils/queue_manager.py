@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Coroutine
 import time
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +19,7 @@ class QueueManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the queue manager."""
         self.hass = hass
-        self.queue: list[Coroutine] = []
+        self.queue: list[Coroutine[Any, Any, Any]] = []
         self.running = False
 
     @property
@@ -35,7 +36,7 @@ class QueueManager:
         """Clear the queue."""
         self.queue = []
 
-    def add(self, task: Coroutine) -> None:
+    def add(self, task: Coroutine[Any, Any, Any]) -> None:
         """Add a task to the queue."""
         self.queue.append(task)
 

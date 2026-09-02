@@ -31,4 +31,4 @@ def version_left_higher_or_equal_then_right(left: str, right: str) -> bool:
     if left == right:
         return True
 
-    return version_left_higher_then_right(left, right)
+    return version_left_higher_then_right(left, right) or False

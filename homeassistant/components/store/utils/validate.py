@@ -24,7 +24,7 @@ class Validate:
         return len(self.errors) == 0
 
 
-def _country_validator(values) -> list[str]:
+def _country_validator(values: Any) -> list[str]:
     """Custom country validator."""
     countries = []
     if isinstance(values, str):
@@ -74,7 +74,7 @@ INTEGRATION_MANIFEST_JSON_SCHEMA = vol.Schema(
 )
 
 
-def validate_repo_data(schema: dict[str, Any], extra: int) -> Callable[[Any], Any]:
+def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], Any]:
     """Return a validator for repo data.
 
     This is used instead of vol.All to always try both the repo schema and

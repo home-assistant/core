@@ -1,6 +1,7 @@
 """Helper constants."""
 
 from enum import StrEnum
+from typing import override
 
 
 class HacsGitHubRepo(StrEnum):
@@ -20,6 +21,7 @@ class HacsCategory(StrEnum):
     TEMPLATE = "template"
     THEME = "theme"
 
+    @override
     def __str__(self) -> str:
         """Return the string representation."""
         return str(self.value)

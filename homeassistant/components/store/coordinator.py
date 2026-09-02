@@ -1,7 +1,7 @@
 """Coordinator to trigger entity updates."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
@@ -14,6 +14,7 @@ class HacsUpdateCoordinator(BaseDataUpdateCoordinatorProtocol):
         """Initialize."""
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
+    @override
     @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None

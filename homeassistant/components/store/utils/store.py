@@ -1,5 +1,10 @@
 """Storage handers."""
 
+import json
+from typing import Any
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.util import json as json_util
@@ -13,16 +18,14 @@ _LOGGER = LOGGER
 STORE_CACHE_KEY = "hacs_store_cache"
 
 
-class HACSStore(Store):
+class HACSStore(Store[dict[str, Any]]):
     """A subclass of Store that allows multiple loads in the executor."""
 
-    def load(self):
+    def load(self) -> Any:
         """Load the data from disk if version matches."""
         try:
-            data = json_util.load_json(self.path)
-        except (
-            BaseException  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-        ) as exception:
+            data: Any = json_util.load_json(self.path)
+        except HomeAssistantError as exception:
             _LOGGER.critical(
                 "Could not load '%s', restore it from a backup or delete the file: %s",
                 self.path,
@@ -34,19 +37,25 @@ class HACSStore(Store):
         return data["data"]
 
 
-def get_store_key(key):
+def get_store_key(key: str) -> str:
     """Return the key to use with homeassistant.helpers.storage.Storage."""
     return key if "/" in key else f"hacs.{key}"
 
 
-def _get_store_for_key(hass, key, encoder):
+def _get_store_for_key(
+    hass: HomeAssistant, key: str, encoder: type[json.JSONEncoder]
+) -> HACSStore:
     """Create a Store object for the key."""
     return HACSStore(
-        hass, VERSION_STORAGE, get_store_key(key), encoder=encoder, atomic_writes=True
+        hass,
+        VERSION_STORAGE,  # type: ignore[arg-type] # the store keeps its version as a string
+        get_store_key(key),
+        encoder=encoder,
+        atomic_writes=True,
     )
 
 
-def get_store_for_key(hass, key):
+def get_store_for_key(hass: HomeAssistant, key: str) -> HACSStore:
     """Get (or create and cache) the Store object for the key.
 
     The cache is cleared in async_unload_entry so Store instances do not
@@ -58,12 +67,12 @@ def get_store_for_key(hass, key):
     return cache[key]
 
 
-async def async_load_from_store(hass, key):
+async def async_load_from_store(hass: HomeAssistant, key: str) -> Any:
     """Load the retained data from store and return de-serialized data."""
     return await get_store_for_key(hass, key).async_load() or {}
 
 
-async def async_save_to_store(hass, key, data):
+async def async_save_to_store(hass: HomeAssistant, key: str, data: Any) -> None:
     """Generate dynamic data to store and save it to the filesystem.
 
     The data is only written if the content on the disk has changed
@@ -83,7 +92,7 @@ async def async_save_to_store(hass, key, data):
     )
 
 
-async def async_remove_store(hass, key):
+async def async_remove_store(hass: HomeAssistant, key: str) -> None:
     """Remove a store element that should no longer be used."""
     if "/" not in key:
         return

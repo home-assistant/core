@@ -4,13 +4,13 @@ from typing import Any
 
 
 def filter_content_return_one_of_type(
-    content: list[str | Any],
+    content: list[Any],
     namestartswith: str,
     filterfiltype: str,
     attr: str = "name",
 ) -> list[str]:
     """Only match 1 of the filter."""
-    contents = []
+    contents: list[str] = []
     filetypefound = False
     for filename in content:
         if isinstance(filename, str):
@@ -31,11 +31,9 @@ def filter_content_return_one_of_type(
     return contents
 
 
-def get_first_directory_in_directory(
-    content: list[str | Any], dirname: str
-) -> str | None:
+def get_first_directory_in_directory(content: list[Any], dirname: str) -> str | None:
     """Return the first directory in dirname or None."""
-    directory = None
+    directory: str | None = None
     for path in content:
         if path.full_path.startswith(dirname) and path.full_path != dirname:
             if path.is_directory:
