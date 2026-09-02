@@ -1814,6 +1814,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/store/ @home-assistant/core
+/tests/components/store/ @home-assistant/core
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
 /homeassistant/components/stt/ @home-assistant/core
