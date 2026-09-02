@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.loader import async_get_integration
@@ -149,11 +148,6 @@ async def _async_initialize_integration(
         hacs.enable_hacs()
 
     await async_try_startup()
-
-    # Remove old (v0-v1) sensor if it exists, can be removed in v3
-    er = async_get_entity_registry(hass)
-    if old_sensor := er.async_get_entity_id("sensor", DOMAIN, HACS_SYSTEM_ID):
-        er.async_remove(old_sensor)
 
     # Mischief managed!
     return True

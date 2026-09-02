@@ -3,7 +3,6 @@
   "config": {
     "abort": {
       "single_instance_allowed": "Only a single configuration of the Community store is allowed.",
-      "github": "Could not authenticate with GitHub, try again later.",
       "not_setup": "The Community store is not set up.",
       "reauth_successful": "Reauthentication was successful."
     },

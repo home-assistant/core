@@ -22,7 +22,6 @@ from aiogithubapi import (
     GitHubNotModifiedException,
     GitHubRatelimitException,
 )
-from aiogithubapi.objects.repository import AIOGitHubAPIRepository
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
 
@@ -366,7 +365,6 @@ class HacsBase:
     hass: HomeAssistant | None = None
     integration: Integration | None = None
     queue: QueueManager | None = None
-    repository: AIOGitHubAPIRepository | None = None
     session: ClientSession | None = None
     stage: HacsStage | None = None
     validation: ValidationManager | None = None
@@ -533,8 +531,7 @@ class HacsBase:
     ) -> None:
         """Register a repository."""
         if repository_full_name in self.common.skip:
-            if repository_full_name != HacsGitHubRepo.INTEGRATION:
-                raise HacsExpectedException(f"Skipping {repository_full_name}")
+            raise HacsExpectedException(f"Skipping {repository_full_name}")
 
         if repository_full_name == "home-assistant/core":
             raise HomeAssistantCoreRepositoryException()
@@ -617,7 +614,6 @@ class HacsBase:
     async def startup_tasks(self, _=None) -> None:
         """Tasks that are started after setup."""
         self.set_stage(HacsStage.STARTUP)
-        await self.async_load_hacs_from_github()
 
         if critical := await async_load_from_store(self.hass, "critical"):
             for repo in critical:
@@ -627,14 +623,6 @@ class HacsBase:
                         self.hass, title="URGENT!", message="**Check the HACS panel!**"
                     )
                     break
-
-        self.recurring_tasks.append(
-            async_track_time_interval(
-                self.hass,
-                self.async_load_hacs_from_github,
-                timedelta(hours=48),
-            )
-        )
 
         self.recurring_tasks.append(
             async_track_time_interval(
@@ -824,49 +812,6 @@ class HacsBase:
         if self.configuration.appdaemon:
             self.enable_hacs_category(HacsCategory.APPDAEMON)
 
-    async def async_load_hacs_from_github(self, _=None) -> None:
-        """Load HACS from GitHub."""
-        if self.status.inital_fetch_done:
-            return
-
-        try:
-            repository = self.repositories.get_by_full_name(HacsGitHubRepo.INTEGRATION)
-            should_recreate_entities = False
-            if repository is None:
-                should_recreate_entities = True
-                await self.async_register_repository(
-                    repository_full_name=HacsGitHubRepo.INTEGRATION,
-                    category=HacsCategory.INTEGRATION,
-                    default=True,
-                )
-                repository = self.repositories.get_by_full_name(
-                    HacsGitHubRepo.INTEGRATION
-                )
-            elif not self.status.startup:
-                self.log.error("Scheduling update of hacs/integration")
-                self.queue.add(repository.common_update())
-            if repository is None:
-                raise HacsException("Unknown error")
-
-            repository.data.installed = True
-            repository.data.installed_version = self.version.string
-            repository.data.new = False
-            repository.data.releases = True
-
-            if should_recreate_entities:
-                await self.async_recreate_entities()
-
-            self.repository = repository.repository_object
-            self.repositories.mark_default(repository)
-        except HacsException as exception:
-            if "403" in str(exception):
-                self.log.critical(
-                    "GitHub API is ratelimited, or the token is wrong.",
-                )
-            else:
-                self.log.critical("Could not load HACS! - %s", exception)
-            self.disable_hacs(HacsDisabledReason.LOAD_HACS)
-
     async def async_get_all_category_repositories(self, _=None) -> None:
         """Get all category repositories."""
         if self.system.disabled:
@@ -890,6 +835,13 @@ class HacsBase:
         except HacsException as exception:
             self.log.error("Could not update %s - %s", category, exception)
             return
+
+        # The store is part of Home Assistant, it does not manage itself
+        category_data = {
+            repo_id: repo_data
+            for repo_id, repo_data in category_data.items()
+            if repo_data["full_name"] != HacsGitHubRepo.INTEGRATION
+        }
 
         await self.data.register_unknown_repositories(category_data, category)
 

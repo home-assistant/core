@@ -254,6 +254,8 @@ class HacsData:
             # since its unlikely to ever suspend at startup
             if (
                 entry == "0"
+                # The old HACS self-repository is not managed by the store
+                or entry == HACS_REPOSITORY_ID
                 or repo_data.get("category", category) is None
                 or self.hacs.repositories.is_registered(repository_id=entry)
             ):
@@ -271,6 +273,10 @@ class HacsData:
     @callback
     def async_restore_repository(self, entry: str, repository_data: dict[str, Any]):
         """Restore repository."""
+        if entry == HACS_REPOSITORY_ID:
+            # The old HACS self-repository is not managed by the store
+            return
+
         repository: HacsRepository | None = None
         if full_name := repository_data.get("full_name"):
             repository = self.hacs.repositories.get_by_full_name(full_name)
@@ -338,7 +344,3 @@ class HacsData:
 
         if repository.data.installed:
             repository.data.first_install = False
-
-        if entry == HACS_REPOSITORY_ID:
-            repository.data.installed_version = self.hacs.version
-            repository.data.installed = True

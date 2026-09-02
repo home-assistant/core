@@ -8,7 +8,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.loader import async_get_custom_components
 
 from ..const import DOMAIN
-from ..enums import HacsCategory, HacsDispatchEvent, HacsGitHubRepo, RepositoryFile
+from ..enums import HacsCategory, HacsDispatchEvent, RepositoryFile
 from ..exceptions import AppRepositoryException, HacsException
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
@@ -41,8 +41,7 @@ class HacsIntegrationRepository(HacsRepository):
         """Run post installation steps."""
         self.pending_restart = True
         if self.data.config_flow:
-            if self.data.full_name != HacsGitHubRepo.INTEGRATION:
-                await self.reload_custom_components()
+            await self.reload_custom_components()
             if self.data.first_install:
                 self.pending_restart = False
 

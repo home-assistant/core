@@ -6,7 +6,6 @@ from aiogithubapi.common.const import ACCEPT_HEADERS
 
 from homeassistant.const import __version__ as HAVERSION
 
-NAME_SHORT = "Community store"
 DOMAIN = "store"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantCommunityStore/{HAVERSION}"
