@@ -17,13 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_EVENTS, DOMAIN, PLATFORMS, SIGNAL_EVENTS_UPDATED
+from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
 from .models import DoorBirdConfigEntry, DoorBirdData
-from .util import get_mac_address_from_door_station_info
 from .view import DoorBirdRequestView
 
 CONF_CUSTOM_URL = "hass_url_override"
@@ -116,19 +114,6 @@ async def _async_register_events(
 
 async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
-    door_station = entry.runtime_data.door_station
-    had_events = any(door_station.events)
-    door_station.update_events(entry.options[CONF_EVENTS])
-    if any(door_station.events) != had_events:
-        # Whether the deprecated cameras exist is decided when the platform is
-        # set up, and only they can refresh a device with no events left.
-        await hass.config_entries.async_reload(entry.entry_id)
-        return
-    # Subscribe to doorbell or motion events
-    await _async_register_events(hass, door_station, entry)
-    # The entities resolve their events from the refreshed descriptions, so they
-    # have to remap without waiting for a reload.
-    mac_address = get_mac_address_from_door_station_info(
-        entry.runtime_data.door_station_info
-    )
-    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
+    # The entities derive both their existence and their subscriptions from the
+    # configured events, so they are rebuilt rather than patched in place.
+    await hass.config_entries.async_reload(entry.entry_id)

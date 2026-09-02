@@ -2,19 +2,22 @@
 
 import pytest
 
-from homeassistant.components.doorbird.const import CONF_EVENTS, SIGNAL_EVENTS_UPDATED
-from homeassistant.components.doorbird.device import DoorbirdEvent
-from homeassistant.components.doorbird.util import (
-    get_mac_address_from_door_station_info,
+from homeassistant.components.doorbird.const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+)
+from homeassistant.components.doorbird.device import (
+    DoorbirdEvent,
+    async_matching_event_names,
 )
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import mock_not_found_exception, mock_webhook_call
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
 from tests.typing import ClientSessionGenerator
 
@@ -154,26 +157,32 @@ async def test_image_event_mapping_follows_configured_events(
     hass_client: ClientSessionGenerator,
     doorbird_mocker: DoorbirdMockerType,
 ) -> None:
-    """The event to entity_id mapping tracks options changes without a reload."""
+    """Test the event to entity_id mapping tracks the configured events."""
     doorbird_entry = await doorbird_mocker()
     entry = doorbird_entry.entry
-    event_entity_ids = entry.runtime_data.event_entity_ids
 
-    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
-
-    hass.config_entries.async_update_entry(entry, options={CONF_EVENTS: ["motion"]})
-    await hass.async_block_till_done()
-
-    # The ring image no longer answers to a doorbell event, so the stale mapping
-    # would otherwise keep naming it in the event data.
-    assert "mydoorbird_doorbell" not in event_entity_ids
-
-    hass.config_entries.async_update_entry(
-        entry, options={CONF_EVENTS: ["motion", "doorbell"]}
+    assert (
+        entry.runtime_data.event_entity_ids["mydoorbird_doorbell"]
+        == "image.mydoorbird_last_ring"
     )
-    await hass.async_block_till_done()
 
-    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        hass.config_entries.async_update_entry(entry, options={CONF_EVENTS: ["motion"]})
+        await hass.async_block_till_done()
+
+        # The ring image no longer answers to a doorbell event, so the stale
+        # mapping would otherwise keep naming it in the event data.
+        assert "mydoorbird_doorbell" not in entry.runtime_data.event_entity_ids
+
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_EVENTS: ["motion", "doorbell"]}
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        entry.runtime_data.event_entity_ids["mydoorbird_doorbell"]
+        == "image.mydoorbird_last_ring"
+    )
 
     client = await hass_client()
     await mock_webhook_call(entry, client, "mydoorbird_doorbell")
@@ -182,108 +191,78 @@ async def test_image_event_mapping_follows_configured_events(
     assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN
 
 
-async def test_image_ignores_deconfigured_event_descriptions(
-    hass: HomeAssistant,
-    doorbird_mocker: DoorbirdMockerType,
-) -> None:
-    """A description the device still reports for a removed event is ignored."""
-    doorbird_entry = await doorbird_mocker()
-    door_station = doorbird_entry.entry.runtime_data.door_station
-
-    # The device keeps the favorite of a deconfigured event, so a later refresh
-    # can still describe it while the options no longer configure it.
-    door_station.update_events(["motion"])
-    door_station.event_descriptions = [
-        DoorbirdEvent("mydoorbird_doorbell", "doorbell"),
-        DoorbirdEvent("mydoorbird_motion", "motion"),
-    ]
-    mac_address = get_mac_address_from_door_station_info(
-        doorbird_entry.entry.runtime_data.door_station_info
-    )
-    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
-    await hass.async_block_till_done()
-
-    assert (
-        "mydoorbird_doorbell" not in doorbird_entry.entry.runtime_data.event_entity_ids
-    )
-
-
 @pytest.mark.parametrize(
-    "configured_events",
+    ("configured", "described", "expected_ring", "expected_motion"),
     [
-        pytest.param(["front_door"], id="only_renamed"),
-        pytest.param(["doorbell", "front_door"], id="mixed_with_default"),
+        pytest.param(
+            ["doorbell", "motion"],
+            [("mydoorbird_doorbell", "doorbell"), ("mydoorbird_motion", "motion")],
+            ["mydoorbird_doorbell"],
+            ["mydoorbird_motion"],
+            id="described_as_configured",
+        ),
+        pytest.param(
+            ["motion"],
+            [("mydoorbird_doorbell", "doorbell"), ("mydoorbird_motion", "motion")],
+            [],
+            ["mydoorbird_motion"],
+            id="description_of_a_deconfigured_event_ignored",
+        ),
+        pytest.param(
+            ["doorbell", "motion"],
+            [("mydoorbird_doorbell", "motion"), ("mydoorbird_motion", "doorbell")],
+            ["mydoorbird_motion"],
+            ["mydoorbird_doorbell"],
+            id="descriptions_swap_the_images",
+        ),
+        pytest.param(
+            ["front_door"],
+            [("mydoorbird_front_door", "motion")],
+            [],
+            ["mydoorbird_front_door"],
+            id="renamed_event_classified_by_the_schedule",
+        ),
+        pytest.param(
+            ["front_door"],
+            [],
+            ["mydoorbird_front_door"],
+            [],
+            id="renamed_event_falls_back_to_the_ring",
+        ),
+        pytest.param(
+            ["doorbell", "front_door"],
+            [],
+            ["mydoorbird_doorbell", "mydoorbird_front_door"],
+            [],
+            id="renamed_event_alongside_a_default",
+        ),
+        pytest.param([], [], [], [], id="no_events"),
     ],
 )
-async def test_image_updates_on_renamed_event_without_schedule_api(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    doorbird_mocker: DoorbirdMockerType,
-    configured_events: list[str],
-) -> None:
-    """A renamed event on a schedule-less model still refreshes an image.
-
-    The options accept arbitrary names, so neither type can claim the event;
-    the deprecated cameras polled on a timer and did not care.
-    """
-    doorbird_entry = await doorbird_mocker(
-        schedule_side_effect=mock_not_found_exception()
-    )
-    hass.config_entries.async_update_entry(
-        doorbird_entry.entry, options={CONF_EVENTS: configured_events}
-    )
-    await hass.async_block_till_done()
-    client = await hass_client()
-
-    await mock_webhook_call(doorbird_entry.entry, client, "mydoorbird_front_door")
-    await hass.async_block_till_done()
-
-    assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN
-
-
-async def test_image_keeps_mapping_reassigned_to_the_other_image(
+async def test_matching_event_names(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,
+    configured: list[str],
+    described: list[tuple[str, str]],
+    expected_ring: list[str],
+    expected_motion: list[str],
 ) -> None:
-    """An event moved between the two images keeps the new owner's mapping."""
+    """Test which configured events refresh each image."""
     doorbird_entry = await doorbird_mocker()
     door_station = doorbird_entry.entry.runtime_data.door_station
-    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
 
-    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
-
-    # The refreshed descriptions swap which image each event belongs to, so one
-    # image claims a name the other is about to release.
+    door_station.update_events(configured)
+    # The device keeps the favorites of a deconfigured event, so the refreshed
+    # descriptions do not always agree with the options.
     door_station.event_descriptions = [
-        DoorbirdEvent("mydoorbird_doorbell", "motion"),
-        DoorbirdEvent("mydoorbird_motion", "doorbell"),
+        DoorbirdEvent(name, event_type) for name, event_type in described
     ]
-    mac_address = get_mac_address_from_door_station_info(
-        doorbird_entry.entry.runtime_data.door_station_info
+
+    assert (
+        async_matching_event_names(door_station, DEFAULT_DOORBELL_EVENT)
+        == expected_ring
     )
-    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
-    await hass.async_block_till_done()
-
-    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_motion"
-    assert event_entity_ids["mydoorbird_motion"] == "image.mydoorbird_last_ring"
-
-
-async def test_image_respects_schedule_classification_of_renamed_event(
-    hass: HomeAssistant,
-    doorbird_mocker: DoorbirdMockerType,
-) -> None:
-    """A renamed event the schedule classifies stays with the image it names."""
-    doorbird_entry = await doorbird_mocker()
-    door_station = doorbird_entry.entry.runtime_data.door_station
-    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
-
-    door_station.update_events(["front_door"])
-    door_station.event_descriptions = [DoorbirdEvent("mydoorbird_front_door", "motion")]
-    mac_address = get_mac_address_from_door_station_info(
-        doorbird_entry.entry.runtime_data.door_station_info
+    assert (
+        async_matching_event_names(door_station, DEFAULT_MOTION_EVENT)
+        == expected_motion
     )
-    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
-    await hass.async_block_till_done()
-
-    # The ring image must not claim it back through the unclassifiable fallback.
-    assert event_entity_ids["mydoorbird_front_door"] == "image.mydoorbird_last_motion"

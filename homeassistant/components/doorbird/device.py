@@ -22,6 +22,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     API_URL,
+    DEFAULT_DOORBELL_EVENT,
     DEFAULT_EVENT_TYPES,
     HTTP_EVENT_TYPE,
     MAX_WEEKDAY,
@@ -75,7 +76,9 @@ class ConfiguredDoorBird:
 
     def update_events(self, events: list[str]) -> None:
         """Update the doorbird events."""
-        self.events = events
+        # Clearing the options field yields [""], since it splits an empty
+        # string, and an empty name registers a webhook nothing can call.
+        self.events = [event for event in events if event]
         self.door_station_events = [
             self._get_event_name(event) for event in self.events
         ]
@@ -265,3 +268,47 @@ async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None
         for favorite_id in favorite_ids:
             await door_bird.delete_favorite(favorite_type, favorite_id)
     await door_station.async_register_events()
+
+
+def async_matching_event_names(
+    door_station: ConfiguredDoorBird, event_type: str
+) -> list[str]:
+    """Return the configured event names that refresh the given image type.
+
+    Resolved on each use because the options listener replaces the descriptions
+    without reloading the platforms. Models without the schedule API report no
+    descriptions at all, so fall back to the configured events: the ones this
+    type names, or every unclassifiable one when the user renamed them.
+    """
+    # The device keeps the favorites and schedule entries of a deconfigured
+    # event, so the descriptions can still name one that was removed.
+    configured = set(door_station.door_station_events)
+    described_names = [
+        event.event
+        for event in door_station.event_descriptions
+        if event.event_type == event_type and event.event in configured
+    ]
+
+    # An event the schedule attributes to either image is spoken for, so the
+    # fallback only covers the configured events it left over.
+    described = {event.event for event in door_station.event_descriptions}
+    classifiable = {event for event, _ in DEFAULT_EVENT_TYPES}
+    own_events = {
+        event
+        for event, default_type in DEFAULT_EVENT_TYPES
+        if default_type == event_type
+    }
+    # A renamed event cannot be attributed to either image, so the doorbell one
+    # takes it: without this the replacement never refreshes, while the
+    # deprecated cameras polled on a timer regardless of the event names.
+    takes_unclassifiable = event_type == DEFAULT_DOORBELL_EVENT
+    return described_names + [
+        event_name
+        for event, event_name in zip(
+            door_station.events, door_station.door_station_events, strict=True
+        )
+        if event_name not in described
+        and (
+            event in own_events or (takes_unclassifiable and event not in classifiable)
+        )
+    ]

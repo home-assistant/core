@@ -9,11 +9,13 @@ import aiohttp
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT, DOMAIN
 from .deprecation import deprecate_entity
+from .device import async_matching_event_names
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 from .util import get_mac_address_from_door_station_info
@@ -46,21 +48,22 @@ async def async_setup_entry(
         )
     ]
 
-    # Without events nothing can invalidate the images, which do not poll, so
-    # the replacement would freeze on its first fetch. Keep these until the
-    # entry configures an event.
-    events_configured = any(door_bird_data.door_station.events)
-
-    for camera_id, history_type, interval in (
-        ("last_ring", "doorbell", _LAST_VISITOR_INTERVAL),
-        ("last_motion", "motionsensor", _LAST_MOTION_INTERVAL),
+    for camera_id, history_type, event_type, interval in (
+        ("last_ring", "doorbell", DEFAULT_DOORBELL_EVENT, _LAST_VISITOR_INTERVAL),
+        ("last_motion", "motionsensor", DEFAULT_MOTION_EVENT, _LAST_MOTION_INTERVAL),
     ):
-        if events_configured and not deprecate_entity(
+        issue_id = f"deprecated_camera_{mac_addr}_{camera_id}"
+        # The image replacing this camera is event driven and does not poll, so
+        # without an event to invalidate it the camera has to stay. The issue
+        # would name a replacement that cannot refresh, so it goes too.
+        if not async_matching_event_names(door_bird_data.door_station, event_type):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif not deprecate_entity(
             hass,
             entity_registry,
             platform_domain=Platform.CAMERA,
             entity_unique_id=f"{mac_addr}_{camera_id}",
-            issue_id=f"deprecated_camera_{mac_addr}_{camera_id}",
+            issue_id=issue_id,
             translation_key=f"deprecated_camera_{camera_id}",
         ):
             continue
