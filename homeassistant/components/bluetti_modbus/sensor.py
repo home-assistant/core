@@ -146,26 +146,6 @@ def _describe(name: str, field: RegisterField[object]) -> SensorEntityDescriptio
 PARALLEL_UPDATES = 0
 
 
-class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
-    """Defines a BLUETTI Modbus sensor."""
-
-    def __init__(
-        self, *, entry: BluettiModbusConfigEntry, description: SensorEntityDescription
-    ) -> None:
-        """Initialize a BLUETTI Modbus sensor."""
-        super().__init__(entry=entry, field_name=description.key)
-        self.entity_description = description
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return the field's most recently read value, decoding an enum to its stable state slug."""
-        value = self.coordinator.device.values.get(self._field_name)
-        if isinstance(value, Enum):
-            return _enum_value_map(type(value))[value]
-        return cast(StateType, value)
-
-
 def _describe_fields(device: BluettiDevice) -> list[SensorEntityDescription]:
     """Build entity descriptions for every field this device exposes as a sensor."""
     descriptions = []
@@ -189,3 +169,23 @@ async def async_setup_entry(
         BluettiModbusSensor(entry=entry, description=description)
         for description in _describe_fields(device)
     )
+
+
+class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
+    """Defines a BLUETTI Modbus sensor."""
+
+    def __init__(
+        self, *, entry: BluettiModbusConfigEntry, description: SensorEntityDescription
+    ) -> None:
+        """Initialize a BLUETTI Modbus sensor."""
+        super().__init__(entry=entry, field_name=description.key)
+        self.entity_description = description
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the field's most recently read value, decoding an enum to its stable state slug."""
+        value = self.coordinator.device.values.get(self._field_name)
+        if isinstance(value, Enum):
+            return _enum_value_map(type(value))[value]
+        return cast(StateType, value)
