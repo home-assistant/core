@@ -321,6 +321,21 @@ DHW_SENSORS = [
         value_fn=lambda status: status.dhw_target_temperature,
     ),
     WeHeatSensorEntityDescription(
+        translation_key="dhw_control_method",
+        key="dhw_control_method",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=lambda status: status.dhw_control_method_code is not None,
+        options=[method.name.lower() for method in HeatPump.DhwControlMethod],
+        value_fn=(
+            lambda status: (
+                status.dhw_control_method.name.lower()
+                if status.dhw_control_method is not None
+                else None
+            )
+        ),
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="dhw_flow_volume",
         key="dhw_flow_volume",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,

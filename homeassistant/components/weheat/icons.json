@@ -84,6 +84,9 @@
       "current_control_method": {
         "default": "mdi:tune"
       },
+      "dhw_control_method": {
+        "default": "mdi:tune"
+      },
       "dhw_flow_volume": {
         "default": "mdi:pump"
       },

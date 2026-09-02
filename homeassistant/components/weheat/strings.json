@@ -180,6 +180,16 @@
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
+      "dhw_control_method": {
+        "name": "DHW control method",
+        "state": {
+          "boost": "Boost",
+          "fixed": "Fixed setpoint",
+          "none": "None",
+          "schedule": "Schedule",
+          "weheat_intelligence": "Weheat Intelligence"
+        }
+      },
       "dhw_flow_volume": {
         "name": "DHW pump flow"
       },
