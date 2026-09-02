@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.tod.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -89,19 +88,22 @@ async def test_in_period_on_start(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize("offset", ["24:00", "-24:00"])
-def test_reject_multi_day_offset(offset: str) -> None:
-    """Test YAML offsets must be less than one day."""
-    with pytest.raises(vol.Invalid):
-        PLATFORM_SCHEMA(
-            {
-                "after": "10:00",
-                "after_offset": offset,
-                "before": "18:00",
-                "name": "Daytime",
-                "platform": "tod",
-            }
-        )
+@pytest.mark.parametrize(
+    ("offset", "expected"),
+    [("48:00", timedelta(days=2)), ("-48:00", timedelta(days=-2))],
+)
+def test_accept_multi_day_yaml_offset(offset: str, expected: timedelta) -> None:
+    """Test legacy YAML continues to accept multi-day offsets."""
+    config = PLATFORM_SCHEMA(
+        {
+            "after": "10:00",
+            "after_offset": offset,
+            "before": "18:00",
+            "name": "Daytime",
+            "platform": "tod",
+        }
+    )
+    assert config["after_offset"] == expected
 
 
 @pytest.mark.freeze_time("2019-01-10 22:30:00-08:00")
@@ -927,6 +929,54 @@ async def test_sun_interval_restart(
     assert state.state == STATE_ON
     assert state.attributes["after"] == after.astimezone(hass_tz_info).isoformat()
     assert state.attributes["before"] == before.astimezone(hass_tz_info).isoformat()
+
+
+@pytest.mark.parametrize(
+    ("test_date", "expected_state"),
+    [
+        pytest.param("2019-03-21", STATE_ON, id="rolled-to-ordered"),
+        pytest.param("2019-09-21", STATE_OFF, id="ordered-to-rolled"),
+    ],
+)
+async def test_sun_interval_restart_day_to_day_ordering_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+    test_date: str,
+    expected_state: str,
+) -> None:
+    """Test previous solar interval ordering is resolved independently."""
+    today = datetime.fromisoformat(test_date).replace(tzinfo=hass_tz_info)
+    yesterday = today - timedelta(days=1)
+    yesterday_sunrise = get_astral_event_date(hass, "sunrise", yesterday)
+    yesterday_sunset = get_astral_event_date(hass, "sunset", yesterday)
+    today_sunrise = get_astral_event_date(hass, "sunrise", today)
+    today_sunset = get_astral_event_date(hass, "sunset", today)
+    after_offset = (
+        (yesterday_sunset - yesterday_sunrise) + (today_sunset - today_sunrise)
+    ) / 2
+    today_after = today_sunrise + after_offset
+    freezer.move_to(min(today_after, today_sunset) - timedelta(minutes=1))
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Changing daylight",
+                    "after": "sunrise",
+                    "after_offset": after_offset,
+                    "before": "sunset",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.changing_daylight")
+    assert state.state == expected_state
 
 
 async def test_sun_to_fixed_time_interval_restart(

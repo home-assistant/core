@@ -47,15 +47,17 @@ ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
 TIME_OR_SUN_EVENT = vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event))
-OFFSET = vol.All(cv.time_period, vol.Range(min=-MAX_OFFSET, max=MAX_OFFSET))
+CONFIG_ENTRY_OFFSET = vol.All(
+    cv.time_period, vol.Range(min=-MAX_OFFSET, max=MAX_OFFSET)
+)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AFTER): TIME_OR_SUN_EVENT,
         vol.Required(CONF_BEFORE): TIME_OR_SUN_EVENT,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): OFFSET,
-        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): OFFSET,
+        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
+        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -72,9 +74,13 @@ async def async_setup_entry(
         return
 
     after = TIME_OR_SUN_EVENT(config_entry.options[CONF_AFTER_TIME])
-    after_offset = OFFSET(config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0)))
+    after_offset = CONFIG_ENTRY_OFFSET(
+        config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0))
+    )
     before = TIME_OR_SUN_EVENT(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = OFFSET(config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0)))
+    before_offset = CONFIG_ENTRY_OFFSET(
+        config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0))
+    )
     name = config_entry.title
     unique_id = config_entry.entry_id
 
@@ -217,9 +223,7 @@ class TodSensor(BinarySensorEntity):
         before_time = before_event_date + self._before_offset
 
         # Before is earlier than after once the configured offsets are applied.
-        boundaries_rolled = before_time < after_time
-        previous_before_time = before_time
-        if boundaries_rolled:
+        if before_time < after_time:
             if _is_sun_event(self._before):
                 before_event_date = get_astral_event_next(
                     self.hass,
@@ -247,16 +251,17 @@ class TodSensor(BinarySensorEntity):
                 )
             previous_after_time = previous_after_event_date + self._after_offset
 
-            if not boundaries_rolled:
-                if _is_sun_event(self._before):
-                    previous_before_event_date = self._get_astral_event_previous(
-                        self._before, before_event_date - timedelta(microseconds=1)
-                    )
-                else:
-                    previous_before_event_date = self._subtract_one_dst_aware_day(
-                        before_event_date, self._before
-                    )
-                previous_before_time = previous_before_event_date + self._before_offset
+            if _is_sun_event(self._before):
+                previous_before_event_date = get_astral_event_next(
+                    self.hass,
+                    self._before,
+                    previous_after_time - self._before_offset,
+                )
+            else:
+                previous_before_event_date = self._get_fixed_time_next(
+                    self._before, previous_after_time - self._before_offset
+                )
+            previous_before_time = previous_before_event_date + self._before_offset
 
             if previous_after_time <= nowutc < previous_before_time:
                 after_time = previous_after_time
@@ -264,6 +269,18 @@ class TodSensor(BinarySensorEntity):
 
         self._time_after = after_time
         self._time_before = before_time
+
+    def _get_fixed_time_next(
+        self, target_time: time, utc_point_in_time: datetime
+    ) -> datetime:
+        """Calculate the next fixed-time boundary."""
+        target_date = utc_point_in_time.astimezone(
+            dt_util.get_default_time_zone()
+        ).date()
+        boundary_time = dt_util.as_utc(datetime.combine(target_date, target_time))
+        if boundary_time <= utc_point_in_time:
+            return self._add_one_dst_aware_day(boundary_time, target_time)
+        return boundary_time
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
         """Add one local calendar day, accounting for DST."""
