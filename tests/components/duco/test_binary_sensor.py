@@ -61,14 +61,12 @@ async def test_diagnostic_binary_sensor_entity_registry_defaults(
             DiagComponent(component="Filter", status="Ok"),
             DiagComponent(component="VentCool", status="Ok"),
             DiagComponent(component="SunCtrl", status="Ok"),
-            DiagComponent(component="Future Mode", status="Ok"),
         )
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     for entity_id in (
-        "binary_sensor.living_future_mode",
         "binary_sensor.living_sun_control",
         "binary_sensor.living_ventilation_cooling",
     ):
@@ -85,6 +83,24 @@ async def test_diagnostic_binary_sensor_entity_registry_defaults(
         assert entry is not None
         assert entry.disabled_by is None
         assert entry.original_device_class is BinarySensorDeviceClass.PROBLEM
+
+
+async def test_unknown_diagnostic_subsystem_is_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an unknown diagnostic subsystem is not exposed."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+        diagnostic_subsystems=(DiagComponent(component="Future Mode", status="Error"),)
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
+
+    assert entity_registry.async_get("binary_sensor.living_future_mode") is None
 
 
 @pytest.mark.parametrize(

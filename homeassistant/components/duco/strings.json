@@ -41,9 +41,6 @@
       "diagnostic_filter": {
         "name": "Filter"
       },
-      "diagnostic_status": {
-        "name": "{component}"
-      },
       "diagnostic_sun_control": {
         "name": "Sun control"
       },

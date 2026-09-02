@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from .const import BOX_NODE_ID
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -35,8 +34,8 @@ class DucoDiagnosticBinarySensorEntityDescription(BinarySensorEntityDescription)
     component: str
 
 
-# Subsystem health is device-internal diagnostic data. Optional and unknown
-# subsystems are disabled by default because they may not be actionable.
+# Ventilation and filter problems are directly actionable. Model-specific
+# subsystem diagnostics remain opt-in.
 DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS: dict[
     str, DucoDiagnosticBinarySensorEntityDescription
 ] = {
@@ -92,9 +91,14 @@ async def async_setup_entry(
         for component in coordinator.data.diagnostic_subsystems:
             if component in known_components:
                 continue
+            # Only expose components whose problem semantics are confirmed.
+            if (
+                description := DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS.get(component)
+            ) is None:
+                continue
             known_components.add(component)
             new_entities.append(
-                DucoDiagnosticBinarySensorEntity(coordinator, box_node, component)
+                DucoDiagnosticBinarySensorEntity(coordinator, box_node, description)
             )
 
         if new_entities:
@@ -113,24 +117,12 @@ class DucoDiagnosticBinarySensorEntity(DucoEntity, BinarySensorEntity):
         self,
         coordinator: DucoCoordinator,
         node: Node,
-        component: str,
+        description: DucoDiagnosticBinarySensorEntityDescription,
     ) -> None:
         """Initialize the diagnostic binary sensor."""
-        if (
-            description := DIAGNOSTIC_BINARY_SENSOR_DESCRIPTIONS.get(component)
-        ) is None:
-            description = DucoDiagnosticBinarySensorEntityDescription(
-                key=slugify(component),
-                component=component,
-                translation_key="diagnostic_status",
-                device_class=BinarySensorDeviceClass.PROBLEM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=False,
-            )
-            self._attr_translation_placeholders = {"component": component}
         self.entity_description = description
         super().__init__(coordinator, node)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{component}_diagnostic"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.component}_diagnostic"
 
     @property
     @override
