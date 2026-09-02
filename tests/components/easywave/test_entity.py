@@ -2,13 +2,32 @@
 
 from typing import override
 
-from homeassistant.components.easywave.const import DOMAIN
-from homeassistant.components.easywave.entity import EasywaveChildEntity
+from homeassistant.components.easywave.const import (
+    CONF_BUTTON_COUNT,
+    CONF_ENTRY_TYPE,
+    CONF_GROUPING_MODE,
+    CONF_OPERATING_TYPE,
+    CONF_SWITCH_MODE,
+    CONF_TRANSMITTER_SERIAL,
+    DOMAIN,
+    ENTRY_TYPE_TRANSMITTER,
+    TRANSMITTER_GROUPING_GROUP,
+    TRANSMITTER_SWITCH_IMPULSE,
+)
+from homeassistant.components.easywave.entity import (
+    EasywaveChildEntity,
+    EasywaveDeviceEntry,
+    EasywaveTransmitterEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .conftest import async_setup_easywave_entry
+from .conftest import (
+    MOCK_TRANSMITTER_DEVICE_ID,
+    MOCK_TRANSMITTER_SERIAL,
+    async_setup_easywave_entry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -91,3 +110,43 @@ async def test_link_device_to_gateway_updates_device_registry(
     assert updated.via_device_id is not None
     assert entity.device_entry is not None
     assert entity.device_entry.via_device_id == updated.via_device_id
+
+
+async def test_link_device_to_gateway_skips_when_gateway_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Linking is a no-op when the gateway device is not registered yet."""
+    mock_config_entry.add_to_hass(hass)
+    entity = _ChildEntity()
+    entity._entry = mock_config_entry
+    entity.hass = hass
+
+    entity._link_device_to_gateway()
+
+    assert entity.device_info is not None
+    assert "via_device_id" not in entity.device_info
+
+
+async def test_transmitter_entity_exposes_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Transmitter entities expose their Easywave device id."""
+    await async_setup_easywave_entry(hass, mock_config_entry)
+    device = EasywaveDeviceEntry(
+        device_id=MOCK_TRANSMITTER_DEVICE_ID,
+        title="Test Transmitter",
+        data={
+            CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+            CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
+            CONF_OPERATING_TYPE: "1",
+            CONF_BUTTON_COUNT: 4,
+            CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
+            CONF_SWITCH_MODE: TRANSMITTER_SWITCH_IMPULSE,
+        },
+        subentry_id="subentry",
+    )
+    entity = EasywaveTransmitterEntity(mock_config_entry, device, "last_button")
+
+    assert entity.device_id == MOCK_TRANSMITTER_DEVICE_ID

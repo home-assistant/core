@@ -130,3 +130,18 @@ async def test_listen_for_telegram_resumes_after_suspend_failure() -> None:
 
     coordinator.resume_telegram_listener.assert_called_once()
     coordinator.end_learning.assert_called_once()
+
+
+async def test_listen_for_telegram_returns_none_when_learning_busy() -> None:
+    """Learning aborts immediately when another session holds the lock."""
+    helper = _SensorListHelper()
+    coordinator = MagicMock()
+    coordinator.begin_learning = AsyncMock(return_value=False)
+    coordinator.suspend_telegram_listener = AsyncMock()
+
+    result = await helper._listen_for_telegram(
+        coordinator, accept_telegram=lambda _telegram: None
+    )
+
+    assert result is None
+    coordinator.suspend_telegram_listener.assert_not_called()

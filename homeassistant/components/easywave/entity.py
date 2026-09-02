@@ -74,14 +74,13 @@ class EasywaveChildEntity(Entity):
             return
         device_info = dict(self.device_info)
         device_info.pop("via_device", None)
-        if not (
-            via_id := dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, self._entry.entry_id),
-                config_entry_id=self._entry.entry_id,
-            )
-        ):
+        gateway = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, self._entry.entry_id),
+            self._entry.entry_id,
+        )
+        if gateway is None:
             return
+        via_id = gateway.id
         self._attr_device_info = cast(
             DeviceInfo,
             {**device_info, "via_device_id": via_id},

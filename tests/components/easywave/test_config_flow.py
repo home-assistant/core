@@ -505,3 +505,22 @@ async def test_confirm_unique_id_from_device_path(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert flow.unique_id == "easywave__dev_ttyACM0"
+
+
+async def test_validate_device_connection_disposes_on_unexpected_connect_error(
+    hass: HomeAssistant,
+) -> None:
+    """Unexpected connect errors still dispose the temporary transceiver."""
+    flow = EasywaveConfigFlow()
+    flow.hass = hass
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(side_effect=RuntimeError("boom"))
+    mock_transceiver.dispose = AsyncMock()
+
+    with (
+        patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
+        pytest.raises(RuntimeError, match="boom"),
+    ):
+        await flow._async_validate_device_connection("/dev/ttyACM0")
+
+    mock_transceiver.dispose.assert_awaited_once()

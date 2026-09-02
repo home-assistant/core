@@ -7,6 +7,7 @@ replacement when it is the only one present.
 """
 
 from collections.abc import Callable, Mapping
+import contextlib
 from functools import partial
 import logging
 from typing import Any
@@ -93,10 +94,14 @@ class RX11Transceiver:
         self._configured_path = config.get(CONF_DEVICE_PATH) or device_path
         self._disconnect_callback: Callable[[], None] | None = None
         self._connected_callback: Callable[[], None] | None = None
-        self._gateway = EasywaveGateway(
+        self._gateway = self._build_gateway(None)
+
+    def _build_gateway(self, port: str | None) -> EasywaveGateway:
+        """Create a gateway instance for the resolved serial port."""
+        return EasywaveGateway(
             GatewayConfig(
                 transceiver_id="RX11",
-                port=None,
+                port=port,
                 usb_ids=SUPPORTED_USB_IDS,
                 auto_reconnect=False,
                 auto_listen=False,
@@ -168,9 +173,11 @@ class RX11Transceiver:
                 device_path=self._configured_path,
             )
         )
-        self._gateway._config.port = port  # noqa: SLF001
-        # Library connect() uses _device_path; config.port alone is ignored.
-        self._gateway._device_path = port  # noqa: SLF001
+        # Recreate the gateway with the resolved port via the public config API.
+        old_gateway = self._gateway
+        self._gateway = self._build_gateway(port)
+        with contextlib.suppress(OSError, TimeoutError):
+            await old_gateway.stop()
         return port is not None
 
     async def connect(self) -> bool:

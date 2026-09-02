@@ -886,3 +886,74 @@ async def test_first_disconnect_after_setup_fires_gateway_event(
         event.data["type"] == EVENT_TYPE_GATEWAY_DISCONNECTED for event in events
     )
     assert coordinator._gateway_last_status == "disconnected"
+
+
+def test_gateway_connection_status_disconnected_when_link_down_but_not_offline(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Status is disconnected when the transceiver reports no live link."""
+    coordinator.is_offline = False
+    mock_transceiver.is_connected = False
+
+    assert coordinator._gateway_connection_status() == "disconnected"
+
+
+async def test_sync_gateway_connection_events_skips_before_homeassistant_started(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Gateway automation events are suppressed until Home Assistant has started."""
+    coordinator._ha_started = False
+    coordinator._gateway_last_status = "disconnected"
+    coordinator.is_offline = False
+
+    coordinator._sync_gateway_connection_events()
+
+    assert coordinator._gateway_last_status == "disconnected"
+
+
+async def test_connected_callback_restarts_telegram_listener(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Connect callbacks restart telegram reception when listeners are registered."""
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.register_sensor_entities([MagicMock()])
+    await hass.async_block_till_done(wait_background_tasks=True)
+    coordinator.is_offline = True
+    coordinator._stop_telegram_listener()
+    connected_callback = mock_transceiver.set_connected_callback.call_args[0][0]
+
+    connected_callback()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._listener_task is not None
+    await coordinator.async_shutdown()
+
+
+async def test_unregister_transmitter_entity_stops_listener_without_configured_devices(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Unregistering the last entity stops reception when no transmitters are configured."""
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    entity = MagicMock()
+    coordinator.register_transmitter_entities([entity])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator.unregister_transmitter_entity(entity)
+
+    assert coordinator._listener_task is None
+    await coordinator.async_shutdown()
