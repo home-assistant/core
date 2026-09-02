@@ -70,5 +70,19 @@
         "name": "Next arrival"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "line_ids": "Bus lines"
+        },
+        "data_description": {
+          "line_ids": "Select the bus lines to monitor for this stop."
+        },
+        "description": "Choose the bus lines to monitor for this stop.",
+        "title": "Select lines"
+      }
+    }
   }
 }

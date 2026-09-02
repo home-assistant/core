@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -18,6 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_LINE_IDS, CONF_LINES, CONF_STOP_ID, DOMAIN
 from .coordinator import ArrivalData, BizkaibusConfigEntry, BizkaibusUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -39,6 +42,31 @@ async def async_setup_entry(
 
     lines_ids = config_entry.options.get(CONF_LINE_IDS, [])
     lines = config_entry.options.get(CONF_LINES, {})
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    selected_unique_ids = {
+        f"{config_entry.data[CONF_STOP_ID]}_{line_id}_nearest_arrival"
+        for line_id in lines_ids
+    }
+    obsolete_device_ids: set[str] = set()
+    for entity_entry in entity_registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if (
+            entity_entry.platform == DOMAIN
+            and entity_entry.unique_id not in selected_unique_ids
+        ):
+            if entity_entry.device_id:
+                obsolete_device_ids.add(entity_entry.device_id)
+            entity_registry.async_remove(entity_entry.entity_id)
+
+    for device_id in obsolete_device_ids:
+        if not any(
+            entity_entry.device_id == device_id
+            for entity_entry in entity_registry.entities.values()
+        ):
+            device_registry.async_remove_device(device_id)
 
     if not lines:
         async_add_entities([])

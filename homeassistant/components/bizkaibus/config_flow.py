@@ -5,7 +5,14 @@ from typing import Any, override
 from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
@@ -14,10 +21,60 @@ from .const import CONF_LINE_IDS, CONF_LINES, CONF_STOP_ID, DOMAIN
 USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_STOP_ID): cv.string})
 
 
+def _lines_schema(
+    line_ids: list[str], lines: dict[str, Any], selected_line_ids: list[str]
+) -> vol.Schema:
+    """Return the schema for selecting bus lines."""
+    options = [
+        selector.SelectOptionDict(
+            value=line,
+            label=f"{line} - {lines[line]}",
+        )
+        for line in line_ids
+    ]
+
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_LINE_IDS, default=selected_line_ids
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=options,
+                    multiple=True,
+                    mode=selector.SelectSelectorMode.LIST,
+                )
+            ),
+        }
+    )
+
+
+async def _async_get_lines(
+    stop_id: str,
+) -> tuple[BizkaibusAPI | None, list[str], dict[str, Any]]:
+    """Fetch the available lines for a bus stop."""
+    api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
+    if not await api.TestConnection():
+        return None, [], {}
+
+    bizkaibus_lines = await api.GetLinesOnStop()
+    return (
+        api,
+        [line.id for line in bizkaibus_lines],
+        {line.id: line.route for line in bizkaibus_lines},
+    )
+
+
 class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bizkaibus."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+        """Get the options flow."""
+        return BizkaibusOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize the config flow state."""
@@ -39,17 +96,10 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._stop_id)
             self._abort_if_unique_id_configured()
 
-            api = BizkaibusAPI(BizkaibusLanguages.ES, self._stop_id)
-
-            is_online = await api.TestConnection()
-            if not is_online:
+            api, self._line_ids, self._lines = await _async_get_lines(self._stop_id)
+            if api is None:
                 errors["base"] = "cannot_connect"
             else:
-                bizkaibus_lines = await api.GetLinesOnStop()
-
-                self._line_ids = [line.id for line in bizkaibus_lines]
-                self._lines = {line.id: line.route for line in bizkaibus_lines}
-
                 timetable = await api.GetTimetable()
 
                 if timetable is not None:
@@ -70,6 +120,18 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select bus lines."""
         if user_input is not None and CONF_LINE_IDS in user_input:
+            if self.source == SOURCE_RECONFIGURE:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    unique_id=self._stop_id,
+                    title=self._title,
+                    data_updates={CONF_STOP_ID: self._stop_id},
+                    options={
+                        CONF_LINE_IDS: user_input[CONF_LINE_IDS],
+                        CONF_LINES: self._lines,
+                    },
+                )
+
             return self.async_create_entry(
                 title=self._title,
                 data={CONF_STOP_ID: self._stop_id},
@@ -79,27 +141,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        options = [
-            selector.SelectOptionDict(
-                value=line,
-                label=f"{line} - {self._lines[line]}",
-            )
-            for line in self._line_ids
-        ]
-
         return self.async_show_form(
             step_id="lines",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_LINE_IDS): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=options,
-                            multiple=True,
-                            mode=selector.SelectSelectorMode.LIST,
-                        )
-                    ),
-                }
-            ),
+            data_schema=_lines_schema(self._line_ids, self._lines, []),
         )
 
     async def async_step_reconfigure(
@@ -111,19 +155,23 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             stop_id = user_input[CONF_STOP_ID]
-            api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
 
-            if not await api.TestConnection():
+            if stop_id != reconfigure_entry.data[CONF_STOP_ID]:
+                await self.async_set_unique_id(stop_id)
+                self._abort_if_unique_id_configured()
+
+            api, self._line_ids, self._lines = await _async_get_lines(stop_id)
+            if api is None:
                 errors["base"] = "cannot_connect"
             else:
-                if stop_id != reconfigure_entry.data[CONF_STOP_ID]:
-                    await self.async_set_unique_id(stop_id)
-                    self._abort_if_unique_id_configured()
-
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates={CONF_STOP_ID: stop_id},
+                timetable = await api.GetTimetable()
+                self._stop_id = stop_id
+                self._title = (
+                    f"{stop_id} {timetable.name if timetable.name is not None else timetable.id}"
+                    if timetable is not None
+                    else f"{DOMAIN.capitalize()} {stop_id}"
                 )
+                return await self.async_step_lines()
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -144,4 +192,41 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=stop_id,
             data={CONF_STOP_ID: stop_id},
+        )
+
+
+class BizkaibusOptionsFlow(OptionsFlowWithReload):
+    """Handle Bizkaibus options."""
+
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self._line_ids: list[str] = []
+        self._lines: dict[str, Any] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the selected bus lines."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None and not errors:
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_LINE_IDS: user_input[CONF_LINE_IDS],
+                    CONF_LINES: self._lines,
+                },
+            )
+
+        api, self._line_ids, self._lines = await _async_get_lines(
+            self.config_entry.data[CONF_STOP_ID]
+        )
+        if api is None:
+            errors["base"] = "cannot_connect"
+
+        selected_line_ids = self.config_entry.options.get(CONF_LINE_IDS, [])
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_lines_schema(self._line_ids, self._lines, selected_line_ids),
+            errors=errors,
         )

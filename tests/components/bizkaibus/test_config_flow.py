@@ -250,8 +250,9 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
     """Test the reconfigure step."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_STOP_ID: "1234"},
+        data={CONF_STOP_ID: "0252"},
         options={CONF_LINE_IDS: ["A"]},
+        unique_id="0252",
     )
     config_entry.add_to_hass(hass)
 
@@ -268,14 +269,81 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
         mock_setup.return_value = True
         mock_api = mock_api_class.return_value
         mock_api.TestConnection = AsyncMock(return_value=True)
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+        mock_api.GetTimetable = AsyncMock(
+            return_value=SimpleNamespace(id="stop_0232", name="Central Station")
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "reconfigure", "entry_id": config_entry.entry_id},
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_STOP_ID: "1234"}
+            result["flow_id"], {CONF_STOP_ID: "0232"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
         )
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
+        assert config_entry.data[CONF_STOP_ID] == "0232"
+        assert config_entry.unique_id == "0232"
+        assert config_entry.options[CONF_LINE_IDS] == ["A"]
+        assert config_entry.options[CONF_LINES] == {"A": "Route A"}
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "0252"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test updating the selected bus lines."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={
+            CONF_LINE_IDS: ["A"],
+            CONF_LINES: {"A": "Route A", "B": "Route B"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(return_value=True)
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[
+                SimpleNamespace(id="A", route="Route A updated"),
+                SimpleNamespace(id="C", route="Route C"),
+            ]
+        )
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["C"]}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_LINE_IDS: ["C"],
+            CONF_LINES: {"A": "Route A updated", "C": "Route C"},
+        }
