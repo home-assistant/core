@@ -213,8 +213,7 @@ class EcowittModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     # new address is not one another entry already polls.
                     self._async_abort_entries_match(_address(model, user_input))
 
-                # The title carries the host, so it has to move with the
-                # entry; leaving it would keep showing the old address.
+                # Passing `data` alone would leave the old host in the title.
                 return self.async_update_reload_and_abort(
                     entry,
                     title=_title(model, user_input),

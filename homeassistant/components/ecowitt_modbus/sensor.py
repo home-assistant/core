@@ -169,13 +169,17 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
         _rainfall("rainfall", precision=3),
         ABSOLUTE_PRESSURE,
         # The WN90LP archives these two in its history block; the WN69LP has
-        # them as live registers, re-measured once a minute.
+        # them as live registers, re-measured once a minute. Both need an
+        # explicit precision: the voltage device class defaults to whole
+        # volts, which would round a 3.12V battery to 3V and hide exactly
+        # the drift these are worth watching for.
         _reading(
             "battery_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
+            suggested_display_precision=2,
         ),
         _reading(
             "supply_voltage",
@@ -184,6 +188,7 @@ SENSOR_DESCRIPTIONS: dict[str, tuple[EcowittSensorDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
+            suggested_display_precision=1,
         ),
         # The specification does not say what period this covers, only that
         # the rainfall-reset command clears it alongside the total. Off by
