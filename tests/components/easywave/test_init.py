@@ -15,8 +15,8 @@ from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.components.easywave.devices import get_devices
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import (
     MOCK_ENTRY_DATA,
@@ -34,10 +34,10 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry_shutdown_when_first_refresh_raises_update_failed(
+async def test_setup_entry_shutdown_when_first_refresh_raises_not_ready(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Setup shuts down the coordinator when first refresh raises UpdateFailed."""
+    """Setup shuts down the coordinator when first refresh raises ConfigEntryNotReady."""
     mock_config_entry.add_to_hass(hass)
     transceiver = mock_easywave_transceiver()
 
@@ -49,7 +49,7 @@ async def test_setup_entry_shutdown_when_first_refresh_raises_update_failed(
         patch.object(
             EasywaveCoordinator,
             "async_config_entry_first_refresh",
-            AsyncMock(side_effect=UpdateFailed("setup failed")),
+            AsyncMock(side_effect=ConfigEntryNotReady("not ready")),
         ),
         patch.object(
             EasywaveCoordinator,

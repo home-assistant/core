@@ -304,8 +304,8 @@ class EasywaveDeviceFlowMixin:
         if not await coordinator.begin_learning():
             return None
         try:
-            await coordinator.suspend_telegram_listener()
             try:
+                await coordinator.suspend_telegram_listener()
                 deadline = time.monotonic() + LEARNING_TIMEOUT
                 while time.monotonic() < deadline:
                     remaining = deadline - time.monotonic()

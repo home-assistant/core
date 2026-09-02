@@ -197,13 +197,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _on_transceiver_disconnect(self) -> None:
-        """Called from transceiver when connection is lost.
-
-        May be invoked from the event loop (health-check / RxModule
-        disconnect handler), so use call_soon_threadsafe to guarantee
-        thread safety regardless of the calling context.
-        """
-        self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
+        """Called from transceiver when connection is lost."""
+        self._handle_disconnect()
 
     @callback
     def _handle_disconnect(self) -> None:
@@ -230,6 +225,11 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         try:
             if self.is_offline:
+                if self.is_learning_busy():
+                    return {
+                        "is_connected": False,
+                        "device_path": None,
+                    }
                 connected = await self.transceiver.reconnect()
                 if connected:
                     self.is_offline = False

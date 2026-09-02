@@ -1,7 +1,7 @@
 """Tests for neo sensor type labels in the config flow."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -112,3 +112,21 @@ async def test_config_flow_sensor_list_uses_language_fallback(
             {"measures_temperature": True, "measures_humidity": True}
         )
     assert sensor_list == "• Temperature\n• Humidity"
+
+
+async def test_listen_for_telegram_resumes_after_suspend_failure() -> None:
+    """Learning resumes telegram reception when suspending the listener fails."""
+    helper = _SensorListHelper()
+    coordinator = MagicMock()
+    coordinator.begin_learning = AsyncMock(return_value=True)
+    coordinator.end_learning = MagicMock()
+    coordinator.suspend_telegram_listener = AsyncMock(side_effect=OSError("usb busy"))
+    coordinator.resume_telegram_listener = MagicMock()
+
+    with pytest.raises(OSError, match="usb busy"):
+        await helper._listen_for_telegram(
+            coordinator, accept_telegram=lambda _telegram: None
+        )
+
+    coordinator.resume_telegram_listener.assert_called_once()
+    coordinator.end_learning.assert_called_once()

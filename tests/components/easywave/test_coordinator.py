@@ -2,7 +2,7 @@
 
 import asyncio
 import contextlib
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from easywave_home_control.codec import (
     ButtonFunction,
@@ -157,9 +157,11 @@ async def test_transceiver_disconnect_marks_coordinator_offline(
     coordinator.is_offline = False
     disconnect_callback = mock_transceiver.set_disconnect_callback.call_args[0][0]
 
-    disconnect_callback()
-    await hass.async_block_till_done()
+    with patch.object(hass.loop, "call_soon_threadsafe") as mock_schedule:
+        disconnect_callback()
+        await hass.async_block_till_done()
 
+    mock_schedule.assert_not_called()
     assert coordinator.is_offline is True
     assert coordinator.data == {
         "is_connected": False,
@@ -255,6 +257,22 @@ async def test_refresh_stays_offline_when_reconnect_fails(
     mock_transceiver.reconnect.assert_awaited_once()
     assert coordinator.is_offline is True
     assert coordinator.data == {"is_connected": False, "device_path": None}
+
+
+async def test_refresh_skips_reconnect_while_learning(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Periodic refresh does not reconnect during a device learning session."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+    assert await coordinator.begin_learning() is True
+
+    await coordinator.async_refresh()
+
+    mock_transceiver.reconnect.assert_not_called()
+    assert coordinator.is_offline is True
+    coordinator.end_learning()
 
 
 async def test_connected_callback_restores_online_state(
