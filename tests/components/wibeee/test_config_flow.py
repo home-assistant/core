@@ -51,7 +51,7 @@ async def test_user_step_connection_error(
     mock_setup_entry: AsyncMock,
     mock_wibeee_api_config_flow: MagicMock,
 ) -> None:
-    """Test user step handles connection error."""
+    """Test user step handles connection error and recovers."""
     mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = TimeoutError(
         "error"
     )
@@ -69,13 +69,24 @@ async def test_user_step_connection_error(
     assert "errors" in result
     assert result["errors"][CONF_HOST] == "no_device_info"
 
+    mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == MOCK_HOST
+
 
 async def test_user_step_invalid_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_wibeee_api_config_flow: MagicMock,
 ) -> None:
-    """Test user step handles non-Wibeee device (no device info)."""
+    """Test user step handles non-Wibeee device (no device info) and recovers."""
+    device_info = mock_wibeee_api_config_flow.async_fetch_device_info.return_value
     mock_wibeee_api_config_flow.async_fetch_device_info.return_value = None
 
     result = await hass.config_entries.flow.async_init(
@@ -89,6 +100,16 @@ async def test_user_step_invalid_device(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_HOST] == "no_device_info"
+
+    mock_wibeee_api_config_flow.async_fetch_device_info.return_value = device_info
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == MOCK_HOST
 
 
 async def test_dhcp_discovery(
@@ -206,9 +227,9 @@ async def test_user_step_already_configured(
 
 
 async def test_user_step_unexpected_exception(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_wibeee_api: MagicMock
 ) -> None:
-    """Test user step shows generic error on unexpected exception."""
+    """Test user step shows generic error on unexpected exception and recovers."""
     mock_wibeee_api.async_fetch_device_info.side_effect = RuntimeError("boom")
 
     result = await hass.config_entries.flow.async_init(
@@ -220,3 +241,12 @@ async def test_user_step_unexpected_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
+
+    mock_wibeee_api.async_fetch_device_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == MOCK_HOST
