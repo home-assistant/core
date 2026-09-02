@@ -13,7 +13,6 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
-    DucoUnsupportedCapabilityError,
     LanInfo,
     Node,
     NodeListActionItemList,
@@ -289,20 +288,18 @@ async def test_setup_entry_retries_on_bypass_temperature_failure(
     assert mock_config_entry.error_reason_translation_placeholders is None
 
 
-async def test_unsupported_bypass_temperature_capability_is_not_repolled(
+async def test_empty_bypass_temperature_targets_are_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test an unsupported bulk bypass target endpoint is not polled again."""
-    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = (
-        DucoUnsupportedCapabilityError(
-            400,
-            "/config",
-            '{"Code":3,"Result":"FAILED"}',
-        )
-    )
+    """Test empty bypass targets are retried and can later create entities."""
+    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = [
+        {},
+        mock_bypass_supply_temperature_targets.copy(),
+    ]
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -317,7 +314,9 @@ async def test_unsupported_bypass_temperature_capability_is_not_repolled(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
+    assert mock_duco_client.async_get_bypass_supply_temperature_targets.await_count == 2
+    assert hass.states.get("number.living_bypass_target_1") is not None
+    assert hass.states.get("number.living_bypass_target_2") is not None
 
 
 async def test_missing_bypass_temperature_targets_are_retried(

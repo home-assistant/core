@@ -130,6 +130,7 @@
           },
           "preset_mode": {
             "state": {
+              "dry_comfort": "Dry comfort",
               "long_wind": "Long wind",
               "motion_direct": "Motion direct",
               "motion_indirect": "Motion indirect",
