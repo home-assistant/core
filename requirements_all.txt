@@ -3326,7 +3326,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==16.6.1
+uiprotect==16.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
