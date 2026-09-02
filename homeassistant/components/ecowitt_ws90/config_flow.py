@@ -33,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
             NumberSelector(
-                NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=252)
+                NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
             ),
             vol.Coerce(int),
         ),
