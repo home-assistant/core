@@ -31,6 +31,22 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "access_log": {
+        "name": "Access log",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "access_denied": "Access denied",
+              "fault": "Fault",
+              "opened": "Opened"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the lock."
@@ -43,6 +59,12 @@
     },
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
+    }
+  },
+  "services": {
+    "read_access_log": {
+      "description": "Reads the entries the lock has recorded since the last read and reports the newest of each kind on the access log entity. The lock marks them read, so each entry is only ever reported once.",
+      "name": "Read access log"
     }
   }
 }
