@@ -1,6 +1,5 @@
 """Support for Wibeee energy monitor sensors."""
 
-import logging
 from typing import override
 
 from pywibeee import WibeeeDeviceInfo
@@ -29,11 +28,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KNOWN_MODELS
+from .const import DOMAIN, KNOWN_MODELS, PHASE_PREFIXES
 from .coordinator import WibeeeConfigEntry, WibeeeCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PARALLEL_UPDATES = 0
 
@@ -257,13 +253,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-PHASE_PREFIXES: dict[str, str] = {
-    "fase1": "l1",
-    "fase2": "l2",
-    "fase3": "l3",
-    "fase4": "total",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -274,16 +263,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device_info = coordinator.device_info
 
+    # The coordinator guarantees data only contains known phases.
     data = coordinator.data
-    discovered_phases = [p for p in data if p in PHASE_PREFIXES]
-    if not discovered_phases:
-        _LOGGER.warning(
-            "No usable phase data for Wibeee %s (%s); no sensors created",
-            device_info.mac_addr_short,
-            device_info.ip_addr,
-        )
-        return
-
     async_add_entities(
         WibeeeSensor(
             coordinator=coordinator,
@@ -291,9 +272,15 @@ async def async_setup_entry(
             phase_key=phase_key,
             description=description,
         )
-        for phase_key in discovered_phases
+        for phase_key in data
         for sensor_key, description in SENSOR_TYPES.items()
         if sensor_key in data[phase_key]
+        # 4.x firmware leaves the legacy aggregate at 0 next to the split
+        # consumed/produced counters; don't expose a dead energy sensor.
+        and (
+            sensor_key != "energia_activa"
+            or "energia_activa_cons" not in data[phase_key]
+        )
     )
 
 

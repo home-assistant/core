@@ -7,6 +7,7 @@ from homeassistant.components.wibeee.const import (
     CONF_WIBEEE_ID,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -69,6 +70,9 @@ async def test_sensors_consumed_produced_energy(
     produced = hass.states.get("sensor.wibeee_112233_total_produced_active_energy")
     assert produced is not None
     assert produced.state == "2149.0"
+
+    # The legacy aggregate stays at 0 on this firmware; it must not be created.
+    assert hass.states.get("sensor.wibeee_112233_total_active_energy") is None
 
 
 async def test_sensor_unavailable_on_coordinator_failure(
@@ -159,7 +163,7 @@ async def test_sensors_polling_mode_keeps_all_keys(
 async def test_sensor_setup_no_known_phases(
     hass: HomeAssistant, mock_wibeee_api: MagicMock
 ) -> None:
-    """No sensors are created when the device returns no known phases."""
+    """Setup fails and retries when the device returns no known phases."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
         "unknown_phase": {"vrms": "230"},
     }
@@ -180,4 +184,5 @@ async def test_sensor_setup_no_known_phases(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert hass.states.async_all("sensor") == []

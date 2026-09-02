@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PHASE_PREFIXES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +84,13 @@ class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 translation_placeholders={"host": self.api.host, "error": str(exc)},
             ) from exc
 
-        if data is None:
+        if data is not None:
+            data = {
+                phase: values
+                for phase, values in data.items()
+                if phase in PHASE_PREFIXES
+            }
+        if not data:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_data",
