@@ -183,11 +183,11 @@ async def test_service_call_create_log_book_entry_no_message(
 
 
 async def test_filter_sensor(
-    hass_: HomeAssistant, hass_client: ClientSessionGenerator
+    hass_: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test numeric sensors are filtered."""
-
-    registry = er.async_get(hass_)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Unregistered sensor without a unit of measurement - should be in logbook
     entity_id1 = "sensor.bla"
@@ -196,7 +196,7 @@ async def test_filter_sensor(
     entity_id2 = "sensor.blu"
     attributes_2 = {ATTR_UNIT_OF_MEASUREMENT: "cats"}
     # Registered sensor with state class - should be excluded from logbook
-    entity_id3 = registry.async_get_or_create(
+    entity_id3 = entity_registry.async_get_or_create(
         "sensor",
         "test",
         "unique_3",
@@ -205,7 +205,7 @@ async def test_filter_sensor(
     ).entity_id
     attributes_3 = None
     # Registered sensor without state class or unit - should be in logbook
-    entity_id4 = registry.async_get_or_create(
+    entity_id4 = entity_registry.async_get_or_create(
         "sensor", "test", "unique_4", suggested_object_id="ble"
     ).entity_id
     attributes_4 = None
@@ -3196,6 +3196,7 @@ async def test_logbook_user_id_from_parent_context_state_changes_only(
 
 async def test_context_user_ids_lru_eviction(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the parent context user-id cache is bounded by LRU eviction.
 
@@ -3225,13 +3226,12 @@ async def test_context_user_ids_lru_eviction(
         for_live_stream=True,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
     )
     processor.hass = hass
-    processor.ent_reg = ent_reg
+    processor.ent_reg = entity_registry
     processor.logbook_run = logbook_run
     processor.context_augmenter = context_augmenter
 
@@ -3303,6 +3303,7 @@ async def test_context_user_ids_lru_eviction(
 
 async def test_parent_user_attribution_does_not_use_origin_event_fallback(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that parent context lookup doesn't fall back to origin_event.
 
@@ -3353,13 +3354,11 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
         memoize_new_contexts=False,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
     )
     processor.hass = hass
-    processor.ent_reg = ent_reg
+    processor.ent_reg = entity_registry
     processor.logbook_run = logbook_run
     processor.context_augmenter = context_augmenter
 

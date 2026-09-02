@@ -970,7 +970,9 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
 
 @pytest.mark.usefixtures("hassio_env")
 async def test_partial_backup_legacy_homeassistant_folder(
-    hass: HomeAssistant, supervisor_client: AsyncMock
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    supervisor_client: AsyncMock,
 ) -> None:
     """Test legacy "homeassistant" folder is translated to homeassistant=True."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -991,7 +993,6 @@ async def test_partial_backup_legacy_homeassistant_folder(
             folders={Folder.SSL},
         )
     )
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
         is not None
