@@ -92,10 +92,13 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """
         event_type = self.entity_description.doorbird_event_type
         door_station = self._door_station
+        # The device keeps the favorites and schedule entries of a deconfigured
+        # event, so the descriptions can still name one that was removed.
+        configured = set(door_station.door_station_events)
         if names := [
             event.event
             for event in door_station.event_descriptions
-            if event.event_type == event_type
+            if event.event_type == event_type and event.event in configured
         ]:
             return names
         default_events = {

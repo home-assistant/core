@@ -1,10 +1,15 @@
 """Test DoorBird image entities."""
 
-from homeassistant.components.doorbird.const import CONF_EVENTS
+from homeassistant.components.doorbird.const import CONF_EVENTS, SIGNAL_EVENTS_UPDATED
+from homeassistant.components.doorbird.device import DoorbirdEvent
+from homeassistant.components.doorbird.util import (
+    get_mac_address_from_door_station_info,
+)
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
@@ -173,3 +178,29 @@ async def test_image_event_mapping_follows_configured_events(
     await hass.async_block_till_done()
 
     assert hass.states.get("image.mydoorbird_last_ring").state != STATE_UNKNOWN
+
+
+async def test_image_ignores_deconfigured_event_descriptions(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """A description the device still reports for a removed event is ignored."""
+    doorbird_entry = await doorbird_mocker()
+    door_station = doorbird_entry.entry.runtime_data.door_station
+
+    # The device keeps the favorite of a deconfigured event, so a later refresh
+    # can still describe it while the options no longer configure it.
+    door_station.update_events(["motion"])
+    door_station.event_descriptions = [
+        DoorbirdEvent("mydoorbird_doorbell", "doorbell"),
+        DoorbirdEvent("mydoorbird_motion", "motion"),
+    ]
+    mac_address = get_mac_address_from_door_station_info(
+        doorbird_entry.entry.runtime_data.door_station_info
+    )
+    async_dispatcher_send(hass, f"{SIGNAL_EVENTS_UPDATED}_{mac_address}")
+    await hass.async_block_till_done()
+
+    assert (
+        "mydoorbird_doorbell" not in doorbird_entry.entry.runtime_data.event_entity_ids
+    )
