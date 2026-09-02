@@ -31,7 +31,7 @@ async def async_setup_entry(
 class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     """Representation of Idasen Desk device."""
 
-    _attr_device_class = CoverDeviceClass.DAMPER
+    _attr_device_class = CoverDeviceClass.DESK
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
