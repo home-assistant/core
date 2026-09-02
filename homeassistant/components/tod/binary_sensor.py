@@ -219,8 +219,9 @@ class TodSensor(BinarySensorEntity):
         before_time = before_event_date + self._before_offset
 
         # Before is earlier than after once the configured offsets are applied.
-        if before_time < after_time:
-            previous_before_time = before_time
+        boundaries_rolled = before_time < after_time
+        previous_before_time = before_time
+        if boundaries_rolled:
             if _is_sun_event(self._before):
                 before_event_date = get_astral_event_next(
                     self.hass,
@@ -228,33 +229,46 @@ class TodSensor(BinarySensorEntity):
                     after_event_date + self._after_offset - self._before_offset,
                 )
             else:
-                # It is safe to add timedelta days=1 to UTC as there is no DST
-                before_event_date += timedelta(days=1)
+                before_event_date = self._add_one_dst_aware_day(
+                    before_event_date, self._before
+                )
             before_time = before_event_date + self._before_offset
 
-            if (
-                (not _is_sun_event(self._after) or after_event_is_today)
-                and (not _is_sun_event(self._before) or before_event_is_today)
-                and nowutc < previous_before_time
-            ):
-                if _is_sun_event(self._after):
-                    previous_after_event_date = self._get_astral_event_previous(
-                        self._after, nowutc - self._after_offset
+        if (
+            (not _is_sun_event(self._after) or after_event_is_today)
+            and (not _is_sun_event(self._before) or before_event_is_today)
+            and nowutc < after_time
+        ):
+            if _is_sun_event(self._after):
+                previous_after_event_date = self._get_astral_event_previous(
+                    self._after, nowutc - self._after_offset
+                )
+            else:
+                previous_after_event_date = self._subtract_one_dst_aware_day(
+                    after_event_date, self._after
+                )
+            previous_after_time = previous_after_event_date + self._after_offset
+
+            if not boundaries_rolled:
+                if _is_sun_event(self._before):
+                    previous_before_event_date = self._get_astral_event_previous(
+                        self._before, before_event_date - timedelta(microseconds=1)
                     )
                 else:
-                    previous_after_event_date = self._subtract_one_dst_aware_day(
-                        after_event_date, self._after
+                    previous_before_event_date = self._subtract_one_dst_aware_day(
+                        before_event_date, self._before
                     )
-                previous_after_time = previous_after_event_date + self._after_offset
-                if previous_after_time <= nowutc:
-                    after_time = previous_after_time
-                    before_time = previous_before_time
+                previous_before_time = previous_before_event_date + self._before_offset
+
+            if previous_after_time <= nowutc < previous_before_time:
+                after_time = previous_after_time
+                before_time = previous_before_time
 
         self._time_after = after_time
         self._time_before = before_time
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
-        """Add 24 hours (1 day) but account for DST."""
+        """Add one local calendar day, accounting for DST."""
         tentative_new_date = a_date + timedelta(days=1)
         tentative_new_date = dt_util.as_local(tentative_new_date)
         tentative_new_date = tentative_new_date.replace(
@@ -271,7 +285,7 @@ class TodSensor(BinarySensorEntity):
     def _subtract_one_dst_aware_day(
         self, a_date: datetime, target_time: time
     ) -> datetime:
-        """Subtract 24 hours but account for DST."""
+        """Subtract one local calendar day, accounting for DST."""
         tentative_new_date = a_date - timedelta(days=1)
         tentative_new_date = dt_util.as_local(tentative_new_date)
         tentative_new_date = tentative_new_date.replace(

@@ -539,6 +539,45 @@ async def test_offset_overnight(
     assert state.state == STATE_ON
 
 
+async def test_offset_overnight_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+) -> None:
+    """Test initialization during an offset-created overnight interval."""
+    after = datetime(2019, 1, 10, 19, 34, tzinfo=hass_tz_info)
+    before = datetime(2019, 1, 11, 1, tzinfo=hass_tz_info)
+    freezer.move_to(datetime(2019, 1, 11, 0, 30, tzinfo=hass_tz_info))
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Evening",
+                    "after": "18:00",
+                    "after_offset": "1:34",
+                    "before": "22:00",
+                    "before_offset": "3:00",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.evening")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.isoformat()
+    assert state.attributes["before"] == before.isoformat()
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.evening")
+    assert state.state == STATE_OFF
+
+
 async def test_norwegian_case_winter(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
@@ -950,6 +989,49 @@ async def test_fixed_time_to_sun_interval_restart_across_dst(
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_OFF
+
+
+async def test_fixed_overnight_interval_across_dst(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a fixed overnight interval ends at the configured time across DST."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    time_zone = dt_util.get_time_zone(hass.config.time_zone)
+    after = datetime(2019, 3, 30, 20, tzinfo=time_zone)
+    before = datetime(2019, 3, 31, 7, tzinfo=time_zone)
+    freezer.move_to(after)
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Night",
+                    "after": "20:00",
+                    "before": "07:00",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == after.isoformat()
+    assert state.attributes["before"] == before.isoformat()
+
+    freezer.move_to(before - timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.night").state == STATE_ON
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.night").state == STATE_OFF
 
 
 async def test_dst1(
