@@ -525,6 +525,49 @@ async def test_fixed_time_offsets_crossing_midnight_next_day(
     )
 
 
+async def test_opposing_fixed_time_offsets_skip_multiple_dates(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_tz_info: tzinfo | None,
+) -> None:
+    """Test opposing offsets resolve the next effective fixed boundaries."""
+    after = datetime(2019, 1, 11, 22, tzinfo=hass_tz_info)
+    before = datetime(2019, 1, 12, 1, tzinfo=hass_tz_info)
+    freezer.move_to(after - timedelta(hours=1))
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Offset interval",
+                    "after": "23:00",
+                    "after_offset": "23:00",
+                    "before": "00:00",
+                    "before_offset": "-23:00",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.offset_interval")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == after.isoformat()
+    assert state.attributes["before"] == before.isoformat()
+
+    freezer.move_to(after)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.offset_interval").state == STATE_ON
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.offset_interval").state == STATE_OFF
+
+
 async def test_offset_overnight(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
