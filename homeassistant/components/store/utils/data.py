@@ -257,9 +257,6 @@ class HacsData:
         repository.data.description = repository_data.get("description", "")
         repository.data.downloads = repository_data.get("downloads", 0)
         repository.data.last_updated = repository_data.get("last_updated", 0)
-        if self.hacs.system.generator:
-            repository.data.etag_releases = repository_data.get("etag_releases")
-            repository.data.open_issues = repository_data.get("open_issues", 0)
         repository.data.etag_repository = repository_data.get("etag_repository")
         repository.data.topics = [
             topic

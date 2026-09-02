@@ -2,8 +2,6 @@
 
 from typing import TypeVar
 
-from aiogithubapi.common.const import ACCEPT_HEADERS
-
 from homeassistant.const import __version__ as HAVERSION
 
 DOMAIN = "store"
@@ -21,11 +19,6 @@ DEFAULT_CONCURRENT_TASKS = 15
 DEFAULT_CONCURRENT_BACKOFF_TIME = 1
 
 HACS_REPOSITORY_ID = "172733314"
-
-HACS_ACTION_GITHUB_API_HEADERS = {
-    "User-Agent": "HACS/action",
-    "Accept": ACCEPT_HEADERS["preview"],
-}
 
 VERSION_STORAGE = "6"
 

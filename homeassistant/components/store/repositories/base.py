@@ -191,15 +191,13 @@ class RepositoryData:
         return attr.asdict(self, filter=lambda attr, value: attr.name != "last_fetched")
 
     @staticmethod
-    def create_from_dict(
-        source: dict[str, Any], action: bool = False
-    ) -> RepositoryData:
+    def create_from_dict(source: dict[str, Any]) -> RepositoryData:
         """Set attributes from dicts."""
         data = RepositoryData()
-        data.update_data(source, action)
+        data.update_data(source)
         return data
 
-    def update_data(self, data: dict[str, Any], action: bool = False) -> None:
+    def update_data(self, data: dict[str, Any]) -> None:
         """Update data of the repository."""
         for key, value in data.items():
             if key not in self.__dict__:
@@ -209,7 +207,7 @@ class RepositoryData:
                 setattr(self, key, datetime.fromtimestamp(value, UTC))
             elif key == "id":
                 setattr(self, key, str(value))
-            elif key == "topics" and not action:
+            elif key == "topics":
                 setattr(
                     self, key, [topic for topic in value if topic not in TOPIC_FILTER]
                 )
@@ -491,10 +489,7 @@ class HacsRepository:
         if RepositoryFile.HACS_JSON in [x.filename for x in self.tree]:
             if manifest := await self.async_get_hacs_json():
                 self.repository_manifest = HacsManifest.from_dict(manifest)
-                self.data.update_data(
-                    self.repository_manifest.to_dict(),
-                    action=self.hacs.system.action,
-                )
+                self.data.update_data(self.repository_manifest.to_dict())
 
     async def common_registration(self) -> None:
         """Common registration steps of the repository."""
@@ -507,10 +502,7 @@ class HacsRepository:
                 ) = await self.async_get_legacy_repository_object(
                     etag=None if self.data.installed else self.data.etag_repository,
                 )
-                self.data.update_data(
-                    self.repository_object.attributes,
-                    action=self.hacs.system.action,
-                )
+                self.data.update_data(self.repository_object.attributes)
                 self.data.etag_repository = etag
             except HacsNotModifiedException:
                 self.logger.debug(
@@ -575,10 +567,7 @@ class HacsRepository:
         if RepositoryFile.HACS_JSON in [x.filename for x in self.tree]:
             if manifest := await self.async_get_hacs_json():
                 self.repository_manifest = HacsManifest.from_dict(manifest)
-                self.data.update_data(
-                    self.repository_manifest.to_dict(),
-                    action=self.hacs.system.action,
-                )
+                self.data.update_data(self.repository_manifest.to_dict())
 
         # Update "info.md"
         self.additional_info = await self.async_get_info_file_contents()
@@ -911,9 +900,6 @@ class HacsRepository:
 
     async def async_post_registration(self) -> None:
         """Run post registration steps."""
-        if not self.hacs.system.action:
-            return
-        await self.hacs.validation.async_run_repository_checks(self)
 
     async def async_pre_install(self) -> None:
         """Run pre install steps."""
@@ -1140,24 +1126,15 @@ class HacsRepository:
                 self.hacs.common.renamed_repositories[self.data.full_name] = (
                     repository_object.full_name
                 )
-                if not self.hacs.system.generator:
-                    raise HacsRepositoryExistException  # noqa: TRY301 # handled below
-                self.logger.error(
-                    "%s Repository has been renamed - %s",
-                    self.string,
-                    repository_object.full_name,
-                )
-            self.data.update_data(
-                repository_object.attributes,
-                action=self.hacs.system.action,
-            )
+                raise HacsRepositoryExistException  # noqa: TRY301 # handled below
+            self.data.update_data(repository_object.attributes)
             self.data.etag_repository = etag
         except HacsNotModifiedException:
             return None
         except HacsRepositoryExistException:
             raise HacsRepositoryExistException from None
         except (AIOGitHubAPIException, HacsException) as exception:
-            if not self.hacs.status.startup or self.hacs.system.generator:
+            if not self.hacs.status.startup:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:
                 self.validate.errors.append("Repository does not exist.")
@@ -1219,8 +1196,6 @@ class HacsRepository:
                     if assets := release.assets:
                         if target_asset := self._find_target_asset(assets):
                             self.data.downloads = target_asset.download_count
-        elif self.hacs.system.generator and self.repository_object:
-            await self.async_set_last_commits()
 
         self.hacs.log.debug(
             "%s Running checks against %s",

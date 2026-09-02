@@ -153,12 +153,6 @@ VALIDATE_FETCHED_V2_REPO_DATA = {
     for category, schema in _V2_REPO_SCHEMAS.items()
 }
 
-# Used when validating repos when generating data, fails on extra keys
-VALIDATE_GENERATED_V2_REPO_DATA = {
-    category: vol.Schema({str: validate_repo_data(schema, vol.PREVENT_EXTRA)})
-    for category, schema in _V2_REPO_SCHEMAS.items()
-}
-
 V2_CRITICAL_REPO_DATA_SCHEMA = {
     vol.Required("link"): str,
     vol.Required("reason"): str,
@@ -169,16 +163,6 @@ V2_CRITICAL_REPO_DATA_SCHEMA = {
 VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA = vol.Schema(
     V2_CRITICAL_REPO_DATA_SCHEMA,
     extra=vol.REMOVE_EXTRA,
-)
-
-# Used when validating critical repos when generating data, fails on extra keys
-VALIDATE_GENERATED_V2_CRITICAL_REPO_SCHEMA = vol.Schema(
-    [
-        vol.Schema(
-            V2_CRITICAL_REPO_DATA_SCHEMA,
-            extra=vol.PREVENT_EXTRA,
-        )
-    ]
 )
 
 V2_REMOVED_REPO_DATA_SCHEMA = {
@@ -206,14 +190,4 @@ V2_REMOVED_REPO_DATA_SCHEMA = {
 VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA = vol.Schema(
     V2_REMOVED_REPO_DATA_SCHEMA,
     extra=vol.REMOVE_EXTRA,
-)
-
-# Used when validating removed repos when generating data, fails on extra keys
-VALIDATE_GENERATED_V2_REMOVED_REPO_SCHEMA = vol.Schema(
-    [
-        vol.Schema(
-            V2_REMOVED_REPO_DATA_SCHEMA,
-            extra=vol.PREVENT_EXTRA,
-        )
-    ]
 )

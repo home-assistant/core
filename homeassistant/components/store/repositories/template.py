@@ -70,9 +70,6 @@ class HacsTemplateRepository(HacsRepository):
         self.data.file_name = self.repository_manifest.filename or ""
         self.content.path.local = self.localpath
 
-        if self.hacs.system.action:
-            await self.hacs.validation.async_run_repository_checks(self)
-
     @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""

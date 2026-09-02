@@ -65,7 +65,6 @@ from .utils.store import async_load_from_store, async_save_to_store
 if TYPE_CHECKING:
     from .repositories.base import HacsRepository
     from .utils.data import HacsData
-    from .validate.manager import ValidationManager
 
 
 @dataclass
@@ -174,8 +173,6 @@ class HacsSystem:
     disabled_reason: HacsDisabledReason | None = None
     running: bool = False
     stage: HacsStage = HacsStage.SETUP
-    action: bool = False
-    generator: bool = False
 
     @property
     def disabled(self) -> bool:
@@ -358,7 +355,6 @@ class HacsBase:
     queue: QueueManager
     session: ClientSession
     stage: HacsStage | None = None
-    validation: ValidationManager
     version: AwesomeVersion
 
     def __init__(self) -> None:
@@ -565,25 +561,9 @@ class HacsBase:
                         self.log.error(
                             "Validation for %s failed.", repository_full_name
                         )
-                    if self.system.action:
-                        raise HacsException(
-                            f"::error:: Validation for {repository_full_name} failed."
-                        )
                     return repository.validate.errors
-                if self.system.action:
-                    repository.logger.info("%s Validation completed", repository.string)
-                else:
-                    repository.logger.info(
-                        "%s Registration completed", repository.string
-                    )
-            except (
-                HacsRepositoryExistException,
-                HacsRepositoryArchivedException,
-            ) as exception:
-                if self.system.generator:
-                    repository.logger.error(
-                        "%s Registration Failed - %s", repository.string, exception
-                    )
+                repository.logger.info("%s Registration completed", repository.string)
+            except HacsRepositoryExistException, HacsRepositoryArchivedException:
                 return None
             except AIOGitHubAPIException as exception:
                 self.common.skip.add(repository.data.full_name)

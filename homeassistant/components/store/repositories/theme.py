@@ -71,9 +71,6 @@ class HacsThemeRepository(HacsRepository):
         self.update_filenames()
         self.content.path.local = self.localpath
 
-        if self.hacs.system.action:
-            await self.hacs.validation.async_run_repository_checks(self)
-
     async def _reload_frontend_themes(self) -> None:
         """Reload frontend themes."""
         self.logger.debug("%s Reloading frontend themes", self.string)

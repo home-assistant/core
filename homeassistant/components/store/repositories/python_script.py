@@ -67,9 +67,6 @@ class HacsPythonScriptRepository(HacsRepository):
         # Set name
         self.update_filenames()
 
-        if self.hacs.system.action:
-            await self.hacs.validation.async_run_repository_checks(self)
-
     @override
     @concurrent(concurrenttasks=10, backoff_time=5)
     async def update_repository(
