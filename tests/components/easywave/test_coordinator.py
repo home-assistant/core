@@ -583,6 +583,29 @@ async def test_start_telegram_listener_noops_without_entities(
     assert coordinator._listener_task is None
 
 
+async def test_telegram_listener_loop_exits_when_disconnected_receive_returns_none(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Listener exits instead of busy-looping when receive returns None while offline."""
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        mock_transceiver.is_connected = False
+
+    mock_transceiver.is_connected = True
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.register_sensor_entities([MagicMock()])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._listener_task is not None
+    assert coordinator._listener_task.done()
+    mock_transceiver.receive_telegram.assert_awaited_once()
+    await coordinator.async_shutdown()
+
+
 async def test_clear_listener_task_skips_foreign_running_task(
     hass: HomeAssistant,
     coordinator: EasywaveCoordinator,

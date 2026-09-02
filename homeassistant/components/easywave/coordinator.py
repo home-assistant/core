@@ -425,6 +425,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 try:
                     telegram = await self.transceiver.receive_telegram(timeout=30.0)
                     if telegram is None:
+                        if not self.transceiver.is_connected:
+                            break
                         continue
                     self._dispatch_telegram(telegram)
                 except asyncio.CancelledError:

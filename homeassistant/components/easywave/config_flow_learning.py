@@ -310,11 +310,15 @@ class EasywaveDeviceFlowMixin:
                 await coordinator.suspend_telegram_listener()
                 deadline = time.monotonic() + LEARNING_TIMEOUT
                 while time.monotonic() < deadline:
+                    if not coordinator.transceiver.is_connected:
+                        return None
                     remaining = deadline - time.monotonic()
                     telegram = await coordinator.transceiver.receive_telegram(
                         timeout=min(remaining, 10.0)
                     )
                     if telegram is None:
+                        if not coordinator.transceiver.is_connected:
+                            return None
                         continue
                     if learned := accept_telegram(telegram):
                         return learned

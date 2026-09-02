@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.target import (
@@ -52,7 +53,10 @@ class EasywaveEventTrigger(Trigger, ABC):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return cast(ConfigType, cls._schema(config))
+        config = cast(ConfigType, cls._schema(config))
+        if not TargetSelection(config[CONF_TARGET]).has_any_target:
+            raise HomeAssistantError(f"No target defined in {config[CONF_TARGET]}")
+        return config
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""

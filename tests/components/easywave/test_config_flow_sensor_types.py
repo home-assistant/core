@@ -148,6 +148,31 @@ async def test_listen_for_telegram_returns_none_when_learning_busy() -> None:
     coordinator.suspend_telegram_listener.assert_not_called()
 
 
+async def test_listen_for_telegram_exits_when_gateway_disconnects() -> None:
+    """Learning stops when a disconnected gateway returns immediate None reads."""
+    helper = _LearningHelper()
+    coordinator = MagicMock()
+    coordinator.begin_learning = AsyncMock(return_value=True)
+    coordinator.end_learning = MagicMock()
+    coordinator.suspend_telegram_listener = AsyncMock()
+    coordinator.resume_telegram_listener = MagicMock()
+    coordinator.transceiver.is_connected = True
+
+    async def receive_side_effect(*_args: object, **_kwargs: object) -> None:
+        coordinator.transceiver.is_connected = False
+
+    coordinator.transceiver.receive_telegram = AsyncMock(
+        side_effect=receive_side_effect
+    )
+
+    result = await helper._listen_for_telegram(
+        coordinator, accept_telegram=lambda _telegram: None
+    )
+
+    assert result is None
+    coordinator.transceiver.receive_telegram.assert_awaited_once()
+
+
 async def test_await_learning_task_uses_entry_background_task(
     hass: HomeAssistant,
 ) -> None:

@@ -1,5 +1,7 @@
 """Tests for Easywave purpose-specific triggers."""
 
+import pytest
+
 from homeassistant.components import group
 from homeassistant.components.easywave.const import (
     DOMAIN,
@@ -8,9 +10,12 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
 )
+from homeassistant.components.easywave.trigger import TRIGGERS
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
+from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -449,3 +454,11 @@ async def test_get_triggers_for_target_gateway(
     assert "easywave.gateway_disconnected" in msg["result"]
     assert "easywave.button_press_a" not in msg["result"]
     assert "easywave.button_release" not in msg["result"]
+
+
+async def test_trigger_rejects_empty_target(hass: HomeAssistant) -> None:
+    """Target triggers require at least one target selector."""
+    trigger_cls = TRIGGERS["button_press_a"]
+
+    with pytest.raises(HomeAssistantError, match="No target defined"):
+        await trigger_cls.async_validate_config(hass, {CONF_TARGET: {}})
