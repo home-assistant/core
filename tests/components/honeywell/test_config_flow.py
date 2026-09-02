@@ -17,11 +17,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+# The away temperatures are options, not fields on the user form.
 FAKE_CONFIG = {
     "username": "fake",
     "password": "user",
-    "away_cool_temperature": 88,
-    "away_heat_temperature": 61,
 }
 
 
@@ -40,7 +39,15 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = aiosomecomfort.device.ConnectionError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
     )
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -50,7 +57,15 @@ async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     client.login.side_effect = aiosomecomfort.device.AuthError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
     )
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -62,7 +77,15 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FAKE_CONFIG,
         )
         await hass.async_block_till_done()
 
