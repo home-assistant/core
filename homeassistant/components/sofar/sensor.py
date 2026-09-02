@@ -1,13 +1,12 @@
 """Support for Sofar sensors."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date
 from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import SystemState
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -31,26 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
-from homeassistant.util.variance import ignore_variance
 
-# Aliased: a module-level SCAN_INTERVAL would set the platform's poll.
-from .const import SCAN_INTERVAL as _POLL_INTERVAL
-from .coordinator import SofarConfigEntry, SofarRuntimeData
+from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
-
-# Two polls of slack, so jitter does not republish a steady countdown.
-_COUNTDOWN_VARIANCE = timedelta(seconds=_POLL_INTERVAL * 2)
-
-
-def _deadline_filter() -> Callable[[int], datetime]:
-    """Turn remaining seconds into a deadline, holding it steady."""
-    return ignore_variance(
-        lambda seconds: dt_util.utcnow() + timedelta(seconds=seconds),
-        _COUNTDOWN_VARIANCE,
-    )
 
 
 async def async_setup_entry(
@@ -114,8 +98,6 @@ def _sensor_class(
     description: SofarSensorDescription,
 ) -> type[SofarSensor | SofarTotalSensor]:
     """Pick the entity class a description's semantics ask for."""
-    if description.device_class is SensorDeviceClass.TIMESTAMP:
-        return SofarCountdownSensor
     if description.state_class in (
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
@@ -138,37 +120,6 @@ class SofarSensor(SofarEntity, SensorEntity):
         if isinstance(value, IntEnum):
             return value.name.lower()
         return cast(str | int | float | date | None, value)
-
-
-class SofarCountdownSensor(SofarSensor):
-    """Defines a Sofar countdown, published as the moment it runs out."""
-
-    # A positive register alone doesn't mean the countdown is active.
-    _ACTIVE_STATES = (SystemState.WAITING, SystemState.CHECKING)
-
-    def __init__(
-        self,
-        runtime_data: SofarRuntimeData,
-        entity_description: SofarSensorDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(runtime_data, entity_description)
-        self._deadline = _deadline_filter()
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        seconds = getattr(component, self.entity_description.key)
-        if (
-            not isinstance(seconds, int)
-            or seconds <= 0
-            or component.system_state not in self._ACTIVE_STATES
-        ):
-            # A restart must not land inside the finished countdown's slack.
-            self._deadline = _deadline_filter()
-            return None
-        return self._deadline(seconds)
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -380,13 +331,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
             "upgrading",
             "self_charging",
         ],
-    ),
-    SofarSensorDescription(
-        key="waiting_time",
-        component="state",
-        translation_key="waiting_ends",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(
         key="inverter_temperature_1",

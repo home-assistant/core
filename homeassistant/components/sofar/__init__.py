@@ -42,6 +42,16 @@ _IDENTITY_ATTEMPTS = 3
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
+    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
+    )
+    if entity_id is not None:
+        registry.async_remove(entity_id)
+
+
 async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
     """Read identity once, retrying a few times against a transient blip."""
     for attempt in range(_IDENTITY_ATTEMPTS):
@@ -88,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     """Set up Sofar Inverter Modbus from a config entry."""
     serial = entry.unique_id
     assert serial is not None
+    _async_remove_stale_waiting_time(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(

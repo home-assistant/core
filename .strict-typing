@@ -674,4 +674,5 @@ homeassistant.components.zeroconf.*
 homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
+homeassistant.components.zonneplan.*
 homeassistant.components.zwave_js.*
