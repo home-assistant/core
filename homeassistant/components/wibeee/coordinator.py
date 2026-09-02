@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for Wibeee energy monitors."""
 
-import asyncio
 import logging
 from typing import Any, cast, override
 
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DEVICE_INFO_TIMEOUT, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +42,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_setup(self) -> None:
         """Fetch device info once before the first refresh."""
         try:
-            async with asyncio.timeout(DEVICE_INFO_TIMEOUT):
-                device_info = await self.api.async_fetch_device_info(retries=0)
+            device_info = await self.api.async_fetch_device_info()
         except (TimeoutError, aiohttp.ClientError) as exc:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

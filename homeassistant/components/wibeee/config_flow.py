@@ -1,6 +1,5 @@
 """Config flow for Wibeee energy monitor."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -16,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_MAC_ADDRESS, CONF_WIBEEE_ID, DEVICE_INFO_TIMEOUT, DOMAIN
+from .const import CONF_MAC_ADDRESS, CONF_WIBEEE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +28,7 @@ async def validate_input(
     api = WibeeeAPI(session, data[CONF_HOST])
 
     try:
-        async with asyncio.timeout(DEVICE_INFO_TIMEOUT):
-            device = await api.async_fetch_device_info(retries=0)
+        device = await api.async_fetch_device_info()
     except (TimeoutError, aiohttp.ClientError) as exc:
         raise NoDeviceInfo(
             translation_domain=DOMAIN,
