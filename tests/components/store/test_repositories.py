@@ -766,6 +766,113 @@ async def test_register_repository_failures(
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
+async def test_validate_repository(
+    store: HacsBase, category_test_data: CategoryTestData
+) -> None:
+    """Test validating the structure of a repository of every category."""
+    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    await repository.update_repository(force=True)
+
+    assert await repository.validate_repository()
+    assert repository.validate.errors == []
+
+
+@pytest.mark.parametrize(
+    "category_test_data",
+    category_test_data_parametrized(
+        categories=[
+            HacsCategory.APPDAEMON,
+            HacsCategory.PYTHON_SCRIPT,
+            HacsCategory.TEMPLATE,
+            HacsCategory.THEME,
+        ]
+    ),
+)
+async def test_validate_repository_without_content(
+    store: HacsBase, category_test_data: CategoryTestData
+) -> None:
+    """Test that a repository without the expected content is refused."""
+    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    await repository.update_repository(force=True)
+
+    repository.tree = _tree(("README.md", False))
+    repository.treefiles = ["README.md"]
+
+    with (
+        patch.object(repository, "common_validate"),
+        pytest.raises(HacsException, match="is not compliant"),
+    ):
+        await repository.validate_repository()
+
+
+async def test_validate_integration_without_content(store: HacsBase) -> None:
+    """Test an integration repository without a custom_components directory."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    await repository.update_repository(force=True)
+
+    repository.tree = _tree(("README.md", False))
+    repository.treefiles = ["README.md"]
+    repository.content.path.remote = "custom_components"
+
+    with (
+        patch.object(repository, "common_validate"),
+        pytest.raises(HacsException, match="is not compliant"),
+    ):
+        await repository.validate_repository()
+
+
+async def test_validate_plugin_without_content(store: HacsBase) -> None:
+    """Test a dashboard plugin repository without a script to serve."""
+    repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    await repository.update_repository(force=True)
+
+    repository.tree = _tree(("README.md", False))
+    repository.treefiles = ["README.md"]
+    repository.content.path.remote = None
+
+    with (
+        patch.object(repository, "common_validate"),
+        pytest.raises(HacsException, match="is not compliant"),
+    ):
+        await repository.validate_repository()
+
+
+@pytest.mark.parametrize(
+    "category_test_data",
+    category_test_data_parametrized(
+        categories=[HacsCategory.PYTHON_SCRIPT, HacsCategory.THEME]
+    ),
+)
+async def test_validate_repository_with_content_in_root(
+    store: HacsBase, category_test_data: CategoryTestData
+) -> None:
+    """Test a repository that keeps its content in the repository root."""
+    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    await repository.update_repository(force=True)
+    repository.repository_manifest.content_in_root = True
+
+    # The common validation refetches the manifest, which would undo the change
+    with patch.object(repository, "common_validate"):
+        assert await repository.validate_repository()
+
+    assert repository.content.path.remote == ""
+
+
+@pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
+async def test_update_repository_without_a_tree(
+    store: HacsBase, category_test_data: CategoryTestData
+) -> None:
+    """Test that a refresh that finds no files keeps the known tree."""
+    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    await repository.update_repository(force=True)
+
+    with patch.object(repository, "get_tree", return_value=[]):
+        await repository.update_repository(ignore_issues=True, force=True)
+
+    assert repository.tree
+
+
+@pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_download_repository(
     hass: HomeAssistant,
     store: HacsBase,
