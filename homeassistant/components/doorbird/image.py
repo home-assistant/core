@@ -105,9 +105,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        # Remembered rather than resolved again on removal: resetting the
-        # favorites re-derives the descriptions while the entity is live, so
-        # the names can have moved on by then.
+        # Remembered so removal drops exactly what was registered here.
         self._registered_event_names = self._door_station.image_event_names.get(
             self.entity_description.doorbird_event_type, []
         )
@@ -126,7 +124,8 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event_name in self._registered_event_names:
-            # Another image may already have claimed it after a reload.
+            # Defensive: the resolver gives an event to one image, so this
+            # should always be ours.
             if event_to_entity_id.get(event_name) == self.entity_id:
                 del event_to_entity_id[event_name]
         await super().async_will_remove_from_hass()

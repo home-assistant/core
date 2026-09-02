@@ -52,28 +52,31 @@ async def async_setup_entry(
         ("last_motion", "motionsensor", DEFAULT_MOTION_EVENT, _LAST_MOTION_INTERVAL),
     ):
         issue_id = f"deprecated_camera_{mac_addr}_{camera_id}"
-        # The image replacing this camera is event driven and does not poll, so
-        # without an event to invalidate it the camera has to stay. The issue
-        # would name a replacement that cannot refresh, so it goes too.
-        if not door_bird_data.door_station.image_event_names.get(event_type):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
-        elif not deprecate_entity(
-            hass,
-            entity_registry,
-            platform_domain=Platform.CAMERA,
-            entity_unique_id=f"{mac_addr}_{camera_id}",
-            issue_id=issue_id,
-            translation_key=f"deprecated_camera_{camera_id}",
-        ):
-            continue
-        entities.append(
-            DoorBirdCamera(
-                door_bird_data,
-                device.history_image_url(1, history_type),
-                camera_id,
-                interval,
+        if door_bird_data.door_station.image_event_names.get(event_type):
+            keep = deprecate_entity(
+                hass,
+                entity_registry,
+                platform_domain=Platform.CAMERA,
+                entity_unique_id=f"{mac_addr}_{camera_id}",
+                issue_id=issue_id,
+                translation_key=f"deprecated_camera_{camera_id}",
             )
-        )
+        else:
+            # The image replacing this camera is event driven and does not poll,
+            # so without an event to invalidate it the camera has to stay. The
+            # issue would name a replacement that cannot refresh, so it goes too.
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            keep = True
+
+        if keep:
+            entities.append(
+                DoorBirdCamera(
+                    door_bird_data,
+                    device.history_image_url(1, history_type),
+                    camera_id,
+                    interval,
+                )
+            )
 
     async_add_entities(entities)
 
