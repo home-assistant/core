@@ -1,0 +1,243 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'custom_repositories': list([
+    ]),
+    'entry': dict({
+      'data': dict({
+        'token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'store',
+      'options': dict({
+        'appdaemon': True,
+        'country': 'ALL',
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '',
+      'unique_id': '12345',
+    }),
+    'hacs': dict({
+      'archived_repositories': list([
+      ]),
+      'categories': list([
+        'appdaemon',
+        'integration',
+        'plugin',
+        'template',
+        'theme',
+      ]),
+      'configuration': dict({
+        'appdaemon': True,
+        'country': 'ALL',
+        'debug': False,
+        'python_script': False,
+        'release_limit': 5,
+        'theme': False,
+      }),
+      'disabled_reason': None,
+      'ignored_repositories': list([
+      ]),
+      'lovelace_mode': 'storage',
+      'new': False,
+      'renamed_repositories': dict({
+      }),
+      'stage': 'running',
+      'startup': False,
+    }),
+    'rate_limit': dict({
+      'rate': dict({
+        'limit': 5000,
+        'remaining': 4999,
+        'reset': 1372700873,
+        'used': 1,
+      }),
+      'resources': dict({
+        'actions_runner_registration': dict({
+          'limit': 10000,
+          'remaining': 10000,
+          'reset': 1691594631,
+          'used': 0,
+        }),
+        'code_scanning_upload': dict({
+          'limit': 500,
+          'remaining': 499,
+          'reset': 1691594631,
+          'used': 1,
+        }),
+        'core': dict({
+          'limit': 5000,
+          'remaining': 4999,
+          'reset': 1691591363,
+          'used': 1,
+        }),
+        'graphql': dict({
+          'limit': 5000,
+          'remaining': 4993,
+          'reset': 1691593228,
+          'used': 7,
+        }),
+        'integration_manifest': dict({
+          'limit': 5000,
+          'remaining': 4999,
+          'reset': 1691594631,
+          'used': 1,
+        }),
+        'scim': dict({
+          'limit': 15000,
+          'remaining': 15000,
+          'reset': 1691594631,
+          'used': 0,
+        }),
+        'search': dict({
+          'limit': 30,
+          'remaining': 18,
+          'reset': 1691591091,
+          'used': 12,
+        }),
+        'source_import': dict({
+          'limit': 100,
+          'remaining': 99,
+          'reset': 1691591091,
+          'used': 1,
+        }),
+      }),
+    }),
+    'repositories': list([
+      dict({
+        'data': dict({
+          'archived': False,
+          'authors': list([
+          ]),
+          'category': 'integration',
+          'config_flow': False,
+          'default_branch': None,
+          'description': 'This your first repo!',
+          'domain': 'example',
+          'downloads': 0,
+          'etag_releases': None,
+          'etag_repository': None,
+          'file_name': '',
+          'first_install': False,
+          'full_name': 'hacs-test-org/integration-basic',
+          'full_name_lower': 'hacs-test-org/integration-basic',
+          'has_issues': True,
+          'hide': False,
+          'id': '1296269',
+          'installed': True,
+          'installed_commit': None,
+          'installed_version': '1.0.0',
+          'last_commit': None,
+          'last_updated': '2020-01-20T09:34:52Z',
+          'last_version': '2.0.0',
+          'manifest_name': 'Basic integration',
+          'new': False,
+          'open_issues': 0,
+          'prerelease': None,
+          'published_tags': list([
+          ]),
+          'releases': False,
+          'selected_tag': None,
+          'show_beta': False,
+          'stargazers_count': 0,
+          'topics': list([
+          ]),
+        }),
+        'integration_manifest': dict({
+        }),
+        'paths': dict({
+          'local': '/config/custom_components/example',
+          'localpath': '/config/custom_components/example',
+          'remote': 'custom_components',
+        }),
+        'ref': None,
+        'repository_manifest': dict({
+          'content_in_root': False,
+          'country': list([
+          ]),
+          'filename': None,
+          'hacs': None,
+          'hide_default_branch': False,
+          'homeassistant': None,
+          'manifest': dict({
+            'name': 'Basic integration',
+          }),
+          'name': 'Basic integration',
+          'persistent_directory': None,
+          'render_readme': False,
+          'zip_release': False,
+        }),
+      }),
+      dict({
+        'data': dict({
+          'archived': False,
+          'authors': list([
+          ]),
+          'category': 'plugin',
+          'config_flow': False,
+          'default_branch': None,
+          'description': 'This your first repo!',
+          'domain': None,
+          'downloads': 0,
+          'etag_releases': None,
+          'etag_repository': None,
+          'file_name': '',
+          'first_install': False,
+          'full_name': 'hacs-test-org/plugin-basic',
+          'full_name_lower': 'hacs-test-org/plugin-basic',
+          'has_issues': True,
+          'hide': False,
+          'id': '1296267',
+          'installed': True,
+          'installed_commit': None,
+          'installed_version': '1.0.0',
+          'last_commit': None,
+          'last_updated': '2020-01-20T09:34:52Z',
+          'last_version': '2.0.0',
+          'manifest_name': None,
+          'new': False,
+          'open_issues': 0,
+          'prerelease': None,
+          'published_tags': list([
+          ]),
+          'releases': False,
+          'selected_tag': None,
+          'show_beta': True,
+          'stargazers_count': 0,
+          'topics': list([
+          ]),
+        }),
+        'integration_manifest': dict({
+        }),
+        'paths': dict({
+          'local': '/config/www/community/plugin-basic',
+          'localpath': '/config/www/community/plugin-basic',
+          'remote': None,
+        }),
+        'ref': None,
+        'repository_manifest': dict({
+          'content_in_root': False,
+          'country': list([
+          ]),
+          'filename': 'plugin-basic.js',
+          'hacs': None,
+          'hide_default_branch': False,
+          'homeassistant': None,
+          'manifest': dict({
+            'filename': 'plugin-basic.js',
+            'name': 'Basic plugin',
+          }),
+          'name': 'Basic plugin',
+          'persistent_directory': None,
+          'render_readme': False,
+          'zip_release': False,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_diagnostics_without_a_rate_limit
+  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character, expected a JSON value: line 1 column 1 (char 0)"
+# ---
