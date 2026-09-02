@@ -72,7 +72,9 @@ async def test_sensor_device_info(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the device card exposes a delijn.be link and the stop number."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, STOP_NUMBER)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, STOP_NUMBER), load_integration.entry_id
+    )
     assert device is not None
     assert device.configuration_url == f"https://www.delijn.be/nl/haltes/{STOP_NUMBER}/"
     assert device.model == "Stop"
